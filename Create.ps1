@@ -16,8 +16,13 @@
         Name = "$DomainName SS_ROOTCA";
         Template = 'Windows Server 2012 R2 Datacenter Full';
         MemoryStartupBytes = 1024MB;
-        Networks = @('@'); # Internet Switches to connect to - @ is Internet
-        DataVHDSize = 0; # Don't add an extra VHD to the VM
+        ProcessorCount = $null ; # $null or not setting the property causes 1 CPU to assigned.
+        Networks = @('@'); # Internet Switches to connect to - @ is Internet.
+        DataVHDSize = 0; # $null or not setting the property doesn't create a data disk.
+        ComputerName = 'SS_ROOTCA';
+        TimeZone = 'Pacific Standard Time';
+        AdministratorPassword = 'P@ssword1!';
+        ProductKey = 'W3GGN-FT8W3-Y4M27-J84CP-Q3VJ9'
     }
 )
 
@@ -140,10 +145,89 @@ function InitVMs {
             If (-not (Test-Path -Path $VMBootDiskPath)) {
                 Write-Verbose "Creating VM $($VM.Name) Boot Disk $VMBootDiskPath ..."
                 New-VHD -Differencing -Path $VMBootDiskPath -ParentPath $ParentVHDPath | Out-Null
+
+# Because this is a new boot disk create an unattend file and inject it into the VHD
+$UnattendContent = [String] @"
+<?xml version="1.0" encoding="utf-8"?>
+<unattend xmlns="urn:schemas-microsoft-com:unattend">
+    <settings pass="offlineServicing">
+        <component name="Microsoft-Windows-LUA-Settings" processorArchitecture="amd64" publicKeyToken="31bf3856ad364e35" language="neutral" versionScope="nonSxS" xmlns:wcm="http://schemas.microsoft.com/WMIConfig/2002/State" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+            <EnableLUA>false</EnableLUA>
+        </component>
+    </settings>
+    <settings pass="generalize">
+        <component name="Microsoft-Windows-Security-SPP" processorArchitecture="amd64" publicKeyToken="31bf3856ad364e35" language="neutral" versionScope="nonSxS" xmlns:wcm="http://schemas.microsoft.com/WMIConfig/2002/State" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+            <SkipRearm>1</SkipRearm>
+        </component>
+    </settings>
+    <settings pass="specialize">
+        <component name="Microsoft-Windows-International-Core" processorArchitecture="amd64" publicKeyToken="31bf3856ad364e35" language="neutral" versionScope="nonSxS" xmlns:wcm="http://schemas.microsoft.com/WMIConfig/2002/State" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+            <InputLocale>0409:00000409</InputLocale>
+            <SystemLocale>en-US</SystemLocale>
+            <UILanguage>en-US</UILanguage>
+            <UILanguageFallback>en-US</UILanguageFallback>
+            <UserLocale>en-US</UserLocale>
+        </component>
+        <component name="Microsoft-Windows-Security-SPP-UX" processorArchitecture="amd64" publicKeyToken="31bf3856ad364e35" language="neutral" versionScope="nonSxS" xmlns:wcm="http://schemas.microsoft.com/WMIConfig/2002/State" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+            <SkipAutoActivation>true</SkipAutoActivation>
+        </component>
+        <component name="Microsoft-Windows-SQMApi" processorArchitecture="amd64" publicKeyToken="31bf3856ad364e35" language="neutral" versionScope="nonSxS" xmlns:wcm="http://schemas.microsoft.com/WMIConfig/2002/State" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+            <CEIPEnabled>0</CEIPEnabled>
+        </component>
+        <component name="Microsoft-Windows-Shell-Setup" processorArchitecture="amd64" publicKeyToken="31bf3856ad364e35" language="neutral" versionScope="nonSxS" xmlns:wcm="http://schemas.microsoft.com/WMIConfig/2002/State" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+            <ComputerName>$($VM.ComputerName)</ComputerName>
+            <ProductKey>$($VM.ProductKey)</ProductKey>
+        </component>
+    </settings>
+    <settings pass="oobeSystem">
+        <component name="Microsoft-Windows-Shell-Setup" processorArchitecture="amd64" publicKeyToken="31bf3856ad364e35" language="neutral" versionScope="nonSxS" xmlns:wcm="http://schemas.microsoft.com/WMIConfig/2002/State" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+            <OOBE>
+                <HideEULAPage>true</HideEULAPage>
+                <HideOEMRegistrationScreen>true</HideOEMRegistrationScreen>
+                <HideOnlineAccountScreens>true</HideOnlineAccountScreens>
+                <HideWirelessSetupInOOBE>true</HideWirelessSetupInOOBE>
+                <NetworkLocation>Work</NetworkLocation>
+                <ProtectYourPC>1</ProtectYourPC>
+                <SkipUserOOBE>true</SkipUserOOBE>
+                <SkipMachineOOBE>true</SkipMachineOOBE>
+            </OOBE>
+            <UserAccounts>
+               <AdministratorPassword>
+                  <Value>$($VM.AdministratorPassword)</Value>
+                  <PlainText>true</PlainText>
+               </AdministratorPassword>
+            </UserAccounts>
+            <RegisteredOrganization>$($Script:DomainName)</RegisteredOrganization>
+            <RegisteredOwner>$($Script:DomainName)</RegisteredOwner>
+            <DisableAutoDaylightTimeSet>false</DisableAutoDaylightTimeSet>
+            <TimeZone>$($VM.TimeZone)</TimeZone>
+        </component>
+        <component name="Microsoft-Windows-ehome-reg-inf" processorArchitecture="x86" publicKeyToken="31bf3856ad364e35" language="neutral" versionScope="NonSxS" xmlns:wcm="http://schemas.microsoft.com/WMIConfig/2002/State" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+            <RestartEnabled>true</RestartEnabled>
+        </component>
+        <component name="Microsoft-Windows-ehome-reg-inf" processorArchitecture="amd64" publicKeyToken="31bf3856ad364e35" language="neutral" versionScope="NonSxS" xmlns:wcm="http://schemas.microsoft.com/WMIConfig/2002/State" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+            <RestartEnabled>true</RestartEnabled>
+        </component>
+    </settings>
+</unattend>
+"@
+                Write-Verbose "Applying VM $($VM.Name) Unattend File ..."
+                $UnattendFile = $ENV:Temp+"\Unattend.xml"
+                Set-Content -Path $UnattendFile -Value $UnattendContent | Out-Null
+                New-Item -Path c:\TempMount -ItemType Directory | Out-Null
+                Mount-WindowsImage -ImagePath $VMBootDiskPath -Path c:\tempMount -Index 1 | Out-Null
+                Use-WindowsUnattend –Path c:\TempMount –UnattendPath $UnattendFile | Out-Null
+                Copy-Item -Path $UnattendFile -Destination c:\tempMount\Windows\Panther\ -Force | Out-Null
+                Dismount-WindowsImage -Path c:\tempMount -Save | Out-Null
+                Remove-Item -Path c:\TempMount | Out-Null
+                Remove-Item -Path $UnattendFile | Out-Null
             } Else {
                 Write-Verbose "VM $($VM.Name) Boot Disk $VMBootDiskPath already exists..."
             }
             New-VM -Name $VM.Name -MemoryStartupBytes $VM.MemoryStartupBytes -Generation 2 -Path $VMPath -VHDPath $VMBootDiskPath -SwitchName $Script:InternetSwitchName | Out-Null
+            If (($VM.ProcessorCount -ne $null) -and ($VM.ProcessorCount -ne 0)) {
+                Set-VM -Name $VM.Name -ProcessorCount $VM.ProcessorCount
+            }
             If (($VM.DataVHDSize -ne $null) -and ($VM.DataVHDSize -gt 0)) {
                 $VMDataDiskPath = "$VMPath\$($VM.Name)\Virtual Hard Disks\$($VM.Name) Data Disk.vhdx"
                 If (-not (Test-Path -Path $VMDataDiskPath)) {
