@@ -1,9 +1,34 @@
 ﻿#Requires -version 5.0
 
+# This line makes sure that the script doesn't run prematurely
+#Return
+
 # Configuration
 [string]$InternetSwitchName = 'General Purpose Internal'
 [string]$DomainSwitchName = 'Domain Private Site'
 [int]$DomainSiteCount = 4
+[string]$VMPath = 'c:\vm\bmdlab.local'
+
+# Used as the parent disks for all differencing disks used by the VMs
+$ParentVHDs = @{
+    WindowsServer2012R2Full = "$($VMpath)\Virtual Hard Disks\Windows Server 2012 R2 Full Parent.vhdx";
+    WindowsServer2012R2Core = "$($VMpath)\Virtual Hard Disks\Windows Server 2012 R2 Core Parent.vhdx";
+    Windows10Ent = "$($VMPath)\Virtual Hard Disks\Windows 10 Enterprise Parent.vhdx";
+    }
+
+# Pre-checks
+# Check all VM Parent disks exist
+Foreach ($ParentVHD in $ParentVHDs.Values) {
+    If (-not (Test-Path -Path $ParentVHD)) {
+        Write-Error "The parent VHD $ParentVHD is not found."
+        Return
+    }
+}
+
+# Create Folder for VMs
+If (-not (Test-Path -Path $VMPath)) {
+    New-Item -Path $VMPath -ItemType Directory
+}
 
 # Install Hyper-V Components
 Write-Verbose "Installing Hyper-V Components ..."
