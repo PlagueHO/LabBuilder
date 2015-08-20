@@ -7,6 +7,10 @@
 		<vhdparentpath>c:\vm\BMDLAB.LOCAL\Virtual Hard Disk Templates</vhdparentpath>
 	</settings>
 
+    <dsc>
+		
+	</dsc>
+
 	<switches>
 		<switch name="General Purpose External" type="External">
 			<adapters>
@@ -24,7 +28,7 @@
 	<templates fromvm="template *" />
 
 	<vms>
-		<vm name="SS_ROOTCA" template="Template Windows Server 2012 R2 Datacenter Full">
+		<vm name="BMDLAB.LOCAL SS_ROOTCA" template="Template Windows Server 2012 R2 Datacenter Full">
 			<usedifferencingbootdisk>Y</usedifferencingbootdisk>
 			<datavhdsize>0</datavhdsize>
 			<memorystartupbytes>1073741824</memorystartupbytes>
@@ -36,5 +40,19 @@
 			<productkey>W3GGN-FT8W3-Y4M27-J84CP-Q3VJ9</productkey>
 			<timezone>Pacific Standard Time</timezone>
 		</vm>
+
+		<vm name="BMDLAB.LOCAL SA_DC1" template="Template Windows Server 2012 R2 Datacenter Core">
+			<usedifferencingbootdisk>Y</usedifferencingbootdisk>
+			<datavhdsize>0</datavhdsize>
+			<memorystartupbytes>1073741824</memorystartupbytes>
+			<processorcount>1</processorcount>
+			<switches>
+				<switch name="Domain Private Site A" />
+			</switches>
+			<administratorpassword>P@ssword!1</administratorpassword>
+			<productkey>W3GGN-FT8W3-Y4M27-J84CP-Q3VJ9</productkey>
+			<timezone>Pacific Standard Time</timezone>
+		</vm>
+
 	</vms>
 </labbuilderconfig>

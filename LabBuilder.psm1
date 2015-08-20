@@ -96,6 +96,19 @@ function Initialize-LabHyperV {
 ##########################################################################################################################################
 
 ##########################################################################################################################################
+function Initialize-LabDSC {
+    [CmdLetBinding()]
+    param (
+        [Parameter(Mandatory=$true)]
+        [XML]$Configuration
+    )
+    
+    # Install DSC Components
+    Write-Verbose "Configuring Lab DSC Components ..."
+} # Initialize-LabDSC
+##########################################################################################################################################
+
+##########################################################################################################################################
 function Get-LabSwitches {
     [OutputType([System.Collections.Hashtable[]])]
     [CmdLetBinding()]
@@ -499,6 +512,8 @@ Function Install-Lab {
     }
        
     Initialize-LabHyperV -Configuration $Config
+
+    Initialize-LabDSC -Configuration $Config
 
     $Switches = Get-LabSwitches -Configuration $Config
     Initialize-LabSwitches -Configuration $Config -Switches $Switches
