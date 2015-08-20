@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
+<labbuilderconfig>
+    <settings>
+		<domainname>BMDLAB.LOCAL</domainname>
+		<vmpath>c:\vm\BMDLAB.LOCAL</vmpath>
+		<vhdparentpath>c:\vm\BMDLAB.LOCAL\Virtual Hard Disk Templates</vhdparentpath>
+	</settings>
+
+	<switches>
+		<switch name="General Purpose External" type="External">
+			<adapters>
+				<adapter name="Cluster" macaddress="00155D010701"/>
+				<adapter name="Management" macaddress="00155D010702"/>
+				<adapter name="SMB" macaddress="00155D010703"/>
+				<adapter name="LM" macaddress="00155D010704"/>
+			</adapters>
+		</switch>
+		<switch name="Domain Private Site A" type="Private" />
+		<switch name="Domain Private Site B" type="Private" />
+		<switch name="Domain Private Site C" type="Private" />
+		<switch name="Domain Private Site D" type="Private" />
+		<switch name="Domain Private Site E" type="Private" />
+	</switches>
+
+	<templates fromvm="template *">
+		<template name="Nano Server Basic" sourcevhd="C:\VM\Nano Server Basic\Virtual Hard Disks\Nano Server Basic.vhdx" />
+		<template name="Nano Server Storage" sourcevhd="C:\VM\Nano Server Storage\Virtual Hard Disks\Nano Server Storage.vhdx" />
+	</templates>
+
+	<vms>
+		<vm name="SS_ROOTCA" template="Template Windows Server 2012 R2 Datacenter Full">
+			<usedifferencingbootdisk>Y</usedifferencingbootdisk>
+			<memorystartupbytes>1024MB</memorystartupbytes>
+			<processorcount>1</processorcount>
+			<switches>
+				<switch name="General Purpose External" />
+				<switch name="Domain Private Site A" />
+			</switches>
+			<datavhdsize>0</datavhdsize>
+			<administratorpassword>P@ssword!1</administratorpassword>
+			<productkey>W3GGN-FT8W3-Y4M27-J84CP-Q3VJ9</productkey>
+			<timezone>Pacific Standard Time</timezone>
+		</vm>
+	</vms>
+</labbuilderconfig>
