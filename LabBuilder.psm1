@@ -113,7 +113,7 @@ function Get-LabSwitches {
                 $ConfigAdapters += @{ Name = $Adapter.Name; MACAddress = $Adapter.MacAddress }
             }
         }
-        $Switches += @{ Name = $ConfigSwitch.Name; Type = $ConfigSwitch.Type; Adapters = $ConfigAdapters } 
+        $Switches += @{ Name = $ConfigSwitch.Name; Type = $ConfigSwitch.Type; Adapters = $ConfigAdapters; Vlan = $ConfigSwitch.Vlan } 
     }
     return $Switches
 } # Get-LabSwitches
@@ -126,8 +126,7 @@ function Initialize-LabSwitches {
         [Parameter(Mandatory=$true)]
         [XML]$Configuration,
     
-        [Parameter(Mandatory=$true,
-        ValueFromPipeline=$true)]
+        [Parameter(Mandatory=$true)]
         [System.Collections.Hashtable[]]$Switches
     )
     
@@ -142,9 +141,14 @@ function Initialize-LabSwitches {
                     New-VMSwitch -Name $SwitchName -SwitchType External
                     If ($Switch.Adapters) {
                         Foreach ($Adapter in $Switch.Adapters) {
-                            Add-VMNetworkAdapter -ManagementOS -SwitchName $Switch.Name -Name $Adapter.Name -StaticMacAddress $Adapter.MacAddress
-                        }
-                    }
+                            If ($Switch.VLan) {
+                                # A default VLAN is assigned to this Switch so assign it to the management adapters
+                                Add-VMNetworkAdapter -ManagementOS -SwitchName $Switch.Name -Name $Adapter.Name -StaticMacAddress $Adapter.MacAddress -Passthru | Set-VMNetworkAdapterVlan -Access -VlanId $Switch.Vlan | Out-Nul
+                            } Else { 
+                                Add-VMNetworkAdapter -ManagementOS -SwitchName $Switch.Name -Name $Adapter.Name -StaticMacAddress $Adapter.MacAddress | Out-Null
+                            } # If
+                        } # Foreach
+                    } # If
                     Break
                 } # 'External'
                 'Private' {
@@ -204,8 +208,7 @@ function Initialize-LabVMTemplates {
         [Parameter(Mandatory=$true)]
         [XML]$Configuration,
 
-        [Parameter(Mandatory=$true,
-            ValueFromPipeline=$true)]
+        [Parameter(Mandatory=$true)]
         [System.Collections.Hashtable[]]$VMTemplates
     )
     
@@ -225,37 +228,108 @@ function Initialize-LabVMTemplates {
 ##########################################################################################################################################
 
 ##########################################################################################################################################
+function Get-LabVMs {
+    [OutputType([System.Collections.Hashtable[]])]
+    [CmdLetBinding()]
+    param (
+        [Parameter(Mandatory=$true)]
+        [XML]$Configuration,
+
+        [Parameter(Mandatory=$true)]
+        [System.Collections.Hashtable[]]$VMTemplates,
+
+        [Parameter(Mandatory=$true)]
+        [System.Collections.Hashtable[]]$Switches
+    )
+
+    [System.Collections.Hashtable[]]$LabVMs = @()
+    [String]$VHDParentPath = $Configuration.labbuilderconfig.SelectNodes('settings').vhdparentpath
+    $VMs = $Configuration.labbuilderconfig.SelectNodes('vms').vm
+    [Microsoft.HyperV.PowerShell.VMSwitch[]]$CurrentSwitches = Get-VMSwitch
+
+    Foreach ($VM in $VMs) {
+        # Find the template that this VM uses and get the Parent VHD Path
+        [String]$TemplateVHDPath = $null
+        Foreach ($VMTemplate in $VMTemplates) {
+            If ($VMTemplate.Name -eq $VM.Template) {
+                $TemplateVHDPath = $VMTemplate.DestVHD
+                Break
+            }
+        }
+        If ($TemplateVHDPath -eq $null)
+        {
+            throw "The template $($VM.Template) is not available."
+        }
+        If (-not (Test-Path $TemplateVHDPath))
+        {
+            throw "The template VHD $TemplateVHDPath can not be found."
+        }
+
+        [System.Collections.Hashtable[]]$VMSwitches = @()
+        Foreach ($VMSwitch in $VM.Switches.Switch) {
+            # Check the switch is in the switch list
+            [Boolean]$Found = $False
+            Foreach ($Switch in $Switches) {
+                If ($Switch.Name -eq $VMSwitch.Name) {
+                    # Swtich found
+                    $Found = $True
+                    $SwitchVLan = $Switch.Vlan
+                    Break
+                } # If
+            } # Foreach
+            If (-not $Found) {
+                throw "The switch $($VMSwitch.Name) could not be found in Hyper-V."
+            } # If
+            # Check the switch is available in Hyper-V
+            If (($CurrentSwitches | Where-Object -Property Name -eq $VMSwitch.Name).Count -eq 0) {
+                throw "The switch $($VMSwitch.Name) could not be found in Hyper-V."
+            }
+            
+            # Figure out the VLan - If defined in the VM use it, otherwise use the one defined in the Switch, otherwise keep blank.
+            $VLan = $VMSwitch.VLan
+            If (-not $VLan) {
+                $VLan = $SwitchVLan
+            }
+            $VMSwitches += @{ Name = $VMSwitch.Name; VLan = $VLan }
+        }
+
+        $LabVMs += @{
+            Name = $VM.name;
+            Template = $VM.template;
+            TemplateVHD = $TemplateVHDPath;
+            UseDifferencingDisk = $VM.usedifferencingbootdisk;
+            MemoryStartupBytes = $VM.memorystartupbytes;
+            ProcessorCount = $VM.processorcount;
+            AdministratorPassword = $VM.administratorpassword;
+            ProductKey = $VM.productkey;
+            TimeZone = $VM.timezone;
+            Switches = $VMSwitches;
+        }
+    } # Foreach        
+
+    Return $LabVMs
+} # Get-LabVMs
+##########################################################################################################################################
+
+##########################################################################################################################################
 function Initialize-LabVMs {
     [CmdLetBinding()]
     param (
         [Parameter(Mandatory=$true)]
-        [XML]$Configuration
+        [XML]$Configuration,
+
+        [Parameter(Mandatory=$true)]
+        [System.Collections.Hashtable[]]$VMs
     )
     
-    $ExitingVMs = Get-VM
-
-    Foreach ($VM in $Script:VMs) {
-        If (($ExistingMVs | Where-Object -Property Name -eq $VM.Name).Count -eq 0) {
+    $CurrentVMs = Get-VM
+    [String]$VMPath = $Configuration.labbuilderconfig.SelectNodes('settings').vmpath
+    
+    Foreach ($VM in $VMs) {
+        If (($CurrentVMs | Where-Object -Property Name -eq $VM.Name).Count -eq 0) {
             Write-Verbose "Creating VM $($VM.Name) ..."
 
-            # Find the template that this VM uses and get the Parent VHD Path
-            [String]$ParentVHDPath = $null
-            Foreach ($VMTemplate in $Script:VMTemplates) {
-                If ($VMTemplate.Name -eq $VM.Template) {
-                    $ParentVHDPath = $VMTemplate.DestVHD
-                    Break
-
-                }
-            }
-            If ($ParentVHDPath -eq $null)
-            {
-                throw "The template $($VMTemplate.Name) is not available."
-            }
-            If (-not (Test-Path $ParentVHDPath))
-            {
-                throw "The template parent VHD $ParentVHDPath can not be found."
-            }
-
+            # Create the paths for the VM
             If (-not (Test-Path -Path "$VMPath\$($VM.Name)")) {
                 New-Item -Path "$VMPath\$($VM.Name)" -ItemType Directory | Out-Null
             }
@@ -265,12 +339,67 @@ function Initialize-LabVMs {
             If (-not (Test-Path -Path "$VMPath\$($VM.Name)\Virtual Hard Disks")) {
                 New-Item -Path "$VMPath\$($VM.Name)\Virtual Hard Disks" -ItemType Directory | Out-Null
             }
+
+            # Create the boot disk
             $VMBootDiskPath = "$VMPath\$($VM.Name)\Virtual Hard Disks\$($VM.Name) Boot Disk.vhdx"
             If (-not (Test-Path -Path $VMBootDiskPath)) {
-                Write-Verbose "Creating VM $($VM.Name) Boot Disk $VMBootDiskPath ..."
-                New-VHD -Differencing -Path $VMBootDiskPath -ParentPath $ParentVHDPath | Out-Null
-
+                If ($VM.UseDifferencingDisk -eq 'Y') {
+                    Write-Verbose "Creating VM $($VM.Name) Differencing Boot Disk $VMBootDiskPath ..."
+                    New-VHD -Differencing -Path $VMBootDiskPath -ParentPath $VM.TemplateVHD | Out-Null
+                } Else {
+                    Write-Verbose "Creating VM $($VM.Name) Boot Disk $VMBootDiskPath ..."
+                    Copy-Item -Path $VM.TemplateVHD -Destination $VMBootDiskPath | Out-Null
+                }            
 # Because this is a new boot disk create an unattend file and inject it into the VHD
+                Set-LabVMUnattendFile -Configuration $Configuration -VMBootDiskPath $VMBootDiskPath -VM $VM
+            } Else {
+                Write-Verbose "VM $($VM.Name) Boot Disk $VMBootDiskPath already exists..."
+            }
+            New-VM -Name $VM.Name -MemoryStartupBytes $VM.MemoryStartupBytes -Generation 2 -Path $VMPath -VHDPath $VMBootDiskPath | Out-Null
+            # Just get rid of all network adapters bcause New-VM automatically creates one which we don't need
+            Get-VMNetworkAdapter -VMName $VM.Name | Remove-VMNetworkAdapter
+            If (($VM.ProcessorCount -ne $null) -and ($VM.ProcessorCount -ne 0)) {
+                Set-VM -Name $VM.Name -ProcessorCount $VM.ProcessorCount
+            }
+            If (($VM.DataVHDSize -ne $null) -and ($VM.DataVHDSize -gt 0)) {
+                $VMDataDiskPath = "$VMPath\$($VM.Name)\Virtual Hard Disks\$($VM.Name) Data Disk.vhdx"
+                If (-not (Test-Path -Path $VMDataDiskPath)) {
+                    Write-Verbose "Creating VM $($VM.Name) Data Disk $VMDataDiskPath ..."
+                    New-VHD -Path $VMDataDiskPath -SizeBytes $VM.DataVHDSize -Dynamic | Out-Null
+                } Else {
+                    Write-Verbose "VM $($VM.Name) Data Disk $VMDataDiskPath already exists..."
+                }
+                Add-VMHardDiskDrive -VMName $VM.Name -Path $VMDataDiskPath -ControllerType SCSI -ControllerLocation 1 -ControllerNumber 0 | Out-Null
+            }
+            Foreach ($VMSwitch in $VM.Switches) {
+                $Vlan = $VMSwitch.VLan
+                If ($VLan) {
+                    Add-VMNetworkAdapter -VMName $VM.Name -SwitchName $VMSwitch.Name -Name $VMSwitch.Name -Passthru | Set-VMNetworkAdapterVlan -Access -VlanId $Vlan | Out-Null
+                } Else {
+                    Add-VMNetworkAdapter -VMName $VM.Name -SwitchName $VMSwitch.Name -Name $VMSwitch.Name | Out-Null
+                }
+            }
+        }
+    } 
+} # Initialize-LabVMs
+##########################################################################################################################################
+
+##########################################################################################################################################
+function Set-LabVMUnattendFile {
+    [CmdLetBinding()]
+    param (
+        [Parameter(Mandatory=$true)]
+        [XML]$Configuration,
+
+        [Parameter(Mandatory=$true)]
+        [String]$VMBootDiskPath,
+
+        [Parameter(Mandatory=$true)]
+        [System.Collections.Hashtable]$VM
+    )
+[String]$DomainName = $Configuration.labbuilderconfig.SelectNodes('settings').domainname
+[String]$Email = $Configuration.labbuilderconfig.SelectNodes('settings').email
+
 $UnattendContent = [String] @"
 <?xml version="1.0" encoding="utf-8"?>
 <unattend xmlns="urn:schemas-microsoft-com:unattend">
@@ -321,8 +450,8 @@ $UnattendContent = [String] @"
                   <PlainText>true</PlainText>
                </AdministratorPassword>
             </UserAccounts>
-            <RegisteredOrganization>$($Script:DomainName)</RegisteredOrganization>
-            <RegisteredOwner>$($Script:DomainName)</RegisteredOwner>
+            <RegisteredOrganization>$($DomainName)</RegisteredOrganization>
+            <RegisteredOwner>$($Email)</RegisteredOwner>
             <DisableAutoDaylightTimeSet>false</DisableAutoDaylightTimeSet>
             <TimeZone>$($VM.TimeZone)</TimeZone>
         </component>
@@ -335,46 +464,17 @@ $UnattendContent = [String] @"
     </settings>
 </unattend>
 "@
-                Write-Verbose "Applying VM $($VM.Name) Unattend File ..."
-                $UnattendFile = $ENV:Temp+"\Unattend.xml"
-                Set-Content -Path $UnattendFile -Value $UnattendContent | Out-Null
-                New-Item -Path c:\TempMount -ItemType Directory | Out-Null
-                Mount-WindowsImage -ImagePath $VMBootDiskPath -Path c:\tempMount -Index 1 | Out-Null
-                Use-WindowsUnattend –Path c:\TempMount –UnattendPath $UnattendFile | Out-Null
-                Copy-Item -Path $UnattendFile -Destination c:\tempMount\Windows\Panther\ -Force | Out-Null
-                Dismount-WindowsImage -Path c:\tempMount -Save | Out-Null
-                Remove-Item -Path c:\TempMount | Out-Null
-                Remove-Item -Path $UnattendFile | Out-Null
-            } Else {
-                Write-Verbose "VM $($VM.Name) Boot Disk $VMBootDiskPath already exists..."
-            }
-            New-VM -Name $VM.Name -MemoryStartupBytes $VM.MemoryStartupBytes -Generation 2 -Path $VMPath -VHDPath $VMBootDiskPath -SwitchName $Script:InternetSwitchName | Out-Null
-            If (($VM.ProcessorCount -ne $null) -and ($VM.ProcessorCount -ne 0)) {
-                Set-VM -Name $VM.Name -ProcessorCount $VM.ProcessorCount
-            }
-            If (($VM.DataVHDSize -ne $null) -and ($VM.DataVHDSize -gt 0)) {
-                $VMDataDiskPath = "$VMPath\$($VM.Name)\Virtual Hard Disks\$($VM.Name) Data Disk.vhdx"
-                If (-not (Test-Path -Path $VMDataDiskPath)) {
-                    Write-Verbose "Creating VM $($VM.Name) Data Disk $VMDataDiskPath ..."
-                    New-VHD -Path $VMDataDiskPath -SizeBytes $VM.DataVHDSize -Dynamic | Out-Null
-                } Else {
-                    Write-Verbose "VM $($VM.Name) Data Disk $VMDataDiskPath already exists..."
-                }
-                Add-VMHardDiskDrive -VMName $VM.Name -Path $VMDataDiskPath -ControllerType SCSI -ControllerLocation 1 -ControllerNumber 0 | Out-Null
-            }
-            For ([int]$Switch=0; $Switch -lt $Script:DomainSiteCount; $Switch++ ) {
-                [char]$SiteLetter = [Convert]::ToChar([Convert]::ToByte([Char]'A')+$Switch)
-                If ($SiteLetter -in $VM.Networks) {
-                    [string]$SwitchName = "$DomainSwitchName $SiteLetter"
-                    Add-VMNetworkAdapter -VMName $VM.Name -SwitchName $SwitchName -Passthru | Set-VMNetworkAdapterVlan -Access -VlanId $($Switch+2) | Out-Null
-                }
-            }
-            If ('@' -notin $VM.Networks) {
-                Get-VMNetworkAdapter -VMName $VM.Name -Name 'Network Adapter' | Where-Object -Property SwitchName -eq $Script:InternetSwitchName | Remove-VMNetworkAdapter
-            }            
-        }
-    } 
-} # Initialize-LabVMs
+    Write-Verbose "Applying VM $($VM.Name) Unattend File ..."
+    [String]$UnattendFile = $ENV:Temp+"\Unattend.xml"
+    [String]$MountPount = "C:\TempMount"
+    Set-Content -Path $UnattendFile -Value $UnattendContent | Out-Null
+    New-Item -Path $MountPount -ItemType Directory | Out-Null
+    Mount-WindowsImage -ImagePath $VMBootDiskPath -Path $MountPount -Index 1 | Out-Null
+    Copy-Item -Path $UnattendFile -Destination c:\tempMount\Windows\Panther\ -Force | Out-Null
+    Dismount-WindowsImage -Path $MountPount -Save | Out-Null
+    Remove-Item -Path $MountPount | Out-Null
+    Remove-Item -Path $UnattendFile | Out-Null
+} # Set-LabVMUnattendFile
 ##########################################################################################################################################
 
 ##########################################################################################################################################
@@ -406,7 +506,8 @@ Function Install-Lab {
     $VMTemplates = Get-LabVMTemplates -Configuration $Config
     Initialize-LabVMTemplates -Configuration $Config -VMTemplates $VMTemplates
 
-    Initialize-LabVMs -Configuration $Config
+    $VMs = Get-LabVMs -Configuration $Config -VMTemplates $VMTemplates -Switches $Switches
+    Initialize-LabVMs -Configuration $Config -VMs $VMs
 } # Build-Lab
 ##########################################################################################################################################
 
@@ -421,8 +522,9 @@ Function Uninstall-Lab {
 ##########################################################################################################################################
 # Export the Module Cmdlets
 Export-ModuleMember -Function Get-LabConfiguration,Test-LabConfiguration, `
+    Initialize-LabHyperV, `
     Get-LabSwitches,Initialize-LabSwitches, `
     Get-LabVMTemplates,Initialize-LabVMTemplates, `
-    Initialize-LabHyperV,Initialize-LabVMs, `
+    Get-LabVMs,Initialize-LabVMs, `
     Install-Lab,Uninstall-Lab
 ##########################################################################################################################################
