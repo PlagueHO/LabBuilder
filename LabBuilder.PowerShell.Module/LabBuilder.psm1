@@ -685,11 +685,11 @@ Function Uninstall-Lab {
 		[parameter(Mandatory=$true, ParameterSetName="Content")]
 		[String]$Content,
 
-		[Boolean]$RemoveSwitches,
+		[Switch]$RemoveSwitches,
 
-		[Boolean]$RemoveTemplates,
+		[Switch]$RemoveTemplates,
 
-		[Boolean]$RemoveVHDs
+		[Switch]$RemoveVHDs
 	) # Param
 
 	If ($Path) {
