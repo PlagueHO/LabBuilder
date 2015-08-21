@@ -1,6 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 
-<labbuilderconfig>
+<labbuilderconfig name="TestConfig1" version="1.0">
+  <description>Simple Test Lab Configuration File 1</description>
+  
   <settings>
     <domainname>BMDLAB.LOCAL</domainname>
     <email>daniel@bmdlab.com</email>

@@ -38,8 +38,9 @@
   <ItemGroup>
     <Compile Include="LabBuilder.psd1" />
     <Compile Include="LabBuilder.psm1" />
-    <Compile Include="Tests\LabBuilder.Test.Default.ps1" />
+    <Compile Include="LabBuilder2.tests.ps1" />
     <Compile Include="Tests\TestConfig1.dsc\SS_ROOTCA.ps1" />
+    <Compile Include="Tests\TestConfig1.ps1" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Tests\" />
