@@ -426,12 +426,16 @@ function Initialize-LabVMs {
 
 		# The VM is now ready to be started
 		Write-Verbose "VM $($VM.Name) is starting ..."
+		$StartTime = Get-Date
+
 		Start-VM -VMName $VM.Name
 		
 		# Wait for the VM to become ready so any post build configuration (e.g. DSC) can be applied.
-		
-		Wait-LabVMStart -VM $VM
-		Write-Verbose "VM $($VM.Name) has started ..."
+				
+		Wait-LabVMStart -VM $VM | Out-Null
+
+		$EndTime = Get-Date
+		Write-Verbose "VM $($VM.Name) started in $(($EndTime - $StartTime).Seconds)..."
 
 		# Now it is time to assign any post initialize scripts/DSC etc.
 
@@ -442,6 +446,7 @@ function Initialize-LabVMs {
 
 ##########################################################################################################################################
 function Wait-LabVMStart {
+	[OutputType([Boolean])]
 	[CmdLetBinding()]
 	param (
 		[Parameter(Mandatory=$true)]
@@ -451,7 +456,7 @@ function Wait-LabVMStart {
 	while ($Heartbeat.PrimaryStatusDescription -ne "OK")
 	{
 		$Heartbeat = Get-VMIntegrationService -VMName $VM.Name -Name Heartbeat
-		sleep 5
+		sleep 1
 	} # while
 
 	Return $True
