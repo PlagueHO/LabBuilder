@@ -502,7 +502,7 @@ function Initialize-LabVMs {
 			Wait-LabVMStart -VM $VM | Out-Null
 
 			$EndTime = Get-Date
-			Write-Verbose "VM $($VM.Name) started in $(($EndTime - $StartTime).Seconds)..."
+			Write-Verbose "VM $($VM.Name) started in $(($EndTime - $StartTime).Seconds) seconds ..."
 
 			# Even though the VM has started it might still be in the process installing (after a sysprep).
 			# So will need to wait for this process to complete
