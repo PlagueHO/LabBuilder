@@ -26,11 +26,18 @@
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
-  <ItemGroup />
   <ItemGroup>
-    <Compile Include="LabBuilder.PowerShell.Module.psd1" />
-    <Compile Include="LabBuilder.PowerShell.Module.psm1" />
-    <Compile Include="LabBuilder.PowerShell.Module.tests.ps1" />
+    <Compile Include="LabBuilder.psd1" />
+    <Compile Include="LabBuilder.psm1" />
+    <Compile Include="Tests\LabBuilder.Test.Default.ps1" />
+    <Compile Include="Tests\TestConfig1.dsc\SS_ROOTCA.ps1" />
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Tests\" />
+    <Folder Include="Tests\TestConfig1.dsc\" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="Tests\TestConfig1.xml" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <Target Name="Build" />
