@@ -412,17 +412,16 @@ function Initialize-LabVMs {
 			} # If
 			$Vlan = $VMAdapter.VLan
 			If ($VLan) {
-				Write-Verbose "VM $($VM.Name) network adapter ($VMAdapter.Name) VLAN is set to $Vlan ..."
+				Write-Verbose "VM $($VM.Name) network adapter $($VMAdapter.Name) VLAN is set to $Vlan ..."
 				Get-VMNetworkAdapter -VMName $VM.Name -Name $VMAdapter.Name | Set-VMNetworkAdapterVlan -Access -VlanId $Vlan | Out-Null
 			} Else {
-				Write-Verbose "VM $($VM.Name) network adapter ($VMAdapter.Name) VLAN is cleared ..."
+				Write-Verbose "VM $($VM.Name) network adapter $($VMAdapter.Name) VLAN is cleared ..."
 				Get-VMNetworkAdapter -VMName $VM.Name -Name $VMAdapter.Name | Set-VMNetworkAdapterVlan -Untagged | Out-Null
 			} # If
-			If ($VM.MacAddress) {
-				Get-VMNetworkAdapter -VMName $VM.Name -Name $VMAdapter.Name | Set-VMNetworkAdapter -StaticMacAddress $VMAdapter.MacAddress
+			If ($VMAdapter.MACAddress) {
+				Get-VMNetworkAdapter -VMName $VM.Name -Name $VMAdapter.Name | Set-VMNetworkAdapter -StaticMacAddress $VMAdapter.MACAddress | Out-Null
 			} Else {
-				Get-VMNetworkAdapter -VMName $VM.Name -Name $VMAdapter.Name | Set-VMNetworkAdapter -StaticMacAddress ''
-
+				Get-VMNetworkAdapter -VMName $VM.Name -Name $VMAdapter.Name | Set-VMNetworkAdapter -DynamicMacAddress | Out-Null
 			} # If
 		} # Foreach
 	} 
