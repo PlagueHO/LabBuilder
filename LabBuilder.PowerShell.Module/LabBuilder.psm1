@@ -702,6 +702,10 @@ Function Uninstall-Lab {
 		return
 	} # If
 
+	$VMTemplates = Get-LabVMTemplates -Configuration $Config
+
+	$Switches = Get-LabSwitches -Configuration $Config
+
 	$VMs = Get-LabVMs -Configuration $Config -VMTemplates $VMTemplates -Switches $Switches
 	If ($RemoveVHDs) {
 		Remove-LabVMs -Configuration $Config -VMs $VMs -RemoveVHDs
@@ -710,11 +714,9 @@ Function Uninstall-Lab {
 	} # If
 
 	If ($RemoveTemplates) {
-		$VMTemplates = Get-LabVMTemplates -Configuration $Config
 	} # If
 
 	If ($RemoveSwitches) {
-		$Switches = Get-LabSwitches -Configuration $Config
 	} # If
 } # Uninstall-Lab
 ##########################################################################################################################################
