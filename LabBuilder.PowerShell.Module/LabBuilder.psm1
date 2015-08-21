@@ -407,7 +407,7 @@ function Initialize-LabVMs {
 		# Create any network adapters
 		Foreach ($VMAdapter in $VM.Adapters) {
 			If ((Get-VMNetworkAdapter -VMName $VM.Name | Where-Object -Property Name -EQ $VMAdapter.Name).Count -eq 0) {
-				Write-Verbose "VM $($VM.Name) network adapter ($VMAdapter.Name) is being added ..."
+				Write-Verbose "VM $($VM.Name) network adapter $($VMAdapter.Name) is being added ..."
 				Add-VMNetworkAdapter -VMName $VM.Name -SwitchName $VMAdapter.SwitchName -Name $VMAdapter.Name
 			} # If
 			$Vlan = $VMAdapter.VLan
