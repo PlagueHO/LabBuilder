@@ -509,10 +509,10 @@ function Wait-LabVMOff {
 		[Parameter(Mandatory=$true)]
 		[System.Collections.Hashtable]$VM
 	)
-	$VM = Get-VM -Name $VM.Name
-	while ($VM.State -ne "Off")
+	$RunningVM = Get-VM -Name $VM.Name
+	while ($RunningVM.State -ne "Off")
 	{
-		$VM = Get-VM -Name $VM.Name
+		$RunningVM = Get-VM -Name $VM.Name
 		sleep 1
 	} # while
 
