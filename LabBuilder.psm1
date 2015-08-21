@@ -278,32 +278,32 @@ function Get-LabVMs {
             throw "The template VHD $TemplateVHDPath can not be found."
         }
 
-        [System.Collections.Hashtable[]]$VMSwitches = @()
-        Foreach ($VMSwitch in $VM.Switches.Switch) {
+        [System.Collections.Hashtable[]]$VMAdapters = @()
+        Foreach ($VMAdapter in $VM.Adapters.Adapter) {
             # Check the switch is in the switch list
             [Boolean]$Found = $False
             Foreach ($Switch in $Switches) {
-                If ($Switch.Name -eq $VMSwitch.Name) {
-                    # Swtich found
+                If ($Switch.Name -eq $VMAdapter.SwitchName) {
+                    # The switch is found in the switch list - record the VLAN (if there is one)
                     $Found = $True
                     $SwitchVLan = $Switch.Vlan
                     Break
                 } # If
             } # Foreach
             If (-not $Found) {
-                throw "The switch $($VMSwitch.Name) could not be found in Hyper-V."
+                throw "The switch $($VMAdapter.SwitchName) could not be found in Hyper-V."
             } # If
             # Check the switch is available in Hyper-V
-            If (($CurrentSwitches | Where-Object -Property Name -eq $VMSwitch.Name).Count -eq 0) {
-                throw "The switch $($VMSwitch.Name) could not be found in Hyper-V."
+            If (($CurrentSwitches | Where-Object -Property Name -eq $VMAdapter.SwitchName).Count -eq 0) {
+                throw "The switch $($VMAdapter.SwitchName) could not be found in Hyper-V."
             }
             
             # Figure out the VLan - If defined in the VM use it, otherwise use the one defined in the Switch, otherwise keep blank.
-            $VLan = $VMSwitch.VLan
+            $VLan = $VMAdapter.VLan
             If (-not $VLan) {
                 $VLan = $SwitchVLan
             }
-            $VMSwitches += @{ Name = $VMSwitch.Name; VLan = $VLan }
+            $VMAdapters += @{ Name = $VMAdapter.Name; SwitchName = $VMAdapter.SwitchName; MACAddress = $VMAdapter.macaddress; VLan = $VLan }
         }
 
         $LabVMs += @{
@@ -316,7 +316,7 @@ function Get-LabVMs {
             AdministratorPassword = $VM.administratorpassword;
             ProductKey = $VM.productkey;
             TimeZone = $VM.timezone;
-            Switches = $VMSwitches;
+            Adapters = $VMAdapters;
         }
     } # Foreach        
 
@@ -371,27 +371,34 @@ function Initialize-LabVMs {
             New-VM -Name $VM.Name -MemoryStartupBytes $VM.MemoryStartupBytes -Generation 2 -Path $VMPath -VHDPath $VMBootDiskPath | Out-Null
             # Just get rid of all network adapters bcause New-VM automatically creates one which we don't need
             Get-VMNetworkAdapter -VMName $VM.Name | Remove-VMNetworkAdapter
-            If (($VM.ProcessorCount -ne $null) -and ($VM.ProcessorCount -ne 0)) {
-                Set-VM -Name $VM.Name -ProcessorCount $VM.ProcessorCount
+        }
+
+# Set the processor count
+        If (($VM.ProcessorCount -ne $null) -and ($VM.ProcessorCount -ne 0)) {
+            Set-VM -Name $VM.Name -ProcessorCount $VM.ProcessorCount
+        }
+
+# Do we need to add a data disk?
+        If (($VM.DataVHDSize -ne $null) -and ($VM.DataVHDSize -gt 0)) {
+            $VMDataDiskPath = "$VMPath\$($VM.Name)\Virtual Hard Disks\$($VM.Name) Data Disk.vhdx"
+            If (-not (Test-Path -Path $VMDataDiskPath)) {
+                Write-Verbose "Creating VM $($VM.Name) Data Disk $VMDataDiskPath ..."
+                New-VHD -Path $VMDataDiskPath -SizeBytes $VM.DataVHDSize -Dynamic | Out-Null
+            } Else {
+                Write-Verbose "VM $($VM.Name) Data Disk $VMDataDiskPath already exists..."
             }
-            If (($VM.DataVHDSize -ne $null) -and ($VM.DataVHDSize -gt 0)) {
-                $VMDataDiskPath = "$VMPath\$($VM.Name)\Virtual Hard Disks\$($VM.Name) Data Disk.vhdx"
-                If (-not (Test-Path -Path $VMDataDiskPath)) {
-                    Write-Verbose "Creating VM $($VM.Name) Data Disk $VMDataDiskPath ..."
-                    New-VHD -Path $VMDataDiskPath -SizeBytes $VM.DataVHDSize -Dynamic | Out-Null
-                } Else {
-                    Write-Verbose "VM $($VM.Name) Data Disk $VMDataDiskPath already exists..."
-                }
-                Add-VMHardDiskDrive -VMName $VM.Name -Path $VMDataDiskPath -ControllerType SCSI -ControllerLocation 1 -ControllerNumber 0 | Out-Null
+            Add-VMHardDiskDrive -VMName $VM.Name -Path $VMDataDiskPath -ControllerType SCSI -ControllerLocation 1 -ControllerNumber 0 | Out-Null
+        }
+            
+        # Create any network adapters
+        Foreach ($VMAdapter in $VM.Adapters) {
+            $Vlan = $VMAdapter.VLan
+            If ($VLan) {
+                Add-VMNetworkAdapter -VMName $VM.Name -SwitchName $VMAdapter.SwitchName -Name $VMAdapter.Name -Passthru | Set-VMNetworkAdapterVlan -Access -VlanId $Vlan | Out-Null
+            } Else {
+                Add-VMNetworkAdapter -VMName $VM.Name -SwitchName $VMAdapter.SwitchName -Name $VMAdapter.Name | Out-Null
             }
-            Foreach ($VMSwitch in $VM.Switches) {
-                $Vlan = $VMSwitch.VLan
-                If ($VLan) {
-                    Add-VMNetworkAdapter -VMName $VM.Name -SwitchName $VMSwitch.Name -Name $VMSwitch.Name -Passthru | Set-VMNetworkAdapterVlan -Access -VlanId $Vlan | Out-Null
-                } Else {
-                    Add-VMNetworkAdapter -VMName $VM.Name -SwitchName $VMSwitch.Name -Name $VMSwitch.Name | Out-Null
-                }
-            }
+        }
         }
     } 
 } # Initialize-LabVMs
