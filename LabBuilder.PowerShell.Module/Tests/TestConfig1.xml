@@ -1,45 +1,46 @@
 <?xml version="1.0" encoding="utf-8"?>
+
 <labbuilderconfig>
-    <settings>
-		<domainname>BMDLAB.LOCAL</domainname>
-		<email>daniel@bmdlab.com</email>
-		<vmpath>c:\vm\BMDLAB.LOCAL</vmpath>
-		<vhdparentpath>c:\vm\BMDLAB.LOCAL\Virtual Hard Disk Templates</vhdparentpath>
-	</settings>
+  <settings>
+    <domainname>BMDLAB.LOCAL</domainname>
+    <email>daniel@bmdlab.com</email>
+    <vmpath>c:\vm\BMDLAB.LOCAL</vmpath>
+    <vhdparentpath>c:\vm\BMDLAB.LOCAL\Virtual Hard Disk Templates</vhdparentpath>
+  </settings>
 
-    <dsc configpath=".\TestConfig1 DSC\">
-		
-	</dsc>
+  <dsc configpath=".\TestConfig1 DSC\">
 
-	<switches>
-		<switch name="General Purpose External" type="External">
-			<adapters>
-				<adapter name="Cluster" macaddress="00155D010701"/>
-				<adapter name="Management" macaddress="00155D010702"/>
-				<adapter name="SMB" macaddress="00155D010703"/>
-				<adapter name="LM" macaddress="00155D010704"/>
-			</adapters>
-		</switch>
-		<switch name="Domain Private Site A" type="Private" vlan="2" />
-		<switch name="Domain Private Site B" type="Private" vlan="3" />
-		<switch name="Domain Private Site C" type="Private" vlan="4"/>
-	</switches>
+  </dsc>
 
-	<templates fromvm="template *" />
+  <switches>
+    <switch name="General Purpose External" type="External">
+      <adapters>
+        <adapter name="Cluster" macaddress="00155D010701" />
+        <adapter name="Management" macaddress="00155D010702" />
+        <adapter name="SMB" macaddress="00155D010703" />
+        <adapter name="LM" macaddress="00155D010704" />
+      </adapters>
+    </switch>
+    <switch name="Domain Private Site A" type="Private" vlan="2" />
+    <switch name="Domain Private Site B" type="Private" vlan="3" />
+    <switch name="Domain Private Site C" type="Private" vlan="4" />
+  </switches>
 
-	<vms>
-		<vm name="BMDLAB.LOCAL SS_ROOTCA" template="Template Windows Server 2012 R2 Datacenter Full">
-			<usedifferencingbootdisk>Y</usedifferencingbootdisk>
-			<datavhdsize>0</datavhdsize>
-			<memorystartupbytes>1073741824</memorystartupbytes>
-			<processorcount>1</processorcount>
-			<adapters>
-				<adapter name="General Purpose External" switchname="General Purpose External" macaddress="00155D010801"/>
-			</adapters>
-			<administratorpassword>P@ssword!1</administratorpassword>
-			<productkey>W3GGN-FT8W3-Y4M27-J84CP-Q3VJ9</productkey>
-			<timezone>Pacific Standard Time</timezone>
-		</vm>
+  <templates fromvm="template *" />
 
-	</vms>
+  <vms>
+    <vm name="BMDLAB.LOCAL SS_ROOTCA" template="Template Windows Server 2012 R2 Datacenter Full">
+      <usedifferencingbootdisk>Y</usedifferencingbootdisk>
+      <datavhdsize>10GB</datavhdsize>
+      <memorystartupbytes>1073741824</memorystartupbytes>
+      <processorcount>1</processorcount>
+      <adapters>
+        <adapter name="General Purpose External" switchname="General Purpose External" macaddress="00155D010801" />
+      </adapters>
+      <administratorpassword>P@ssword!1</administratorpassword>
+      <productkey>W3GGN-FT8W3-Y4M27-J84CP-Q3VJ9</productkey>
+      <timezone>Pacific Standard Time</timezone>
+    </vm>
+
+  </vms>
 </labbuilderconfig>
