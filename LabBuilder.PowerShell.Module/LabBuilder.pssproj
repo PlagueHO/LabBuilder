@@ -7,7 +7,16 @@
     <OutputType>Exe</OutputType>
     <RootNamespace>MyApplication</RootNamespace>
     <AssemblyName>MyApplication</AssemblyName>
-    <Name>LabBuilder.PowerShell.Module</Name>
+    <Name>LabBuilder</Name>
+    <Author>Daniel Scott-Raynsford</Author>
+    <CompanyName />
+    <Copyright>(c) 2015 Daniel Scott-Raynsford. All rights reserved.</Copyright>
+    <Description>Builds Hyper-V Windows Labs out of text based configuration files</Description>
+    <Guid>e229850e-7a90-4123-9a30-37814119d3a3</Guid>
+    <ProjectHome />
+    <VariablesToExport>*</VariablesToExport>
+    <CmdletsToExport>*</CmdletsToExport>
+    <AliasesToExport>*</AliasesToExport>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
