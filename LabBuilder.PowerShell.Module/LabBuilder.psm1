@@ -183,6 +183,51 @@ function Initialize-LabSwitches {
 ##########################################################################################################################################
 
 ##########################################################################################################################################
+function Remove-LabSwitches {
+	[CmdLetBinding()]
+	param (
+		[Parameter(Mandatory=$true)]
+		[XML]$Configuration,
+	
+		[Parameter(Mandatory=$true)]
+		[System.Collections.Hashtable[]]$Switches
+	)
+	
+	# Delete Hyper-V Switches
+	Foreach ($Switch in $Switches) {
+		If ((Get-VMSwitch | Where-Object -Property Name -eq $Switch.Name).Count -ne 0) {
+			[String]$SwitchName = $Switch.Name
+			[string]$SwitchType = $Switch.Type
+			Write-Verbose "Deleting Virtual Switch '$SwitchName' ..."
+			Switch ($SwitchType) {
+				'External' {
+					If ($Switch.Adapters) {
+						Foreach ($Adapter in $Switch.Adapters) {
+								Remove-VMNetworkAdapter -ManagementOS -Name $Adapter.Name | Out-Null
+						} # Foreach
+					} # If
+					Remove-VMSwitch -Name $SwitchName
+					Break
+				} # 'External'
+				'Private' {
+					Remove-VMSwitch -Name $SwitchName
+					Break
+				} # 'Private'
+				'Internal' {
+					Remove-VMSwitch -Name $SwitchName
+					Break
+				} # 'Internal'
+				Default {
+					Throw "Unknown Switch Type $SwitchType."
+				}
+			} # Switch
+		} # If
+	} # Foreach        
+
+} # Remove-LabSwitches
+##########################################################################################################################################
+
+##########################################################################################################################################
 function Get-LabVMTemplates {
 	[OutputType([System.Collections.Hashtable[]])]
 	[CmdLetBinding()]
@@ -238,6 +283,27 @@ function Initialize-LabVMTemplates {
 		}
 	}
 } # Initialize-LabVMTemplates
+##########################################################################################################################################
+
+##########################################################################################################################################
+function Remove-LabVMTemplates {
+	[CmdLetBinding()]
+	param (
+		[Parameter(Mandatory=$true)]
+		[XML]$Configuration,
+
+		[Parameter(Mandatory=$true)]
+		[System.Collections.Hashtable[]]$VMTemplates
+	)
+	
+	Foreach ($VMTemplate in $VMTemplates) {
+		If (Test-Path $VMTemplate.DestVHD) {
+			Set-ItemProperty -Path $VMTemplate.SourceVHD -Name IsReadOnly -Value $False
+			Write-Verbose "Deleting Template VHD $($VMTemplate.DestVHD) ..."
+			Remove-Item -Path $VMTemplate.DestVHD -Confirm:$false -Force
+		}
+	}
+} # Remove-LabVMTemplates
 ##########################################################################################################################################
 
 ##########################################################################################################################################
@@ -475,7 +541,8 @@ function Remove-LabVMs {
 				Write-Verbose "Deleting VM $($VM.Name) hard drive(s) ..."
 				Get-VMHardDiskDrive -VMName $VM.Name | Select-Object -Property Path | Remove-Item
 			}
-			Get-VM -Name $VMs.Name | Remove-VM
+			Get-VM -Name $VMs.Name | Remove-VM -Confirm:$false
+
 			Write-Verbose "Removed VM $($VM.Name) ..."
 		}
 	}
@@ -714,9 +781,11 @@ Function Uninstall-Lab {
 	} # If
 
 	If ($RemoveTemplates) {
+		Remove-LabVMTemplates -Configuration $Config -VMTemplates $VMTemplates
 	} # If
 
 	If ($RemoveSwitches) {
+		Remove-LabSwitches -Configuration $Config -Switches $Switches
 	} # If
 } # Uninstall-Lab
 ##########################################################################################################################################
@@ -725,8 +794,8 @@ Function Uninstall-Lab {
 # Export the Module Cmdlets
 Export-ModuleMember -Function Get-LabConfiguration,Test-LabConfiguration, `
 	Initialize-LabHyperV, `
-	Get-LabSwitches,Initialize-LabSwitches, `
-	Get-LabVMTemplates,Initialize-LabVMTemplates, `
-	Get-LabVMs,Initialize-LabVMs, `
+	Get-LabSwitches,Initialize-LabSwitches,Remove-LabSwitches, `
+	Get-LabVMTemplates,Initialize-LabVMTemplates,Remove-LabVMTemplates, `
+	Get-LabVMs,Initialize-LabVMs,Remove-LabVMs, `
 	Install-Lab,Uninstall-Lab
 ##########################################################################################################################################
