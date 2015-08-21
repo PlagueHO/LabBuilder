@@ -468,14 +468,14 @@ function Remove-LabVMs {
 			If ((Get-VM -Name $VM.Name).State -eq 'Running') {
 				Write-Verbose "Stopping VM $($VM.Name) ..."
 				Stop-VM -Name $VM.Name
-				Wait-LabVMOff -VM $VM
+				Wait-LabVMOff -VM $VM | Out-Null
 			}
 			Write-Verbose "Removing VM $($VM.Name) ..."
 			If ($RemoveVHDs) {
 				Write-Verbose "Deleting VM $($VM.Name) hard drive(s) ..."
 				Get-VMHardDiskDrive -VMName $VM.Name | Select-Object -Property Path | Remove-Item
 			}
-			Remove-VM -VM $VM.Name
+			Get-VM -Name $VMs.Name | Remove-VM
 			Write-Verbose "Removed VM $($VM.Name) ..."
 		}
 	}
