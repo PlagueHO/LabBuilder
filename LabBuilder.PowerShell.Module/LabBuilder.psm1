@@ -423,9 +423,39 @@ function Initialize-LabVMs {
 			} Else {
 				Get-VMNetworkAdapter -VMName $VM.Name -Name $VMAdapter.Name | Set-VMNetworkAdapter -DynamicMacAddress | Out-Null
 			} # If
+
+		# The VM is now ready to be started
+		Write-Verbose "VM $($VM.Name) is starting ..."
+		Start-VM -VMName $VM.Name
+		
+		# Wait for the VM to become ready so any post build configuration (e.g. DSC) can be applied.
+		
+		Wait-LabVMStart -VM $VM
+		Write-Verbose "VM $($VM.Name) has started ..."
+
+		# Now it is time to assign any post initialize scripts/DSC etc.
+
 		} # Foreach
 	} 
 } # Initialize-LabVMs
+##########################################################################################################################################
+
+##########################################################################################################################################
+function Wait-LabVMStart {
+	[CmdLetBinding()]
+	param (
+		[Parameter(Mandatory=$true)]
+		[System.Collections.Hashtable]$VM
+	)
+	$Heartbeat = Get-VMIntegrationService -VMName $VM.Name -Name Heartbeat
+	while ($Heartbeat.PrimaryStatusDescription -ne "OK")
+	{
+		$Heartbeat = Get-VMIntegrationService -VMName $VM.Name -Name Heartbeat
+		sleep 5
+	} # while
+
+	Return $True
+} # Wait-LabVMStart
 ##########################################################################################################################################
 
 ##########################################################################################################################################
@@ -509,6 +539,32 @@ $UnattendContent = [String] @"
 </unattend>
 "@
 	Write-Verbose "Applying VM $($VM.Name) Unattend File ..."
+	[String]$UnattendFile = $ENV:Temp+"\Unattend.xml"
+	[String]$MountPount = "C:\TempMount"
+	Set-Content -Path $UnattendFile -Value $UnattendContent | Out-Null
+	New-Item -Path $MountPount -ItemType Directory | Out-Null
+	Mount-WindowsImage -ImagePath $VMBootDiskPath -Path $MountPount -Index 1 | Out-Null
+	Copy-Item -Path $UnattendFile -Destination c:\tempMount\Windows\Panther\ -Force | Out-Null
+	Dismount-WindowsImage -Path $MountPount -Save | Out-Null
+	Remove-Item -Path $MountPount | Out-Null
+	Remove-Item -Path $UnattendFile | Out-Null
+} # Set-LabVMUnattendFile
+##########################################################################################################################################
+
+##########################################################################################################################################
+function Set-LabVMInitalDSCPushMode {
+	[CmdLetBinding()]
+	param (
+		[Parameter(Mandatory=$true)]
+		[XML]$Configuration,
+
+		[Parameter(Mandatory=$true)]
+		[String]$VMBootDiskPath,
+
+		[Parameter(Mandatory=$true)]
+		[System.Collections.Hashtable]$VM
+	)
+	Write-Verbose "Starting VM $($VM.Name) DSC Push Mode ..."
 	[String]$UnattendFile = $ENV:Temp+"\Unattend.xml"
 	[String]$MountPount = "C:\TempMount"
 	Set-Content -Path $UnattendFile -Value $UnattendContent | Out-Null
