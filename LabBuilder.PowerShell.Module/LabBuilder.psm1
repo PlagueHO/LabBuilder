@@ -423,25 +423,62 @@ function Initialize-LabVMs {
 			} Else {
 				Get-VMNetworkAdapter -VMName $VM.Name -Name $VMAdapter.Name | Set-VMNetworkAdapter -DynamicMacAddress | Out-Null
 			} # If
-
-		# The VM is now ready to be started
-		Write-Verbose "VM $($VM.Name) is starting ..."
-		$StartTime = Get-Date
-
-		Start-VM -VMName $VM.Name
+		} # Foreach
 		
-		# Wait for the VM to become ready so any post build configuration (e.g. DSC) can be applied.
-				
-		Wait-LabVMStart -VM $VM | Out-Null
+		# The VM is now ready to be started
+		If ((Get-VM -Name $VMs.Name).State -eq 'Off') {
+			Write-Verbose "VM $($VM.Name) is starting ..."
+			$StartTime = Get-Date
 
-		$EndTime = Get-Date
-		Write-Verbose "VM $($VM.Name) started in $(($EndTime - $StartTime).Seconds)..."
+			Start-VM -VMName $VM.Name
+			# Wait for the VM to become ready so any post build configuration (e.g. DSC) can be applied.
+			
+			Wait-LabVMStart -VM $VM | Out-Null
+
+			$EndTime = Get-Date
+			Write-Verbose "VM $($VM.Name) started in $(($EndTime - $StartTime).Seconds)..."
+
+			# Even though the VM has started it might still be in the process installing (after a sysprep).
+			# So will need to wait for this process to complete
+		} # If
 
 		# Now it is time to assign any post initialize scripts/DSC etc.
-
-		} # Foreach
-	} 
+	} # Foreach
 } # Initialize-LabVMs
+##########################################################################################################################################
+
+##########################################################################################################################################
+function Remove-LabVMs {
+	[CmdLetBinding()]
+	param (
+		[Parameter(Mandatory=$true)]
+		[XML]$Configuration,
+
+		[Parameter(Mandatory=$true)]
+		[System.Collections.Hashtable[]]$VMs,
+
+		[Switch]$RemoveVHDs
+	)
+	
+	$CurrentVMs = Get-VM
+	[String]$VMPath = $Configuration.labbuilderconfig.SelectNodes('settings').vmpath
+	
+	Foreach ($VM in $VMs) {
+		If (($CurrentVMs | Where-Object -Property Name -eq $VM.Name).Count -ne 0) {
+			If ((Get-VM -Name $VM.Name).State -eq 'Running') {
+				Write-Verbose "Stopping VM $($VM.Name) ..."
+				Stop-VM -Name $VM.Name
+				Wait-LabVMOff -VM $VM
+			}
+			Write-Verbose "Removing VM $($VM.Name) ..."
+			If ($RemoveVHDs) {
+				Write-Verbose "Deleting VM $($VM.Name) hard drive(s) ..."
+				Get-VMHardDiskDrive -VMName $VM.Name | Select-Object -Property Path | Remove-Item
+			}
+			Remove-VM -VM $VM.Name
+			Write-Verbose "Removed VM $($VM.Name) ..."
+		}
+	}
 ##########################################################################################################################################
 
 ##########################################################################################################################################
@@ -461,6 +498,25 @@ function Wait-LabVMStart {
 
 	Return $True
 } # Wait-LabVMStart
+##########################################################################################################################################
+
+##########################################################################################################################################
+function Wait-LabVMOff {
+	[OutputType([Boolean])]
+	[CmdLetBinding()]
+	param (
+		[Parameter(Mandatory=$true)]
+		[System.Collections.Hashtable]$VM
+	)
+	$VM = Get-VM -Name $VM.Name
+	while ($VM.State -ne "Off")
+	{
+		$VM = Get-VM -Name $VM.Name
+		sleep 1
+	} # while
+
+	Return $True
+} # Wait-LabVMOff
 ##########################################################################################################################################
 
 ##########################################################################################################################################
@@ -620,10 +676,46 @@ Function Install-Lab {
 
 ##########################################################################################################################################
 Function Uninstall-Lab {
-	[CmdLetBinding()]
+	[CmdLetBinding(DefaultParameterSetName="Path")]
 	param (
-	)
-} # Remove-Lab
+		[parameter(Mandatory=$true, ParameterSetName="Path")]
+		[String]$Path,
+
+		[parameter(Mandatory=$true, ParameterSetName="Content")]
+		[String]$Content,
+
+		[Boolean]$RemoveSwitches,
+
+		[Boolean]$RemoveTemplates,
+
+		[Boolean]$RemoveVHDs
+	) # Param
+
+	If ($Path) {
+		[XML]$Config = Get-LabConfiguration -Path $Path
+	} Else {
+		[XML]$Config = Get-LabConfiguration -Content $Content
+	}
+	# Make sure everything is OK to install the lab
+	If (-not (Test-LabConfiguration -Configuration $Config)) {
+		return
+	} # If
+
+	$VMs = Get-LabVMs -Configuration $Config -VMTemplates $VMTemplates -Switches $Switches
+	If ($RemoveVHDs) {
+		Remove-LabVMs -Configuration $Config -VMs $VMs -RemoveVHDs
+	} Else {
+		Remove-LabVMs -Configuration $Config -VMs $VMs
+	} # If
+
+	If ($RemoveTemplates) {
+		$VMTemplates = Get-LabVMTemplates -Configuration $Config
+	} # If
+
+	If ($RemoveSwitches) {
+		$Switches = Get-LabSwitches -Configuration $Config
+	} # If
+} # Uninstall-Lab
 ##########################################################################################################################################
 
 ##########################################################################################################################################
