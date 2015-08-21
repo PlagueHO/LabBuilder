@@ -15,4 +15,5 @@ Function Test-LabBuilderLoadModule {
 ##########################################################################################################################################
 Test-LabBuilderLoadModule
 Test-LabBuilderInstall
+Wait 30 # Wait 30 seconds for everything to finish building
 Test-LabBuilderUninstall
