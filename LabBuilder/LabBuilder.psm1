@@ -5,19 +5,27 @@ function Get-LabConfiguration {
 	[CmdLetBinding(DefaultParameterSetName="Path")]
 	[OutputType([XML])]
 	param (
-		[parameter(Mandatory=$true, ParameterSetName="Path")]
+		[parameter(ParameterSetName="Path",
+			Position=0)]
+		[ValidateNotNullOrEmpty()]
 		[String]$Path,
 
-		[parameter(Mandatory=$true, ParameterSetName="Content")]
+		[parameter(ParameterSetName="Content")]
+		[ValidateNotNullOrEmpty()]
 		[String]$Content
 	) # Param
 	If ($Path) {
+		# The Path parameter was provided...
 		If (-not (Test-Path -Path $Path)) {
 			Throw "Configuration file $Path is not found."
 		} # If
-		$Content = Get-Content -Path $Path  
+		$Content = Get-Content -Path $Path -Raw
+	} Elseif ($Content) {
+		# Content Parameter was provided...
+	} Else {
+		Throw "Either a Path or Content parameter must be provided."
 	} # If
-	If (($Content -eq $null) -or ($Content -eq '')) {
+	If (-not $Content) {
 		Throw "Configuration is empty."
 	} # If
 	[XML]$Configuration = New-Object -TypeName XML
@@ -30,9 +38,14 @@ function Get-LabConfiguration {
 function Test-LabConfiguration {
 	[CmdLetBinding()]
 	param (
-		[Parameter(Mandatory=$true)]
+		[Parameter(Position=0)]
+		[ValidateNotNullOrEmpty()]
 		[XML]$Configuration
 	)
+
+	If (-not $Configuration) {
+		Throw "Configuration is missing or null."
+	}
 
 	If ($Configuration.labbuilderconfig -eq $null) {
 		Throw "<labbuilderconfig> node is missing from the configuration."
