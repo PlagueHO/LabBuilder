@@ -4,10 +4,15 @@
 # You can download Pester from http://go.microsoft.com/fwlink/?LinkID=534084
 #
 
-Remove-Module LabBuilder -ErrorAction SilentlyContinue
-Import-Module .\LabBuilder.psd1
-$TestConfigPath = '.\Tests\PesterTestConfig.xml'
+$here = Split-Path -Parent $MyInvocation.MyCommand.Path
+$sut = (Split-Path -Leaf $MyInvocation.MyCommand.Path).Replace(".Tests.", ".")
 
+Remove-Module LabBuilder -ErrorAction SilentlyContinue
+Import-Module "$here\LabBuilder.psd1"
+$TestConfigPath = "$here\Tests\PesterTestConfig.xml"
+Write-Host "Running from $Here"
+
+##########################################################################################################################################
 Describe "Get-LabConfiguration" {
 	Context "No parameter is passed" {
 		It "Fails" {
@@ -44,9 +49,13 @@ Describe "Get-LabConfiguration" {
 		}
 	}
 }
+##########################################################################################################################################
 
+##########################################################################################################################################
 Describe "Test-LabConfiguration" {
 	$Config = Get-LabConfiguration -Path $TestConfigPath
+	Remove-Item -Path $Config.labbuilderconfig.SelectNodes('settings').vmpath -Recurse -Force -ErrorAction SilentlyContinue
+
 	Context "No parameter is passed" {
 		It "Fails" {
 			{ Test-LabConfiguration } | Should Throw
@@ -71,4 +80,6 @@ Describe "Test-LabConfiguration" {
 			Test-LabConfiguration -Configuration $Config | Should Be $True
 		}
 	}
+	Remove-Item -Path $Config.labbuilderconfig.SelectNodes('settings').vmpath -Recurse -Force -ErrorAction SilentlyContinue
 }
+##########################################################################################################################################

@@ -6,11 +6,11 @@
   <settings>
     <domainname>PESTER.LOCAL</domainname>
     <email>daniel@bmdlab.com</email>
-    <vmpath>\Pester Lab</vmpath>
-    <vhdparentpath>\Pester Lab\Virtual Hard Disk Templates</vhdparentpath>
+    <vmpath>.\Pester Lab</vmpath>
+    <vhdparentpath>C:\Pester Lab\Virtual Hard Disk Templates</vhdparentpath>
   </settings>
 
-  <dsc configpath=".\PesterTestConfig DSC\" />
+  <dsc configpath="C:\PesterTestConfig DSC\" />
 
   <switches>
     <switch name="General Purpose External" type="External">
