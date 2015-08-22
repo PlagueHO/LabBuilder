@@ -37,6 +37,7 @@ function Get-LabConfiguration {
 ##########################################################################################################################################
 function Test-LabConfiguration {
 	[CmdLetBinding()]
+	[OutputType([Boolean])]
 	param (
 		[Parameter(Position=0)]
 		[ValidateNotNullOrEmpty()]
@@ -48,7 +49,7 @@ function Test-LabConfiguration {
 	}
 
 	If ($Configuration.labbuilderconfig -eq $null) {
-		Throw "<labbuilderconfig> node is missing from the configuration."
+		Throw "Configuration is invalid."
 	}
 
 	# Check folders exist
@@ -75,24 +76,53 @@ function Test-LabConfiguration {
 ##########################################################################################################################################
 
 ##########################################################################################################################################
+function Install-LabHyperV {
+	[CmdLetBinding()]
+	[OutputType([Boolean])]
+	Param ()
+
+	# Install Hyper-V Components
+	If ((Get-CimInstance Win32_OperatingSystem).ProductType -eq 1) {
+		# Desktop OS
+		$Feature = Get-WindowsOptionalFeature -Online -FeatureName '*Hyper-V*' | Where-Object -Property State -Eq 'Disabled'
+		If ($Feature.Count -gt 0 ) {
+			Write-Verbose "Installing Lab Desktop Hyper-V Components ..."
+			$Feature | Enable-WindowsOptionalFeature -Online
+		}
+	} Else {
+		# Server OS
+		$Geature = Get-WindowsFeature -Name Hyper-V | Where-Object -Property Installed -EQ $False
+		If ($Feature.Count -gt 0 ) {
+			Write-Verbose "Installing Lab Server Hyper-V Components ..."
+			$Feature | Install-WindowsFeature -IncludeAllSubFeature -IncludeManagementTools
+		}
+	}
+
+	Return $True
+} # Install-LabHyperV
+##########################################################################################################################################
+
+##########################################################################################################################################
 function Initialize-LabHyperV {
 	[CmdLetBinding()]
+	[OutputType([Boolean])]
 	param (
-		[Parameter(Mandatory=$true)]
+		[Parameter(Position=0)]
+		[ValidateNotNullOrEmpty()]
 		[XML]$Configuration
 	)
 	
+	If (-not $Configuration) {
+		Throw "Configuration is missing or null."
+	}
+
+	If ($Configuration.labbuilderconfig -eq $null) {
+		Throw "Configuration is invalid."
+	}
+
 	# Install Hyper-V Components
 	Write-Verbose "Initializing Lab Hyper-V Components ..."
 	
-	If ((Get-CimInstance Win32_OperatingSystem).ProductType -eq 1) {
-		# Desktop OS
-		Get-WindowsOptionalFeature -Online -FeatureName *Hyper-V* | Where-Object -Property State -Eq 'Disabled' | Enable-WindowsOptionalFeature -Online
-	} Else {
-		# Server OS
-		Install-WindowsFeature -Name Hyper-V -IncludeAllSubFeature -IncludeManagementTools
-	}
-
 	[String]$MacAddressMinimum = $Configuration.labbuilderconfig.SelectNodes('settings').macaddressminimum
 	If (-not $MacAddressMinimum) {
 		$MacAddressMinimum = '00155D010600'
@@ -103,21 +133,34 @@ function Initialize-LabHyperV {
 		$MacAddressMaximum = '00155D0106FF'
 	}
 
-	Write-Verbose "Configuring Lab Hyper-V Components ..."
 	Set-VMHost -MacAddressMinimum $MacAddressMinimum -MacAddressMaximum $MacAddressMaximum
+
+	Return $True
 } # Initialize-LabHyperV
 ##########################################################################################################################################
 
 ##########################################################################################################################################
 function Initialize-LabDSC {
 	[CmdLetBinding()]
+	[OutputType([Boolean])]
 	param (
-		[Parameter(Mandatory=$true)]
+		[Parameter(Position=0)]
+		[ValidateNotNullOrEmpty()]
 		[XML]$Configuration
 	)
 	
+	If (-not $Configuration) {
+		Throw "Configuration is missing or null."
+	}
+
+	If ($Configuration.labbuilderconfig -eq $null) {
+		Throw "Configuration is invalid."
+	}
+	
 	# Install DSC Components
 	Write-Verbose "Configuring Lab DSC Components ..."
+	
+	Return $True
 } # Initialize-LabDSC
 ##########################################################################################################################################
 
@@ -727,7 +770,9 @@ Function Install-Lab {
 		[String]$Path,
 
 		[parameter(Mandatory=$true, ParameterSetName="Content")]
-		[String]$Content
+		[String]$Content,
+
+		[Switch]$CheckEnvironment
 	) # Param
 
 	If ($Path) {
@@ -740,6 +785,9 @@ Function Install-Lab {
 		return
 	}
 	   
+	If ($CheckEnvironment) {
+		Install-LabHyperV
+	}
 	Initialize-LabHyperV -Configuration $Config
 
 	Initialize-LabDSC -Configuration $Config
@@ -806,7 +854,7 @@ Function Uninstall-Lab {
 ##########################################################################################################################################
 # Export the Module Cmdlets
 Export-ModuleMember -Function Get-LabConfiguration,Test-LabConfiguration, `
-	Initialize-LabHyperV, `
+	Install-LabHyperV,Initialize-LabHyperV, `
 	Get-LabSwitches,Initialize-LabSwitches,Remove-LabSwitches, `
 	Get-LabVMTemplates,Initialize-LabVMTemplates,Remove-LabVMTemplates, `
 	Get-LabVMs,Initialize-LabVMs,Remove-LabVMs, `

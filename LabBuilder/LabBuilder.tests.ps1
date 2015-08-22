@@ -66,6 +66,7 @@ Describe "Test-LabConfiguration" {
 			{ Test-LabConfiguration -Configuration $Config } | Should Throw
 		}
 	}
+	
 	New-Item -Path $Config.labbuilderconfig.SelectNodes('settings').vmpath -ItemType Directory
 
 	Context "Valid Configuration is provided and VHDParentPath folder does not exist" {
@@ -73,6 +74,7 @@ Describe "Test-LabConfiguration" {
 			{ Test-LabConfiguration -Configuration $Config } | Should Throw
 		}
 	}
+	
 	New-Item -Path $Config.labbuilderconfig.SelectNodes('settings').vhdparentpath -ItemType Directory
 
 	Context "Valid Configuration is provided and all paths exist" {
@@ -81,5 +83,57 @@ Describe "Test-LabConfiguration" {
 		}
 	}
 	Remove-Item -Path $Config.labbuilderconfig.SelectNodes('settings').vmpath -Recurse -Force -ErrorAction SilentlyContinue
+}
+##########################################################################################################################################
+
+##########################################################################################################################################
+Describe "Install-LabHyperV" {
+	$Config = Get-LabConfiguration -Path $TestConfigPath
+
+	Context "The function exists" {
+		It "Returns True" {
+			If ((Get-CimInstance Win32_OperatingSystem).ProductType -eq 1) {
+				Mock Get-WindowsOptionalFeature { return [PSCustomObject]@{ Name = 'Dummy'; State = 'Enabled'; } }
+			} Else {
+				Mock Get-WindowsFeature { return [PSCustomObject]@{ Name = 'Dummy'; Installed = $false; } }
+			}
+			Install-LabHyperV | Should Be $True
+		}
+	}
+}
+##########################################################################################################################################
+
+##########################################################################################################################################
+Describe "Initialize-LabHyperV" {
+	$Config = Get-LabConfiguration -Path $TestConfigPath
+	Set-VMHost -MacAddressMinimum '001000000000' -MacAddressMaximum '0010000000FF'
+	Context "No parameter is passed" {
+		It "Fails" {
+			{ Initialize-LabHyperV } | Should Throw
+		}
+	}
+	Context "Valid configuration is passed" {
+		It "Returns True" {
+			Initialize-LabHyperV -Config $Config | Should Be $True
+		}
+		It "MacAddressMinumum should be $($Config.labbuilderconfig.SelectNodes('settings').macaddressminimum)" {
+			(Get-VMHost).MacAddressMinimum | Should Be $Config.labbuilderconfig.SelectNodes('settings').macaddressminimum
+		}
+		It "MacAddressMaximum should be $($Config.labbuilderconfig.SelectNodes('settings').macaddressmaximum)" {
+			(Get-VMHost).MacAddressMaximum | Should Be $Config.labbuilderconfig.SelectNodes('settings').macaddressmaximum
+		}
+	}
+}
+##########################################################################################################################################
+
+##########################################################################################################################################
+Describe "Initialize-LabDSC" {
+	$Config = Get-LabConfiguration -Path $TestConfigPath
+
+	Context "No parameter is passed" {
+		It "Fails" {
+			{ Initialize-LabDSC } | Should Throw
+		}
+	}
 }
 ##########################################################################################################################################

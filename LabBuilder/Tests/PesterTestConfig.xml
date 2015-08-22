@@ -6,8 +6,10 @@
   <settings>
     <domainname>PESTER.LOCAL</domainname>
     <email>daniel@bmdlab.com</email>
-    <vmpath>.\Pester Lab</vmpath>
+    <vmpath>C:\Pester Lab</vmpath>
     <vhdparentpath>C:\Pester Lab\Virtual Hard Disk Templates</vhdparentpath>
+    <macaddressminimum>001122334400</macaddressminimum>
+    <macaddressmaximum>0011223344FF</macaddressmaximum>
   </settings>
 
   <dsc configpath="C:\PesterTestConfig DSC\" />
