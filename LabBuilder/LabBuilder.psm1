@@ -169,20 +169,28 @@ function Get-LabSwitches {
 	[OutputType([System.Collections.Hashtable[]])]
 	[CmdLetBinding()]
 	param (
-		[Parameter(Mandatory=$true)]
+		[Parameter(Position=0)]
 		[XML]$Configuration
 	)
+
+	If (-not $Configuration) {
+		Throw "Configuration is missing or null."
+	}
+
+	If ($Configuration.labbuilderconfig -eq $null) {
+		Throw "Configuration is invalid."
+	}
 
 	[System.Collections.Hashtable[]]$Switches = @()
 	$ConfigSwitches = $Configuration.labbuilderconfig.SelectNodes('switches').Switch
 	Foreach ($ConfigSwitch in $ConfigSwitches) {
 		[System.Collections.Hashtable[]]$ConfigAdapters = @()
 		If ($ConfigSwitch.Adapters) {
-			Foreach ($Adapter in $ConfigSwitch.Adapters) {
-				$ConfigAdapters += @{ Name = $Adapter.Name; MACAddress = $Adapter.MacAddress }
+			Foreach ($Adapter in $ConfigSwitch.Adapters.Adapter) {
+				$ConfigAdapters += @{ name = $Adapter.Name; macaddress = $Adapter.MacAddress }
 			}
 		}
-		$Switches += @{ Name = $ConfigSwitch.Name; Type = $ConfigSwitch.Type; Adapters = $ConfigAdapters; Vlan = $ConfigSwitch.Vlan } 
+		$Switches += @{ name = $ConfigSwitch.Name; type = $ConfigSwitch.Type; vlan = $ConfigSwitch.Vlan; adapters = $ConfigAdapters } 
 	}
 	return $Switches
 } # Get-LabSwitches

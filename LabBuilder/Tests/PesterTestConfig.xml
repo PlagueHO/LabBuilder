@@ -23,8 +23,10 @@
         <adapter name="LM" macaddress="00155D010704" />
       </adapters>
     </switch>
-    <switch name="Domain Private Site A" type="Private" vlan="2" />
-    <switch name="Domain Private Site B" type="Private" />
+    <switch name="Pester Test Private Vlan" type="Private" vlan="2" />
+    <switch name="Pester Test Private" type="Private" />
+    <switch name="Pester Test Internal Vlan" type="Internal" vlan="3" />
+    <switch name="Pester Test Internal" type="Internal" />
   </switches>
 
   <templates fromvm="template *" />

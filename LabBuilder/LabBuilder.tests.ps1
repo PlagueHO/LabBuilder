@@ -106,6 +106,9 @@ Describe "Install-LabHyperV" {
 ##########################################################################################################################################
 Describe "Initialize-LabHyperV" {
 	$Config = Get-LabConfiguration -Path $TestConfigPath
+	
+	$CurrentMacAddressMinimum = (Get-VMHost).MacAddressMinimum
+	$CurrentMacAddressMaximum = (Get-VMHost).MacAddressMaximum
 	Set-VMHost -MacAddressMinimum '001000000000' -MacAddressMaximum '0010000000FF'
 	Context "No parameter is passed" {
 		It "Fails" {
@@ -123,6 +126,7 @@ Describe "Initialize-LabHyperV" {
 			(Get-VMHost).MacAddressMaximum | Should Be $Config.labbuilderconfig.SelectNodes('settings').macaddressmaximum
 		}
 	}
+	Set-VMHost -MacAddressMinimum $CurrentMacAddressMinimum -MacAddressMaximum $CurrentMacAddressMaximum
 }
 ##########################################################################################################################################
 
@@ -133,6 +137,42 @@ Describe "Initialize-LabDSC" {
 	Context "No parameter is passed" {
 		It "Fails" {
 			{ Initialize-LabDSC } | Should Throw
+		}
+	}
+}
+##########################################################################################################################################
+
+##########################################################################################################################################
+Describe "Get-LabSwitches" {
+	$Config = Get-LabConfiguration -Path $TestConfigPath
+	$ExpectedSwtiches = @( 
+				@{ name="General Purpose External"; type="External"; vlan=$null; adapters=[System.Collections.Hashtable[]]@(
+					@{ name="Cluster"; macaddress="00155D010701" },
+					@{ name="Management"; macaddress="00155D010702" },
+					@{ name="SMB"; macaddress="00155D010703" },
+					@{ name="LM"; macaddress="00155D010704" }
+					)
+				},
+				@{ name="Pester Test Private Vlan"; type="Private"; vlan="2"; adapters=@() },
+				@{ name="Pester Test Private"; type="Private"; vlan=$null; adapters=@() },
+				@{ name="Pester Test Internal Vlan"; type="Internal"; vlan="3"; adapters=@() },
+				@{ name="Pester Test Internal"; type="Internal"; vlan=$null; adapters=@() }
+			)
+	Context "No parameter is passed" {
+		It "Fails" {
+			{ Get-LabSwitches } | Should Throw
+		}
+	}
+	Context "Valid configuration is passed" {
+		$Switches = Get-LabSwitches -Config $Config
+		Set-Content -Path "$($ENV:Temp)\Switches.json" -Value ($Switches | ConvertTo-Json -Depth 10)
+		Set-Content -Path "$($ENV:Temp)\ExpectedSwitches.json" -Value ($ExpectedSwtiches | ConvertTo-Json -Depth 10)
+		
+		It "Returns 5 Switch Items" {
+			$Switches.Count | Should Be 5
+		}
+		It "Returns Switches Object that matches Expected Object" {
+			[String]::Compare(($Switches | ConvertTo-Json -10),($ExpectedSwtiches | ConvertTo-Json -10),$true) | Should Be 0
 		}
 	}
 }
