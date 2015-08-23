@@ -240,7 +240,7 @@ Describe "Get-LabTemplates" {
 					destvhd="C:\Pester Lab\Virtual Hard Disk Templates\Windows Server 2012 R2 Datacenter Core.vhdx";
 					installiso="Microsoft Windows Server 2012 R2\9600.16384.130821-1623_x64fre_Server_EN-US_IRM_SSS_DV5.iso";
 					allowcreate="Y";
-					edition="Windows Server 2012 R2 SERVERCORE";
+					edition="Windows Server 2012 R2 SERVERDATACENTERCORE";
 					sourcevhd="Windows Server 2012 R2 Datacenter Core.vhdx";
 				}
 			)
