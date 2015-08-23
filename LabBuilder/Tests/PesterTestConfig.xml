@@ -15,7 +15,7 @@
   <dsc configpath="C:\PesterTestConfig DSC\" />
 
   <switches>
-    <switch name="General Purpose External" type="External">
+    <switch name="Pester Test External" type="External" >
       <adapters>
         <adapter name="Cluster" macaddress="00155D010701" />
         <adapter name="Management" macaddress="00155D010702" />
@@ -29,7 +29,18 @@
     <switch name="Pester Test Internal" type="Internal" />
   </switches>
 
-  <templates fromvm="template *" />
+  <templates fromvm="pester template *">
+    <template name="Pester Windows Server 2012 R2 Full"
+              sourcevhd="Windows Server 2012 R2 Datacenter Full.vhdx"
+              installiso="Microsoft Windows Server 2012 R2\9600.16384.130821-1623_x64fre_Server_EN-US_IRM_SSS_DV5.iso"
+              edition="Windows Server 2012 R2 SERVERDATACENTER"
+              allowcreate="Y"/>
+    <template name="Pester Windows Server 2012 R2 Core"
+              sourcevhd="Windows Server 2012 R2 Datacenter Core.vhdx"
+              installiso="Microsoft Windows Server 2012 R2\9600.16384.130821-1623_x64fre_Server_EN-US_IRM_SSS_DV5.iso"
+              edition="Windows Server 2012 R2 SERVERCORE"
+              allowcreate="Y"/>
+  </templates>
 
   <vms>
     <vm name="PESTER.LOCAL SS_ROOTCA" template="Template Windows Server 2012 R2 Datacenter Full">

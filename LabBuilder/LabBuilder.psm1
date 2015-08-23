@@ -199,14 +199,24 @@ function Get-LabSwitches {
 ##########################################################################################################################################
 function Initialize-LabSwitches {
 	[CmdLetBinding()]
+	[OutputType([Boolean])]
 	param (
-		[Parameter(Mandatory=$true)]
+		[Parameter(Position=0)]
+		[ValidateNotNullOrEmpty()]
 		[XML]$Configuration,
-	
-		[Parameter(Mandatory=$true)]
+
+		[Parameter(Position=1)]
 		[System.Collections.Hashtable[]]$Switches
 	)
-	
+
+	If (-not $Configuration) {
+		Throw "Configuration is missing or null."
+	}
+
+	If (-not $Switches) {
+		Throw "Switches are missing or null."
+	}
+
 	# Create Hyper-V Switches
 	Foreach ($Switch in $Switches) {
 		If ((Get-VMSwitch | Where-Object -Property Name -eq $Switch.Name).Count -eq 0) {
@@ -215,7 +225,7 @@ function Initialize-LabSwitches {
 			Write-Verbose "Creating Virtual Switch '$SwitchName' ..."
 			Switch ($SwitchType) {
 				'External' {
-					New-VMSwitch -Name $SwitchName -SwitchType External
+					New-VMSwitch -Name $SwitchName -NetAdapterName (Get-NetAdapter | Where-Object { $_.Status -eq 'Up' } | Select-Object -First 1 -ExpandProperty Name)
 					If ($Switch.Adapters) {
 						Foreach ($Adapter in $Switch.Adapters) {
 							If ($Switch.VLan) {
@@ -241,21 +251,31 @@ function Initialize-LabSwitches {
 				}
 			} # Switch
 		} # If
-	} # Foreach        
-
+	} # Foreach       
+	Return $True 
 } # Initialize-LabSwitches
 ##########################################################################################################################################
 
 ##########################################################################################################################################
 function Remove-LabSwitches {
 	[CmdLetBinding()]
+	[OutputType([Boolean])]
 	param (
-		[Parameter(Mandatory=$true)]
+		[Parameter(Position=0)]
+		[ValidateNotNullOrEmpty()]
 		[XML]$Configuration,
-	
-		[Parameter(Mandatory=$true)]
+
+		[Parameter(Position=1)]
 		[System.Collections.Hashtable[]]$Switches
 	)
+
+	If (-not $Configuration) {
+		Throw "Configuration is missing or null."
+	}
+
+	If (-not $Switches) {
+		Throw "Switches are missing or null."
+	}
 	
 	# Delete Hyper-V Switches
 	Foreach ($Switch in $Switches) {
@@ -287,7 +307,7 @@ function Remove-LabSwitches {
 			} # Switch
 		} # If
 	} # Foreach        
-
+	Return $True
 } # Remove-LabSwitches
 ##########################################################################################################################################
 
@@ -296,28 +316,64 @@ function Get-LabVMTemplates {
 	[OutputType([System.Collections.Hashtable[]])]
 	[CmdLetBinding()]
 	param (
-		[Parameter(Mandatory=$true)]
+		[Parameter(Position=0)]
 		[XML]$Configuration
 	)
 
+	If (-not $Configuration) {
+		Throw "Configuration is missing or null."
+	}
+
+	If ($Configuration.labbuilderconfig -eq $null) {
+		Throw "Configuration is invalid."
+	}
+
 	[System.Collections.Hashtable[]]$VMTemplates = @()
 	[String]$VHDParentPath = $Configuration.labbuilderconfig.SelectNodes('settings').vhdparentpath
+
+	# Get a list of all templates in the Hyper-V system matching the phrase found in the fromvm config setting
 	[String]$FromVM=$Configuration.labbuilderconfig.SelectNodes('templates').fromvm
 	If (($FromVM -ne $null) -and ($FromVM -ne '')) {
 		$Templates = Get-VM -Name $FromVM
 		Foreach ($Template in $Templates) {
-			[String]$VMTemplateName = $Template.Name
-			[String]$VMTemplateSourceVHD = ($Template | Get-VMHardDiskDrive).Path
-			[String]$VMTemplateDestVHD = "$VHDParentPath\$([System.IO.Path]::GetFileName($VMTemplateSourceVHD))"
-			$VMTemplates += @{ Name = $VMTemplateName; SourceVHD = $VMTemplateSourceVHD; DestVHD = $VMTemplateDestVHD; }
+			$VMTemplates += @{
+				name = $Template.Name;
+				sourcevhd = ($Template | Get-VMHardDiskDrive).Path;
+				destvhd = "$VHDParentPath\$([System.IO.Path]::GetFileName(($Template | Get-VMHardDiskDrive).Path))";
+			}
 		} # Foreach
-	}
+	} # If
+	
+	# Read the list of templates from the configuration file
 	$Templates = $Configuration.labbuilderconfig.SelectNodes('templates').template
 	Foreach ($Template in $Templates) {
-	   [String]$VMTemplateName = $Template.Name
-	   [String]$VMTemplateSourceVHD = $Template.SourceVHD
-	   [String]$VMTemplateDestVHD = "$VHDParentPath\$([System.IO.Path]::GetFileName($VMTemplateSourceVHD))"
-	   $VMTemplates += @{ Name = $VMTemplateName; SourceVHD = $VMTemplateSourceVHD; DestVHD = $VMTemplateDestVHD; }
+		# Does the template already exist in the list
+		[Boolean]$Found = $False
+		Foreach ($VMTemplate in $VMTemplates) {
+			If ($VMTemplate.Name -eq $Template.Name) {
+				# The template already exists - so don't add it again, but update the VHD path if provided
+				If ($Template.SourceVHD) {
+					$VMTemplate.SourceVHD = $Template.SourceVHD
+					$VMTemplate.DestVHD = "$VHDParentPath\$([System.IO.Path]::GetFileName($Template.SourceVHD))"
+				}
+				$VMTemplate.InstallISO = $Template.InstallISO
+				$VMTemplate.Edition = $Template.Edtion
+				$VMTemplate.AllowCreate = $Template.AllowCreate
+				$Found = $True
+				Break
+			} # If
+		} # Foreach
+		If (-not $Found) {
+			# The template wasn't found in the list of templates pulled from Hyper-V
+			$VMTemplates += @{
+				name = $Template.Name;
+				sourcevhd = $Template.SourceVHD;
+				destvhd = "$VHDParentPath\$([System.IO.Path]::GetFileName($Template.SourceVHD))";
+				installiso = $Template.InstallISO;
+				edition = $Template.Edition;
+				allowcreate = $Template.AllowCreate;
+			}
+		} # If
 	} # Foreach
 	Return $VMTemplates
 } # Get-LabVMTemplates
@@ -861,7 +917,8 @@ Function Uninstall-Lab {
 
 ##########################################################################################################################################
 # Export the Module Cmdlets
-Export-ModuleMember -Function Get-LabConfiguration,Test-LabConfiguration, `
+Export-ModuleMember -Function `
+	Get-LabConfiguration,Test-LabConfiguration, `
 	Install-LabHyperV,Initialize-LabHyperV, `
 	Get-LabSwitches,Initialize-LabSwitches,Remove-LabSwitches, `
 	Get-LabVMTemplates,Initialize-LabVMTemplates,Remove-LabVMTemplates, `

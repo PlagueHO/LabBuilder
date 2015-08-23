@@ -45,6 +45,7 @@
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Tests\" />
+    <Folder Include="Tests\PesterTestFiles\" />
     <Folder Include="Tests\TestConfig1.dsc\" />
   </ItemGroup>
   <ItemGroup>
