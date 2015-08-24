@@ -30,18 +30,19 @@
   </templates>
 
   <vms>
-    <vm template="Pester Windows Server 2012 R2 Datacenter Full">
+    <vm name="Bad Unattend File" template="Pester Windows Server 2012 R2 Datacenter Full">
       <usedifferencingbootdisk>Y</usedifferencingbootdisk>
       <datavhdsize>10GB</datavhdsize>
       <memorystartupbytes>536870912</memorystartupbytes>
       <processorcount>1</processorcount>
       <adapters>
-        <adapter switchname="Pester Test Private Vlan" macaddress="00155D010801" />
+        <adapter name="Pester Test Private Vlan" switchname="Pester Test Private Vlan" macaddress="00155D010801" />
       </adapters>
       <administratorpassword>None</administratorpassword>
       <productkey>AAAAA-AAAAA-AAAAA-AAAAA-AAAAA</productkey>
       <timezone>Pacific Standard Time</timezone>
       <dscconfig>VM1</dscconfig>
+      <unattendfile>ThisFileDoesntExist.xml</unattendfile>
     </vm>
 
   </vms>

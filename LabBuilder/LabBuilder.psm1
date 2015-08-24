@@ -535,7 +535,7 @@ function Get-LabVMs {
 				} # If
 			} # Foreach
 			If (-not $Found) {
-				throw "The switch $($VMAdapter.SwitchName) could not be found in Switches."
+				throw "The switch $($VMAdapter.SwitchName) specified in VM ($VM.Name) could not be found in Switches."
 			} # If
 			
 			# Figure out the VLan - If defined in the VM use it, otherwise use the one defined in the Switch, otherwise keep blank.
@@ -546,6 +546,10 @@ function Get-LabVMs {
 			$VMAdapters += @{ Name = $VMAdapter.Name; SwitchName = $VMAdapter.SwitchName; MACAddress = $VMAdapter.macaddress; VLan = $VLan }
 		}
 
+		[String]$UnattendFile = $VM.UnattendFile
+		If (($UnattendFile) -and -not (Test-Path $UnattendFile)) {
+			Throw "The Unattend File $UnattendFile specified in VM ($VM.Name) can not be found."
+		}
 		$LabVMs += @{
 			Name = $VM.name;
 			Template = $VM.template;
@@ -558,6 +562,7 @@ function Get-LabVMs {
 			TimeZone = $VM.timezone;
 			Adapters = $VMAdapters;
 			DataVHDSize = (Invoke-Expression $VM.DataVHDSize);
+			UnattendFile = $UnattendFile;
 		}
 	} # Foreach        
 
@@ -786,10 +791,13 @@ function Set-LabVMInitializationFiles {
 		[Parameter(Mandatory=$true)]
 		[System.Collections.Hashtable]$VM
 	)
-[String]$DomainName = $Configuration.labbuilderconfig.SelectNodes('settings').domainname
-[String]$Email = $Configuration.labbuilderconfig.SelectNodes('settings').email
-
-$UnattendContent = [String] @"
+	[String]$DomainName = $Configuration.labbuilderconfig.SelectNodes('settings').domainname
+	[String]$Email = $Configuration.labbuilderconfig.SelectNodes('settings').email
+	# Has a custom unattend file been specified for this VM?
+	If ($VM.UnattendFile) {
+		[String]$UnattendContent = Get-Content -Path $VM.UnattendFile
+	} Else {
+		$UnattendContent = [String] @"
 <?xml version="1.0" encoding="utf-8"?>
 <unattend xmlns="urn:schemas-microsoft-com:unattend">
 	<settings pass="offlineServicing">
@@ -853,13 +861,20 @@ $UnattendContent = [String] @"
 	</settings>
 </unattend>
 "@
+	}
 	Write-Verbose "Applying VM $($VM.Name) Unattend File ..."
 	[String]$UnattendFile = $ENV:Temp+"\Unattend.xml"
+
+	# Mount the VMs Boot VHD so that files can be loaded into it
 	[String]$MountPount = "C:\TempMount"
 	Set-Content -Path $UnattendFile -Value $UnattendContent | Out-Null
 	New-Item -Path $MountPount -ItemType Directory | Out-Null
 	Mount-WindowsImage -ImagePath $VMBootDiskPath -Path $MountPount -Index 1 | Out-Null
+
+	# Apply any files that are needed
 	Copy-Item -Path $UnattendFile -Destination c:\tempMount\Windows\Panther\ -Force | Out-Null
+	
+	# Dismount the VHD in preparation for boot
 	Dismount-WindowsImage -Path $MountPount -Save | Out-Null
 	Remove-Item -Path $MountPount | Out-Null
 	Remove-Item -Path $UnattendFile | Out-Null

@@ -444,19 +444,27 @@ Describe "Get-LabVMs" {
 			{ Get-LabVMs -Configuration $Config -VMTemplates $VMTemplates -Switches $Switches } | Should Throw
 		}
 	}
+	Context "Configuration passed with VM unattend file that can't be found." {
+		It "Fails" {
+			$Config = Get-LabConfiguration -Path "$TestConfigPath\PesterTestConfig.VMFail.BadUnattendFile.xml"
+			$Switches = Get-LabSwitches -Configuration $Config
+			$VMTemplates = Get-LabVMTemplates -Configuration $Config
+			{ Get-LabVMs -Configuration $Config -VMTemplates $VMTemplates -Switches $Switches } | Should Throw
+		}
+	}
 	Context "Valid configuration is passed" {
 		$Config = Get-LabConfiguration -Path $TestConfigOKPath
 		$Switches = Get-LabSwitches -Configuration $Config
 		$VMTemplates = Get-LabVMTemplates -Configuration $Config
 		$VMs = Get-LabVMs -Configuration $Config -VMTemplates $VMTemplates -Switches $Switches
-		Set-Content -Path "$($ENV:Temp)\VMs.json" -Value ($VMs | ConvertTo-Json -Depth 4)
+		# Set-Content -Path "$($ENV:Temp)\VMs.json" -Value ($VMs | ConvertTo-Json -Depth 4)
 		It "Returns Template Object that matches Expected Object" {
 			$ExpectedVMs = [String] @"
 {
     "UseDifferencingDisk":  "Y",
     "TimeZone":  "Pacific Standard Time",
     "ProcessorCount":  "1",
-    "ProductKey":  "W3GGN-FT8W3-Y4M27-J84CP-Q3VJ9",
+    "ProductKey":  "AAAAA-AAAAA-AAAAA-AAAAA-AAAAA",
     "Template":  "Pester Windows Server 2012 R2 Datacenter Full",
     "MemoryStartupBytes":  536870912,
     "Adapters":  [
@@ -486,6 +494,7 @@ Describe "Get-LabVMs" {
                      }
                  ],
     "Name":  "PESTER.VM1",
+    "UnattendFile":  "",
     "TemplateVHD":  "C:\\Pester Lab\\Virtual Hard Disk Templates\\Windows Server 2012 R2 Datacenter Full.vhdx",
     "AdministratorPassword":  "None",
     "DataVHDSize":  10737418240
