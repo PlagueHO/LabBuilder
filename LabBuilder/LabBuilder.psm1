@@ -6,12 +6,14 @@ function Get-LabConfiguration {
 	[OutputType([XML])]
 	param (
 		[parameter(
+			Mandatory=$True,
 			ParameterSetName="Path",
 			Position=0)]
 		[ValidateNotNullOrEmpty()]
 		[String]$Path,
 
 		[parameter(
+			Mandatory=$True,
 			ParameterSetName="Content")]
 		[ValidateNotNullOrEmpty()]
 		[String]$Content
@@ -22,10 +24,6 @@ function Get-LabConfiguration {
 			Throw "Configuration file $Path is not found."
 		} # If
 		$Content = Get-Content -Path $Path -Raw
-	} Elseif ($Content) {
-		# Content Parameter was provided...
-	} Else {
-		Throw "Either a Path or Content parameter must be provided."
 	} # If
 	If (-not $Content) {
 		Throw "Configuration is empty."
@@ -41,14 +39,12 @@ function Test-LabConfiguration {
 	[CmdLetBinding()]
 	[OutputType([Boolean])]
 	param (
-		[Parameter(Position=0)]
+		[Parameter(
+			Mandatory=$True,
+			Position=0)]
 		[ValidateNotNullOrEmpty()]
 		[XML]$Configuration
 	)
-
-	If (-not $Configuration) {
-		Throw "Configuration is missing or null."
-	}
 
 	If ($Configuration.labbuilderconfig -eq $null) {
 		Throw "Configuration is invalid."
@@ -109,15 +105,13 @@ function Initialize-LabHyperV {
 	[CmdLetBinding()]
 	[OutputType([Boolean])]
 	param (
-		[Parameter(Position=0)]
+		[Parameter(
+			Mandatory=$True,
+			Position=0)]
 		[ValidateNotNullOrEmpty()]
 		[XML]$Configuration
 	)
 	
-	If (-not $Configuration) {
-		Throw "Configuration is missing or null."
-	}
-
 	If ($Configuration.labbuilderconfig -eq $null) {
 		Throw "Configuration is invalid."
 	}
@@ -146,15 +140,13 @@ function Initialize-LabDSC {
 	[CmdLetBinding()]
 	[OutputType([Boolean])]
 	param (
-		[Parameter(Position=0)]
+		[Parameter(
+			Mandatory=$True,
+			Position=0)]
 		[ValidateNotNullOrEmpty()]
 		[XML]$Configuration
 	)
 	
-	If (-not $Configuration) {
-		Throw "Configuration is missing or null."
-	}
-
 	If ($Configuration.labbuilderconfig -eq $null) {
 		Throw "Configuration is invalid."
 	}
@@ -171,13 +163,12 @@ function Get-LabSwitches {
 	[OutputType([System.Collections.Hashtable[]])]
 	[CmdLetBinding()]
 	param (
-		[Parameter(Position=0)]
+		[Parameter(
+			Mandatory=$True,
+			Position=0)]
+		[ValidateNotNullOrEmpty()]
 		[XML]$Configuration
 	)
-
-	If (-not $Configuration) {
-		Throw "Configuration is missing or null."
-	}
 
 	If ($Configuration.labbuilderconfig -eq $null) {
 		Throw "Configuration is invalid."
@@ -186,13 +177,31 @@ function Get-LabSwitches {
 	[System.Collections.Hashtable[]]$Switches = @()
 	$ConfigSwitches = $Configuration.labbuilderconfig.SelectNodes('switches').Switch
 	Foreach ($ConfigSwitch in $ConfigSwitches) {
-		[System.Collections.Hashtable[]]$ConfigAdapters = @()
+		# It can't be switch because if the name attrib/node is missing the name property on the XML object defaults to the name
+		# Of the parent. So we can't easily tell if no name was specified or if they actually specified 'switch' as the name.
+		If ($ConfigSwitch.Name -eq 'switch') {
+			Throw "The switch name cannot be 'switch' or empty."
+		}
+		If ($ConfigSwitch.Type -notin 'Private','Internal','External') {
+			Throw "The switch type must be Private, Internal or External."
+		}
+		# Assemble the list of Adapters if any are specified for this switch (only if an external switch)
 		If ($ConfigSwitch.Adapters) {
+			[System.Collections.Hashtable[]]$ConfigAdapters = @()
 			Foreach ($Adapter in $ConfigSwitch.Adapters.Adapter) {
 				$ConfigAdapters += @{ name = $Adapter.Name; macaddress = $Adapter.MacAddress }
 			}
+			If (($ConfigAdapters.Count -gt 0) -and ($ConfigSwitch.Type -ne 'External')) {
+				Throw "Adapters can only be specified for External type switches."
+			}
+		} Else {
+			$ConfigAdapters = $null
 		}
-		$Switches += @{ name = $ConfigSwitch.Name; type = $ConfigSwitch.Type; vlan = $ConfigSwitch.Vlan; adapters = $ConfigAdapters } 
+		$Switches += @{
+			name = $ConfigSwitch.Name;
+			type = $ConfigSwitch.Type;
+			vlan = $ConfigSwitch.Vlan;
+			adapters = $ConfigAdapters } 
 	}
 	return $Switches
 } # Get-LabSwitches
@@ -203,21 +212,18 @@ function Initialize-LabSwitches {
 	[CmdLetBinding()]
 	[OutputType([Boolean])]
 	param (
-		[Parameter(Position=0)]
+		[Parameter(
+			Mandatory=$true,
+			Position=0)]
 		[ValidateNotNullOrEmpty()]
 		[XML]$Configuration,
 
-		[Parameter(Position=1)]
+		[Parameter(
+			Mandatory=$true,
+			Position=1)]
+		[ValidateNotNullOrEmpty()]
 		[System.Collections.Hashtable[]]$Switches
 	)
-
-	If (-not $Configuration) {
-		Throw "Configuration is missing or null."
-	}
-
-	If (-not $Switches) {
-		Throw "Switches are missing or null."
-	}
 
 	# Create Hyper-V Switches
 	Foreach ($Switch in $Switches) {
@@ -263,26 +269,26 @@ function Remove-LabSwitches {
 	[CmdLetBinding()]
 	[OutputType([Boolean])]
 	param (
-		[Parameter(Position=0)]
+		[Parameter(
+			Mandatory=$true,
+			Position=0)]
 		[ValidateNotNullOrEmpty()]
 		[XML]$Configuration,
 
-		[Parameter(Position=1)]
+		[Parameter(
+			Mandatory=$true,
+			Position=1)]
+		[ValidateNotNullOrEmpty()]
 		[System.Collections.Hashtable[]]$Switches
 	)
 
-	If (-not $Configuration) {
-		Throw "Configuration is missing or null."
-	}
-
-	If (-not $Switches) {
-		Throw "Switches are missing or null."
-	}
-	
 	# Delete Hyper-V Switches
 	Foreach ($Switch in $Switches) {
 		If ((Get-VMSwitch | Where-Object -Property Name -eq $Switch.Name).Count -ne 0) {
 			[String]$SwitchName = $Switch.Name
+			If (-not $SwitchName) {
+				Throw "The Switch Name can't be empty."
+			}
 			[string]$SwitchType = $Switch.Type
 			Write-Verbose "Deleting Virtual Switch '$SwitchName' ..."
 			Switch ($SwitchType) {
@@ -318,17 +324,12 @@ function Get-LabVMTemplates {
 	[OutputType([System.Collections.Hashtable[]])]
 	[CmdLetBinding()]
 	param (
-		[Parameter(Position=0)]
+		[Parameter(
+			Mandatory=$true,
+			Position=0)]
+		[ValidateNotNullOrEmpty()]
 		[XML]$Configuration
 	)
-
-	If (-not $Configuration) {
-		Throw "Configuration is missing or null."
-	}
-
-	If ($Configuration.labbuilderconfig -eq $null) {
-		Throw "Configuration is invalid."
-	}
 
 	[System.Collections.Hashtable[]]$VMTemplates = @()
 	[String]$VHDParentPath = $Configuration.labbuilderconfig.SelectNodes('settings').vhdparentpath
@@ -349,12 +350,23 @@ function Get-LabVMTemplates {
 	# Read the list of templates from the configuration file
 	$Templates = $Configuration.labbuilderconfig.SelectNodes('templates').template
 	Foreach ($Template in $Templates) {
+		# It can't be template because if the name attrib/node is missing the name property on the XML object defaults to the name
+		# Of the parent. So we can't easily tell if no name was specified or if they actually specified 'template' as the name.
+		If ($Template.Name -eq 'template') {
+			Throw "The Template Name can't be 'template' or empty."
+		}
+		If (-not $Template.VHD) {
+			Throw "The Template Name can't be empty."
+		}
 		# Does the template already exist in the list
 		[Boolean]$Found = $False
 		Foreach ($VMTemplate in $VMTemplates) {
 			If ($VMTemplate.Name -eq $Template.Name) {
 				# The template already exists - so don't add it again, but update the VHD path if provided
 				If ($Template.VHD) {
+					If (-not $Template.VHD) {
+						Throw "The VHD file in template $($Template.Name) cannot be empty."
+					}
 					$VMTemplate.VHD = $Template.VHD
 					$VMTemplate.TemplateVHD = "$VHDParentPath\$([System.IO.Path]::GetFileName($Template.VHD))"
 				}
@@ -386,22 +398,19 @@ function Initialize-LabVMTemplates {
 	[CmdLetBinding()]
 	[OutputType([Boolean])]
 	param (
-		[Parameter(Position=0)]
+		[Parameter(
+			Mandatory=$true,
+			Position=0)]
 		[ValidateNotNullOrEmpty()]
 		[XML]$Configuration,
 
-		[Parameter(Position=1)]
+		[Parameter(
+			Mandatory=$true,
+			Position=1)]
+		[ValidateNotNullOrEmpty()]
 		[System.Collections.Hashtable[]]$VMTemplates
 	)
 	
-	If (-not $Configuration) {
-		Throw "Configuration is missing or null."
-	}
-
-	If (-not $VMTemplates) {
-		Throw "VMTemplates are missing or null."
-	}
-
 	Foreach ($VMTemplate in $VMTemplates) {
 		If (-not (Test-Path $VMTemplate.TemplateVHD)) {
 			# The template VHD isn't in the VHD Parent folder - so copy it there after optimizing it
@@ -423,21 +432,18 @@ function Remove-LabVMTemplates {
 	[CmdLetBinding()]
 	[OutputType([Boolean])]
 	param (
-		[Parameter(Position=0)]
+		[Parameter(
+			Mandatory=$true,
+			Position=0)]
 		[ValidateNotNullOrEmpty()]
 		[XML]$Configuration,
 
-		[Parameter(Position=1)]
+		[Parameter(
+			Mandatory=$true,
+			Position=1)]
+		[ValidateNotNullOrEmpty()]
 		[System.Collections.Hashtable[]]$VMTemplates
 	)
-	
-	If (-not $Configuration) {
-		Throw "Configuration is missing or null."
-	}
-
-	If (-not $VMTemplates) {
-		Throw "VMTemplates are missing or null."
-	}
 	
 	Foreach ($VMTemplate in $VMTemplates) {
 		If (Test-Path $VMTemplate.templatevhd) {
@@ -455,31 +461,24 @@ function Get-LabVMs {
 	[OutputType([System.Collections.Hashtable[]])]
 	[CmdLetBinding()]
 	param (
-		[Parameter(Position=0)]
+		[Parameter(
+			Mandatory=$true,
+			Position=0)]
+		[ValidateNotNullOrEmpty()]
 		[XML]$Configuration,
 
-		[Parameter(Position=1)]
+		[Parameter(
+			Mandatory=$true,
+			Position=1)]
+		[ValidateNotNullOrEmpty()]
 		[System.Collections.Hashtable[]]$VMTemplates,
 
-		[Parameter(Position=2)]
+		[Parameter(
+			Mandatory=$true,
+			Position=2)]
+		[ValidateNotNullOrEmpty()]
 		[System.Collections.Hashtable[]]$Switches
 	)
-
-	If (-not $Configuration) {
-		Throw "Configuration is missing or null."
-	}
-
-	If ($Configuration.labbuilderconfig -eq $null) {
-		Throw "Configuration is invalid."
-	}
-
-	If (-not $VMTemplates) {
-		Throw "VMTemplates is missing or null."
-	}
-
-	If (-not $Switches) {
-		Throw "Switches is missing or null."
-	}
 
 	[System.Collections.Hashtable[]]$LabVMs = @()
 	[String]$VHDParentPath = $Configuration.labbuilderconfig.SelectNodes('settings').vhdparentpath
@@ -487,25 +486,40 @@ function Get-LabVMs {
 	[Microsoft.HyperV.PowerShell.VMSwitch[]]$CurrentSwitches = Get-VMSwitch
 
 	Foreach ($VM in $VMs) {
-		# Find the template that this VM uses and get the Parent VHD Path
-		[String]$TemplateVHDPath = $null
+		If (-not $VM.Name)
+		{
+			throw "The VM name cannot be empty."
+		}
+
+		# Find the template that this VM uses and get the VHD Path
+		[String]$TemplateVHDPath =''
+		[Boolean]$Found = $false
 		Foreach ($VMTemplate in $VMTemplates) {
 			If ($VMTemplate.Name -eq $VM.Template) {
 				$TemplateVHDPath = $VMTemplate.templatevhd
+				$Found = $true
 				Break
 			}
 		}
-		If ($TemplateVHDPath -eq $null)
+		If (-not $Found)
 		{
-			throw "The template $($VM.Template) is not available."
+			throw "The template $($VM.Template) specified in VM $($VM.Name) could not be found."
 		}
-		If (-not (Test-Path $TemplateVHDPath))
+		# Check the VHD File path in the tempalte is not empty - it 
+		If (-not $TemplateVHDPath)
 		{
-			throw "The template VHD $TemplateVHDPath can not be found."
+			throw "The template VHD path set in template $($VM.Template) cannot be empty."
 		}
 
+		# Assemble the Network adapters that this VM will use
 		[System.Collections.Hashtable[]]$VMAdapters = @()
 		Foreach ($VMAdapter in $VM.Adapters.Adapter) {
+			If (-not $VMAdapters.Name) {
+				Throw "The Adapter Name in VM ($VM.Name) cannot be empty."
+			}
+			If (-not $VMAdapters.SwitchName) {
+				Throw "The Switch Name specified in adapter $($VMAdapter.Name) specified in VM ($VM.Name) cannot be empty."
+			}
 			# Check the switch is in the switch list
 			[Boolean]$Found = $False
 			Foreach ($Switch in $Switches) {
@@ -517,7 +531,7 @@ function Get-LabVMs {
 				} # If
 			} # Foreach
 			If (-not $Found) {
-				throw "The switch $($VMAdapter.SwitchName) could not be found in Hyper-V."
+				throw "The switch $($VMAdapter.SwitchName) could not be found in Hyper-V Switches."
 			} # If
 			# Check the switch is available in Hyper-V
 			If (($CurrentSwitches | Where-Object -Property Name -eq $VMAdapter.SwitchName).Count -eq 0) {
@@ -555,16 +569,22 @@ function Get-LabVMs {
 function Initialize-LabVMs {
 	[CmdLetBinding()]
 	param (
-		[Parameter(Mandatory=$true)]
+		[Parameter(
+			Mandatory=$true,
+			Position=0)]
+		[ValidateNotNullOrEmpty()]
 		[XML]$Configuration,
 
-		[Parameter(Mandatory=$true)]
+		[Parameter(
+			Mandatory=$true,
+			Position=1)]
+		[ValidateNotNullOrEmpty()]
 		[System.Collections.Hashtable[]]$VMs
 	)
 	
 	$CurrentVMs = Get-VM
 	[String]$VMPath = $Configuration.labbuilderconfig.SelectNodes('settings').vmpath
-	
+
 	Foreach ($VM in $VMs) {
 		If (($CurrentVMs | Where-Object -Property Name -eq $VM.Name).Count -eq 0) {
 			Write-Verbose "Creating VM $($VM.Name) ..."
@@ -590,8 +610,8 @@ function Initialize-LabVMs {
 					Write-Verbose "VM $($VM.Name) boot disk $VMBootDiskPath being created ..."
 					Copy-Item -Path $VM.TemplateVHD -Destination $VMBootDiskPath | Out-Null
 				}            
-				# Because this is a new boot disk create an unattend file and inject it into the VHD
-				Set-LabVMUnattendFile -Configuration $Configuration -VMBootDiskPath $VMBootDiskPath -VM $VM
+				# Because this is a new boot disk assign any required initialization files to it (Unattend.xml etc).
+				Set-LabVMInitializationFiles -Configuration $Configuration -VMBootDiskPath $VMBootDiskPath -VM $VM
 			} Else {
 				Write-Verbose "VM $($VM.Name) boot disk $VMBootDiskPath already exists..."
 			} # If
@@ -677,10 +697,16 @@ function Initialize-LabVMs {
 function Remove-LabVMs {
 	[CmdLetBinding()]
 	param (
-		[Parameter(Mandatory=$true)]
+		[Parameter(
+			Mandatory=$true,
+			Position=0)]
+		[ValidateNotNullOrEmpty()]
 		[XML]$Configuration,
 
-		[Parameter(Mandatory=$true)]
+		[Parameter(
+			Mandatory=$true,
+			position=1)]
+		[ValidateNotNullOrEmpty()]
 		[System.Collections.Hashtable[]]$VMs,
 
 		[Switch]$RemoveVHDs
@@ -748,7 +774,7 @@ function Wait-LabVMOff {
 ##########################################################################################################################################
 
 ##########################################################################################################################################
-function Set-LabVMUnattendFile {
+function Set-LabVMInitializationFiles {
 	[CmdLetBinding()]
 	param (
 		[Parameter(Mandatory=$true)]
@@ -837,7 +863,7 @@ $UnattendContent = [String] @"
 	Dismount-WindowsImage -Path $MountPount -Save | Out-Null
 	Remove-Item -Path $MountPount | Out-Null
 	Remove-Item -Path $UnattendFile | Out-Null
-} # Set-LabVMUnattendFile
+} # Set-LabVMInitializationFiles
 ##########################################################################################################################################
 
 ##########################################################################################################################################
@@ -959,9 +985,11 @@ Function Uninstall-Lab {
 # Export the Module Cmdlets
 Export-ModuleMember -Function `
 	Get-LabConfiguration,Test-LabConfiguration, `
-	Install-LabHyperV,Initialize-LabHyperV, `
+	Install-LabHyperV,Initialize-LabHyperV,Initialize-LabDSC, `
 	Get-LabSwitches,Initialize-LabSwitches,Remove-LabSwitches, `
 	Get-LabVMTemplates,Initialize-LabVMTemplates,Remove-LabVMTemplates, `
 	Get-LabVMs,Initialize-LabVMs,Remove-LabVMs, `
+	Wait-LabVMStart, Wait-LabVMOff, `
+	Set-LabVMInitializationFiles, Set-LabVMInitalDSCPushMode, `
 	Install-Lab,Uninstall-Lab
 ##########################################################################################################################################

@@ -30,12 +30,12 @@
   </switches>
 
   <templates fromvm="pester template *">
-    <template name="Pester Windows Server 2012 R2 Full"
+    <template name="Pester Windows Server 2012 R2 Datacenter Full"
               vhd="Windows Server 2012 R2 Datacenter Full.vhdx"
               installiso="Tests\DummyISO\9600.16384.130821-1623_x64fre_Server_EN-US_IRM_SSS_DV5.iso"
               edition="Windows Server 2012 R2 SERVERDATACENTER"
               allowcreate="Y"/>
-    <template name="Pester Windows Server 2012 R2 Core"
+    <template name="Pester Windows Server 2012 R2 Datacenter Core"
               vhd="Windows Server 2012 R2 Datacenter Core.vhdx"
               installiso="Tests\DummyISO\9600.16384.130821-1623_x64fre_Server_EN-US_IRM_SSS_DV5.iso"
               edition="Windows Server 2012 R2 SERVERDATACENTERCORE"
@@ -48,41 +48,13 @@
   </templates>
 
   <vms>
-    <vm name="PESTER.VM1" template="Template Windows Server 2012 R2 Datacenter Full">
+    <vm name="PESTER.VM1" template="Pester Windows Server 2012 R2 Datacenter Full">
       <usedifferencingbootdisk>Y</usedifferencingbootdisk>
       <datavhdsize>10GB</datavhdsize>
-      <memorystartupbytes>1073741824</memorystartupbytes>
+      <memorystartupbytes>536870912</memorystartupbytes>
       <processorcount>1</processorcount>
       <adapters>
-        <adapter name="Pester Test External" switchname="Pester Test External" macaddress="00155D010801" />
-      </adapters>
-      <administratorpassword>None</administratorpassword>
-      <productkey>W3GGN-FT8W3-Y4M27-J84CP-Q3VJ9</productkey>
-      <timezone>Pacific Standard Time</timezone>
-      <dscconfig>VM1</dscconfig>
-    </vm>
-
-    <vm name="PESTER.VM2" template="Template Windows Server 2012 R2 Datacenter Full">
-      <usedifferencingbootdisk>Y</usedifferencingbootdisk>
-      <datavhdsize>10GB</datavhdsize>
-      <memorystartupbytes>1073741824</memorystartupbytes>
-      <processorcount>1</processorcount>
-      <adapters>
-        <adapter name="Pester Test External" switchname="Pester Test External" macaddress="00155D010801" />
-      </adapters>
-      <administratorpassword>None</administratorpassword>
-      <productkey>W3GGN-FT8W3-Y4M27-J84CP-Q3VJ9</productkey>
-      <timezone>Pacific Standard Time</timezone>
-      <dscconfig>VM1</dscconfig>
-    </vm>
-
-    <vm name="PESTER.VM1" template="Template Windows Server 2012 R2 Datacenter Full">
-      <usedifferencingbootdisk>Y</usedifferencingbootdisk>
-      <datavhdsize>10GB</datavhdsize>
-      <memorystartupbytes>1073741824</memorystartupbytes>
-      <processorcount>1</processorcount>
-      <adapters>
-        <adapter name="Pester Test External" switchname="Pester Test External" macaddress="00155D010801" />
+        <adapter name="Pester Test External" switchname="Pester Test External" macaddress="00155D010802" />
       </adapters>
       <administratorpassword>None</administratorpassword>
       <productkey>W3GGN-FT8W3-Y4M27-J84CP-Q3VJ9</productkey>

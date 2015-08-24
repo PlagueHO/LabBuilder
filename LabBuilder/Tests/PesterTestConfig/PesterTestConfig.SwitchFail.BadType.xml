@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<labbuilderconfig name="PesterTestConfig" version="1.0">
+  <description>Configuration File Used with Pester Tests</description>
+  
+  <settings>
+    <domainname>PESTER.LOCAL</domainname>
+    <email>daniel@bmdlab.com</email>
+    <vmpath>C:\Pester Lab</vmpath>
+    <vhdparentpath>C:\Pester Lab\Virtual Hard Disk Templates</vhdparentpath>
+    <macaddressminimum>001122334400</macaddressminimum>
+    <macaddressmaximum>0011223344FF</macaddressmaximum>
+  </settings>
+
+  <dsc configpath="C:\PesterTestConfig DSC\" />
+
+  <switches>
+    <switch type="BadType" vlan="2" />
+  </switches>
+
+  <templates />
+
+  <vms />
+</labbuilderconfig>

@@ -9,13 +9,12 @@ $sut = (Split-Path -Leaf $MyInvocation.MyCommand.Path).Replace(".Tests.", ".")
 
 Remove-Module LabBuilder -ErrorAction SilentlyContinue
 Import-Module "$here\LabBuilder.psd1"
-$TestConfigPath = "$here\Tests\PesterTestConfig.xml"
-$helperDir = "$here\TestHelpers"
-Resolve-Path $helperDir\*.ps1 | % { . $_.ProviderPath }
+$TestConfigPath = "$here\Tests\PesterTestConfig"
+$TestConfigOKPath = "$TestConfigPath\PesterTestConfig.OK.xml"
 
 ##########################################################################################################################################
 Describe "Get-LabConfiguration" {
-	Context "No parameter is passed" {
+	Context "No parameters passed" {
 		It "Fails" {
 			{ Get-LabConfiguration } | Should Throw
 		}
@@ -27,7 +26,7 @@ Describe "Get-LabConfiguration" {
 	}
 	Context "Path is provided and valid XML file exists" {
 		It "Returns XmlDocument object with valid content" {
-			$Config = Get-LabConfiguration -Path $TestConfigPath
+			$Config = Get-LabConfiguration -Path $TestConfigOKPath
 			$Config.GetType().Name | Should Be 'XmlDocument'
 			$Config.labbuilderconfig | Should Not Be $null
 		}
@@ -39,7 +38,7 @@ Describe "Get-LabConfiguration" {
 	}
 	Context "Content is provided and contains valid XML" {
 		It "Returns XmlDocument object with valid content" {
-			$Config = Get-LabConfiguration -Content (Get-Content -Path $TestConfigPath -Raw)
+			$Config = Get-LabConfiguration -Content (Get-Content -Path $TestConfigOKPath -Raw)
 			$Config.GetType().Name | Should Be 'XmlDocument'
 			$Config.labbuilderconfig | Should Not Be $null
 		}
@@ -49,14 +48,16 @@ Describe "Get-LabConfiguration" {
 
 ##########################################################################################################################################
 Describe "Test-LabConfiguration" {
-	$Config = Get-LabConfiguration -Path $TestConfigPath
-	Remove-Item -Path $Config.labbuilderconfig.SelectNodes('settings').vmpath -Recurse -Force -ErrorAction SilentlyContinue
+	$Config = Get-LabConfiguration -Path $TestConfigOKPath
 
-	Context "No parameter is passed" {
+	Context "No parameters passed" {
 		It "Fails" {
 			{ Test-LabConfiguration } | Should Throw
 		}
 	}
+
+	Remove-Item -Path $Config.labbuilderconfig.SelectNodes('settings').vmpath -Recurse -Force -ErrorAction SilentlyContinue
+
 	Context "Valid Configuration is provided and VMPath folder does not exist" {
 		It "Fails" {
 			{ Test-LabConfiguration -Configuration $Config } | Should Throw
@@ -84,8 +85,13 @@ Describe "Test-LabConfiguration" {
 
 ##########################################################################################################################################
 Describe "Install-LabHyperV" {
-	$Config = Get-LabConfiguration -Path $TestConfigPath
+	$Config = Get-LabConfiguration -Path $TestConfigOKPath
 
+	Context "No parameters passed" {
+		It "Fails" {
+			{ Install-LabHyperV } | Should Throw
+		}
+	}
 	Context "The function exists" {
 		It "Returns True" {
 			If ((Get-CimInstance Win32_OperatingSystem).ProductType -eq 1) {
@@ -101,19 +107,20 @@ Describe "Install-LabHyperV" {
 
 ##########################################################################################################################################
 Describe "Initialize-LabHyperV" {
-	$Config = Get-LabConfiguration -Path $TestConfigPath
+	$Config = Get-LabConfiguration -Path $TestConfigOKPath
 	
 	$CurrentMacAddressMinimum = (Get-VMHost).MacAddressMinimum
 	$CurrentMacAddressMaximum = (Get-VMHost).MacAddressMaximum
 	Set-VMHost -MacAddressMinimum '001000000000' -MacAddressMaximum '0010000000FF'
-	Context "No parameter is passed" {
+
+	Context "No parameters passed" {
 		It "Fails" {
 			{ Initialize-LabHyperV } | Should Throw
 		}
 	}
 	Context "Valid configuration is passed" {
 		It "Returns True" {
-			Initialize-LabHyperV -Config $Config | Should Be $True
+			Initialize-LabHyperV -Configuration $Config | Should Be $True
 		}
 		It "MacAddressMinumum should be $($Config.labbuilderconfig.SelectNodes('settings').macaddressminimum)" {
 			(Get-VMHost).MacAddressMinimum | Should Be $Config.labbuilderconfig.SelectNodes('settings').macaddressminimum
@@ -128,11 +135,16 @@ Describe "Initialize-LabHyperV" {
 
 ##########################################################################################################################################
 Describe "Initialize-LabDSC" {
-	$Config = Get-LabConfiguration -Path $TestConfigPath
+	$Config = Get-LabConfiguration -Path $TestConfigOKPath
 
-	Context "No parameter is passed" {
+	Context "No parameters passed" {
 		It "Fails" {
 			{ Initialize-LabDSC } | Should Throw
+		}
+	}
+	Context "Valid configuration is passed" {
+		It "Returns True" {
+			Initialize-LabDSC -Configuration $Config | Should Be $True
 		}
 	}
 }
@@ -140,33 +152,89 @@ Describe "Initialize-LabDSC" {
 
 ##########################################################################################################################################
 Describe "Get-LabSwitches" {
-	$Config = Get-LabConfiguration -Path $TestConfigPath
-	$ExpectedSwtiches = @( 
-				@{ name="Pester Test External"; type="External"; vlan=$null; adapters=[System.Collections.Hashtable[]]@(
-					@{ name="Cluster"; macaddress="00155D010701" },
-					@{ name="Management"; macaddress="00155D010702" },
-					@{ name="SMB"; macaddress="00155D010703" },
-					@{ name="LM"; macaddress="00155D010704" }
-					)
-				},
-				@{ name="Pester Test Private Vlan"; type="Private"; vlan="2"; adapters=@() },
-				@{ name="Pester Test Private"; type="Private"; vlan=$null; adapters=@() },
-				@{ name="Pester Test Internal Vlan"; type="Internal"; vlan="3"; adapters=@() },
-				@{ name="Pester Test Internal"; type="Internal"; vlan=$null; adapters=@() }
-			)
-	Context "No parameter is passed" {
+	Context "No parameters passed" {
 		It "Fails" {
-			{ Get-LabSwitches } | Should Throw
+			{ Get-LabConfiguration } | Should Throw
+		}
+	}
+	Context "Configuration passed with switch missing Switch Name." {
+		It "Fails" {
+			{ Get-LabSwitches -Configuration (Get-LabConfiguration -Path "$TestConfigPath\PesterTestConfig.SwitchFail.NoName.xml") } | Should Throw
+		}
+	}
+	Context "Configuration passed with switch missing Switch Type." {
+		It "Fails" {
+			{ Get-LabSwitches -Configuration (Get-LabConfiguration -Path "$TestConfigPath\PesterTestConfig.SwitchFail.NoType.xml") } | Should Throw
+		}
+	}
+	Context "Configuration passed with switch invalid Switch Type." {
+		It "Fails" {
+			{ Get-LabSwitches -Configuration (Get-LabConfiguration -Path "$TestConfigPath\PesterTestConfig.SwitchFail.BadType.xml") } | Should Throw
+		}
+	}
+	Context "Configuration passed with switch containing adapters but is not External type." {
+		It "Fails" {
+			{ Get-LabSwitches -Configuration (Get-LabConfiguration -Path "$TestConfigPath\PesterTestConfig.SwitchFail.AdaptersSet.xml") } | Should Throw
 		}
 	}
 	Context "Valid configuration is passed" {
-		$Switches = Get-LabSwitches -Config $Config
+		$Config = Get-LabConfiguration -Path $TestConfigOKPath
+		$Switches = Get-LabSwitches -Configuration $Config
+		# Set-Content -Path "$($ENV:Temp)\Switches.json" -Value ($Switches | ConvertTo-Json -Depth 4)
 		
-		It "Returns 5 Switch Items" {
-			$Switches.Count | Should Be 5
-		}
 		It "Returns Switches Object that matches Expected Object" {
-			[String]::Compare(($Switches | ConvertTo-Json -Depth 4),($ExpectedSwtiches | ConvertTo-Json -Depth 4),$true) | Should Be 0
+			$ExpectedSwitches = [string] @"
+[
+    {
+        "vlan":  null,
+        "name":  "Pester Test External",
+        "adapters":  [
+                         {
+                             "name":  "Cluster",
+                             "macaddress":  "00155D010701"
+                         },
+                         {
+                             "name":  "Management",
+                             "macaddress":  "00155D010702"
+                         },
+                         {
+                             "name":  "SMB",
+                             "macaddress":  "00155D010703"
+                         },
+                         {
+                             "name":  "LM",
+                             "macaddress":  "00155D010704"
+                         }
+                     ],
+        "type":  "External"
+    },
+    {
+        "vlan":  "2",
+        "name":  "Pester Test Private Vlan",
+        "adapters":  null,
+        "type":  "Private"
+    },
+    {
+        "vlan":  null,
+        "name":  "Pester Test Private",
+        "adapters":  null,
+        "type":  "Private"
+    },
+    {
+        "vlan":  "3",
+        "name":  "Pester Test Internal Vlan",
+        "adapters":  null,
+        "type":  "Internal"
+    },
+    {
+        "vlan":  null,
+        "name":  "Pester Test Internal",
+        "adapters":  null,
+        "type":  "Internal"
+    }
+]
+"@
+			[String]::Compare(($Switches | ConvertTo-Json -Depth 4),$ExpectedSwitches,$true) | Should Be 0
 		}
 	}
 }
@@ -174,18 +242,18 @@ Describe "Get-LabSwitches" {
 
 ##########################################################################################################################################
 Describe "Initialize-LabSwitches" {
-	$Config = Get-LabConfiguration -Path $TestConfigPath
-	$Switches = Get-LabSwitches -Config $Config
+	$Config = Get-LabConfiguration -Path $TestConfigOKPath
+	$Switches = Get-LabSwitches -Configuration $Config
 	Get-VMSwitch -Name  Pester* | Remove-VMSwitch
 
-	Context "No parameter is passed" {
+	Context "No parameters passed" {
 		It "Fails" {
 			{ Initialize-LabSwitches } | Should Throw
 		}
 	}
 	Context "Valid configuration is passed" {	
 		It "Returns True" {
-			Initialize-LabSwitches -Config $Config -Switches $Switches | Should Be $True
+			Initialize-LabSwitches -Configuration $Config -Switches $Switches | Should Be $True
 		}
 		It "Creates 2 Pester Internal Switches" {
 			(Get-VMSwitch -Name Pester* | Where-Object -Property SwitchType -EQ Internal).Count | Should Be 2
@@ -201,21 +269,21 @@ Describe "Initialize-LabSwitches" {
 
 ##########################################################################################################################################
 Describe "Remove-LabSwitches" {
-	$Config = Get-LabConfiguration -Path $TestConfigPath
-	$Switches = Get-LabSwitches -Config $Config
+	$Config = Get-LabConfiguration -Path $TestConfigOKPath
+	$Switches = Get-LabSwitches -Configuration $Config
 	New-VMSwitch -Name "Pester Test Private Vlan" -SwitchType "Private"
 	New-VMSwitch -Name "Pester Test Private" -SwitchType "Private"
 	New-VMSwitch -Name "Pester Test Internal Vlan" -SwitchType "Internal"
 	New-VMSwitch -Name "Pester Test Internal" -SwitchType "Internal"
 
-	Context "No parameter is passed" {
+	Context "No parameters passed" {
 		It "Fails" {
 			{ Remove-LabSwitches } | Should Throw
 		}
 	}
 	Context "Valid configuration is passed" {	
 		It "Returns True" {
-			Remove-LabSwitches -Config $Config -Switches $Switches | Should Be $True
+			Remove-LabSwitches -Configuration $Config -Switches $Switches | Should Be $True
 		}
 		It "Removes All Pester Switches" {
 			(Get-VMSwitch -Name Pester*).Count | Should Be 0
@@ -226,45 +294,55 @@ Describe "Remove-LabSwitches" {
 
 ##########################################################################################################################################
 Describe "Get-LabVMTemplates" {
-	$Config = Get-LabConfiguration -Path $TestConfigPath
-	$ExpectedTemplates = @( 
-				@{
-					name="Pester Windows Server 2012 R2 Full";
-					templatevhd="C:\Pester Lab\Virtual Hard Disk Templates\Windows Server 2012 R2 Datacenter Full.vhdx";
-					installiso="Tests\DummyISO\9600.16384.130821-1623_x64fre_Server_EN-US_IRM_SSS_DV5.iso";
-					allowcreate="Y";
-					edition="Windows Server 2012 R2 SERVERDATACENTER";
-					vhd="Windows Server 2012 R2 Datacenter Full.vhdx";
-				},
-				@{
-					name="Pester Windows Server 2012 R2 Core";
-					templatevhd="C:\Pester Lab\Virtual Hard Disk Templates\Windows Server 2012 R2 Datacenter Core.vhdx";
-					installiso="Tests\DummyISO\9600.16384.130821-1623_x64fre_Server_EN-US_IRM_SSS_DV5.iso";
-					allowcreate="Y";
-					edition="Windows Server 2012 R2 SERVERDATACENTERCORE";
-					vhd="Windows Server 2012 R2 Datacenter Core.vhdx";
-				},
-				@{
-					name="Pester Windows 10 Enterprise";
-					templatevhd="C:\Pester Lab\Virtual Hard Disk Templates\Windows 10 Enterprise.vhdx";
-					installiso="Tests\DummyISO\10240.16384.150709-1700.TH1_CLIENTENTERPRISE_VOL_X64FRE_EN-US.iso";
-					allowcreate="Y";
-					edition="Windows 10 Enterprise";
-					vhd="Windows 10 Enterprise.vhdx";
-				}
-			)
-	Context "No parameter is passed" {
+	Context "No parameters passed" {
 		It "Fails" {
 			{ Get-LabVMTemplates } | Should Throw
 		}
 	}
-	Context "Valid configuration is passed" {
-		$Templates = Get-LabVMTemplates -Config $Config
-		It "Returns 3 Template Items" {
-			$Templates.Count | Should Be 3
+	Context "Configuration passed with template missing Template Name." {
+		It "Fails" {
+			{ Get-LabVMTemplates -Configuration (Get-LabConfiguration -Path "$TestConfigPath\PesterTestConfig.TemplateFail.NoName.xml") } | Should Throw
 		}
+	}
+	Context "Configuration passed with template missing VHD Path." {
+		It "Fails" {
+			{ Get-LabVMTemplates -Configuration (Get-LabConfiguration -Path "$TestConfigPath\PesterTestConfig.TemplateFail.NoVHD.xml") } | Should Throw
+		}
+	}
+	Context "Valid configuration is passed" {
+		$Config = Get-LabConfiguration -Path $TestConfigOKPath
+		$Templates = Get-LabVMTemplates -Configuration $Config 
+		# Set-Content -Path "$($ENV:Temp)\VMTemplates.json" -Value ($Templates | ConvertTo-Json -Depth 2)
 		It "Returns Template Object that matches Expected Object" {
-			[String]::Compare(($Templates | ConvertTo-Json -Depth 2),($ExpectedTemplates | ConvertTo-Json -Depth 2),$true) | Should Be 0
+		$ExpectedTemplates = [string] @"
+[
+    {
+        "vhd":  "Windows Server 2012 R2 Datacenter Full.vhdx",
+        "name":  "Pester Windows Server 2012 R2 Datacenter Full",
+        "installiso":  "Tests\\DummyISO\\9600.16384.130821-1623_x64fre_Server_EN-US_IRM_SSS_DV5.iso",
+        "allowcreate":  "Y",
+        "edition":  "Windows Server 2012 R2 SERVERDATACENTER",
+        "templatevhd":  "C:\\Pester Lab\\Virtual Hard Disk Templates\\Windows Server 2012 R2 Datacenter Full.vhdx"
+    },
+    {
+        "vhd":  "Windows Server 2012 R2 Datacenter Core.vhdx",
+        "name":  "Pester Windows Server 2012 R2 Datacenter Core",
+        "installiso":  "Tests\\DummyISO\\9600.16384.130821-1623_x64fre_Server_EN-US_IRM_SSS_DV5.iso",
+        "allowcreate":  "Y",
+        "edition":  "Windows Server 2012 R2 SERVERDATACENTERCORE",
+        "templatevhd":  "C:\\Pester Lab\\Virtual Hard Disk Templates\\Windows Server 2012 R2 Datacenter Core.vhdx"
+    },
+    {
+        "vhd":  "Windows 10 Enterprise.vhdx",
+        "name":  "Pester Windows 10 Enterprise",
+        "installiso":  "Tests\\DummyISO\\10240.16384.150709-1700.TH1_CLIENTENTERPRISE_VOL_X64FRE_EN-US.iso",
+        "allowcreate":  "Y",
+        "edition":  "Windows 10 Enterprise",
+        "templatevhd":  "C:\\Pester Lab\\Virtual Hard Disk Templates\\Windows 10 Enterprise.vhdx"
+    }
+]
+"@
+			[String]::Compare(($Templates | ConvertTo-Json -Depth 2),$ExpectedTemplates,$true) | Should Be 0
 		}
 	}
 }
@@ -272,17 +350,17 @@ Describe "Get-LabVMTemplates" {
 
 ##########################################################################################################################################
 Describe "Initialize-LabVMTemplates" {
-	$Config = Get-LabConfiguration -Path $TestConfigPath
-	$VMTemplates = Get-LabVMTemplates -Config $Config
+	$Config = Get-LabConfiguration -Path $TestConfigOKPath
+	$VMTemplates = Get-LabVMTemplates -Configuration $Config
 
-	Context "No parameter is passed" {
+	Context "No parameters passed" {
 		It "Fails" {
 			{ Initialize-LabVMTemplates } | Should Throw
 		}
 	}
 	Context "Valid configuration is passed" {	
 		It "Returns True" {
-			Initialize-LabVMTemplates -Config $Config -VMTemplates $VMTemplates | Should Be $True
+			Initialize-LabVMTemplates -Configuration $Config -VMTemplates $VMTemplates | Should Be $True
 		}
 	}
 
@@ -292,17 +370,17 @@ Describe "Initialize-LabVMTemplates" {
 
 ##########################################################################################################################################
 Describe "Remove-LabVMTemplates" {
-	$Config = Get-LabConfiguration -Path $TestConfigPath
-	$VMTemplates = Get-LabVMTemplates -Config $Config
+	$Config = Get-LabConfiguration -Path $TestConfigOKPath
+	$VMTemplates = Get-LabVMTemplates -Configuration $Config
 
-	Context "No parameter is passed" {
+	Context "No parameters passed" {
 		It "Fails" {
 			{ Remove-LabVMTemplates } | Should Throw
 		}
 	}
 	Context "Valid configuration is passed" {	
 		It "Returns True" {
-			Remove-LabVMTemplates -Config $Config -VMTemplates $VMTemplates | Should Be $True
+			Remove-LabVMTemplates -Configuration $Config -VMTemplates $VMTemplates | Should Be $True
 		}
 	}
 }
@@ -310,20 +388,26 @@ Describe "Remove-LabVMTemplates" {
 
 ##########################################################################################################################################
 Describe "Get-LabVMs" {
-	$Config = Get-LabConfiguration -Path $TestConfigPath
-	Context "No parameter is passed" {
+	$Config = Get-LabConfiguration -Path $TestConfigOKPath
+	$VMTemplates = Get-LabVMTemplates -Configuration $Config
+	$Switches = Get-LabSwitches -Configuration $Config
+	$ExpectedVMs = [String] @"
+
+"@
+
+	Context "No parameters passed" {
 		It "Fails" {
 			{ Get-LabVMs } | Should Throw
 		}
 	}
 	Context "Valid configuration is passed" {
-		$Templates = Get-LabVMSwitches -Config $Config
-		$Templates = Get-LabVMTemplates -Config $Config
-		It "Returns 2 Template Items" {
-			$Templates.Count | Should Be 2
+		$VMs = Get-LabVMs -Configuration $Config -VMTemplates $VMTemplates -Switches $Switches
+		Set-Content -Path "$($ENV:Temp)\VMs.json" -Content ($VMs | ConvertTo-Json -Depth 4)
+		It "Returns 1 VM Items" {
+			$VMs.Count | Should Be 1
 		}
 		It "Returns Template Object that matches Expected Object" {
-			[String]::Compare(($Templates | ConvertTo-Json -Depth 2),($ExpectedTemplates | ConvertTo-Json -Depth 2),$true) | Should Be 0
+			[String]::Compare(($VMs | ConvertTo-Json -Depth 4),$ExpectedVMs,$true) | Should Be 0
 		}
 	}
 }
@@ -331,37 +415,29 @@ Describe "Get-LabVMs" {
 
 ##########################################################################################################################################
 Describe "Initialize-LabVMs" {
-	$Config = Get-LabConfiguration -Path $TestConfigPath
-	$VMTemplates = Get-LabVMTemplates -Config $Config
+	$Config = Get-LabConfiguration -Path $TestConfigOKPath
+	$Templates = Get-LabVMTemplates -Configuration $Config
+	$Switches = Get-LabSwitches -Configuration $Config
+	$VMs = Get-LabVMs -Configuration $Config -VMTemplates $VMTemplates -VMSwitches $Switches
 
-	Context "No parameter is passed" {
-		It "Fails" {
-			{ Initialize-LabVMs } | Should Throw
-		}
-	}
 	Context "Valid configuration is passed" {	
 		It "Returns True" {
-			Initialize-LabVMTemplates -Config $Config -VMTemplates $VMTemplates | Should Be $True
+			Initialize-LabVMs -Configuration $Config -VMTemplates $VMs | Should Be $True
 		}
 	}
-
-	Get-VMSwitch -Name  Pester* | Remove-VMSwitch
 }
 ##########################################################################################################################################
 
 ##########################################################################################################################################
 Describe "Remove-LabVMs" {
-	$Config = Get-LabConfiguration -Path $TestConfigPath
-	$VMTemplates = Get-LabVMTemplates -Config $Config
+	$Config = Get-LabConfiguration -Path $TestConfigOKPath
+	$Templates = Get-LabVMTemplates -Configuration $Config
+	$Switches = Get-LabSwitches -Configuration $Config
+	$VMs = Get-LabVMs -Configuration $Config -VMTemplates $VMTemplates -VMSwitches $Switches
 
-	Context "No parameter is passed" {
-		It "Fails" {
-			{ Remove-LabVMs } | Should Throw
-		}
-	}
 	Context "Valid configuration is passed" {	
 		It "Returns True" {
-			Remove-LabVMTemplates -Config $Config -VMTemplates $VMTemplates | Should Be $True
+			Remove-LabVMs -Configuration $Config -VMTemplates $VMs | Should Be $True
 		}
 	}
 }

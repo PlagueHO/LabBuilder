@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<labbuilderconfig name="PesterTestConfig" version="1.0">
+  <description>Configuration File Used with Pester Tests</description>
+  
+  <settings>
+    <domainname>PESTER.LOCAL</domainname>
+    <email>daniel@bmdlab.com</email>
+    <vmpath>C:\Pester Lab</vmpath>
+    <vhdparentpath>C:\Pester Lab\Virtual Hard Disk Templates</vhdparentpath>
+    <macaddressminimum>001122334400</macaddressminimum>
+    <macaddressmaximum>0011223344FF</macaddressmaximum>
+  </settings>
+
+  <dsc configpath="C:\PesterTestConfig DSC\" />
+
+  <switches />
+
+  <templates fromvm="pester template *">
+    <template name="No VHD"
+              installiso="Tests\DummyISO\9600.16384.130821-1623_x64fre_Server_EN-US_IRM_SSS_DV5.iso"
+              edition="Windows Server 2012 R2 SERVERDATACENTER"
+              allowcreate="Y"/>
+  </templates>
+
+  <vms />
+</labbuilderconfig>
