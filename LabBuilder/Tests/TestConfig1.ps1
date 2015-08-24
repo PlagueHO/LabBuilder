@@ -9,8 +9,7 @@ Function Test-LabBuilderUninstall {
 ##########################################################################################################################################
 
 Function Test-LabBuilderLoadModule {
-	Get-Module | Where-Object -Property Name -Eq LabBuilder | Remove-Module
-	Import-Module "$PSScriptRoot\..\LabBuilder" -Verbose
+	Import-Module "$PSScriptRoot\..\LabBuilder" -Verbose -Force
 } # Function Test-LabBuilderLoadModule
 ##########################################################################################################################################
 Test-LabBuilderLoadModule

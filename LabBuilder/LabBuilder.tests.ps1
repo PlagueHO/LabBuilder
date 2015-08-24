@@ -7,8 +7,7 @@
 $here = Split-Path -Parent $MyInvocation.MyCommand.Path
 $sut = (Split-Path -Leaf $MyInvocation.MyCommand.Path).Replace(".Tests.", ".")
 
-Remove-Module LabBuilder -ErrorAction SilentlyContinue
-Import-Module "$here\LabBuilder.psd1"
+Import-Module "$here\LabBuilder.psd1" -Force
 $TestConfigPath = "$here\Tests\PesterTestConfig"
 $TestConfigOKPath = "$TestConfigPath\PesterTestConfig.OK.xml"
 
@@ -398,6 +397,54 @@ Describe "Get-LabVMs" {
 			{ Get-LabVMs } | Should Throw
 		}
 	}
+	Context "Configuration passed with VM missing VM Name." {
+		It "Fails" {
+			$Config = Get-LabConfiguration -Path "$TestConfigPath\PesterTestConfig.VMFail.NoName.xml"
+			$Switches = Get-LabSwitches -Configuration $Config
+			$VMTemplates = Get-LabVMTemplates -Configuration $Config
+			{ Get-LabVMs -Configuration $Config -VMTemplates $VMTemplates -Switches $Switches } | Should Throw
+		}
+	}
+	Context "Configuration passed with VM missing Template." {
+		It "Fails" {
+			$Config = Get-LabConfiguration -Path "$TestConfigPath\PesterTestConfig.VMFail.NoTemplate.xml"
+			$Switches = Get-LabSwitches -Configuration $Config
+			$VMTemplates = Get-LabVMTemplates -Configuration $Config
+			{ Get-LabVMs -Configuration $Config -VMTemplates $VMTemplates -Switches $Switches } | Should Throw
+		}
+	}
+	Context "Configuration passed with VM invalid Template." {
+		It "Fails" {
+			$Config = Get-LabConfiguration -Path "$TestConfigPath\PesterTestConfig.VMFail.BadTemplate.xml"
+			$Switches = Get-LabSwitches -Configuration $Config
+			$VMTemplates = Get-LabVMTemplates -Configuration $Config
+			{ Get-LabVMs -Configuration $Config -VMTemplates $VMTemplates -Switches $Switches } | Should Throw
+		}
+	}
+	Context "Configuration passed with VM missing adapter name." {
+		It "Fails" {
+			$Config = Get-LabConfiguration -Path "$TestConfigPath\PesterTestConfig.VMFail.NoAdapterName.xml"
+			$Switches = Get-LabSwitches -Configuration $Config
+			$VMTemplates = Get-LabVMTemplates -Configuration $Config
+			{ Get-LabVMs -Configuration $Config -VMTemplates $VMTemplates -Switches $Switches } | Should Throw
+		}
+	}
+	Context "Configuration passed with VM missing adapter switch name." {
+		It "Fails" {
+			$Config = Get-LabConfiguration -Path "$TestConfigPath\PesterTestConfig.VMFail.NoAdapterSwitch.xml"
+			$Switches = Get-LabSwitches -Configuration $Config
+			$VMTemplates = Get-LabVMTemplates -Configuration $Config
+			{ Get-LabVMs -Configuration $Config -VMTemplates $VMTemplates -Switches $Switches } | Should Throw
+		}
+	}
+	Context "Configuration passed with VM invalid adapter switch name." {
+		It "Fails" {
+			$Config = Get-LabConfiguration -Path "$TestConfigPath\PesterTestConfig.VMFail.BadAdapterSwitch.xml"
+			$Switches = Get-LabSwitches -Configuration $Config
+			$VMTemplates = Get-LabVMTemplates -Configuration $Config
+			{ Get-LabVMs -Configuration $Config -VMTemplates $VMTemplates -Switches $Switches } | Should Throw
+		}
+	}
 	Context "Valid configuration is passed" {
 		$Config = Get-LabConfiguration -Path $TestConfigOKPath
 		$Switches = Get-LabSwitches -Configuration $Config
@@ -453,14 +500,19 @@ Describe "Get-LabVMs" {
 
 ##########################################################################################################################################
 Describe "Initialize-LabVMs" {
-	$Config = Get-LabConfiguration -Path $TestConfigOKPath
-	$Templates = Get-LabVMTemplates -Configuration $Config
-	$Switches = Get-LabSwitches -Configuration $Config
-	$VMs = Get-LabVMs -Configuration $Config -VMTemplates $VMTemplates -VMSwitches $Switches
-
+	Context "No parameters passed" {
+		It "Fails" {
+			{ Initialize-LabVMs } | Should Throw
+		}
+	}
 	Context "Valid configuration is passed" {	
+		$Config = Get-LabConfiguration -Path $TestConfigOKPath
+		$Templates = Get-LabVMTemplates -Configuration $Config
+		$Switches = Get-LabSwitches -Configuration $Config
+		$VMs = Get-LabVMs -Configuration $Config -VMTemplates $VMTemplates -VMSwitches $Switches
+
 		It "Returns True" {
-			Initialize-LabVMs -Configuration $Config -VMTemplates $VMs | Should Be $True
+			Initialize-LabVMs -Configuration $Config -VMTemplates $VMs -VMs Get-LabVMs | Should Be $True
 		}
 	}
 }

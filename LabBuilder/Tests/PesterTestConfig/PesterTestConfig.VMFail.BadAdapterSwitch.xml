@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<labbuilderconfig name="PesterTestConfig" version="1.0">
+  <description>Configuration File Used with Pester Tests</description>
+  
+  <settings>
+    <domainname>PESTER.LOCAL</domainname>
+    <email>daniel@bmdlab.com</email>
+    <vmpath>C:\Pester Lab</vmpath>
+    <vhdparentpath>C:\Pester Lab\Virtual Hard Disk Templates</vhdparentpath>
+    <macaddressminimum>001122334400</macaddressminimum>
+    <macaddressmaximum>0011223344FF</macaddressmaximum>
+  </settings>
+
+  <dsc configpath="C:\PesterTestConfig DSC\" />
+
+  <switches>
+    <switch name="Pester Test Private Vlan" type="Private" vlan="2" />
+    <switch name="Pester Test Private" type="Private" />
+    <switch name="Pester Test Internal Vlan" type="Internal" vlan="3" />
+    <switch name="Pester Test Internal" type="Internal" />
+  </switches>
+
+  <templates fromvm="pester template *">
+    <template name="Pester Windows Server 2012 R2 Datacenter Full"
+              vhd="Windows Server 2012 R2 Datacenter Full.vhdx"
+              installiso="Tests\DummyISO\9600.16384.130821-1623_x64fre_Server_EN-US_IRM_SSS_DV5.iso"
+              edition="Windows Server 2012 R2 SERVERDATACENTER"
+              allowcreate="Y"/>
+  </templates>
+
+  <vms>
+    <vm template="Pester Windows Server 2012 R2 Datacenter Full">
+      <usedifferencingbootdisk>Y</usedifferencingbootdisk>
+      <datavhdsize>10GB</datavhdsize>
+      <memorystartupbytes>536870912</memorystartupbytes>
+      <processorcount>1</processorcount>
+      <adapters>
+        <adapter name="Bad Adapter Switch" switchname="Pester Bad Switch" macaddress="00155D010801" />
+      </adapters>
+      <administratorpassword>None</administratorpassword>
+      <productkey>W3GGN-FT8W3-Y4M27-J84CP-Q3VJ9</productkey>
+      <timezone>Pacific Standard Time</timezone>
+      <dscconfig>VM1</dscconfig>
+    </vm>
+
+  </vms>
+</labbuilderconfig>

@@ -486,9 +486,13 @@ function Get-LabVMs {
 	[Microsoft.HyperV.PowerShell.VMSwitch[]]$CurrentSwitches = Get-VMSwitch
 
 	Foreach ($VM in $VMs) {
-		If (-not $VM.Name)
+		If ($VM.Name -eq 'VM')
 		{
-			throw "The VM name cannot be empty."
+			throw "The VM name cannot be 'VM' or empty."
+		}
+		If (-not $VM.Template)
+		{
+			throw "The template name in VM $($VM.Name) cannot be empty."
 		}
 
 		# Find the template that this VM uses and get the VHD Path
@@ -505,7 +509,7 @@ function Get-LabVMs {
 		{
 			throw "The template $($VM.Template) specified in VM $($VM.Name) could not be found."
 		}
-		# Check the VHD File path in the tempalte is not empty - it 
+		# Check the VHD File path in the template is not empty
 		If (-not $TemplateVHDPath)
 		{
 			throw "The template VHD path set in template $($VM.Template) cannot be empty."

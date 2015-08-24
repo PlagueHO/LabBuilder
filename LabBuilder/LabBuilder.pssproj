@@ -39,17 +39,24 @@
     <Compile Include="LabBuilder.psd1" />
     <Compile Include="LabBuilder.psm1" />
     <Compile Include="LabBuilder.tests.ps1" />
-    <Compile Include="Tests\PesterTestConfig.xml" />
+    <Compile Include="Tests\PesterTestConfig\PesterTestConfig.OK.xml" />
     <Compile Include="Tests\TestConfig1.dsc\SS_ROOTCA.ps1" />
     <Compile Include="Tests\TestConfig1.ps1" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="TestHelpers\" />
     <Folder Include="Tests\" />
-    <Folder Include="Tests\PesterTestFiles\" />
+    <Folder Include="Tests\PesterTestConfig\" />
     <Folder Include="Tests\TestConfig1.dsc\" />
   </ItemGroup>
   <ItemGroup>
+    <Content Include="Tests\PesterTestConfig\PesterTestConfig.VMFail.NoName.xml" />
+    <Content Include="Tests\PesterTestConfig\PesterTestConfig.TemplateFail.NoVHD.xml" />
+    <Content Include="Tests\PesterTestConfig\PesterTestConfig.TemplateFail.NoName.xml" />
+    <Content Include="Tests\PesterTestConfig\PesterTestConfig.SwitchFail.AdaptersSet.xml" />
+    <Content Include="Tests\PesterTestConfig\PesterTestConfig.SwitchFail.BadType.xml" />
+    <Content Include="Tests\PesterTestConfig\PesterTestConfig.SwitchFail.NoType.xml" />
+    <Content Include="Tests\PesterTestConfig\PesterTestConfig.SwitchFail.NoName.xml" />
     <Content Include="Tests\TestConfig1.xml" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
