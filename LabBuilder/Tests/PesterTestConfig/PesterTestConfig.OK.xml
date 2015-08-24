@@ -54,7 +54,10 @@
       <memorystartupbytes>536870912</memorystartupbytes>
       <processorcount>1</processorcount>
       <adapters>
-        <adapter name="Pester Test External" switchname="Pester Test External" macaddress="00155D010802" />
+        <adapter name="Pester Test Private Vlan" switchname="Pester Test Private Vlan" macaddress="00155D010801" />
+        <adapter name="Pester Test Internal Vlan" switchname="Pester Test Internal Vlan" macaddress="00155D010802"/>
+        <adapter name="Pester Test Private" switchname="Pester Test Private" macaddress="00155D010803" vlan="3" />
+        <adapter name="Pester Test Internal" switchname="Pester Test Internal" macaddress="00155D010804" vlan="4" />
       </adapters>
       <administratorpassword>None</administratorpassword>
       <productkey>W3GGN-FT8W3-Y4M27-J84CP-Q3VJ9</productkey>

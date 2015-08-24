@@ -514,10 +514,10 @@ function Get-LabVMs {
 		# Assemble the Network adapters that this VM will use
 		[System.Collections.Hashtable[]]$VMAdapters = @()
 		Foreach ($VMAdapter in $VM.Adapters.Adapter) {
-			If (-not $VMAdapters.Name) {
-				Throw "The Adapter Name in VM ($VM.Name) cannot be empty."
+			If (-not $VMAdapter.Name) {
+				Throw "The Adapter Name in VM $($VM.Name) cannot be empty."
 			}
-			If (-not $VMAdapters.SwitchName) {
+			If (-not $VMAdapter.SwitchName) {
 				Throw "The Switch Name specified in adapter $($VMAdapter.Name) specified in VM ($VM.Name) cannot be empty."
 			}
 			# Check the switch is in the switch list
@@ -531,12 +531,8 @@ function Get-LabVMs {
 				} # If
 			} # Foreach
 			If (-not $Found) {
-				throw "The switch $($VMAdapter.SwitchName) could not be found in Hyper-V Switches."
+				throw "The switch $($VMAdapter.SwitchName) could not be found in Switches."
 			} # If
-			# Check the switch is available in Hyper-V
-			If (($CurrentSwitches | Where-Object -Property Name -eq $VMAdapter.SwitchName).Count -eq 0) {
-				throw "The switch $($VMAdapter.SwitchName) could not be found in Hyper-V."
-			}
 			
 			# Figure out the VLan - If defined in the VM use it, otherwise use the one defined in the Switch, otherwise keep blank.
 			$VLan = $VMAdapter.VLan

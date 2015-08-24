@@ -48,13 +48,14 @@ Describe "Get-LabConfiguration" {
 
 ##########################################################################################################################################
 Describe "Test-LabConfiguration" {
-	$Config = Get-LabConfiguration -Path $TestConfigOKPath
 
 	Context "No parameters passed" {
 		It "Fails" {
 			{ Test-LabConfiguration } | Should Throw
 		}
 	}
+
+	$Config = Get-LabConfiguration -Path $TestConfigOKPath
 
 	Remove-Item -Path $Config.labbuilderconfig.SelectNodes('settings').vmpath -Recurse -Force -ErrorAction SilentlyContinue
 
@@ -85,7 +86,6 @@ Describe "Test-LabConfiguration" {
 
 ##########################################################################################################################################
 Describe "Install-LabHyperV" {
-	$Config = Get-LabConfiguration -Path $TestConfigOKPath
 
 	Context "No parameters passed" {
 		It "Fails" {
@@ -93,6 +93,8 @@ Describe "Install-LabHyperV" {
 		}
 	}
 	Context "The function exists" {
+		$Config = Get-LabConfiguration -Path $TestConfigOKPath
+		
 		It "Returns True" {
 			If ((Get-CimInstance Win32_OperatingSystem).ProductType -eq 1) {
 				Mock Get-WindowsOptionalFeature { return [PSCustomObject]@{ Name = 'Dummy'; State = 'Enabled'; } }
@@ -107,18 +109,18 @@ Describe "Install-LabHyperV" {
 
 ##########################################################################################################################################
 Describe "Initialize-LabHyperV" {
-	$Config = Get-LabConfiguration -Path $TestConfigOKPath
-	
-	$CurrentMacAddressMinimum = (Get-VMHost).MacAddressMinimum
-	$CurrentMacAddressMaximum = (Get-VMHost).MacAddressMaximum
-	Set-VMHost -MacAddressMinimum '001000000000' -MacAddressMaximum '0010000000FF'
-
 	Context "No parameters passed" {
 		It "Fails" {
 			{ Initialize-LabHyperV } | Should Throw
 		}
 	}
 	Context "Valid configuration is passed" {
+		$Config = Get-LabConfiguration -Path $TestConfigOKPath
+	
+		$CurrentMacAddressMinimum = (Get-VMHost).MacAddressMinimum
+		$CurrentMacAddressMaximum = (Get-VMHost).MacAddressMaximum
+		Set-VMHost -MacAddressMinimum '001000000000' -MacAddressMaximum '0010000000FF'
+
 		It "Returns True" {
 			Initialize-LabHyperV -Configuration $Config | Should Be $True
 		}
@@ -128,14 +130,14 @@ Describe "Initialize-LabHyperV" {
 		It "MacAddressMaximum should be $($Config.labbuilderconfig.SelectNodes('settings').macaddressmaximum)" {
 			(Get-VMHost).MacAddressMaximum | Should Be $Config.labbuilderconfig.SelectNodes('settings').macaddressmaximum
 		}
+		
+		Set-VMHost -MacAddressMinimum $CurrentMacAddressMinimum -MacAddressMaximum $CurrentMacAddressMaximum
 	}
-	Set-VMHost -MacAddressMinimum $CurrentMacAddressMinimum -MacAddressMaximum $CurrentMacAddressMaximum
 }
 ##########################################################################################################################################
 
 ##########################################################################################################################################
 Describe "Initialize-LabDSC" {
-	$Config = Get-LabConfiguration -Path $TestConfigOKPath
 
 	Context "No parameters passed" {
 		It "Fails" {
@@ -143,6 +145,8 @@ Describe "Initialize-LabDSC" {
 		}
 	}
 	Context "Valid configuration is passed" {
+		$Config = Get-LabConfiguration -Path $TestConfigOKPath
+
 		It "Returns True" {
 			Initialize-LabDSC -Configuration $Config | Should Be $True
 		}
@@ -242,9 +246,6 @@ Describe "Get-LabSwitches" {
 
 ##########################################################################################################################################
 Describe "Initialize-LabSwitches" {
-	$Config = Get-LabConfiguration -Path $TestConfigOKPath
-	$Switches = Get-LabSwitches -Configuration $Config
-	Get-VMSwitch -Name  Pester* | Remove-VMSwitch
 
 	Context "No parameters passed" {
 		It "Fails" {
@@ -252,6 +253,11 @@ Describe "Initialize-LabSwitches" {
 		}
 	}
 	Context "Valid configuration is passed" {	
+		$Config = Get-LabConfiguration -Path $TestConfigOKPath
+		$Switches = Get-LabSwitches -Configuration $Config
+
+		Get-VMSwitch -Name  Pester* | Remove-VMSwitch
+
 		It "Returns True" {
 			Initialize-LabSwitches -Configuration $Config -Switches $Switches | Should Be $True
 		}
@@ -261,27 +267,27 @@ Describe "Initialize-LabSwitches" {
 		It "Creates 2 Pester Private Switches" {
 			(Get-VMSwitch -Name Pester* | Where-Object -Property SwitchType -EQ Private).Count | Should Be 2
 		}
-	}
 
-	Get-VMSwitch -Name  Pester* | Remove-VMSwitch
+		Get-VMSwitch -Name  Pester* | Remove-VMSwitch
+	}
 }
 ##########################################################################################################################################
 
 ##########################################################################################################################################
 Describe "Remove-LabSwitches" {
-	$Config = Get-LabConfiguration -Path $TestConfigOKPath
-	$Switches = Get-LabSwitches -Configuration $Config
-	New-VMSwitch -Name "Pester Test Private Vlan" -SwitchType "Private"
-	New-VMSwitch -Name "Pester Test Private" -SwitchType "Private"
-	New-VMSwitch -Name "Pester Test Internal Vlan" -SwitchType "Internal"
-	New-VMSwitch -Name "Pester Test Internal" -SwitchType "Internal"
-
 	Context "No parameters passed" {
 		It "Fails" {
 			{ Remove-LabSwitches } | Should Throw
 		}
 	}
 	Context "Valid configuration is passed" {	
+		$Config = Get-LabConfiguration -Path $TestConfigOKPath
+		$Switches = Get-LabSwitches -Configuration $Config
+		New-VMSwitch -Name "Pester Test Private Vlan" -SwitchType "Private"
+		New-VMSwitch -Name "Pester Test Private" -SwitchType "Private"
+		New-VMSwitch -Name "Pester Test Internal Vlan" -SwitchType "Internal"
+		New-VMSwitch -Name "Pester Test Internal" -SwitchType "Internal"
+
 		It "Returns True" {
 			Remove-LabSwitches -Configuration $Config -Switches $Switches | Should Be $True
 		}
@@ -350,35 +356,33 @@ Describe "Get-LabVMTemplates" {
 
 ##########################################################################################################################################
 Describe "Initialize-LabVMTemplates" {
-	$Config = Get-LabConfiguration -Path $TestConfigOKPath
-	$VMTemplates = Get-LabVMTemplates -Configuration $Config
-
 	Context "No parameters passed" {
 		It "Fails" {
 			{ Initialize-LabVMTemplates } | Should Throw
 		}
 	}
 	Context "Valid configuration is passed" {	
+		$Config = Get-LabConfiguration -Path $TestConfigOKPath
+		$VMTemplates = Get-LabVMTemplates -Configuration $Config
+
 		It "Returns True" {
 			Initialize-LabVMTemplates -Configuration $Config -VMTemplates $VMTemplates | Should Be $True
 		}
 	}
-
-	Get-VMSwitch -Name  Pester* | Remove-VMSwitch
 }
 ##########################################################################################################################################
 
 ##########################################################################################################################################
 Describe "Remove-LabVMTemplates" {
-	$Config = Get-LabConfiguration -Path $TestConfigOKPath
-	$VMTemplates = Get-LabVMTemplates -Configuration $Config
-
 	Context "No parameters passed" {
 		It "Fails" {
 			{ Remove-LabVMTemplates } | Should Throw
 		}
 	}
 	Context "Valid configuration is passed" {	
+		$Config = Get-LabConfiguration -Path $TestConfigOKPath
+		$VMTemplates = Get-LabVMTemplates -Configuration $Config
+
 		It "Returns True" {
 			Remove-LabVMTemplates -Configuration $Config -VMTemplates $VMTemplates | Should Be $True
 		}
@@ -388,12 +392,6 @@ Describe "Remove-LabVMTemplates" {
 
 ##########################################################################################################################################
 Describe "Get-LabVMs" {
-	$Config = Get-LabConfiguration -Path $TestConfigOKPath
-	$VMTemplates = Get-LabVMTemplates -Configuration $Config
-	$Switches = Get-LabSwitches -Configuration $Config
-	$ExpectedVMs = [String] @"
-
-"@
 
 	Context "No parameters passed" {
 		It "Fails" {
@@ -401,12 +399,52 @@ Describe "Get-LabVMs" {
 		}
 	}
 	Context "Valid configuration is passed" {
+		$Config = Get-LabConfiguration -Path $TestConfigOKPath
+		$Switches = Get-LabSwitches -Configuration $Config
+		$VMTemplates = Get-LabVMTemplates -Configuration $Config
 		$VMs = Get-LabVMs -Configuration $Config -VMTemplates $VMTemplates -Switches $Switches
-		Set-Content -Path "$($ENV:Temp)\VMs.json" -Content ($VMs | ConvertTo-Json -Depth 4)
-		It "Returns 1 VM Items" {
-			$VMs.Count | Should Be 1
-		}
+		Set-Content -Path "$($ENV:Temp)\VMs.json" -Value ($VMs | ConvertTo-Json -Depth 4)
 		It "Returns Template Object that matches Expected Object" {
+			$ExpectedVMs = [String] @"
+{
+    "UseDifferencingDisk":  "Y",
+    "TimeZone":  "Pacific Standard Time",
+    "ProcessorCount":  "1",
+    "ProductKey":  "W3GGN-FT8W3-Y4M27-J84CP-Q3VJ9",
+    "Template":  "Pester Windows Server 2012 R2 Datacenter Full",
+    "MemoryStartupBytes":  536870912,
+    "Adapters":  [
+                     {
+                         "SwitchName":  "Pester Test Private Vlan",
+                         "VLan":  "2",
+                         "Name":  "Pester Test Private Vlan",
+                         "MACAddress":  "00155D010801"
+                     },
+                     {
+                         "SwitchName":  "Pester Test Internal Vlan",
+                         "VLan":  "3",
+                         "Name":  "Pester Test Internal Vlan",
+                         "MACAddress":  "00155D010802"
+                     },
+                     {
+                         "SwitchName":  "Pester Test Private",
+                         "VLan":  "3",
+                         "Name":  "Pester Test Private",
+                         "MACAddress":  "00155D010803"
+                     },
+                     {
+                         "SwitchName":  "Pester Test Internal",
+                         "VLan":  "4",
+                         "Name":  "Pester Test Internal",
+                         "MACAddress":  "00155D010804"
+                     }
+                 ],
+    "Name":  "PESTER.VM1",
+    "TemplateVHD":  "C:\\Pester Lab\\Virtual Hard Disk Templates\\Windows Server 2012 R2 Datacenter Full.vhdx",
+    "AdministratorPassword":  "None",
+    "DataVHDSize":  10737418240
+}
+"@
 			[String]::Compare(($VMs | ConvertTo-Json -Depth 4),$ExpectedVMs,$true) | Should Be 0
 		}
 	}
