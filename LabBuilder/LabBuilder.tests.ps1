@@ -93,13 +93,12 @@ Describe "Install-LabHyperV" {
 	}
 	Context "The function exists" {
 		$Config = Get-LabConfiguration -Path $TestConfigOKPath
-		
+		If ((Get-CimInstance Win32_OperatingSystem).ProductType -eq 1) {
+			Mock Get-WindowsOptionalFeature { [PSCustomObject]@{ Name = 'Dummy'; State = 'Enabled'; } }
+		} Else {
+			Mock Get-WindowsFeature { [PSCustomObject]@{ Name = 'Dummy'; Installed = $false; } }
+		}		
 		It "Returns True" {
-			If ((Get-CimInstance Win32_OperatingSystem).ProductType -eq 1) {
-				Mock Get-WindowsOptionalFeature { return [PSCustomObject]@{ Name = 'Dummy'; State = 'Enabled'; } }
-			} Else {
-				Mock Get-WindowsFeature { return [PSCustomObject]@{ Name = 'Dummy'; Installed = $false; } }
-			}
 			Install-LabHyperV | Should Be $True
 		}
 	}
