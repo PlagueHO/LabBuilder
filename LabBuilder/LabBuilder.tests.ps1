@@ -10,7 +10,8 @@ $sut = (Split-Path -Leaf $MyInvocation.MyCommand.Path).Replace(".Tests.", ".")
 Remove-Module LabBuilder -ErrorAction SilentlyContinue
 Import-Module "$here\LabBuilder.psd1"
 $TestConfigPath = "$here\Tests\PesterTestConfig.xml"
-Write-Host "Running from $Here"
+$helperDir = "$here\TestHelpers"
+Resolve-Path $helperDir\*.ps1 | % { . $_.ProviderPath }
 
 ##########################################################################################################################################
 Describe "Get-LabConfiguration" {
@@ -224,24 +225,32 @@ Describe "Remove-LabSwitches" {
 ##########################################################################################################################################
 
 ##########################################################################################################################################
-Describe "Get-LabTemplates" {
+Describe "Get-LabVMTemplates" {
 	$Config = Get-LabConfiguration -Path $TestConfigPath
 	$ExpectedTemplates = @( 
 				@{
 					name="Pester Windows Server 2012 R2 Full";
-					destvhd="C:\Pester Lab\Virtual Hard Disk Templates\Windows Server 2012 R2 Datacenter Full.vhdx";
-					installiso="Microsoft Windows Server 2012 R2\9600.16384.130821-1623_x64fre_Server_EN-US_IRM_SSS_DV5.iso";
+					templatevhd="C:\Pester Lab\Virtual Hard Disk Templates\Windows Server 2012 R2 Datacenter Full.vhdx";
+					installiso="Tests\DummyISO\9600.16384.130821-1623_x64fre_Server_EN-US_IRM_SSS_DV5.iso";
 					allowcreate="Y";
 					edition="Windows Server 2012 R2 SERVERDATACENTER";
-					sourcevhd="Windows Server 2012 R2 Datacenter Full.vhdx";
+					vhd="Windows Server 2012 R2 Datacenter Full.vhdx";
 				},
 				@{
 					name="Pester Windows Server 2012 R2 Core";
-					destvhd="C:\Pester Lab\Virtual Hard Disk Templates\Windows Server 2012 R2 Datacenter Core.vhdx";
-					installiso="Microsoft Windows Server 2012 R2\9600.16384.130821-1623_x64fre_Server_EN-US_IRM_SSS_DV5.iso";
+					templatevhd="C:\Pester Lab\Virtual Hard Disk Templates\Windows Server 2012 R2 Datacenter Core.vhdx";
+					installiso="Tests\DummyISO\9600.16384.130821-1623_x64fre_Server_EN-US_IRM_SSS_DV5.iso";
 					allowcreate="Y";
 					edition="Windows Server 2012 R2 SERVERDATACENTERCORE";
-					sourcevhd="Windows Server 2012 R2 Datacenter Core.vhdx";
+					vhd="Windows Server 2012 R2 Datacenter Core.vhdx";
+				},
+				@{
+					name="Pester Windows 10 Enterprise";
+					templatevhd="C:\Pester Lab\Virtual Hard Disk Templates\Windows 10 Enterprise.vhdx";
+					installiso="Tests\DummyISO\10240.16384.150709-1700.TH1_CLIENTENTERPRISE_VOL_X64FRE_EN-US.iso";
+					allowcreate="Y";
+					edition="Windows 10 Enterprise";
+					vhd="Windows 10 Enterprise.vhdx";
 				}
 			)
 	Context "No parameter is passed" {
@@ -251,13 +260,108 @@ Describe "Get-LabTemplates" {
 	}
 	Context "Valid configuration is passed" {
 		$Templates = Get-LabVMTemplates -Config $Config
-		Set-Content -Path "$($ENV:Temp)\Templates.json" -Value ($Templates | ConvertTo-Json -Depth 2)
-		Set-Content -Path "$($ENV:Temp)\ExpectedTemplates.json" -Value ($ExpectedTemplates | ConvertTo-Json -Depth 2)
+		It "Returns 3 Template Items" {
+			$Templates.Count | Should Be 3
+		}
+		It "Returns Template Object that matches Expected Object" {
+			[String]::Compare(($Templates | ConvertTo-Json -Depth 2),($ExpectedTemplates | ConvertTo-Json -Depth 2),$true) | Should Be 0
+		}
+	}
+}
+##########################################################################################################################################
+
+##########################################################################################################################################
+Describe "Initialize-LabVMTemplates" {
+	$Config = Get-LabConfiguration -Path $TestConfigPath
+	$VMTemplates = Get-LabVMTemplates -Config $Config
+
+	Context "No parameter is passed" {
+		It "Fails" {
+			{ Initialize-LabVMTemplates } | Should Throw
+		}
+	}
+	Context "Valid configuration is passed" {	
+		It "Returns True" {
+			Initialize-LabVMTemplates -Config $Config -VMTemplates $VMTemplates | Should Be $True
+		}
+	}
+
+	Get-VMSwitch -Name  Pester* | Remove-VMSwitch
+}
+##########################################################################################################################################
+
+##########################################################################################################################################
+Describe "Remove-LabVMTemplates" {
+	$Config = Get-LabConfiguration -Path $TestConfigPath
+	$VMTemplates = Get-LabVMTemplates -Config $Config
+
+	Context "No parameter is passed" {
+		It "Fails" {
+			{ Remove-LabVMTemplates } | Should Throw
+		}
+	}
+	Context "Valid configuration is passed" {	
+		It "Returns True" {
+			Remove-LabVMTemplates -Config $Config -VMTemplates $VMTemplates | Should Be $True
+		}
+	}
+}
+##########################################################################################################################################
+
+##########################################################################################################################################
+Describe "Get-LabVMs" {
+	$Config = Get-LabConfiguration -Path $TestConfigPath
+	Context "No parameter is passed" {
+		It "Fails" {
+			{ Get-LabVMs } | Should Throw
+		}
+	}
+	Context "Valid configuration is passed" {
+		$Templates = Get-LabVMSwitches -Config $Config
+		$Templates = Get-LabVMTemplates -Config $Config
 		It "Returns 2 Template Items" {
 			$Templates.Count | Should Be 2
 		}
 		It "Returns Template Object that matches Expected Object" {
 			[String]::Compare(($Templates | ConvertTo-Json -Depth 2),($ExpectedTemplates | ConvertTo-Json -Depth 2),$true) | Should Be 0
+		}
+	}
+}
+##########################################################################################################################################
+
+##########################################################################################################################################
+Describe "Initialize-LabVMs" {
+	$Config = Get-LabConfiguration -Path $TestConfigPath
+	$VMTemplates = Get-LabVMTemplates -Config $Config
+
+	Context "No parameter is passed" {
+		It "Fails" {
+			{ Initialize-LabVMs } | Should Throw
+		}
+	}
+	Context "Valid configuration is passed" {	
+		It "Returns True" {
+			Initialize-LabVMTemplates -Config $Config -VMTemplates $VMTemplates | Should Be $True
+		}
+	}
+
+	Get-VMSwitch -Name  Pester* | Remove-VMSwitch
+}
+##########################################################################################################################################
+
+##########################################################################################################################################
+Describe "Remove-LabVMs" {
+	$Config = Get-LabConfiguration -Path $TestConfigPath
+	$VMTemplates = Get-LabVMTemplates -Config $Config
+
+	Context "No parameter is passed" {
+		It "Fails" {
+			{ Remove-LabVMs } | Should Throw
+		}
+	}
+	Context "Valid configuration is passed" {	
+		It "Returns True" {
+			Remove-LabVMTemplates -Config $Config -VMTemplates $VMTemplates | Should Be $True
 		}
 	}
 }

@@ -44,6 +44,7 @@
     <Compile Include="Tests\TestConfig1.ps1" />
   </ItemGroup>
   <ItemGroup>
+    <Folder Include="TestHelpers\" />
     <Folder Include="Tests\" />
     <Folder Include="Tests\PesterTestFiles\" />
     <Folder Include="Tests\TestConfig1.dsc\" />

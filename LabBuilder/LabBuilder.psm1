@@ -5,12 +5,14 @@ function Get-LabConfiguration {
 	[CmdLetBinding(DefaultParameterSetName="Path")]
 	[OutputType([XML])]
 	param (
-		[parameter(ParameterSetName="Path",
+		[parameter(
+			ParameterSetName="Path",
 			Position=0)]
 		[ValidateNotNullOrEmpty()]
 		[String]$Path,
 
-		[parameter(ParameterSetName="Content")]
+		[parameter(
+			ParameterSetName="Content")]
 		[ValidateNotNullOrEmpty()]
 		[String]$Content
 	) # Param
@@ -338,8 +340,8 @@ function Get-LabVMTemplates {
 		Foreach ($Template in $Templates) {
 			$VMTemplates += @{
 				name = $Template.Name;
-				sourcevhd = ($Template | Get-VMHardDiskDrive).Path;
-				destvhd = "$VHDParentPath\$([System.IO.Path]::GetFileName(($Template | Get-VMHardDiskDrive).Path))";
+				vhd = ($Template | Get-VMHardDiskDrive).Path;
+				templatevhd = "$VHDParentPath\$([System.IO.Path]::GetFileName(($Template | Get-VMHardDiskDrive).Path))";
 			}
 		} # Foreach
 	} # If
@@ -352,9 +354,9 @@ function Get-LabVMTemplates {
 		Foreach ($VMTemplate in $VMTemplates) {
 			If ($VMTemplate.Name -eq $Template.Name) {
 				# The template already exists - so don't add it again, but update the VHD path if provided
-				If ($Template.SourceVHD) {
-					$VMTemplate.SourceVHD = $Template.SourceVHD
-					$VMTemplate.DestVHD = "$VHDParentPath\$([System.IO.Path]::GetFileName($Template.SourceVHD))"
+				If ($Template.VHD) {
+					$VMTemplate.VHD = $Template.VHD
+					$VMTemplate.TemplateVHD = "$VHDParentPath\$([System.IO.Path]::GetFileName($Template.VHD))"
 				}
 				$VMTemplate.InstallISO = $Template.InstallISO
 				$VMTemplate.Edition = $Template.Edtion
@@ -367,8 +369,8 @@ function Get-LabVMTemplates {
 			# The template wasn't found in the list of templates pulled from Hyper-V
 			$VMTemplates += @{
 				name = $Template.Name;
-				sourcevhd = $Template.SourceVHD;
-				destvhd = "$VHDParentPath\$([System.IO.Path]::GetFileName($Template.SourceVHD))";
+				vhd = $Template.VHD;
+				templatevhd = "$VHDParentPath\$([System.IO.Path]::GetFileName($Template.VHD))";
 				installiso = $Template.InstallISO;
 				edition = $Template.Edition;
 				allowcreate = $Template.AllowCreate;
@@ -382,47 +384,69 @@ function Get-LabVMTemplates {
 ##########################################################################################################################################
 function Initialize-LabVMTemplates {
 	[CmdLetBinding()]
+	[OutputType([Boolean])]
 	param (
-		[Parameter(Mandatory=$true)]
+		[Parameter(Position=0)]
+		[ValidateNotNullOrEmpty()]
 		[XML]$Configuration,
 
-		[Parameter(Mandatory=$true)]
+		[Parameter(Position=1)]
 		[System.Collections.Hashtable[]]$VMTemplates
 	)
 	
+	If (-not $Configuration) {
+		Throw "Configuration is missing or null."
+	}
+
+	If (-not $VMTemplates) {
+		Throw "VMTemplates are missing or null."
+	}
+
 	Foreach ($VMTemplate in $VMTemplates) {
-		If (-not (Test-Path $VMTemplate.DestVHD)) {
+		If (-not (Test-Path $VMTemplate.TemplateVHD)) {
 			# The template VHD isn't in the VHD Parent folder - so copy it there after optimizing it
-			Set-ItemProperty -Path $VMTemplate.SourceVHD -Name IsReadOnly -Value $False
-			Write-Verbose "Optimizing template source VHD $($VMTemplate.SourceVHD) ..."
-			Optimize-VHD -Path $VMTemplate.SourceVHD -Mode Full
-			Set-ItemProperty -Path $VMTemplate.SourceVHD -Name IsReadOnly -Value $True
-			Write-Verbose "Copying template source VHD $($VMTemplate.SourceVHD) to $($VMTemplate.DestVHD) ..."
-			Copy-Item -Path $VMTemplate.SourceVHD -Destination $VMTemplate.DestVHD
-			Set-ItemProperty -Path $VMTemplate.DestVHD -Name IsReadOnly -Value $True
+			Set-ItemProperty -Path $VMTemplate.vhd -Name IsReadOnly -Value $False
+			Write-Verbose "Optimizing template source VHD $($VMTemplate.vhd) ..."
+			Optimize-VHD -Path $VMTemplate.vhd -Mode Full
+			Set-ItemProperty -Path $VMTemplate.vhd -Name IsReadOnly -Value $True
+			Write-Verbose "Copying template source VHD $($VMTemplate.vhd) to $($VMTemplate.templatevhd) ..."
+			Copy-Item -Path $VMTemplate.vhd -Destination $VMTemplate.templatevhd
+			Set-ItemProperty -Path $VMTemplate.templatevhd -Name IsReadOnly -Value $True
 		}
 	}
+	Return $True
 } # Initialize-LabVMTemplates
 ##########################################################################################################################################
 
 ##########################################################################################################################################
 function Remove-LabVMTemplates {
 	[CmdLetBinding()]
+	[OutputType([Boolean])]
 	param (
-		[Parameter(Mandatory=$true)]
+		[Parameter(Position=0)]
+		[ValidateNotNullOrEmpty()]
 		[XML]$Configuration,
 
-		[Parameter(Mandatory=$true)]
+		[Parameter(Position=1)]
 		[System.Collections.Hashtable[]]$VMTemplates
 	)
 	
+	If (-not $Configuration) {
+		Throw "Configuration is missing or null."
+	}
+
+	If (-not $VMTemplates) {
+		Throw "VMTemplates are missing or null."
+	}
+	
 	Foreach ($VMTemplate in $VMTemplates) {
-		If (Test-Path $VMTemplate.DestVHD) {
-			Set-ItemProperty -Path $VMTemplate.SourceVHD -Name IsReadOnly -Value $False
-			Write-Verbose "Deleting Template VHD $($VMTemplate.DestVHD) ..."
-			Remove-Item -Path $VMTemplate.DestVHD -Confirm:$false -Force
+		If (Test-Path $VMTemplate.templatevhd) {
+			Set-ItemProperty -Path $VMTemplate.vhd -Name IsReadOnly -Value $False
+			Write-Verbose "Deleting Template VHD $($VMTemplate.templatevhd) ..."
+			Remove-Item -Path $VMTemplate.templatevhd -Confirm:$false -Force
 		}
 	}
+	Return $True
 } # Remove-LabVMTemplates
 ##########################################################################################################################################
 
@@ -431,15 +455,31 @@ function Get-LabVMs {
 	[OutputType([System.Collections.Hashtable[]])]
 	[CmdLetBinding()]
 	param (
-		[Parameter(Mandatory=$true)]
+		[Parameter(Position=0)]
 		[XML]$Configuration,
 
-		[Parameter(Mandatory=$true)]
+		[Parameter(Position=1)]
 		[System.Collections.Hashtable[]]$VMTemplates,
 
-		[Parameter(Mandatory=$true)]
+		[Parameter(Position=2)]
 		[System.Collections.Hashtable[]]$Switches
 	)
+
+	If (-not $Configuration) {
+		Throw "Configuration is missing or null."
+	}
+
+	If ($Configuration.labbuilderconfig -eq $null) {
+		Throw "Configuration is invalid."
+	}
+
+	If (-not $VMTemplates) {
+		Throw "VMTemplates is missing or null."
+	}
+
+	If (-not $Switches) {
+		Throw "Switches is missing or null."
+	}
 
 	[System.Collections.Hashtable[]]$LabVMs = @()
 	[String]$VHDParentPath = $Configuration.labbuilderconfig.SelectNodes('settings').vhdparentpath
@@ -451,7 +491,7 @@ function Get-LabVMs {
 		[String]$TemplateVHDPath = $null
 		Foreach ($VMTemplate in $VMTemplates) {
 			If ($VMTemplate.Name -eq $VM.Template) {
-				$TemplateVHDPath = $VMTemplate.DestVHD
+				$TemplateVHDPath = $VMTemplate.templatevhd
 				Break
 			}
 		}
