@@ -485,6 +485,133 @@ function Remove-LabVMTemplates {
 ##########################################################################################################################################
 
 ##########################################################################################################################################
+function Set-LabVMInitializationFiles {
+	[CmdLetBinding()]
+	param (
+		[Parameter(Mandatory=$true)]
+		[XML]$Configuration,
+
+		[Parameter(Mandatory=$true)]
+		[String]$VMBootDiskPath,
+
+		[Parameter(Mandatory=$true)]
+		[System.Collections.Hashtable]$VM
+	)
+	[String]$DomainName = $Configuration.labbuilderconfig.SelectNodes('settings').domainname
+	[String]$Email = $Configuration.labbuilderconfig.SelectNodes('settings').email
+	# Has a custom unattend file been specified for this VM?
+	If ($VM.UnattendFile) {
+		[String]$UnattendContent = Get-Content -Path $VM.UnattendFile
+	} Else {
+		$UnattendContent = [String] @"
+<?xml version="1.0" encoding="utf-8"?>
+<unattend xmlns="urn:schemas-microsoft-com:unattend">
+	<settings pass="offlineServicing">
+		<component name="Microsoft-Windows-LUA-Settings" processorArchitecture="amd64" publicKeyToken="31bf3856ad364e35" language="neutral" versionScope="nonSxS" xmlns:wcm="http://schemas.microsoft.com/WMIConfig/2002/State" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+			<EnableLUA>false</EnableLUA>
+		</component>
+	</settings>
+	<settings pass="generalize">
+		<component name="Microsoft-Windows-Security-SPP" processorArchitecture="amd64" publicKeyToken="31bf3856ad364e35" language="neutral" versionScope="nonSxS" xmlns:wcm="http://schemas.microsoft.com/WMIConfig/2002/State" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+			<SkipRearm>1</SkipRearm>
+		</component>
+	</settings>
+	<settings pass="specialize">
+		<component name="Microsoft-Windows-International-Core" processorArchitecture="amd64" publicKeyToken="31bf3856ad364e35" language="neutral" versionScope="nonSxS" xmlns:wcm="http://schemas.microsoft.com/WMIConfig/2002/State" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+			<InputLocale>0409:00000409</InputLocale>
+			<SystemLocale>en-US</SystemLocale>
+			<UILanguage>en-US</UILanguage>
+			<UILanguageFallback>en-US</UILanguageFallback>
+			<UserLocale>en-US</UserLocale>
+		</component>
+		<component name="Microsoft-Windows-Security-SPP-UX" processorArchitecture="amd64" publicKeyToken="31bf3856ad364e35" language="neutral" versionScope="nonSxS" xmlns:wcm="http://schemas.microsoft.com/WMIConfig/2002/State" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+			<SkipAutoActivation>true</SkipAutoActivation>
+		</component>
+		<component name="Microsoft-Windows-SQMApi" processorArchitecture="amd64" publicKeyToken="31bf3856ad364e35" language="neutral" versionScope="nonSxS" xmlns:wcm="http://schemas.microsoft.com/WMIConfig/2002/State" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+			<CEIPEnabled>0</CEIPEnabled>
+		</component>
+		<component name="Microsoft-Windows-Shell-Setup" processorArchitecture="amd64" publicKeyToken="31bf3856ad364e35" language="neutral" versionScope="nonSxS" xmlns:wcm="http://schemas.microsoft.com/WMIConfig/2002/State" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+			<ComputerName>$($VM.ComputerName)</ComputerName>
+			<ProductKey>$($VM.ProductKey)</ProductKey>
+		</component>
+	</settings>
+	<settings pass="oobeSystem">
+		<component name="Microsoft-Windows-Shell-Setup" processorArchitecture="amd64" publicKeyToken="31bf3856ad364e35" language="neutral" versionScope="nonSxS" xmlns:wcm="http://schemas.microsoft.com/WMIConfig/2002/State" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+			<OOBE>
+				<HideEULAPage>true</HideEULAPage>
+				<HideOEMRegistrationScreen>true</HideOEMRegistrationScreen>
+				<HideOnlineAccountScreens>true</HideOnlineAccountScreens>
+				<HideWirelessSetupInOOBE>true</HideWirelessSetupInOOBE>
+				<NetworkLocation>Work</NetworkLocation>
+				<ProtectYourPC>1</ProtectYourPC>
+				<SkipUserOOBE>true</SkipUserOOBE>
+				<SkipMachineOOBE>true</SkipMachineOOBE>
+			</OOBE>
+			<UserAccounts>
+			   <AdministratorPassword>
+				  <Value>$($VM.AdministratorPassword)</Value>
+				  <PlainText>true</PlainText>
+			   </AdministratorPassword>
+			</UserAccounts>
+			<RegisteredOrganization>$($DomainName)</RegisteredOrganization>
+			<RegisteredOwner>$($Email)</RegisteredOwner>
+			<DisableAutoDaylightTimeSet>false</DisableAutoDaylightTimeSet>
+			<TimeZone>$($VM.TimeZone)</TimeZone>
+		</component>
+		<component name="Microsoft-Windows-ehome-reg-inf" processorArchitecture="x86" publicKeyToken="31bf3856ad364e35" language="neutral" versionScope="NonSxS" xmlns:wcm="http://schemas.microsoft.com/WMIConfig/2002/State" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+			<RestartEnabled>true</RestartEnabled>
+		</component>
+		<component name="Microsoft-Windows-ehome-reg-inf" processorArchitecture="amd64" publicKeyToken="31bf3856ad364e35" language="neutral" versionScope="NonSxS" xmlns:wcm="http://schemas.microsoft.com/WMIConfig/2002/State" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+			<RestartEnabled>true</RestartEnabled>
+		</component>
+	</settings>
+</unattend>
+"@
+	}
+	Write-Verbose "Applying VM $($VM.Name) Unattend File ..."
+
+	# Mount the VMs Boot VHD so that files can be loaded into it
+	[String]$MountPount = "C:\TempMount"
+	New-Item -Path $MountPount -ItemType Directory | Out-Null
+	Mount-WindowsImage -ImagePath $VMBootDiskPath -Path $MountPount -Index 1 | Out-Null
+
+	# Apply any files that are needed
+	Set-Content -Path "$MountPount\Windows\Panther\UnattendFile.xml" -Value $UnattendContent | Out-Null
+	
+	# Dismount the VHD in preparation for boot
+	Dismount-WindowsImage -Path $MountPount -Save | Out-Null
+	Remove-Item -Path $MountPount | Out-Null
+	Remove-Item -Path $UnattendFile | Out-Null
+} # Set-LabVMInitializationFiles
+##########################################################################################################################################
+
+##########################################################################################################################################
+function Set-LabVMInitalDSCPushMode {
+	[CmdLetBinding()]
+	param (
+		[Parameter(Mandatory=$true)]
+		[XML]$Configuration,
+
+		[Parameter(Mandatory=$true)]
+		[String]$VMBootDiskPath,
+
+		[Parameter(Mandatory=$true)]
+		[System.Collections.Hashtable]$VM
+	)
+	Write-Verbose "Starting VM $($VM.Name) DSC Push Mode ..."
+	[String]$UnattendFile = $ENV:Temp+"\Unattend.xml"
+	[String]$MountPount = "C:\TempMount"
+	Set-Content -Path $UnattendFile -Value $UnattendContent | Out-Null
+	New-Item -Path $MountPount -ItemType Directory | Out-Null
+	Mount-WindowsImage -ImagePath $VMBootDiskPath -Path $MountPount -Index 1 | Out-Null
+	Copy-Item -Path $UnattendFile -Destination c:\tempMount\Windows\Panther\ -Force | Out-Null
+	Dismount-WindowsImage -Path $MountPount -Save | Out-Null
+	Remove-Item -Path $MountPount | Out-Null
+	Remove-Item -Path $UnattendFile | Out-Null
+} # Set-LabVMUnattendFile
+##########################################################################################################################################
+
+##########################################################################################################################################
 function Get-LabVMs {
 	[OutputType([System.Collections.Hashtable[]])]
 	[CmdLetBinding()]
@@ -816,133 +943,6 @@ function Wait-LabVMOff {
 
 	Return $True
 } # Wait-LabVMOff
-##########################################################################################################################################
-
-##########################################################################################################################################
-function Set-LabVMInitializationFiles {
-	[CmdLetBinding()]
-	param (
-		[Parameter(Mandatory=$true)]
-		[XML]$Configuration,
-
-		[Parameter(Mandatory=$true)]
-		[String]$VMBootDiskPath,
-
-		[Parameter(Mandatory=$true)]
-		[System.Collections.Hashtable]$VM
-	)
-	[String]$DomainName = $Configuration.labbuilderconfig.SelectNodes('settings').domainname
-	[String]$Email = $Configuration.labbuilderconfig.SelectNodes('settings').email
-	# Has a custom unattend file been specified for this VM?
-	If ($VM.UnattendFile) {
-		[String]$UnattendContent = Get-Content -Path $VM.UnattendFile
-	} Else {
-		$UnattendContent = [String] @"
-<?xml version="1.0" encoding="utf-8"?>
-<unattend xmlns="urn:schemas-microsoft-com:unattend">
-	<settings pass="offlineServicing">
-		<component name="Microsoft-Windows-LUA-Settings" processorArchitecture="amd64" publicKeyToken="31bf3856ad364e35" language="neutral" versionScope="nonSxS" xmlns:wcm="http://schemas.microsoft.com/WMIConfig/2002/State" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
-			<EnableLUA>false</EnableLUA>
-		</component>
-	</settings>
-	<settings pass="generalize">
-		<component name="Microsoft-Windows-Security-SPP" processorArchitecture="amd64" publicKeyToken="31bf3856ad364e35" language="neutral" versionScope="nonSxS" xmlns:wcm="http://schemas.microsoft.com/WMIConfig/2002/State" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
-			<SkipRearm>1</SkipRearm>
-		</component>
-	</settings>
-	<settings pass="specialize">
-		<component name="Microsoft-Windows-International-Core" processorArchitecture="amd64" publicKeyToken="31bf3856ad364e35" language="neutral" versionScope="nonSxS" xmlns:wcm="http://schemas.microsoft.com/WMIConfig/2002/State" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
-			<InputLocale>0409:00000409</InputLocale>
-			<SystemLocale>en-US</SystemLocale>
-			<UILanguage>en-US</UILanguage>
-			<UILanguageFallback>en-US</UILanguageFallback>
-			<UserLocale>en-US</UserLocale>
-		</component>
-		<component name="Microsoft-Windows-Security-SPP-UX" processorArchitecture="amd64" publicKeyToken="31bf3856ad364e35" language="neutral" versionScope="nonSxS" xmlns:wcm="http://schemas.microsoft.com/WMIConfig/2002/State" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
-			<SkipAutoActivation>true</SkipAutoActivation>
-		</component>
-		<component name="Microsoft-Windows-SQMApi" processorArchitecture="amd64" publicKeyToken="31bf3856ad364e35" language="neutral" versionScope="nonSxS" xmlns:wcm="http://schemas.microsoft.com/WMIConfig/2002/State" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
-			<CEIPEnabled>0</CEIPEnabled>
-		</component>
-		<component name="Microsoft-Windows-Shell-Setup" processorArchitecture="amd64" publicKeyToken="31bf3856ad364e35" language="neutral" versionScope="nonSxS" xmlns:wcm="http://schemas.microsoft.com/WMIConfig/2002/State" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
-			<ComputerName>$($VM.ComputerName)</ComputerName>
-			<ProductKey>$($VM.ProductKey)</ProductKey>
-		</component>
-	</settings>
-	<settings pass="oobeSystem">
-		<component name="Microsoft-Windows-Shell-Setup" processorArchitecture="amd64" publicKeyToken="31bf3856ad364e35" language="neutral" versionScope="nonSxS" xmlns:wcm="http://schemas.microsoft.com/WMIConfig/2002/State" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
-			<OOBE>
-				<HideEULAPage>true</HideEULAPage>
-				<HideOEMRegistrationScreen>true</HideOEMRegistrationScreen>
-				<HideOnlineAccountScreens>true</HideOnlineAccountScreens>
-				<HideWirelessSetupInOOBE>true</HideWirelessSetupInOOBE>
-				<NetworkLocation>Work</NetworkLocation>
-				<ProtectYourPC>1</ProtectYourPC>
-				<SkipUserOOBE>true</SkipUserOOBE>
-				<SkipMachineOOBE>true</SkipMachineOOBE>
-			</OOBE>
-			<UserAccounts>
-			   <AdministratorPassword>
-				  <Value>$($VM.AdministratorPassword)</Value>
-				  <PlainText>true</PlainText>
-			   </AdministratorPassword>
-			</UserAccounts>
-			<RegisteredOrganization>$($DomainName)</RegisteredOrganization>
-			<RegisteredOwner>$($Email)</RegisteredOwner>
-			<DisableAutoDaylightTimeSet>false</DisableAutoDaylightTimeSet>
-			<TimeZone>$($VM.TimeZone)</TimeZone>
-		</component>
-		<component name="Microsoft-Windows-ehome-reg-inf" processorArchitecture="x86" publicKeyToken="31bf3856ad364e35" language="neutral" versionScope="NonSxS" xmlns:wcm="http://schemas.microsoft.com/WMIConfig/2002/State" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
-			<RestartEnabled>true</RestartEnabled>
-		</component>
-		<component name="Microsoft-Windows-ehome-reg-inf" processorArchitecture="amd64" publicKeyToken="31bf3856ad364e35" language="neutral" versionScope="NonSxS" xmlns:wcm="http://schemas.microsoft.com/WMIConfig/2002/State" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
-			<RestartEnabled>true</RestartEnabled>
-		</component>
-	</settings>
-</unattend>
-"@
-	}
-	Write-Verbose "Applying VM $($VM.Name) Unattend File ..."
-
-	# Mount the VMs Boot VHD so that files can be loaded into it
-	[String]$MountPount = "C:\TempMount"
-	New-Item -Path $MountPount -ItemType Directory | Out-Null
-	Mount-WindowsImage -ImagePath $VMBootDiskPath -Path $MountPount -Index 1 | Out-Null
-
-	# Apply any files that are needed
-	Set-Content -Path "$MountPount\Windows\Panther\UnattendFile.xml" -Value $UnattendContent | Out-Null
-	
-	# Dismount the VHD in preparation for boot
-	Dismount-WindowsImage -Path $MountPount -Save | Out-Null
-	Remove-Item -Path $MountPount | Out-Null
-	Remove-Item -Path $UnattendFile | Out-Null
-} # Set-LabVMInitializationFiles
-##########################################################################################################################################
-
-##########################################################################################################################################
-function Set-LabVMInitalDSCPushMode {
-	[CmdLetBinding()]
-	param (
-		[Parameter(Mandatory=$true)]
-		[XML]$Configuration,
-
-		[Parameter(Mandatory=$true)]
-		[String]$VMBootDiskPath,
-
-		[Parameter(Mandatory=$true)]
-		[System.Collections.Hashtable]$VM
-	)
-	Write-Verbose "Starting VM $($VM.Name) DSC Push Mode ..."
-	[String]$UnattendFile = $ENV:Temp+"\Unattend.xml"
-	[String]$MountPount = "C:\TempMount"
-	Set-Content -Path $UnattendFile -Value $UnattendContent | Out-Null
-	New-Item -Path $MountPount -ItemType Directory | Out-Null
-	Mount-WindowsImage -ImagePath $VMBootDiskPath -Path $MountPount -Index 1 | Out-Null
-	Copy-Item -Path $UnattendFile -Destination c:\tempMount\Windows\Panther\ -Force | Out-Null
-	Dismount-WindowsImage -Path $MountPount -Save | Out-Null
-	Remove-Item -Path $MountPount | Out-Null
-	Remove-Item -Path $UnattendFile | Out-Null
-} # Set-LabVMUnattendFile
 ##########################################################################################################################################
 
 ##########################################################################################################################################
