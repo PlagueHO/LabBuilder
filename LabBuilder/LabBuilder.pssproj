@@ -50,8 +50,15 @@
     <Folder Include="Tests\TestConfig1.dsc\" />
   </ItemGroup>
   <ItemGroup>
+    <Content Include="Tests\PesterTestConfig\PesterTestConfig.TemplateFail.NoVHD - Copy.xml" />
+    <Content Include="Tests\PesterTestConfig\PesterTestConfig.VMFail.BadTemplate.xml" />
+    <Content Include="Tests\PesterTestConfig\PesterTestConfig.VMFail.BadAdapterSwitch.xml" />
+    <Content Include="Tests\PesterTestConfig\PesterTestConfig.VMFail.NoAdapterSwitch.xml" />
+    <Content Include="Tests\PesterTestConfig\PesterTestConfig.VMFail.NoAdapterName.xml" />
+    <Content Include="Tests\PesterTestConfig\PesterTestConfig.VMFail.BadUnattendFile.xml" />
+    <Content Include="Tests\PesterTestConfig\PesterTestConfig.VMFail.NoTemplate.xml" />
     <Content Include="Tests\PesterTestConfig\PesterTestConfig.VMFail.NoName.xml" />
-    <Content Include="Tests\PesterTestConfig\PesterTestConfig.TemplateFail.NoVHD.xml" />
+    <Content Include="Tests\PesterTestConfig\PesterTestConfig.TemplateFail.BadSourceVHD.xml" />
     <Content Include="Tests\PesterTestConfig\PesterTestConfig.TemplateFail.NoName.xml" />
     <Content Include="Tests\PesterTestConfig\PesterTestConfig.SwitchFail.AdaptersSet.xml" />
     <Content Include="Tests\PesterTestConfig\PesterTestConfig.SwitchFail.BadType.xml" />

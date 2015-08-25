@@ -1,6 +1,17 @@
 ﻿#Requires -version 5.0
 
 ##########################################################################################################################################
+# Helper functions that aren't exposed
+##########################################################################################################################################
+Function IsElevated {
+	[System.Security.Principal.WindowsPrincipal]$SecurityPrincipal = new-object System.Security.Principal.WindowsPrincipal([System.Security.Principal.WindowsIdentity]::GetCurrent())
+	Return $SecurityPrincipal.IsInRole([System.Security.Principal.WindowsBuiltInRole]::Administrator)
+}
+##########################################################################################################################################
+
+##########################################################################################################################################
+# Main CmdLets
+##########################################################################################################################################
 function Get-LabConfiguration {
 	[CmdLetBinding(DefaultParameterSetName="Path")]
 	[OutputType([XML])]
@@ -339,10 +350,13 @@ function Get-LabVMTemplates {
 	If (($FromVM -ne $null) -and ($FromVM -ne '')) {
 		$Templates = Get-VM -Name $FromVM
 		Foreach ($Template in $Templates) {
+			[String]$VHDFilepath = ($Template | Get-VMHardDiskDrive).Path
+			[String]$VHDFilename = [System.IO.Path]::GetFileName($VHDFilepath)
 			$VMTemplates += @{
 				name = $Template.Name;
-				vhd = ($Template | Get-VMHardDiskDrive).Path;
-				templatevhd = "$VHDParentPath\$([System.IO.Path]::GetFileName(($Template | Get-VMHardDiskDrive).Path))";
+				vhd = $VHDFilename;
+				sourcevhd = $VHDFilepath;
+				templatevhd = "$VHDParentPath\$VHDFilename";
 			}
 		} # Foreach
 	} # If
@@ -356,9 +370,15 @@ function Get-LabVMTemplates {
 			Throw "The Template Name can't be 'template' or empty."
 		}
 		If (-not $Template.VHD) {
-			Throw "The Template Name can't be empty."
+			Throw "The Template VHD name in Template $($Template.Name) can't be empty."
 		}
-		# Does the template already exist in the list
+		If ($Template.SourceVHD) {
+			# A Source VHD file was specified - does it exist?
+			If (-not (Test-Path -Path $Templates.SourceVHD)) {
+				Throw "The Template Source VHD in Template $($Template.Name) could not be found."
+			}
+		}
+		# Does the template already exist in the list?
 		[Boolean]$Found = $False
 		Foreach ($VMTemplate in $VMTemplates) {
 			If ($VMTemplate.Name -eq $Template.Name) {
@@ -370,6 +390,7 @@ function Get-LabVMTemplates {
 					$VMTemplate.VHD = $Template.VHD
 					$VMTemplate.TemplateVHD = "$VHDParentPath\$([System.IO.Path]::GetFileName($Template.VHD))"
 				}
+				$VMTemplate.SourceVHD = $Templates.SourceVHD
 				$VMTemplate.InstallISO = $Template.InstallISO
 				$VMTemplate.Edition = $Template.Edtion
 				$VMTemplate.AllowCreate = $Template.AllowCreate
@@ -378,10 +399,11 @@ function Get-LabVMTemplates {
 			} # If
 		} # Foreach
 		If (-not $Found) {
-			# The template wasn't found in the list of templates pulled from Hyper-V
+			# The template wasn't found in the list of templates so add it
 			$VMTemplates += @{
 				name = $Template.Name;
 				vhd = $Template.VHD;
+				sourcevhd = $Template.SourceVHD;
 				templatevhd = "$VHDParentPath\$([System.IO.Path]::GetFileName($Template.VHD))";
 				installiso = $Template.InstallISO;
 				edition = $Template.Edition;
@@ -414,13 +436,19 @@ function Initialize-LabVMTemplates {
 	Foreach ($VMTemplate in $VMTemplates) {
 		If (-not (Test-Path $VMTemplate.TemplateVHD)) {
 			# The template VHD isn't in the VHD Parent folder - so copy it there after optimizing it
-			Set-ItemProperty -Path $VMTemplate.vhd -Name IsReadOnly -Value $False
-			Write-Verbose "Optimizing template source VHD $($VMTemplate.vhd) ..."
-			Optimize-VHD -Path $VMTemplate.vhd -Mode Full
-			Set-ItemProperty -Path $VMTemplate.vhd -Name IsReadOnly -Value $True
-			Write-Verbose "Copying template source VHD $($VMTemplate.vhd) to $($VMTemplate.templatevhd) ..."
-			Copy-Item -Path $VMTemplate.vhd -Destination $VMTemplate.templatevhd
+			If (-not (Test-Path $VMTemplate.SourceVHD)) {
+				# The source VHD does not exist - so try and create it from the ISO
+				# This feature is not yet supported so will throw an error
+				Throw "The template source VHD $($VMTemplate.SourceVHD) could not be found and creating it from an ISO is not yet supported."
+			}
+			Write-Verbose "Copying template source VHD $($VMTemplate.sourcevhd) to $($VMTemplate.templatevhd) ..."
+			Copy-Item -Path $VMTemplate.sourcevhd -Destination $VMTemplate.templatevhd
+			Write-Verbose "Optimizing template VHD $($VMTemplate.vhd) ..."
+			Optimize-VHD -Path $VMTemplate.templatevhd -Mode Full
+			Write-Verbose "Setting template VHD $($VMTemplate.vhd) as readonly ..."
 			Set-ItemProperty -Path $VMTemplate.templatevhd -Name IsReadOnly -Value $True
+		} Else {
+			Write-Verbose "Template VHD file $($VMTemplate.templatevhd) already exists - skipping..."
 		}
 	}
 	Return $True
@@ -573,6 +601,7 @@ function Get-LabVMs {
 ##########################################################################################################################################
 function Initialize-LabVMs {
 	[CmdLetBinding()]
+	[OutputType([Boolean])]
 	param (
 		[Parameter(
 			Mandatory=$true,
@@ -695,12 +724,14 @@ function Initialize-LabVMs {
 
 		# Now it is time to assign any post initialize scripts/DSC etc.
 	} # Foreach
+	Return $True
 } # Initialize-LabVMs
 ##########################################################################################################################################
 
 ##########################################################################################################################################
 function Remove-LabVMs {
 	[CmdLetBinding()]
+	[OutputType([Boolean])]
 	param (
 		[Parameter(
 			Mandatory=$true,
@@ -722,21 +753,30 @@ function Remove-LabVMs {
 	
 	Foreach ($VM in $VMs) {
 		If (($CurrentVMs | Where-Object -Property Name -eq $VM.Name).Count -ne 0) {
+			# If the VM is running we need to shut it down.
 			If ((Get-VM -Name $VM.Name).State -eq 'Running') {
 				Write-Verbose "Stopping VM $($VM.Name) ..."
 				Stop-VM -Name $VM.Name
+				# Wait for it to completely shut down and report that it is off.
 				Wait-LabVMOff -VM $VM | Out-Null
 			}
 			Write-Verbose "Removing VM $($VM.Name) ..."
+
+			# Should we also delete the VHDs from the VM?
 			If ($RemoveVHDs) {
 				Write-Verbose "Deleting VM $($VM.Name) hard drive(s) ..."
 				Get-VMHardDiskDrive -VMName $VM.Name | Select-Object -Property Path | Remove-Item
 			}
+			
+			# Now delete the actual VM
 			Get-VM -Name $VMs.Name | Remove-VM -Confirm:$false
 
 			Write-Verbose "Removed VM $($VM.Name) ..."
+		} Else {
+			Write-Verbose "VM $($VM.Name) is not in Hyper-V ..."
 		}
 	}
+	Return $true
 }
 ##########################################################################################################################################
 
@@ -863,16 +903,14 @@ function Set-LabVMInitializationFiles {
 "@
 	}
 	Write-Verbose "Applying VM $($VM.Name) Unattend File ..."
-	[String]$UnattendFile = $ENV:Temp+"\Unattend.xml"
 
 	# Mount the VMs Boot VHD so that files can be loaded into it
 	[String]$MountPount = "C:\TempMount"
-	Set-Content -Path $UnattendFile -Value $UnattendContent | Out-Null
 	New-Item -Path $MountPount -ItemType Directory | Out-Null
 	Mount-WindowsImage -ImagePath $VMBootDiskPath -Path $MountPount -Index 1 | Out-Null
 
 	# Apply any files that are needed
-	Copy-Item -Path $UnattendFile -Destination c:\tempMount\Windows\Panther\ -Force | Out-Null
+	Set-Content -Path "$MountPount\Windows\Panther\UnattendFile.xml" -Value $UnattendContent | Out-Null
 	
 	# Dismount the VHD in preparation for boot
 	Dismount-WindowsImage -Path $MountPount -Save | Out-Null

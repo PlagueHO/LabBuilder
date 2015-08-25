@@ -32,17 +32,20 @@
   <templates fromvm="pester template *">
     <template name="Pester Windows Server 2012 R2 Datacenter Full"
               vhd="Windows Server 2012 R2 Datacenter Full.vhdx"
-              installiso="Tests\DummyISO\9600.16384.130821-1623_x64fre_Server_EN-US_IRM_SSS_DV5.iso"
+              sourcevhd=".\Tests\PesterTestConfig\Windows Server 2012 R2 Datacenter Full.vhdx"
+              installiso=".\Tests\PesterTestConfig\9600.16384.130821-1623_x64fre_Server_EN-US_IRM_SSS_DV5.iso"
               edition="Windows Server 2012 R2 SERVERDATACENTER"
               allowcreate="Y"/>
     <template name="Pester Windows Server 2012 R2 Datacenter Core"
               vhd="Windows Server 2012 R2 Datacenter Core.vhdx"
-              installiso="Tests\DummyISO\9600.16384.130821-1623_x64fre_Server_EN-US_IRM_SSS_DV5.iso"
+              sourcevhd=".\Tests\PesterTestConfig\Windows Server 2012 R2 Datacenter Full.vhdx"
+              installiso=".\Tests\PesterTestConfig\9600.16384.130821-1623_x64fre_Server_EN-US_IRM_SSS_DV5.iso"
               edition="Windows Server 2012 R2 SERVERDATACENTERCORE"
               allowcreate="Y"/>
     <template name="Pester Windows 10 Enterprise"
               vhd="Windows 10 Enterprise.vhdx"
-              installiso="Tests\DummyISO\10240.16384.150709-1700.TH1_CLIENTENTERPRISE_VOL_X64FRE_EN-US.iso"
+              sourcevhd=".\Tests\PesterTestConfig\Windows 10 Enterprise.vhdx"
+              installiso=".\Tests\PesterTestConfig\10240.16384.150709-1700.TH1_CLIENTENTERPRISE_VOL_X64FRE_EN-US.iso"
               edition="Windows 10 Enterprise"
               allowcreate="Y"/>
   </templates>

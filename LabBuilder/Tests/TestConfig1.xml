@@ -41,6 +41,8 @@
       <productkey>W3GGN-FT8W3-Y4M27-J84CP-Q3VJ9</productkey>
       <timezone>Pacific Standard Time</timezone>
       <dscconfig>SS_ROOTCA</dscconfig>
+      <unattendfile></unattendfile>
+      <setupcomplete></setupcomplete>
     </vm>
 
   </vms>
