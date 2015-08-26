@@ -3,9 +3,17 @@
 ##########################################################################################################################################
 # Helper functions that aren't exposed
 ##########################################################################################################################################
-Function IsElevated {
-	[System.Security.Principal.WindowsPrincipal]$SecurityPrincipal = new-object System.Security.Principal.WindowsPrincipal([System.Security.Principal.WindowsIdentity]::GetCurrent())
-	Return $SecurityPrincipal.IsInRole([System.Security.Principal.WindowsBuiltInRole]::Administrator)
+function Test-Admin()
+{
+    # Get the ID and security principal of the current user account
+    $myWindowsID=[System.Security.Principal.WindowsIdentity]::GetCurrent()
+    $myWindowsPrincipal=new-object System.Security.Principal.WindowsPrincipal($myWindowsID)
+  
+    # Get the security principal for the Administrator role
+    $adminRole=[System.Security.Principal.WindowsBuiltInRole]::Administrator
+  
+    # Check to see if we are currently running "as Administrator"
+    Return ($myWindowsPrincipal.IsInRole($adminRole))
 }
 ##########################################################################################################################################
 
@@ -444,6 +452,7 @@ function Initialize-LabVMTemplates {
 			Write-Verbose "Copying template source VHD $($VMTemplate.sourcevhd) to $($VMTemplate.templatevhd) ..."
 			Copy-Item -Path $VMTemplate.sourcevhd -Destination $VMTemplate.templatevhd
 			Write-Verbose "Optimizing template VHD $($VMTemplate.vhd) ..."
+			Set-ItemProperty -Path $VMTemplate.templatevhd -Name IsReadOnly -Value $False
 			Optimize-VHD -Path $VMTemplate.templatevhd -Mode Full
 			Write-Verbose "Setting template VHD $($VMTemplate.vhd) as readonly ..."
 			Set-ItemProperty -Path $VMTemplate.templatevhd -Name IsReadOnly -Value $True
@@ -568,20 +577,20 @@ function Set-LabVMInitializationFiles {
 </unattend>
 "@
 	}
-	Write-Verbose "Applying VM $($VM.Name) Unattend File ..."
-
 	# Mount the VMs Boot VHD so that files can be loaded into it
 	[String]$MountPount = "C:\TempMount"
+	Write-Verbose "Mounting VM $($VM.Name) Boot Disk VHDx $VMBootDiskPath ..."
 	New-Item -Path $MountPount -ItemType Directory | Out-Null
 	Mount-WindowsImage -ImagePath $VMBootDiskPath -Path $MountPount -Index 1 | Out-Null
 
 	# Apply any files that are needed
-	Set-Content -Path "$MountPount\Windows\Panther\UnattendFile.xml" -Value $UnattendContent | Out-Null
+	Write-Verbose "Applying VM $($VM.Name) Unattend File ..."
+	Set-Content -Path "$MountPount\Windows\Panther\Unattend.xml" -Value $UnattendContent -Force | Out-Null
 	
 	# Dismount the VHD in preparation for boot
+	Write-Verbose "Dismounting VM $($VM.Name) Boot Disk VHDx $VMBootDiskPath ..."
 	Dismount-WindowsImage -Path $MountPount -Save | Out-Null
 	Remove-Item -Path $MountPount | Out-Null
-	Remove-Item -Path $UnattendFile | Out-Null
 } # Set-LabVMInitializationFiles
 ##########################################################################################################################################
 
@@ -638,7 +647,7 @@ function Get-LabVMs {
 	[System.Collections.Hashtable[]]$LabVMs = @()
 	[String]$VHDParentPath = $Configuration.labbuilderconfig.SelectNodes('settings').vhdparentpath
 	$VMs = $Configuration.labbuilderconfig.SelectNodes('vms').vm
-	[Microsoft.HyperV.PowerShell.VMSwitch[]]$CurrentSwitches = Get-VMSwitch
+	$CurrentSwitches = Get-VMSwitch
 
 	Foreach ($VM in $VMs) {
 		If ($VM.Name -eq 'VM')
