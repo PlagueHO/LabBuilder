@@ -42,7 +42,7 @@
       <timezone>Pacific Standard Time</timezone>
       <dscconfig>SS_ROOTCA</dscconfig>
       <unattendfile></unattendfile>
-      <setupcomplete></setupcomplete>
+      <setupcomplete>TestConfig1.ps1</setupcomplete>
     </vm>
 
   </vms>

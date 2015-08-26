@@ -577,6 +577,12 @@ function Set-LabVMInitializationFiles {
 </unattend>
 "@
 	}
+	[String]$SetupCompletePs = ''
+	[String]$SetupCompleteCmd = ''
+	If ($VM.SetupComplete) {
+		
+	} # If
+	
 	# Mount the VMs Boot VHD so that files can be loaded into it
 	[String]$MountPount = "C:\TempMount"
 	Write-Verbose "Mounting VM $($VM.Name) Boot Disk VHDx $VMBootDiskPath ..."
@@ -586,7 +592,14 @@ function Set-LabVMInitializationFiles {
 	# Apply any files that are needed
 	Write-Verbose "Applying VM $($VM.Name) Unattend File ..."
 	Set-Content -Path "$MountPount\Windows\Panther\Unattend.xml" -Value $UnattendContent -Force | Out-Null
-	
+	If ($SetupCompleteCmd) {
+		Write-Verbose "Applying VM $($VM.Name) Setup Complete CMD File ..."
+		Set-Content -Path "$MountPount\Windows\Setup\Scripts\SetupComplete.cmd" -Value $SetupCompleteCmd -Force | Out-Null	
+		If ($SetupCompletePs) {
+			Write-Verbose "Applying VM $($VM.Name) Setup Complete PowerShell File ..."
+			Set-Content -Path "$MountPount\Windows\Setup\Scripts\SetupComplete.ps1" -Value $SetupCompletePs -Force | Out-Null	
+		} # If
+	} # If
 	# Dismount the VHD in preparation for boot
 	Write-Verbose "Dismounting VM $($VM.Name) Boot Disk VHDx $VMBootDiskPath ..."
 	Dismount-WindowsImage -Path $MountPount -Save | Out-Null
@@ -712,7 +725,16 @@ function Get-LabVMs {
 
 		[String]$UnattendFile = $VM.UnattendFile
 		If (($UnattendFile) -and -not (Test-Path $UnattendFile)) {
-			Throw "The Unattend File $UnattendFile specified in VM ($VM.Name) can not be found."
+			Throw "The Unattend File $UnattendFile specified in VM $($VM.Name) can not be found."
+		}
+		[String]$SetupComplete = $VM.SetupComplete
+		If ($SetupComplete) {
+			If (-not (Test-Path $SetupComplete)) {
+				Throw "The Setup Complete File $SetupComplete specified in VM $($VM.Name) can not be found."
+			}
+			If ([System.IO.Path]::GetExtension($SetupComplete) -notin 'ps1','cmd' ) {
+				Throw "The Setup Complete File $SetupComplete specified in VM $($VM.Name) must be either a PS1 or CMD file."
+			}
 		}
 		$LabVMs += @{
 			Name = $VM.name;
@@ -727,6 +749,7 @@ function Get-LabVMs {
 			Adapters = $VMAdapters;
 			DataVHDSize = (Invoke-Expression $VM.DataVHDSize);
 			UnattendFile = $UnattendFile;
+			SetupComplete = $SetupComplete;
 		}
 	} # Foreach        
 

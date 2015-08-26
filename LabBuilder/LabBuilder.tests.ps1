@@ -514,6 +514,22 @@ Describe "Get-LabVMs" {
 			{ Get-LabVMs -Configuration $Config -VMTemplates $VMTemplates -Switches $Switches } | Should Throw
 		}
 	}
+	Context "Configuration passed with VM setup complete file that can't be found." {
+		It "Fails" {
+			$Config = Get-LabConfiguration -Path "$TestConfigPath\PesterTestConfig.VMFail.BadSetupCompleteFile.xml"
+			$Switches = Get-LabSwitches -Configuration $Config
+			$VMTemplates = Get-LabVMTemplates -Configuration $Config
+			{ Get-LabVMs -Configuration $Config -VMTemplates $VMTemplates -Switches $Switches } | Should Throw
+		}
+	}
+	Context "Configuration passed with VM setup complete file with an invalid file extension." {
+		It "Fails" {
+			$Config = Get-LabConfiguration -Path "$TestConfigPath\PesterTestConfig.VMFail.BadSetupCompleteFileType.xml"
+			$Switches = Get-LabSwitches -Configuration $Config
+			$VMTemplates = Get-LabVMTemplates -Configuration $Config
+			{ Get-LabVMs -Configuration $Config -VMTemplates $VMTemplates -Switches $Switches } | Should Throw
+		}
+	}
 	Context "Valid configuration is passed" {
 		$Config = Get-LabConfiguration -Path $TestConfigOKPath
 		$Switches = Get-LabSwitches -Configuration $Config
@@ -523,12 +539,11 @@ Describe "Get-LabVMs" {
 		It "Returns Template Object that matches Expected Object" {
 			$ExpectedVMs = [String] @"
 {
-    "UseDifferencingDisk":  "Y",
-    "TimeZone":  "Pacific Standard Time",
     "ProcessorCount":  "1",
-    "ProductKey":  "AAAAA-AAAAA-AAAAA-AAAAA-AAAAA",
-    "Template":  "Pester Windows Server 2012 R2 Datacenter Full",
+    "UnattendFile":  "",
+    "TemplateVHD":  "C:\\Pester Lab\\Virtual Hard Disk Templates\\Windows Server 2012 R2 Datacenter Full.vhdx",
     "MemoryStartupBytes":  536870912,
+    "SetupComplete":  "",
     "Adapters":  [
                      {
                          "SwitchName":  "Pester Test Private Vlan",
@@ -556,10 +571,12 @@ Describe "Get-LabVMs" {
                      }
                  ],
     "Name":  "PESTER.VM1",
-    "UnattendFile":  "",
-    "TemplateVHD":  "C:\\Pester Lab\\Virtual Hard Disk Templates\\Windows Server 2012 R2 Datacenter Full.vhdx",
+    "DataVHDSize":  10737418240,
     "AdministratorPassword":  "None",
-    "DataVHDSize":  10737418240
+    "ProductKey":  "AAAAA-AAAAA-AAAAA-AAAAA-AAAAA",
+    "UseDifferencingDisk":  "Y",
+    "TimeZone":  "Pacific Standard Time",
+    "Template":  "Pester Windows Server 2012 R2 Datacenter Full"
 }
 "@
 			[String]::Compare(($VMs | ConvertTo-Json -Depth 4),$ExpectedVMs,$true) | Should Be 0
