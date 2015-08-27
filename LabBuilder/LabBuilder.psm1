@@ -163,7 +163,7 @@ function Initialize-LabHyperV {
 		$MacAddressMaximum = '00155D0106FF'
 	}
 
-	Set-VMHost -MacAddressMinimum $MacAddressMinimum -MacAddressMaximum $MacAddressMaximum
+	Set-VMHost -MacAddressMinimum $MacAddressMinimum -MacAddressMaximum $MacAddressMaximum | Out-Null
 
 	Return $True
 } # Initialize-LabHyperV
@@ -267,7 +267,7 @@ function Initialize-LabSwitches {
 			Write-Verbose "Creating Virtual Switch '$SwitchName' ..."
 			Switch ($SwitchType) {
 				'External' {
-					New-VMSwitch -Name $SwitchName -NetAdapterName (Get-NetAdapter | Where-Object { $_.Status -eq 'Up' } | Select-Object -First 1 -ExpandProperty Name)
+					New-VMSwitch -Name $SwitchName -NetAdapterName (Get-NetAdapter | Where-Object { $_.Status -eq 'Up' } | Select-Object -First 1 -ExpandProperty Name) | Out-Null
 					If ($Switch.Adapters) {
 						Foreach ($Adapter in $Switch.Adapters) {
 							If ($Switch.VLan) {
@@ -281,11 +281,11 @@ function Initialize-LabSwitches {
 					Break
 				} # 'External'
 				'Private' {
-					New-VMSwitch -Name $SwitchName -SwitchType Private
+					New-VMSwitch -Name $SwitchName -SwitchType Private | Out-Null
 					Break
 				} # 'Private'
 				'Internal' {
-					New-VMSwitch -Name $SwitchName -SwitchType Internal
+					New-VMSwitch -Name $SwitchName -SwitchType Internal | Out-Null
 					Break
 				} # 'Internal'
 				Default {
