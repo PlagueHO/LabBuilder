@@ -45,7 +45,8 @@ function Get-LabConfiguration {
 	# This path is used to find any additional configuration files that might
 	# be provided with config
 	[String]$ConfigPath = [System.IO.Path]::GetDirectoryName($Path)
-	If ($XMLConfigPath) {
+	[String]$XMLConfigPath = $Configuration.labbuilderconfig.settings.configpath
+    If ($XMLConfigPath) {
 		If ($XMLConfigPath.Substring(0,1) -eq '.') {
 			# A relative path was provided in the config path so add the actual path of the XML to it
 			[String]$FullConfigPath = Join-Path -Path $ConfigPath -ChildPath $XMLConfigPath
@@ -595,9 +596,9 @@ function Set-LabVMInitializationFiles {
 	[String]$SetupCompleteCmd = ''
 	If ($VM.SetupComplete) {
 		# Workout the actual path to the SetupComplete File
-		$SetupComplete = Join-Path -Path $Congfiguration.labbuilderconfig.settings.fullconfigpath -ChildPath ($VM.SetupComplete)
+		$SetupComplete = Join-Path -Path ($Configuration.labbuilderconfig.settings.fullconfigpath) -ChildPath ($VM.SetupComplete)
 		[String]$Extension = [System.IO.Path]::GetExtension($SetupComplete)
-		Switch ($Extension) {
+		Switch ($Extension.ToLower()) {
 			'ps1' {
 				$SetupCompleteCmd += "`n`rpowerShell -ExecutionPolicy Unrestricted -Command `"SetupComplete.ps1`""
 				$SetupCompletePs = Get-Content -Path $SetupComplete
@@ -659,7 +660,7 @@ function Get-LabVMs {
 	)
 
 	[System.Collections.Hashtable[]]$LabVMs = @()
-	[String]$VHDParentPath = $Configuration.labbuilderconfig.SelectNodes('settings').vhdparentpath
+	[String]$VHDParentPath = $Configuration.labbuilderconfig.settings.vhdparentpath
 	$VMs = $Configuration.labbuilderconfig.SelectNodes('vms').vm
 	$CurrentSwitches = Get-VMSwitch
 
@@ -724,16 +725,20 @@ function Get-LabVMs {
 			$VMAdapters += @{ Name = $VMAdapter.Name; SwitchName = $VMAdapter.SwitchName; MACAddress = $VMAdapter.macaddress; VLan = $VLan }
 		}
 
-		[String]$UnattendFile = $VM.UnattendFile
-		If (($UnattendFile) -and -not (Test-Path $UnattendFile)) {
-			Throw "The Unattend File $UnattendFile specified in VM $($VM.Name) can not be found."
-		}
-		[String]$SetupComplete = $VM.SetupComplete
-		If ($SetupComplete) {
+		[String]$UnattendFile = ''
+		If ($VM.UnattendFile) {
+			$UnattendFile = Join-Path -Path $Configuration.labbuilderconfig.settings.fullconfigpath -ChildPath $VM.UnattendFile
+			If (-not (Test-Path $UnattendFile)) {
+				Throw "The Unattend File $UnattendFile specified in VM $($VM.Name) can not be found."
+			} # Endif
+		} # Endif
+		[String]$SetupComplete = ''
+		If ($VM.SetupComplete) {
+			$SetupComplete = Join-Path -Path $Configuration.labbuilderconfig.settings.fullconfigpath -ChildPath $VM.SetupComplete
 			If (-not (Test-Path $SetupComplete)) {
 				Throw "The Setup Complete File $SetupComplete specified in VM $($VM.Name) can not be found."
 			}
-			If ([System.IO.Path]::GetExtension($SetupComplete) -notin 'ps1','cmd' ) {
+			If ([System.IO.Path]::GetExtension($SetupComplete) -notin '.ps1','.cmd' ) {
 				Throw "The Setup Complete File $SetupComplete specified in VM $($VM.Name) must be either a PS1 or CMD file."
 			}
 		}
