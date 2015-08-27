@@ -31,18 +31,6 @@ Describe "Get-LabConfiguration" {
 			$Config.labbuilderconfig | Should Not Be $null
 		}
 	}
-	Context "Content is provided but is empty" {
-		It "Fails" {
-			{ Get-LabConfiguration -Content '' } | Should Throw
-		}
-	}
-	Context "Content is provided and contains valid XML" {
-		It "Returns XmlDocument object with valid content" {
-			$Config = Get-LabConfiguration -Content (Get-Content -Path $TestConfigOKPath -Raw)
-			$Config.GetType().Name | Should Be 'XmlDocument'
-			$Config.labbuilderconfig | Should Not Be $null
-		}
-	}
 }
 ##########################################################################################################################################
 
@@ -435,16 +423,6 @@ Describe "Set-LabVMInitializationFiles" {
 	Context "No parameters passed" {
 		It "Fails" {
 			{ Set-LabVMInitializationFiles } | Should Throw
-		}
-	}
-}
-##########################################################################################################################################
-
-##########################################################################################################################################
-Describe "Set-LabVMInitalDSCPushMode" {
-	Context "No parameters passed" {
-		It "Fails" {
-			{ Set-LabVMInitalDSCPushMode } | Should Throw
 		}
 	}
 }

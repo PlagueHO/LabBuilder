@@ -8,9 +8,8 @@
     <email>daniel@bmdlab.com</email>
     <vmpath>c:\vm\BMDLAB.LOCAL</vmpath>
     <vhdparentpath>c:\vm\BMDLAB.LOCAL\Virtual Hard Disk Templates</vhdparentpath>
+    <configpath>.\TestConfig1\</configpath>
   </settings>
-
-  <dsc configpath=".\TestConfig1 DSC\" />
 
   <switches>
     <switch name="General Purpose External" type="External">
@@ -42,7 +41,7 @@
       <timezone>Pacific Standard Time</timezone>
       <dscconfig>SS_ROOTCA</dscconfig>
       <unattendfile></unattendfile>
-      <setupcomplete>TestConfig1.ps1</setupcomplete>
+      <setupcomplete>SS_ROOTCA.SetupComplete.ps1</setupcomplete>
     </vm>
 
   </vms>

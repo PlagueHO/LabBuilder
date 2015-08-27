@@ -21,34 +21,39 @@ function Test-Admin()
 # Main CmdLets
 ##########################################################################################################################################
 function Get-LabConfiguration {
-	[CmdLetBinding(DefaultParameterSetName="Path")]
+	[CmdLetBinding()]
 	[OutputType([XML])]
 	param (
 		[parameter(
-			Mandatory=$True,
-			ParameterSetName="Path",
 			Position=0)]
 		[ValidateNotNullOrEmpty()]
-		[String]$Path,
-
-		[parameter(
-			Mandatory=$True,
-			ParameterSetName="Content")]
-		[ValidateNotNullOrEmpty()]
-		[String]$Content
+		[String]$Path
 	) # Param
-	If ($Path) {
-		# The Path parameter was provided...
-		If (-not (Test-Path -Path $Path)) {
-			Throw "Configuration file $Path is not found."
-		} # If
-		$Content = Get-Content -Path $Path -Raw
+	If (-not $Path) {
+		Throw "Configuration file parameter is missing."
 	} # If
+	If (-not (Test-Path -Path $Path)) {
+		Throw "Configuration file $Path is not found."
+	} # If
+	$Content = Get-Content -Path $Path -Raw
 	If (-not $Content) {
-		Throw "Configuration is empty."
+		Throw "Configuration file $Path is empty."
 	} # If
 	[XML]$Configuration = New-Object -TypeName XML
 	$Configuration.LoadXML($Content)
+	# Figure out the Config path and load it into the XML object (if we can)
+	# This path is used to find any additional configuration files that might
+	# be provided with config
+	[String]$ConfigPath = [System.IO.Path]::GetDirectoryName($Path)
+	If ($XMLConfigPath) {
+		If ($XMLConfigPath.Substring(0,1) -eq '.') {
+			# A relative path was provided in the config path so add the actual path of the XML to it
+			[String]$FullConfigPath = Join-Path -Path $ConfigPath -ChildPath $XMLConfigPath
+		} # If
+	} Else {
+        [String]$FullConfigPath = $ConfigPath
+    }
+	$Configuration.labbuilderconfig.settings.setattribute('fullconfigpath',$FullConfigPath)
 	Return $Configuration
 } # Get-LabConfiguration
 ##########################################################################################################################################
@@ -69,8 +74,12 @@ function Test-LabConfiguration {
 		Throw "Configuration is invalid."
 	}
 
+	If ($Configuration.labbuilderconfig.settings -eq $null) {
+		Throw "Configuration is invalid."
+	}
+
 	# Check folders exist
-	[String]$VMPath = $Configuration.labbuilderconfig.SelectNodes('settings').vmpath
+	[String]$VMPath = $Configuration.labbuilderconfig.settings.vmpath
 	If (-not $VMPath) {
 		Throw "<settings>\<vmpath> is missing or empty in the configuration."
 	}
@@ -79,13 +88,18 @@ function Test-LabConfiguration {
 		Throw "The VM Path $VMPath is not found."
 	}
 
-	[String]$VHDParentPath = $Configuration.labbuilderconfig.SelectNodes('settings').vhdparentpath
+	[String]$VHDParentPath = $Configuration.labbuilderconfig.settings.vhdparentpath
 	If (-not $VHDParentPath) {
 		Throw "<settings>\<vhdparentpath> is missing or empty in the configuration."
 	}
 
 	If (-not (Test-Path -Path $VHDParentPath)) {
 		Throw "The VHD Parent Path $VHDParentPath is not found."
+	}
+
+	[String]$FullConfigPath = $Configuration.labbuilderconfig.settings.fullconfigpath
+	If (-not (Test-Path -Path $FullConfigPath)) {
+		Throw "The Config Path $FullConfigPath could not be found."
 	}
 
 	Return $True
@@ -506,8 +520,8 @@ function Set-LabVMInitializationFiles {
 		[Parameter(Mandatory=$true)]
 		[System.Collections.Hashtable]$VM
 	)
-	[String]$DomainName = $Configuration.labbuilderconfig.SelectNodes('settings').domainname
-	[String]$Email = $Configuration.labbuilderconfig.SelectNodes('settings').email
+	[String]$DomainName = $Configuration.labbuilderconfig.settings.domainname
+	[String]$Email = $Configuration.labbuilderconfig.settings.email
 	# Has a custom unattend file been specified for this VM?
 	If ($VM.UnattendFile) {
 		[String]$UnattendContent = Get-Content -Path $VM.UnattendFile
@@ -580,7 +594,20 @@ function Set-LabVMInitializationFiles {
 	[String]$SetupCompletePs = ''
 	[String]$SetupCompleteCmd = ''
 	If ($VM.SetupComplete) {
-		
+		# Workout the actual path to the SetupComplete File
+		$SetupComplete = Join-Path -Path $Congfiguration.labbuilderconfig.settings.fullconfigpath -ChildPath ($VM.SetupComplete)
+		[String]$Extension = [System.IO.Path]::GetExtension($SetupComplete)
+		Switch ($Extension) {
+			'ps1' {
+				$SetupCompleteCmd += "`n`rpowerShell -ExecutionPolicy Unrestricted -Command `"SetupComplete.ps1`""
+				$SetupCompletePs = Get-Content -Path $SetupComplete
+				Break
+			} # 'ps1'
+			'cmd' {
+				$SetupCompleteCmd = Get-Content -Path $SetupComplete
+				Break
+			} # 'cmd'
+		} # Switch
 	} # If
 	
 	# Mount the VMs Boot VHD so that files can be loaded into it
@@ -605,32 +632,6 @@ function Set-LabVMInitializationFiles {
 	Dismount-WindowsImage -Path $MountPount -Save | Out-Null
 	Remove-Item -Path $MountPount | Out-Null
 } # Set-LabVMInitializationFiles
-##########################################################################################################################################
-
-##########################################################################################################################################
-function Set-LabVMInitalDSCPushMode {
-	[CmdLetBinding()]
-	param (
-		[Parameter(Mandatory=$true)]
-		[XML]$Configuration,
-
-		[Parameter(Mandatory=$true)]
-		[String]$VMBootDiskPath,
-
-		[Parameter(Mandatory=$true)]
-		[System.Collections.Hashtable]$VM
-	)
-	Write-Verbose "Starting VM $($VM.Name) DSC Push Mode ..."
-	[String]$UnattendFile = $ENV:Temp+"\Unattend.xml"
-	[String]$MountPount = "C:\TempMount"
-	Set-Content -Path $UnattendFile -Value $UnattendContent | Out-Null
-	New-Item -Path $MountPount -ItemType Directory | Out-Null
-	Mount-WindowsImage -ImagePath $VMBootDiskPath -Path $MountPount -Index 1 | Out-Null
-	Copy-Item -Path $UnattendFile -Destination c:\tempMount\Windows\Panther\ -Force | Out-Null
-	Dismount-WindowsImage -Path $MountPount -Save | Out-Null
-	Remove-Item -Path $MountPount | Out-Null
-	Remove-Item -Path $UnattendFile | Out-Null
-} # Set-LabVMUnattendFile
 ##########################################################################################################################################
 
 ##########################################################################################################################################
@@ -979,22 +980,16 @@ function Wait-LabVMOff {
 
 ##########################################################################################################################################
 Function Install-Lab {
-	[CmdLetBinding(DefaultParameterSetName="Path")]
+	[CmdLetBinding()]
 	param (
-		[parameter(Mandatory=$true, ParameterSetName="Path")]
+		[parameter(
+			Mandatory=$true)]
 		[String]$Path,
-
-		[parameter(Mandatory=$true, ParameterSetName="Content")]
-		[String]$Content,
 
 		[Switch]$CheckEnvironment
 	) # Param
 
-	If ($Path) {
-		[XML]$Config = Get-LabConfiguration -Path $Path
-	} Else {
-		[XML]$Config = Get-LabConfiguration -Content $Content
-	}
+	[XML]$Config = Get-LabConfiguration -Path $Path
 	# Make sure everything is OK to install the lab
 	If (-not (Test-LabConfiguration -Configuration $Config)) {
 		return
@@ -1020,13 +1015,11 @@ Function Install-Lab {
 
 ##########################################################################################################################################
 Function Uninstall-Lab {
-	[CmdLetBinding(DefaultParameterSetName="Path")]
+	[CmdLetBinding()]
 	param (
-		[parameter(Mandatory=$true, ParameterSetName="Path")]
+		[parameter(
+			Mandatory=$true)]
 		[String]$Path,
-
-		[parameter(Mandatory=$true, ParameterSetName="Content")]
-		[String]$Content,
 
 		[Switch]$RemoveSwitches,
 
@@ -1035,11 +1028,8 @@ Function Uninstall-Lab {
 		[Switch]$RemoveVHDs
 	) # Param
 
-	If ($Path) {
-		[XML]$Config = Get-LabConfiguration -Path $Path
-	} Else {
-		[XML]$Config = Get-LabConfiguration -Content $Content
-	}
+	[XML]$Config = Get-LabConfiguration -Path $Path
+
 	# Make sure everything is OK to install the lab
 	If (-not (Test-LabConfiguration -Configuration $Config)) {
 		return
@@ -1075,6 +1065,6 @@ Export-ModuleMember -Function `
 	Get-LabVMTemplates,Initialize-LabVMTemplates,Remove-LabVMTemplates, `
 	Get-LabVMs,Initialize-LabVMs,Remove-LabVMs, `
 	Wait-LabVMStart, Wait-LabVMOff, `
-	Set-LabVMInitializationFiles, Set-LabVMInitalDSCPushMode, `
+	Set-LabVMInitializationFiles, `
 	Install-Lab,Uninstall-Lab
 ##########################################################################################################################################

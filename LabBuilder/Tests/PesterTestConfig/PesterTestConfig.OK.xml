@@ -12,8 +12,6 @@
     <macaddressmaximum>0011223344FF</macaddressmaximum>
   </settings>
 
-  <dsc configpath="C:\PesterTestConfig DSC\" />
-
   <switches>
     <switch name="Pester Test External" type="External" >
       <adapters>
