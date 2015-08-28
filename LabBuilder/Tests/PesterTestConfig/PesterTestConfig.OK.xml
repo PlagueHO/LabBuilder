@@ -49,7 +49,8 @@
   </templates>
 
   <vms>
-    <vm name="PESTER.VM1" template="Pester Windows Server 2012 R2 Datacenter Full">
+    <vm name="PESTER01" template="Pester Windows Server 2012 R2 Datacenter Full">
+      <computername>PESTER01</computername>
       <usedifferencingbootdisk>Y</usedifferencingbootdisk>
       <datavhdsize>10GB</datavhdsize>
       <memorystartupbytes>536870912</memorystartupbytes>

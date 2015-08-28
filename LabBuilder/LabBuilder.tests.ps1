@@ -566,12 +566,14 @@ Describe "Get-LabVMs" {
 		It "Returns Template Object that matches Expected Object" {
 			$ExpectedVMs = [String] @"
 {
-    "ProcessorCount":  "1",
+    "DataVHDSize":  10737418240,
+    "DSCMOFFile":  "",
     "DSCConfigName":  null,
-    "UnattendFile":  "",
+    "AdministratorPassword":  "None",
     "TemplateVHD":  "C:\\Pester Lab\\Virtual Hard Disk Templates\\Windows Server 2012 R2 Datacenter Full.vhdx",
-    "MemoryStartupBytes":  536870912,
-    "SetupComplete":  "",
+    "ProductKey":  "AAAAA-AAAAA-AAAAA-AAAAA-AAAAA",
+    "ComputerName":  "PESTER01",
+    "UnattendFile":  "",
     "Adapters":  [
                      {
                          "SwitchName":  "Pester Test Private Vlan",
@@ -598,15 +600,14 @@ Describe "Get-LabVMs" {
                          "MACAddress":  "00155D010804"
                      }
                  ],
-    "Name":  "PESTER.VM1",
-    "DataVHDSize":  10737418240,
-    "AdministratorPassword":  "None",
-    "ProductKey":  "AAAAA-AAAAA-AAAAA-AAAAA-AAAAA",
-    "DSCConfigFile":  "",
-    "UseDifferencingDisk":  "Y",
-    "TimeZone":  "Pacific Standard Time",
+    "ProcessorCount":  "1",
     "Template":  "Pester Windows Server 2012 R2 Datacenter Full",
-    "DSCMOFFile":  ""
+    "UseDifferencingDisk":  "Y",
+    "SetupComplete":  "",
+    "TimeZone":  "Pacific Standard Time",
+    "MemoryStartupBytes":  536870912,
+    "DSCConfigFile":  "",
+    "Name":  "PESTER01"
 }
 "@
 			[String]::Compare(($VMs | ConvertTo-Json -Depth 4),$ExpectedVMs,$true) | Should Be 0

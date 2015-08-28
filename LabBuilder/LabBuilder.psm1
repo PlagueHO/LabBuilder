@@ -611,6 +611,26 @@ function Set-LabVMInitializationFiles {
 			} # 'cmd'
 		} # Switch
 	} # If
+
+	# Are there any DSC Settings to manage?
+	[String]$DSCMOFFile = ''
+	If ($VM.DSCMOFFile) {
+		# A MOF File was specified so just use that. 
+		$DSCMOFFile = $VM.DSCMOFFile
+	} Else {
+		If ($VM.DSCConfigFile) {
+			# A DSC Config File was provided so create a MOF File out of it.
+			Write-Verbose "Creating VM $($VM.Name) DSC MOF File from DSC Config $($VM.DSCConfigFile) ..."
+			. $VM.DSConfigFile
+			[String]$DSCConfigName = $VM.DSCConfigName
+			[String]$DSCMOFFile = "$($ENV:Temp)\$($VM.ComputerName)"
+			& "$DSCConfigName -OutputPath $($ENV:Temp)"
+			If (-not (Test-Path -Path $DSCMOFFile)) {
+				Throw "A MOF File was not created by the DSC Config File $($VM.DSCCOnfigFile) for VM $($VM.Name)."
+			} # If
+			Write-Verbose "DSC MOF File $DSCMOFFile for VM $($VM.Name) was created successfully ..."
+		} # If
+	} # If
 	
 	# Mount the VMs Boot VHD so that files can be loaded into it
 	[String]$MountPount = "C:\TempMount"
@@ -622,6 +642,16 @@ function Set-LabVMInitializationFiles {
 	Write-Verbose "Applying VM $($VM.Name) Unattend File ..."
 	Set-Content -Path "$MountPount\Windows\Panther\Unattend.xml" -Value $UnattendContent -Force | Out-Null
 	New-Item -Path "$MountPount\Windows\Setup\Scripts" -ItemType Directory
+
+	If ($DSCMOFFile) {
+		Write-Verbose "Applying VM $($VM.Name) DSC MOF File $DSCMOFFile ..."
+		# A MOF File is available for this VM so copy it to the VM and start DSC Push Mode
+		New-Item -Path "$MountPount\Windows\DSC\" -ItemType Directory | Out-Null
+		Copy-Item -Path $DSCMOFFile -Destination "$MountPount\Windows\DSC\$($VM.ComputerName)" -Force | Out-Null
+		# $SetupCompletePs += "`n`rSet-DscLocalConfigurationManager -Path `"$($ENV:SystemRoot)\DSC\`""
+		$SetupCompletePs += "`n`rStart-DSCConfiguration -Path `"$($ENV:SystemRoot)\DSC\`" -Force"
+	} # If
+
 	If ($SetupCompletePs) {
 		# Because a PowerShell SetupComplete file was provided we need to kick it off from
 		# The SetupComplete.cmd script.
@@ -777,6 +807,7 @@ function Get-LabVMs {
 		}
 		$LabVMs += @{
 			Name = $VM.name;
+			ComputerName = $VM.ComputerName;
 			Template = $VM.template;
 			TemplateVHD = $TemplateVHDPath;
 			UseDifferencingDisk = $VM.usedifferencingbootdisk;

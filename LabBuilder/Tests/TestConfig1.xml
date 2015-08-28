@@ -29,6 +29,7 @@
 
   <vms>
     <vm name="BMDLAB.LOCAL SS_ROOTCA" template="Template Windows Server 2012 R2 Datacenter Full">
+      <computername>SS_ROOTCA</computername>
       <usedifferencingbootdisk>Y</usedifferencingbootdisk>
       <datavhdsize>10GB</datavhdsize>
       <memorystartupbytes>1073741824</memorystartupbytes>
