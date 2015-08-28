@@ -41,7 +41,7 @@
       <administratorpassword>None</administratorpassword>
       <productkey>AAAAA-AAAAA-AAAAA-AAAAA-AAAAA</productkey>
       <timezone>Pacific Standard Time</timezone>
-      <dscconfig>VM1</dscconfig>
+      
       <unattendfile>ThisFileDoesntExist.xml</unattendfile>
     </vm>
 

@@ -30,7 +30,7 @@
   </templates>
 
   <vms>
-    <vm name="Pester Bad Template" template="Pester Bad Template">
+    <vm name="Bad Setup Complete File" template="Pester Windows Server 2012 R2 Datacenter Full">
       <usedifferencingbootdisk>Y</usedifferencingbootdisk>
       <datavhdsize>10GB</datavhdsize>
       <memorystartupbytes>536870912</memorystartupbytes>
@@ -41,7 +41,7 @@
       <administratorpassword>None</administratorpassword>
       <productkey>AAAAA-AAAAA-AAAAA-AAAAA-AAAAA</productkey>
       <timezone>Pacific Standard Time</timezone>
-      
+      <dsc configname="OK" configfile="FileDoesNotExist.ps1" />
     </vm>
 
   </vms>

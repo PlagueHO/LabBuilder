@@ -39,7 +39,7 @@
       <administratorpassword>P@ssword!1</administratorpassword>
       <productkey>W3GGN-FT8W3-Y4M27-J84CP-Q3VJ9</productkey>
       <timezone>Pacific Standard Time</timezone>
-      <dscconfig>SS_ROOTCA</dscconfig>
+      <dsc configname="SS_ROOTCA" configfile="SS_ROOTCA.DSC.ps1" />
       <unattendfile></unattendfile>
       <setupcomplete>SS_ROOTCA.SetupComplete.ps1</setupcomplete>
     </vm>

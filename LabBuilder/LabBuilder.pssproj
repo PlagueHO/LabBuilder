@@ -42,6 +42,7 @@
     <Compile Include="Tests\PesterTestConfig\PesterTestConfig.OK.xml" />
     <Compile Include="Tests\TestConfig1\SS_ROOTCA.DSC.ps1" />
     <Compile Include="Tests\TestConfig1.ps1" />
+    <Compile Include="Tests\TestConfig1\SS_ROOTCA.SetupComplete.cmd" />
     <Compile Include="Tests\TestConfig1\SS_ROOTCA.SetupComplete.ps1" />
   </ItemGroup>
   <ItemGroup>
@@ -51,7 +52,11 @@
     <Folder Include="Tests\TestConfig1\" />
   </ItemGroup>
   <ItemGroup>
-    <Content Include="Tests\PesterTestConfig\PesterTestConfig.TemplateFail.NoVHD - Copy.xml" />
+    <Content Include="Tests\PesterTestConfig\PesterTestConfig.TemplateFail.NoVHD.xml" />
+    <Content Include="Tests\PesterTestConfig\PesterTestConfig.VMFail.BadDSCMOFFileType.xml" />
+    <Content Include="Tests\PesterTestConfig\PesterTestConfig.VMFail.BadMOFConfigFile.xml" />
+    <Content Include="Tests\PesterTestConfig\PesterTestConfig.VMFail.BadDSCConfigFileType.xml" />
+    <Content Include="Tests\PesterTestConfig\PesterTestConfig.VMFail.BadDSCConfigFile.xml" />
     <Content Include="Tests\PesterTestConfig\PesterTestConfig.VMFail.BadSetupCompleteFileType.xml" />
     <Content Include="Tests\PesterTestConfig\PesterTestConfig.VMFail.BadTemplate.xml" />
     <Content Include="Tests\PesterTestConfig\PesterTestConfig.VMFail.BadAdapterSwitch.xml" />

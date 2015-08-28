@@ -10,5 +10,3 @@ Configuration SS_ROOTCA
       }
    }
 }
-
-SS_ROOTCA

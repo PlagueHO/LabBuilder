@@ -743,8 +743,36 @@ function Get-LabVMs {
 			If (-not (Test-Path $SetupComplete)) {
 				Throw "The Setup Complete File $SetupComplete specified in VM $($VM.Name) can not be found."
 			}
-			If ([System.IO.Path]::GetExtension($SetupComplete) -notin '.ps1','.cmd' ) {
+			If ([System.IO.Path]::GetExtension($SetupComplete).ToLower() -notin '.ps1','.cmd' ) {
 				Throw "The Setup Complete File $SetupComplete specified in VM $($VM.Name) must be either a PS1 or CMD file."
+			}
+		}
+		# Load the DSC Config File setting and check it
+		[String]$DSCConfigFile = ''
+		If ($VM.DSC.ConfigFile) {
+			$DSCConfigFile = Join-Path -Path $Configuration.labbuilderconfig.settings.fullconfigpath -ChildPath $VM.DSC.ConfigFile
+			If (-not (Test-Path $DSCConfigFile)) {
+				Throw "The DSC Config File $DSCConfigFile specified in VM $($VM.Name) can not be found."
+			}
+			If ([System.IO.Path]::GetExtension($DSCConfigFile).ToLower() -ne '.ps1' ) {
+				Throw "The DSC Config File $DSCConfigFile specified in VM $($VM.Name) must be a PS1 file."
+			}
+			If (-not $VM.DSC.ConfigName) {
+				Throw "The DSC Config Name must be specified for VM $($VM.Name)."
+			}
+		}
+		# Load the DSC MOF File setting and check it
+		[String]$DSCMOFFile = ''
+		If ($VM.DSC.MOFFile) {
+			If ($DSCConfigFile) {
+				Throw "Both a DSC MOF File and and DSC Config file can not be specified in $($VM.Name)."
+			}
+			$DSCMOFFile = Join-Path -Path $Configuration.labbuilderconfig.settings.fullconfigpath -ChildPath $VM.DSC.MOFFile
+			If (-not (Test-Path $DSCMOFFile)) {
+				Throw "The DSC MOF File $DSCMOFFile specified in VM $($VM.Name) can not be found."
+			}
+			If ([System.IO.Path]::GetExtension($DSCMOFFile).ToLower() -ne '.mof' ) {
+				Throw "The DSC Config File $DSCMOFFile specified in VM $($VM.Name) must be a MOF file."
 			}
 		}
 		$LabVMs += @{
@@ -761,6 +789,9 @@ function Get-LabVMs {
 			DataVHDSize = (Invoke-Expression $VM.DataVHDSize);
 			UnattendFile = $UnattendFile;
 			SetupComplete = $SetupComplete;
+			DSCConfigFile = $DSCConfigFile;
+			DSCConfigName = $VM.DSC.ConfigName;
+			DSCMOFFile = $DSCMOFFile;
 		}
 	} # Foreach        
 
