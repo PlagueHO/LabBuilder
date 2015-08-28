@@ -600,7 +600,6 @@ function Set-LabVMInitializationFiles {
 		[String]$Extension = [System.IO.Path]::GetExtension($SetupComplete)
 		Switch ($Extension.ToLower()) {
 			'ps1' {
-				$SetupCompleteCmd += "`n`rpowerShell -ExecutionPolicy Unrestricted -Command `"SetupComplete.ps1`""
 				$SetupCompletePs = Get-Content -Path $SetupComplete
 				Break
 			} # 'ps1'
@@ -621,12 +620,15 @@ function Set-LabVMInitializationFiles {
 	Write-Verbose "Applying VM $($VM.Name) Unattend File ..."
 	Set-Content -Path "$MountPount\Windows\Panther\Unattend.xml" -Value $UnattendContent -Force | Out-Null
 	If ($SetupCompleteCmd) {
-		Write-Verbose "Applying VM $($VM.Name) Setup Complete CMD File ..."
-		Set-Content -Path "$MountPount\Windows\Setup\Scripts\SetupComplete.cmd" -Value $SetupCompleteCmd -Force | Out-Null	
 		If ($SetupCompletePs) {
+			# Because a PowerShell SetupComplete file was provided we need to kick it off from
+			# The SetupComplete.cmd script.
+			$SetupCompleteCmd += "`n`rpowerShell -ExecutionPolicy Unrestricted -Command `"SetupComplete.ps1`""
 			Write-Verbose "Applying VM $($VM.Name) Setup Complete PowerShell File ..."
 			Set-Content -Path "$MountPount\Windows\Setup\Scripts\SetupComplete.ps1" -Value $SetupCompletePs -Force | Out-Null	
 		} # If
+		Write-Verbose "Applying VM $($VM.Name) Setup Complete CMD File ..."
+		Set-Content -Path "$MountPount\Windows\Setup\Scripts\SetupComplete.cmd" -Value $SetupCompleteCmd -Force | Out-Null	
 	} # If
 	# Dismount the VHD in preparation for boot
 	Write-Verbose "Dismounting VM $($VM.Name) Boot Disk VHDx $VMBootDiskPath ..."
@@ -1001,20 +1003,20 @@ Function Install-Lab {
 	}
 	   
 	If ($CheckEnvironment) {
-		Install-LabHyperV
+		Install-LabHyperV | Not-Null
 	}
-	Initialize-LabHyperV -Configuration $Config
+	Initialize-LabHyperV -Configuration $Config | Not-Null
 
-	Initialize-LabDSC -Configuration $Config
+	Initialize-LabDSC -Configuration $Config | Not-Null
 
 	$Switches = Get-LabSwitches -Configuration $Config
-	Initialize-LabSwitches -Configuration $Config -Switches $Switches
+	Initialize-LabSwitches -Configuration $Config -Switches $Switches | Not-Null
 
 	$VMTemplates = Get-LabVMTemplates -Configuration $Config
-	Initialize-LabVMTemplates -Configuration $Config -VMTemplates $VMTemplates
+	Initialize-LabVMTemplates -Configuration $Config -VMTemplates $VMTemplates | Not-Null
 
 	$VMs = Get-LabVMs -Configuration $Config -VMTemplates $VMTemplates -Switches $Switches
-	Initialize-LabVMs -Configuration $Config -VMs $VMs
+	Initialize-LabVMs -Configuration $Config -VMs $VMs | Not-Null
 } # Build-Lab
 ##########################################################################################################################################
 
@@ -1046,17 +1048,17 @@ Function Uninstall-Lab {
 
 	$VMs = Get-LabVMs -Configuration $Config -VMTemplates $VMTemplates -Switches $Switches
 	If ($RemoveVHDs) {
-		Remove-LabVMs -Configuration $Config -VMs $VMs -RemoveVHDs
+		Remove-LabVMs -Configuration $Config -VMs $VMs -RemoveVHDs | Not-Null
 	} Else {
-		Remove-LabVMs -Configuration $Config -VMs $VMs
+		Remove-LabVMs -Configuration $Config -VMs $VMs | Not-Null
 	} # If
 
 	If ($RemoveTemplates) {
-		Remove-LabVMTemplates -Configuration $Config -VMTemplates $VMTemplates
+		Remove-LabVMTemplates -Configuration $Config -VMTemplates $VMTemplates | Not-Null
 	} # If
 
 	If ($RemoveSwitches) {
-		Remove-LabSwitches -Configuration $Config -Switches $Switches
+		Remove-LabSwitches -Configuration $Config -Switches $Switches | Not-Null
 	} # If
 } # Uninstall-Lab
 ##########################################################################################################################################
