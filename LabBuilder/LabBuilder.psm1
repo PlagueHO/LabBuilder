@@ -621,10 +621,10 @@ function Set-LabVMInitializationFiles {
 		If ($VM.DSCConfigFile) {
 			# A DSC Config File was provided so create a MOF File out of it.
 			Write-Verbose "Creating VM $($VM.Name) DSC MOF File from DSC Config $($VM.DSCConfigFile) ..."
-			. $VM.DSConfigFile
+			. $VM.DSCConfigFile
 			[String]$DSCConfigName = $VM.DSCConfigName
-			[String]$DSCMOFFile = "$($ENV:Temp)\$($VM.ComputerName)"
-			& "$DSCConfigName -OutputPath $($ENV:Temp)"
+			[String]$DSCMOFFile = "$($ENV:Temp)\$($VM.ComputerName).mof"
+			& "$DSCConfigName" -OutputPath $($ENV:Temp)
 			If (-not (Test-Path -Path $DSCMOFFile)) {
 				Throw "A MOF File was not created by the DSC Config File $($VM.DSCCOnfigFile) for VM $($VM.Name)."
 			} # If
@@ -647,7 +647,7 @@ function Set-LabVMInitializationFiles {
 		Write-Verbose "Applying VM $($VM.Name) DSC MOF File $DSCMOFFile ..."
 		# A MOF File is available for this VM so copy it to the VM and start DSC Push Mode
 		New-Item -Path "$MountPount\Windows\DSC\" -ItemType Directory | Out-Null
-		Copy-Item -Path $DSCMOFFile -Destination "$MountPount\Windows\DSC\$($VM.ComputerName)" -Force | Out-Null
+		Copy-Item -Path $DSCMOFFile -Destination "$MountPount\Windows\DSC\$($VM.ComputerName).mof" -Force | Out-Null
 		# $SetupCompletePs += "`n`rSet-DscLocalConfigurationManager -Path `"$($ENV:SystemRoot)\DSC\`""
 		$SetupCompletePs += "`n`rStart-DSCConfiguration -Path `"$($ENV:SystemRoot)\DSC\`" -Force"
 	} # If
