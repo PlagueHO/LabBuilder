@@ -625,7 +625,7 @@ function Set-LabVMInitializationFiles {
 	If ($SetupCompletePs) {
 		# Because a PowerShell SetupComplete file was provided we need to kick it off from
 		# The SetupComplete.cmd script.
-		$SetupCompleteCmd += "`n`rpowerShell -ExecutionPolicy Unrestricted -Command `".\SetupComplete.ps1`""
+		$SetupCompleteCmd += "`n`r-powerShell -ExecutionPolicy Unrestricted -Command %SYSTEMROOT%`"Setup\Scripts\SetupComplete.ps1`""
 		Write-Verbose "Applying VM $($VM.Name) Setup Complete PowerShell File ..."
 		Set-Content -Path "$MountPount\Windows\Setup\Scripts\SetupComplete.ps1" -Value $SetupCompletePs -Force | Out-Null	
 	}
