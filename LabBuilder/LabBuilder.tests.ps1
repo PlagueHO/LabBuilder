@@ -663,12 +663,12 @@ Describe "Remove-LabVMs" {
 		$VMs = Get-LabVMs -Configuration $Config -VMTemplates $Templates -Switches $Switches
 
 		# Create the dummy VM's that the Remove-LabVMs function 
-		New-VM -Name 'PESTER.VM1'
+		New-VM -Name 'PESTER01'
 		It "Returns True" {
 			Remove-LabVMs -Configuration $Config -VMs $VMs | Should Be $True
 		}
-		It "Removes the VM PESTER.VM1" {
-			(Get-VM -Name 'PESTER.VM1').Count | Should Be 0
+		It "Removes the VM PESTER01" {
+			(Get-VM -Name 'PESTER01').Count | Should Be 0
 		}
 		Remove-VM -Name PESTER.* -Confirm:$true
 	}

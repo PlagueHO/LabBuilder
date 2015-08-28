@@ -14,5 +14,5 @@ Function Test-LabBuilderLoadModule {
 ##########################################################################################################################################
 Test-LabBuilderLoadModule
 Test-LabBuilderInstall
-Sleep 30 # Wait 30 seconds for everything to finish building
-Test-LabBuilderUninstall
+# Sleep 30 # Wait 30 seconds for everything to finish building
+# Test-LabBuilderUninstall

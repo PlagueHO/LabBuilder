@@ -1,1 +1,1 @@
-﻿Set-Content -Path c:\SetupCompletePs1.txt -Value "SetupComplete.ps1 Fired"
+﻿

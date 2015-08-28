@@ -648,14 +648,13 @@ function Set-LabVMInitializationFiles {
 		# A MOF File is available for this VM so copy it to the VM and start DSC Push Mode
 		New-Item -Path "$MountPount\Windows\DSC\" -ItemType Directory | Out-Null
 		Copy-Item -Path $DSCMOFFile -Destination "$MountPount\Windows\DSC\$($VM.ComputerName).mof" -Force | Out-Null
-		# $SetupCompletePs += "`n`rSet-DscLocalConfigurationManager -Path `"$($ENV:SystemRoot)\DSC\`""
-		$SetupCompletePs += "`n`rStart-DSCConfiguration -Path `"$($ENV:SystemRoot)\DSC\`" -Force"
+		$SetupCompletePs += "`r`nStart-DSCConfiguration -Path `"$($ENV:SystemRoot)\DSC\`" -Force"
 	} # If
-
+	
 	If ($SetupCompletePs) {
 		# Because a PowerShell SetupComplete file was provided we need to kick it off from
 		# The SetupComplete.cmd script.
-		$SetupCompleteCmd += "`n`rpowerShell.exe -ExecutionPolicy Unrestricted -Command `"%SYSTEMROOT%\Setup\Scripts\SetupComplete.ps1`""
+		$SetupCompleteCmd += "`r`npowerShell.exe -ExecutionPolicy Unrestricted -Command `"%SYSTEMROOT%\Setup\Scripts\SetupComplete.ps1`""
 		Write-Verbose "Applying VM $($VM.Name) Setup Complete PowerShell File ..."
 		Set-Content -Path "$MountPount\Windows\Setup\Scripts\SetupComplete.ps1" -Value $SetupCompletePs -Force | Out-Null	
 	}
