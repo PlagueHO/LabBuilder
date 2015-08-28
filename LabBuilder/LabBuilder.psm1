@@ -595,15 +595,17 @@ function Set-LabVMInitializationFiles {
 	[String]$SetupCompletePs = ''
 	[String]$SetupCompleteCmd = ''
 	If ($VM.SetupComplete) {
-		# Workout the actual path to the SetupComplete File
-		$SetupComplete = Join-Path -Path ($Configuration.labbuilderconfig.settings.fullconfigpath) -ChildPath ($VM.SetupComplete)
+        [String]$SetupComplete = $VM.SetupComplete
+        If (-not (Test-Path -Path $SetupComplete)) {
+            Throw "SetupComplete Script file $SetupComplete could not be found for VM $($VM.Name)."
+        }
 		[String]$Extension = [System.IO.Path]::GetExtension($SetupComplete)
 		Switch ($Extension.ToLower()) {
-			'ps1' {
+			'.ps1' {
 				$SetupCompletePs = Get-Content -Path $SetupComplete
 				Break
 			} # 'ps1'
-			'cmd' {
+			'.cmd' {
 				$SetupCompleteCmd = Get-Content -Path $SetupComplete
 				Break
 			} # 'cmd'
@@ -619,14 +621,15 @@ function Set-LabVMInitializationFiles {
 	# Apply any files that are needed
 	Write-Verbose "Applying VM $($VM.Name) Unattend File ..."
 	Set-Content -Path "$MountPount\Windows\Panther\Unattend.xml" -Value $UnattendContent -Force | Out-Null
+	New-Item -Path "$MountPount\Windows\Setup\Scripts" -ItemType Directory
+	If ($SetupCompletePs) {
+		# Because a PowerShell SetupComplete file was provided we need to kick it off from
+		# The SetupComplete.cmd script.
+		$SetupCompleteCmd += "`n`rpowerShell -ExecutionPolicy Unrestricted -Command `".\SetupComplete.ps1`""
+		Write-Verbose "Applying VM $($VM.Name) Setup Complete PowerShell File ..."
+		Set-Content -Path "$MountPount\Windows\Setup\Scripts\SetupComplete.ps1" -Value $SetupCompletePs -Force | Out-Null	
+	}
 	If ($SetupCompleteCmd) {
-		If ($SetupCompletePs) {
-			# Because a PowerShell SetupComplete file was provided we need to kick it off from
-			# The SetupComplete.cmd script.
-			$SetupCompleteCmd += "`n`rpowerShell -ExecutionPolicy Unrestricted -Command `"SetupComplete.ps1`""
-			Write-Verbose "Applying VM $($VM.Name) Setup Complete PowerShell File ..."
-			Set-Content -Path "$MountPount\Windows\Setup\Scripts\SetupComplete.ps1" -Value $SetupCompletePs -Force | Out-Null	
-		} # If
 		Write-Verbose "Applying VM $($VM.Name) Setup Complete CMD File ..."
 		Set-Content -Path "$MountPount\Windows\Setup\Scripts\SetupComplete.cmd" -Value $SetupCompleteCmd -Force | Out-Null	
 	} # If
@@ -1003,20 +1006,20 @@ Function Install-Lab {
 	}
 	   
 	If ($CheckEnvironment) {
-		Install-LabHyperV | Not-Null
+		Install-LabHyperV | Out-Null
 	}
-	Initialize-LabHyperV -Configuration $Config | Not-Null
+	Initialize-LabHyperV -Configuration $Config | Out-Null
 
-	Initialize-LabDSC -Configuration $Config | Not-Null
+	Initialize-LabDSC -Configuration $Config | Out-Null
 
 	$Switches = Get-LabSwitches -Configuration $Config
-	Initialize-LabSwitches -Configuration $Config -Switches $Switches | Not-Null
+	Initialize-LabSwitches -Configuration $Config -Switches $Switches | Out-Null
 
 	$VMTemplates = Get-LabVMTemplates -Configuration $Config
-	Initialize-LabVMTemplates -Configuration $Config -VMTemplates $VMTemplates | Not-Null
+	Initialize-LabVMTemplates -Configuration $Config -VMTemplates $VMTemplates | Out-Null
 
 	$VMs = Get-LabVMs -Configuration $Config -VMTemplates $VMTemplates -Switches $Switches
-	Initialize-LabVMs -Configuration $Config -VMs $VMs | Not-Null
+	Initialize-LabVMs -Configuration $Config -VMs $VMs | Out-Null
 } # Build-Lab
 ##########################################################################################################################################
 
@@ -1048,17 +1051,17 @@ Function Uninstall-Lab {
 
 	$VMs = Get-LabVMs -Configuration $Config -VMTemplates $VMTemplates -Switches $Switches
 	If ($RemoveVHDs) {
-		Remove-LabVMs -Configuration $Config -VMs $VMs -RemoveVHDs | Not-Null
+		Remove-LabVMs -Configuration $Config -VMs $VMs -RemoveVHDs | Out-Null
 	} Else {
-		Remove-LabVMs -Configuration $Config -VMs $VMs | Not-Null
+		Remove-LabVMs -Configuration $Config -VMs $VMs | Out-Null
 	} # If
 
 	If ($RemoveTemplates) {
-		Remove-LabVMTemplates -Configuration $Config -VMTemplates $VMTemplates | Not-Null
+		Remove-LabVMTemplates -Configuration $Config -VMTemplates $VMTemplates | Out-Null
 	} # If
 
 	If ($RemoveSwitches) {
-		Remove-LabSwitches -Configuration $Config -Switches $Switches | Not-Null
+		Remove-LabSwitches -Configuration $Config -Switches $Switches | Out-Null
 	} # If
 } # Uninstall-Lab
 ##########################################################################################################################################
