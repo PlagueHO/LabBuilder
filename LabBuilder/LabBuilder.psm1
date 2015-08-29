@@ -648,18 +648,24 @@ function Set-LabVMInitializationFiles {
 		# A MOF File is available for this VM so copy it to the VM and start DSC Push Mode
 		New-Item -Path "$MountPount\Windows\DSC\" -ItemType Directory | Out-Null
 		Copy-Item -Path $DSCMOFFile -Destination "$MountPount\Windows\DSC\$($VM.ComputerName).mof" -Force | Out-Null
-		$SetupCompletePs += "`r`nStart-DSCConfiguration -Path `"$($ENV:SystemRoot)\DSC\`" -Force"
+		$SetupCompletePs += "`r`nAdd-Content -Path `"$($ENV:SystemRoot)\Windows\Setup\Scripts\SetupComplete.log`" -Value `"DSC Configuration Started...`""
+		$SetupCompletePs += "`r`nStart-DSCConfiguration -Path `"$($ENV:SystemRoot)\DSC\`" -Force -Wait"
+		$SetupCompletePs += "`r`nAdd-Content -Path `"$($ENV:SystemRoot)\Windows\Setup\Scripts\SetupComplete.log`" -Value `"DSC Configuration Finished...`""
 	} # If
 	
 	If ($SetupCompletePs) {
 		# Because a PowerShell SetupComplete file was provided we need to kick it off from
 		# The SetupComplete.cmd script.
+		$SetupCompleteCmd += "`r`n@echo SetupComplete.ps1 Script Started... >> %SYSTEMROOT%\Windows\Setup\Scripts\SetupComplete.log"
 		$SetupCompleteCmd += "`r`npowerShell.exe -ExecutionPolicy Unrestricted -Command `"%SYSTEMROOT%\Setup\Scripts\SetupComplete.ps1`""
+		$SetupCompleteCmd += "`r`n@echo SetupComplete.ps1 Script Finished... >> %SYSTEMROOT%\Windows\Setup\Scripts\SetupComplete.log"
 		Write-Verbose "Applying VM $($VM.Name) Setup Complete PowerShell File ..."
 		Set-Content -Path "$MountPount\Windows\Setup\Scripts\SetupComplete.ps1" -Value $SetupCompletePs -Force | Out-Null	
 	}
 	If ($SetupCompleteCmd) {
 		Write-Verbose "Applying VM $($VM.Name) Setup Complete CMD File ..."
+		$SetupCompleteCmd = "@echo SetupComplete.cmd Script Started... >> %SYSTEMROOT%\Windows\Setup\Scripts\SetupComplete.log`r`n$SetupCompleteCmd"
+		$SetupCompleteCmd += "`r`n@echo SetupComplete.cmd Script Finished... >> %SYSTEMROOT%\Windows\Setup\Scripts\SetupComplete.log"
 		Set-Content -Path "$MountPount\Windows\Setup\Scripts\SetupComplete.cmd" -Value $SetupCompleteCmd -Force | Out-Null	
 	} # If
 	# Dismount the VHD in preparation for boot
