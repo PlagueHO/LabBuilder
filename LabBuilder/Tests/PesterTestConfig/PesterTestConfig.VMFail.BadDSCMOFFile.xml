@@ -12,8 +12,6 @@
     <macaddressmaximum>0011223344FF</macaddressmaximum>
   </settings>
 
-  <dsc configpath="C:\PesterTestConfig DSC\" />
-
   <switches>
     <switch name="Pester Test Private Vlan" type="Private" vlan="2" />
     <switch name="Pester Test Private" type="Private" />
@@ -43,6 +41,6 @@
       <timezone>Pacific Standard Time</timezone>
       <dsc moffile="FileDoesNotExist.ps1" />
     </vm>
-
   </vms>
+  
 </labbuilderconfig>

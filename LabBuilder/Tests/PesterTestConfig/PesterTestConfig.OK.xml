@@ -33,19 +33,37 @@
               sourcevhd=".\Tests\PesterTestConfig\Windows Server 2012 R2 Datacenter Full.vhdx"
               installiso=".\Tests\PesterTestConfig\9600.16384.130821-1623_x64fre_Server_EN-US_IRM_SSS_DV5.iso"
               edition="Windows Server 2012 R2 SERVERDATACENTER"
-              allowcreate="Y"/>
+              allowcreate="Y">
+      <memorystartupbytes>1GB</memorystartupbytes>
+      <processorcount>1</processorcount>
+      <administratorpassword>None</administratorpassword>
+      <productkey>AAAAA-AAAAA-AAAAA-AAAAA-AAAAA</productkey>
+      <timezone>Pacific Standard Time</timezone>
+    </template>
     <template name="Pester Windows Server 2012 R2 Datacenter Core"
               vhd="Windows Server 2012 R2 Datacenter Core.vhdx"
               sourcevhd=".\Tests\PesterTestConfig\Windows Server 2012 R2 Datacenter Full.vhdx"
               installiso=".\Tests\PesterTestConfig\9600.16384.130821-1623_x64fre_Server_EN-US_IRM_SSS_DV5.iso"
               edition="Windows Server 2012 R2 SERVERDATACENTERCORE"
-              allowcreate="Y"/>
+              allowcreate="Y">
+      <memorystartupbytes>1GB</memorystartupbytes>
+      <processorcount>1</processorcount>
+      <administratorpassword>Whatever</administratorpassword>
+      <productkey>BBBBB-BBBBB-BBBBB-BBBBB-BBBBB</productkey>
+      <timezone>Pacific Standard Time</timezone>
+    </template>
     <template name="Pester Windows 10 Enterprise"
               vhd="Windows 10 Enterprise.vhdx"
               sourcevhd=".\Tests\PesterTestConfig\Windows 10 Enterprise.vhdx"
               installiso=".\Tests\PesterTestConfig\10240.16384.150709-1700.TH1_CLIENTENTERPRISE_VOL_X64FRE_EN-US.iso"
               edition="Windows 10 Enterprise"
-              allowcreate="Y"/>
+              allowcreate="Y">
+      <memorystartupbytes>1GB</memorystartupbytes>
+      <processorcount>1</processorcount>
+      <administratorpassword>Something</administratorpassword>
+      <productkey>CCCCC-CCCCC-CCCCC-CCCCC-CCCCC</productkey>
+      <timezone>Pacific Standard Time</timezone>
+    </template>
   </templates>
 
   <vms>
@@ -53,8 +71,6 @@
       <computername>PESTER01</computername>
       <usedifferencingbootdisk>Y</usedifferencingbootdisk>
       <datavhdsize>10GB</datavhdsize>
-      <memorystartupbytes>536870912</memorystartupbytes>
-      <processorcount>1</processorcount>
       <adapters>
         <adapter name="Pester Test Private Vlan" switchname="Pester Test Private Vlan" macaddress="00155D010801" />
         <adapter name="Pester Test Internal Vlan" switchname="Pester Test Internal Vlan" macaddress="00155D010802"/>
@@ -65,6 +81,6 @@
       <productkey>AAAAA-AAAAA-AAAAA-AAAAA-AAAAA</productkey>
       <timezone>Pacific Standard Time</timezone>
     </vm>
-
   </vms>
+  
 </labbuilderconfig>

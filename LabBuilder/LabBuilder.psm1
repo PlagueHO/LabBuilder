@@ -391,16 +391,17 @@ function Get-LabVMTemplates {
 		# Of the parent. So we can't easily tell if no name was specified or if they actually specified 'template' as the name.
 		If ($Template.Name -eq 'template') {
 			Throw "The Template Name can't be 'template' or empty."
-		}
+		} # If
 		If (-not $Template.VHD) {
 			Throw "The Template VHD name in Template $($Template.Name) can't be empty."
-		}
+		} # If
 		If ($Template.SourceVHD) {
 			# A Source VHD file was specified - does it exist?
 			If (-not (Test-Path -Path $Templates.SourceVHD)) {
 				Throw "The Template Source VHD in Template $($Template.Name) could not be found."
-			}
-		}
+			} # If
+		} # If
+		[Int64]$MemortStartupBytes = 0
 		# Does the template already exist in the list?
 		[Boolean]$Found = $False
 		Foreach ($VMTemplate in $VMTemplates) {
@@ -409,14 +410,34 @@ function Get-LabVMTemplates {
 				If ($Template.VHD) {
 					If (-not $Template.VHD) {
 						Throw "The VHD file in template $($Template.Name) cannot be empty."
-					}
+					} # If
 					$VMTemplate.VHD = $Template.VHD
 					$VMTemplate.TemplateVHD = "$VHDParentPath\$([System.IO.Path]::GetFileName($Template.VHD))"
-				}
+				} # If
 				$VMTemplate.SourceVHD = $Templates.SourceVHD
 				$VMTemplate.InstallISO = $Template.InstallISO
 				$VMTemplate.Edition = $Template.Edtion
 				$VMTemplate.AllowCreate = $Template.AllowCreate
+				# Write any template specific VM attributes
+				If ($Templates.MemoryStartupBytes) {
+					$VMTemplate.MemoryStartupBytes = (Invoke-Expression $Template.MemoryStartupBytes)
+				} # If
+				If ($Templates.ProcessorCount) {
+					$VMTemplate.ProcessorCount = $Template.ProcessorCount
+				} # If
+				If ($Templates.AdministratorPassword) {
+					$VMTemplate.AdministratorPassword = $Template.AdministratorPassword
+				} # If
+				If ($Templates.ProductKey) {
+					$VMTemplate.ProductKey = $Template.ProductKey
+				} # If
+				If ($Templates.TimeZone) {
+					$VMTemplate.TimeZone = $Template.TimeZone
+				} # If
+				If ($Template.MemoryStartupBytes) {
+					$MemortStartupBytes = (Invoke-Expression $Template.MemoryStartupBytes)
+				} # If
+
 				$Found = $True
 				Break
 			} # If
@@ -431,6 +452,11 @@ function Get-LabVMTemplates {
 				installiso = $Template.InstallISO;
 				edition = $Template.Edition;
 				allowcreate = $Template.AllowCreate;
+				memorystartupbytes = $MemoryStartupBytes;
+				processorcount = $Template.ProcessorCount;
+				administratorpassword = $Template.AdministratorPassword;
+				productkey = $Template.ProductKey;
+				timezone = $Template.TimeZone;
 			}
 		} # If
 	} # Foreach
@@ -649,7 +675,7 @@ function Set-LabVMInitializationFiles {
 		New-Item -Path "$MountPount\Windows\DSC\" -ItemType Directory | Out-Null
 		Copy-Item -Path $DSCMOFFile -Destination "$MountPount\Windows\DSC\$($VM.ComputerName).mof" -Force | Out-Null
 		$SetupCompletePs += "`r`nAdd-Content -Path `"$($ENV:SystemRoot)\Setup\Scripts\SetupComplete.log`" -Value `"DSC Configuration Started...`""
-		$SetupCompletePs += "`r`nStart-DSCConfiguration -Path `"$($ENV:SystemRoot)\DSC\`" -Force -Wait"
+		$SetupCompletePs += "`r`nStart-DSCConfiguration -Path `"$($ENV:SystemRoot)\DSC\`" -Force -Wait -Verbose  4>> `"$($ENV:SystemRoot)\Setup\Scripts\SetupComplete.log`""
 		$SetupCompletePs += "`r`nAdd-Content -Path `"$($ENV:SystemRoot)\Setup\Scripts\SetupComplete.log`" -Value `"DSC Configuration Finished...`""
 	} # If
 	
@@ -810,19 +836,29 @@ function Get-LabVMs {
 				Throw "The DSC Config File $DSCMOFFile specified in VM $($VM.Name) must be a MOF file."
 			}
 		}
+		# Get the Memory Startup Bytes
+		[Int64]$MemoryStartupBytes = 0
+		If ($VM.memorystartupbytes) {
+			[Int64]$MemoryStartupBytes = (Invoke-Expression $VM.memorystartupbytes)
+		} # If
+		# Get the data VHD Size
+		[Int64]$DataVHDSize = 0
+		If (Invoke-Expression $VM.DataVHDSize) {
+			[Int64]$MemoryStartupBytes = (Invoke-Expression $VM.DataVHDSize)
+		} # If
 		$LabVMs += @{
 			Name = $VM.name;
 			ComputerName = $VM.ComputerName;
 			Template = $VM.template;
 			TemplateVHD = $TemplateVHDPath;
 			UseDifferencingDisk = $VM.usedifferencingbootdisk;
-			MemoryStartupBytes = (Invoke-Expression $VM.memorystartupbytes);
+			MemoryStartupBytes = $MemoryStartupBytes;
 			ProcessorCount = $VM.processorcount;
 			AdministratorPassword = $VM.administratorpassword;
 			ProductKey = $VM.productkey;
 			TimeZone = $VM.timezone;
 			Adapters = $VMAdapters;
-			DataVHDSize = (Invoke-Expression $VM.DataVHDSize);
+			DataVHDSize = $DataVHDSize;
 			UnattendFile = $UnattendFile;
 			SetupComplete = $SetupComplete;
 			DSCConfigFile = $DSCConfigFile;

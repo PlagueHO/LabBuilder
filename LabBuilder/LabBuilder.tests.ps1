@@ -317,31 +317,46 @@ Describe "Get-LabVMTemplates" {
 		$ExpectedTemplates = [string] @"
 [
     {
-        "vhd":  "Windows Server 2012 R2 Datacenter Full.vhdx",
-        "name":  "Pester Windows Server 2012 R2 Datacenter Full",
+        "allowcreate":  "Y",
         "templatevhd":  "C:\\Pester Lab\\Virtual Hard Disk Templates\\Windows Server 2012 R2 Datacenter Full.vhdx",
+        "processorcount":  "1",
+        "productkey":  "AAAAA-AAAAA-AAAAA-AAAAA-AAAAA",
+        "memorystartupbytes":  1073741824,
         "installiso":  ".\\Tests\\PesterTestConfig\\9600.16384.130821-1623_x64fre_Server_EN-US_IRM_SSS_DV5.iso",
-        "allowcreate":  "Y",
         "edition":  "Windows Server 2012 R2 SERVERDATACENTER",
-        "sourcevhd":  ".\\Tests\\PesterTestConfig\\Windows Server 2012 R2 Datacenter Full.vhdx"
+        "name":  "Pester Windows Server 2012 R2 Datacenter Full",
+        "timezone":  "Pacific Standard Time",
+        "sourcevhd":  ".\\Tests\\PesterTestConfig\\Windows Server 2012 R2 Datacenter Full.vhdx",
+        "vhd":  "Windows Server 2012 R2 Datacenter Full.vhdx",
+        "administratorpassword":  "None"
     },
     {
-        "vhd":  "Windows Server 2012 R2 Datacenter Core.vhdx",
-        "name":  "Pester Windows Server 2012 R2 Datacenter Core",
+        "allowcreate":  "Y",
         "templatevhd":  "C:\\Pester Lab\\Virtual Hard Disk Templates\\Windows Server 2012 R2 Datacenter Core.vhdx",
+        "processorcount":  "1",
+        "productkey":  "BBBBB-BBBBB-BBBBB-BBBBB-BBBBB",
+        "memorystartupbytes":  1073741824,
         "installiso":  ".\\Tests\\PesterTestConfig\\9600.16384.130821-1623_x64fre_Server_EN-US_IRM_SSS_DV5.iso",
-        "allowcreate":  "Y",
         "edition":  "Windows Server 2012 R2 SERVERDATACENTERCORE",
-        "sourcevhd":  ".\\Tests\\PesterTestConfig\\Windows Server 2012 R2 Datacenter Full.vhdx"
+        "name":  "Pester Windows Server 2012 R2 Datacenter Core",
+        "timezone":  "Pacific Standard Time",
+        "sourcevhd":  ".\\Tests\\PesterTestConfig\\Windows Server 2012 R2 Datacenter Full.vhdx",
+        "vhd":  "Windows Server 2012 R2 Datacenter Core.vhdx",
+        "administratorpassword":  "Whatever"
     },
     {
-        "vhd":  "Windows 10 Enterprise.vhdx",
-        "name":  "Pester Windows 10 Enterprise",
-        "templatevhd":  "C:\\Pester Lab\\Virtual Hard Disk Templates\\Windows 10 Enterprise.vhdx",
-        "installiso":  ".\\Tests\\PesterTestConfig\\10240.16384.150709-1700.TH1_CLIENTENTERPRISE_VOL_X64FRE_EN-US.iso",
         "allowcreate":  "Y",
+        "templatevhd":  "C:\\Pester Lab\\Virtual Hard Disk Templates\\Windows 10 Enterprise.vhdx",
+        "processorcount":  "1",
+        "productkey":  "CCCCC-CCCCC-CCCCC-CCCCC-CCCCC",
+        "memorystartupbytes":  1073741824,
+        "installiso":  ".\\Tests\\PesterTestConfig\\10240.16384.150709-1700.TH1_CLIENTENTERPRISE_VOL_X64FRE_EN-US.iso",
         "edition":  "Windows 10 Enterprise",
-        "sourcevhd":  ".\\Tests\\PesterTestConfig\\Windows 10 Enterprise.vhdx"
+        "name":  "Pester Windows 10 Enterprise",
+        "timezone":  "Pacific Standard Time",
+        "sourcevhd":  ".\\Tests\\PesterTestConfig\\Windows 10 Enterprise.vhdx",
+        "vhd":  "Windows 10 Enterprise.vhdx",
+        "administratorpassword":  "Something"
     }
 ]
 "@
@@ -566,7 +581,7 @@ Describe "Get-LabVMs" {
 		It "Returns Template Object that matches Expected Object" {
 			$ExpectedVMs = [String] @"
 {
-    "DataVHDSize":  10737418240,
+    "DataVHDSize":  0,
     "DSCMOFFile":  "",
     "DSCConfigName":  null,
     "AdministratorPassword":  "None",
@@ -600,12 +615,12 @@ Describe "Get-LabVMs" {
                          "MACAddress":  "00155D010804"
                      }
                  ],
-    "ProcessorCount":  "1",
+    "ProcessorCount":  null,
     "Template":  "Pester Windows Server 2012 R2 Datacenter Full",
     "UseDifferencingDisk":  "Y",
     "SetupComplete":  "",
     "TimeZone":  "Pacific Standard Time",
-    "MemoryStartupBytes":  536870912,
+    "MemoryStartupBytes":  10737418240,
     "DSCConfigFile":  "",
     "Name":  "PESTER01"
 }

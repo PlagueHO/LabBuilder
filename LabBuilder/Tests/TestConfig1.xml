@@ -25,25 +25,41 @@
     <switch name="Domain Private Site C" type="Private" vlan="4" />
   </switches>
 
-  <templates fromvm="template *" />
+  <templates fromvm="template *">
+    <template name="Template Windows Server 2012 R2 Datacenter Full">
+      <memorystartupbytes>1GB</memorystartupbytes>
+      <processorcount>1</processorcount>
+      <administratorpassword>P@ssword!1</administratorpassword>
+      <productkey>W3GGN-FT8W3-Y4M27-J84CP-Q3VJ9</productkey>
+      <timezone>New Zealand Standard Time</timezone>      
+    </template>
+    <template name="Template Windows Server 2012 R2 Datacenter Core">
+      <memorystartupbytes>1GB</memorystartupbytes>
+      <processorcount>1</processorcount>
+      <administratorpassword>P@ssword!1</administratorpassword>
+      <productkey>W3GGN-FT8W3-Y4M27-J84CP-Q3VJ9</productkey>
+      <timezone>New Zealand Standard Time</timezone>      
+    </template>
+    <template name="Pester Windows 10 Enterprise"> 
+      <memorystartupbytes>1GB</memorystartupbytes>
+      <processorcount>1</processorcount>
+      <administratorpassword>P@ssword!1</administratorpassword>
+      <productkey>W3GGN-FT8W3-Y4M27-J84CP-Q3VJ9</productkey>
+      <timezone>New Zealand Standard Time</timezone>      
+    </template>
+  </templates>
 
   <vms>
     <vm name="BMDLAB.LOCAL SS_ROOTCA" template="Template Windows Server 2012 R2 Datacenter Full">
       <computername>SS_ROOTCA</computername>
       <usedifferencingbootdisk>Y</usedifferencingbootdisk>
-      <datavhdsize>10GB</datavhdsize>
-      <memorystartupbytes>1073741824</memorystartupbytes>
-      <processorcount>1</processorcount>
       <adapters>
         <adapter name="General Purpose External" switchname="General Purpose External" macaddress="00155D010801" />
       </adapters>
-      <administratorpassword>P@ssword!1</administratorpassword>
-      <productkey>W3GGN-FT8W3-Y4M27-J84CP-Q3VJ9</productkey>
-      <timezone>New Zealand Standard Time</timezone>
       <dsc configname="SS_ROOTCA" configfile="SS_ROOTCA.DSC.ps1" />
       <unattendfile></unattendfile>
       <setupcomplete>SS_ROOTCA.SetupComplete.ps1</setupcomplete>
     </vm>
-
   </vms>
+
 </labbuilderconfig>

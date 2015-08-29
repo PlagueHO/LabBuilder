@@ -43,6 +43,6 @@
       <timezone>Pacific Standard Time</timezone>
       <dsc configname="OK" configfile="FileDoesNotExist.ps1" />
     </vm>
-
   </vms>
+  
 </labbuilderconfig>
