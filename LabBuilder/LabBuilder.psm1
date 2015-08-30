@@ -691,7 +691,7 @@ function Set-LabVMInitializationFiles {
 		New-Item -Path "$MountPount\Windows\DSC\" -ItemType Directory | Out-Null
 		Copy-Item -Path $DSCMOFFile -Destination "$MountPount\Windows\DSC\$($VM.ComputerName).mof" -Force | Out-Null
 		$SetupCompletePs += "`r`nAdd-Content -Path `"$($ENV:SystemRoot)\Setup\Scripts\SetupComplete.log`" -Value `"DSC Configuration Started...`""
-		$SetupCompletePs += "`r`nStart-DSCConfiguration -Path `"$($ENV:SystemRoot)\DSC\`" -Force -Wait -Verbose  4>> `"$($ENV:SystemRoot)\Setup\Scripts\SetupComplete.log`""
+		$SetupCompletePs += "`r`nStart-DSCConfiguration -Path `"$($ENV:SystemRoot)\DSC\`" -Force -Wait -Verbose  *>> `"$($ENV:SystemRoot)\Setup\Scripts\DSC.log`""
 		$SetupCompletePs += "`r`nAdd-Content -Path `"$($ENV:SystemRoot)\Setup\Scripts\SetupComplete.log`" -Value `"DSC Configuration Finished...`""
 	} # If
 	
