@@ -392,9 +392,6 @@ function Get-LabVMTemplates {
 		If ($Template.Name -eq 'template') {
 			Throw "The Template Name can't be 'template' or empty."
 		} # If
-		If (-not $Template.VHD) {
-			Throw "The Template VHD name in Template $($Template.Name) can't be empty."
-		} # If
 		If ($Template.SourceVHD) {
 			# A Source VHD file was specified - does it exist?
 			If (-not (Test-Path -Path $Templates.SourceVHD)) {
@@ -420,11 +417,12 @@ function Get-LabVMTemplates {
 			If ($VMTemplate.Name -eq $Template.Name) {
 				# The template already exists - so don't add it again, but update the VHD path if provided
 				If ($Template.VHD) {
-					If (-not $Template.VHD) {
-						Throw "The VHD file in template $($Template.Name) cannot be empty."
-					} # If
 					$VMTemplate.VHD = $Template.VHD
 					$VMTemplate.TemplateVHD = "$VHDParentPath\$([System.IO.Path]::GetFileName($Template.VHD))"
+				} # If
+				# Check that we do end up with a VHD filename in the template
+				If (-not $VMTemplate.VHD) {
+					Throw "The VHD name in template $($Template.Name) cannot be empty."
 				} # If
 				$VMTemplate.SourceVHD = $Templates.SourceVHD
 				$VMTemplate.InstallISO = $Template.InstallISO
@@ -455,6 +453,11 @@ function Get-LabVMTemplates {
 			} # If
 		} # Foreach
 		If (-not $Found) {
+			# Check that we do end up with a VHD filename in the template
+			If (-not $Template.VHD) {
+				Throw "The VHD name in template $($Template.Name) cannot be empty."
+			} # If
+
 			# The template wasn't found in the list of templates so add it
 			$VMTemplates += @{
 				name = $Template.Name;
