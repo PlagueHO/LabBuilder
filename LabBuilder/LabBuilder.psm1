@@ -401,7 +401,19 @@ function Get-LabVMTemplates {
 				Throw "The Template Source VHD in Template $($Template.Name) could not be found."
 			} # If
 		} # If
+		
+		# Get the Template Default Startup Bytes
 		[Int64]$MemortStartupBytes = 0
+		If ($Template.MemoryStartupBytes) {
+			$MemortStartupBytes = (Invoke-Expression $Template.MemoryStartupBytes)
+		} # If
+
+		# Get the Template Default Data VHD Size
+		[Int64]$DataVHDSize = 0
+		If ($Template.DataVHDSize) {
+			$DataVHDSize = (Invoke-Expression $Template.DataVHDSize)
+		} # If
+				
 		# Does the template already exist in the list?
 		[Boolean]$Found = $False
 		Foreach ($VMTemplate in $VMTemplates) {
@@ -418,12 +430,15 @@ function Get-LabVMTemplates {
 				$VMTemplate.InstallISO = $Template.InstallISO
 				$VMTemplate.Edition = $Template.Edtion
 				$VMTemplate.AllowCreate = $Template.AllowCreate
-				# Write any template specific VM attributes
-				If ($Templates.MemoryStartupBytes) {
-					$VMTemplate.MemoryStartupBytes = (Invoke-Expression $Template.MemoryStartupBytes)
+				# Write any template specific default VM attributes
+				If ($MemortStartupBytes) {
+					$VMTemplate.MemoryStartupBytes = $MemortStartupBytes
 				} # If
 				If ($Templates.ProcessorCount) {
 					$VMTemplate.ProcessorCount = $Template.ProcessorCount
+				} # If
+				If ($DataVHDSize) {
+					$VMTemplate.DataVHDSize = $DataVHDSize
 				} # If
 				If ($Templates.AdministratorPassword) {
 					$VMTemplate.AdministratorPassword = $Template.AdministratorPassword
@@ -433,9 +448,6 @@ function Get-LabVMTemplates {
 				} # If
 				If ($Templates.TimeZone) {
 					$VMTemplate.TimeZone = $Template.TimeZone
-				} # If
-				If ($Template.MemoryStartupBytes) {
-					$MemortStartupBytes = (Invoke-Expression $Template.MemoryStartupBytes)
 				} # If
 
 				$Found = $True
@@ -454,6 +466,7 @@ function Get-LabVMTemplates {
 				allowcreate = $Template.AllowCreate;
 				memorystartupbytes = $MemoryStartupBytes;
 				processorcount = $Template.ProcessorCount;
+				datavhdsize = $Template.DataVHDSize;
 				administratorpassword = $Template.AdministratorPassword;
 				productkey = $Template.ProductKey;
 				timezone = $Template.TimeZone;
@@ -791,6 +804,7 @@ function Get-LabVMs {
 			$VMAdapters += @{ Name = $VMAdapter.Name; SwitchName = $VMAdapter.SwitchName; MACAddress = $VMAdapter.macaddress; VLan = $VLan }
 		}
 
+		# Does the VM have an Unattend file specified?
 		[String]$UnattendFile = ''
 		If ($VM.UnattendFile) {
 			$UnattendFile = Join-Path -Path $Configuration.labbuilderconfig.settings.fullconfigpath -ChildPath $VM.UnattendFile
@@ -798,6 +812,8 @@ function Get-LabVMs {
 				Throw "The Unattend File $UnattendFile specified in VM $($VM.Name) can not be found."
 			} # Endif
 		} # Endif
+		
+		# Does the VM specify a Setup Complete Script?
 		[String]$SetupComplete = ''
 		If ($VM.SetupComplete) {
 			$SetupComplete = Join-Path -Path $Configuration.labbuilderconfig.settings.fullconfigpath -ChildPath $VM.SetupComplete
@@ -808,6 +824,7 @@ function Get-LabVMs {
 				Throw "The Setup Complete File $SetupComplete specified in VM $($VM.Name) must be either a PS1 or CMD file."
 			}
 		}
+
 		# Load the DSC Config File setting and check it
 		[String]$DSCConfigFile = ''
 		If ($VM.DSC.ConfigFile) {
@@ -822,6 +839,7 @@ function Get-LabVMs {
 				Throw "The DSC Config Name must be specified for VM $($VM.Name)."
 			}
 		}
+		
 		# Load the DSC MOF File setting and check it
 		[String]$DSCMOFFile = ''
 		If ($VM.DSC.MOFFile) {
@@ -836,16 +854,61 @@ function Get-LabVMs {
 				Throw "The DSC Config File $DSCMOFFile specified in VM $($VM.Name) must be a MOF file."
 			}
 		}
-		# Get the Memory Startup Bytes
-		[Int64]$MemoryStartupBytes = 0
+
+		# Get the Memory Startup Bytes (from the template or VM)
+		[Int64]$MemoryStartupBytes = 1GB
+		If ($VMTemplate.memorystartupbytes) {
+			$MemoryStartupBytes = $VMTemplate.memorystartupbytes
+		} # If
 		If ($VM.memorystartupbytes) {
-			[Int64]$MemoryStartupBytes = (Invoke-Expression $VM.memorystartupbytes)
+			$MemoryStartupBytes = (Invoke-Expression $VM.memorystartupbytes)
 		} # If
-		# Get the data VHD Size
+		
+		# Get the Memory Startup Bytes (from the template or VM)
+		[Int]$ProcessorCount = 1
+		If ($VMTemplate.processorcount) {
+			$ProcessorCount = $VMTemplate.processorcount
+		} # If
+		If ($VM.processorcount) {
+			$ProcessorCount = (Invoke-Expression $VM.processorcount)
+		} # If
+
+		# Get the data VHD Size (from the template or VM)
 		[Int64]$DataVHDSize = 0
-		If (Invoke-Expression $VM.DataVHDSize) {
-			[Int64]$MemoryStartupBytes = (Invoke-Expression $VM.DataVHDSize)
+		If ($VMTemplate.datavhdsize) {
+			$MemoryStartupBytes = $VMTemplate.datavhdsize
 		} # If
+		If ($VM.DataVHDSize) {
+			$MemoryStartupBytes = (Invoke-Expression $VM.DataVHDSize)
+		} # If
+		
+		# Get the Administrator password (from the template or VM)
+		[String]$AdministratorPassword = ""
+		If ($VMTemplate.administratorpassword) {
+			$AdministratorPassword = $VMTemplate.administratorpassword
+		} # If
+		If ($VM.administratorpassword) {
+			$AdministratorPassword = $VM.administratorpassword
+		} # If
+
+		# Get the Product Key (from the template or VM)
+		[String]$ProductKey = ""
+		If ($VMTemplate.productkey) {
+			$ProductKey = $VMTemplate.productkey
+		} # If
+		If ($VM.productkey) {
+			$ProductKey = $VM.productkey
+		} # If
+
+		# Get the Product Key (from the template or VM)
+		[String]$Timezone = "Pacific Standard Time"
+		If ($VMTemplate.timezone) {
+			$Timezone = $VMTemplate.timezone
+		} # If
+		If ($VM.timezone) {
+			$Timezone = $VM.timezone
+		} # If
+
 		$LabVMs += @{
 			Name = $VM.name;
 			ComputerName = $VM.ComputerName;
@@ -853,10 +916,10 @@ function Get-LabVMs {
 			TemplateVHD = $TemplateVHDPath;
 			UseDifferencingDisk = $VM.usedifferencingbootdisk;
 			MemoryStartupBytes = $MemoryStartupBytes;
-			ProcessorCount = $VM.processorcount;
-			AdministratorPassword = $VM.administratorpassword;
-			ProductKey = $VM.productkey;
-			TimeZone = $VM.timezone;
+			ProcessorCount = $ProcessorCount;
+			AdministratorPassword = $AdministratorPassword;
+			ProductKey = $ProductKey;
+			TimeZone =$Timezone;
 			Adapters = $VMAdapters;
 			DataVHDSize = $DataVHDSize;
 			UnattendFile = $UnattendFile;
@@ -981,21 +1044,9 @@ function Initialize-LabVMs {
 		# The VM is now ready to be started
 		If ((Get-VM -Name $VMs.Name).State -eq 'Off') {
 			Write-Verbose "VM $($VM.Name) is starting ..."
-			$StartTime = Get-Date
 
 			Start-VM -VMName $VM.Name
-			# Wait for the VM to become ready so any post build configuration (e.g. DSC) can be applied.
-			
-			Wait-LabVMStart -VM $VM | Out-Null
-
-			$EndTime = Get-Date
-			Write-Verbose "VM $($VM.Name) started in $(($EndTime - $StartTime).Seconds) seconds ..."
-
-			# Even though the VM has started it might still be in the process installing (after a sysprep).
-			# So will need to wait for this process to complete
 		} # If
-
-		# Now it is time to assign any post initialize scripts/DSC etc.
 	} # Foreach
 	Return $True
 } # Initialize-LabVMs

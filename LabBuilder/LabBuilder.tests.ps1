@@ -317,46 +317,49 @@ Describe "Get-LabVMTemplates" {
 		$ExpectedTemplates = [string] @"
 [
     {
-        "allowcreate":  "Y",
+        "processorcount":  "1",
         "templatevhd":  "C:\\Pester Lab\\Virtual Hard Disk Templates\\Windows Server 2012 R2 Datacenter Full.vhdx",
-        "processorcount":  "1",
-        "productkey":  "AAAAA-AAAAA-AAAAA-AAAAA-AAAAA",
-        "memorystartupbytes":  1073741824,
-        "installiso":  ".\\Tests\\PesterTestConfig\\9600.16384.130821-1623_x64fre_Server_EN-US_IRM_SSS_DV5.iso",
-        "edition":  "Windows Server 2012 R2 SERVERDATACENTER",
+        "memorystartupbytes":  null,
+        "datavhdsize":  null,
         "name":  "Pester Windows Server 2012 R2 Datacenter Full",
-        "timezone":  "Pacific Standard Time",
-        "sourcevhd":  ".\\Tests\\PesterTestConfig\\Windows Server 2012 R2 Datacenter Full.vhdx",
-        "vhd":  "Windows Server 2012 R2 Datacenter Full.vhdx",
-        "administratorpassword":  "None"
-    },
-    {
-        "allowcreate":  "Y",
-        "templatevhd":  "C:\\Pester Lab\\Virtual Hard Disk Templates\\Windows Server 2012 R2 Datacenter Core.vhdx",
-        "processorcount":  "1",
-        "productkey":  "BBBBB-BBBBB-BBBBB-BBBBB-BBBBB",
-        "memorystartupbytes":  1073741824,
+        "administratorpassword":  "None",
         "installiso":  ".\\Tests\\PesterTestConfig\\9600.16384.130821-1623_x64fre_Server_EN-US_IRM_SSS_DV5.iso",
-        "edition":  "Windows Server 2012 R2 SERVERDATACENTERCORE",
-        "name":  "Pester Windows Server 2012 R2 Datacenter Core",
+        "productkey":  "AAAAA-AAAAA-AAAAA-AAAAA-AAAAA",
+        "edition":  "Windows Server 2012 R2 SERVERDATACENTER",
+        "vhd":  "Windows Server 2012 R2 Datacenter Full.vhdx",
         "timezone":  "Pacific Standard Time",
         "sourcevhd":  ".\\Tests\\PesterTestConfig\\Windows Server 2012 R2 Datacenter Full.vhdx",
-        "vhd":  "Windows Server 2012 R2 Datacenter Core.vhdx",
-        "administratorpassword":  "Whatever"
+        "allowcreate":  "Y"
     },
     {
-        "allowcreate":  "Y",
-        "templatevhd":  "C:\\Pester Lab\\Virtual Hard Disk Templates\\Windows 10 Enterprise.vhdx",
         "processorcount":  "1",
-        "productkey":  "CCCCC-CCCCC-CCCCC-CCCCC-CCCCC",
-        "memorystartupbytes":  1073741824,
-        "installiso":  ".\\Tests\\PesterTestConfig\\10240.16384.150709-1700.TH1_CLIENTENTERPRISE_VOL_X64FRE_EN-US.iso",
-        "edition":  "Windows 10 Enterprise",
+        "templatevhd":  "C:\\Pester Lab\\Virtual Hard Disk Templates\\Windows Server 2012 R2 Datacenter Core.vhdx",
+        "memorystartupbytes":  null,
+        "datavhdsize":  null,
+        "name":  "Pester Windows Server 2012 R2 Datacenter Core",
+        "administratorpassword":  "None",
+        "installiso":  ".\\Tests\\PesterTestConfig\\9600.16384.130821-1623_x64fre_Server_EN-US_IRM_SSS_DV5.iso",
+        "productkey":  "BBBBB-BBBBB-BBBBB-BBBBB-BBBBB",
+        "edition":  "Windows Server 2012 R2 SERVERDATACENTERCORE",
+        "vhd":  "Windows Server 2012 R2 Datacenter Core.vhdx",
+        "timezone":  "Pacific Standard Time",
+        "sourcevhd":  ".\\Tests\\PesterTestConfig\\Windows Server 2012 R2 Datacenter Full.vhdx",
+        "allowcreate":  "Y"
+    },
+    {
+        "processorcount":  "1",
+        "templatevhd":  "C:\\Pester Lab\\Virtual Hard Disk Templates\\Windows 10 Enterprise.vhdx",
+        "memorystartupbytes":  null,
+        "datavhdsize":  null,
         "name":  "Pester Windows 10 Enterprise",
+        "administratorpassword":  "None",
+        "installiso":  ".\\Tests\\PesterTestConfig\\10240.16384.150709-1700.TH1_CLIENTENTERPRISE_VOL_X64FRE_EN-US.iso",
+        "productkey":  "CCCCC-CCCCC-CCCCC-CCCCC-CCCCC",
+        "edition":  "Windows 10 Enterprise",
+        "vhd":  "Windows 10 Enterprise.vhdx",
         "timezone":  "Pacific Standard Time",
         "sourcevhd":  ".\\Tests\\PesterTestConfig\\Windows 10 Enterprise.vhdx",
-        "vhd":  "Windows 10 Enterprise.vhdx",
-        "administratorpassword":  "Something"
+        "allowcreate":  "Y"
     }
 ]
 "@
@@ -584,9 +587,9 @@ Describe "Get-LabVMs" {
     "DataVHDSize":  0,
     "DSCMOFFile":  "",
     "DSCConfigName":  null,
-    "AdministratorPassword":  "None",
+    "AdministratorPassword":  "Something",
     "TemplateVHD":  "C:\\Pester Lab\\Virtual Hard Disk Templates\\Windows Server 2012 R2 Datacenter Full.vhdx",
-    "ProductKey":  "AAAAA-AAAAA-AAAAA-AAAAA-AAAAA",
+    "ProductKey":  "DDDDD-DDDDD-DDDDD-DDDDD-DDDDD",
     "ComputerName":  "PESTER01",
     "UnattendFile":  "",
     "Adapters":  [
@@ -615,7 +618,7 @@ Describe "Get-LabVMs" {
                          "MACAddress":  "00155D010804"
                      }
                  ],
-    "ProcessorCount":  null,
+    "ProcessorCount":  1,
     "Template":  "Pester Windows Server 2012 R2 Datacenter Full",
     "UseDifferencingDisk":  "Y",
     "SetupComplete":  "",
