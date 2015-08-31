@@ -57,6 +57,9 @@
             CACommonName = "BMDLAB.COM Root CA"
             CADistinguishedNameSuffix = "DC=BMDLAB,DC=COM"
           </parameters>
+        <modules>
+          <module name="xAdcsDeployment" />
+        </modules>
       </dsc>
       <adapters>
         <adapter name="General Purpose External"

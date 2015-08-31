@@ -83,6 +83,9 @@
           CACommonName = "PESTER.LOCAL Root CA"
           CADistinguishedNameSuffix = "DC=PESTER,DC=LOCAL"
         </parameters>
+        <modules>
+          <module name="xAdcsDeployment" />
+        </modules>
       </dsc>
     </vm>
   </vms>

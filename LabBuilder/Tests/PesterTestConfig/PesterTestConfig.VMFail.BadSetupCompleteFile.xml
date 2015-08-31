@@ -1,18 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
 
-<labbuilderconfig name="PesterTestConfig" version="1.0">
+<labbuilderconfig name="PesterTestConfig"
+                  version="1.0">
   <description>Configuration File Used with Pester Tests</description>
-  
-  <settings>
-    <domainname>PESTER.LOCAL</domainname>
-    <email>daniel@bmdlab.com</email>
-    <vmpath>C:\Pester Lab</vmpath>
-    <vhdparentpath>C:\Pester Lab\Virtual Hard Disk Templates</vhdparentpath>
-    <macaddressminimum>001122334400</macaddressminimum>
-    <macaddressmaximum>0011223344FF</macaddressmaximum>
-  </settings>
 
-  <dsc configpath="C:\PesterTestConfig DSC\" />
+  <settings domainname="PESTER.LOCAL"
+            email="tester@pester.local"
+            vmpath="C:\Pester Lab"
+            vhdparentpath="C:\Pester Lab\Virtual Hard Disk Templates"
+            macaddressminimum="001122334400"
+            macaddressmaximum="0011223344FF" />
 
   <switches>
     <switch name="Pester Test Private Vlan" type="Private" vlan="2" />
@@ -30,20 +27,19 @@
   </templates>
 
   <vms>
-    <vm name="Bad Setup Complete File" template="Pester Windows Server 2012 R2 Datacenter Full">
-      <usedifferencingbootdisk>Y</usedifferencingbootdisk>
-      <datavhdsize>10GB</datavhdsize>
-      <memorystartupbytes>536870912</memorystartupbytes>
-      <processorcount>1</processorcount>
+    <vm name="PESTER01"
+        template="Pester Windows Server 2012 R2 Datacenter Full"
+        computername="PESTER01"
+        usedifferencingbootdisk="Y"
+        datavhdsize="10GB"
+        administratorpassword="Something"
+        productkey="DDDDD-DDDDD-DDDDD-DDDDD-DDDDD"
+        timezone="Pacific Standard Time"
+        setupcomplete="ThisFileDoesntExist.ps1">
       <adapters>
         <adapter name="Pester Test Private Vlan" switchname="Pester Test Private Vlan" macaddress="00155D010801" />
       </adapters>
-      <administratorpassword>None</administratorpassword>
-      <productkey>AAAAA-AAAAA-AAAAA-AAAAA-AAAAA</productkey>
-      <timezone>Pacific Standard Time</timezone>
-      
-      <setupcomplete>ThisFileDoesntExist.ps1</setupcomplete>
     </vm>
-
   </vms>
+  
 </labbuilderconfig>

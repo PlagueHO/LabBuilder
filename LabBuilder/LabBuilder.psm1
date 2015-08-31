@@ -816,8 +816,8 @@ function Get-LabVMs {
 		# Assemble the Network adapters that this VM will use
 		[System.Collections.Hashtable[]]$VMAdapters = @()
 		Foreach ($VMAdapter in $VM.Adapters.Adapter) {
-			If (-not $VMAdapter.Name) {
-				Throw "The Adapter Name in VM $($VM.Name) cannot be empty."
+			If ($VMAdapter.Name -eq 'adapter') {
+				Throw "The Adapter Name in VM $($VM.Name) cannot be 'adapter' or empty."
 			}
 			If (-not $VMAdapter.SwitchName) {
 				Throw "The Switch Name specified in adapter $($VMAdapter.Name) specified in VM ($VM.Name) cannot be empty."
