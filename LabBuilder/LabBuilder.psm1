@@ -743,12 +743,15 @@ function Set-LabVMInitializationFiles {
 		New-Item -Path "$MountPount\Windows\DSC\" -ItemType Directory | Out-Null
 		Copy-Item -Path $DSCMOFFile -Destination "$MountPount\Windows\DSC\$($VM.ComputerName).mof" -Force | Out-Null
 		$SetupCompletePs += "`r`nAdd-Content -Path `"$($ENV:SystemRoot)\Setup\Scripts\SetupComplete.log`" -Value `"DSC Configuration Started...`""
+
 		# Make sure the NuGet Package is installed so that PowerShellGet Module will work
-		$SetupCompletePs += "`r`nPackageManagement\Get-PackageProvider -Name NuGet -Force"
+		$SetupCompletePs += "`r`nPackageManagement\Get-PackageProvider -Name NuGet -Force *>> `"$($ENV:SystemRoot)\Setup\Scripts\DSC.log`""
+		$SetupCompletePs += "`r`nPackageManagement\Set-PackageSource -Name PSGallery -Trusted *>> `"$($ENV:SystemRoot)\Setup\Scripts\DSC.log`""
+
 		# Automatically install any modules that are required by DSC onto the server
 		# The server Must have PowerShell 5.0 installed to do this!
 		Foreach ($Module in $VM.DSCModules) {
-			$SetupCompletePs += "`r`nFind-Module -Name $Module | Install-Module -Verbose"
+			$SetupCompletePs += "`r`nFind-Module -Name $Module | Install-Module -Verbose *>> `"$($ENV:SystemRoot)\Setup\Scripts\DSC.log`""
 		} # Foreach
 
 		$SetupCompletePs += "`r`nStart-DSCConfiguration -Path `"$($ENV:SystemRoot)\DSC\`" -Force -Wait -Verbose  *>> `"$($ENV:SystemRoot)\Setup\Scripts\DSC.log`""
