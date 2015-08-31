@@ -747,7 +747,7 @@ function Set-LabVMInitializationFiles {
 		# Automatically install any modules that are required by DSC onto the server
 		# The server Must have PowerShell 5.0 installed to do this!
 		Foreach ($Module in $VM.DSCModules) {
-			$SetupComplete += "`r`nFind-Module -Name $Module | Install-Module -Verbose"
+			$SetupCompletePs += "`r`nFind-Module -Name $Module | Install-Module -Verbose"
 		} # Foreach
 
 		$SetupCompletePs += "`r`nStart-DSCConfiguration -Path `"$($ENV:SystemRoot)\DSC\`" -Force -Wait -Verbose  *>> `"$($ENV:SystemRoot)\Setup\Scripts\DSC.log`""
