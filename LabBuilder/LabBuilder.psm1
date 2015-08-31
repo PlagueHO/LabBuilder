@@ -1,4 +1,4 @@
-﻿#Requires -version 5.0
+﻿LabDSCStartFile#Requires -version 5.0
 
 ##########################################################################################################################################
 # Helper functions that aren't exposed
@@ -630,28 +630,26 @@ function Get-LabDSCStartFile {
 		[System.Collections.Hashtable]$VM
 	)
 	[String]$DSCStartPs = ''
-	If ($VM.DSCMOFFile) {
-		# Make sure the NuGet Package is installed so that PowerShellGet Module will work
-		$DSCStartPs = @"
+	# Make sure the NuGet Package is installed so that PowerShellGet Module will work
+	$DSCStartPs = @"
 Add-Content -Path `"$($ENV:SystemRoot)\Setup\Scripts\SetupComplete.log`" -Value `"DSC Configuration Started...`"
 PackageManagement\Get-PackageProvider -Name NuGet -Force *>> `"$($ENV:SystemRoot)\Setup\Scripts\DSC.log`"
 PackageManagement\Set-PackageSource -Name PSGallery -Trusted *>> `"$($ENV:SystemRoot)\Setup\Scripts\DSC.log`"
 "@
 
-		# Automatically install any modules that are required by DSC onto the server
-		# The server Must have PowerShell 5.0 installed to do this!
-		Foreach ($Module in $VM.DSCModules) {
-			$DSCStartPs += @"
+	# Automatically install any modules that are required by DSC onto the server
+	# The server Must have PowerShell 5.0 installed to do this!
+	Foreach ($Module in $VM.DSCModules) {
+		$DSCStartPs += @"
 Find-Module -Name $Module | Install-Module -Verbose *>> `"$($ENV:SystemRoot)\Setup\Scripts\DSC.log`"
 "@
-		} # Foreach
+	} # Foreach
 
-		# Start the actual DSC Configuration
-		$DSCStartPs += @"
+	# Start the actual DSC Configuration
+	$DSCStartPs += @"
 Start-DSCConfiguration -Path `"$($ENV:SystemRoot)\DSC\`" -Force -Wait -Verbose  *>> `"$($ENV:SystemRoot)\Setup\Scripts\DSC.log`"
 Add-Content -Path `"$($ENV:SystemRoot)\Setup\Scripts\SetupComplete.log`" -Value `"DSC Configuration Finished...`"
 "@
-	} # If
 	Return $DSCStartPs
 } # Get-LabDSCStartFile
 ##########################################################################################################################################
@@ -810,6 +808,7 @@ Add-Content -Path `"$($ENV:SystemRoot)\Setup\Scripts\SetupComplete.log`" -Value 
 		# Cause the DSC to be triggered - this is temporary and should be moved to a
 		# later stage when automatic credential encryption in MOF Files is supported
 		$SetupCompletePs += @"
+
 C:\Windows\Setup\Scripts\StartDSC.ps1
 "@
 	} # If
