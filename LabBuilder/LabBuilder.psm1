@@ -635,6 +635,7 @@ function Get-LabDSCStartFile {
 Add-Content -Path `"$($ENV:SystemRoot)\Setup\Scripts\SetupComplete.log`" -Value `"DSC Configuration Started...`"
 PackageManagement\Get-PackageProvider -Name NuGet -Force *>> `"$($ENV:SystemRoot)\Setup\Scripts\DSC.log`"
 PackageManagement\Set-PackageSource -Name PSGallery -Trusted *>> `"$($ENV:SystemRoot)\Setup\Scripts\DSC.log`"
+
 "@
 
 	# Automatically install any modules that are required by DSC onto the server
@@ -642,6 +643,7 @@ PackageManagement\Set-PackageSource -Name PSGallery -Trusted *>> `"$($ENV:System
 	Foreach ($Module in $VM.DSCModules) {
 		$DSCStartPs += @"
 Find-Module -Name $Module | Install-Module -Verbose *>> `"$($ENV:SystemRoot)\Setup\Scripts\DSC.log`"
+
 "@
 	} # Foreach
 
@@ -649,6 +651,7 @@ Find-Module -Name $Module | Install-Module -Verbose *>> `"$($ENV:SystemRoot)\Set
 	$DSCStartPs += @"
 Start-DSCConfiguration -Path `"$($ENV:SystemRoot)\DSC\`" -Force -Wait -Verbose  *>> `"$($ENV:SystemRoot)\Setup\Scripts\DSC.log`"
 Add-Content -Path `"$($ENV:SystemRoot)\Setup\Scripts\SetupComplete.log`" -Value `"DSC Configuration Finished...`"
+
 "@
 	Return $DSCStartPs
 } # Get-LabDSCStartFile
