@@ -1,4 +1,4 @@
-﻿LabDSCStartFile#Requires -version 5.0
+﻿#Requires -version 5.0
 
 ##########################################################################################################################################
 # Helper functions that aren't exposed
