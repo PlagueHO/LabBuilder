@@ -886,6 +886,15 @@ function Get-LabVMs {
 			$DSCParameters = $VM.DSC.Parameters
 		} # If
 
+		# Load up the DSC Module List (if specified)
+		[String[]]$DSCModules = @()
+		Foreach ($Module in $VM.DSC.Modules.Module) {
+			If ($Module.Name -eq 'module') {
+				Throw "The Module Name in VM $($VM.Name) cannot be 'module' or empty."
+			}
+			$DSCModules += $Module.Name
+		} # Foreach
+
 		# Load the DSC MOF File setting and check it
 		[String]$DSCMOFFile = ''
 		If ($VM.DSC.MOFFile) {
@@ -975,6 +984,7 @@ function Get-LabVMs {
 			DSCConfigName = $VM.DSC.ConfigName;
 			DSCMOFFile = $DSCMOFFile;
 			DSCParameters = $DSCParameters;
+			DSCModules = $DSCModules;
 		}
 	} # Foreach        
 
