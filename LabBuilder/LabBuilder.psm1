@@ -806,14 +806,16 @@ New-SelfSignedCertificate -DnsName $($VM.ComputerName) -CertStoreLocation cert:\
 		[String]$DSCStartPs = Get-LabDSCStartFile -Configuration $Configuration -VM $VM
 		Set-Content -Path "$MountPount\Windows\Setup\Scripts\StartDSC.ps1" -Value $DSCStartPs
 
-		$SetupCompletePs = @"
-$MountPount\Windows\Setup\Scripts\StartDSC.ps1
+		# Cause the DSC to be triggered - this is temporary and should be moved to a
+		# later stage when automatic credential encryption in MOF Files is supported
+		$SetupCompletePs += @"
+C:\Windows\Setup\Scripts\StartDSC.ps1
 "@
 	} # If
 	
 	# Write out the CMD Setup Complete File
 	Write-Verbose "Applying VM $($VM.Name) Setup Complete CMD File ..."
-	$SetupCompleteCmd = @"
+	$SetupCompleteCmd += @"
 @echo SetupComplete.cmd Script Started... >> %SYSTEMROOT%\Setup\Scripts\SetupComplete.log
 $SetupCompleteCmd
 powerShell.exe -ExecutionPolicy Unrestricted -Command `"%SYSTEMROOT%\Setup\Scripts\SetupComplete.ps1`"
@@ -823,10 +825,10 @@ powerShell.exe -ExecutionPolicy Unrestricted -Command `"%SYSTEMROOT%\Setup\Scrip
 
 	# Write out the PowerShell Setup Complete file
 	Write-Verbose "Applying VM $($VM.Name) Setup Complete PowerShell File ..."
-	$SetupCompletePs = @"
-"SetupComplete.cmd Script Started..." *>> `"$($ENV:SystemRoot)\Setup\Scripts\DSC.log`"
+	$SetupCompletePs += @"
+"SetupComplete.ps1 Script Started..." *>> `"$($ENV:SystemRoot)\Setup\Scripts\SetupComplete.log`"
 $SetupCompletePs
-"SetupComplete.cmd Script Finished..." *>> `"$($ENV:SystemRoot)\Setup\Scripts\DSC.log`"
+"SetupComplete.ps1 Script Finished..." *>> `"$($ENV:SystemRoot)\Setup\Scripts\SetupComplete.log`"
 "@
 
 	Set-Content -Path "$MountPount\Windows\Setup\Scripts\SetupComplete.ps1" -Value $SetupCompletePs -Force | Out-Null	
