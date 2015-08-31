@@ -773,8 +773,8 @@ function Set-LabVMInitializationFiles {
 	[String]$SetupCompleteCmd = @"
 "@
 	[String]$SetupCompletePs = @"
-New-SelfSignedCertificate -DnsName $($VM.ComputerName) -CertStoreLocation cert:\LocalMachine\My
-Add-Content -Path `"$($ENV:SystemRoot)\Setup\Scripts\SetupComplete.log`" -Value 'Self-signed certificate created...' -Encoding Ascii
+New-SelfSignedCertificate -DnsName $($VM.ComputerName) -CertStoreLocation cert:\LocalMachine\My | Export-Certificate -FilePath c:\Windows\SelfSigned.cer -Force
+Add-Content -Path `"$($ENV:SystemRoot)\Setup\Scripts\SetupComplete.log`" -Value 'Self-signed certificate created and saved to C:\Windows\SelfSigned.cer ...' -Encoding Ascii
 "@
 	If ($VM.SetupComplete) {
         [String]$SetupComplete = $VM.SetupComplete
