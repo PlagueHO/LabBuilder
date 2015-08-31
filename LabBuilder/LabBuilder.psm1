@@ -568,6 +568,16 @@ function Get-LabDSCMOFFile {
 		$DSCMOFFile = $VM.DSCMOFFile
 	} Else {
 		If ($VM.DSCConfigFile) {
+			# Make sure all the modules required to create the MOF file are installed
+			$InstalledModules = Get-Module -ListAvailable
+			Foreach ($Module in $VM.DSCModules) {
+				If (($InstalledModules | Where-Object -Property Name -EQ $Module).Count -eq 0) {
+					# The Module isn't available on this computer, so try and install it
+					Write-Verbose "Installing Module $Module required by DSC Config File $($VM.DSCConfigFile) in VM $($VM.Name) ..."
+					Find-Module -Name $Module | Install-Module -Verbose
+				} # If
+			} # Foreach
+
 			# A DSC Config File was provided so create a MOF File out of it.
 			Write-Verbose "Creating VM $($VM.Name) DSC MOF File from DSC Config $($VM.DSCConfigFile) ..."
 			. $VM.DSCConfigFile
