@@ -756,23 +756,24 @@ function Set-LabVMInitializationFiles {
 	)
 
 	# Mount the VMs Boot VHD so that files can be loaded into it
-	[String]$MountPount = "C:\TempMount"
+	[String]$MountPoint = "C:\TempMount"
 	Write-Verbose "Mounting VM $($VM.Name) Boot Disk VHDx $VMBootDiskPath ..."
-	New-Item -Path $MountPount -ItemType Directory | Out-Null
-	Mount-WindowsImage -ImagePath $VMBootDiskPath -Path $MountPount -Index 1 | Out-Null
+	New-Item -Path $MountPoint -ItemType Directory | Out-Null
+	Mount-WindowsImage -ImagePath $VMBootDiskPath -Path $MountPoint -Index 1 | Out-Null
 
 	# Create the scripts folder where setup scripts will be put
-	New-Item -Path "$MountPount\Windows\Setup\Scripts" -ItemType Directory
+	New-Item -Path "$MountPoint\Windows\Setup\Scripts" -ItemType Directory
 
 	# Generate and apply an unattended setup file
 	[String]$UnattendFile = Get-LabUnattendFile -Configuration $Configuration -VM $VM
 	Write-Verbose "Applying VM $($VM.Name) Unattend File ..."
-	Set-Content -Path "$MountPount\Windows\Panther\Unattend.xml" -Value $UnattendFile -Force | Out-Null
+	Set-Content -Path "$MountPoint\Windows\Panther\Unattend.xml" -Value $UnattendFile -Force | Out-Null
 
 	[String]$SetupCompleteCmd = @"
 "@
 	[String]$SetupCompletePs = @"
 New-SelfSignedCertificate -DnsName $($VM.ComputerName) -CertStoreLocation cert:\LocalMachine\My
+Add-Content -Path `"$($ENV:SystemRoot)\Setup\Scripts\SetupComplete.log`" -Value 'Self-signed certificate created...' -Encoding Ascii
 "@
 	If ($VM.SetupComplete) {
         [String]$SetupComplete = $VM.SetupComplete
@@ -799,12 +800,12 @@ New-SelfSignedCertificate -DnsName $($VM.ComputerName) -CertStoreLocation cert:\
 		Write-Verbose "Applying VM $($VM.Name) DSC MOF File $DSCMOFFile ..."
 
 		# A MOF File is available for this VM so assemble script for starting DSC on this server
-		New-Item -Path "$MountPount\Windows\DSC\" -ItemType Directory | Out-Null
-		Copy-Item -Path $DSCMOFFile -Destination "$MountPount\Windows\DSC\$($VM.ComputerName).mof" -Force | Out-Null
+		New-Item -Path "$MountPoint\Windows\DSC\" -ItemType Directory | Out-Null
+		Copy-Item -Path $DSCMOFFile -Destination "$MountPoint\Windows\DSC\$($VM.ComputerName).mof" -Force | Out-Null
 
 		# Generate the DSC Start up Script file
 		[String]$DSCStartPs = Get-LabDSCStartFile -Configuration $Configuration -VM $VM
-		Set-Content -Path "$MountPount\Windows\Setup\Scripts\StartDSC.ps1" -Value $DSCStartPs
+		Set-Content -Path "$MountPoint\Windows\Setup\Scripts\StartDSC.ps1" -Value $DSCStartPs
 
 		# Cause the DSC to be triggered - this is temporary and should be moved to a
 		# later stage when automatic credential encryption in MOF Files is supported
@@ -815,28 +816,28 @@ C:\Windows\Setup\Scripts\StartDSC.ps1
 	
 	# Write out the CMD Setup Complete File
 	Write-Verbose "Applying VM $($VM.Name) Setup Complete CMD File ..."
-	$SetupCompleteCmd += @"
+	$SetupCompleteCmd = @"
 @echo SetupComplete.cmd Script Started... >> %SYSTEMROOT%\Setup\Scripts\SetupComplete.log
 $SetupCompleteCmd
 powerShell.exe -ExecutionPolicy Unrestricted -Command `"%SYSTEMROOT%\Setup\Scripts\SetupComplete.ps1`"
 @echo SetupComplete.cmd Script Finished... >> %SYSTEMROOT%\Setup\Scripts\SetupComplete.log
 "@
-	Set-Content -Path "$MountPount\Windows\Setup\Scripts\SetupComplete.cmd" -Value $SetupCompleteCmd -Force | Out-Null	
+	Set-Content -Path "$MountPoint\Windows\Setup\Scripts\SetupComplete.cmd" -Value $SetupCompleteCmd -Force | Out-Null	
 
 	# Write out the PowerShell Setup Complete file
 	Write-Verbose "Applying VM $($VM.Name) Setup Complete PowerShell File ..."
-	$SetupCompletePs += @"
-"SetupComplete.ps1 Script Started..." *>> `"$($ENV:SystemRoot)\Setup\Scripts\SetupComplete.log`"
+	$SetupCompletePs = @"
+Add-Content -Path `"$($ENV:SystemRoot)\Setup\Scripts\SetupComplete.log`" -Value 'SetupComplete.ps1 Script Started...' -Encoding Ascii
 $SetupCompletePs
-"SetupComplete.ps1 Script Finished..." *>> `"$($ENV:SystemRoot)\Setup\Scripts\SetupComplete.log`"
+Add-Content -Path `"$($ENV:SystemRoot)\Setup\Scripts\SetupComplete.log`" -Value 'SetupComplete.ps1 Script Finished...' -Encoding Ascii
 "@
 
-	Set-Content -Path "$MountPount\Windows\Setup\Scripts\SetupComplete.ps1" -Value $SetupCompletePs -Force | Out-Null	
+	Set-Content -Path "$MountPoint\Windows\Setup\Scripts\SetupComplete.ps1" -Value $SetupCompletePs -Force | Out-Null	
 	
 	# Dismount the VHD in preparation for boot
 	Write-Verbose "Dismounting VM $($VM.Name) Boot Disk VHDx $VMBootDiskPath ..."
-	Dismount-WindowsImage -Path $MountPount -Save | Out-Null
-	Remove-Item -Path $MountPount | Out-Null
+	Dismount-WindowsImage -Path $MountPoint -Save | Out-Null
+	Remove-Item -Path $MountPoint | Out-Null
 } # Set-LabVMInitializationFiles
 ##########################################################################################################################################
 
