@@ -77,6 +77,13 @@
         <adapter name="Pester Test Private" switchname="Pester Test Private" macaddress="00155D010803" vlan="3" />
         <adapter name="Pester Test Internal" switchname="Pester Test Internal" macaddress="00155D010804" vlan="4" />
       </adapters>
+      <dsc configname="ROOTCA"
+           configfile="PesterTest.DSC.ps1">
+        <parameters>
+          CACommonName = "PESTER.LOCAL Root CA"
+          CADistinguishedNameSuffix = "DC=PESTER,DC=LOCAL"
+        </parameters>
+      </dsc>
     </vm>
   </vms>
   

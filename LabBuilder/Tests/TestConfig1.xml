@@ -4,10 +4,10 @@
                   version="1.0">
   <description>Simple Test Lab Configuration File 1</description>
 
-  <settings domainname="BMDLAB.LOCAL"
+  <settings domainname="BMDLAB.COM"
             email="daniel@bmdlab.com"
-            vmpath="c:\vm\BMDLAB.LOCAL"
-            vhdparentpath="c:\vm\BMDLAB.LOCAL\Virtual Hard Disk Templates"
+            vmpath="c:\vm\BMDLAB.COM"
+            vhdparentpath="c:\vm\BMDLAB.COM\Virtual Hard Disk Templates"
             configpath=".\TestConfig1\" />
 
   <switches>
@@ -46,13 +46,18 @@
   </templates>
 
   <vms>
-    <vm name="BMDLAB.LOCAL SS_ROOTCA"
+    <vm name="BMDLAB.COM SS_ROOTCA"
         template="Template Windows Server 2012 R2 Datacenter Full"
         computername="SS_ROOTCA"
         usedifferencingbootdisk="Y"
         setupcomplete="SS_ROOTCA.SetupComplete.ps1">
       <dsc configname="SS_ROOTCA"
-           configfile="SS_ROOTCA.DSC.ps1" />
+           configfile="SS_ROOTCA.DSC.ps1">
+          <parameters>
+            CACommonName = "BMDLAB.COM Root CA"
+            CADistinguishedNameSuffix = "DC=BMDLAB,DC=COM"
+          </parameters>
+      </dsc>
       <adapters>
         <adapter name="General Purpose External"
                  switchname="General Purpose External"

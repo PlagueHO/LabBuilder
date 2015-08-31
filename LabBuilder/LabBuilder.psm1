@@ -551,6 +551,64 @@ function Remove-LabVMTemplates {
 ##########################################################################################################################################
 
 ##########################################################################################################################################
+function Get-LabDSCMOFFile {
+	[CmdLetBinding()]
+	[OutputType([String])]
+	param (
+		[Parameter(Mandatory=$true)]
+		[XML]$Configuration,
+
+		[Parameter(Mandatory=$true)]
+		[System.Collections.Hashtable]$VM
+	)
+
+	[String]$DSCMOFFile = ''
+	If ($VM.DSCMOFFile) {
+		# A MOF File was specified so just use that. 
+		$DSCMOFFile = $VM.DSCMOFFile
+	} Else {
+		If ($VM.DSCConfigFile) {
+			# A DSC Config File was provided so create a MOF File out of it.
+			Write-Verbose "Creating VM $($VM.Name) DSC MOF File from DSC Config $($VM.DSCConfigFile) ..."
+			. $VM.DSCConfigFile
+			[String]$DSCConfigName = $VM.DSCConfigName
+			[String]$DSCMOFFile = Join-Path -Path $ENV:Temp -ChildPath "$($VM.ComputerName).mof"
+			# Generate the Configuration Nodes data that always gets passed to the DSC configuration.
+			[String]$ConfigurationData = @"
+@{
+	AllNodes = @(
+		@{
+			NodeName = '$($VM.ComputerName)'
+			PSDscAllowPlainTextPassword = `$True
+			LocalAdminPassword = '$($VM.administratorpassword)'
+			$($VM.DSCParameters)
+		}
+	)
+}
+"@
+			# Write it to a temp file
+			[String]$ConfigurationTempFile = (Join-Path -Path $ENV:Temp -ChildPath "DSCConfigData.psd1")
+			If (Test-Path -Path $ConfigurationTempFile) {
+				Remove-Item -Path $ConfigurationTempFile
+			}
+			Set-Content -Path $ConfigurationTempFile -Value $ConfigurationData
+			
+			# Generate the MOF file from the configuration
+			& "$DSCConfigName" -OutputPath $($ENV:Temp) -ConfigurationData $ConfigurationTempFile | Out-Null
+			If (-not (Test-Path -Path $DSCMOFFile)) {
+				Throw "A MOF File was not created by the DSC Config File $($VM.DSCCOnfigFile) for VM $($VM.Name)."
+			} # If
+			
+			# Remove the temporary configuration file
+			# Remove-Item -Path $ConfigurationTempFile
+			Write-Verbose "DSC MOF File $DSCMOFFile for VM $($VM.Name) was created successfully ..."
+		} # If
+	} # If
+	Return $DSCMOFFile
+} # Get-LabDSCMOFFile
+##########################################################################################################################################
+
+##########################################################################################################################################
 function Set-LabVMInitializationFiles {
 	[CmdLetBinding()]
 	param (
@@ -655,25 +713,8 @@ function Set-LabVMInitializationFiles {
 	} # If
 
 	# Are there any DSC Settings to manage?
-	[String]$DSCMOFFile = ''
-	If ($VM.DSCMOFFile) {
-		# A MOF File was specified so just use that. 
-		$DSCMOFFile = $VM.DSCMOFFile
-	} Else {
-		If ($VM.DSCConfigFile) {
-			# A DSC Config File was provided so create a MOF File out of it.
-			Write-Verbose "Creating VM $($VM.Name) DSC MOF File from DSC Config $($VM.DSCConfigFile) ..."
-			. $VM.DSCConfigFile
-			[String]$DSCConfigName = $VM.DSCConfigName
-			[String]$DSCMOFFile = "$($ENV:Temp)\$($VM.ComputerName).mof"
-			& "$DSCConfigName" -OutputPath $($ENV:Temp)
-			If (-not (Test-Path -Path $DSCMOFFile)) {
-				Throw "A MOF File was not created by the DSC Config File $($VM.DSCCOnfigFile) for VM $($VM.Name)."
-			} # If
-			Write-Verbose "DSC MOF File $DSCMOFFile for VM $($VM.Name) was created successfully ..."
-		} # If
-	} # If
-	
+	[String]$DSCMOFFile = Get-LabDSCMOFFile -Configuration $Configuration -VM $VM
+		
 	# Mount the VMs Boot VHD so that files can be loaded into it
 	[String]$MountPount = "C:\TempMount"
 	Write-Verbose "Mounting VM $($VM.Name) Boot Disk VHDx $VMBootDiskPath ..."
@@ -747,14 +788,12 @@ function Get-LabVMs {
 	$CurrentSwitches = Get-VMSwitch
 
 	Foreach ($VM in $VMs) {
-		If ($VM.Name -eq 'VM')
-		{
+		If ($VM.Name -eq 'VM') {
 			throw "The VM name cannot be 'VM' or empty."
-		}
-		If (-not $VM.Template)
-		{
+		} # If
+		If (-not $VM.Template) {
 			throw "The template name in VM $($VM.Name) cannot be empty."
-		}
+		} # If
 
 		# Find the template that this VM uses and get the VHD Path
 		[String]$TemplateVHDPath =''
@@ -764,17 +803,15 @@ function Get-LabVMs {
 				$TemplateVHDPath = $VMTemplate.templatevhd
 				$Found = $true
 				Break
-			}
-		}
-		If (-not $Found)
-		{
+			} # If
+		} # Foreach
+		If (-not $Found) {
 			throw "The template $($VM.Template) specified in VM $($VM.Name) could not be found."
-		}
+		} # If
 		# Check the VHD File path in the template is not empty
-		If (-not $TemplateVHDPath)
-		{
+		If (-not $TemplateVHDPath) {
 			throw "The template VHD path set in template $($VM.Template) cannot be empty."
-		}
+		} # If
 
 		# Assemble the Network adapters that this VM will use
 		[System.Collections.Hashtable[]]$VMAdapters = @()
@@ -803,9 +840,9 @@ function Get-LabVMs {
 			$VLan = $VMAdapter.VLan
 			If (-not $VLan) {
 				$VLan = $SwitchVLan
-			}
+			} # If
 			$VMAdapters += @{ Name = $VMAdapter.Name; SwitchName = $VMAdapter.SwitchName; MACAddress = $VMAdapter.macaddress; VLan = $VLan }
-		}
+		} # Foreach
 
 		# Does the VM have an Unattend file specified?
 		[String]$UnattendFile = ''
@@ -813,8 +850,8 @@ function Get-LabVMs {
 			$UnattendFile = Join-Path -Path $Configuration.labbuilderconfig.settings.fullconfigpath -ChildPath $VM.UnattendFile
 			If (-not (Test-Path $UnattendFile)) {
 				Throw "The Unattend File $UnattendFile specified in VM $($VM.Name) can not be found."
-			} # Endif
-		} # Endif
+			} # If
+		} # If
 		
 		# Does the VM specify a Setup Complete Script?
 		[String]$SetupComplete = ''
@@ -822,11 +859,11 @@ function Get-LabVMs {
 			$SetupComplete = Join-Path -Path $Configuration.labbuilderconfig.settings.fullconfigpath -ChildPath $VM.SetupComplete
 			If (-not (Test-Path $SetupComplete)) {
 				Throw "The Setup Complete File $SetupComplete specified in VM $($VM.Name) can not be found."
-			}
+			} # If
 			If ([System.IO.Path]::GetExtension($SetupComplete).ToLower() -notin '.ps1','.cmd' ) {
 				Throw "The Setup Complete File $SetupComplete specified in VM $($VM.Name) must be either a PS1 or CMD file."
-			}
-		}
+			} # If
+		} # If
 
 		# Load the DSC Config File setting and check it
 		[String]$DSCConfigFile = ''
@@ -839,24 +876,31 @@ function Get-LabVMs {
 				Throw "The DSC Config File $DSCConfigFile specified in VM $($VM.Name) must be a PS1 file."
 			}
 			If (-not $VM.DSC.ConfigName) {
-				Throw "The DSC Config Name must be specified for VM $($VM.Name)."
+				Throw "The DSC Config Name specified in VM $($VM.Name) is empty."
 			}
 		}
 		
+		# Load the DSC Parameters
+		[String]$DSCParameters = ''
+		If ($VM.DSC.Parameters) {
+			$DSCParameters = $VM.DSC.Parameters
+		} # If
+
 		# Load the DSC MOF File setting and check it
 		[String]$DSCMOFFile = ''
 		If ($VM.DSC.MOFFile) {
 			If ($DSCConfigFile) {
 				Throw "Both a DSC MOF File and and DSC Config file can not be specified in $($VM.Name)."
-			}
+			} # If
 			$DSCMOFFile = Join-Path -Path $Configuration.labbuilderconfig.settings.fullconfigpath -ChildPath $VM.DSC.MOFFile
 			If (-not (Test-Path $DSCMOFFile)) {
 				Throw "The DSC MOF File $DSCMOFFile specified in VM $($VM.Name) can not be found."
-			}
+			} # If
 			If ([System.IO.Path]::GetExtension($DSCMOFFile).ToLower() -ne '.mof' ) {
 				Throw "The DSC Config File $DSCMOFFile specified in VM $($VM.Name) must be a MOF file."
-			}
-		}
+			} # If
+		} # If
+
 
 		# Get the Memory Startup Bytes (from the template or VM)
 		[Int64]$MemoryStartupBytes = 1GB
@@ -930,6 +974,7 @@ function Get-LabVMs {
 			DSCConfigFile = $DSCConfigFile;
 			DSCConfigName = $VM.DSC.ConfigName;
 			DSCMOFFile = $DSCMOFFile;
+			DSCParameters = $DSCParameters;
 		}
 	} # Foreach        
 
@@ -1231,6 +1276,7 @@ Export-ModuleMember -Function `
 	Get-LabSwitches,Initialize-LabSwitches,Remove-LabSwitches, `
 	Get-LabVMTemplates,Initialize-LabVMTemplates,Remove-LabVMTemplates, `
 	Get-LabVMs,Initialize-LabVMs,Remove-LabVMs, `
+	Get-LabDSCMOFFile, `
 	Wait-LabVMStart, Wait-LabVMOff, `
 	Set-LabVMInitializationFiles, `
 	Install-Lab,Uninstall-Lab

@@ -437,6 +437,28 @@ Describe "Remove-LabVMTemplates" {
 ##########################################################################################################################################
 
 ##########################################################################################################################################
+Describe "Get-LabDSCMOFFile" {
+	Context "No parameters passed" {
+		It "Fails" {
+			{ Get-LabDSCMOFFile } | Should Throw
+		}
+	}
+	Context "Valid Parameters Passed" {
+		$Config = Get-LabConfiguration -Path $TestConfigOKPath
+		$Switches = Get-LabSwitches -Configuration $Config
+		$VMTemplates = Get-LabVMTemplates -Configuration $Config
+		$VMs = Get-LabVMs -Configuration $Config -VMTemplates $VMTemplates -Switches $Switches
+		[String]$MOFFileName = Get-LabDSCMOFFile -Configuration $Config -VM $VMs
+		Write-Host $MOFFileName
+		It "Returns Filename that exists" {
+			(Test-Path -Path $MOFFileName) | Should Be $True
+		}
+	}
+
+}
+##########################################################################################################################################
+
+##########################################################################################################################################
 Describe "Set-LabVMInitializationFiles" {
 	Context "No parameters passed" {
 		It "Fails" {
@@ -584,14 +606,23 @@ Describe "Get-LabVMs" {
 		It "Returns Template Object that matches Expected Object" {
 			$ExpectedVMs = [String] @"
 {
-    "DataVHDSize":  0,
-    "DSCMOFFile":  "",
-    "DSCConfigName":  null,
-    "AdministratorPassword":  "Something",
     "TemplateVHD":  "C:\\Pester Lab\\Virtual Hard Disk Templates\\Windows Server 2012 R2 Datacenter Full.vhdx",
-    "ProductKey":  "DDDDD-DDDDD-DDDDD-DDDDD-DDDDD",
+    "ProcessorCount":  1,
+    "TimeZone":  "Pacific Standard Time",
+    "Template":  "Pester Windows Server 2012 R2 Datacenter Full",
+    "MemoryStartupBytes":  10737418240,
+    "SetupComplete":  "",
+    "DSCMOFFile":  "",
+    "DSCConfigName":  "ROOTCA",
+    "DSCParameters":  "\r\n          CACommonName = \"PESTER.LOCAL Root CA\"\r\n          CADistinguishedNameSuffix = \"DC=PESTER,DC=LOCAL\"\r\n        ",
+    "UseDifferencingDisk":  "Y",
+    "DSCConfigFile":  "C:\\Users\\Daniel\\Source\\GitHub\\LabBuilder\\LabBuilder\\Tests\\PesterTestConfig\\PesterTest.DSC.ps1",
     "ComputerName":  "PESTER01",
+    "ProductKey":  "DDDDD-DDDDD-DDDDD-DDDDD-DDDDD",
+    "DataVHDSize":  0,
+    "Name":  "PESTER01",
     "UnattendFile":  "",
+    "AdministratorPassword":  "Something",
     "Adapters":  [
                      {
                          "SwitchName":  "Pester Test Private Vlan",
@@ -617,15 +648,7 @@ Describe "Get-LabVMs" {
                          "Name":  "Pester Test Internal",
                          "MACAddress":  "00155D010804"
                      }
-                 ],
-    "ProcessorCount":  1,
-    "Template":  "Pester Windows Server 2012 R2 Datacenter Full",
-    "UseDifferencingDisk":  "Y",
-    "SetupComplete":  "",
-    "TimeZone":  "Pacific Standard Time",
-    "MemoryStartupBytes":  10737418240,
-    "DSCConfigFile":  "",
-    "Name":  "PESTER01"
+                 ]
 }
 "@
 			[String]::Compare(($VMs | ConvertTo-Json -Depth 4),$ExpectedVMs,$true) | Should Be 0
