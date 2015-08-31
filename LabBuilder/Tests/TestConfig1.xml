@@ -51,8 +51,8 @@
         computername="SS_ROOTCA"
         usedifferencingbootdisk="Y"
         setupcomplete="SS_ROOTCA.SetupComplete.ps1">
-      <dsc configname="SS_ROOTCA"
-           configfile="SS_ROOTCA.DSC.ps1">
+      <dsc configname="ROOTCA"
+           configfile="ROOTCA.DSC.ps1">
           <parameters>
             CACommonName = "BMDLAB.COM Root CA"
             CADistinguishedNameSuffix = "DC=BMDLAB,DC=COM"
