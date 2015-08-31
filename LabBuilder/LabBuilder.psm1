@@ -767,7 +767,7 @@ function Set-LabVMInitializationFiles {
 	# Generate and apply an unattended setup file
 	[String]$UnattendFile = Get-LabUnattendFile -Configuration $Configuration -VM $VM
 	Write-Verbose "Applying VM $($VM.Name) Unattend File ..."
-	Set-Content -Path "$MountPount\Windows\Panther\Unattend.xml" -Value $UnattendContent -Force | Out-Null
+	Set-Content -Path "$MountPount\Windows\Panther\Unattend.xml" -Value $UnattendFile -Force | Out-Null
 
 	[String]$SetupCompleteCmd = @"
 "@
