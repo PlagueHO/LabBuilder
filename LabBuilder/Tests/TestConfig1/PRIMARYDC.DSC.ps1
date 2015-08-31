@@ -1,4 +1,4 @@
-Configuration ROOTCA
+Configuration PRIMARYDC
 {
 	Import-DscResource –ModuleName 'PSDesiredStateConfiguration'
 	Import-DscResource -ModuleName xActiveDirectory 

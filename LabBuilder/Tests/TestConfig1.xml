@@ -66,6 +66,7 @@
                  macaddress="00155D010801" />
       </adapters>
     </vm>
+    
     <vm name="BMDLAB.COM SA_DC1"
         template="Template Windows Server 2012 R2 Datacenter CORE"
         computername="SA_DC1"

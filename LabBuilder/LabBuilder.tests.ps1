@@ -444,12 +444,51 @@ Describe "Get-LabDSCMOFFile" {
 		$VMTemplates = Get-LabVMTemplates -Configuration $Config
 		$VMs = Get-LabVMs -Configuration $Config -VMTemplates $VMTemplates -Switches $Switches
 		[String]$MOFFileName = Get-LabDSCMOFFile -Configuration $Config -VM $VMs
-		Write-Host $MOFFileName
 		It "Returns Filename that exists" {
 			(Test-Path -Path $MOFFileName) | Should Be $True
 		}
 	}
 
+}
+##########################################################################################################################################
+
+##########################################################################################################################################
+Describe "Get-LabDSCStartFile" {
+	Context "No parameters passed" {
+		It "Fails" {
+			{ Get-LabDSCStartFile } | Should Throw
+		}
+	}
+	Context "Valid Parameters Passed" {
+		$Config = Get-LabConfiguration -Path $TestConfigOKPath
+		$Switches = Get-LabSwitches -Configuration $Config
+		$VMTemplates = Get-LabVMTemplates -Configuration $Config
+		$VMs = Get-LabVMs -Configuration $Config -VMTemplates $VMTemplates -Switches $Switches
+		[String]$DSCStartFile = Get-LabDSCStartFile -Configuration $Config -VM $VMs
+		It "Returns Expected File Content" {
+			$DSCStartFile | Should Be $True
+		}
+	}
+}
+##########################################################################################################################################
+
+##########################################################################################################################################
+Describe "Get-LabUnattendFile" {
+	Context "No parameters passed" {
+		It "Fails" {
+			{ Get-LabUnattendFile } | Should Throw
+		}
+	}
+	Context "Valid Parameters Passed" {
+		$Config = Get-LabConfiguration -Path $TestConfigOKPath
+		$Switches = Get-LabSwitches -Configuration $Config
+		$VMTemplates = Get-LabVMTemplates -Configuration $Config
+		$VMs = Get-LabVMs -Configuration $Config -VMTemplates $VMTemplates -Switches $Switches
+		[String]$UnattendFile = Get-LabUnattendFile -Configuration $Config -VM $VMs
+		It "Returns Expected File Content" {
+			$UnattendFile | Should Be $True
+		}
+	}
 }
 ##########################################################################################################################################
 

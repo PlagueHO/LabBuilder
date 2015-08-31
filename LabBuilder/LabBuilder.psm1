@@ -619,24 +619,59 @@ function Get-LabDSCMOFFile {
 ##########################################################################################################################################
 
 ##########################################################################################################################################
-function Set-LabVMInitializationFiles {
+function Get-LabDSCStartFile {
 	[CmdLetBinding()]
+	[OutputType([String])]
 	param (
 		[Parameter(Mandatory=$true)]
 		[XML]$Configuration,
 
 		[Parameter(Mandatory=$true)]
-		[String]$VMBootDiskPath,
+		[System.Collections.Hashtable]$VM
+	)
+	[String]$DSCStartPs = ''
+	If ($VM.DSCMOFFile) {
+		# Make sure the NuGet Package is installed so that PowerShellGet Module will work
+		$DSCStartPs = @"
+Add-Content -Path `"$($ENV:SystemRoot)\Setup\Scripts\SetupComplete.log`" -Value `"DSC Configuration Started...`"
+PackageManagement\Get-PackageProvider -Name NuGet -Force *>> `"$($ENV:SystemRoot)\Setup\Scripts\DSC.log`"
+PackageManagement\Set-PackageSource -Name PSGallery -Trusted *>> `"$($ENV:SystemRoot)\Setup\Scripts\DSC.log`"
+"@
+
+		# Automatically install any modules that are required by DSC onto the server
+		# The server Must have PowerShell 5.0 installed to do this!
+		Foreach ($Module in $VM.DSCModules) {
+			$DSCStartPs += @"
+Find-Module -Name $Module | Install-Module -Verbose *>> `"$($ENV:SystemRoot)\Setup\Scripts\DSC.log`"
+"@
+		} # Foreach
+
+		# Start the actual DSC Configuration
+		$DSCStartPs += @"
+Start-DSCConfiguration -Path `"$($ENV:SystemRoot)\DSC\`" -Force -Wait -Verbose  *>> `"$($ENV:SystemRoot)\Setup\Scripts\DSC.log`"
+Add-Content -Path `"$($ENV:SystemRoot)\Setup\Scripts\SetupComplete.log`" -Value `"DSC Configuration Finished...`"
+"@
+	} # If
+	Return $DSCStartPs
+} # Get-LabDSCStartFile
+##########################################################################################################################################
+
+##########################################################################################################################################
+function Get-LabUnattendFile {
+	[CmdLetBinding()]
+	[OutputType([String])]
+	param (
+		[Parameter(Mandatory=$true)]
+		[XML]$Configuration,
 
 		[Parameter(Mandatory=$true)]
 		[System.Collections.Hashtable]$VM
 	)
-	[String]$DomainName = $Configuration.labbuilderconfig.settings.domainname
-	[String]$Email = $Configuration.labbuilderconfig.settings.email
-	# Has a custom unattend file been specified for this VM?
 	If ($VM.UnattendFile) {
 		[String]$UnattendContent = Get-Content -Path $VM.UnattendFile
 	} Else {
+		[String]$DomainName = $Configuration.labbuilderconfig.settings.domainname
+		[String]$Email = $Configuration.labbuilderconfig.settings.email
 		$UnattendContent = [String] @"
 <?xml version="1.0" encoding="utf-8"?>
 <unattend xmlns="urn:schemas-microsoft-com:unattend">
@@ -701,9 +736,44 @@ function Set-LabVMInitializationFiles {
 	</settings>
 </unattend>
 "@
-	}
-	[String]$SetupCompletePs = ''
-	[String]$SetupCompleteCmd = ''
+		}
+	Return $UnattendContent
+} # Get-LabUnattendFile
+##########################################################################################################################################
+
+##########################################################################################################################################
+function Set-LabVMInitializationFiles {
+	[CmdLetBinding()]
+	param (
+		[Parameter(Mandatory=$true)]
+		[XML]$Configuration,
+
+		[Parameter(Mandatory=$true)]
+		[String]$VMBootDiskPath,
+
+		[Parameter(Mandatory=$true)]
+		[System.Collections.Hashtable]$VM
+	)
+
+	# Mount the VMs Boot VHD so that files can be loaded into it
+	[String]$MountPount = "C:\TempMount"
+	Write-Verbose "Mounting VM $($VM.Name) Boot Disk VHDx $VMBootDiskPath ..."
+	New-Item -Path $MountPount -ItemType Directory | Out-Null
+	Mount-WindowsImage -ImagePath $VMBootDiskPath -Path $MountPount -Index 1 | Out-Null
+
+	# Create the scripts folder where setup scripts will be put
+	New-Item -Path "$MountPount\Windows\Setup\Scripts" -ItemType Directory
+
+	# Generate and apply an unattended setup file
+	[String]$UnattendFile = Get-LabUnattendFile -Configuration $Configuration -VM $VM
+	Write-Verbose "Applying VM $($VM.Name) Unattend File ..."
+	Set-Content -Path "$MountPount\Windows\Panther\Unattend.xml" -Value $UnattendContent -Force | Out-Null
+
+	[String]$SetupCompleteCmd = @"
+"@
+	[String]$SetupCompletePs = @"
+New-SelfSignedCertificate -DnsName $($VM.ComputerName) -CertStoreLocation cert:\LocalMachine\My
+"@
 	If ($VM.SetupComplete) {
         [String]$SetupComplete = $VM.SetupComplete
         If (-not (Test-Path -Path $SetupComplete)) {
@@ -712,11 +782,11 @@ function Set-LabVMInitializationFiles {
 		[String]$Extension = [System.IO.Path]::GetExtension($SetupComplete)
 		Switch ($Extension.ToLower()) {
 			'.ps1' {
-				$SetupCompletePs = Get-Content -Path $SetupComplete
+				$SetupCompletePs += Get-Content -Path $SetupComplete
 				Break
 			} # 'ps1'
 			'.cmd' {
-				$SetupCompleteCmd = Get-Content -Path $SetupComplete
+				$SetupCompleteCmd += Get-Content -Path $SetupComplete
 				Break
 			} # 'cmd'
 		} # Switch
@@ -724,55 +794,43 @@ function Set-LabVMInitializationFiles {
 
 	# Are there any DSC Settings to manage?
 	[String]$DSCMOFFile = Get-LabDSCMOFFile -Configuration $Configuration -VM $VM
-		
-	# Mount the VMs Boot VHD so that files can be loaded into it
-	[String]$MountPount = "C:\TempMount"
-	Write-Verbose "Mounting VM $($VM.Name) Boot Disk VHDx $VMBootDiskPath ..."
-	New-Item -Path $MountPount -ItemType Directory | Out-Null
-	Mount-WindowsImage -ImagePath $VMBootDiskPath -Path $MountPount -Index 1 | Out-Null
-
-	# Apply any files that are needed
-	Write-Verbose "Applying VM $($VM.Name) Unattend File ..."
-	Set-Content -Path "$MountPount\Windows\Panther\Unattend.xml" -Value $UnattendContent -Force | Out-Null
-	New-Item -Path "$MountPount\Windows\Setup\Scripts" -ItemType Directory
 
 	If ($DSCMOFFile) {
 		Write-Verbose "Applying VM $($VM.Name) DSC MOF File $DSCMOFFile ..."
 
-		# A MOF File is available for this VM so copy it to the VM and start DSC Push Mode
+		# A MOF File is available for this VM so assemble script for starting DSC on this server
 		New-Item -Path "$MountPount\Windows\DSC\" -ItemType Directory | Out-Null
 		Copy-Item -Path $DSCMOFFile -Destination "$MountPount\Windows\DSC\$($VM.ComputerName).mof" -Force | Out-Null
-		$SetupCompletePs += "`r`nAdd-Content -Path `"$($ENV:SystemRoot)\Setup\Scripts\SetupComplete.log`" -Value `"DSC Configuration Started...`""
 
-		# Make sure the NuGet Package is installed so that PowerShellGet Module will work
-		$SetupCompletePs += "`r`nPackageManagement\Get-PackageProvider -Name NuGet -Force *>> `"$($ENV:SystemRoot)\Setup\Scripts\DSC.log`""
-		$SetupCompletePs += "`r`nPackageManagement\Set-PackageSource -Name PSGallery -Trusted *>> `"$($ENV:SystemRoot)\Setup\Scripts\DSC.log`""
+		# Generate the DSC Start up Script file
+		[String]$DSCStartPs = Get-LabDSCStartFile -Configuration $Configuration -VM $VM
+		Set-Content -Path "$MountPount\Windows\Setup\Scripts\StartDSC.ps1" -Value $DSCStartPs
 
-		# Automatically install any modules that are required by DSC onto the server
-		# The server Must have PowerShell 5.0 installed to do this!
-		Foreach ($Module in $VM.DSCModules) {
-			$SetupCompletePs += "`r`nFind-Module -Name $Module | Install-Module -Verbose *>> `"$($ENV:SystemRoot)\Setup\Scripts\DSC.log`""
-		} # Foreach
-
-		$SetupCompletePs += "`r`nStart-DSCConfiguration -Path `"$($ENV:SystemRoot)\DSC\`" -Force -Wait -Verbose  *>> `"$($ENV:SystemRoot)\Setup\Scripts\DSC.log`""
-		$SetupCompletePs += "`r`nAdd-Content -Path `"$($ENV:SystemRoot)\Setup\Scripts\SetupComplete.log`" -Value `"DSC Configuration Finished...`""
+		$SetupCompletePs = @"
+$MountPount\Windows\Setup\Scripts\StartDSC.ps1
+"@
 	} # If
 	
-	If ($SetupCompletePs) {
-		# Because a PowerShell SetupComplete file was provided we need to kick it off from
-		# The SetupComplete.cmd script.
-		$SetupCompleteCmd += "`r`n@echo SetupComplete.ps1 Script Started... >> %SYSTEMROOT%\Setup\Scripts\SetupComplete.log"
-		$SetupCompleteCmd += "`r`npowerShell.exe -ExecutionPolicy Unrestricted -Command `"%SYSTEMROOT%\Setup\Scripts\SetupComplete.ps1`""
-		$SetupCompleteCmd += "`r`n@echo SetupComplete.ps1 Script Finished... >> %SYSTEMROOT%\Setup\Scripts\SetupComplete.log"
-		Write-Verbose "Applying VM $($VM.Name) Setup Complete PowerShell File ..."
-		Set-Content -Path "$MountPount\Windows\Setup\Scripts\SetupComplete.ps1" -Value $SetupCompletePs -Force | Out-Null	
-	}
-	If ($SetupCompleteCmd) {
-		Write-Verbose "Applying VM $($VM.Name) Setup Complete CMD File ..."
-		$SetupCompleteCmd = "@echo SetupComplete.cmd Script Started... >> %SYSTEMROOT%\Setup\Scripts\SetupComplete.log`r`n$SetupCompleteCmd"
-		$SetupCompleteCmd += "`r`n@echo SetupComplete.cmd Script Finished... >> %SYSTEMROOT%\Setup\Scripts\SetupComplete.log"
-		Set-Content -Path "$MountPount\Windows\Setup\Scripts\SetupComplete.cmd" -Value $SetupCompleteCmd -Force | Out-Null	
-	} # If
+	# Write out the CMD Setup Complete File
+	Write-Verbose "Applying VM $($VM.Name) Setup Complete CMD File ..."
+	$SetupCompleteCmd = @"
+@echo SetupComplete.cmd Script Started... >> %SYSTEMROOT%\Setup\Scripts\SetupComplete.log
+$SetupCompleteCmd
+powerShell.exe -ExecutionPolicy Unrestricted -Command `"%SYSTEMROOT%\Setup\Scripts\SetupComplete.ps1`"
+@echo SetupComplete.cmd Script Finished... >> %SYSTEMROOT%\Setup\Scripts\SetupComplete.log
+"@
+	Set-Content -Path "$MountPount\Windows\Setup\Scripts\SetupComplete.cmd" -Value $SetupCompleteCmd -Force | Out-Null	
+
+	# Write out the PowerShell Setup Complete file
+	Write-Verbose "Applying VM $($VM.Name) Setup Complete PowerShell File ..."
+	$SetupCompletePs = @"
+"SetupComplete.cmd Script Started..." *>> `"$($ENV:SystemRoot)\Setup\Scripts\DSC.log`"
+$SetupCompletePs
+"SetupComplete.cmd Script Finished..." *>> `"$($ENV:SystemRoot)\Setup\Scripts\DSC.log`"
+"@
+
+	Set-Content -Path "$MountPount\Windows\Setup\Scripts\SetupComplete.ps1" -Value $SetupCompletePs -Force | Out-Null	
+	
 	# Dismount the VHD in preparation for boot
 	Write-Verbose "Dismounting VM $($VM.Name) Boot Disk VHDx $VMBootDiskPath ..."
 	Dismount-WindowsImage -Path $MountPount -Save | Out-Null
@@ -1072,7 +1130,7 @@ function Initialize-LabVMs {
 
 		# Set the processor count if different to default and if specified in config file
 		If ($VM.ProcessorCount) {
-			If ($VM.ProcessorCount -ne (Get-VM -Name $VMs.Name).ProcessorCount) {
+			If ($VM.ProcessorCount -ne (Get-VM -Name $VM.Name).ProcessorCount) {
 				Set-VM -Name $VM.Name -ProcessorCount $VM.ProcessorCount
 			} # If
 		} # If
@@ -1122,7 +1180,7 @@ function Initialize-LabVMs {
 		} # Foreach
 		
 		# The VM is now ready to be started
-		If ((Get-VM -Name $VMs.Name).State -eq 'Off') {
+		If ((Get-VM -Name $VM.Name).State -eq 'Off') {
 			Write-Verbose "VM $($VM.Name) is starting ..."
 
 			Start-VM -VMName $VM.Name
@@ -1308,7 +1366,7 @@ Export-ModuleMember -Function `
 	Get-LabSwitches,Initialize-LabSwitches,Remove-LabSwitches, `
 	Get-LabVMTemplates,Initialize-LabVMTemplates,Remove-LabVMTemplates, `
 	Get-LabVMs,Initialize-LabVMs,Remove-LabVMs, `
-	Get-LabDSCMOFFile, `
+	Get-LabDSCMOFFile,Get-LabDSCStartFile,Get-LabUnattendFile, `
 	Wait-LabVMStart, Wait-LabVMOff, `
 	Set-LabVMInitializationFiles, `
 	Install-Lab,Uninstall-Lab
