@@ -597,7 +597,7 @@ function Get-LabDSCMOFFile {
 		@{
 			NodeName = '$($VM.ComputerName)'
 			CertificateFile = '$CertificateFile'
-            Thumbprint = '$CertificateThumbpring' 
+            Thumbprint = '$CertificateThumbprint' 
 			LocalAdminPassword = '$($VM.administratorpassword)'
 			$($VM.DSCParameters)
 		}
@@ -618,7 +618,6 @@ function Get-LabDSCMOFFile {
 			} # If
 			
 			# Remove the temporary configuration file
-			# Remove-Item -Path $ConfigurationTempFile
 			Write-Verbose "DSC MOF File $DSCMOFFile for VM $($VM.Name) was created successfully ..."
 		} # If
 	} # If
@@ -677,6 +676,9 @@ function Initialize-LabVMDSC {
 		# A MOF File is available for this VM so assemble script for starting DSC on this server
 		New-Item -Path "$MountPoint\Windows\DSC\" -ItemType Directory -Force | Out-Null
 		Copy-Item -Path $DSCMOFFile -Destination "$VMPath\$($VM.Name)\LabBuilder Files\$($VM.ComputerName).mof" -Force | Out-Null
+		If (Test-Path "$VMPath\$($VM.Name)\LabBuilder Files\$($VM.ComputerName).meta.mof") {
+			Copy-Item -Path $DSCMOFFile -Destination "$VMPath\$($VM.Name)\LabBuilder Files\$($VM.ComputerName).meta.mof" -Force | Out-Null
+		} # If
 
 		# Generate the DSC Start up Script file
 		[String]$DSCStartPs = Get-LabDSCStartFile -Configuration $Configuration -VM $VM
