@@ -749,7 +749,7 @@ function Set-LabVMInitializationFiles {
 	)
 
 	# Mount the VMs Boot VHD so that files can be loaded into it
-	[String]$MountPoint = "C:\TempMount"
+	[String]$MountPoint = Join-Path -Path $ENV:Temp -ChildPath ([System.IO.Path]::GetRandomFileName())
 	Write-Verbose "Mounting VM $($VM.Name) Boot Disk VHDx $VMBootDiskPath ..."
 	New-Item -Path $MountPoint -ItemType Directory | Out-Null
 	Mount-WindowsImage -ImagePath $VMBootDiskPath -Path $MountPoint -Index 1 | Out-Null
