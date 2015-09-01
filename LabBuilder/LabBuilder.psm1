@@ -1115,7 +1115,7 @@ function Get-LabVMSelfSignedCert {
 	While ((-not $Session) -and (((Get-Date) - $StartTime).Seconds) -lt $TimeOut) {
 		# Try and connect to the remote VM for up to $Timeout (5 minutes) seconds.
 		Try {
-			$Session = New-PSSession -ComputerName ($VM.ComputerName) -Credential $AdmininistratorCredential
+			$Session = New-PSSession -ComputerName ($VM.ComputerName) -Credential $AdmininistratorCredential -ErrorAction Stop
 		} Catch {
 			Write-Verbose "Trying to connect to $($VM.ComputerName) ..."
 		}
@@ -1125,7 +1125,7 @@ function Get-LabVMSelfSignedCert {
 		While ((-not $Downloaded) -and (((Get-Date) - $StartTime).Seconds) -lt $TimeOut) {
 			Try {
 				
-				Copy-Item -Path "c:\windows\SelfSigned.cer" -Destination "$VMPath\$($VM.Name)\LabBuilder Files\" -FromSession $Session
+				Copy-Item -Path "c:\windows\SelfSigned.cer" -Destination "$VMPath\$($VM.Name)\LabBuilder Files\" -FromSession $Session -ErrorAction Stop
 				$Downloaded = $True
 			} Catch {
 				Write-Verbose "Waiting for Certificate file on $($VM.ComputerName) ..."
@@ -1350,7 +1350,7 @@ function Wait-LabVMInit {
 	While ((-not $Session) -and (((Get-Date) - $StartTime).Seconds) -lt $TimeOut) {
 		# Try and connect to the remote VM for up to $Timeout (5 minutes) seconds.
 		Try {
-			$Session = New-PSSession -ComputerName ($VM.ComputerName) -Credential $AdmininistratorCredential
+			$Session = New-PSSession -ComputerName ($VM.ComputerName) -Credential $AdmininistratorCredential -ErrorAction Stop
 		} Catch {
 			Write-Verbose "Trying to connect to $($VM.ComputerName) ..."
 		}
@@ -1361,7 +1361,7 @@ function Wait-LabVMInit {
 		While ((-not $Found) -and (((Get-Date) - $StartTime).Seconds) -lt $TimeOut) {
 			Try {
 				
-				$Found = Invoke-Command -Session $Session {Test-Path "$($ENV:SystemRoot)\Setup\Scripts\InitialSetupCompleted.txt" }
+				$Found = Invoke-Command -Session $Session {Test-Path "$($ENV:SystemRoot)\Setup\Scripts\InitialSetupCompleted.txt" } -ErrorAction Stop
 			} Catch {
 				Write-Verbose "Waiting for Initial Setup Complete file on $($VM.ComputerName) ..."
 				Sleep 5
