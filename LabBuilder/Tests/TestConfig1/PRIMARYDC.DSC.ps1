@@ -11,6 +11,10 @@ Configuration PRIMARYDC
 			[PSCredential]$DomainAdminCredential = New-Object System.Management.Automation.PSCredential ("Administrator", (ConvertTo-SecureString $Node.DomainAdminPassword -AsPlainText -Force))
 		}
 
+        LocalConfigurationManager {
+             CertificateId = $Node.Thumbprint
+        } 
+
 		WindowsFeature DNSInstall 
         { 
             Ensure = "Present" 

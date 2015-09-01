@@ -583,13 +583,21 @@ function Get-LabDSCMOFFile {
 			. $VM.DSCConfigFile
 			[String]$DSCConfigName = $VM.DSCConfigName
 			[String]$DSCMOFFile = Join-Path -Path $ENV:Temp -ChildPath "$($VM.ComputerName).mof"
+	
+			# Get the certificate thumbprint for the computer
+			[String]$CertificateFile = "$VMPath\$($VM.Name)\LabBuilder Files\SelfSigned.cer"
+			$Certificate = Import-Certificate -FilePath $CertificateFile -CertStoreLocation "Cert:LocalMachine\My"
+			[String]$CertificateThumbprint = $Certificate.Thumbprint
+			Remove-Item -Path "Cert:LocalMachine\My\$($Cert.Thumbprint)" -Force
+			
 			# Generate the Configuration Nodes data that always gets passed to the DSC configuration.
 			[String]$ConfigurationData = @"
 @{
 	AllNodes = @(
 		@{
 			NodeName = '$($VM.ComputerName)'
-			PSDscAllowPlainTextPassword = `$True
+			CertificateFile = '$CertificateFile'
+            Thumbprint = '$CertificateThumbpring' 
 			LocalAdminPassword = '$($VM.administratorpassword)'
 			$($VM.DSCParameters)
 		}
@@ -616,6 +624,34 @@ function Get-LabDSCMOFFile {
 	} # If
 	Return $DSCMOFFile
 } # Get-LabDSCMOFFile
+##########################################################################################################################################
+
+##########################################################################################################################################
+function Start-LabVMDSC {
+	[CmdLetBinding()]
+	param (
+		[Parameter(Mandatory=$true)]
+		[XML]$Configuration,
+
+		[Parameter(Mandatory=$true)]
+		[System.Collections.Hashtable]$VM
+	)
+
+	# Are there any DSC Settings to manage?
+	[String]$DSCMOFFile = Get-LabDSCMOFFile -Configuration $Configuration -VM $VM
+
+	If ($DSCMOFFile) {
+		Write-Verbose "Applying VM $($VM.Name) DSC MOF File $DSCMOFFile ..."
+
+		# A MOF File is available for this VM so assemble script for starting DSC on this server
+		New-Item -Path "$MountPoint\Windows\DSC\" -ItemType Directory -Force | Out-Null
+		Copy-Item -Path $DSCMOFFile -Destination "$VMPath\$($VM.Name)\LabBuilder Files\$($VM.ComputerName).mof" -Force | Out-Null
+
+		# Generate the DSC Start up Script file
+		[String]$DSCStartPs = Get-LabDSCStartFile -Configuration $Configuration -VM $VM
+		Set-Content -Path "$VMPath\$($VM.Name)\LabBuilder Files\StartDSC.ps1" -Value $DSCStartPs -Force | Out-Null
+	} # If
+} # Start-LabVMDSC
 ##########################################################################################################################################
 
 ##########################################################################################################################################
@@ -804,32 +840,6 @@ Add-Content -Path `"$($ENV:SystemRoot)\Setup\Scripts\SetupComplete.log`" -Value 
 		} # Switch
 	} # If
 
-	# This code will be moved once certificates can be obtained
-	If ($False) {
-		# Are there any DSC Settings to manage?
-		[String]$DSCMOFFile = Get-LabDSCMOFFile -Configuration $Configuration -VM $VM
-
-		If ($DSCMOFFile) {
-			Write-Verbose "Applying VM $($VM.Name) DSC MOF File $DSCMOFFile ..."
-
-			# A MOF File is available for this VM so assemble script for starting DSC on this server
-			New-Item -Path "$MountPoint\Windows\DSC\" -ItemType Directory | Out-Null
-			Copy-Item -Path $DSCMOFFile -Destination "$MountPoint\Windows\DSC\$($VM.ComputerName).mof" -Force | Out-Null
-
-			# Generate the DSC Start up Script file
-			[String]$DSCStartPs = Get-LabDSCStartFile -Configuration $Configuration -VM $VM
-			Set-Content -Path "$MountPoint\Windows\Setup\Scripts\StartDSC.ps1" -Value $DSCStartPs -Force | Out-Null
-			Set-Content -Path "$VMPath\$($VM.Name)\LabBuilder Files\StartDSC.ps1" -Value $DSCStartPs -Force | Out-Null
-
-			# Cause the DSC to be triggered - this is temporary and should be moved to a
-			# later stage when automatic credential encryption in MOF Files is supported
-			$SetupCompletePs += @"
-
-C:\Windows\Setup\Scripts\StartDSC.ps1
-"@
-		} # If
-	} # If
-	
 	# Write out the CMD Setup Complete File
 	Write-Verbose "Applying VM $($VM.Name) Setup Complete CMD File ..."
 	$SetupCompleteCmd = @"

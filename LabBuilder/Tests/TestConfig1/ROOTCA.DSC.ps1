@@ -8,6 +8,10 @@ Configuration ROOTCA
 			[PSCredential]$LocalAdminCredential = New-Object System.Management.Automation.PSCredential ("Administrator", (ConvertTo-SecureString $Node.LocalAdminPassword -AsPlainText -Force))
 		}
 
+        LocalConfigurationManager {
+             CertificateId = $Node.Thumbprint
+        } 
+
 		WindowsFeature ADCSCA {
 			Name = 'ADCS-Cert-Authority'
 			Ensure = 'Present'
