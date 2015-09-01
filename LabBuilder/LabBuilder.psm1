@@ -649,7 +649,7 @@ Find-Module -Name $Module | Install-Module -Verbose *>> `"$($ENV:SystemRoot)\Set
 
 	# Start the actual DSC Configuration
 	$DSCStartPs += @"
-Start-DSCConfiguration -Path `"$($ENV:SystemRoot)\DSC\`" -Force -Wait -Verbose  *>> `"$($ENV:SystemRoot)\Setup\Scripts\DSC.log`"
+Start-DSCConfiguration -Path `"$($ENV:SystemRoot)\Setup\Scripts\`" -Force -Wait -Verbose  *>> `"$($ENV:SystemRoot)\Setup\Scripts\DSC.log`"
 
 "@
 	Return $DSCStartPs
@@ -674,7 +674,6 @@ function Initialize-LabVMDSC {
 		Write-Verbose "Applying VM $($VM.Name) DSC MOF File $DSCMOFFile ..."
 
 		# A MOF File is available for this VM so assemble script for starting DSC on this server
-		New-Item -Path "$MountPoint\Windows\DSC\" -ItemType Directory -Force | Out-Null
 		Copy-Item -Path $DSCMOFFile -Destination "$VMPath\$($VM.Name)\LabBuilder Files\$($VM.ComputerName).mof" -Force | Out-Null
 		If (Test-Path -Path "$VMPath\$($VM.Name)\LabBuilder Files\$($VM.ComputerName).meta.mof") {
 			Copy-Item -Path [System.IO.Path]::ChangeExtension($DSCMOFFile,"meta.mof") -Destination "$VMPath\$($VM.Name)\LabBuilder Files\$($VM.ComputerName).meta.mof" -Force | Out-Null
@@ -685,6 +684,50 @@ function Initialize-LabVMDSC {
 		Set-Content -Path "$VMPath\$($VM.Name)\LabBuilder Files\StartDSC.ps1" -Value $DSCStartPs -Force | Out-Null
 	} # If
 } # Initialize-LabVMDSC
+##########################################################################################################################################
+
+##########################################################################################################################################
+function Start-LabVMDSC {
+	[CmdLetBinding()]
+	param (
+		[Parameter(Mandatory=$true)]
+		[XML]$Configuration,
+
+		[Parameter(Mandatory=$true)]
+		[System.Collections.Hashtable]$VM,
+
+		[Int]$Timeout = 300
+	)
+	[String]$VMPath = $Configuration.labbuilderconfig.SelectNodes('settings').vmpath
+	[DateTime]$StartTime = Get-Date
+	[System.Management.Automation.Runspaces.PSSession]$Session = $null
+	[PSCredential]$AdmininistratorCredential = New-Object System.Management.Automation.PSCredential ("Administrator", (ConvertTo-SecureString $VM.AdministratorPassword -AsPlainText -Force))
+	[Boolean]$Complete = $False
+	While ((-not $Session) -and (((Get-Date) - $StartTime).Seconds) -lt $TimeOut) {
+		# Try and connect to the remote VM for up to $Timeout (5 minutes) seconds.
+		Try {
+			$Session = New-PSSession -ComputerName ($VM.ComputerName) -Credential $AdmininistratorCredential -ErrorAction Stop
+		} Catch {
+			Write-Verbose "Trying to connect to $($VM.ComputerName) ..."
+		}
+	} # While
+	If ($Session) {
+		# We connected OK - upload the MOF files
+		While ((-not $Complete) -and (((Get-Date) - $StartTime).Seconds) -lt $TimeOut) {
+			Try {
+				Copy-Item -Path "$VMPath\$($VM.Name)\LabBuilder Files\$($VM.ComputerName).mof" -Destination  -ToSession $Session -Force -ErrorAction Stop
+				Copy-Item -Path "$VMPath\$($VM.Name)\LabBuilder Files\$($VM.ComputerName).meta.mof" -Destination  -ToSession $Session -Force -ErrorAction Stop
+				Copy-Item -Path "$VMPath\$($VM.Name)\LabBuilder Files\StartDSC.ps1" -Destination  -ToSession $Session -Force -ErrorAction Stop
+				$Complete = $True
+			} Catch {
+				Write-Verbose "Waiting for DSC Files to Copy tn $($VM.ComputerName) ..."
+				Sleep 5
+			}
+		}
+		Remove-PSSession -Session $Session
+	}
+	Return $Complete
+} # Start-LabVMDSC
 ##########################################################################################################################################
 
 ##########################################################################################################################################
@@ -1285,6 +1328,9 @@ function Initialize-LabVMs {
 
 		# Create any DSC Files for the VM
 		Initialize-LabVMDSC -Configuration $Configuration -VM $VM
+
+		# Attempt to start DSC on the VM
+		Start-LabVMDSC -Configuration $Configuration -VM $VM
 	} # Foreach
 	Return $True
 } # Initialize-LabVMs
