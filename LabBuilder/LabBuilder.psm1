@@ -676,7 +676,7 @@ function Initialize-LabVMDSC {
 		# A MOF File is available for this VM so assemble script for starting DSC on this server
 		Copy-Item -Path $DSCMOFFile -Destination "$VMPath\$($VM.Name)\LabBuilder Files\$($VM.ComputerName).mof" -Force | Out-Null
 		If (Test-Path -Path "$VMPath\$($VM.Name)\LabBuilder Files\$($VM.ComputerName).meta.mof") {
-			Copy-Item -Path [System.IO.Path]::ChangeExtension($DSCMOFFile,"meta.mof") -Destination "$VMPath\$($VM.Name)\LabBuilder Files\$($VM.ComputerName).meta.mof" -Force | Out-Null
+			Copy-Item -Path ([System.IO.Path]::ChangeExtension($DSCMOFFile,"meta.mof")) -Destination "$VMPath\$($VM.Name)\LabBuilder Files\$($VM.ComputerName).meta.mof" -Force | Out-Null
 		} # If
 
 		# Generate the DSC Start up Script file
@@ -715,12 +715,13 @@ function Start-LabVMDSC {
 		# We connected OK - upload the MOF files
 		While ((-not $Complete) -and (((Get-Date) - $StartTime).Seconds) -lt $TimeOut) {
 			Try {
-				Copy-Item -Path "$VMPath\$($VM.Name)\LabBuilder Files\$($VM.ComputerName).mof" -Destination  -ToSession $Session -Force -ErrorAction Stop
-				Copy-Item -Path "$VMPath\$($VM.Name)\LabBuilder Files\$($VM.ComputerName).meta.mof" -Destination  -ToSession $Session -Force -ErrorAction Stop
-				Copy-Item -Path "$VMPath\$($VM.Name)\LabBuilder Files\StartDSC.ps1" -Destination  -ToSession $Session -Force -ErrorAction Stop
+				Copy-Item -Path "$VMPath\$($VM.Name)\LabBuilder Files\$($VM.ComputerName).mof" -Destination c:\Windows\Setup\Scripts -ToSession $Session -Force -ErrorAction Stop
+				Copy-Item -Path "$VMPath\$($VM.Name)\LabBuilder Files\$($VM.ComputerName).meta.mof" -Destination c:\Windows\Setup\Scripts -ToSession $Session -Force -ErrorAction Stop
+				Copy-Item -Path "$VMPath\$($VM.Name)\LabBuilder Files\StartDSC.ps1" -Destination c:\Windows\Setup\Scripts -ToSession $Session -Force -ErrorAction Stop
+				Invoke-Command -Session $Session { c:\windows\setup\scripts\StartDSC.ps1 }
 				$Complete = $True
 			} Catch {
-				Write-Verbose "Waiting for DSC Files to Copy tn $($VM.ComputerName) ..."
+				Write-Verbose "Waiting for DSC Files to Copy to $($VM.ComputerName) ..."
 				Sleep 5
 			}
 		}
