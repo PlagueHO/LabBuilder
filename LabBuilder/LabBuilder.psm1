@@ -584,11 +584,10 @@ function Get-LabDSCMOFFile {
 			[String]$DSCConfigName = $VM.DSCConfigName
 			[String]$DSCMOFFile = Join-Path -Path $ENV:Temp -ChildPath "$($VM.ComputerName).mof"
 	
-			# Get the certificate thumbprint for the computer
+			# Add the VM Self-Signed Certificate to the Local Machine store and get the Thumbprint
 			[String]$CertificateFile = "$VMPath\$($VM.Name)\LabBuilder Files\SelfSigned.cer"
 			$Certificate = Import-Certificate -FilePath $CertificateFile -CertStoreLocation "Cert:LocalMachine\My"
 			[String]$CertificateThumbprint = $Certificate.Thumbprint
-			Remove-Item -Path "Cert:LocalMachine\My\$CertificateThumbprint" -Force
 			
 			# Generate the Configuration Nodes data that always gets passed to the DSC configuration.
 			[String]$ConfigurationData = @"
@@ -617,7 +616,9 @@ function Get-LabDSCMOFFile {
 				Throw "A MOF File was not created by the DSC Config File $($VM.DSCCOnfigFile) for VM $($VM.Name)."
 			} # If
 			
-			# Remove the temporary configuration file
+			# Remove the VM Self-Signed Certificate from the Local Machine Store
+			Remove-Item -Path "Cert:LocalMachine\My\$CertificateThumbprint" -Force
+
 			Write-Verbose "DSC MOF File $DSCMOFFile for VM $($VM.Name) was created successfully ..."
 		} # If
 	} # If
