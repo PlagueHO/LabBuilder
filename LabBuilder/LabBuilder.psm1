@@ -588,7 +588,7 @@ function Get-LabDSCMOFFile {
 			[String]$CertificateFile = "$VMPath\$($VM.Name)\LabBuilder Files\SelfSigned.cer"
 			$Certificate = Import-Certificate -FilePath $CertificateFile -CertStoreLocation "Cert:LocalMachine\My"
 			[String]$CertificateThumbprint = $Certificate.Thumbprint
-			Remove-Item -Path "Cert:LocalMachine\My\$($Cert.Thumbprint)" -Force
+			Remove-Item -Path "Cert:LocalMachine\My\$CertificateThumbprint" -Force
 			
 			# Generate the Configuration Nodes data that always gets passed to the DSC configuration.
 			[String]$ConfigurationData = @"
