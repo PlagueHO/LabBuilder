@@ -642,6 +642,19 @@ function Get-LabDSCStartFile {
 	# The server Must have PowerShell 5.0 installed to do this!
 	Foreach ($Module in $VM.DSCModules) {
 		$DSCStartPs += @"
+[Int]`$Count = 0
+[Boolean]`$Installed = `$False
+While ((-not `$Installed) -and (`$Count -lt 5)) {
+	Try {
+		PackageManagement\Get-PackageProvider -Name NuGet -Force *>> `"$($ENV:SystemRoot)\Setup\Scripts\NuGetInstall.log`"
+		PackageManagement\Set-PackageSource -Name PSGallery -Trusted *>> `"$($ENV:SystemRoot)\Setup\Scripts\NuGetInstall.log`"
+		`$Installed = `$True
+	} Catch {
+		`$Count++
+		Add-Content -Path `"$($ENV:SystemRoot)\Setup\Scripts\SetupComplete.log`" -Value 'Error installing NuGet ...' -Encoding Ascii
+	}
+}
+
 Find-Module -Name $Module | Install-Module -Verbose *>> `"$($ENV:SystemRoot)\Setup\Scripts\DSC.log`"
 
 "@
