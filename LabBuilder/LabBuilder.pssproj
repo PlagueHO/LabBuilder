@@ -39,12 +39,12 @@
     <Compile Include="LabBuilder.psd1" />
     <Compile Include="LabBuilder.psm1" />
     <Compile Include="LabBuilder.tests.ps1" />
+    <Compile Include="README.md" />
     <Compile Include="Tests\PesterTestConfig\PesterTest.DSC.ps1" />
     <Compile Include="Tests\PesterTestConfig\PesterTestConfig.OK.xml" />
+    <Compile Include="Tests\TestConfig1\PRIMARYDC.DSC.ps1" />
     <Compile Include="Tests\TestConfig1\ROOTCA.DSC.ps1" />
     <Compile Include="Tests\TestConfig1.ps1" />
-    <Compile Include="Tests\TestConfig1\SS_ROOTCA.SetupComplete.cmd" />
-    <Compile Include="Tests\TestConfig1\SS_ROOTCA.SetupComplete.ps1" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="TestHelpers\" />
@@ -55,6 +55,7 @@
   <ItemGroup>
     <Content Include="Tests\PesterTestConfig\PesterTest.mof" />
     <Content Include="Tests\PesterTestConfig\PesterTestConfig.TemplateFail.NoVHD.xml" />
+    <Content Include="Tests\PesterTestConfig\PesterTestConfig.VMFail.BadDSCModule.xml" />
     <Content Include="Tests\PesterTestConfig\PesterTestConfig.VMFail.DSCFileAndMOFFile.xml" />
     <Content Include="Tests\PesterTestConfig\PesterTestConfig.VMFail.BadDSCNameMissing.xml" />
     <Content Include="Tests\PesterTestConfig\PesterTestConfig.VMFail.BadDSCMOFFileType.xml" />

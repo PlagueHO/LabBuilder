@@ -630,13 +630,6 @@ function Get-LabDSCStartFile {
 		[System.Collections.Hashtable]$VM
 	)
 	[String]$DSCStartPs = ''
-	# Make sure the NuGet Package is installed so that PowerShellGet Module will work
-	$DSCStartPs = @"
-Add-Content -Path `"$($ENV:SystemRoot)\Setup\Scripts\SetupComplete.log`" -Value `"DSC Configuration Started...`"
-PackageManagement\Get-PackageProvider -Name NuGet -Force *>> `"$($ENV:SystemRoot)\Setup\Scripts\DSC.log`"
-PackageManagement\Set-PackageSource -Name PSGallery -Trusted *>> `"$($ENV:SystemRoot)\Setup\Scripts\DSC.log`"
-
-"@
 
 	# Automatically install any modules that are required by DSC onto the server
 	# The server Must have PowerShell 5.0 installed to do this!
@@ -650,7 +643,6 @@ Find-Module -Name $Module | Install-Module -Verbose *>> `"$($ENV:SystemRoot)\Set
 	# Start the actual DSC Configuration
 	$DSCStartPs += @"
 Start-DSCConfiguration -Path `"$($ENV:SystemRoot)\DSC\`" -Force -Wait -Verbose  *>> `"$($ENV:SystemRoot)\Setup\Scripts\DSC.log`"
-Add-Content -Path `"$($ENV:SystemRoot)\Setup\Scripts\SetupComplete.log`" -Value `"DSC Configuration Finished...`"
 
 "@
 	Return $DSCStartPs
@@ -763,18 +755,36 @@ function Set-LabVMInitializationFiles {
 	Mount-WindowsImage -ImagePath $VMBootDiskPath -Path $MountPoint -Index 1 | Out-Null
 
 	# Create the scripts folder where setup scripts will be put
-	New-Item -Path "$MountPoint\Windows\Setup\Scripts" -ItemType Directory
+	New-Item -Path "$MountPoint\Windows\Setup\Scripts" -ItemType Directory | Out-Null
 
 	# Generate and apply an unattended setup file
 	[String]$UnattendFile = Get-LabUnattendFile -Configuration $Configuration -VM $VM
 	Write-Verbose "Applying VM $($VM.Name) Unattend File ..."
 	Set-Content -Path "$MountPoint\Windows\Panther\Unattend.xml" -Value $UnattendFile -Force | Out-Null
-
+	Set-Content -Path "$VMPath\$($VM.Name)\LabBuilder Files\Unattend.xml" -Value $UnattendFile -Force | Out-Null
 	[String]$SetupCompleteCmd = @"
 "@
 	[String]$SetupCompletePs = @"
 New-SelfSignedCertificate -DnsName $($VM.ComputerName) -CertStoreLocation cert:\LocalMachine\My | Export-Certificate -FilePath c:\Windows\SelfSigned.cer -Force
 Add-Content -Path `"$($ENV:SystemRoot)\Setup\Scripts\SetupComplete.log`" -Value 'Self-signed certificate created and saved to C:\Windows\SelfSigned.cer ...' -Encoding Ascii
+[Int]`$Count = 0
+[Boolean]`$Installed = `$False
+While ((-not `$Installed) -and (`$Count -lt 5)) {
+	Try {
+		PackageManagement\Get-PackageProvider -Name NuGet -Force *>> `"$($ENV:SystemRoot)\Setup\Scripts\NuGetInstall.log`"
+		PackageManagement\Set-PackageSource -Name PSGallery -Trusted *>> `"$($ENV:SystemRoot)\Setup\Scripts\NuGetInstall.log`"
+		`$Installed = `$True
+	} Catch {
+		`$Count++
+		Add-Content -Path `"$($ENV:SystemRoot)\Setup\Scripts\SetupComplete.log`" -Value 'Error installing NuGet ...' -Encoding Ascii
+	}
+}
+Add-Content -Path `"$($ENV:SystemRoot)\Setup\Scripts\SetupComplete.log`" -Value 'NuGet Installed ...' -Encoding Ascii
+# iex ((new-object net.webclient).DownloadString('https://chocolatey.org/install.ps1'))
+# Add-Content -Path `"$($ENV:SystemRoot)\Setup\Scripts\SetupComplete.log`" -Value 'Chocolatey Installed ...' -Encoding Ascii
+Enable-PSRemoting -SkipNetworkProfileCheck -Force
+Add-Content -Path `"$($ENV:SystemRoot)\Setup\Scripts\SetupComplete.log`" -Value 'Windows Remoting Enabled ...' -Encoding Ascii
+
 "@
 	If ($VM.SetupComplete) {
         [String]$SetupComplete = $VM.SetupComplete
@@ -794,26 +804,30 @@ Add-Content -Path `"$($ENV:SystemRoot)\Setup\Scripts\SetupComplete.log`" -Value 
 		} # Switch
 	} # If
 
-	# Are there any DSC Settings to manage?
-	[String]$DSCMOFFile = Get-LabDSCMOFFile -Configuration $Configuration -VM $VM
+	# This code will be moved once certificates can be obtained
+	If ($False) {
+		# Are there any DSC Settings to manage?
+		[String]$DSCMOFFile = Get-LabDSCMOFFile -Configuration $Configuration -VM $VM
 
-	If ($DSCMOFFile) {
-		Write-Verbose "Applying VM $($VM.Name) DSC MOF File $DSCMOFFile ..."
+		If ($DSCMOFFile) {
+			Write-Verbose "Applying VM $($VM.Name) DSC MOF File $DSCMOFFile ..."
 
-		# A MOF File is available for this VM so assemble script for starting DSC on this server
-		New-Item -Path "$MountPoint\Windows\DSC\" -ItemType Directory | Out-Null
-		Copy-Item -Path $DSCMOFFile -Destination "$MountPoint\Windows\DSC\$($VM.ComputerName).mof" -Force | Out-Null
+			# A MOF File is available for this VM so assemble script for starting DSC on this server
+			New-Item -Path "$MountPoint\Windows\DSC\" -ItemType Directory | Out-Null
+			Copy-Item -Path $DSCMOFFile -Destination "$MountPoint\Windows\DSC\$($VM.ComputerName).mof" -Force | Out-Null
 
-		# Generate the DSC Start up Script file
-		[String]$DSCStartPs = Get-LabDSCStartFile -Configuration $Configuration -VM $VM
-		Set-Content -Path "$MountPoint\Windows\Setup\Scripts\StartDSC.ps1" -Value $DSCStartPs
+			# Generate the DSC Start up Script file
+			[String]$DSCStartPs = Get-LabDSCStartFile -Configuration $Configuration -VM $VM
+			Set-Content -Path "$MountPoint\Windows\Setup\Scripts\StartDSC.ps1" -Value $DSCStartPs -Force | Out-Null
+			Set-Content -Path "$VMPath\$($VM.Name)\LabBuilder Files\StartDSC.ps1" -Value $DSCStartPs -Force | Out-Null
 
-		# Cause the DSC to be triggered - this is temporary and should be moved to a
-		# later stage when automatic credential encryption in MOF Files is supported
-		$SetupCompletePs += @"
+			# Cause the DSC to be triggered - this is temporary and should be moved to a
+			# later stage when automatic credential encryption in MOF Files is supported
+			$SetupCompletePs += @"
 
 C:\Windows\Setup\Scripts\StartDSC.ps1
 "@
+		} # If
 	} # If
 	
 	# Write out the CMD Setup Complete File
@@ -823,8 +837,10 @@ C:\Windows\Setup\Scripts\StartDSC.ps1
 $SetupCompleteCmd
 powerShell.exe -ExecutionPolicy Unrestricted -Command `"%SYSTEMROOT%\Setup\Scripts\SetupComplete.ps1`"
 @echo SetupComplete.cmd Script Finished... >> %SYSTEMROOT%\Setup\Scripts\SetupComplete.log
+@echo Initial Setup Completed - this file indicates that setup has completed. >> %SYSTEMROOT%\Setup\Scripts\InitialSetupCompleted.txt
 "@
 	Set-Content -Path "$MountPoint\Windows\Setup\Scripts\SetupComplete.cmd" -Value $SetupCompleteCmd -Force | Out-Null	
+	Set-Content -Path "$VMPath\$($VM.Name)\LabBuilder Files\SetupComplete.cmd" -Value $SetupCompleteCmd -Force | Out-Null
 
 	# Write out the PowerShell Setup Complete file
 	Write-Verbose "Applying VM $($VM.Name) Setup Complete PowerShell File ..."
@@ -835,11 +851,12 @@ Add-Content -Path `"$($ENV:SystemRoot)\Setup\Scripts\SetupComplete.log`" -Value 
 "@
 
 	Set-Content -Path "$MountPoint\Windows\Setup\Scripts\SetupComplete.ps1" -Value $SetupCompletePs -Force | Out-Null	
+	Set-Content -Path "$VMPath\$($VM.Name)\LabBuilder Files\SetupComplete.ps1" -Value $SetupCompletePs -Force | Out-Null
 	
 	# Dismount the VHD in preparation for boot
 	Write-Verbose "Dismounting VM $($VM.Name) Boot Disk VHDx $VMBootDiskPath ..."
 	Dismount-WindowsImage -Path $MountPoint -Save | Out-Null
-	Remove-Item -Path $MountPoint | Out-Null
+	Remove-Item -Path $MountPoint -Recurse -Force | Out-Null
 } # Set-LabVMInitializationFiles
 ##########################################################################################################################################
 
@@ -1078,6 +1095,51 @@ function Get-LabVMs {
 ##########################################################################################################################################
 
 ##########################################################################################################################################
+function Get-LabVMSelfSignedCert {
+	[CmdLetBinding()]
+	[OutputType([Boolean])]
+	param (
+		[Parameter(Mandatory=$true)]
+		[XML]$Configuration,
+
+		[Parameter(Mandatory=$true)]
+		[System.Collections.Hashtable]$VM,
+
+		[Int]$Timeout = 300
+	)
+	[String]$VMPath = $Configuration.labbuilderconfig.SelectNodes('settings').vmpath
+	[DateTime]$StartTime = Get-Date
+	[System.Management.Automation.Runspaces.PSSession]$Session = $null
+	[PSCredential]$AdmininistratorCredential = New-Object System.Management.Automation.PSCredential ("Administrator", (ConvertTo-SecureString $VM.AdministratorPassword -AsPlainText -Force))
+	[Boolean]$Downloaded = $False
+	While ((-not $Session) -and (((Get-Date) - $StartTime).Seconds) -lt $TimeOut) {
+		# Try and connect to the remote VM for up to $Timeout (5 minutes) seconds.
+		Try {
+			$Session = New-PSSession -ComputerName ($VM.ComputerName) -Credential $AdmininistratorCredential
+		} Catch {
+			Write-Verbose "Trying to connect to $($VM.ComputerName) ..."
+		}
+	} # While
+	If ($Session) {
+		# We connected OK - download the Certificate file
+		While ((-not $Downloaded) -and (((Get-Date) - $StartTime).Seconds) -lt $TimeOut) {
+			Try {
+				
+				Copy-Item -Path "c:\windows\SelfSigned.cer" -Destination "$VMPath\$($VM.Name)\LabBuilder Files\" -FromSession $Session
+				$Downloaded = $True
+			} Catch {
+				Write-Verbose "Waiting for Certificate file on $($VM.ComputerName) ..."
+				Sleep 5
+			}
+		}
+		Remove-PSSession -Session $Session
+	}
+	Return $Downloaded
+
+} # Get-LabVMSelfSignedCert
+##########################################################################################################################################
+
+##########################################################################################################################################
 function Initialize-LabVMs {
 	[CmdLetBinding()]
 	[OutputType([Boolean])]
@@ -1111,6 +1173,9 @@ function Initialize-LabVMs {
 			}
 			If (-not (Test-Path -Path "$VMPath\$($VM.Name)\Virtual Hard Disks")) {
 				New-Item -Path "$VMPath\$($VM.Name)\Virtual Hard Disks" -ItemType Directory | Out-Null
+			}
+			If (-not (Test-Path -Path "$VMPath\$($VM.Name)\LabBuilder Files")) {
+				New-Item -Path "$VMPath\$($VM.Name)\LabBuilder Files" -ItemType Directory | Out-Null
 			}
 
 			# Create the boot disk
@@ -1190,6 +1255,21 @@ function Initialize-LabVMs {
 
 			Start-VM -VMName $VM.Name
 		} # If
+
+		# Has this VM been initialized before (do we have a cer for it)
+		If (-not (Test-Path "$VMPath\$($VM.Name)\LabBuilder Files\SelfSigned.cer")) {
+			# No, so check it is initialized and download the cert.
+			If (Wait-LabVMInit -VM $VM) {
+				Write-Verbose "Attempting to download certificate for VM $($VM.Name) ..."
+				If (Get-LabVMSelfSignedCert -Configuration $Configuration -VM $VM) {
+					Write-Verbose "Certificate for VM $($VM.Name) was downloaded successfully ..."
+				} Else {
+					Write-Verbose "Certificate for VM $($VM.Name) could not be downloaded ..."
+				} # If
+			} Else {
+				Write-Verbose "Initialization for VM $($VM.Name) did not complete ..."
+			} # If
+		} # If
 	} # Foreach
 	Return $True
 } # Initialize-LabVMs
@@ -1245,6 +1325,52 @@ function Remove-LabVMs {
 	}
 	Return $true
 }
+##########################################################################################################################################
+
+##########################################################################################################################################
+function Wait-LabVMInit {
+	[OutputType([Boolean])]
+	[CmdLetBinding()]
+	param (
+		[Parameter(Mandatory=$true)]
+		[System.Collections.Hashtable]$VM,
+
+		[Int]$Timeout = 300
+	)
+
+	[DateTime]$StartTime = Get-Date
+	[Boolean]$Found = $False
+	[System.Management.Automation.Runspaces.PSSession]$Session = $null
+	[PSCredential]$AdmininistratorCredential = New-Object System.Management.Automation.PSCredential ("Administrator", (ConvertTo-SecureString $VM.AdministratorPassword -AsPlainText -Force))
+
+	# Make sure the VM has started
+	Wait-LabVMStart -VM $VM
+
+	# Try to connect to it
+	While ((-not $Session) -and (((Get-Date) - $StartTime).Seconds) -lt $TimeOut) {
+		# Try and connect to the remote VM for up to $Timeout (5 minutes) seconds.
+		Try {
+			$Session = New-PSSession -ComputerName ($VM.ComputerName) -Credential $AdmininistratorCredential
+		} Catch {
+			Write-Verbose "Trying to connect to $($VM.ComputerName) ..."
+		}
+	} # While
+
+	If ($Session) {
+		# We connected OK - check for init file
+		While ((-not $Found) -and (((Get-Date) - $StartTime).Seconds) -lt $TimeOut) {
+			Try {
+				
+				$Found = Invoke-Command -Session $Session {Test-Path "$($ENV:SystemRoot)\Setup\Scripts\InitialSetupCompleted.txt" }
+			} Catch {
+				Write-Verbose "Waiting for Initial Setup Complete file on $($VM.ComputerName) ..."
+				Sleep 5
+			}
+		}
+		Remove-PSSession -Session $Session
+	}
+	Return $Found
+} # Wait-LabVMInit
 ##########################################################################################################################################
 
 ##########################################################################################################################################
@@ -1373,6 +1499,7 @@ Export-ModuleMember -Function `
 	Get-LabVMs,Initialize-LabVMs,Remove-LabVMs, `
 	Get-LabDSCMOFFile,Get-LabDSCStartFile,Get-LabUnattendFile, `
 	Wait-LabVMStart, Wait-LabVMOff, `
+	Get-LabVMSelfSignedCert, `
 	Set-LabVMInitializationFiles, `
 	Install-Lab,Uninstall-Lab
 ##########################################################################################################################################
