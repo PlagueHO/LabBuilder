@@ -627,34 +627,6 @@ function Get-LabDSCMOFFile {
 ##########################################################################################################################################
 
 ##########################################################################################################################################
-function Start-LabVMDSC {
-	[CmdLetBinding()]
-	param (
-		[Parameter(Mandatory=$true)]
-		[XML]$Configuration,
-
-		[Parameter(Mandatory=$true)]
-		[System.Collections.Hashtable]$VM
-	)
-
-	# Are there any DSC Settings to manage?
-	[String]$DSCMOFFile = Get-LabDSCMOFFile -Configuration $Configuration -VM $VM
-
-	If ($DSCMOFFile) {
-		Write-Verbose "Applying VM $($VM.Name) DSC MOF File $DSCMOFFile ..."
-
-		# A MOF File is available for this VM so assemble script for starting DSC on this server
-		New-Item -Path "$MountPoint\Windows\DSC\" -ItemType Directory -Force | Out-Null
-		Copy-Item -Path $DSCMOFFile -Destination "$VMPath\$($VM.Name)\LabBuilder Files\$($VM.ComputerName).mof" -Force | Out-Null
-
-		# Generate the DSC Start up Script file
-		[String]$DSCStartPs = Get-LabDSCStartFile -Configuration $Configuration -VM $VM
-		Set-Content -Path "$VMPath\$($VM.Name)\LabBuilder Files\StartDSC.ps1" -Value $DSCStartPs -Force | Out-Null
-	} # If
-} # Start-LabVMDSC
-##########################################################################################################################################
-
-##########################################################################################################################################
 function Get-LabDSCStartFile {
 	[CmdLetBinding()]
 	[OutputType([String])]
@@ -683,6 +655,34 @@ Start-DSCConfiguration -Path `"$($ENV:SystemRoot)\DSC\`" -Force -Wait -Verbose  
 "@
 	Return $DSCStartPs
 } # Get-LabDSCStartFile
+##########################################################################################################################################
+
+##########################################################################################################################################
+function Initialize-LabVMDSC {
+	[CmdLetBinding()]
+	param (
+		[Parameter(Mandatory=$true)]
+		[XML]$Configuration,
+
+		[Parameter(Mandatory=$true)]
+		[System.Collections.Hashtable]$VM
+	)
+
+	# Are there any DSC Settings to manage?
+	[String]$DSCMOFFile = Get-LabDSCMOFFile -Configuration $Configuration -VM $VM
+
+	If ($DSCMOFFile) {
+		Write-Verbose "Applying VM $($VM.Name) DSC MOF File $DSCMOFFile ..."
+
+		# A MOF File is available for this VM so assemble script for starting DSC on this server
+		New-Item -Path "$MountPoint\Windows\DSC\" -ItemType Directory -Force | Out-Null
+		Copy-Item -Path $DSCMOFFile -Destination "$VMPath\$($VM.Name)\LabBuilder Files\$($VM.ComputerName).mof" -Force | Out-Null
+
+		# Generate the DSC Start up Script file
+		[String]$DSCStartPs = Get-LabDSCStartFile -Configuration $Configuration -VM $VM
+		Set-Content -Path "$VMPath\$($VM.Name)\LabBuilder Files\StartDSC.ps1" -Value $DSCStartPs -Force | Out-Null
+	} # If
+} # Initialize-LabVMDSC
 ##########################################################################################################################################
 
 ##########################################################################################################################################
@@ -1280,6 +1280,9 @@ function Initialize-LabVMs {
 				Write-Verbose "Initialization for VM $($VM.Name) did not complete ..."
 			} # If
 		} # If
+
+		# Create any DSC Files for the VM
+		Initialize-LabVMDSC -Configuration $Configuration -VM $VM
 	} # Foreach
 	Return $True
 } # Initialize-LabVMs
@@ -1507,9 +1510,9 @@ Export-ModuleMember -Function `
 	Get-LabSwitches,Initialize-LabSwitches,Remove-LabSwitches, `
 	Get-LabVMTemplates,Initialize-LabVMTemplates,Remove-LabVMTemplates, `
 	Get-LabVMs,Initialize-LabVMs,Remove-LabVMs, `
-	Get-LabDSCMOFFile,Get-LabDSCStartFile,Get-LabUnattendFile, `
-	Wait-LabVMStart, Wait-LabVMOff, `
+	Get-LabDSCMOFFile,Get-LabDSCStartFile,Initialize-LabVMDSC, `
+	Get-LabUnattendFile, Set-LabVMInitializationFiles, `
+	Wait-LabVMStart, Wait-LabVMOff, Wait-LabVMInit, `
 	Get-LabVMSelfSignedCert, `
-	Set-LabVMInitializationFiles, `
 	Install-Lab,Uninstall-Lab
 ##########################################################################################################################################
