@@ -676,8 +676,8 @@ function Initialize-LabVMDSC {
 		# A MOF File is available for this VM so assemble script for starting DSC on this server
 		New-Item -Path "$MountPoint\Windows\DSC\" -ItemType Directory -Force | Out-Null
 		Copy-Item -Path $DSCMOFFile -Destination "$VMPath\$($VM.Name)\LabBuilder Files\$($VM.ComputerName).mof" -Force | Out-Null
-		If (Test-Path "$VMPath\$($VM.Name)\LabBuilder Files\$($VM.ComputerName).meta.mof") {
-			Copy-Item -Path $DSCMOFFile -Destination "$VMPath\$($VM.Name)\LabBuilder Files\$($VM.ComputerName).meta.mof" -Force | Out-Null
+		If (Test-Path -Path "$VMPath\$($VM.Name)\LabBuilder Files\$($VM.ComputerName).meta.mof") {
+			Copy-Item -Path [System.IO.Path]::ChangeExtension($DSCMOFFile,"meta.mof") -Destination "$VMPath\$($VM.Name)\LabBuilder Files\$($VM.ComputerName).meta.mof" -Force | Out-Null
 		} # If
 
 		# Generate the DSC Start up Script file
