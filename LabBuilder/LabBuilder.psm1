@@ -551,9 +551,26 @@ function Remove-LabVMTemplates {
 ##########################################################################################################################################
 
 ##########################################################################################################################################
-function Get-LabDSCMOFFile {
+Configuration ConfigLCM {
+	Param (
+		[String]$ComputerName,
+		[String]$Thumbprint
+	)
+	Node $ComputerName {
+		LocalConfigurationManager {
+			ConfigurationMode = 'ApplyAndAutoCorrect'
+			CertificateId = $Thumbprint
+			RefreshFrequencyMins = 30
+			RebootNodeIfNeeded = $True
+		} 
+	}
+}
+##########################################################################################################################################
+
+##########################################################################################################################################
+function Set-LabDSCMOFFile {
 	[CmdLetBinding()]
-	[OutputType([String])]
+	[OutputType([Boolean])]
 	param (
 		[Parameter(Mandatory=$true)]
 		[XML]$Configuration,
@@ -563,9 +580,16 @@ function Get-LabDSCMOFFile {
 	)
 
 	[String]$DSCMOFFile = ''
+	[String]$DSCMOFLCMFile = ''
+	[String]$DSCMOFMetaFile = ''
+	[String]$VMPath = $Configuration.labbuilderconfig.settings.vmpath
+
 	If ($VM.DSCMOFFile) {
 		# A MOF File was specified so just use that. 
+		Write-Verbose "Using specified DSC MOF File $($VM.DSCMOFFile) for VM $($VM.Name) ..."
 		$DSCMOFFile = $VM.DSCMOFFile
+		[String]$DSCMOFMetaFile = ([System.IO.Path]::ChangeExtension($DSCMOFFile,"meta.mof"))
+		[String]$DSCMOFLCMFile = ([System.IO.Path]::ChangeExtension($DSCMOFFile,".lcm.mof"))
 	} Else {
 		If ($VM.DSCConfigFile) {
 			# Make sure all the modules required to create the MOF file are installed
@@ -578,17 +602,25 @@ function Get-LabDSCMOFFile {
 				} # If
 			} # Foreach
 
+			# Add the VM Self-Signed Certificate to the Local Machine store and get the Thumbprint	
+			[String]$CertificateFile = "$VMPath\$($VM.Name)\LabBuilder Files\SelfSigned.cer"
+			$Certificate = Import-Certificate -FilePath $CertificateFile -CertStoreLocation "Cert:LocalMachine\My"
+			[String]$CertificateThumbprint = $Certificate.Thumbprint
+
+			# Generate the LCM MOF File
+			Write-Verbose "Creating VM $($VM.Name) DSC LCM MOF File ..."
+			ConfigLCM -OutputPath $($ENV:Temp) -ComputerName $($VM.ComputerName) -Thumbprint $CertificateThumbprint | Out-Null
+			If (-not (Test-Path -Path $DSCMOFFile)) {
+				Throw "A MOF File was not created by the DSC Config File $($VM.DSCCOnfigFile) for VM $($VM.Name)."
+			} # If
+			Rename-Item -Path $DSCMOFFile -Destination ([System.IO.Path]::ChangeExtension($DSCMOFFile,"lcm.mof")) -Force | Out-Null
+
 			# A DSC Config File was provided so create a MOF File out of it.
 			Write-Verbose "Creating VM $($VM.Name) DSC MOF File from DSC Config $($VM.DSCConfigFile) ..."
 			. $VM.DSCConfigFile
 			[String]$DSCConfigName = $VM.DSCConfigName
 			[String]$DSCMOFFile = Join-Path -Path $ENV:Temp -ChildPath "$($VM.ComputerName).mof"
-	
-			# Add the VM Self-Signed Certificate to the Local Machine store and get the Thumbprint
-			[String]$CertificateFile = "$VMPath\$($VM.Name)\LabBuilder Files\SelfSigned.cer"
-			$Certificate = Import-Certificate -FilePath $CertificateFile -CertStoreLocation "Cert:LocalMachine\My"
-			[String]$CertificateThumbprint = $Certificate.Thumbprint
-			
+		
 			# Generate the Configuration Nodes data that always gets passed to the DSC configuration.
 			[String]$ConfigurationData = @"
 @{
@@ -615,21 +647,35 @@ function Get-LabDSCMOFFile {
 			If (-not (Test-Path -Path $DSCMOFFile)) {
 				Throw "A MOF File was not created by the DSC Config File $($VM.DSCCOnfigFile) for VM $($VM.Name)."
 			} # If
-			
+			Copy-Item -Path $DSCMOFFile -Destination "$VMPath\$($VM.Name)\LabBuilder Files\$($VM.ComputerName).mof" -Force | Out-Null
+			Remove-Item -Path $DSCMOFFile
+
 			# Remove the VM Self-Signed Certificate from the Local Machine Store
 			Remove-Item -Path "Cert:LocalMachine\My\$CertificateThumbprint" -Force
 
 			Write-Verbose "DSC MOF File $DSCMOFFile for VM $($VM.Name) was created successfully ..."
 		} # If
 	} # If
-	Return $DSCMOFFile
-} # Get-LabDSCMOFFile
+
+	# Copy the files to the LabBuilder Files folder
+	Copy-Item -Path $DSCMOFFile -Destination "$VMPath\$($VM.Name)\LabBuilder Files\$($VM.ComputerName).mof" -Force | Out-Null
+		
+	If (Test-Path -Path $DSCMOFMetaFile) {
+		Copy-Item -Path $DSCMOFMetaFile -Destination "$VMPath\$($VM.Name)\LabBuilder Files\$($VM.ComputerName).meta.mof" -Force | Out-Null
+	} # If
+
+	If (Test-Path -Path $DSCMOFLCMFile) {
+		Copy-Item -Path $DSCMOFLCMFile -Destination "$VMPath\$($VM.Name)\LabBuilder Files\$($VM.ComputerName).lcm.mof" -Force | Out-Null
+	} # If
+
+	Return $True
+} # Set-LabDSCMOFFile
 ##########################################################################################################################################
 
 ##########################################################################################################################################
-function Get-LabDSCStartFile {
+function Set-LabDSCStartFile {
 	[CmdLetBinding()]
-	[OutputType([String])]
+	[OutputType([Boolean])]
 	param (
 		[Parameter(Mandatory=$true)]
 		[XML]$Configuration,
@@ -637,7 +683,9 @@ function Get-LabDSCStartFile {
 		[Parameter(Mandatory=$true)]
 		[System.Collections.Hashtable]$VM
 	)
+
 	[String]$DSCStartPs = ''
+	[String]$VMPath = $Configuration.labbuilderconfig.settings.vmpath
 
 	# Automatically install any modules that are required by DSC onto the server
 	# The server Must have PowerShell 5.0 installed to do this!
@@ -663,12 +711,14 @@ Find-Module -Name $Module | Install-Module -Verbose *>> `"$($ENV:SystemRoot)\Set
 
 	# Start the actual DSC Configuration
 	$DSCStartPs += @"
-Set-DscLocalConfigurationManager -Path `"$($ENV:SystemRoot)\Setup\Scripts\`" -Verbose  *>> `"$($ENV:SystemRoot)\Setup\Scripts\DSC.log`"
-Start-DSCConfiguration -Path `"$($ENV:SystemRoot)\Setup\Scripts\`" -Force -Wait -Verbose  *>> `"$($ENV:SystemRoot)\Setup\Scripts\DSC.log`"
+Set-DscLocalConfigurationManager -Path `"$($ENV:SystemRoot)\Setup\Scripts\LCM\`" -Verbose  *>> `"$($ENV:SystemRoot)\Setup\Scripts\DSC.log`"
+Start-DSCConfiguration -Path `"$($ENV:SystemRoot)\Setup\Scripts\DSC\`" -Force -Wait -Verbose  *>> `"$($ENV:SystemRoot)\Setup\Scripts\DSC.log`"
 
 "@
-	Return $DSCStartPs
-} # Get-LabDSCStartFile
+	Set-Content -Path "$VMPath\$($VM.Name)\LabBuilder Files\StartDSC.ps1" -Value $DSCStartPs -Force | Out-Null
+
+	Return $True
+} # Set-LabDSCStartFile
 ##########################################################################################################################################
 
 ##########################################################################################################################################
@@ -683,22 +733,10 @@ function Initialize-LabVMDSC {
 	)
 
 	# Are there any DSC Settings to manage?
-	[String]$DSCMOFFile = Get-LabDSCMOFFile -Configuration $Configuration -VM $VM
+	Set-LabDSCMOFFile -Configuration $Configuration -VM $VM
 
-	If ($DSCMOFFile) {
-		Write-Verbose "Applying VM $($VM.Name) DSC MOF File $DSCMOFFile ..."
-
-		# A MOF File is available for this VM so assemble script for starting DSC on this server
-		Copy-Item -Path $DSCMOFFile -Destination "$VMPath\$($VM.Name)\LabBuilder Files\$($VM.ComputerName).mof" -Force | Out-Null
-		$DSCMOFMetaFile = ([System.IO.Path]::ChangeExtension($DSCMOFFile,"meta.mof"))
-		If (Test-Path -Path $DSCMOFMetaFile) {
-			Copy-Item -Path $DSCMOFMetaFile -Destination "$VMPath\$($VM.Name)\LabBuilder Files\$($VM.ComputerName).meta.mof" -Force | Out-Null
-		} # If
-
-		# Generate the DSC Start up Script file
-		[String]$DSCStartPs = Get-LabDSCStartFile -Configuration $Configuration -VM $VM
-		Set-Content -Path "$VMPath\$($VM.Name)\LabBuilder Files\StartDSC.ps1" -Value $DSCStartPs -Force | Out-Null
-	} # If
+	# Generate the DSC Start up Script file
+	Set-LabDSCStartFile -Configuration $Configuration -VM $VM
 } # Initialize-LabVMDSC
 ##########################################################################################################################################
 
@@ -714,7 +752,7 @@ function Start-LabVMDSC {
 
 		[Int]$Timeout = 300
 	)
-	[String]$VMPath = $Configuration.labbuilderconfig.SelectNodes('settings').vmpath
+	[String]$VMPath = $Configuration.labbuilderconfig.settings.vmpath
 	[DateTime]$StartTime = Get-Date
 	[System.Management.Automation.Runspaces.PSSession]$Session = $null
 	[PSCredential]$AdmininistratorCredential = New-Object System.Management.Automation.PSCredential ("Administrator", (ConvertTo-SecureString $VM.AdministratorPassword -AsPlainText -Force))
@@ -1577,7 +1615,7 @@ Export-ModuleMember -Function `
 	Get-LabSwitches,Initialize-LabSwitches,Remove-LabSwitches, `
 	Get-LabVMTemplates,Initialize-LabVMTemplates,Remove-LabVMTemplates, `
 	Get-LabVMs,Initialize-LabVMs,Remove-LabVMs, `
-	Get-LabDSCMOFFile,Get-LabDSCStartFile,Initialize-LabVMDSC, `
+	Set-LabDSCMOFFile,Set-LabDSCStartFile,Initialize-LabVMDSC, `
 	Get-LabUnattendFile, Set-LabVMInitializationFiles, `
 	Wait-LabVMStart, Wait-LabVMOff, Wait-LabVMInit, `
 	Get-LabVMSelfSignedCert, `

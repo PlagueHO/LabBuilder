@@ -432,10 +432,10 @@ Describe "Remove-LabVMTemplates" {
 ##########################################################################################################################################
 
 ##########################################################################################################################################
-Describe "Get-LabDSCMOFFile" {
+Describe "Set-LabDSCMOFFile" {
 	Context "No parameters passed" {
 		It "Fails" {
-			{ Get-LabDSCMOFFile } | Should Throw
+			{ Set-LabDSCMOFFile } | Should Throw
 		}
 	}
 	Context "Valid Parameters Passed" {
@@ -443,7 +443,7 @@ Describe "Get-LabDSCMOFFile" {
 		$Switches = Get-LabSwitches -Configuration $Config
 		$VMTemplates = Get-LabVMTemplates -Configuration $Config
 		$VMs = Get-LabVMs -Configuration $Config -VMTemplates $VMTemplates -Switches $Switches
-		[String]$MOFFileName = Get-LabDSCMOFFile -Configuration $Config -VM $VMs
+		[String]$MOFFileName = Set-LabDSCMOFFile -Configuration $Config -VM $VMs
 		It "Returns Filename that exists" {
 			(Test-Path -Path $MOFFileName) | Should Be $True
 		}
@@ -453,10 +453,10 @@ Describe "Get-LabDSCMOFFile" {
 ##########################################################################################################################################
 
 ##########################################################################################################################################
-Describe "Get-LabDSCStartFile" {
+Describe "Set-LabDSCStartFile" {
 	Context "No parameters passed" {
 		It "Fails" {
-			{ Get-LabDSCStartFile } | Should Throw
+			{ Set-LabDSCStartFile } | Should Throw
 		}
 	}
 	Context "Valid Parameters Passed" {
@@ -464,7 +464,7 @@ Describe "Get-LabDSCStartFile" {
 		$Switches = Get-LabSwitches -Configuration $Config
 		$VMTemplates = Get-LabVMTemplates -Configuration $Config
 		$VMs = Get-LabVMs -Configuration $Config -VMTemplates $VMTemplates -Switches $Switches
-		[String]$DSCStartFile = Get-LabDSCStartFile -Configuration $Config -VM $VMs
+		[String]$DSCStartFile = Set-LabDSCStartFile -Configuration $Config -VM $VMs
 		It "Returns Expected File Content" {
 			$DSCStartFile | Should Be $True
 		}
