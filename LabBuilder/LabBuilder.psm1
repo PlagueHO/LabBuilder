@@ -706,8 +706,8 @@ Find-Module -Name $Module | Install-Module -Verbose *>> `"$($ENV:SystemRoot)\Set
 
 	# Start the actual DSC Configuration
 	$DSCStartPs += @"
-Set-DscLocalConfigurationManager -Path `"$($ENV:SystemRoot)\Setup\Scripts\LCM\`" -Verbose  *>> `"$($ENV:SystemRoot)\Setup\Scripts\DSC.log`"
-Start-DSCConfiguration -Path `"$($ENV:SystemRoot)\Setup\Scripts\DSC\`" -Force -Wait -Verbose  *>> `"$($ENV:SystemRoot)\Setup\Scripts\DSC.log`"
+Set-DscLocalConfigurationManager -Path `"$($ENV:SystemRoot)\Setup\Scripts\`" -Verbose  *>> `"$($ENV:SystemRoot)\Setup\Scripts\DSC.log`"
+Start-DSCConfiguration -Path `"$($ENV:SystemRoot)\Setup\Scripts\`" -Force -Wait -Verbose  *>> `"$($ENV:SystemRoot)\Setup\Scripts\DSC.log`"
 
 "@
 	Set-Content -Path "$VMPath\$($VM.Name)\LabBuilder Files\StartDSC.ps1" -Value $DSCStartPs -Force | Out-Null
