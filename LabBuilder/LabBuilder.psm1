@@ -701,8 +701,8 @@ function Set-LabDSCStartFile {
 [Boolean]`$Installed = `$False
 While ((-not `$Installed) -and (`$Count -lt 5)) {
 	Try {
-		PackageManagement\Get-PackageProvider -Name NuGet -Force *>> `"$($ENV:SystemRoot)\Setup\Scripts\NuGetInstall.log`"
-		PackageManagement\Set-PackageSource -Name PSGallery -Trusted *>> `"$($ENV:SystemRoot)\Setup\Scripts\NuGetInstall.log`"
+		PackageManagement\Get-PackageProvider -Name NuGet -Force
+		PackageManagement\Set-PackageSource -Name PSGallery -Trusted
 		`$Installed = `$True
 	} Catch {
 		`$Count++
