@@ -580,7 +580,6 @@ function Set-LabDSCMOFFile {
 	)
 
 	[String]$DSCMOFFile = ''
-	[String]$DSCMOFLCMFile = ''
 	[String]$DSCMOFMetaFile = ''
 	[String]$VMPath = $Configuration.labbuilderconfig.settings.vmpath
 
@@ -588,6 +587,7 @@ function Set-LabDSCMOFFile {
 		# A MOF File was specified so just use that. 
 		Write-Verbose "Using specified DSC MOF File $($VM.DSCMOFFile) for VM $($VM.Name) ..."
 		$DSCMOFFile = $VM.DSCMOFFile
+		$DSCMOFMetaFile = ([System.IO.Path]::ChangeExtension($DSCMOFFile,"meta.mof"))
 	} Else {
 		If ($VM.DSCConfigFile) {
 			# Make sure all the modules required to create the MOF file are installed
@@ -606,15 +606,15 @@ function Set-LabDSCMOFFile {
 			[String]$CertificateThumbprint = $Certificate.Thumbprint
 
 			# Set the predictated MOF File name
-			[String]$DSCMOFFile = Join-Path -Path $ENV:Temp -ChildPath "$($VM.ComputerName).mof"
-
+			$DSCMOFFile = Join-Path -Path $ENV:Temp -ChildPath "$($VM.ComputerName).mof"
+			$DSCMOFMetaFile = ([System.IO.Path]::ChangeExtension($DSCMOFFile,"meta.mof"))
+			
 			# Generate the LCM MOF File
 			Write-Verbose "Creating VM $($VM.Name) DSC LCM MOF File ..."
 			ConfigLCM -OutputPath $($ENV:Temp) -ComputerName $($VM.ComputerName) -Thumbprint $CertificateThumbprint | Out-Null
-			If (-not (Test-Path -Path $DSCMOFFile)) {
-				Throw "A MOF File was not created by the DSC Config File $($VM.DSCCOnfigFile) for VM $($VM.Name)."
+			If (-not (Test-Path -Path $DSCMOFMetaFile)) {
+				Throw "A Meta MOF File was not created by the DSC LCM Config for VM $($VM.Name)."
 			} # If
-			Rename-Item -Path $DSCMOFFile -Destination ([System.IO.Path]::ChangeExtension($DSCMOFFile,"lcm.mof")) -Force | Out-Null
 
 			# A DSC Config File was provided so create a MOF File out of it.
 			Write-Verbose "Creating VM $($VM.Name) DSC MOF File from DSC Config $($VM.DSCConfigFile) ..."
@@ -659,14 +659,8 @@ function Set-LabDSCMOFFile {
 
 	Copy-Item -Path $DSCMOFFile -Destination "$VMPath\$($VM.Name)\LabBuilder Files\$($VM.ComputerName).mof" -Force | Out-Null
 		
-	[String]$DSCMOFMetaFile = ([System.IO.Path]::ChangeExtension($DSCMOFFile,"meta.mof"))
 	If (Test-Path -Path $DSCMOFMetaFile) {
 		Copy-Item -Path $DSCMOFMetaFile -Destination "$VMPath\$($VM.Name)\LabBuilder Files\$($VM.ComputerName).meta.mof" -Force | Out-Null
-	} # If
-
-	[String]$DSCMOFLCMFile = ([System.IO.Path]::ChangeExtension($DSCMOFFile,".lcm.mof"))
-	If (Test-Path -Path $DSCMOFLCMFile) {
-		Copy-Item -Path $DSCMOFLCMFile -Destination "$VMPath\$($VM.Name)\LabBuilder Files\$($VM.ComputerName).lcm.mof" -Force | Out-Null
 	} # If
 
 	Return $True
