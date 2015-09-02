@@ -588,8 +588,6 @@ function Set-LabDSCMOFFile {
 		# A MOF File was specified so just use that. 
 		Write-Verbose "Using specified DSC MOF File $($VM.DSCMOFFile) for VM $($VM.Name) ..."
 		$DSCMOFFile = $VM.DSCMOFFile
-		[String]$DSCMOFMetaFile = ([System.IO.Path]::ChangeExtension($DSCMOFFile,"meta.mof"))
-		[String]$DSCMOFLCMFile = ([System.IO.Path]::ChangeExtension($DSCMOFFile,".lcm.mof"))
 	} Else {
 		If ($VM.DSCConfigFile) {
 			# Make sure all the modules required to create the MOF file are installed
@@ -607,6 +605,9 @@ function Set-LabDSCMOFFile {
 			$Certificate = Import-Certificate -FilePath $CertificateFile -CertStoreLocation "Cert:LocalMachine\My"
 			[String]$CertificateThumbprint = $Certificate.Thumbprint
 
+			# Set the predictated MOF File name
+			[String]$DSCMOFFile = Join-Path -Path $ENV:Temp -ChildPath "$($VM.ComputerName).mof"
+
 			# Generate the LCM MOF File
 			Write-Verbose "Creating VM $($VM.Name) DSC LCM MOF File ..."
 			ConfigLCM -OutputPath $($ENV:Temp) -ComputerName $($VM.ComputerName) -Thumbprint $CertificateThumbprint | Out-Null
@@ -619,7 +620,6 @@ function Set-LabDSCMOFFile {
 			Write-Verbose "Creating VM $($VM.Name) DSC MOF File from DSC Config $($VM.DSCConfigFile) ..."
 			. $VM.DSCConfigFile
 			[String]$DSCConfigName = $VM.DSCConfigName
-			[String]$DSCMOFFile = Join-Path -Path $ENV:Temp -ChildPath "$($VM.ComputerName).mof"
 		
 			# Generate the Configuration Nodes data that always gets passed to the DSC configuration.
 			[String]$ConfigurationData = @"
@@ -647,8 +647,6 @@ function Set-LabDSCMOFFile {
 			If (-not (Test-Path -Path $DSCMOFFile)) {
 				Throw "A MOF File was not created by the DSC Config File $($VM.DSCCOnfigFile) for VM $($VM.Name)."
 			} # If
-			Copy-Item -Path $DSCMOFFile -Destination "$VMPath\$($VM.Name)\LabBuilder Files\$($VM.ComputerName).mof" -Force | Out-Null
-			Remove-Item -Path $DSCMOFFile
 
 			# Remove the VM Self-Signed Certificate from the Local Machine Store
 			Remove-Item -Path "Cert:LocalMachine\My\$CertificateThumbprint" -Force
@@ -658,12 +656,15 @@ function Set-LabDSCMOFFile {
 	} # If
 
 	# Copy the files to the LabBuilder Files folder
+
 	Copy-Item -Path $DSCMOFFile -Destination "$VMPath\$($VM.Name)\LabBuilder Files\$($VM.ComputerName).mof" -Force | Out-Null
 		
+	[String]$DSCMOFMetaFile = ([System.IO.Path]::ChangeExtension($DSCMOFFile,"meta.mof"))
 	If (Test-Path -Path $DSCMOFMetaFile) {
 		Copy-Item -Path $DSCMOFMetaFile -Destination "$VMPath\$($VM.Name)\LabBuilder Files\$($VM.ComputerName).meta.mof" -Force | Out-Null
 	} # If
 
+	[String]$DSCMOFLCMFile = ([System.IO.Path]::ChangeExtension($DSCMOFFile,".lcm.mof"))
 	If (Test-Path -Path $DSCMOFLCMFile) {
 		Copy-Item -Path $DSCMOFLCMFile -Destination "$VMPath\$($VM.Name)\LabBuilder Files\$($VM.ComputerName).lcm.mof" -Force | Out-Null
 	} # If
