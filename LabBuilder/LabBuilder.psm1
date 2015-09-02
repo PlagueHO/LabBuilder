@@ -638,7 +638,7 @@ function Set-LabDSCMOFFile {
 			# Write it to a temp file
 			[String]$ConfigurationTempFile = (Join-Path -Path $ENV:Temp -ChildPath "DSCConfigData.psd1")
 			If (Test-Path -Path $ConfigurationTempFile) {
-				Remove-Item -Path $ConfigurationTempFile
+				Remove-Item -Path $ConfigurationTempFile -Force | Out-Null
 			}
 			Set-Content -Path $ConfigurationTempFile -Value $ConfigurationData
 			
@@ -648,8 +648,10 @@ function Set-LabDSCMOFFile {
 				Throw "A MOF File was not created by the DSC Config File $($VM.DSCCOnfigFile) for VM $($VM.Name)."
 			} # If
 
+			Remove-Item -Path $ConfigurationTempFile -Force | Out-Null
+
 			# Remove the VM Self-Signed Certificate from the Local Machine Store
-			Remove-Item -Path "Cert:LocalMachine\My\$CertificateThumbprint" -Force
+			Remove-Item -Path "Cert:LocalMachine\My\$CertificateThumbprint" -Force | OUt-Null
 
 			Write-Verbose "DSC MOF File $DSCMOFFile for VM $($VM.Name) was created successfully ..."
 		} # If
@@ -658,9 +660,18 @@ function Set-LabDSCMOFFile {
 	# Copy the files to the LabBuilder Files folder
 
 	Copy-Item -Path $DSCMOFFile -Destination "$VMPath\$($VM.Name)\LabBuilder Files\$($VM.ComputerName).mof" -Force | Out-Null
-		
+
+	If (-not $VM.DSCMOFFile) {
+		# Remove Temporary files created by DSC
+		Remove-Item -Path $DSCMOFFile -Force | OUt-Null
+	}
+
 	If (Test-Path -Path $DSCMOFMetaFile) {
 		Copy-Item -Path $DSCMOFMetaFile -Destination "$VMPath\$($VM.Name)\LabBuilder Files\$($VM.ComputerName).meta.mof" -Force | Out-Null
+		If (-not $VM.DSCMOFFile) {
+			# Remove Temporary files created by DSC
+			Remove-Item -Path $DSCMOFMetaFile -Force | OUt-Null
+		}
 	} # If
 
 	Return $True
