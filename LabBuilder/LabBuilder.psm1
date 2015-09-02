@@ -1,7 +1,14 @@
 ﻿#Requires -version 5.0
 
 ##########################################################################################################################################
-# Helper functions that aren't exposed
+# Module Variables
+##########################################################################################################################################
+# This is the URL to the WMF Production Preview
+[String]$Script:WMF5DownloadURL = 'http://download.microsoft.com/download/3/F/D/3FD04B49-26F9-4D9A-8C34-4533B9D5B020/Win8.1AndW2K12R2-KB3066437-x64.msu'
+[String]$Script:WMF5InstallerFilename = ''
+[String]$Script:WMF5InstallerPath = ''
+##########################################################################################################################################
+# Helper functions that aren't exported
 ##########################################################################################################################################
 function Test-Admin()
 {
@@ -16,6 +23,23 @@ function Test-Admin()
     Return ($myWindowsPrincipal.IsInRole($adminRole))
 }
 ##########################################################################################################################################
+function Download-WMF5Installer()
+{
+    # Only downloads for Win8.1/WS2K12R2
+	[String]$URL = $Script:WMF5DownloadURL
+	$Script:WMF5InstallerFilename = $URL.Substring($URL.LastIndexOf("/") + 1)
+	$Script:WMF5InstallerPath = Join-Path -Path $ENV:Temp -ChildPath $Script:WMF5InstallerFilename
+	If (-not (Test-Path -Path $Script:WMF5InstallerPath)) {
+		Try {
+			Invoke-WebRequest -Uri $URL -OutFile $Script:WMF5InstallerPath
+		} Catch {
+			Return $False
+		}
+	}
+    Return $True
+}
+##########################################################################################################################################
+
 
 ##########################################################################################################################################
 # Main CmdLets
@@ -185,6 +209,11 @@ function Initialize-LabDSC {
 		Throw "Configuration is invalid."
 	}
 	
+	# Download WMF 5.0 in case any VMs need it
+	If (-not (Download-WMF5Installer)) {
+		Throw "An error occurred downloading the WMF 5.0 Installer."
+	}
+
 	# Install DSC Components
 	Write-Verbose "Configuring Lab DSC Components ..."
 	
