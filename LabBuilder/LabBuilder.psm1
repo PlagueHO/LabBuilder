@@ -5,6 +5,7 @@
 ##########################################################################################################################################
 # This is the URL to the WMF Production Preview
 [String]$Script:WMF5DownloadURL = 'http://download.microsoft.com/download/3/F/D/3FD04B49-26F9-4D9A-8C34-4533B9D5B020/Win8.1AndW2K12R2-KB3066437-x64.msu'
+[Int]$Script:WMF5Revision = 16384
 [String]$Script:WMF5InstallerFilename = ''
 [String]$Script:WMF5InstallerPath = ''
 ##########################################################################################################################################
@@ -927,6 +928,10 @@ function Set-LabVMInitializationFiles {
 	New-Item -Path $MountPoint -ItemType Directory | Out-Null
 	Mount-WindowsImage -ImagePath $VMBootDiskPath -Path $MountPoint -Index 1 | Out-Null
 
+	# Copy the WMF 5.0 Installer to the VM in case it is needed
+	Write-Verbose "Applying VM $($VM.Name) WMF 5.0 ..."
+	Add-WindowsPackage -PackagePath $Script:WMF5InstallerPath -Path $MountPoint | Out-Null
+
 	# Create the scripts folder where setup scripts will be put
 	New-Item -Path "$MountPoint\Windows\Setup\Scripts" -ItemType Directory | Out-Null
 
@@ -939,25 +944,24 @@ function Set-LabVMInitializationFiles {
 "@
 	[String]$SetupCompletePs = @"
 New-SelfSignedCertificate -DnsName $($VM.ComputerName) -CertStoreLocation cert:\LocalMachine\My | Export-Certificate -FilePath c:\Windows\SelfSigned.cer -Force
-Add-Content -Path `"$($ENV:SystemRoot)\Setup\Scripts\SetupComplete.log`" -Value 'Self-signed certificate created and saved to C:\Windows\SelfSigned.cer ...' -Encoding Ascii
+Add-Content -Path `"`$(`$ENV:SystemRoot)\Setup\Scripts\SetupComplete.log`" -Value 'Self-signed certificate created and saved to C:\Windows\SelfSigned.cer ...' -Encoding Ascii
 [Int]`$Count = 0
 [Boolean]`$Installed = `$False
 While ((-not `$Installed) -and (`$Count -lt 5)) {
 	Try {
-		PackageManagement\Get-PackageProvider -Name NuGet -Force *>> `"$($ENV:SystemRoot)\Setup\Scripts\NuGetInstall.log`"
-		PackageManagement\Set-PackageSource -Name PSGallery -Trusted *>> `"$($ENV:SystemRoot)\Setup\Scripts\NuGetInstall.log`"
+		PackageManagement\Get-PackageProvider -Name NuGet -Force *>> `"`$(`$ENV:SystemRoot)\Setup\Scripts\NuGetInstall.log`"
+		PackageManagement\Set-PackageSource -Name PSGallery -Trusted *>> `"`$(`$ENV:SystemRoot)\Setup\Scripts\NuGetInstall.log`"
 		`$Installed = `$True
 	} Catch {
 		`$Count++
-		Add-Content -Path `"$($ENV:SystemRoot)\Setup\Scripts\SetupComplete.log`" -Value 'Error installing NuGet ...' -Encoding Ascii
+		Add-Content -Path `"`$(`$ENV:SystemRoot)\Setup\Scripts\SetupComplete.log`" -Value 'Error installing NuGet ...' -Encoding Ascii
 	}
 }
-Add-Content -Path `"$($ENV:SystemRoot)\Setup\Scripts\SetupComplete.log`" -Value 'NuGet Installed ...' -Encoding Ascii
+Add-Content -Path `"`$(`$ENV:SystemRoot)\Setup\Scripts\SetupComplete.log`" -Value 'NuGet Installed ...' -Encoding Ascii
 # iex ((new-object net.webclient).DownloadString('https://chocolatey.org/install.ps1'))
-# Add-Content -Path `"$($ENV:SystemRoot)\Setup\Scripts\SetupComplete.log`" -Value 'Chocolatey Installed ...' -Encoding Ascii
+# Add-Content -Path `"`$(`$ENV:SystemRoot)\Setup\Scripts\SetupComplete.log`" -Value 'Chocolatey Installed ...' -Encoding Ascii
 Enable-PSRemoting -SkipNetworkProfileCheck -Force
-Add-Content -Path `"$($ENV:SystemRoot)\Setup\Scripts\SetupComplete.log`" -Value 'Windows Remoting Enabled ...' -Encoding Ascii
-
+Add-Content -Path `"`$(`$ENV:SystemRoot)\Setup\Scripts\SetupComplete.log`" -Value 'Windows Remoting Enabled ...' -Encoding Ascii
 "@
 	If ($VM.SetupComplete) {
         [String]$SetupComplete = $VM.SetupComplete
