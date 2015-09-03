@@ -970,12 +970,12 @@ function Set-LabVMInitializationFiles {
 	[String]$SetupCompleteCmd = @"
 "@
 	[String]$SetupCompletePs = @"
-. `$(`$ENV:SystemRoot)\Setup\Scripts\New-SelfSignedCertificateEx.ps1
+. `"`$(`$ENV:SystemRoot)\Setup\Scripts\New-SelfSignedCertificateEx.ps1`"
 New-SelfsignedCertificateEx -Subject 'CN=$($VM.ComputerName)' -EKU 'Server Authentication', 'Client authentication' ``
 	-KeyUsage 'KeyEncipherment, DigitalSignature' -SAN '$($VM.ComputerName)' -FriendlyName '$($VM.ComputerName) Self-Signed Certificate' ``
 	-Exportable -StoreLocation 'LocalMachine'
-$Cert = Get-ChildItem -Path cert:\LocalMachine\My | Where-Object { $_.FriendlyName -eq '$($VM.ComputerName) Self-Signed Certificate' }
-Export-Certificate -Type CERT -Cert $Cert -FilePath `"`$(`$ENV:SystemRoot)\SelfSigned.cer`"
+`$Cert = Get-ChildItem -Path cert:\LocalMachine\My | Where-Object { `$_.FriendlyName -eq '$($VM.ComputerName) Self-Signed Certificate' }
+Export-Certificate -Type CERT -Cert `$Cert -FilePath `"`$(`$ENV:SystemRoot)\SelfSigned.cer`"
 Add-Content -Path `"`$(`$ENV:SystemRoot)\Setup\Scripts\SetupComplete.log`" -Value 'Self-signed certificate created and saved to C:\Windows\SelfSigned.cer ...' -Encoding Ascii
 [Int]`$Count = 0
 [Boolean]`$Installed = `$False
