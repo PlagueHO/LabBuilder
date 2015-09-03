@@ -52,7 +52,7 @@ function Download-CertGenerator()
 	$Script:CertGenZipPath = Join-Path -Path $Script:WorkingFolder -ChildPath $Script:CertGenZipFilename
 	If (-not (Test-Path -Path $Script:CertGenZipPath)) {
 		Try {
-			Invoke-WebRequest -Uri $URL -OutFile $Script:CertGenDownloadURL
+			Invoke-WebRequest -Uri $URL -OutFile $Script:CertGenZipPath
 		} Catch {
 			Return $False
 		} # Try
