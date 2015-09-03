@@ -683,7 +683,6 @@ function Set-LabDSCMOFFile {
 	AllNodes = @(
 		@{
 			NodeName = '$($VM.ComputerName)'
-			DomainName = '$($Configuration.labbuilderconfig.settings.domainname)'
 			CertificateFile = '$CertificateFile'
             Thumbprint = '$CertificateThumbprint' 
 			LocalAdminPassword = '$($VM.administratorpassword)'
