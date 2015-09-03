@@ -51,6 +51,7 @@ Configuration ROOTCA
 					& "certutil.exe -setreg CA\CACertPublicationURLs `"$($Node.CACertPublicationURLs)`"" *>> c:\windows\setup\scripts\certutil.log
 				}
 				Restart-Service -Name CertSvc
+				Add-Content -Path 'c:\windows\setup\scripts\certutil.log' -Value "Certificate Service Restarted ..."
 			}
 			GetScript = {
 				Return @{
