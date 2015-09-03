@@ -42,13 +42,13 @@ Configuration ROOTCA
 		{
 			SetScript = {
 				If ($Using:Node.DSConifgDN) {
-					& "certutil.exe -setreg CA\DSConfigDN `"$($Using:Node.DSConfigDN)`""
+					& "$($ENV:SystemRoot)\system32\certutil.exe -setreg CA\DSConfigDN `"$($Using:Node.DSConfigDN)`""
 				}
 				If ($Using:Node.CRLPublicationURLs) {
-					& "certutil.exe -setreg CA\CRLPublicationURLs `"$($Using:Node.CRLPublicationURLs)`""
+					& "$($ENV:SystemRoot)\System32\certutil.exe -setreg CA\CRLPublicationURLs `"$($Using:Node.CRLPublicationURLs)`""
 				}
 				If ($Using:Node.CACertPublicationURLs) {
-					& "certutil.exe -setreg CA\CACertPublicationURLs `"$($Using:Node.CACertPublicationURLs)`""
+					& "$($ENV:SystemRoot)\System32\certutil.exe -setreg CA\CACertPublicationURLs `"$($Using:Node.CACertPublicationURLs)`""
 				}
 				Restart-Service -Name CertSvc
 				Add-Content -Path 'c:\windows\setup\scripts\certutil.log' -Value "Certificate Service Restarted ..."
