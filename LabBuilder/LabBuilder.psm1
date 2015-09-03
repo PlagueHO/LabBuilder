@@ -6,10 +6,10 @@
 # This is the URL to the WMF Production Preview
 [String]$Script:WorkingFolder = $ENV:Temp
 [String]$Script:WMF5DownloadURL = 'http://download.microsoft.com/download/3/F/D/3FD04B49-26F9-4D9A-8C34-4533B9D5B020/Win8.1AndW2K12R2-KB3066437-x64.msu'
-[String]$Script:WMF5InstallerFilename = $URL.Substring($URL.LastIndexOf("/") + 1)
+[String]$Script:WMF5InstallerFilename = ($Script:WMF5DownloadURL).Substring(($Script:WMF5DownloadURL).LastIndexOf("/") + 1)
 [String]$Script:WMF5InstallerPath = Join-Path -Path $Script:WorkingFolder -ChildPath $Script:WMF5InstallerFilename
 [String]$Script:CertGenDownloadURL = 'https://gallery.technet.microsoft.com/scriptcenter/Self-signed-certificate-5920a7c6/file/101251/1/New-SelfSignedCertificateEx.zip'
-[String]$Script:CertGenZipFilename = $URL.Substring($URL.LastIndexOf("/") + 1)
+[String]$Script:CertGenZipFilename = ($Script:CertGenDownloadURL).Substring(($Script:CertGenDownloadURL).LastIndexOf("/") + 1)
 [String]$Script:CertGenZipPath = Join-Path -Path $Script:WorkingFolder -ChildPath $Script:CertGenZipFilename
 [String]$Script:CertGenPS1Filename = 'New-SelfSignedCertificateEx.ps1'
 [String]$Script:CertGenPS1Path = Join-Path -Path $Script:WorkingFolder -ChildPath $Script:CertGenPS1Filename
