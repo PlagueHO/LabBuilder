@@ -1,4 +1,4 @@
-Configuration PRIMARYDC
+Configuration SECONDARYDC
 {
 	Import-DscResource –ModuleName 'PSDesiredStateConfiguration'
 	Import-DscResource -ModuleName xActiveDirectory 
@@ -24,20 +24,21 @@ Configuration PRIMARYDC
 			DependsOn = "[WindowsFeature]DNSInstall" 
         } 
 
-        xADDomain PrimaryDC 
-        { 
-            DomainName = $Node.DomainName 
-            DomainAdministratorCredential = $DomainAdminCredential 
-            SafemodeAdministratorPassword = $LocalAdminCredential 
-            DependsOn = "[WindowsFeature]ADDSInstall" 
-        } 
-
-        xWaitForADDomain DscForestWait 
-        { 
-            DomainName = $Node.DomainName 
+        xWaitForADDomain DscForestWait
+        {
+            DomainName = $Node.DomainName
             DomainUserCredential = $DomainAdminCredential 
-            DependsOn = "[xADDomain]PrimaryDC" 
-        } 
-
+            RetryCount = $Node.RetryCount
+            RetryIntervalSec = $Node.RetryIntervalSec
+            DependsOn = "[WindowsFeature]ADDSInstall"
+        }
+        
+		xADDomainController SecondaryDC
+        {
+            DomainName = $Node.DomainName
+            DomainAdministratorCredential = $DomainAdminCredential
+            SafemodeAdministratorPassword = $DomainAdminCredential 
+            DependsOn = "[xWaitForADDomain]DscForestWait"
+        }	
 	}
 }

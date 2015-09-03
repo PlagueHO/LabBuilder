@@ -65,8 +65,7 @@
       </dsc>
       <adapters>
         <adapter name="General Purpose External"
-                 switchname="General Purpose External"
-                 macaddress="00155D010801" />
+                 switchname="General Purpose External" />
       </adapters>
     </vm>
     
@@ -86,8 +85,31 @@
       </dsc>
       <adapters>
         <adapter name="General Purpose External"
-                 switchname="General Purpose External"
-                 macaddress="00155D010801" />
+                 switchname="General Purpose External" />
+        <adapter name="Domain Private Site A"
+                 switchname="Domain Private Site A" />
+      </adapters>
+    </vm>
+
+    <vm name="BMDLAB.COM SA_DC2"
+        template="Template Windows Server 2012 R2 Datacenter CORE"
+        computername="SA_DC2"
+        usedifferencingbootdisk="Y">
+      <dsc configname="SECONDARYDC"
+           configfile="SECONDARYDC.DSC.ps1">
+        <parameters>
+          DomainName = "BMDLAB.COM"
+          DomainAdminPassword = "P@ssword!1"
+        </parameters>
+        <modules>
+          <module name="xActiveDirectory" />
+        </modules>
+      </dsc>
+      <adapters>
+        <adapter name="General Purpose External"
+                 switchname="General Purpose External" />
+        <adapter name="Domain Private Site A"
+                 switchname="Domain Private Site A" />
       </adapters>
     </vm>
 
