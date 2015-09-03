@@ -41,15 +41,14 @@ Configuration ROOTCA
 		Script ADCSAdvConfig
 		{
 			SetScript = {
-				[String]$DN = ''
-				$Node.DomainName.Split('.') | % { $DN = "DC=$($_),$DN" }
-				$DN = $DN.SubString(0,$DN.Length-1)
-				& "certutil.exe -setreg CA\DSConfigDN `"CN=Configuration,$DN`" "
+				If ($Node.DSConifgDN) {
+					& "certutil.exe -setreg CA\DSConfigDN `"$($Node.DSConfigDN)`"" *>> c:\windows\setup\scripts\certutil.log
+				}
 				If ($Node.CRLPublicationURLs) {
-					& "certutil.exe -setreg CA\CRLPublicationURLs `"$($Node.CRLPublicationURLs)`" "
+					& "certutil.exe -setreg CA\CRLPublicationURLs `"$($Node.CRLPublicationURLs)`"" *>> c:\windows\setup\scripts\certutil.log
 				}
 				If ($Node.CACertPublicationURLs) {
-					& "certutil.exe -setreg CA\CACertPublicationURLs `"$($Node.CACertPublicationURLs)`" "
+					& "certutil.exe -setreg CA\CACertPublicationURLs `"$($Node.CACertPublicationURLs)`"" *>> c:\windows\setup\scripts\certutil.log
 				}
 				Restart-Service -Name CertSvc
 			}
@@ -61,16 +60,13 @@ Configuration ROOTCA
 				}
 			}
 			TestScript = { 
-				[String]$DN = ''
-				$Node.DomainName.Split('.') | % { $DN = "DC=$($_),$DN" }
-				$DN = $DN.SubString(0,$DN.Length-1)
-				If ((Get-ChildItem 'HKLM:\System\CurrentControlSet\Services\CertSvc\Configuration').GetValue('DSConfigDN') -ne $DN) {
+				If (($Node.DSConfigDN) -and ((Get-ChildItem 'HKLM:\System\CurrentControlSet\Services\CertSvc\Configuration').GetValue('DSConfigDN') -ne $Node.DSConfigDN)) {
 					Return $False
 				}
-				If ((Get-ChildItem 'HKLM:\System\CurrentControlSet\Services\CertSvc\Configuration').GetValue('CRLPublicationURLs') -ne $Node.CRLPublicationURLs) {
+				If (($Node.CRLPublicationURLs) -and ((Get-ChildItem 'HKLM:\System\CurrentControlSet\Services\CertSvc\Configuration').GetValue('CRLPublicationURLs') -ne $Node.CRLPublicationURLs)) {
 					Return $False
 				}
-				If ((Get-ChildItem 'HKLM:\System\CurrentControlSet\Services\CertSvc\Configuration').GetValue('CACertPublicationURLs') -ne $Node.CACertPublicationURLs) {
+				If (($Node.CACertPublicationURLs) -and ((Get-ChildItem 'HKLM:\System\CurrentControlSet\Services\CertSvc\Configuration').GetValue('CACertPublicationURLs') -ne $Node.CACertPublicationURLs)) {
 					Return $False
 				}
 				Return $True
