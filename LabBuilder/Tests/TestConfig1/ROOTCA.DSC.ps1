@@ -65,17 +65,20 @@ Configuration ROOTCA
 			}
 			TestScript = { 
 				Add-Content -Path "c:\windows\setup\scripts\TestScript.log" -Value "Test Fires"
+				Add-Content -Path "c:\windows\setup\scripts\TestScript.log" -Value ($Node.DSConfigDN)
 				Add-Content -Path "c:\windows\setup\scripts\TestScript.log" -Value ((Get-ChildItem 'HKLM:\System\CurrentControlSet\Services\CertSvc\Configuration').GetValue('DSConfigDN'))
 				If (($Node.DSConfigDN) -and ((Get-ChildItem 'HKLM:\System\CurrentControlSet\Services\CertSvc\Configuration').GetValue('DSConfigDN') -ne $Node.DSConfigDN)) {
 					Add-Content -Path "c:\windows\setup\scripts\TestScript.log" -Value "DSConfigDN NE"
 					Return $False
 				}
 				Add-Content -Path "c:\windows\setup\scripts\TestScript.log" -Value ((Get-ChildItem 'HKLM:\System\CurrentControlSet\Services\CertSvc\Configuration').GetValue('CRLPublicationURLs'))
+				Add-Content -Path "c:\windows\setup\scripts\TestScript.log" -Value ($Node.CRLPublicationURLs)
 				If (($Node.CRLPublicationURLs) -and ((Get-ChildItem 'HKLM:\System\CurrentControlSet\Services\CertSvc\Configuration').GetValue('CRLPublicationURLs') -ne $Node.CRLPublicationURLs)) {
 					Add-Content -Path "c:\windows\setup\scripts\TestScript.log" -Value "CRLPublicationURLs NE"
 					Return $False
 				}
 				Add-Content -Path "c:\windows\setup\scripts\TestScript.log" -Value ((Get-ChildItem 'HKLM:\System\CurrentControlSet\Services\CertSvc\Configuration').GetValue('CACertPublicationURLs'))
+				Add-Content -Path "c:\windows\setup\scripts\TestScript.log" -Value ($Node.CACertPublicationURLs)
 				If (($Node.CACertPublicationURLs) -and ((Get-ChildItem 'HKLM:\System\CurrentControlSet\Services\CertSvc\Configuration').GetValue('CACertPublicationURLs') -ne $Node.CACertPublicationURLs)) {
 					Add-Content -Path "c:\windows\setup\scripts\TestScript.log" -Value "CACertPublicationURLs NE"
 					Return $False
