@@ -4,9 +4,15 @@
 # Module Variables
 ##########################################################################################################################################
 # This is the URL to the WMF Production Preview
+[String]$Script:WorkingFolder = $ENV:Temp
 [String]$Script:WMF5DownloadURL = 'http://download.microsoft.com/download/3/F/D/3FD04B49-26F9-4D9A-8C34-4533B9D5B020/Win8.1AndW2K12R2-KB3066437-x64.msu'
 [String]$Script:WMF5InstallerFilename = ''
 [String]$Script:WMF5InstallerPath = ''
+[String]$Script:CertGenDownloadURL = 'https://gallery.technet.microsoft.com/scriptcenter/Self-signed-certificate-5920a7c6/file/101251/1/New-SelfSignedCertificateEx.zip'
+[String]$Script:CertGenZipFilename = ''
+[String]$Script:CertGenZipPath = ''
+[String]$Script:CertGenPS1Filename = 'New-SelfSignedCertificateEx.ps1'
+[String]$Script:CertGenPS1Path = ''
 ##########################################################################################################################################
 # Helper functions that aren't exported
 ##########################################################################################################################################
@@ -28,7 +34,7 @@ function Download-WMF5Installer()
     # Only downloads for Win8.1/WS2K12R2
 	[String]$URL = $Script:WMF5DownloadURL
 	$Script:WMF5InstallerFilename = $URL.Substring($URL.LastIndexOf("/") + 1)
-	$Script:WMF5InstallerPath = Join-Path -Path $ENV:Temp -ChildPath $Script:WMF5InstallerFilename
+	$Script:WMF5InstallerPath = Join-Path -Path $Script:WorkingFolder -ChildPath $Script:WMF5InstallerFilename
 	If (-not (Test-Path -Path $Script:WMF5InstallerPath)) {
 		Try {
 			Invoke-WebRequest -Uri $URL -OutFile $Script:WMF5InstallerPath
@@ -37,9 +43,32 @@ function Download-WMF5Installer()
 		}
 	}
     Return $True
-}
+} # Download-WMF5Installer
 ##########################################################################################################################################
-
+function Download-CertGenerator()
+{
+	[String]$URL = $Script:CertGenDownloadURL
+	$Script:CertGenZipFilename = $URL.Substring($URL.LastIndexOf("/") + 1)
+	$Script:CertGenZipPath = Join-Path -Path $Script:WorkingFolder -ChildPath $Script:CertGenZipFilename
+	If (-not (Test-Path -Path $Script:CertGenPS1Path)) {
+		Try {
+			Invoke-WebRequest -Uri $URL -OutFile $Script:CertGenDownloadURL
+		} Catch {
+			Return $False
+		} # Try
+	} # If
+	$Script:CertGenPS1Path = Join-Path -Path $Script:WorkingFolder -ChildPath $Script:CertGenPS1Filename
+	If (-not (Test-Path -Path $Script:CertGenPS1Path)) {
+		Try {
+			Expand-Archive -Path $Script:CertGenZipPath -DestinationPath $Script:WorkingFolder
+		} Catch {
+			Return $False
+		} # Try
+	} # If
+	
+    Return $True
+} # Download-CertGenerator
+##########################################################################################################################################
 
 ##########################################################################################################################################
 # Main CmdLets
@@ -188,6 +217,9 @@ function Initialize-LabHyperV {
 	}
 
 	Set-VMHost -MacAddressMinimum $MacAddressMinimum -MacAddressMaximum $MacAddressMaximum | Out-Null
+
+	# Download the New-SelfSignedCertificateEx.ps1 script
+	Download-CertGenerator
 
 	Return $True
 } # Initialize-LabHyperV
@@ -943,7 +975,9 @@ function Set-LabVMInitializationFiles {
 	[String]$SetupCompleteCmd = @"
 "@
 	[String]$SetupCompletePs = @"
-New-SelfSignedCertificate -DnsName $($VM.ComputerName) -CertStoreLocation cert:\LocalMachine\My | Export-Certificate -FilePath c:\Windows\SelfSigned.cer -Force
+.\New-SelfsignedCertificateEx.ps1 -Subject 'CN=$VM.ComputerName' -EKU 'Server Authentication', 'Client authentication' ` 
+	-KeyUsage 'KeyEncipherment, DigitalSignature' -SAN '$VM.ComputerName' ` 
+	-Exportable -StoreLocation 'LocalMachine' -Path `"`$(`$ENV:SystemRoot)\SelfSigned.cer`"
 Add-Content -Path `"`$(`$ENV:SystemRoot)\Setup\Scripts\SetupComplete.log`" -Value 'Self-signed certificate created and saved to C:\Windows\SelfSigned.cer ...' -Encoding Ascii
 [Int]`$Count = 0
 [Boolean]`$Installed = `$False
@@ -1003,7 +1037,9 @@ Add-Content -Path `"$($ENV:SystemRoot)\Setup\Scripts\SetupComplete.log`" -Value 
 
 	Set-Content -Path "$MountPoint\Windows\Setup\Scripts\SetupComplete.ps1" -Value $SetupCompletePs -Force | Out-Null	
 	Set-Content -Path "$VMPath\$($VM.Name)\LabBuilder Files\SetupComplete.ps1" -Value $SetupCompletePs -Force | Out-Null
-	
+
+	Copy-Item -Path $Script:CertGenPS1Path -Destination "$MountPoint\Windows\Setup\Scripts\$($Script:CertGenPS1Path)" -Force
+		
 	# Dismount the VHD in preparation for boot
 	Write-Verbose "Dismounting VM $($VM.Name) Boot Disk VHDx $VMBootDiskPath ..."
 	Dismount-WindowsImage -Path $MountPoint -Save | Out-Null
