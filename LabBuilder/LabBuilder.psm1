@@ -50,7 +50,7 @@ function Download-CertGenerator()
 	[String]$URL = $Script:CertGenDownloadURL
 	$Script:CertGenZipFilename = $URL.Substring($URL.LastIndexOf("/") + 1)
 	$Script:CertGenZipPath = Join-Path -Path $Script:WorkingFolder -ChildPath $Script:CertGenZipFilename
-	If (-not (Test-Path -Path $Script:CertGenPS1Path)) {
+	If (-not (Test-Path -Path $Script:CertGenZipPath)) {
 		Try {
 			Invoke-WebRequest -Uri $URL -OutFile $Script:CertGenDownloadURL
 		} Catch {
