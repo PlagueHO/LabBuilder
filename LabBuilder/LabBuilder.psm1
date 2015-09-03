@@ -5,7 +5,6 @@
 ##########################################################################################################################################
 # This is the URL to the WMF Production Preview
 [String]$Script:WMF5DownloadURL = 'http://download.microsoft.com/download/3/F/D/3FD04B49-26F9-4D9A-8C34-4533B9D5B020/Win8.1AndW2K12R2-KB3066437-x64.msu'
-[Int]$Script:WMF5Revision = 16384
 [String]$Script:WMF5InstallerFilename = ''
 [String]$Script:WMF5InstallerPath = ''
 ##########################################################################################################################################
@@ -930,7 +929,8 @@ function Set-LabVMInitializationFiles {
 
 	# Copy the WMF 5.0 Installer to the VM in case it is needed
 	Write-Verbose "Applying VM $($VM.Name) WMF 5.0 ..."
-	Add-WindowsPackage -PackagePath $Script:WMF5InstallerPath -Path $MountPoint | Out-Null
+	# This contains a bug at the moment - waiting for MS to resolve
+	# Add-WindowsPackage -PackagePath $Script:WMF5InstallerPath -Path $MountPoint | Out-Null
 
 	# Create the scripts folder where setup scripts will be put
 	New-Item -Path "$MountPoint\Windows\Setup\Scripts" -ItemType Directory | Out-Null
