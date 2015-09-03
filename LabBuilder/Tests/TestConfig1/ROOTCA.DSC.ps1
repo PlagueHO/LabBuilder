@@ -20,7 +20,7 @@ Configuration ROOTCA
 
 		File CAPolicy
 		{
-			DestinationPath = 'C:\Windows\CAPolicy'
+			DestinationPath = 'C:\Windows\CAPolicy.inf'
 			Contents = "[Version]`r`n Signature= `"$Windows NT$`"`r`n[Certsrv_Server]`r`n RenewalKeyLength=4096`r`n RenewalValidityPeriod=Years`r`n RenewalValidityPeriodUnits=20`r`n CRLDeltaPeriod=Days`r`n CRLDeltaPeriodUnits=0`r`n[CRLDistributionPoint]`r`n[AuthorityInformationAccess]`r`n"
 			Ensure = 'Present'
 			DependsOn = '[WindowsFeature]ADCSCA'
