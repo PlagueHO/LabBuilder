@@ -50,8 +50,8 @@
         template="Template Windows Server 2012 R2 Datacenter Full"
         computername="SS_ROOTCA"
         usedifferencingbootdisk="Y">
-      <dsc configname="ROOTCA"
-           configfile="ROOTCA.DSC.ps1">
+      <dsc configname="STANDALONE_ROOTCA"
+           configfile="STANDALONE_ROOTCA.DSC.ps1">
           <parameters>
             CACommonName = "BMDLAB.COM Root CA"
             CADistinguishedNameSuffix = "DC=BMDLAB,DC=COM"

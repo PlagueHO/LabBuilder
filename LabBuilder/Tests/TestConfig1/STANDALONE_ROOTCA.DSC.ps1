@@ -1,4 +1,4 @@
-Configuration ROOTCA
+Configuration STANDALONE_ROOTCA
 {
 	Import-DscResource –ModuleName 'PSDesiredStateConfiguration'
 	Import-DscResource -ModuleName xAdcsDeployment
