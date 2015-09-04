@@ -75,7 +75,7 @@ function Get-ModulesInDSCConfig()
 		[ValidateNotNullOrEmpty()]	
 		[String]$MOFFile
 	)
-	[String[]]$Modules = ''
+	[String[]]$Modules = $Null
 	[String]$Content = Get-Content -Path $MOFFile
 	$Regex = "Import\-DscResource\s(?:\-ModuleName\s)?'?`"?([A-Za-z0-9]+)`"?'?"
 	$Matches = [regex]::matches($Content, $Regex, "IgnoreCase")
