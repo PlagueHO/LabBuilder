@@ -861,7 +861,7 @@ function Start-LabVMDSC {
 			While ((-not $Complete) -and (((Get-Date) - $StartTime).Seconds) -lt $TimeOut) {
 				Try {
 					Write-Verbose "Copying DSC Module $Module Files to $($VM.ComputerName) ..."
-					Copy-Item -Path "$($env:ProgramFiles)\WindowsPowerShell\Modules\$Module)" -Destination "$($env:ProgramFiles)\WindowsPowerShell\Modules\" -ToSession $Session -Force -Recurse -ErrorAction Stop | Out-Null
+					Copy-Item -Path "$($env:ProgramFiles)\WindowsPowerShell\Modules\$Module" -Destination "$($env:ProgramFiles)\WindowsPowerShell\Modules\" -ToSession $Session -Force -Recurse -ErrorAction Stop | Out-Null
 					$Complete = $True
 				} Catch {
 					Write-Verbose "Waiting for DSC Module $Module Files to Copy to $($VM.ComputerName) ..."
