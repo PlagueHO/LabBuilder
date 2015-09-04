@@ -673,11 +673,13 @@ function Set-LabDSCMOFFile {
 			$InstalledModules = Get-Module -ListAvailable
 			Write-Verbose "Identifying Modules used by DSC Config File $($VM.DSCConfigFile) in VM $($VM.Name) ..."
 			$DSCModules = Get-ModulesInDSCConfig -MOFFile $($VM.DSCConfigFile)
-			Foreach ($Module in $DSCModules) {
-				If (($InstalledModules | Where-Object -Property Name -EQ $Module).Count -eq 0) {
+			Foreach ($ModuleName in $DSCModules) {
+				If (($InstalledModules | Where-Object -Property Name -EQ $ModuleName).Count -eq 0) {
 					# The Module isn't available on this computer, so try and install it
-					Write-Verbose "Installing Module $Module required by DSC Config File $($VM.DSCConfigFile) in VM $($VM.Name) ..."
-					Find-Module -Name $Module | Install-Module -Verbose
+					Write-Verbose "Installing Module $ModuleName required by DSC Config File $($VM.DSCConfigFile) in VM $($VM.Name) ..."
+					$Module = Find-Module -Name $ModuleName
+					$Module | Install-Module -Verbose
+					$Module | Save-Module -Path "$VMPath\$($VM.Name)\LabBuilder Files\DSC Modules\$ModuleName
 				} # If
 			} # Foreach
 
@@ -1373,6 +1375,9 @@ function Initialize-LabVMs {
 			}
 			If (-not (Test-Path -Path "$VMPath\$($VM.Name)\LabBuilder Files")) {
 				New-Item -Path "$VMPath\$($VM.Name)\LabBuilder Files" -ItemType Directory | Out-Null
+			}
+			If (-not (Test-Path -Path "$VMPath\$($VM.Name)\LabBuilder Files\DSC Modules")) {
+				New-Item -Path "$VMPath\$($VM.Name)\LabBuilder Files\DSC Modules" -ItemType Directory | Out-Null
 			}
 
 			# Create the boot disk
