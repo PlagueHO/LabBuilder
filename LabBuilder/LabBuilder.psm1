@@ -1013,21 +1013,7 @@ New-SelfsignedCertificateEx -Subject 'CN=$($VM.ComputerName)' -EKU 'Server Authe
 `$Cert = Get-ChildItem -Path cert:\LocalMachine\My | Where-Object { `$_.FriendlyName -eq '$($VM.ComputerName) Self-Signed Certificate' }
 Export-Certificate -Type CERT -Cert `$Cert -FilePath `"`$(`$ENV:SystemRoot)\SelfSigned.cer`"
 Add-Content -Path `"`$(`$ENV:SystemRoot)\Setup\Scripts\SetupComplete.log`" -Value 'Self-signed certificate created and saved to C:\Windows\SelfSigned.cer ...' -Encoding Ascii
-[Int]`$Count = 0
-[Boolean]`$Installed = `$False
-While ((-not `$Installed) -and (`$Count -lt 5)) {
-	Try {
-		PackageManagement\Get-PackageProvider -Name NuGet -Force *>> `"`$(`$ENV:SystemRoot)\Setup\Scripts\NuGetInstall.log`"
-		PackageManagement\Set-PackageSource -Name PSGallery -Trusted *>> `"`$(`$ENV:SystemRoot)\Setup\Scripts\NuGetInstall.log`"
-		`$Installed = `$True
-	} Catch {
-		`$Count++
-		Add-Content -Path `"`$(`$ENV:SystemRoot)\Setup\Scripts\SetupComplete.log`" -Value 'Error installing NuGet ...' -Encoding Ascii
-	}
-}
 Add-Content -Path `"`$(`$ENV:SystemRoot)\Setup\Scripts\SetupComplete.log`" -Value 'NuGet Installed ...' -Encoding Ascii
-# iex ((new-object net.webclient).DownloadString('https://chocolatey.org/install.ps1'))
-# Add-Content -Path `"`$(`$ENV:SystemRoot)\Setup\Scripts\SetupComplete.log`" -Value 'Chocolatey Installed ...' -Encoding Ascii
 Enable-PSRemoting -SkipNetworkProfileCheck -Force
 Add-Content -Path `"`$(`$ENV:SystemRoot)\Setup\Scripts\SetupComplete.log`" -Value 'Windows Remoting Enabled ...' -Encoding Ascii
 "@
