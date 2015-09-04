@@ -80,7 +80,9 @@ function Get-ModulesInDSCConfig()
 	$Regex = "Import\-DscResource\s(?:\-ModuleName\s)?'?`"?([A-Za-z0-9]+)`"?'?"
 	$Matches = [regex]::matches($Content, $Regex, "IgnoreCase")
 	Foreach ($Match in $Matches) {
-		$Modules += $Match.Groups[1].Value
+		If ($Match.Groups[1].Value -ne 'PSDesiredStateConfiguration') {
+			$Modules += $Match.Groups[1].Value
+		} # If
 	} # Foreach
 	Return $Modules
 } # Get-ModulesInDSCConfig
@@ -853,16 +855,16 @@ function Start-LabVMDSC {
 		}
 
 		# Now Upload any required modules
-		$Complete = $False
 		$DSCModules = Get-ModulesInDSCConfig -MOFFile $($VM.DSCConfigFile)
 		Foreach ($Module in $DSCModules) {
+			$Complete = $False
 			While ((-not $Complete) -and (((Get-Date) - $StartTime).Seconds) -lt $TimeOut) {
 				Try {
-					$ModuleBase = (Get-Module -Name $Module -ListAvailable).ModuleBase
-					Copy-Item -Path "$($env:ProgramFiles)\WindowsPowerShell\Modules\$Module)" -Destination "$($env:ProgramFiles)\WindowsPowerShell\Modules\" -ToSession $Session -Force -Recurse -ErrorAction Stop
+					Write-Verbose "Copying DSC Module $Module Files to $($VM.ComputerName) ..."
+					Copy-Item -Path "$($env:ProgramFiles)\WindowsPowerShell\Modules\$Module)" -Destination "$($env:ProgramFiles)\WindowsPowerShell\Modules\" -ToSession $Session -Force -Recurse -ErrorAction Stop | Out-Null
 					$Complete = $True
 				} Catch {
-					Write-Verbose "Waiting for DSC Module Files to Copy to $($VM.ComputerName) ..."
+					Write-Verbose "Waiting for DSC Module $Module Files to Copy to $($VM.ComputerName) ..."
 					Sleep 5
 				} # Try
 			} # While
