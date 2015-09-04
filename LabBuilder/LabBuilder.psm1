@@ -671,7 +671,7 @@ function Set-LabDSCMOFFile {
 			$InstalledModules = Get-Module -ListAvailable
 			Write-Verbose "Identifying Modules used by DSC Config File $($VM.DSCConfigFile) in VM $($VM.Name) ..."
 			$DSCModules = Get-ModulesInDSCConfig -MOFFile $($VM.DSCConfigFile)
-			Foreach ($Module in DSCModules) {
+			Foreach ($Module in $DSCModules) {
 				If (($InstalledModules | Where-Object -Property Name -EQ $Module).Count -eq 0) {
 					# The Module isn't available on this computer, so try and install it
 					Write-Verbose "Installing Module $Module required by DSC Config File $($VM.DSCConfigFile) in VM $($VM.Name) ..."
@@ -855,7 +855,7 @@ function Start-LabVMDSC {
 		# Now Upload any required modules
 		$Complete = $False
 		$DSCModules = Get-ModulesInDSCConfig -MOFFile $($VM.DSCConfigFile)
-		Foreach ($Module in DSCModules) {
+		Foreach ($Module in $DSCModules) {
 			While ((-not $Complete) -and (((Get-Date) - $StartTime).Seconds) -lt $TimeOut) {
 				Try {
 					$ModuleBase = (Get-Module -Name $Module -ListAvailable).ModuleBase
