@@ -677,9 +677,9 @@ function Set-LabDSCMOFFile {
 				If (($InstalledModules | Where-Object -Property Name -EQ $ModuleName).Count -eq 0) {
 					# The Module isn't available on this computer, so try and install it
 					Write-Verbose "Installing Module $ModuleName required by DSC Config File $($VM.DSCConfigFile) in VM $($VM.Name) ..."
-					$Module = Find-Module -Name $ModuleName
-					$Module | Install-Module -Verbose
-					$Module | Save-Module -Path "$VMPath\$($VM.Name)\LabBuilder Files\DSC Modules\$ModuleName
+					Find-Module -Name $ModuleName | Install-Module -Verbose
+					Write-Verbose "Saving Module $ModuleName required by DSC Config File $($VM.DSCConfigFile) in VM $($VM.Name) ..."
+					Save-Module -Name $ModuleName Path "$VMPath\$($VM.Name)\LabBuilder Files\DSC Modules\" -Force
 				} # If
 			} # Foreach
 
@@ -858,15 +858,15 @@ function Start-LabVMDSC {
 
 		# Now Upload any required modules
 		$DSCModules = Get-ModulesInDSCConfig -MOFFile $($VM.DSCConfigFile)
-		Foreach ($Module in $DSCModules) {
+		Foreach ($ModuleName in $DSCModules) {
 			$Complete = $False
 			While ((-not $Complete) -and (((Get-Date) - $StartTime).Seconds) -lt $TimeOut) {
 				Try {
-					Write-Verbose "Copying DSC Module $Module Files to $($VM.ComputerName) ..."
-					Copy-Item -Path "$($env:ProgramFiles)\WindowsPowerShell\Modules\$Module" -Destination "$($env:ProgramFiles)\WindowsPowerShell\Modules\" -ToSession $Session -Force -Recurse -ErrorAction Stop | Out-Null
+					Write-Verbose "Copying DSC Module $ModuleName Files to $($VM.ComputerName) ..."
+					Copy-Item -Path "$VMPath\$($VM.Name)\LabBuilder Files\DSC Modules\$ModuleName\" -Destination "$($env:ProgramFiles)\WindowsPowerShell\Modules\" -ToSession $Session -Force -Recurse -ErrorAction Stop | Out-Null
 					$Complete = $True
 				} Catch {
-					Write-Verbose "Waiting for DSC Module $Module Files to Copy to $($VM.ComputerName) ..."
+					Write-Verbose "Waiting for DSC Module $ModuleName Files to Copy to $($VM.ComputerName) ..."
 					Sleep 5
 				} # Try
 			} # While
