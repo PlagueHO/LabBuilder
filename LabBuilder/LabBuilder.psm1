@@ -675,7 +675,7 @@ function Set-LabDSCMOFFile {
 			$DSCModules = Get-ModulesInDSCConfig -MOFFile $($VM.DSCConfigFile)
 			Foreach ($ModuleName in $DSCModules) {
 				Write-Verbose "Saving Module $ModuleName required by DSC Config File $($VM.DSCConfigFile) in VM $($VM.Name) ..."
-				Save-Module -Name $ModuleName Path "$VMPath\$($VM.Name)\LabBuilder Files\DSC Modules\" -Force
+				Save-Module -Name $ModuleName -Path "$VMPath\$($VM.Name)\LabBuilder Files\DSC Modules\" -Force
 				If (($InstalledModules | Where-Object -Property Name -EQ $ModuleName).Count -eq 0) {
 					# The Module isn't available on this computer, so try and install it
 					Write-Verbose "Installing Module $ModuleName required by DSC Config File $($VM.DSCConfigFile) in VM $($VM.Name) ..."
