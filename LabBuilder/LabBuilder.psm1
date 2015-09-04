@@ -772,31 +772,6 @@ function Set-LabDSCStartFile {
 	[String]$DSCStartPs = ''
 	[String]$VMPath = $Configuration.labbuilderconfig.settings.vmpath
 
-	$DSCStartPs += @"
-[Int]`$Count = 0
-[Boolean]`$Installed = `$False
-While ((-not `$Installed) -and (`$Count -lt 5)) {
-	Try {
-		PackageManagement\Get-PackageProvider -Name NuGet -Force
-		PackageManagement\Set-PackageSource -Name PSGallery -Trusted
-		`$Installed = `$True
-	} Catch {
-		`$Count++
-		Add-Content -Path `"$($ENV:SystemRoot)\Setup\Scripts\SetupComplete.log`" -Value 'Error installing NuGet ...' -Encoding Ascii
-	}
-}
-
-	# Automatically install any modules that are required by DSC onto the server
-	# The server Must have PowerShell 5.0 installed to do this!
-"@
-	Foreach ($Module in $VM.DSCModules) {
-
-	$DSCStartPs += @"
-Find-Module -Name $Module | Install-Module -Verbose *>> `"$($ENV:SystemRoot)\Setup\Scripts\DSC.log`"
-
-"@
-	} # Foreach
-
 	# Start the actual DSC Configuration
 	$DSCStartPs += @"
 Set-DscLocalConfigurationManager -Path `"$($ENV:SystemRoot)\Setup\Scripts\`" -Verbose  *>> `"$($ENV:SystemRoot)\Setup\Scripts\DSC.log`"
@@ -844,7 +819,7 @@ function Start-LabVMDSC {
 	[DateTime]$StartTime = Get-Date
 	[System.Management.Automation.Runspaces.PSSession]$Session = $null
 	[PSCredential]$AdmininistratorCredential = New-Object System.Management.Automation.PSCredential ("Administrator", (ConvertTo-SecureString $VM.AdministratorPassword -AsPlainText -Force))
-	[Boolean]$Complete = $False
+
 	While ((-not $Session) -and (((Get-Date) - $StartTime).Seconds) -lt $TimeOut) {
 		# Try and connect to the remote VM for up to $Timeout (5 minutes) seconds.
 		Try {
@@ -853,8 +828,10 @@ function Start-LabVMDSC {
 			Write-Verbose "Trying to connect to $($VM.ComputerName) ..."
 		}
 	} # While
+
 	If ($Session) {
 		# We connected OK - upload the MOF files
+		$Complete = $False
 		While ((-not $Complete) -and (((Get-Date) - $StartTime).Seconds) -lt $TimeOut) {
 			Try {
 				Copy-Item -Path "$VMPath\$($VM.Name)\LabBuilder Files\$($VM.ComputerName).mof" -Destination c:\Windows\Setup\Scripts -ToSession $Session -Force -ErrorAction Stop
@@ -862,16 +839,47 @@ function Start-LabVMDSC {
 					Copy-Item -Path "$VMPath\$($VM.Name)\LabBuilder Files\$($VM.ComputerName).meta.mof" -Destination c:\Windows\Setup\Scripts -ToSession $Session -Force -ErrorAction Stop
 				} # If
 				Copy-Item -Path "$VMPath\$($VM.Name)\LabBuilder Files\StartDSC.ps1" -Destination c:\Windows\Setup\Scripts -ToSession $Session -Force -ErrorAction Stop
-				Invoke-Command -Session $Session { c:\windows\setup\scripts\StartDSC.ps1 }
 				$Complete = $True
 			} Catch {
-				Write-Verbose "Waiting for DSC Files to Copy to $($VM.ComputerName) ..."
+				Write-Verbose "Waiting for DSC MOF Files to Copy to $($VM.ComputerName) ..."
 				Sleep 5
-			}
+			} # Try
+		} # While
+
+		If ((-not $Complete) -and (((Get-Date) - $StartTime).Seconds) -ge $TimeOut) {
+			# Timed out
+			Remove-PSSession -Session $Session
+			Return $False
 		}
+
+		# Now Upload any required modules
+		$Complete = $False
+		$DSCModules = Get-ModulesInDSCConfig -MOFFile $($VM.DSCConfigFile)
+		Foreach ($Module in DSCModules) {
+			While ((-not $Complete) -and (((Get-Date) - $StartTime).Seconds) -lt $TimeOut) {
+				Try {
+					$ModuleBase = (Get-Module -Name $Module -ListAvailable).ModuleBase
+					Copy-Item -Path "$($env:ProgramFiles)\WindowsPowerShell\Modules\$Module)" -Destination "$($env:ProgramFiles)\WindowsPowerShell\Modules\" -ToSession $Session -Force -Recurse -ErrorAction Stop
+					$Complete = $True
+				} Catch {
+					Write-Verbose "Waiting for DSC Module Files to Copy to $($VM.ComputerName) ..."
+					Sleep 5
+				} # Try
+			} # While
+		} # Foreach
+
+		If ((-not $Complete) -and (((Get-Date) - $StartTime).Seconds) -ge $TimeOut) {
+			# Timed out
+			Remove-PSSession -Session $Session
+			Return $False
+		}
+
+		# Finally, Start DSC up!
+		Invoke-Command -Session $Session { c:\windows\setup\scripts\StartDSC.ps1 }
+
 		Remove-PSSession -Session $Session
 	}
-	Return $Complete
+	Return $True
 } # Start-LabVMDSC
 ##########################################################################################################################################
 
