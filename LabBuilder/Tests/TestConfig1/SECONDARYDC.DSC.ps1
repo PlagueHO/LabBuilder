@@ -28,6 +28,8 @@ Configuration SECONDARYDC
         {
             DomainName = $Node.DomainName
             DomainUserCredential = $DomainAdminCredential 
+            RetryCount = 20 
+            RetryIntervalSec = 30 
             DependsOn = "[WindowsFeature]ADDSInstall"
         }
         
