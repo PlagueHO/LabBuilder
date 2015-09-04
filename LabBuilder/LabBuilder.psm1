@@ -64,6 +64,27 @@ function Download-CertGenerator()
     Return $True
 } # Download-CertGenerator
 ##########################################################################################################################################
+function Get-ModulesInDSCConfig()
+{
+	[CmdletBinding()]
+	[OutputType([String[]])]
+	Param (
+		[Parameter(
+			Mandatory=$True,
+			Position=0)]
+		[ValidateNotNullOrEmpty()]	
+		[String]$MOFFile
+	)
+	[String[]]$Modules = ''
+	[String]$Content = Get-Content -Path $MOFFile
+	$Regex = "Import\-DscResource\s(?:\-ModuleName\s)?'?`"?([A-Za-z0-9]+)`"?'?"
+	$Matches = [regex]::matches($Content, $Regex, "IgnoreCase")
+	Foreach ($Match in $Matches) {
+		$Modules += $Match.Groups[1].Value
+	} # Foreach
+	Return $Modules
+} # Get-ModulesInDSCConfig
+##########################################################################################################################################
 
 ##########################################################################################################################################
 # Main CmdLets
@@ -648,7 +669,9 @@ function Set-LabDSCMOFFile {
 		If ($VM.DSCConfigFile) {
 			# Make sure all the modules required to create the MOF file are installed
 			$InstalledModules = Get-Module -ListAvailable
-			Foreach ($Module in $VM.DSCModules) {
+			Write-Verbose "Identifying Modules used by DSC Config File $($VM.DSCConfigFile) in VM $($VM.Name) ..."
+			$DSCModules = Get-ModulesInDSCConfig -MOFFile $($VM.DSCConfigFile)
+			Foreach ($Module in DSCModules) {
 				If (($InstalledModules | Where-Object -Property Name -EQ $Module).Count -eq 0) {
 					# The Module isn't available on this computer, so try and install it
 					Write-Verbose "Installing Module $Module required by DSC Config File $($VM.DSCConfigFile) in VM $($VM.Name) ..."
@@ -749,10 +772,7 @@ function Set-LabDSCStartFile {
 	[String]$DSCStartPs = ''
 	[String]$VMPath = $Configuration.labbuilderconfig.settings.vmpath
 
-	# Automatically install any modules that are required by DSC onto the server
-	# The server Must have PowerShell 5.0 installed to do this!
-	Foreach ($Module in $VM.DSCModules) {
-		$DSCStartPs += @"
+	$DSCStartPs += @"
 [Int]`$Count = 0
 [Boolean]`$Installed = `$False
 While ((-not `$Installed) -and (`$Count -lt 5)) {
@@ -766,6 +786,12 @@ While ((-not `$Installed) -and (`$Count -lt 5)) {
 	}
 }
 
+	# Automatically install any modules that are required by DSC onto the server
+	# The server Must have PowerShell 5.0 installed to do this!
+"@
+	Foreach ($Module in $VM.DSCModules) {
+
+	$DSCStartPs += @"
 Find-Module -Name $Module | Install-Module -Verbose *>> `"$($ENV:SystemRoot)\Setup\Scripts\DSC.log`"
 
 "@
@@ -1173,15 +1199,6 @@ function Get-LabVMs {
 			$DSCParameters = $VM.DSC.Parameters
 		} # If
 
-		# Load up the DSC Module List (if specified)
-		[String[]]$DSCModules = @()
-		Foreach ($Module in $VM.DSC.Modules.Module) {
-			If ($Module.Name -eq 'module') {
-				Throw "The Module Name in VM $($VM.Name) cannot be 'module' or empty."
-			}
-			$DSCModules += $Module.Name
-		} # Foreach
-
 		# Load the DSC MOF File setting and check it
 		[String]$DSCMOFFile = ''
 		If ($VM.DSC.MOFFile) {
@@ -1271,7 +1288,6 @@ function Get-LabVMs {
 			DSCConfigName = $VM.DSC.ConfigName;
 			DSCMOFFile = $DSCMOFFile;
 			DSCParameters = $DSCParameters;
-			DSCModules = $DSCModules;
 		}
 	} # Foreach        
 

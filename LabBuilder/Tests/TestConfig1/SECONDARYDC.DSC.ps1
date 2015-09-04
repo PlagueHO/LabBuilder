@@ -1,6 +1,6 @@
 Configuration SECONDARYDC
 {
-	Import-DscResource –ModuleName 'PSDesiredStateConfiguration'
+	Import-DscResource -ModuleName 'PSDesiredStateConfiguration'
 	Import-DscResource -ModuleName xActiveDirectory 
 	Node $AllNodes.NodeName {
 		# Assemble the Local Admin Credentials

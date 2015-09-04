@@ -1,6 +1,6 @@
 Configuration STANDALONE_ROOTCA
 {
-	Import-DscResource –ModuleName 'PSDesiredStateConfiguration'
+	Import-DscResource -ModuleName 'PSDesiredStateConfiguration'
 	Import-DscResource -ModuleName xAdcsDeployment
 	Node $AllNodes.NodeName {
 		# Assemble the Local Admin Credentials

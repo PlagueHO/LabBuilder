@@ -1,6 +1,6 @@
 Configuration PRIMARYDC
 {
-	Import-DscResource –ModuleName 'PSDesiredStateConfiguration'
+	Import-DscResource -ModuleName 'PSDesiredStateConfiguration'
 	Import-DscResource -ModuleName xActiveDirectory
 	Import-DscResource -ModuleName xOU
 	Node $AllNodes.NodeName {

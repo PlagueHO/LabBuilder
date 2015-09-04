@@ -630,14 +630,6 @@ Describe "Get-LabVMs" {
 			{ Get-LabVMs -Configuration $Config -VMTemplates $VMTemplates -Switches $Switches } | Should Throw
 		}
 	}
-	Context "Configuration passed with VM DSC Module with missing Name." {
-		It "Fails" {
-			$Config = Get-LabConfiguration -Path "$TestConfigPath\PesterTestConfig.VMFail.BadDSCModule.xml"
-			$Switches = Get-LabSwitches -Configuration $Config
-			$VMTemplates = Get-LabVMTemplates -Configuration $Config
-			{ Get-LabVMs -Configuration $Config -VMTemplates $VMTemplates -Switches $Switches } | Should Throw
-		}
-	}
 
 	Context "Valid configuration is passed" {
 		$Config = Get-LabConfiguration -Path $TestConfigOKPath
@@ -662,9 +654,6 @@ Describe "Get-LabVMs" {
     "ComputerName":  "PESTER01",
     "ProductKey":  "DDDDD-DDDDD-DDDDD-DDDDD-DDDDD",
     "DataVHDSize":  0,
-    "DSCModules":  [
-                       "xAdcsDeployment"
-                   ],
     "Name":  "PESTER01",
     "UnattendFile":  "",
     "AdministratorPassword":  "Something",

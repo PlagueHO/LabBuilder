@@ -59,9 +59,6 @@
             CRLPublicationURLs = "1:C:\Windows\system32\CertSrv\CertEnroll\%1_%3%4.crt\n2:ldap:///CN=%7,CN=AIA,CN=Public Key Services,CN=Services,%6%11\n2:http://pki.bmdlab.local/CertEnroll/%1_%3%4.crt"
             CACertPublicationURLs = "1:C:\Windows\system32\CertSrv\CertEnroll\%1_%3%4.crt\n2:ldap:///CN=%7,CN=AIA,CN=Public Key Services,CN=Services,%6%11\n2:http://pki.bmdlab.local/CertEnroll/%1_%3%4.crt"
           </parameters>
-        <modules>
-          <module name="xAdcsDeployment" />
-        </modules>
       </dsc>
       <adapters>
         <adapter name="General Purpose External"
@@ -79,10 +76,6 @@
           DomainName = "BMDLAB.COM"
           DomainAdminPassword = "P@ssword!1"
         </parameters>
-        <modules>
-          <module name="xActiveDirectory" />
-          <module name="xOU" />
-        </modules>
       </dsc>
       <adapters>
         <adapter name="General Purpose External"
@@ -102,9 +95,6 @@
           DomainName = "BMDLAB.COM"
           DomainAdminPassword = "P@ssword!1"
         </parameters>
-        <modules>
-          <module name="xActiveDirectory" />
-        </modules>
       </dsc>
       <adapters>
         <adapter name="General Purpose External"
