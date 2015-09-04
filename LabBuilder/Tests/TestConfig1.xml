@@ -81,6 +81,7 @@
         </parameters>
         <modules>
           <module name="xActiveDirectory" />
+          <module name="xOU" />
         </modules>
       </dsc>
       <adapters>

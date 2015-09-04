@@ -1,7 +1,8 @@
 Configuration PRIMARYDC
 {
 	Import-DscResource –ModuleName 'PSDesiredStateConfiguration'
-	Import-DscResource -ModuleName xActiveDirectory 
+	Import-DscResource -ModuleName xActiveDirectory
+	Import-DscResource -ModuleName xOU
 	Node $AllNodes.NodeName {
 		# Assemble the Local Admin Credentials
 		If ($Node.LocalAdminPassword) {
@@ -23,6 +24,13 @@ Configuration PRIMARYDC
             Name = "AD-Domain-Services" 
 			DependsOn = "[WindowsFeature]DNSInstall" 
         } 
+		
+		WindowsFeature RSAT-AD-PowerShellInstall
+		{
+			Ensure = "Present"
+			Name = "RSAT-AD-PowerShell"
+			DependsOn = "[WindowsFeature]ADDSInstall" 
+		}
 
         xADDomain PrimaryDC 
         { 
@@ -40,6 +48,23 @@ Configuration PRIMARYDC
             RetryIntervalSec = 30 
             DependsOn = "[xADDomain]PrimaryDC" 
         } 
+		
+		xADRecycleBin RecycleBin
+        {
+			EnterpriseAdministratorCredential = $DomainAdminCredential
+			ForestFQDN = $Node.DomainName
+		    DependsOn = "[xWaitForADDomain]DscForestWait"
+        }
 
+        xADOrganizationalUnit DepartmentsOU
+        {
+            Ensure = "Present"
+            Name = "Departments"
+            Path = (Get-ADDomain).DistinguishedName
+            Credential = $DomainAdminCredential
+            ProtectedFromAccidentalDeletion = "Yes"
+            Description = "This is a sample OU"
+            DependsOn = "[xADRecycleBin]RecycleBin"
+        }
 	}
 }
