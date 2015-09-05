@@ -769,7 +769,7 @@ $NetworkingDSCConfig += @"
 		. $NetworkingDSCFile
 
 		[String]$DSCFile = Join-Path -Path "$VMPath\$($VM.Name)\LabBuilder Files" -ChildPath "DSC.ps1"
-		[String]$DSCContent = Get-Content -Path $VM.DSCConfigFile
+		[String]$DSCContent = Get-Content -Path $VM.DSCConfigFile -Raw
 		
 		If (-not ($DSCContent -match "Networking $($VM.ComputerName)")) {
 			# Add the Networking Configuration item to the base DSC Config File
