@@ -732,6 +732,8 @@ $NetworkingDSCConfig += @"
 				} # If
 			} # If
 			If ($Adapter.IPv6) {
+				If ($Adapter.IPv6.Address) {
+
 $NetworkingDSCConfig += @"
 	xIPAddress IPv6_$AdapterCount {
 		IPAddress      = $($Adapter.IPv6.Address)
@@ -743,7 +745,7 @@ $NetworkingDSCConfig += @"
 
 "@
 				} # If
-				If ($Adapter.IPv4.DNSAddress) {
+				If ($Adapter.IPv6.DNSAddress) {
 $NetworkingDSCConfig += @"
 	xDnsServerAddress IPv6D_$AdapterCount {
             Address        = $($Adapter.IPv6.DNSServer)
@@ -752,8 +754,8 @@ $NetworkingDSCConfig += @"
 	}
 
 "@
-			}
-		}
+			} # If
+		} # If
 $NetworkingDSCConfig += @"
 }
 "@
