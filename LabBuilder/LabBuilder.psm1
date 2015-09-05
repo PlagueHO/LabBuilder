@@ -710,10 +710,10 @@ Configuration Networking {
 				If ($Adapter.IPv4.Address) {
 $NetworkingDSCConfig += @"
 	xIPAddress IPv4_$AdapterCount {
-		IPAddress      = $Adapter.IPv4.Address
-		InterfaceAlias = $Adapter.InterfaceAlias
-		DefaultGateway = $Adapter.IPv4.DefaultGateway
-		SubnetMask     = $Adapter.IPv4.SubnetMask
+		IPAddress      = $($Adapter.IPv4.Address)
+		InterfaceAlias = $($Adapter.InterfaceAlias)
+		DefaultGateway = $($Adapter.IPv4.DefaultGateway)
+		SubnetMask     = $($Adapter.IPv4.SubnetMask)
 		AddressFamily  = "IPv4"
 	}
 "@
@@ -721,8 +721,8 @@ $NetworkingDSCConfig += @"
 				If ($Adapter.IPv4.DNSAddress) {
 $NetworkingDSCConfig += @"
 	xDnsServerAddress IPv4D_$AdapterCount {
-            Address        = $Adapter.IPv4.DNSServer
-            InterfaceAlias = $InterfaceAlias
+            Address        = $($Adapter.IPv4.DNSServer)
+            InterfaceAlias = $($Adapter.InterfaceAlias)
 			AddressFamily  = "IPv4"
 	}
 "@
@@ -731,10 +731,10 @@ $NetworkingDSCConfig += @"
 			If ($Adapter.IPv6) {
 $NetworkingDSCConfig += @"
 	xIPAddress IPv6_$AdapterCount {
-		IPAddress      = $Adapter.IPv6.Address
-		InterfaceAlias = $Adapter.InterfaceAlias
-		DefaultGateway = $Adapter.IPv6.DefaultGateway
-		SubnetMask     = $Adapter.IPv6.SubnetMask
+		IPAddress      = $($Adapter.IPv6.Address)
+		InterfaceAlias = $($Adapter.InterfaceAlias)
+		DefaultGateway = $($Adapter.IPv6.DefaultGateway)
+		SubnetMask     = $($Adapter.IPv6.SubnetMask)
 		AddressFamily  = "IPv6"
 	}
 "@
@@ -742,8 +742,8 @@ $NetworkingDSCConfig += @"
 				If ($Adapter.IPv4.DNSAddress) {
 $NetworkingDSCConfig += @"
 	xDnsServerAddress IPv6D_$AdapterCount {
-            Address        = $Adapter.IPv6.DNSServer
-            InterfaceAlias = $InterfaceAlias
+            Address        = $($Adapter.IPv6.DNSServer)
+            InterfaceAlias = $($Adapter.InterfaceAlias)
 			AddressFamily  = "IPv6"
 	}
 "@
