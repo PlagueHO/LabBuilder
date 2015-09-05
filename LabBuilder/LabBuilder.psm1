@@ -668,7 +668,7 @@ function Set-LabDSCMOFFile {
 		# Make sure all the modules required to create the MOF file are installed
 		$InstalledModules = Get-Module -ListAvailable
 		Write-Verbose "Identifying Modules used by DSC Config File $($VM.DSCConfigFile) in VM $($VM.Name) ..."
-		$DSCModules = Get-ModulesInDSCConfig -MOFFile $($VM.DSCConfigFile)
+		$DSCModules = Get-ModulesInDSCConfig -DSCConfigFile $($VM.DSCConfigFile)
 		Foreach ($ModuleName in $DSCModules) {
 			Write-Verbose "Saving Module $ModuleName required by DSC Config File $($VM.DSCConfigFile) in VM $($VM.Name) ..."
 			Save-Module -Name $ModuleName -Path "$VMPath\$($VM.Name)\LabBuilder Files\DSC Modules\" -Force
@@ -787,8 +787,6 @@ $NetworkingDSCConfig += @"
 		If (-not (Test-Path -Path $DSCMOFFile)) {
 			Throw "A MOF File was not created by the DSC Config File $($VM.DSCCOnfigFile) for VM $($VM.Name)."
 		} # If
-
-		Remove-Item -Path $ConfigurationTempFile -Force | Out-Null
 
 		# Remove the VM Self-Signed Certificate from the Local Machine Store
 		Remove-Item -Path "Cert:LocalMachine\My\$CertificateThumbprint" -Force | OUt-Null
@@ -915,7 +913,7 @@ function Start-LabVMDSC {
 		}
 
 		# Now Upload any required modules
-		$DSCModules = Get-ModulesInDSCConfig -MOFFile $($VM.DSCConfigFile)
+		$DSCModules = Get-ModulesInDSCConfig -DSCConfigFile $($VM.DSCConfigFile)
 		Foreach ($ModuleName in $DSCModules) {
 			$Complete = $False
 			While ((-not $Complete) -and (((Get-Date) - $StartTime).Seconds) -lt $TimeOut) {
