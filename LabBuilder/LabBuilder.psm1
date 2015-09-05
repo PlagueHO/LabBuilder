@@ -702,6 +702,7 @@ function Set-LabDSCMOFFile {
 		[String]$NetworkingDSCConfig = @"
 Configuration Networking {
 	Import-DscResource -ModuleName xNetworking
+
 "@
 		[Int]$AdapterCount = 0
 		Foreach ($Adapter in $VM.Adapters) {
@@ -716,6 +717,7 @@ $NetworkingDSCConfig += @"
 		SubnetMask     = $($Adapter.IPv4.SubnetMask)
 		AddressFamily  = "IPv4"
 	}
+
 "@
 				} # If
 				If ($Adapter.IPv4.DNSAddress) {
@@ -725,6 +727,7 @@ $NetworkingDSCConfig += @"
             InterfaceAlias = $($Adapter.InterfaceAlias)
 			AddressFamily  = "IPv4"
 	}
+
 "@
 				} # If
 			} # If
@@ -737,6 +740,7 @@ $NetworkingDSCConfig += @"
 		SubnetMask     = $($Adapter.IPv6.SubnetMask)
 		AddressFamily  = "IPv6"
 	}
+
 "@
 				} # If
 				If ($Adapter.IPv4.DNSAddress) {
@@ -746,6 +750,7 @@ $NetworkingDSCConfig += @"
             InterfaceAlias = $($Adapter.InterfaceAlias)
 			AddressFamily  = "IPv6"
 	}
+
 "@
 			}
 		}
