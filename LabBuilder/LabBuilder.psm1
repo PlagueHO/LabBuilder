@@ -84,6 +84,8 @@ function Get-ModulesInDSCConfig()
 			$Modules += $Match.Groups[1].Value
 		} # If
 	} # Foreach
+	# Add the xNetworking DSC Resource because it is always used
+	$Modules += "xNetworking"
 	Return $Modules
 } # Get-ModulesInDSCConfig
 ##########################################################################################################################################
@@ -1147,7 +1149,39 @@ function Get-LabVMs {
 			If (-not $VLan) {
 				$VLan = $SwitchVLan
 			} # If
-			$VMAdapters += @{ Name = $VMAdapter.Name; SwitchName = $VMAdapter.SwitchName; MACAddress = $VMAdapter.macaddress; VLan = $VLan }
+
+			# Have we got any IPv4 settings?
+			[System.Collections.Hashtable]$IPv4 = @{}
+			If ($VMAdapter.IPv4) {
+				$IPv4 = @{
+					Address = $VMAdapter.IPv4.Address;
+					interfacealias = $VMAdapter.IPv4.InterfaceAlias;
+					defaultgateway = $VMAdapter.IPv4.DefaultGateway;
+					subnetmask = $VMAdapter.IPv4.SubnetMask;
+					dnsserver = $VMAdapter.IPv4.DNSServer;
+				}
+			}
+
+			# Have we got any IPv6 settings?
+			[System.Collections.Hashtable]$IPv6 = @{}
+			If ($VMAdapter.IPv6) {
+				$IPv6 = @{
+					Address = $VMAdapter.IPv6.Address;
+					interfacealias = $VMAdapter.IPv6.InterfaceAlias;
+					defaultgateway = $VMAdapter.IPv6.DefaultGateway;
+					subnetmask = $VMAdapter.IPv6.SubnetMask;
+					dnsserver = $VMAdapter.IPv6.DNSServer;
+				}
+			}
+
+			$VMAdapters += @{
+				Name = $VMAdapter.Name;
+				SwitchName = $VMAdapter.SwitchName;
+				MACAddress = $VMAdapter.macaddress;
+				VLan = $VLan;
+				IPv4 = $IPv4;
+				IPv6 = $IPv6
+			}
 		} # Foreach
 
 		# Does the VM have an Unattend file specified?
@@ -1414,19 +1448,22 @@ function Initialize-LabVMs {
 				Write-Verbose "VM $($VM.Name) network adapter $($VMAdapter.Name) is being added ..."
 				Add-VMNetworkAdapter -VMName $VM.Name -SwitchName $VMAdapter.SwitchName -Name $VMAdapter.Name
 			} # If
+			$VMNetworkAdapter = Get-VMNetworkAdapter -VMName $VM.Name -Name $VMAdapter.Name
 			$Vlan = $VMAdapter.VLan
 			If ($VLan) {
 				Write-Verbose "VM $($VM.Name) network adapter $($VMAdapter.Name) VLAN is set to $Vlan ..."
-				Get-VMNetworkAdapter -VMName $VM.Name -Name $VMAdapter.Name | Set-VMNetworkAdapterVlan -Access -VlanId $Vlan | Out-Null
+				$VMNetworkAdapter | Set-VMNetworkAdapterVlan -Access -VlanId $Vlan | Out-Null
 			} Else {
 				Write-Verbose "VM $($VM.Name) network adapter $($VMAdapter.Name) VLAN is cleared ..."
-				Get-VMNetworkAdapter -VMName $VM.Name -Name $VMAdapter.Name | Set-VMNetworkAdapterVlan -Untagged | Out-Null
+				$VMNetworkAdapter | Set-VMNetworkAdapterVlan -Untagged | Out-Null
 			} # If
 			If ($VMAdapter.MACAddress) {
-				Get-VMNetworkAdapter -VMName $VM.Name -Name $VMAdapter.Name | Set-VMNetworkAdapter -StaticMacAddress $VMAdapter.MACAddress | Out-Null
+				$VMNetworkAdapter | Set-VMNetworkAdapter -StaticMacAddress $VMAdapter.MACAddress | Out-Null
 			} Else {
-				Get-VMNetworkAdapter -VMName $VM.Name -Name $VMAdapter.Name | Set-VMNetworkAdapter -DynamicMacAddress | Out-Null
+				$VMNetworkAdapter | Set-VMNetworkAdapter -DynamicMacAddress | Out-Null
 			} # If
+			# Enable Device Naming (although the feature is buggy at the moment)
+			$VMNetworkAdapter | Set-VMNetworkAdapter -DeviceNaming On | Out-Null
 		} # Foreach
 		
 		# The VM is now ready to be started

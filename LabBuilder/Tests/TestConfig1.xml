@@ -81,7 +81,18 @@
         <adapter name="General Purpose External"
                  switchname="General Purpose External" />
         <adapter name="Domain Private Site A"
-                 switchname="Domain Private Site A" />
+                 switchname="Domain Private Site A" >
+          <ipv4 address="192.168.128.10"
+                interfacealias="Ethernet 2"
+                defaultgateway=""
+                subnetmask="24"
+                dnsserver="192.168.128.10"/>
+          <ipv6 address="fd53:ccc5:895a:bc00::a"
+                interfacealias="Ethernet 2"
+                defaultgateway=""
+                subnetmask="64"
+                dnsserver="fd53:ccc5:895a:bc00::a"/>
+        </adapter>
       </adapters>
     </vm>
 
@@ -100,7 +111,18 @@
         <adapter name="General Purpose External"
                  switchname="General Purpose External" />
         <adapter name="Domain Private Site A"
-                 switchname="Domain Private Site A" />
+                 switchname="Domain Private Site A">
+          <ipv4 address="192.168.128.11"
+                interfacealias="Ethernet 2"
+                defaultgateway=""
+                subnetmask="24"
+                dnsserver="192.168.128.11"/>
+          <ipv6 address="fd53:ccc5:895a:bc00::b"
+                interfacealias="Ethernet 2"
+                defaultgateway=""
+                subnetmask="64"
+                dnsserver="fd53:ccc5:895a:bc00::b"/>
+        </adapter>
       </adapters>
     </vm>
 

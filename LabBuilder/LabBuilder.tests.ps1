@@ -615,48 +615,104 @@ Describe "Get-LabVMs" {
 		It "Returns Template Object that matches Expected Object" {
 			$ExpectedVMs = [String] @"
 {
-    "TemplateVHD":  "C:\\Pester Lab\\Virtual Hard Disk Templates\\Windows Server 2012 R2 Datacenter Full.vhdx",
-    "ProcessorCount":  1,
-    "TimeZone":  "Pacific Standard Time",
-    "Template":  "Pester Windows Server 2012 R2 Datacenter Full",
-    "MemoryStartupBytes":  10737418240,
-    "SetupComplete":  "",
-    "DSCConfigName":  "ROOTCA",
-    "DSCParameters":  "\r\n          CACommonName = \"PESTER.LOCAL Root CA\"\r\n          CADistinguishedNameSuffix = \"DC=PESTER,DC=LOCAL\"\r\n        ",
-    "UseDifferencingDisk":  "Y",
-    "DSCConfigFile":  "C:\\Users\\Daniel\\Source\\GitHub\\LabBuilder\\LabBuilder\\Tests\\PesterTestConfig\\PesterTest.DSC.ps1",
-    "ComputerName":  "PESTER01",
-    "ProductKey":  "DDDDD-DDDDD-DDDDD-DDDDD-DDDDD",
     "DataVHDSize":  0,
-    "Name":  "PESTER01",
-    "UnattendFile":  "",
+    "DSCConfigName":  "ROOTCA",
     "AdministratorPassword":  "Something",
+    "TemplateVHD":  "C:\\Pester Lab\\Virtual Hard Disk Templates\\Windows Server 2012 R2 Datacenter Full.vhdx",
+    "ProductKey":  "DDDDD-DDDDD-DDDDD-DDDDD-DDDDD",
+    "ComputerName":  "PESTER01",
+    "UnattendFile":  "",
     "Adapters":  [
                      {
+                         "IPv6":  {
+                                      "interfacealias":  "Ethernet",
+                                      "dnsserver":  "fd53:ccc5:895a:0000::1",
+                                      "subnetmask":  "64",
+                                      "Address":  "fd53:ccc5:895a:0000::1",
+                                      "defaultgateway":  ""
+                                  },
+                         "Name":  "Pester Test Private Vlan",
                          "SwitchName":  "Pester Test Private Vlan",
                          "VLan":  "2",
-                         "Name":  "Pester Test Private Vlan",
+                         "IPv4":  {
+                                      "interfacealias":  "Ethernet",
+                                      "dnsserver":  "192.168.16.1",
+                                      "subnetmask":  "24",
+                                      "Address":  "192.168.16.1",
+                                      "defaultgateway":  ""
+                                  },
                          "MACAddress":  "00155D010801"
                      },
                      {
+                         "IPv6":  {
+                                      "interfacealias":  "Ethernet 2",
+                                      "dnsserver":  "fd53:ccc5:895a:0000::2",
+                                      "subnetmask":  "64",
+                                      "Address":  "fd53:ccc5:895a:0000::2",
+                                      "defaultgateway":  ""
+                                  },
+                         "Name":  "Pester Test Internal Vlan",
                          "SwitchName":  "Pester Test Internal Vlan",
                          "VLan":  "3",
-                         "Name":  "Pester Test Internal Vlan",
+                         "IPv4":  {
+                                      "interfacealias":  "Ethernet 2",
+                                      "dnsserver":  "192.168.16.2",
+                                      "subnetmask":  "24",
+                                      "Address":  "192.168.16.2",
+                                      "defaultgateway":  ""
+                                  },
                          "MACAddress":  "00155D010802"
                      },
                      {
+                         "IPv6":  {
+                                      "interfacealias":  "Ethernet 3",
+                                      "dnsserver":  "fd53:ccc5:895a:0000::3",
+                                      "subnetmask":  "64",
+                                      "Address":  "fd53:ccc5:895a:0000::3",
+                                      "defaultgateway":  ""
+                                  },
+                         "Name":  "Pester Test Private",
                          "SwitchName":  "Pester Test Private",
                          "VLan":  "3",
-                         "Name":  "Pester Test Private",
+                         "IPv4":  {
+                                      "interfacealias":  "Ethernet 3",
+                                      "dnsserver":  "192.168.16.3",
+                                      "subnetmask":  "24",
+                                      "Address":  "192.168.16.3",
+                                      "defaultgateway":  ""
+                                  },
                          "MACAddress":  "00155D010803"
                      },
                      {
+                         "IPv6":  {
+                                      "interfacealias":  "Ethernet 4",
+                                      "dnsserver":  "fd53:ccc5:895a:0000::4",
+                                      "subnetmask":  "64",
+                                      "Address":  "fd53:ccc5:895a:0000::4",
+                                      "defaultgateway":  ""
+                                  },
+                         "Name":  "Pester Test Internal",
                          "SwitchName":  "Pester Test Internal",
                          "VLan":  "4",
-                         "Name":  "Pester Test Internal",
+                         "IPv4":  {
+                                      "interfacealias":  "Ethernet 4",
+                                      "dnsserver":  "192.168.16.4",
+                                      "subnetmask":  "24",
+                                      "Address":  "192.168.16.4",
+                                      "defaultgateway":  ""
+                                  },
                          "MACAddress":  "00155D010804"
                      }
-                 ]
+                 ],
+    "ProcessorCount":  1,
+    "Template":  "Pester Windows Server 2012 R2 Datacenter Full",
+    "UseDifferencingDisk":  "Y",
+    "SetupComplete":  "",
+    "DSCParameters":  "\r\n          CACommonName = \"PESTER.LOCAL Root CA\"\r\n          CADistinguishedNameSuffix = \"DC=PESTER,DC=LOCAL\"\r\n        ",
+    "TimeZone":  "Pacific Standard Time",
+    "MemoryStartupBytes":  10737418240,
+    "DSCConfigFile":  "C:\\Users\\Daniel\\Source\\GitHub\\LabBuilder\\LabBuilder\\Tests\\PesterTestConfig\\PesterTest.DSC.ps1",
+    "Name":  "PESTER01"
 }
 "@
 			[String]::Compare(($VMs | ConvertTo-Json -Depth 4),$ExpectedVMs,$true) | Should Be 0

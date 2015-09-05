@@ -72,10 +72,54 @@
         productkey="DDDDD-DDDDD-DDDDD-DDDDD-DDDDD"
         timezone="Pacific Standard Time">
       <adapters>
-        <adapter name="Pester Test Private Vlan" switchname="Pester Test Private Vlan" macaddress="00155D010801" />
-        <adapter name="Pester Test Internal Vlan" switchname="Pester Test Internal Vlan" macaddress="00155D010802"/>
-        <adapter name="Pester Test Private" switchname="Pester Test Private" macaddress="00155D010803" vlan="3" />
-        <adapter name="Pester Test Internal" switchname="Pester Test Internal" macaddress="00155D010804" vlan="4" />
+        <adapter name="Pester Test Private Vlan" switchname="Pester Test Private Vlan" macaddress="00155D010801" >
+          <ipv4 address="192.168.16.1"
+                interfacealias="Ethernet"
+                defaultgateway=""
+                subnetmask="24"
+                dnsserver="192.168.16.1"/>
+          <ipv6 address="fd53:ccc5:895a:0000::1"
+                interfacealias="Ethernet"
+                defaultgateway=""
+                subnetmask="64"
+                dnsserver="fd53:ccc5:895a:0000::1"/>
+        </adapter>
+        <adapter name="Pester Test Internal Vlan" switchname="Pester Test Internal Vlan" macaddress="00155D010802" >
+          <ipv4 address="192.168.16.2"
+                interfacealias="Ethernet 2"
+                defaultgateway=""
+                subnetmask="24"
+                dnsserver="192.168.16.2"/>
+          <ipv6 address="fd53:ccc5:895a:0000::2"
+                interfacealias="Ethernet 2"
+                defaultgateway=""
+                subnetmask="64"
+                dnsserver="fd53:ccc5:895a:0000::2"/>
+        </adapter>
+        <adapter name="Pester Test Private" switchname="Pester Test Private" macaddress="00155D010803" vlan="3" >
+          <ipv4 address="192.168.16.3"
+                interfacealias="Ethernet 3"
+                defaultgateway=""
+                subnetmask="24"
+                dnsserver="192.168.16.3"/>
+          <ipv6 address="fd53:ccc5:895a:0000::3"
+                interfacealias="Ethernet 3"
+                defaultgateway=""
+                subnetmask="64"
+                dnsserver="fd53:ccc5:895a:0000::3"/>
+        </adapter>
+        <adapter name="Pester Test Internal" switchname="Pester Test Internal" macaddress="00155D010804" vlan="4" >
+          <ipv4 address="192.168.16.4"
+                interfacealias="Ethernet 4"
+                defaultgateway=""
+                subnetmask="24"
+                dnsserver="192.168.16.4"/>
+          <ipv6 address="fd53:ccc5:895a:0000::4"
+                interfacealias="Ethernet 4"
+                defaultgateway=""
+                subnetmask="64"
+                dnsserver="fd53:ccc5:895a:0000::4"/>
+        </adapter>
       </adapters>
       <dsc configname="ROOTCA"
            configfile="PesterTest.DSC.ps1">
