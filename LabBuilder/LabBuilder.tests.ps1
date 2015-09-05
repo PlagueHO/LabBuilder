@@ -625,7 +625,6 @@ Describe "Get-LabVMs" {
     "Adapters":  [
                      {
                          "IPv6":  {
-                                      "interfacealias":  "Ethernet",
                                       "dnsserver":  "fd53:ccc5:895a:0000::1",
                                       "subnetmask":  "64",
                                       "Address":  "fd53:ccc5:895a:0000::1",
@@ -634,8 +633,8 @@ Describe "Get-LabVMs" {
                          "Name":  "Pester Test Private Vlan",
                          "SwitchName":  "Pester Test Private Vlan",
                          "VLan":  "2",
+                         "InterfaceAlias":  "Ethernet",
                          "IPv4":  {
-                                      "interfacealias":  "Ethernet",
                                       "dnsserver":  "192.168.16.1",
                                       "subnetmask":  "24",
                                       "Address":  "192.168.16.1",
@@ -645,7 +644,6 @@ Describe "Get-LabVMs" {
                      },
                      {
                          "IPv6":  {
-                                      "interfacealias":  "Ethernet 2",
                                       "dnsserver":  "fd53:ccc5:895a:0000::2",
                                       "subnetmask":  "64",
                                       "Address":  "fd53:ccc5:895a:0000::2",
@@ -654,8 +652,8 @@ Describe "Get-LabVMs" {
                          "Name":  "Pester Test Internal Vlan",
                          "SwitchName":  "Pester Test Internal Vlan",
                          "VLan":  "3",
+                         "InterfaceAlias":  "Ethernet 2",
                          "IPv4":  {
-                                      "interfacealias":  "Ethernet 2",
                                       "dnsserver":  "192.168.16.2",
                                       "subnetmask":  "24",
                                       "Address":  "192.168.16.2",
@@ -665,7 +663,6 @@ Describe "Get-LabVMs" {
                      },
                      {
                          "IPv6":  {
-                                      "interfacealias":  "Ethernet 3",
                                       "dnsserver":  "fd53:ccc5:895a:0000::3",
                                       "subnetmask":  "64",
                                       "Address":  "fd53:ccc5:895a:0000::3",
@@ -674,8 +671,8 @@ Describe "Get-LabVMs" {
                          "Name":  "Pester Test Private",
                          "SwitchName":  "Pester Test Private",
                          "VLan":  "3",
+                         "InterfaceAlias":  "Ethernet 3",
                          "IPv4":  {
-                                      "interfacealias":  "Ethernet 3",
                                       "dnsserver":  "192.168.16.3",
                                       "subnetmask":  "24",
                                       "Address":  "192.168.16.3",
@@ -685,7 +682,6 @@ Describe "Get-LabVMs" {
                      },
                      {
                          "IPv6":  {
-                                      "interfacealias":  "Ethernet 4",
                                       "dnsserver":  "fd53:ccc5:895a:0000::4",
                                       "subnetmask":  "64",
                                       "Address":  "fd53:ccc5:895a:0000::4",
@@ -694,8 +690,8 @@ Describe "Get-LabVMs" {
                          "Name":  "Pester Test Internal",
                          "SwitchName":  "Pester Test Internal",
                          "VLan":  "4",
+                         "InterfaceAlias":  "Ethernet 4",
                          "IPv4":  {
-                                      "interfacealias":  "Ethernet 4",
                                       "dnsserver":  "192.168.16.4",
                                       "subnetmask":  "24",
                                       "Address":  "192.168.16.4",

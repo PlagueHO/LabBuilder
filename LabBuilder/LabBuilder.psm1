@@ -697,7 +697,68 @@ function Set-LabDSCMOFFile {
 
 		# A DSC Config File was provided so create a MOF File out of it.
 		Write-Verbose "Creating VM $($VM.Name) DSC MOF File from DSC Config $($VM.DSCConfigFile) ..."
-		. $VM.DSCConfigFile
+		
+		# Now create the Networking DSC Config file
+		[String]$NetworkingDSCConfig = @"
+Configuration Networking {
+	Import-DscResource -ModuleName xNetworking
+"@
+		[Int]$AdapterCount = 0
+		Foreach ($Adapter in $VM.Adapters) {
+			$AdapterCount++
+			If ($Adapter.IPv4) {
+				If ($Adapter.IPv4.Address) {
+$NetworkingDSCConfig += @"
+	xIPAddress IPv4_$AdapterCount {
+		IPAddress      = $Adapter.IPv4.Address
+		InterfaceAlias = $Adapter.InterfaceAlias
+		DefaultGateway = $Adapter.IPv4.DefaultGateway
+		SubnetMask     = $Adapter.IPv4.SubnetMask
+		AddressFamily  = "IPv4"
+	}
+"@
+				} # If
+				If ($Adapter.IPv4.DNSAddress) {
+$NetworkingDSCConfig += @"
+	xDnsServerAddress IPv4D_$AdapterCount {
+            Address        = $Adapter.IPv4.DNSServer
+            InterfaceAlias = $InterfaceAlias
+			AddressFamily  = "IPv4"
+	}
+"@
+				} # If
+			} # If
+			If ($Adapter.IPv6) {
+$NetworkingDSCConfig += @"
+	xIPAddress IPv6_$AdapterCount {
+		IPAddress      = $Adapter.IPv6.Address
+		InterfaceAlias = $Adapter.InterfaceAlias
+		DefaultGateway = $Adapter.IPv6.DefaultGateway
+		SubnetMask     = $Adapter.IPv6.SubnetMask
+		AddressFamily  = "IPv6"
+	}
+"@
+				} # If
+				If ($Adapter.IPv4.DNSAddress) {
+$NetworkingDSCConfig += @"
+	xDnsServerAddress IPv6D_$AdapterCount {
+            Address        = $Adapter.IPv6.DNSServer
+            InterfaceAlias = $InterfaceAlias
+			AddressFamily  = "IPv6"
+	}
+"@
+			}
+		}
+$NetworkingDSCConfig += @"
+}
+"@
+		[String]$NetworkingDSCFile = Join-Path -Path "$VMPath\$($VM.Name)\LabBuilder Files" -ChildPath "DSCNetworking.ps1"
+		Set-Content -Path $NetworkingDSCFile -Value $NetworkingDSCConfig | Out-Null
+
+		[String]$DSCFile = Join-Path -Path "$VMPath\$($VM.Name)\LabBuilder Files" -ChildPath "DSC.ps1"
+		Copy-Item -Path $VM.DSCConfigFile -Destination $DSCFile -Force | Out-Null
+		. $DSCFile
+
 		[String]$DSCConfigName = $VM.DSCConfigName
 		
 		# Generate the Configuration Nodes data that always gets passed to the DSC configuration.
@@ -715,14 +776,14 @@ function Set-LabDSCMOFFile {
 }
 "@
 		# Write it to a temp file
-		[String]$ConfigurationTempFile = (Join-Path -Path $ENV:Temp -ChildPath "DSCConfigData.psd1")
-		If (Test-Path -Path $ConfigurationTempFile) {
-			Remove-Item -Path $ConfigurationTempFile -Force | Out-Null
+		[String]$ConfigurationFile = Join-Path -Path "$VMPath\$($VM.Name)\LabBuilder Files" -ChildPath "DSCConfigData.psd1"
+		If (Test-Path -Path $ConfigurationFile) {
+			Remove-Item -Path $ConfigurationFile -Force | Out-Null
 		}
-		Set-Content -Path $ConfigurationTempFile -Value $ConfigurationData
+		Set-Content -Path $ConfigurationFile -Value $ConfigurationData
 			
 		# Generate the MOF file from the configuration
-		& "$DSCConfigName" -OutputPath $($ENV:Temp) -ConfigurationData $ConfigurationTempFile | Out-Null
+		& "$DSCConfigName" -OutputPath $($ENV:Temp) -ConfigurationData $ConfigurationFile | Out-Null
 		If (-not (Test-Path -Path $DSCMOFFile)) {
 			Throw "A MOF File was not created by the DSC Config File $($VM.DSCCOnfigFile) for VM $($VM.Name)."
 		} # If
@@ -1123,7 +1184,9 @@ function Get-LabVMs {
 
 		# Assemble the Network adapters that this VM will use
 		[System.Collections.Hashtable[]]$VMAdapters = @()
+		[Int]$AdapterCount = 0
 		Foreach ($VMAdapter in $VM.Adapters.Adapter) {
+			$AdapterCount++
 			If ($VMAdapter.Name -eq 'adapter') {
 				Throw "The Adapter Name in VM $($VM.Name) cannot be 'adapter' or empty."
 			}
@@ -1145,9 +1208,19 @@ function Get-LabVMs {
 			} # If
 			
 			# Figure out the VLan - If defined in the VM use it, otherwise use the one defined in the Switch, otherwise keep blank.
-			$VLan = $VMAdapter.VLan
+			[String]$VLan = $VMAdapter.VLan
 			If (-not $VLan) {
 				$VLan = $SwitchVLan
+			} # If
+
+			# Determine the Interface Alias
+			[String]$InterfaceAlias = $VMAdapter.InterfaceAlias
+			If (-not $InterfaceAlias) {
+				If ($AdapterCount -eq 1) {
+					$InterfaceAlias = "Ethernet"
+				} Else {
+					$InterfaceAlias = "Ethernet $AdapterCount"
+				}
 			} # If
 
 			# Have we got any IPv4 settings?
@@ -1155,10 +1228,9 @@ function Get-LabVMs {
 			If ($VMAdapter.IPv4) {
 				$IPv4 = @{
 					Address = $VMAdapter.IPv4.Address;
-					interfacealias = $VMAdapter.IPv4.InterfaceAlias;
 					defaultgateway = $VMAdapter.IPv4.DefaultGateway;
 					subnetmask = $VMAdapter.IPv4.SubnetMask;
-					dnsserver = $VMAdapter.IPv4.DNSServer;
+					dnsserver = $VMAdapter.IPv4.DNSServer
 				}
 			}
 
@@ -1167,10 +1239,9 @@ function Get-LabVMs {
 			If ($VMAdapter.IPv6) {
 				$IPv6 = @{
 					Address = $VMAdapter.IPv6.Address;
-					interfacealias = $VMAdapter.IPv6.InterfaceAlias;
 					defaultgateway = $VMAdapter.IPv6.DefaultGateway;
 					subnetmask = $VMAdapter.IPv6.SubnetMask;
-					dnsserver = $VMAdapter.IPv6.DNSServer;
+					dnsserver = $VMAdapter.IPv6.DNSServer
 				}
 			}
 
@@ -1180,7 +1251,8 @@ function Get-LabVMs {
 				MACAddress = $VMAdapter.macaddress;
 				VLan = $VLan;
 				IPv4 = $IPv4;
-				IPv6 = $IPv6
+				IPv6 = $IPv6;
+				InterfaceAlias = $InterfaceAlias
 			}
 		} # Foreach
 
@@ -1297,7 +1369,7 @@ function Get-LabVMs {
 			SetupComplete = $SetupComplete;
 			DSCConfigFile = $DSCConfigFile;
 			DSCConfigName = $VM.DSC.ConfigName;
-			DSCParameters = $DSCParameters;
+			DSCParameters = $DSCParameters
 		}
 	} # Foreach        
 
