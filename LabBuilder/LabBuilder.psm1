@@ -720,7 +720,7 @@ $NetworkingDSCConfig += @"
 
 "@
 				} # If
-				If ($Adapter.IPv4.DNSAddress) {
+				If ($Adapter.IPv4.DNSServer) {
 $NetworkingDSCConfig += @"
 	xDnsServerAddress IPv4D_$AdapterCount {
             Address        = $($Adapter.IPv4.DNSServer)
@@ -745,7 +745,7 @@ $NetworkingDSCConfig += @"
 
 "@
 				} # If
-				If ($Adapter.IPv6.DNSAddress) {
+				If ($Adapter.IPv6.DNSServer) {
 $NetworkingDSCConfig += @"
 	xDnsServerAddress IPv6D_$AdapterCount {
             Address        = $($Adapter.IPv6.DNSServer)
