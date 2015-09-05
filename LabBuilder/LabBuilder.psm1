@@ -723,9 +723,9 @@ $NetworkingDSCConfig += @"
 				If ($Adapter.IPv4.DNSServer) {
 $NetworkingDSCConfig += @"
 	xDnsServerAddress IPv4D_$AdapterCount {
-            Address        = '$($Adapter.IPv4.DNSServer)'
-            InterfaceAlias = '$($Adapter.InterfaceAlias)'
-			AddressFamily  = 'IPv4'
+		Address        = '$($Adapter.IPv4.DNSServer)'
+		InterfaceAlias = '$($Adapter.InterfaceAlias)'
+		AddressFamily  = 'IPv4'
 	}
 
 "@
@@ -746,14 +746,18 @@ $NetworkingDSCConfig += @"
 "@
 				} # If
 				If ($Adapter.IPv6.DNSServer) {
+# This code is disabled until issue #20 is resolved:
+# https://github.com/PowerShell/xNetworking
+<#
 $NetworkingDSCConfig += @"
 	xDnsServerAddress IPv6D_$AdapterCount {
-            Address        = '$($Adapter.IPv6.DNSServer)'
-            InterfaceAlias = '$($Adapter.InterfaceAlias)'
-			AddressFamily  = 'IPv6'
+		Address        = '$($Adapter.IPv6.DNSServer)'
+		InterfaceAlias = '$($Adapter.InterfaceAlias)'
+		AddressFamily  = 'IPv6'
 	}
 
 "@
+#>
 				} # If
 			} # If
 		} # Endfor
@@ -762,9 +766,20 @@ $NetworkingDSCConfig += @"
 "@
 		[String]$NetworkingDSCFile = Join-Path -Path "$VMPath\$($VM.Name)\LabBuilder Files" -ChildPath "DSCNetworking.ps1"
 		Set-Content -Path $NetworkingDSCFile -Value $NetworkingDSCConfig | Out-Null
+		. $NetworkingDSCFile
 
 		[String]$DSCFile = Join-Path -Path "$VMPath\$($VM.Name)\LabBuilder Files" -ChildPath "DSC.ps1"
-		Copy-Item -Path $VM.DSCConfigFile -Destination $DSCFile -Force | Out-Null
+		[String]$DSCContent = Get-Content -Path $VM.DSCConfigFile
+		
+		If (-not ($DSCContent -match "Networking $($VM.ComputerName)")) {
+			# Add the Networking Configuration item to the base DSC Config File
+
+		} # If
+		
+		# Save the DSC Content
+		Set-Content -Path $DSCFile -Value $DSCContent -Force | Out-Null
+
+		# Hook the Networking DSC File into the main DSC File
 		. $DSCFile
 
 		[String]$DSCConfigName = $VM.DSCConfigName
