@@ -73,10 +73,10 @@ function Get-ModulesInDSCConfig()
 			Mandatory=$True,
 			Position=0)]
 		[ValidateNotNullOrEmpty()]	
-		[String]$MOFFile
+		[String]$DSCConfigFile
 	)
 	[String[]]$Modules = $Null
-	[String]$Content = Get-Content -Path $MOFFile
+	[String]$Content = Get-Content -Path $DSCConfigFile
 	$Regex = "Import\-DscResource\s(?:\-ModuleName\s)?'?`"?([A-Za-z0-9]+)`"?'?"
 	$Matches = [regex]::matches($Content, $Regex, "IgnoreCase")
 	Foreach ($Match in $Matches) {
@@ -662,50 +662,44 @@ function Set-LabDSCMOFFile {
 	[String]$DSCMOFMetaFile = ''
 	[String]$VMPath = $Configuration.labbuilderconfig.settings.vmpath
 
-	If ($VM.DSCMOFFile) {
-		# A MOF File was specified so just use that. 
-		Write-Verbose "Using specified DSC MOF File $($VM.DSCMOFFile) for VM $($VM.Name) ..."
-		$DSCMOFFile = $VM.DSCMOFFile
-		$DSCMOFMetaFile = ([System.IO.Path]::ChangeExtension($DSCMOFFile,"meta.mof"))
-	} Else {
-		If ($VM.DSCConfigFile) {
-			# Make sure all the modules required to create the MOF file are installed
-			$InstalledModules = Get-Module -ListAvailable
-			Write-Verbose "Identifying Modules used by DSC Config File $($VM.DSCConfigFile) in VM $($VM.Name) ..."
-			$DSCModules = Get-ModulesInDSCConfig -MOFFile $($VM.DSCConfigFile)
-			Foreach ($ModuleName in $DSCModules) {
-				Write-Verbose "Saving Module $ModuleName required by DSC Config File $($VM.DSCConfigFile) in VM $($VM.Name) ..."
-				Save-Module -Name $ModuleName -Path "$VMPath\$($VM.Name)\LabBuilder Files\DSC Modules\" -Force
-				If (($InstalledModules | Where-Object -Property Name -EQ $ModuleName).Count -eq 0) {
-					# The Module isn't available on this computer, so try and install it
-					Write-Verbose "Installing Module $ModuleName required by DSC Config File $($VM.DSCConfigFile) in VM $($VM.Name) ..."
-					Find-Module -Name $ModuleName | Install-Module -Verbose
-				} # If
-			} # Foreach
-
-			# Add the VM Self-Signed Certificate to the Local Machine store and get the Thumbprint	
-			[String]$CertificateFile = "$VMPath\$($VM.Name)\LabBuilder Files\SelfSigned.cer"
-			$Certificate = Import-Certificate -FilePath $CertificateFile -CertStoreLocation "Cert:LocalMachine\My"
-			[String]$CertificateThumbprint = $Certificate.Thumbprint
-
-			# Set the predictated MOF File name
-			$DSCMOFFile = Join-Path -Path $ENV:Temp -ChildPath "$($VM.ComputerName).mof"
-			$DSCMOFMetaFile = ([System.IO.Path]::ChangeExtension($DSCMOFFile,"meta.mof"))
-			
-			# Generate the LCM MOF File
-			Write-Verbose "Creating VM $($VM.Name) DSC LCM MOF File ..."
-			ConfigLCM -OutputPath $($ENV:Temp) -ComputerName $($VM.ComputerName) -Thumbprint $CertificateThumbprint | Out-Null
-			If (-not (Test-Path -Path $DSCMOFMetaFile)) {
-				Throw "A Meta MOF File was not created by the DSC LCM Config for VM $($VM.Name)."
+	If ($VM.DSCConfigFile) {
+		# Make sure all the modules required to create the MOF file are installed
+		$InstalledModules = Get-Module -ListAvailable
+		Write-Verbose "Identifying Modules used by DSC Config File $($VM.DSCConfigFile) in VM $($VM.Name) ..."
+		$DSCModules = Get-ModulesInDSCConfig -MOFFile $($VM.DSCConfigFile)
+		Foreach ($ModuleName in $DSCModules) {
+			Write-Verbose "Saving Module $ModuleName required by DSC Config File $($VM.DSCConfigFile) in VM $($VM.Name) ..."
+			Save-Module -Name $ModuleName -Path "$VMPath\$($VM.Name)\LabBuilder Files\DSC Modules\" -Force
+			If (($InstalledModules | Where-Object -Property Name -EQ $ModuleName).Count -eq 0) {
+				# The Module isn't available on this computer, so try and install it
+				Write-Verbose "Installing Module $ModuleName required by DSC Config File $($VM.DSCConfigFile) in VM $($VM.Name) ..."
+				Find-Module -Name $ModuleName | Install-Module -Verbose
 			} # If
+		} # Foreach
 
-			# A DSC Config File was provided so create a MOF File out of it.
-			Write-Verbose "Creating VM $($VM.Name) DSC MOF File from DSC Config $($VM.DSCConfigFile) ..."
-			. $VM.DSCConfigFile
-			[String]$DSCConfigName = $VM.DSCConfigName
+		# Add the VM Self-Signed Certificate to the Local Machine store and get the Thumbprint	
+		[String]$CertificateFile = "$VMPath\$($VM.Name)\LabBuilder Files\SelfSigned.cer"
+		$Certificate = Import-Certificate -FilePath $CertificateFile -CertStoreLocation "Cert:LocalMachine\My"
+		[String]$CertificateThumbprint = $Certificate.Thumbprint
+
+		# Set the predictated MOF File name
+		$DSCMOFFile = Join-Path -Path $ENV:Temp -ChildPath "$($VM.ComputerName).mof"
+		$DSCMOFMetaFile = ([System.IO.Path]::ChangeExtension($DSCMOFFile,"meta.mof"))
+			
+		# Generate the LCM MOF File
+		Write-Verbose "Creating VM $($VM.Name) DSC LCM MOF File ..."
+		ConfigLCM -OutputPath $($ENV:Temp) -ComputerName $($VM.ComputerName) -Thumbprint $CertificateThumbprint | Out-Null
+		If (-not (Test-Path -Path $DSCMOFMetaFile)) {
+			Throw "A Meta MOF File was not created by the DSC LCM Config for VM $($VM.Name)."
+		} # If
+
+		# A DSC Config File was provided so create a MOF File out of it.
+		Write-Verbose "Creating VM $($VM.Name) DSC MOF File from DSC Config $($VM.DSCConfigFile) ..."
+		. $VM.DSCConfigFile
+		[String]$DSCConfigName = $VM.DSCConfigName
 		
-			# Generate the Configuration Nodes data that always gets passed to the DSC configuration.
-			[String]$ConfigurationData = @"
+		# Generate the Configuration Nodes data that always gets passed to the DSC configuration.
+		[String]$ConfigurationData = @"
 @{
 	AllNodes = @(
 		@{
@@ -718,46 +712,47 @@ function Set-LabDSCMOFFile {
 	)
 }
 "@
-			# Write it to a temp file
-			[String]$ConfigurationTempFile = (Join-Path -Path $ENV:Temp -ChildPath "DSCConfigData.psd1")
-			If (Test-Path -Path $ConfigurationTempFile) {
-				Remove-Item -Path $ConfigurationTempFile -Force | Out-Null
-			}
-			Set-Content -Path $ConfigurationTempFile -Value $ConfigurationData
-			
-			# Generate the MOF file from the configuration
-			& "$DSCConfigName" -OutputPath $($ENV:Temp) -ConfigurationData $ConfigurationTempFile | Out-Null
-			If (-not (Test-Path -Path $DSCMOFFile)) {
-				Throw "A MOF File was not created by the DSC Config File $($VM.DSCCOnfigFile) for VM $($VM.Name)."
-			} # If
-
+		# Write it to a temp file
+		[String]$ConfigurationTempFile = (Join-Path -Path $ENV:Temp -ChildPath "DSCConfigData.psd1")
+		If (Test-Path -Path $ConfigurationTempFile) {
 			Remove-Item -Path $ConfigurationTempFile -Force | Out-Null
-
-			# Remove the VM Self-Signed Certificate from the Local Machine Store
-			Remove-Item -Path "Cert:LocalMachine\My\$CertificateThumbprint" -Force | OUt-Null
-
-			Write-Verbose "DSC MOF File $DSCMOFFile for VM $($VM.Name) was created successfully ..."
+		}
+		Set-Content -Path $ConfigurationTempFile -Value $ConfigurationData
+			
+		# Generate the MOF file from the configuration
+		& "$DSCConfigName" -OutputPath $($ENV:Temp) -ConfigurationData $ConfigurationTempFile | Out-Null
+		If (-not (Test-Path -Path $DSCMOFFile)) {
+			Throw "A MOF File was not created by the DSC Config File $($VM.DSCCOnfigFile) for VM $($VM.Name)."
 		} # If
-	} # If
 
-	# Copy the files to the LabBuilder Files folder
+		Remove-Item -Path $ConfigurationTempFile -Force | Out-Null
 
-	Copy-Item -Path $DSCMOFFile -Destination "$VMPath\$($VM.Name)\LabBuilder Files\$($VM.ComputerName).mof" -Force | Out-Null
+		# Remove the VM Self-Signed Certificate from the Local Machine Store
+		Remove-Item -Path "Cert:LocalMachine\My\$CertificateThumbprint" -Force | OUt-Null
 
-	If (-not $VM.DSCMOFFile) {
-		# Remove Temporary files created by DSC
-		Remove-Item -Path $DSCMOFFile -Force | OUt-Null
-	}
+		Write-Verbose "DSC MOF File $DSCMOFFile for VM $($VM.Name) was created successfully ..."
 
-	If (Test-Path -Path $DSCMOFMetaFile) {
-		Copy-Item -Path $DSCMOFMetaFile -Destination "$VMPath\$($VM.Name)\LabBuilder Files\$($VM.ComputerName).meta.mof" -Force | Out-Null
+		# Copy the files to the LabBuilder Files folder
+
+		Copy-Item -Path $DSCMOFFile -Destination "$VMPath\$($VM.Name)\LabBuilder Files\$($VM.ComputerName).mof" -Force | Out-Null
+
 		If (-not $VM.DSCMOFFile) {
 			# Remove Temporary files created by DSC
-			Remove-Item -Path $DSCMOFMetaFile -Force | OUt-Null
+			Remove-Item -Path $DSCMOFFile -Force | OUt-Null
 		}
-	} # If
 
-	Return $True
+		If (Test-Path -Path $DSCMOFMetaFile) {
+			Copy-Item -Path $DSCMOFMetaFile -Destination "$VMPath\$($VM.Name)\LabBuilder Files\$($VM.ComputerName).meta.mof" -Force | Out-Null
+			If (-not $VM.DSCMOFFile) {
+				# Remove Temporary files created by DSC
+				Remove-Item -Path $DSCMOFMetaFile -Force | OUt-Null
+			}
+		} # If
+
+		Return $True
+	} Else {
+		Return $False
+	} # If
 } # Set-LabDSCMOFFile
 ##########################################################################################################################################
 
@@ -1197,22 +1192,6 @@ function Get-LabVMs {
 			$DSCParameters = $VM.DSC.Parameters
 		} # If
 
-		# Load the DSC MOF File setting and check it
-		[String]$DSCMOFFile = ''
-		If ($VM.DSC.MOFFile) {
-			If ($DSCConfigFile) {
-				Throw "Both a DSC MOF File and and DSC Config file can not be specified in $($VM.Name)."
-			} # If
-			$DSCMOFFile = Join-Path -Path $Configuration.labbuilderconfig.settings.fullconfigpath -ChildPath $VM.DSC.MOFFile
-			If (-not (Test-Path $DSCMOFFile)) {
-				Throw "The DSC MOF File $DSCMOFFile specified in VM $($VM.Name) can not be found."
-			} # If
-			If ([System.IO.Path]::GetExtension($DSCMOFFile).ToLower() -ne '.mof' ) {
-				Throw "The DSC Config File $DSCMOFFile specified in VM $($VM.Name) must be a MOF file."
-			} # If
-		} # If
-
-
 		# Get the Memory Startup Bytes (from the template or VM)
 		[Int64]$MemoryStartupBytes = 1GB
 		If ($VMTemplate.memorystartupbytes) {
@@ -1284,7 +1263,6 @@ function Get-LabVMs {
 			SetupComplete = $SetupComplete;
 			DSCConfigFile = $DSCConfigFile;
 			DSCConfigName = $VM.DSC.ConfigName;
-			DSCMOFFile = $DSCMOFFile;
 			DSCParameters = $DSCParameters;
 		}
 	} # Foreach        

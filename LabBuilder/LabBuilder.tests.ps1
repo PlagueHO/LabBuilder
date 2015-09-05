@@ -443,12 +443,11 @@ Describe "Set-LabDSCMOFFile" {
 		$Switches = Get-LabSwitches -Configuration $Config
 		$VMTemplates = Get-LabVMTemplates -Configuration $Config
 		$VMs = Get-LabVMs -Configuration $Config -VMTemplates $VMTemplates -Switches $Switches
-		[String]$MOFFileName = Set-LabDSCMOFFile -Configuration $Config -VM $VMs
-		It "Returns Filename that exists" {
-			(Test-Path -Path $MOFFileName) | Should Be $True
+		$Result = Set-LabDSCMOFFile -Configuration $Config -VM $VMs
+		It "Returns True" {
+			$Result | Should Be $True
 		}
 	}
-
 }
 ##########################################################################################################################################
 
@@ -598,33 +597,9 @@ Describe "Get-LabVMs" {
 			{ Get-LabVMs -Configuration $Config -VMTemplates $VMTemplates -Switches $Switches } | Should Throw
 		}
 	}
-	Context "Configuration passed with VM DSC MOF File that can't be found." {
-		It "Fails" {
-			$Config = Get-LabConfiguration -Path "$TestConfigPath\PesterTestConfig.VMFail.BadDSCMOFFile.xml"
-			$Switches = Get-LabSwitches -Configuration $Config
-			$VMTemplates = Get-LabVMTemplates -Configuration $Config
-			{ Get-LabVMs -Configuration $Config -VMTemplates $VMTemplates -Switches $Switches } | Should Throw
-		}
-	}
-	Context "Configuration passed with VM DSC MOF File with an invalid file extension." {
-		It "Fails" {
-			$Config = Get-LabConfiguration -Path "$TestConfigPath\PesterTestConfig.VMFail.BadDSCMOFFileType.xml"
-			$Switches = Get-LabSwitches -Configuration $Config
-			$VMTemplates = Get-LabVMTemplates -Configuration $Config
-			{ Get-LabVMs -Configuration $Config -VMTemplates $VMTemplates -Switches $Switches } | Should Throw
-		}
-	}
 	Context "Configuration passed with VM DSC Config File but no DSC Name." {
 		It "Fails" {
 			$Config = Get-LabConfiguration -Path "$TestConfigPath\PesterTestConfig.VMFail.BadDSCNameMissing.xml"
-			$Switches = Get-LabSwitches -Configuration $Config
-			$VMTemplates = Get-LabVMTemplates -Configuration $Config
-			{ Get-LabVMs -Configuration $Config -VMTemplates $VMTemplates -Switches $Switches } | Should Throw
-		}
-	}
-	Context "Configuration passed with VM DSC Config File and DSC MOF File." {
-		It "Fails" {
-			$Config = Get-LabConfiguration -Path "$TestConfigPath\PesterTestConfig.VMFail.DSCFileAndMOFFile.xml"
 			$Switches = Get-LabSwitches -Configuration $Config
 			$VMTemplates = Get-LabVMTemplates -Configuration $Config
 			{ Get-LabVMs -Configuration $Config -VMTemplates $VMTemplates -Switches $Switches } | Should Throw
@@ -646,7 +621,6 @@ Describe "Get-LabVMs" {
     "Template":  "Pester Windows Server 2012 R2 Datacenter Full",
     "MemoryStartupBytes":  10737418240,
     "SetupComplete":  "",
-    "DSCMOFFile":  "",
     "DSCConfigName":  "ROOTCA",
     "DSCParameters":  "\r\n          CACommonName = \"PESTER.LOCAL Root CA\"\r\n          CADistinguishedNameSuffix = \"DC=PESTER,DC=LOCAL\"\r\n        ",
     "UseDifferencingDisk":  "Y",

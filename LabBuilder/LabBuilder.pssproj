@@ -56,10 +56,7 @@
   <ItemGroup>
     <Content Include="Tests\PesterTestConfig\PesterTest.mof" />
     <Content Include="Tests\PesterTestConfig\PesterTestConfig.TemplateFail.NoVHD.xml" />
-    <Content Include="Tests\PesterTestConfig\PesterTestConfig.VMFail.DSCFileAndMOFFile.xml" />
     <Content Include="Tests\PesterTestConfig\PesterTestConfig.VMFail.BadDSCNameMissing.xml" />
-    <Content Include="Tests\PesterTestConfig\PesterTestConfig.VMFail.BadDSCMOFFileType.xml" />
-    <Content Include="Tests\PesterTestConfig\PesterTestConfig.VMFail.BadDSCMOFFile.xml" />
     <Content Include="Tests\PesterTestConfig\PesterTestConfig.VMFail.BadDSCConfigFileType.xml" />
     <Content Include="Tests\PesterTestConfig\PesterTestConfig.VMFail.BadDSCConfigFile.xml" />
     <Content Include="Tests\PesterTestConfig\PesterTestConfig.VMFail.BadSetupCompleteFileType.xml" />
