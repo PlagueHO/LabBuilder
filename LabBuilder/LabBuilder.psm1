@@ -930,10 +930,11 @@ function Start-LabVMDSC {
 		While (-not ($Session) -or ($Session.State -ne 'Opened')) {
 			# Try and connect to the remote VM for up to $Timeout (5 minutes) seconds.
 			Try {
-				Write-Verbose "Connecting to $($VM.ComputerName) ..."
+				Write-Verbose "Attempting connection to $($VM.ComputerName) ..."
 				$Session = New-PSSession -ComputerName ($VM.ComputerName) -Credential $AdmininistratorCredential -ErrorAction Stop
 			} Catch {
-				Write-Verbose "Connecting to $($VM.ComputerName) ..."
+				Write-Verbose "Connection to $($VM.ComputerName) failed - retrying in 5 seconds ..."
+				Sleep 5
 			}
 		} # While
 
@@ -949,7 +950,7 @@ function Start-LabVMDSC {
 					Copy-Item -Path "$VMPath\$($VM.Name)\LabBuilder Files\StartDSC.ps1" -Destination c:\Windows\Setup\Scripts -ToSession $Session -Force -ErrorAction Stop
 					$ConfigCopyComplete = $True
 				} Catch {
-					Write-Verbose "Waiting for DSC MOF Files to Copy to $($VM.ComputerName) ..."
+					Write-Verbose "Copying DSC MOF Files to $($VM.ComputerName) failed - retrying in 5 seconds ..."
 					Sleep 5
 				} # Try
 			} # While
@@ -969,7 +970,7 @@ function Start-LabVMDSC {
 					Write-Verbose "Copying DSC Module $ModuleName Files to $($VM.ComputerName) ..."
 					Copy-Item -Path "$VMPath\$($VM.Name)\LabBuilder Files\DSC Modules\$ModuleName\" -Destination "$($env:ProgramFiles)\WindowsPowerShell\Modules\" -ToSession $Session -Force -Recurse -ErrorAction Stop | Out-Null
 				} Catch {
-					Write-Verbose "Waiting for DSC Module $ModuleName Files to Copy to $($VM.ComputerName) ..."
+					Write-Verbose "Copying DSC Module $ModuleName Files to $($VM.ComputerName) failed - retrying in 5 seconds ..."
 					Sleep 5
 				} # Try
 			} # Foreach
