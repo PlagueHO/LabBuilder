@@ -959,21 +959,19 @@ function Start-LabVMDSC {
 		If ((-not $ConfigCopyComplete) -and (((Get-Date) - $StartTime).Seconds) -ge $TimeOut) {
 			Remove-PSSession -Session $Session
 			Return $False
-		}	
+		} # If
 
 		# Now Upload any required modules
 		If (($Session) -and ($Session.State -eq 'Opened') -and (-not $ModuleCopyComplete)) {
 			$DSCModules = Get-ModulesInDSCConfig -DSCConfigFile $($VM.DSCConfigFile)
 			Foreach ($ModuleName in $DSCModules) {
-				While (($Session) -and ($Session.State -eq 'Opened') -and (((Get-Date) - $StartTime).Seconds) -lt $TimeOut) {
-					Try {
-						Write-Verbose "Copying DSC Module $ModuleName Files to $($VM.ComputerName) ..."
-						Copy-Item -Path "$VMPath\$($VM.Name)\LabBuilder Files\DSC Modules\$ModuleName\" -Destination "$($env:ProgramFiles)\WindowsPowerShell\Modules\" -ToSession $Session -Force -Recurse -ErrorAction Stop | Out-Null
-					} Catch {
-						Write-Verbose "Waiting for DSC Module $ModuleName Files to Copy to $($VM.ComputerName) ..."
-						Sleep 5
-					} # Try
-				} # While
+				Try {
+					Write-Verbose "Copying DSC Module $ModuleName Files to $($VM.ComputerName) ..."
+					Copy-Item -Path "$VMPath\$($VM.Name)\LabBuilder Files\DSC Modules\$ModuleName\" -Destination "$($env:ProgramFiles)\WindowsPowerShell\Modules\" -ToSession $Session -Force -Recurse -ErrorAction Stop | Out-Null
+				} Catch {
+					Write-Verbose "Waiting for DSC Module $ModuleName Files to Copy to $($VM.ComputerName) ..."
+					Sleep 5
+				} # Try
 			} # Foreach
 			$ModuleCopyComplete = $True
 		} # If
