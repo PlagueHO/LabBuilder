@@ -711,7 +711,7 @@ Configuration Networking {
 				If ($Adapter.IPv4.Address) {
 $NetworkingDSCConfig += @"
 	xIPAddress IPv4_$AdapterCount {
-		InterfaceAlias = '$($Adapter.InterfaceAlias)'
+		InterfaceAlias = '$($Adapter.Name)'
 		AddressFamily  = 'IPv4'
 		IPAddress      = '$($Adapter.IPv4.Address.Replace(",","','"))'
 		SubnetMask     = '$($Adapter.IPv4.SubnetMask)'
@@ -729,7 +729,7 @@ $NetworkingDSCConfig += @"
 				If ($Adapter.IPv4.DNSServer) {
 $NetworkingDSCConfig += @"
 	xDnsServerAddress IPv4D_$AdapterCount {
-		InterfaceAlias = '$($Adapter.InterfaceAlias)'
+		InterfaceAlias = '$($Adapter.Name)'
 		AddressFamily  = 'IPv4'
 		Address        = '$($Adapter.IPv4.DNSServer.Replace(",","','"))'
 	}
@@ -745,7 +745,7 @@ $NetworkingDSCConfig += @"
 				If ($Adapter.IPv6.Address) {
 $NetworkingDSCConfig += @"
 	xIPAddress IPv6_$AdapterCount {
-		InterfaceAlias = '$($Adapter.InterfaceAlias)'
+		InterfaceAlias = '$($Adapter.Name)'
 		AddressFamily  = 'IPv6'
 		IPAddress      = '$($Adapter.IPv6.Address.Replace(",","','"))'
 		SubnetMask     = '$($Adapter.IPv6.SubnetMask)'
@@ -763,7 +763,7 @@ $NetworkingDSCConfig += @"
 				If ($Adapter.IPv6.DNSServer) {
 $NetworkingDSCConfig += @"
 	xDnsServerAddress IPv6D_$AdapterCount {
-		InterfaceAlias = '$($Adapter.InterfaceAlias)'
+		InterfaceAlias = '$($Adapter.Name)'
 		AddressFamily  = 'IPv6'
 		Address        = '$($Adapter.IPv6.DNSServer.Replace(",","','"))'
 	}
@@ -987,7 +987,7 @@ function Start-LabVMDSC {
 		# Finally, Start DSC up!
 		If (($Session) -and ($Session.State -eq 'Opened') -and ($ConfigCopyComplete) -and ($ModuleCopyComplete)) {
 			Write-Verbose "Starting DSC on VM $($VM.ComputerName) ..."
-			Invoke-Command -Session $Session { c:\windows\setup\scripts\StartDSC.ps1 }
+			Invoke-Command -Session $Session { c:\windows\setup\scripts\StartDSC.ps1 } -AsJob
 			Remove-PSSession -Session $Session		
 			$Complete = $True
 		} # If
@@ -1125,7 +1125,22 @@ New-SelfsignedCertificateEx -Subject 'CN=$($VM.ComputerName)' -EKU 'Server Authe
 `$Cert = Get-ChildItem -Path cert:\LocalMachine\My | Where-Object { `$_.FriendlyName -eq '$($VM.ComputerName) Self-Signed Certificate' }
 Export-Certificate -Type CERT -Cert `$Cert -FilePath `"`$(`$ENV:SystemRoot)\SelfSigned.cer`"
 Add-Content -Path `"`$(`$ENV:SystemRoot)\Setup\Scripts\SetupComplete.log`" -Value 'Self-signed certificate created and saved to C:\Windows\SelfSigned.cer ...' -Encoding Ascii
-Add-Content -Path `"`$(`$ENV:SystemRoot)\Setup\Scripts\SetupComplete.log`" -Value 'NuGet Installed ...' -Encoding Ascii
+"@
+	# Relabel the Network Adapters
+	Foreach ($Adapter in $VM.Adapters) {
+		$NetAdapter = Get-VMNetworkAdapter -VMName $($VM.Name) -Name $($VM.Adapter.Name)
+		If (-not $NetAdapter) {
+			Throw "VM Network Adapter $($VM.Adapter.Name) could not be found attached to VM ($VM.Name)."
+		} # If
+		$MacAddress = $NetAdapter.MacAddress
+		If (-not $MacAddress) {
+			Throw "VM Network Adapter $($VM.Adapter.Name) attached to VM ($VM.Name) has a blank MAC Address."
+		} # If
+$SetupCompletePs += @"
+	Get-NetAdapter | Where-Object { `$_.MacAddress.Replace('-','') -eq '$MacAddress' } | Rename-NetAdapter -NewName '$($VM.Adapter.Name)'
+"@
+	}
+$SetupCompletePs += @"
 Enable-PSRemoting -SkipNetworkProfileCheck -Force
 Add-Content -Path `"`$(`$ENV:SystemRoot)\Setup\Scripts\SetupComplete.log`" -Value 'Windows Remoting Enabled ...' -Encoding Ascii
 "@
@@ -1265,16 +1280,6 @@ function Get-LabVMs {
 				$VLan = $SwitchVLan
 			} # If
 
-			# Determine the Interface Alias
-			[String]$InterfaceAlias = $VMAdapter.InterfaceAlias
-			If (-not $InterfaceAlias) {
-				If ($AdapterCount -eq 1) {
-					$InterfaceAlias = "Ethernet"
-				} Else {
-					$InterfaceAlias = "Ethernet $AdapterCount"
-				}
-			} # If
-
 			# Have we got any IPv4 settings?
 			[System.Collections.Hashtable]$IPv4 = @{}
 			If ($VMAdapter.IPv4) {
@@ -1303,8 +1308,7 @@ function Get-LabVMs {
 				MACAddress = $VMAdapter.macaddress;
 				VLan = $VLan;
 				IPv4 = $IPv4;
-				IPv6 = $IPv6;
-				InterfaceAlias = $InterfaceAlias
+				IPv6 = $IPv6
 			}
 		} # Foreach
 
