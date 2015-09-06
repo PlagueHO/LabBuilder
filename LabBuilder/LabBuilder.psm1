@@ -1443,29 +1443,37 @@ function Get-LabVMSelfSignedCert {
 	[DateTime]$StartTime = Get-Date
 	[System.Management.Automation.Runspaces.PSSession]$Session = $null
 	[PSCredential]$AdmininistratorCredential = New-Object System.Management.Automation.PSCredential ("Administrator", (ConvertTo-SecureString $VM.AdministratorPassword -AsPlainText -Force))
-	[Boolean]$Downloaded = $False
-	While ((-not $Session) -and (((Get-Date) - $StartTime).Seconds) -lt $TimeOut) {
-		# Try and connect to the remote VM for up to $Timeout (5 minutes) seconds.
-		Try {
-			$Session = New-PSSession -ComputerName ($VM.ComputerName) -Credential $AdmininistratorCredential -ErrorAction Stop
-		} Catch {
-			Write-Verbose "Trying to connect to $($VM.ComputerName) ..."
-		}
-	} # While
-	If ($Session) {
-		# We connected OK - download the Certificate file
-		While ((-not $Downloaded) -and (((Get-Date) - $StartTime).Seconds) -lt $TimeOut) {
+
+	[Boolean]$Complete = $False
+	While ((-not $Downloaded)  -and (((Get-Date) - $StartTime).Seconds) -lt $TimeOut) {
+		While (-not ($Session) -or ($Session.State -ne 'Opened')) {
+			# Try and connect to the remote VM for up to $Timeout (5 minutes) seconds.
 			Try {
-				
-				Copy-Item -Path "c:\windows\SelfSigned.cer" -Destination "$VMPath\$($VM.Name)\LabBuilder Files\" -FromSession $Session -ErrorAction Stop
-				$Downloaded = $True
+				Write-Verbose "Connecting to $($VM.ComputerName) ..."
+				$Session = New-PSSession -ComputerName ($VM.ComputerName) -Credential $AdmininistratorCredential -ErrorAction Stop
 			} Catch {
-				Write-Verbose "Waiting for Certificate file on $($VM.ComputerName) ..."
-				Sleep 5
-			}
-		}
-		Remove-PSSession -Session $Session
-	}
+				Write-Verbose "Connecting to $($VM.ComputerName) ..."
+			} # Try
+		} # While
+
+		If (($Session) -and ($Session.State -eq 'Opened') -and (-not $Complete)) {
+			# We connected OK - download the Certificate file
+			While ((-not $Complete) -and (((Get-Date) - $StartTime).Seconds) -lt $TimeOut) {
+				Try {
+					Copy-Item -Path "c:\windows\SelfSigned.cer" -Destination "$VMPath\$($VM.Name)\LabBuilder Files\" -FromSession $Session -ErrorAction Stop
+					$Complete = $True
+				} Catch {
+					Write-Verbose "Waiting for Certificate file on $($VM.ComputerName) ..."
+					Sleep 5
+				} # Try
+			} # While
+		} # If
+
+		# Close the Session if it is opened and the download is complete
+		If (($Session) -and ($Session.State -eq 'Opened') -and ($Complete)) {
+			Remove-PSSession -Session $Session
+		} # If
+	} # While
 	Return $Downloaded
 
 } # Get-LabVMSelfSignedCert
