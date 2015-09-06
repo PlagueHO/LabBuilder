@@ -35,7 +35,7 @@ Configuration DC_SECONDARY
 			DependsOn = "[WindowsFeature]DNSInstall" 
         } 
 
-        xWaitForADDomain DscForestWait
+        xWaitForADDomain DscDomainWait
         {
             DomainName = $Node.DomainName
             DomainUserCredential = $DomainAdminCredential 

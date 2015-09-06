@@ -23,7 +23,7 @@ Configuration MEMBER_DHCP
 			[PSCredential]$DomainAdminCredential = New-Object System.Management.Automation.PSCredential ("Administrator", (ConvertTo-SecureString $Node.DomainAdminPassword -AsPlainText -Force))
 		}
 
-        xWaitForADDomain DscForestWait
+        xWaitForADDomain DscDomainWait
         {
             DomainName = $Node.DomainName
             DomainUserCredential = $DomainAdminCredential 
@@ -36,13 +36,14 @@ Configuration MEMBER_DHCP
             Name          = $Node.NodeName
             DomainName    = $Node.DomainName
             Credential    = $DomainAdminCredential 
+			DependsOn = "[xWaitForADDomain]DscDomainWait" 
         } 
 
 		WindowsFeature DHCPInstall 
         { 
             Ensure = "Present" 
             Name = "AD-Domain-Services" 
-			DependsOn = "[WindowsFeature]DNSInstall" 
+			DependsOn = "[xComputer]JoinDomain" 
         } 
 	}
 }
