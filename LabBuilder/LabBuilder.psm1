@@ -737,6 +737,10 @@ $NetworkingDSCConfig += @"
 "@
 				} # If
 			} # If
+# This code is disabled until issue #20 is resolved:
+# https://github.com/PowerShell/xNetworking
+<#
+
 			If ($Adapter.IPv6) {
 				If ($Adapter.IPv6.Address) {
 $NetworkingDSCConfig += @"
@@ -757,9 +761,6 @@ $NetworkingDSCConfig += @"
 "@
 				} # If
 				If ($Adapter.IPv6.DNSServer) {
-# This code is disabled until issue #20 is resolved:
-# https://github.com/PowerShell/xNetworking
-<#
 $NetworkingDSCConfig += @"
 	xDnsServerAddress IPv6D_$AdapterCount {
 		InterfaceAlias = '$($Adapter.InterfaceAlias)'
@@ -768,9 +769,9 @@ $NetworkingDSCConfig += @"
 	}
 
 "@
-#>
 				} # If
 			} # If
+#>
 		} # Endfor
 $NetworkingDSCConfig += @"
 }
