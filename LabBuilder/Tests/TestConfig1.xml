@@ -119,7 +119,65 @@
           <ipv6 address="fd53:ccc5:895a:bc00::b"
                 defaultgateway=""
                 subnetmask="64"
-                dnsserver="fd53:ccc5:895a:bc00::b"/>
+                dnsserver="fd53:ccc5:895a:bc00::a,fd53:ccc5:895a:bc00::b"/>
+        </adapter>
+      </adapters>
+    </vm>
+
+    <vm name="BMDLAB.COM SA_DHCP1"
+        template="Template Windows Server 2012 R2 Datacenter CORE"
+        computername="SA_DHCP1"
+        usedifferencingbootdisk="Y">
+      <dsc configname="MEMBER_DHCP"
+           configfile="MEMBER_DHCP.DSC.ps1">
+        <parameters>
+          DomainName = "BMDLAB.COM"
+          DomainAdminPassword = "P@ssword!1"
+        </parameters>
+      </dsc>
+      <adapters>
+        <adapter name="General Purpose External"
+                 switchname="General Purpose External" />
+        <adapter name="Domain Private Site A"
+                 switchname="Domain Private Site A"
+                 interfacealias="Ethernet 2">
+          <ipv4 address="192.168.128.16"
+                defaultgateway=""
+                subnetmask="24"
+                dnsserver="192.168.128.10,192.168.128.11"/>
+          <ipv6 address="fd53:ccc5:895a:bc00::10"
+                defaultgateway=""
+                subnetmask="64"
+                dnsserver="fd53:ccc5:895a:bc00::a,fd53:ccc5:895a:bc00::b"/>
+        </adapter>
+      </adapters>
+    </vm>
+
+    <vm name="BMDLAB.COM SA_DHCP2"
+    template="Template Windows Server 2012 R2 Datacenter CORE"
+    computername="SA_DHCP2"
+    usedifferencingbootdisk="Y">
+      <dsc configname="MEMBER_DHCP"
+           configfile="MEMBER_DHCP.DSC.ps1">
+        <parameters>
+          DomainName = "BMDLAB.COM"
+          DomainAdminPassword = "P@ssword!1"
+        </parameters>
+      </dsc>
+      <adapters>
+        <adapter name="General Purpose External"
+                 switchname="General Purpose External" />
+        <adapter name="Domain Private Site A"
+                 switchname="Domain Private Site A"
+                 interfacealias="Ethernet 2">
+          <ipv4 address="192.168.128.17"
+                defaultgateway=""
+                subnetmask="24"
+                dnsserver="192.168.128.10,192.168.128.11"/>
+          <ipv6 address="fd53:ccc5:895a:bc00::11"
+                defaultgateway=""
+                subnetmask="64"
+                dnsserver="fd53:ccc5:895a:bc00::a,fd53:ccc5:895a:bc00::b"/>
         </adapter>
       </adapters>
     </vm>

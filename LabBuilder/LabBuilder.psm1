@@ -921,65 +921,74 @@ function Start-LabVMDSC {
 	[System.Management.Automation.Runspaces.PSSession]$Session = $null
 	[PSCredential]$AdmininistratorCredential = New-Object System.Management.Automation.PSCredential ("Administrator", (ConvertTo-SecureString $VM.AdministratorPassword -AsPlainText -Force))
 
-	While ((-not $Session) -and (((Get-Date) - $StartTime).Seconds) -lt $TimeOut) {
-		# Try and connect to the remote VM for up to $Timeout (5 minutes) seconds.
-		Try {
-			$Session = New-PSSession -ComputerName ($VM.ComputerName) -Credential $AdmininistratorCredential -ErrorAction Stop
-		} Catch {
-			Write-Verbose "Trying to connect to $($VM.ComputerName) ..."
-		}
-	} # While
-
-	If ($Session) {
-		# We connected OK - upload the MOF files
-		$Complete = $False
-		While ((-not $Complete) -and (((Get-Date) - $StartTime).Seconds) -lt $TimeOut) {
+	[Boolean]$ConfigCopyComplete = $False
+	[Boolean]$ModuleCopyComplete = $False
+	
+	While ((-not $Complete) -and (((Get-Date) - $StartTime).Seconds) -lt $TimeOut) {
+		While (-not ($Session) -and ($Session.State -eq 'Opened')) {
+			# Try and connect to the remote VM for up to $Timeout (5 minutes) seconds.
 			Try {
-				Copy-Item -Path "$VMPath\$($VM.Name)\LabBuilder Files\$($VM.ComputerName).mof" -Destination c:\Windows\Setup\Scripts -ToSession $Session -Force -ErrorAction Stop
-				If (Test-Path -Path "$VMPath\$($VM.Name)\LabBuilder Files\$($VM.ComputerName).meta.mof") {
-					Copy-Item -Path "$VMPath\$($VM.Name)\LabBuilder Files\$($VM.ComputerName).meta.mof" -Destination c:\Windows\Setup\Scripts -ToSession $Session -Force -ErrorAction Stop
-				} # If
-				Copy-Item -Path "$VMPath\$($VM.Name)\LabBuilder Files\StartDSC.ps1" -Destination c:\Windows\Setup\Scripts -ToSession $Session -Force -ErrorAction Stop
-				$Complete = $True
+				Write-Verbose "Connecting to $($VM.ComputerName) ..."
+				$Session = New-PSSession -ComputerName ($VM.ComputerName) -Credential $AdmininistratorCredential -ErrorAction Stop
 			} Catch {
-				Write-Verbose "Waiting for DSC MOF Files to Copy to $($VM.ComputerName) ..."
-				Sleep 5
-			} # Try
+				Write-Verbose "Connecting to $($VM.ComputerName) ..."
+			}
 		} # While
 
-		If ((-not $Complete) -and (((Get-Date) - $StartTime).Seconds) -ge $TimeOut) {
-			# Timed out
-			Remove-PSSession -Session $Session
-			Return $False
-		}
-
-		# Now Upload any required modules
-		$DSCModules = Get-ModulesInDSCConfig -DSCConfigFile $($VM.DSCConfigFile)
-		Foreach ($ModuleName in $DSCModules) {
-			$Complete = $False
-			While ((-not $Complete) -and (((Get-Date) - $StartTime).Seconds) -lt $TimeOut) {
+		If (($Session) -and ($Session.State -eq 'Opened') -and (-not $ConfigCopyComplete)) {
+			# We are connected OK - upload the MOF files
+			While ((-not $ConfigCopyComplete) -and (((Get-Date) - $StartTime).Seconds) -lt $TimeOut) {
 				Try {
-					Write-Verbose "Copying DSC Module $ModuleName Files to $($VM.ComputerName) ..."
-					Copy-Item -Path "$VMPath\$($VM.Name)\LabBuilder Files\DSC Modules\$ModuleName\" -Destination "$($env:ProgramFiles)\WindowsPowerShell\Modules\" -ToSession $Session -Force -Recurse -ErrorAction Stop | Out-Null
-					$Complete = $True
+					Write-Verbose "Copying DSC MOF Files to $($VM.ComputerName) ..."
+					Copy-Item -Path "$VMPath\$($VM.Name)\LabBuilder Files\$($VM.ComputerName).mof" -Destination c:\Windows\Setup\Scripts -ToSession $Session -Force -ErrorAction Stop
+					If (Test-Path -Path "$VMPath\$($VM.Name)\LabBuilder Files\$($VM.ComputerName).meta.mof") {
+						Copy-Item -Path "$VMPath\$($VM.Name)\LabBuilder Files\$($VM.ComputerName).meta.mof" -Destination c:\Windows\Setup\Scripts -ToSession $Session -Force -ErrorAction Stop
+					} # If
+					Copy-Item -Path "$VMPath\$($VM.Name)\LabBuilder Files\StartDSC.ps1" -Destination c:\Windows\Setup\Scripts -ToSession $Session -Force -ErrorAction Stop
+					$ConfigCopyComplete = $True
 				} Catch {
-					Write-Verbose "Waiting for DSC Module $ModuleName Files to Copy to $($VM.ComputerName) ..."
+					Write-Verbose "Waiting for DSC MOF Files to Copy to $($VM.ComputerName) ..."
 					Sleep 5
 				} # Try
 			} # While
-		} # Foreach
+		} # If
 
-		If ((-not $Complete) -and (((Get-Date) - $StartTime).Seconds) -ge $TimeOut) {
+		# If the copy didn't complete and we're out of time, exit with a failure.
+		If ((-not $ConfigCopyComplete) -and (((Get-Date) - $StartTime).Seconds) -ge $TimeOut) {
+			Remove-PSSession -Session $Session
+			Return $False
+		}	
+
+		# Now Upload any required modules
+		If (($Session) -and ($Session.State -eq 'Opened') -and (-not $ModuleCopyComplete)) {
+			$DSCModules = Get-ModulesInDSCConfig -DSCConfigFile $($VM.DSCConfigFile)
+			Foreach ($ModuleName in $DSCModules) {
+				While (($Session) -and ($Session.State -eq 'Opened') -and (((Get-Date) - $StartTime).Seconds) -lt $TimeOut) {
+					Try {
+						Write-Verbose "Copying DSC Module $ModuleName Files to $($VM.ComputerName) ..."
+						Copy-Item -Path "$VMPath\$($VM.Name)\LabBuilder Files\DSC Modules\$ModuleName\" -Destination "$($env:ProgramFiles)\WindowsPowerShell\Modules\" -ToSession $Session -Force -Recurse -ErrorAction Stop | Out-Null
+					} Catch {
+						Write-Verbose "Waiting for DSC Module $ModuleName Files to Copy to $($VM.ComputerName) ..."
+						Sleep 5
+					} # Try
+				} # While
+			} # Foreach
+			$ModuleCopyComplete = $True
+		} # If
+
+		If ((-not $ModuleCopyComplete) -and (((Get-Date) - $StartTime).Seconds) -ge $TimeOut) {
 			# Timed out
 			Remove-PSSession -Session $Session
 			Return $False
 		}
 
 		# Finally, Start DSC up!
-		Invoke-Command -Session $Session { c:\windows\setup\scripts\StartDSC.ps1 }
+		If (($Session) -and ($Session.State -eq 'Opened') -and ($ConfigCopyComplete) -and ($ModuleCopyComplete)) {
+			Invoke-Command -Session $Session { c:\windows\setup\scripts\StartDSC.ps1 }
+		} # If
+	} # While
+	Remove-PSSession -Session $Session		
 
-		Remove-PSSession -Session $Session
-	}
 	Return $True
 } # Start-LabVMDSC
 ##########################################################################################################################################
