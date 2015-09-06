@@ -9,7 +9,7 @@ DSC Template Configuration File For use by LabBuilder
 	DomainAdminPassword = "P@ssword!1"
 #########################################################################################################################################>
 
-Configuration DC_SECONDARY
+Configuration MEMBER_DHCP
 {
 	Import-DscResource -ModuleName 'PSDesiredStateConfiguration'
 	Import-DscResource -ModuleName xActiveDirectory
