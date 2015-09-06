@@ -1128,13 +1128,13 @@ Add-Content -Path `"`$(`$ENV:SystemRoot)\Setup\Scripts\SetupComplete.log`" -Valu
 "@
 	# Relabel the Network Adapters
 	Foreach ($Adapter in $VM.Adapters) {
-		$NetAdapter = Get-VMNetworkAdapter -VMName $($VM.Name) -Name $($VM.Adapter.Name)
+		$NetAdapter = Get-VMNetworkAdapter -VMName $($VM.Name) -Name $($Adapter.Name)
 		If (-not $NetAdapter) {
-			Throw "VM Network Adapter $($VM.Adapter.Name) could not be found attached to VM ($VM.Name)."
+			Throw "VM Network Adapter $($Adapter.Name) could not be found attached to VM ($VM.Name)."
 		} # If
 		$MacAddress = $NetAdapter.MacAddress
 		If (-not $MacAddress) {
-			Throw "VM Network Adapter $($VM.Adapter.Name) attached to VM ($VM.Name) has a blank MAC Address."
+			Throw "VM Network Adapter $($Adapter.Name) attached to VM ($VM.Name) has a blank MAC Address."
 		} # If
 $SetupCompletePs += @"
 	Get-NetAdapter | Where-Object { `$_.MacAddress.Replace('-','') -eq '$MacAddress' } | Rename-NetAdapter -NewName '$($VM.Adapter.Name)'
@@ -1529,6 +1529,7 @@ function Initialize-LabVMs {
 			}
 
 			# Create the boot disk
+			[Boolean]$NewBootDisk = $False
 			$VMBootDiskPath = "$VMPath\$($VM.Name)\Virtual Hard Disks\$($VM.Name) Boot Disk.vhdx"
 			If (-not (Test-Path -Path $VMBootDiskPath)) {
 				If ($VM.UseDifferencingDisk -eq 'Y') {
@@ -1537,9 +1538,8 @@ function Initialize-LabVMs {
 				} Else {
 					Write-Verbose "VM $($VM.Name) boot disk $VMBootDiskPath being created ..."
 					Copy-Item -Path $VM.TemplateVHD -Destination $VMBootDiskPath | Out-Null
-				}            
-				# Because this is a new boot disk assign any required initialization files to it (Unattend.xml etc).
-				Set-LabVMInitializationFiles -Configuration $Configuration -VMBootDiskPath $VMBootDiskPath -VM $VM
+				}
+				$NewBootDisk = $True     
 			} Else {
 				Write-Verbose "VM $($VM.Name) boot disk $VMBootDiskPath already exists..."
 			} # If
@@ -1602,6 +1602,12 @@ function Initialize-LabVMs {
 			$VMNetworkAdapter | Set-VMNetworkAdapter -DeviceNaming On | Out-Null
 		} # Foreach
 		
+		If ($NewBootDisk) {
+			# Because this is a new boot disk assign any required initialization files to it (Unattend.xml etc).
+			# We have to wait for the VM to have been completely created to perform this step
+			Set-LabVMInitializationFiles -Configuration $Configuration -VMBootDiskPath $VMBootDiskPath -VM $VM
+		} # If
+
 		# The VM is now ready to be started
 		If ((Get-VM -Name $VM.Name).State -eq 'Off') {
 			Write-Verbose "VM $($VM.Name) is starting ..."
