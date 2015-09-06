@@ -1,3 +1,14 @@
+<#########################################################################################################################################
+DSC Template Configuration File For use by LabBuilder
+.Title
+	DC_SECONDARY
+.Desription
+	Builds a Domain Controller and adds it to the existing domain provided in the Parameter DomainName.
+.Parameters:          
+	DomainName = "BMDLAB.COM"
+	DomainAdminPassword = "P@ssword!1"
+#########################################################################################################################################>
+
 Configuration DC_SECONDARY
 {
 	Import-DscResource -ModuleName 'PSDesiredStateConfiguration'

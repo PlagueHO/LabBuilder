@@ -1,3 +1,14 @@
+<#########################################################################################################################################
+DSC Template Configuration File For use by LabBuilder
+.Title
+	DC_FORESTPRIMARY
+.Desription
+	Builds a Domain Controller as the first DC in a forest with the name of the Domain Name parameter passed.
+.Parameters:          
+	DomainName = "BMDLAB.COM"
+	DomainAdminPassword = "P@ssword!1"
+#########################################################################################################################################>
+
 Configuration DC_FORESTPRIMARY
 {
 	Import-DscResource -ModuleName 'PSDesiredStateConfiguration'

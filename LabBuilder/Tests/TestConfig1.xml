@@ -8,7 +8,7 @@
             email="daniel@bmdlab.com"
             vmpath="c:\vm\BMDLAB.COM"
             vhdparentpath="c:\vm\BMDLAB.COM\Virtual Hard Disk Templates"
-            configpath=".\TestConfig1\" />
+            configpath=".\..\DSCLibrary\" />
 
   <switches>
     <switch name="General Purpose External" type="External">
