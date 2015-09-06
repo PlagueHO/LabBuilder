@@ -81,8 +81,7 @@
         <adapter name="General Purpose External"
                  switchname="General Purpose External" />
         <adapter name="Domain Private Site A"
-                 switchname="Domain Private Site A" 
-                 interfacealias="Ethernet 2">
+                 switchname="Domain Private Site A">
           <ipv4 address="192.168.128.10"
                 defaultgateway=""
                 subnetmask="24"
@@ -111,8 +110,7 @@
         <adapter name="General Purpose External"
                  switchname="General Purpose External" />
         <adapter name="Domain Private Site A"
-                 switchname="Domain Private Site A"
-                 interfacealias="Ethernet 2">
+                 switchname="Domain Private Site A">
           <ipv4 address="192.168.128.11"
                 defaultgateway=""
                 subnetmask="24"
@@ -141,8 +139,7 @@
         <adapter name="General Purpose External"
                  switchname="General Purpose External" />
         <adapter name="Domain Private Site A"
-                 switchname="Domain Private Site A"
-                 interfacealias="Ethernet 2">
+                 switchname="Domain Private Site A">
           <ipv4 address="192.168.128.16"
                 defaultgateway=""
                 subnetmask="24"
@@ -171,8 +168,7 @@
         <adapter name="General Purpose External"
                  switchname="General Purpose External" />
         <adapter name="Domain Private Site A"
-                 switchname="Domain Private Site A"
-                 interfacealias="Ethernet 2">
+                 switchname="Domain Private Site A">
           <ipv4 address="192.168.128.17"
                 defaultgateway=""
                 subnetmask="24"

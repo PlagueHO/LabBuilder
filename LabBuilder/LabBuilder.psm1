@@ -711,7 +711,7 @@ Configuration Networking {
 				If ($Adapter.IPv4.Address) {
 $NetworkingDSCConfig += @"
 	xIPAddress IPv4_$AdapterCount {
-		InterfaceAlias = '$($Adapter.InterfaceAlias)'
+		InterfaceAlias = '$($Adapter.Name)'
 		AddressFamily  = 'IPv4'
 		IPAddress      = '$($Adapter.IPv4.Address.Replace(",","','"))'
 		SubnetMask     = '$($Adapter.IPv4.SubnetMask)'
@@ -729,7 +729,7 @@ $NetworkingDSCConfig += @"
 				If ($Adapter.IPv4.DNSServer) {
 $NetworkingDSCConfig += @"
 	xDnsServerAddress IPv4D_$AdapterCount {
-		InterfaceAlias = '$($Adapter.InterfaceAlias)'
+		InterfaceAlias = '$($Adapter.Name)'
 		AddressFamily  = 'IPv4'
 		Address        = '$($Adapter.IPv4.DNSServer.Replace(",","','"))'
 	}
@@ -745,7 +745,7 @@ $NetworkingDSCConfig += @"
 				If ($Adapter.IPv6.Address) {
 $NetworkingDSCConfig += @"
 	xIPAddress IPv6_$AdapterCount {
-		InterfaceAlias = '$($Adapter.InterfaceAlias)'
+		InterfaceAlias = '$($Adapter.Name)'
 		AddressFamily  = 'IPv6'
 		IPAddress      = '$($Adapter.IPv6.Address.Replace(",","','"))'
 		SubnetMask     = '$($Adapter.IPv6.SubnetMask)'
@@ -763,7 +763,7 @@ $NetworkingDSCConfig += @"
 				If ($Adapter.IPv6.DNSServer) {
 $NetworkingDSCConfig += @"
 	xDnsServerAddress IPv6D_$AdapterCount {
-		InterfaceAlias = '$($Adapter.InterfaceAlias)'
+		InterfaceAlias = '$($Adapter.Name)'
 		AddressFamily  = 'IPv6'
 		Address        = '$($Adapter.IPv6.DNSServer.Replace(",","','"))'
 	}
@@ -873,6 +873,23 @@ function Set-LabDSCStartFile {
 
 	[String]$DSCStartPs = ''
 	[String]$VMPath = $Configuration.labbuilderconfig.settings.vmpath
+
+	# Relabel the Network Adapters so that they match what the DSC Networking config will use
+	# This is because unfortunately the Hyper-V Device Naming feature doesn't work.
+	Foreach ($Adapter in $VM.Adapters) {
+		$NetAdapter = Get-VMNetworkAdapter -VMName $($VM.Name) -Name $($Adapter.Name)
+		If (-not $NetAdapter) {
+			Throw "VM Network Adapter $($Adapter.Name) could not be found attached to VM ($VM.Name)."
+		} # If
+		$MacAddress = $NetAdapter.MacAddress
+		If (-not $MacAddress) {
+			Throw "VM Network Adapter $($Adapter.Name) attached to VM ($VM.Name) has a blank MAC Address."
+		} # If
+		$DSCStartPs += @"
+	Get-NetAdapter | Where-Object { `$_.MacAddress.Replace('-','') -eq '$MacAddress' } | Rename-NetAdapter -NewName '$($Adapter.Name)'
+
+"@
+	} # Foreach
 
 	# Start the actual DSC Configuration
 	$DSCStartPs += @"
@@ -1125,7 +1142,6 @@ New-SelfsignedCertificateEx -Subject 'CN=$($VM.ComputerName)' -EKU 'Server Authe
 `$Cert = Get-ChildItem -Path cert:\LocalMachine\My | Where-Object { `$_.FriendlyName -eq '$($VM.ComputerName) Self-Signed Certificate' }
 Export-Certificate -Type CERT -Cert `$Cert -FilePath `"`$(`$ENV:SystemRoot)\SelfSigned.cer`"
 Add-Content -Path `"`$(`$ENV:SystemRoot)\Setup\Scripts\SetupComplete.log`" -Value 'Self-signed certificate created and saved to C:\Windows\SelfSigned.cer ...' -Encoding Ascii
-Add-Content -Path `"`$(`$ENV:SystemRoot)\Setup\Scripts\SetupComplete.log`" -Value 'NuGet Installed ...' -Encoding Ascii
 Enable-PSRemoting -SkipNetworkProfileCheck -Force
 Add-Content -Path `"`$(`$ENV:SystemRoot)\Setup\Scripts\SetupComplete.log`" -Value 'Windows Remoting Enabled ...' -Encoding Ascii
 "@
@@ -1265,16 +1281,6 @@ function Get-LabVMs {
 				$VLan = $SwitchVLan
 			} # If
 
-			# Determine the Interface Alias
-			[String]$InterfaceAlias = $VMAdapter.InterfaceAlias
-			If (-not $InterfaceAlias) {
-				If ($AdapterCount -eq 1) {
-					$InterfaceAlias = "Ethernet"
-				} Else {
-					$InterfaceAlias = "Ethernet $AdapterCount"
-				}
-			} # If
-
 			# Have we got any IPv4 settings?
 			[System.Collections.Hashtable]$IPv4 = @{}
 			If ($VMAdapter.IPv4) {
@@ -1303,8 +1309,7 @@ function Get-LabVMs {
 				MACAddress = $VMAdapter.macaddress;
 				VLan = $VLan;
 				IPv4 = $IPv4;
-				IPv6 = $IPv6;
-				InterfaceAlias = $InterfaceAlias
+				IPv6 = $IPv6
 			}
 		} # Foreach
 
@@ -1533,12 +1538,14 @@ function Initialize-LabVMs {
 				} Else {
 					Write-Verbose "VM $($VM.Name) boot disk $VMBootDiskPath being created ..."
 					Copy-Item -Path $VM.TemplateVHD -Destination $VMBootDiskPath | Out-Null
-				}            
+				}
+
 				# Because this is a new boot disk assign any required initialization files to it (Unattend.xml etc).
 				Set-LabVMInitializationFiles -Configuration $Configuration -VMBootDiskPath $VMBootDiskPath -VM $VM
 			} Else {
 				Write-Verbose "VM $($VM.Name) boot disk $VMBootDiskPath already exists..."
 			} # If
+
 			New-VM -Name $VM.Name -MemoryStartupBytes $VM.MemoryStartupBytes -Generation 2 -Path $VMPath -VHDPath $VMBootDiskPath | Out-Null
 			# Just get rid of all network adapters bcause New-VM automatically creates one which we don't need
 			Get-VMNetworkAdapter -VMName $VM.Name | Remove-VMNetworkAdapter | Out-Null

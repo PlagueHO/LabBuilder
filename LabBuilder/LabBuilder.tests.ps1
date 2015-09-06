@@ -633,7 +633,6 @@ Describe "Get-LabVMs" {
                          "Name":  "Pester Test Private Vlan",
                          "SwitchName":  "Pester Test Private Vlan",
                          "VLan":  "2",
-                         "InterfaceAlias":  "Ethernet",
                          "IPv4":  {
                                       "dnsserver":  "192.168.16.1",
                                       "subnetmask":  "24",
@@ -652,7 +651,6 @@ Describe "Get-LabVMs" {
                          "Name":  "Pester Test Internal Vlan",
                          "SwitchName":  "Pester Test Internal Vlan",
                          "VLan":  "3",
-                         "InterfaceAlias":  "Ethernet 2",
                          "IPv4":  {
                                       "dnsserver":  "192.168.16.2",
                                       "subnetmask":  "24",
@@ -671,7 +669,6 @@ Describe "Get-LabVMs" {
                          "Name":  "Pester Test Private",
                          "SwitchName":  "Pester Test Private",
                          "VLan":  "3",
-                         "InterfaceAlias":  "Ethernet 3",
                          "IPv4":  {
                                       "dnsserver":  "192.168.16.3",
                                       "subnetmask":  "24",
@@ -690,7 +687,6 @@ Describe "Get-LabVMs" {
                          "Name":  "Pester Test Internal",
                          "SwitchName":  "Pester Test Internal",
                          "VLan":  "4",
-                         "InterfaceAlias":  "Ethernet 4",
                          "IPv4":  {
                                       "dnsserver":  "192.168.16.4",
                                       "subnetmask":  "24",
