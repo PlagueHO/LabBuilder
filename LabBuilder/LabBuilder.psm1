@@ -713,7 +713,7 @@ $NetworkingDSCConfig += @"
 	xIPAddress IPv4_$AdapterCount {
 		InterfaceAlias = '$($Adapter.InterfaceAlias)'
 		AddressFamily  = 'IPv4'
-		IPAddress      = '$($Adapter.IPv4.Address)'
+		IPAddress      = '$($Adapter.IPv4.Address.Replace(",","','"))'
 		SubnetMask     = '$($Adapter.IPv4.SubnetMask)'
 "@
 					If ($Adapter.IPv4.DefaultGateway) {
@@ -731,7 +731,7 @@ $NetworkingDSCConfig += @"
 	xDnsServerAddress IPv4D_$AdapterCount {
 		InterfaceAlias = '$($Adapter.InterfaceAlias)'
 		AddressFamily  = 'IPv4'
-		Address        = '$($Adapter.IPv4.DNSServer)'
+		Address        = '$($Adapter.IPv4.DNSServer.Replace(",","','"))'
 	}
 
 "@
@@ -743,7 +743,7 @@ $NetworkingDSCConfig += @"
 	xIPAddress IPv6_$AdapterCount {
 		InterfaceAlias = '$($Adapter.InterfaceAlias)'
 		AddressFamily  = 'IPv6'
-		IPAddress      = '$($Adapter.IPv6.Address)'
+		IPAddress      = '$($Adapter.IPv6.Address.Replace(",","','"))'
 		SubnetMask     = '$($Adapter.IPv6.SubnetMask)'
 "@
 					If ($Adapter.IPv6.DefaultGateway) {
@@ -764,7 +764,7 @@ $NetworkingDSCConfig += @"
 	xDnsServerAddress IPv6D_$AdapterCount {
 		InterfaceAlias = '$($Adapter.InterfaceAlias)'
 		AddressFamily  = 'IPv6'
-		Address        = '$($Adapter.IPv6.DNSServer)'
+		Address        = '$($Adapter.IPv6.DNSServer.Replace(",","','"))'
 	}
 
 "@
