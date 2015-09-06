@@ -926,7 +926,7 @@ function Start-LabVMDSC {
 	[Boolean]$ModuleCopyComplete = $False
 	
 	While ((-not $Complete) -and (((Get-Date) - $StartTime).Seconds) -lt $TimeOut) {
-		While (-not ($Session) -and ($Session.State -eq 'Opened')) {
+		While (-not ($Session) -or ($Session.State -ne 'Opened')) {
 			# Try and connect to the remote VM for up to $Timeout (5 minutes) seconds.
 			Try {
 				Write-Verbose "Connecting to $($VM.ComputerName) ..."
