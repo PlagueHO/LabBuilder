@@ -922,6 +922,7 @@ function Start-LabVMDSC {
 	[System.Management.Automation.Runspaces.PSSession]$Session = $null
 	[PSCredential]$AdmininistratorCredential = New-Object System.Management.Automation.PSCredential ("Administrator", (ConvertTo-SecureString $VM.AdministratorPassword -AsPlainText -Force))
 
+	[Boolean]$Complete = $False
 	[Boolean]$ConfigCopyComplete = $False
 	[Boolean]$ModuleCopyComplete = $False
 	
@@ -986,6 +987,7 @@ function Start-LabVMDSC {
 		# Finally, Start DSC up!
 		If (($Session) -and ($Session.State -eq 'Opened') -and ($ConfigCopyComplete) -and ($ModuleCopyComplete)) {
 			Invoke-Command -Session $Session { c:\windows\setup\scripts\StartDSC.ps1 }
+			$Complete = $True
 		} # If
 	} # While
 	Remove-PSSession -Session $Session		
