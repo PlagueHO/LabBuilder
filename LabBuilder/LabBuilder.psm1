@@ -721,7 +721,8 @@ $NetworkingDSCConfig += @"
 		DefaultGateway = '$($Adapter.IPv4.DefaultGateway)'
 "@
 					}
-	}
+$NetworkingDSCConfig += @"
+			}
 
 "@
 				} # If
@@ -738,7 +739,6 @@ $NetworkingDSCConfig += @"
 			} # If
 			If ($Adapter.IPv6) {
 				If ($Adapter.IPv6.Address) {
-
 $NetworkingDSCConfig += @"
 	xIPAddress IPv6_$AdapterCount {
 		InterfaceAlias = '$($Adapter.InterfaceAlias)'
@@ -750,7 +750,9 @@ $NetworkingDSCConfig += @"
 $NetworkingDSCConfig += @"
 		DefaultGateway = '$($Adapter.IPv6.DefaultGateway)'
 "@
-	}
+					}
+$NetworkingDSCConfig += @"
+			}
 
 "@
 				} # If
