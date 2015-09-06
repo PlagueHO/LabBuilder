@@ -134,6 +134,7 @@
         <parameters>
           DomainName = "BMDLAB.COM"
           DomainAdminPassword = "P@ssword!1"
+          PSDscAllowDomainUser = $True
         </parameters>
       </dsc>
       <adapters>
@@ -163,6 +164,7 @@
         <parameters>
           DomainName = "BMDLAB.COM"
           DomainAdminPassword = "P@ssword!1"
+          PSDscAllowDomainUser = $True
         </parameters>
       </dsc>
       <adapters>
