@@ -49,7 +49,7 @@ Configuration DC_SECONDARY
             DomainName = $Node.DomainName
             DomainAdministratorCredential = $DomainAdminCredential
             SafemodeAdministratorPassword = $LocalAdminCredential 
-            DependsOn = "[xWaitForADDomain]DscForestWait"
+            DependsOn = "[xWaitForADDomain]DscDomainWait"
         }	
 	}
 }
