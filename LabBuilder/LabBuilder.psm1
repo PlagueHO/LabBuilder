@@ -984,13 +984,14 @@ function Start-LabVMDSC {
 
 		# Finally, Start DSC up!
 		If (($Session) -and ($Session.State -eq 'Opened') -and ($ConfigCopyComplete) -and ($ModuleCopyComplete)) {
+			Write-Verbose "Copying DSC Module $ModuleName Files to $($VM.ComputerName) ..."
 			Invoke-Command -Session $Session { c:\windows\setup\scripts\StartDSC.ps1 }
+			Remove-PSSession -Session $Session		
 			$Complete = $True
 		} # If
 	} # While
-	Remove-PSSession -Session $Session		
 
-	Return $True
+	Return $Complete
 } # Start-LabVMDSC
 ##########################################################################################################################################
 
