@@ -886,7 +886,7 @@ function Set-LabDSCStartFile {
 			Throw "VM Network Adapter $($Adapter.Name) attached to VM ($VM.Name) has a blank MAC Address."
 		} # If
 		$DSCStartPs += @"
-	Get-NetAdapter | Where-Object { `$_.MacAddress.Replace('-','') -eq '$MacAddress' } | Rename-NetAdapter -NewName '$($Adapter.Name)'
+Get-NetAdapter | Where-Object { `$_.MacAddress.Replace('-','') -eq '$MacAddress' } | Rename-NetAdapter -NewName '$($Adapter.Name)'
 
 "@
 	} # Foreach
