@@ -1,7 +1,7 @@
-Configuration PRIMARYDC
+Configuration DC_SECONDARY
 {
 	Import-DscResource -ModuleName 'PSDesiredStateConfiguration'
-	Import-DscResource -ModuleName xActiveDirectory
+	Import-DscResource -ModuleName xActiveDirectory 
 	Node $AllNodes.NodeName {
 		# Assemble the Local Admin Credentials
 		If ($Node.LocalAdminPassword) {
@@ -23,36 +23,22 @@ Configuration PRIMARYDC
             Name = "AD-Domain-Services" 
 			DependsOn = "[WindowsFeature]DNSInstall" 
         } 
-		
-		WindowsFeature RSAT-AD-PowerShellInstall
-		{
-			Ensure = "Present"
-			Name = "RSAT-AD-PowerShell"
-			DependsOn = "[WindowsFeature]ADDSInstall" 
-		}
 
-        xADDomain PrimaryDC 
-        { 
-            DomainName = $Node.DomainName 
-            DomainAdministratorCredential = $DomainAdminCredential 
-            SafemodeAdministratorPassword = $LocalAdminCredential 
-            DependsOn = "[WindowsFeature]ADDSInstall" 
-        } 
-
-        xWaitForADDomain DscForestWait 
-        { 
-            DomainName = $Node.DomainName 
+        xWaitForADDomain DscForestWait
+        {
+            DomainName = $Node.DomainName
             DomainUserCredential = $DomainAdminCredential 
             RetryCount = 20 
             RetryIntervalSec = 30 
-            DependsOn = "[xADDomain]PrimaryDC" 
-        } 
-		
-		xADRecycleBin RecycleBin
-        {
-			EnterpriseAdministratorCredential = $DomainAdminCredential
-			ForestFQDN = $Node.DomainName
-		    DependsOn = "[xWaitForADDomain]DscForestWait"
+            DependsOn = "[WindowsFeature]ADDSInstall"
         }
+        
+		xADDomainController SecondaryDC
+        {
+            DomainName = $Node.DomainName
+            DomainAdministratorCredential = $DomainAdminCredential
+            SafemodeAdministratorPassword = $LocalAdminCredential 
+            DependsOn = "[xWaitForADDomain]DscForestWait"
+        }	
 	}
 }

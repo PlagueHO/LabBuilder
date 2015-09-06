@@ -1,4 +1,4 @@
-Configuration SECONDARYDC
+Configuration DC_SECONDARY
 {
 	Import-DscResource -ModuleName 'PSDesiredStateConfiguration'
 	Import-DscResource -ModuleName xActiveDirectory 

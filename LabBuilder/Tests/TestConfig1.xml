@@ -70,8 +70,8 @@
         template="Template Windows Server 2012 R2 Datacenter CORE"
         computername="SA_DC1"
         usedifferencingbootdisk="Y">
-      <dsc configname="PRIMARYDC"
-           configfile="PRIMARYDC.DSC.ps1">
+      <dsc configname="DC_FORESTPRIMARY"
+           configfile="DC_FORESTPRIMARY.DSC.ps1">
         <parameters>
           DomainName = "BMDLAB.COM"
           DomainAdminPassword = "P@ssword!1"
@@ -99,8 +99,8 @@
         template="Template Windows Server 2012 R2 Datacenter CORE"
         computername="SA_DC2"
         usedifferencingbootdisk="Y">
-      <dsc configname="SECONDARYDC"
-           configfile="SECONDARYDC.DSC.ps1">
+      <dsc configname="DC_SECONDARY"
+           configfile="DC_SECONDARY.DSC.ps1">
         <parameters>
           DomainName = "BMDLAB.COM"
           DomainAdminPassword = "P@ssword!1"
