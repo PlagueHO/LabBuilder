@@ -711,11 +711,16 @@ Configuration Networking {
 				If ($Adapter.IPv4.Address) {
 $NetworkingDSCConfig += @"
 	xIPAddress IPv4_$AdapterCount {
-		IPAddress      = '$($Adapter.IPv4.Address)'
 		InterfaceAlias = '$($Adapter.InterfaceAlias)'
-		DefaultGateway = '$($Adapter.IPv4.DefaultGateway)'
-		SubnetMask     = '$($Adapter.IPv4.SubnetMask)'
 		AddressFamily  = 'IPv4'
+		IPAddress      = '$($Adapter.IPv4.Address)'
+		SubnetMask     = '$($Adapter.IPv4.SubnetMask)'
+"@
+					If ($Adapter.IPv4.DefaultGateway) {
+$NetworkingDSCConfig += @"
+		DefaultGateway = '$($Adapter.IPv4.DefaultGateway)'
+"@
+					}
 	}
 
 "@
@@ -723,9 +728,9 @@ $NetworkingDSCConfig += @"
 				If ($Adapter.IPv4.DNSServer) {
 $NetworkingDSCConfig += @"
 	xDnsServerAddress IPv4D_$AdapterCount {
-		Address        = '$($Adapter.IPv4.DNSServer)'
 		InterfaceAlias = '$($Adapter.InterfaceAlias)'
 		AddressFamily  = 'IPv4'
+		Address        = '$($Adapter.IPv4.DNSServer)'
 	}
 
 "@
@@ -736,11 +741,15 @@ $NetworkingDSCConfig += @"
 
 $NetworkingDSCConfig += @"
 	xIPAddress IPv6_$AdapterCount {
-		IPAddress      = '$($Adapter.IPv6.Address)'
 		InterfaceAlias = '$($Adapter.InterfaceAlias)'
-		DefaultGateway = '$($Adapter.IPv6.DefaultGateway)'
-		SubnetMask     = '$($Adapter.IPv6.SubnetMask)'
 		AddressFamily  = 'IPv6'
+		IPAddress      = '$($Adapter.IPv6.Address)'
+		SubnetMask     = '$($Adapter.IPv6.SubnetMask)'
+"@
+					If ($Adapter.IPv6.DefaultGateway) {
+$NetworkingDSCConfig += @"
+		DefaultGateway = '$($Adapter.IPv6.DefaultGateway)'
+"@
 	}
 
 "@
@@ -751,9 +760,9 @@ $NetworkingDSCConfig += @"
 <#
 $NetworkingDSCConfig += @"
 	xDnsServerAddress IPv6D_$AdapterCount {
-		Address        = '$($Adapter.IPv6.DNSServer)'
 		InterfaceAlias = '$($Adapter.InterfaceAlias)'
 		AddressFamily  = 'IPv6'
+		Address        = '$($Adapter.IPv6.DNSServer)'
 	}
 
 "@
@@ -777,7 +786,7 @@ $NetworkingDSCConfig += @"
 			[String]$Regex = '\s*Node\s.*{.*'
 			$Matches = [regex]::matches($DSCContent, $Regex, "IgnoreCase")
 			If ($Matches.Count -eq 1) {
-				$DSCContent.Insert($Matches[0].Index+$Matches[0].Length,"`r`nNetworking Network {}`r`n")
+				$DSCContent = $DSCContent.Insert($Matches[0].Index+$Matches[0].Length,"`r`nNetworking Network {}`r`n")
 			} Else {
 				Throw "A single Node element cannot be found in the DSC Config File $($VM.DSCCOnfigFile) for VM $($VM.Name)."
 			} # If
