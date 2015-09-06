@@ -776,10 +776,10 @@ $NetworkingDSCConfig += @"
 			# Find the location of the line containing "Node $AllNodes.NodeName {"
 			$Regex = '\s*Node\s.*{.*'
 			$Matches = [regex]::matches($Content, $Regex, "IgnoreCase")
-			If ($Matches.Count -eq 0) {
+			If ($Matches.Count -eq 1) {
 				$Content.Insert($Matches[0].Index+$Matches[0].Length,"`r`nNetworking Network {}`r`n")
 			} Else {
-				Throw "A Node element cannot be found in the DSC Config File $($VM.DSCCOnfigFile) for VM $($VM.Name)."
+				Throw "A single Node element cannot be found in the DSC Config File $($VM.DSCCOnfigFile) for VM $($VM.Name)."
 			} # If
 		} # If
 		
