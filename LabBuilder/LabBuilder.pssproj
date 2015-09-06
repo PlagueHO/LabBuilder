@@ -36,22 +36,24 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="DSCLibrary\MEMBER_DHCP.DSC.ps1" />
     <Compile Include="LabBuilder.psd1" />
     <Compile Include="LabBuilder.psm1" />
     <Compile Include="LabBuilder.tests.ps1" />
     <Compile Include="README.md" />
+    <Compile Include="DSCLibrary\STANDALONE_DEFAULT.DSC.ps1" />
+    <Compile Include="DSCLibrary\DC_FORESTPRIMARY.DSC.ps1" />
+    <Compile Include="DSCLibrary\DC_SECONDARY.DSC.ps1" />
+    <Compile Include="DSCLibrary\STANDALONE_ROOTCA.DSC.ps1" />
     <Compile Include="Tests\PesterTestConfig\PesterTest.DSC.ps1" />
     <Compile Include="Tests\PesterTestConfig\PesterTestConfig.OK.xml" />
-    <Compile Include="Tests\TestConfig1\SECONDARYDC.DSC.ps1" />
-    <Compile Include="Tests\TestConfig1\PRIMARYDC.DSC.ps1" />
-    <Compile Include="Tests\TestConfig1\STANDALONE_ROOTCA.DSC.ps1" />
     <Compile Include="Tests\TestConfig1.ps1" />
   </ItemGroup>
   <ItemGroup>
+    <Folder Include="DSCLibrary\" />
     <Folder Include="TestHelpers\" />
     <Folder Include="Tests\" />
     <Folder Include="Tests\PesterTestConfig\" />
-    <Folder Include="Tests\TestConfig1\" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="Tests\PesterTestConfig\PesterTest.mof" />
