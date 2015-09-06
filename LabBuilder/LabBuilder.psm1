@@ -874,6 +874,23 @@ function Set-LabDSCStartFile {
 	[String]$DSCStartPs = ''
 	[String]$VMPath = $Configuration.labbuilderconfig.settings.vmpath
 
+	# Relabel the Network Adapters so that they match what the DSC Networking config will use
+	# This is because unfortunately the Hyper-V Device Naming feature doesn't work.
+	Foreach ($Adapter in $VM.Adapters) {
+		$NetAdapter = Get-VMNetworkAdapter -VMName $($VM.Name) -Name $($Adapter.Name)
+		If (-not $NetAdapter) {
+			Throw "VM Network Adapter $($Adapter.Name) could not be found attached to VM ($VM.Name)."
+		} # If
+		$MacAddress = $NetAdapter.MacAddress
+		If (-not $MacAddress) {
+			Throw "VM Network Adapter $($Adapter.Name) attached to VM ($VM.Name) has a blank MAC Address."
+		} # If
+		$DSCStartPs += @"
+	Get-NetAdapter | Where-Object { `$_.MacAddress.Replace('-','') -eq '$MacAddress' } | Rename-NetAdapter -NewName '$($VM.Adapter.Name)'
+
+"@
+	} # Foreach
+
 	# Start the actual DSC Configuration
 	$DSCStartPs += @"
 Set-DscLocalConfigurationManager -Path `"$($ENV:SystemRoot)\Setup\Scripts\`" -Verbose  *>> `"$($ENV:SystemRoot)\Setup\Scripts\DSC.log`"
@@ -1125,22 +1142,6 @@ New-SelfsignedCertificateEx -Subject 'CN=$($VM.ComputerName)' -EKU 'Server Authe
 `$Cert = Get-ChildItem -Path cert:\LocalMachine\My | Where-Object { `$_.FriendlyName -eq '$($VM.ComputerName) Self-Signed Certificate' }
 Export-Certificate -Type CERT -Cert `$Cert -FilePath `"`$(`$ENV:SystemRoot)\SelfSigned.cer`"
 Add-Content -Path `"`$(`$ENV:SystemRoot)\Setup\Scripts\SetupComplete.log`" -Value 'Self-signed certificate created and saved to C:\Windows\SelfSigned.cer ...' -Encoding Ascii
-"@
-	# Relabel the Network Adapters
-	Foreach ($Adapter in $VM.Adapters) {
-		$NetAdapter = Get-VMNetworkAdapter -VMName $($VM.Name) -Name $($Adapter.Name)
-		If (-not $NetAdapter) {
-			Throw "VM Network Adapter $($Adapter.Name) could not be found attached to VM ($VM.Name)."
-		} # If
-		$MacAddress = $NetAdapter.MacAddress
-		If (-not $MacAddress) {
-			Throw "VM Network Adapter $($Adapter.Name) attached to VM ($VM.Name) has a blank MAC Address."
-		} # If
-$SetupCompletePs += @"
-	Get-NetAdapter | Where-Object { `$_.MacAddress.Replace('-','') -eq '$MacAddress' } | Rename-NetAdapter -NewName '$($VM.Adapter.Name)'
-"@
-	}
-$SetupCompletePs += @"
 Enable-PSRemoting -SkipNetworkProfileCheck -Force
 Add-Content -Path `"`$(`$ENV:SystemRoot)\Setup\Scripts\SetupComplete.log`" -Value 'Windows Remoting Enabled ...' -Encoding Ascii
 "@
@@ -1529,7 +1530,6 @@ function Initialize-LabVMs {
 			}
 
 			# Create the boot disk
-			[Boolean]$NewBootDisk = $False
 			$VMBootDiskPath = "$VMPath\$($VM.Name)\Virtual Hard Disks\$($VM.Name) Boot Disk.vhdx"
 			If (-not (Test-Path -Path $VMBootDiskPath)) {
 				If ($VM.UseDifferencingDisk -eq 'Y') {
@@ -1539,10 +1539,13 @@ function Initialize-LabVMs {
 					Write-Verbose "VM $($VM.Name) boot disk $VMBootDiskPath being created ..."
 					Copy-Item -Path $VM.TemplateVHD -Destination $VMBootDiskPath | Out-Null
 				}
-				$NewBootDisk = $True     
+
+				# Because this is a new boot disk assign any required initialization files to it (Unattend.xml etc).
+				Set-LabVMInitializationFiles -Configuration $Configuration -VMBootDiskPath $VMBootDiskPath -VM $VM
 			} Else {
 				Write-Verbose "VM $($VM.Name) boot disk $VMBootDiskPath already exists..."
 			} # If
+
 			New-VM -Name $VM.Name -MemoryStartupBytes $VM.MemoryStartupBytes -Generation 2 -Path $VMPath -VHDPath $VMBootDiskPath | Out-Null
 			# Just get rid of all network adapters bcause New-VM automatically creates one which we don't need
 			Get-VMNetworkAdapter -VMName $VM.Name | Remove-VMNetworkAdapter | Out-Null
@@ -1602,12 +1605,6 @@ function Initialize-LabVMs {
 			$VMNetworkAdapter | Set-VMNetworkAdapter -DeviceNaming On | Out-Null
 		} # Foreach
 		
-		If ($NewBootDisk) {
-			# Because this is a new boot disk assign any required initialization files to it (Unattend.xml etc).
-			# We have to wait for the VM to have been completely created to perform this step
-			Set-LabVMInitializationFiles -Configuration $Configuration -VMBootDiskPath $VMBootDiskPath -VM $VM
-		} # If
-
 		# The VM is now ready to be started
 		If ((Get-VM -Name $VM.Name).State -eq 'Off') {
 			Write-Verbose "VM $($VM.Name) is starting ..."
