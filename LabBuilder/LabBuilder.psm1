@@ -1446,7 +1446,7 @@ function Get-LabVMSelfSignedCert {
 	[PSCredential]$AdmininistratorCredential = New-Object System.Management.Automation.PSCredential ("Administrator", (ConvertTo-SecureString $VM.AdministratorPassword -AsPlainText -Force))
 
 	[Boolean]$Complete = $False
-	While ((-not $Downloaded)  -and (((Get-Date) - $StartTime).Seconds) -lt $TimeOut) {
+	While ((-not $Complete)  -and (((Get-Date) - $StartTime).Seconds) -lt $TimeOut) {
 		While (-not ($Session) -or ($Session.State -ne 'Opened')) {
 			# Try and connect to the remote VM for up to $Timeout (5 minutes) seconds.
 			Try {
@@ -1475,7 +1475,7 @@ function Get-LabVMSelfSignedCert {
 			Remove-PSSession -Session $Session
 		} # If
 	} # While
-	Return $Downloaded
+	Return $Complete
 
 } # Get-LabVMSelfSignedCert
 ##########################################################################################################################################
@@ -1699,30 +1699,37 @@ function Wait-LabVMInit {
 	# Make sure the VM has started
 	Wait-LabVMStart -VM $VM
 
-	# Try to connect to it
-	While ((-not $Session) -and (((Get-Date) - $StartTime).Seconds) -lt $TimeOut) {
-		# Try and connect to the remote VM for up to $Timeout (5 minutes) seconds.
-		Try {
-			$Session = New-PSSession -ComputerName ($VM.ComputerName) -Credential $AdmininistratorCredential -ErrorAction Stop
-		} Catch {
-			Write-Verbose "Trying to connect to $($VM.ComputerName) ..."
-		}
+	[Boolean]$Complete = $False
+	While ((-not $Complete)  -and (((Get-Date) - $StartTime).Seconds) -lt $TimeOut) {
+		While (-not ($Session) -or ($Session.State -ne 'Opened')) {
+			# Try and connect to the remote VM for up to $Timeout (5 minutes) seconds.
+			Try {
+				Write-Verbose "Connecting to $($VM.ComputerName) ..."
+				$Session = New-PSSession -ComputerName ($VM.ComputerName) -Credential $AdmininistratorCredential -ErrorAction Stop
+			} Catch {
+				Write-Verbose "Connecting to $($VM.ComputerName) ..."
+			} # Try
+		} # While
+
+		If (($Session) -and ($Session.State -eq 'Opened') -and (-not $Complete)) {
+			# We connected OK - check for init file
+			While ((-not $Complete) -and (((Get-Date) - $StartTime).Seconds) -lt $TimeOut) {
+				Try {
+					$Complete = Invoke-Command -Session $Session {Test-Path "$($ENV:SystemRoot)\Setup\Scripts\InitialSetupCompleted.txt" } -ErrorAction Stop
+				} Catch {
+					Write-Verbose "Waiting for Certificate file on $($VM.ComputerName) ..."
+					Sleep 5
+				} # Try
+			} # While
+		} # If
+
+		# Close the Session if it is opened
+		If (($Session) -and ($Session.State -eq 'Opened')) {
+			Remove-PSSession -Session $Session
+		} # If
 	} # While
 
-	If ($Session) {
-		# We connected OK - check for init file
-		While ((-not $Found) -and (((Get-Date) - $StartTime).Seconds) -lt $TimeOut) {
-			Try {
-				
-				$Found = Invoke-Command -Session $Session {Test-Path "$($ENV:SystemRoot)\Setup\Scripts\InitialSetupCompleted.txt" } -ErrorAction Stop
-			} Catch {
-				Write-Verbose "Waiting for Initial Setup Complete file on $($VM.ComputerName) ..."
-				Sleep 5
-			}
-		}
-		Remove-PSSession -Session $Session
-	}
-	Return $Found
+	Return $Complete
 } # Wait-LabVMInit
 ##########################################################################################################################################
 
