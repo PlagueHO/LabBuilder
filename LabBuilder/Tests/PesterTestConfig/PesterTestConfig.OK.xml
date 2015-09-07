@@ -37,7 +37,8 @@
               processorcount="1"
               administratorpassword="None"
               productkey="AAAAA-AAAAA-AAAAA-AAAAA-AAAAA"
-              timezone="Pacific Standard Time" />
+              timezone="Pacific Standard Time"
+              ostype="Server" />
     <template name="Pester Windows Server 2012 R2 Datacenter Core"
               vhd="Windows Server 2012 R2 Datacenter Core.vhdx"
               sourcevhd=".\Tests\PesterTestConfig\Windows Server 2012 R2 Datacenter Full.vhdx"
@@ -48,7 +49,8 @@
               processorcount="1"
               administratorpassword="None"
               productkey="BBBBB-BBBBB-BBBBB-BBBBB-BBBBB"
-              timezone="Pacific Standard Time" />
+              timezone="Pacific Standard Time"
+              ostype="Server" />
     <template name="Pester Windows 10 Enterprise"
               vhd="Windows 10 Enterprise.vhdx"
               sourcevhd=".\Tests\PesterTestConfig\Windows 10 Enterprise.vhdx"
@@ -59,7 +61,8 @@
               processorcount="1"
               administratorpassword="None"
               productkey="CCCCC-CCCCC-CCCCC-CCCCC-CCCCC"
-              timezone="Pacific Standard Time" />
+              timezone="Pacific Standard Time"
+              ostype="Client" />
   </templates>
 
   <vms>

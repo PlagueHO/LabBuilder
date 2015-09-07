@@ -528,6 +528,11 @@ function Get-LabVMTemplates {
 				If ($Templates.TimeZone) {
 					$VMTemplate.TimeZone = $Template.TimeZone
 				} # If
+				If ($Templates.OSType) {
+					$VMTemplate.OSType = $Template.OSType
+				} Else {
+					$VMTemplate.OSType = "Server"
+				}
 
 				$Found = $True
 				Break
@@ -554,6 +559,7 @@ function Get-LabVMTemplates {
 				administratorpassword = $Template.AdministratorPassword;
 				productkey = $Template.ProductKey;
 				timezone = $Template.TimeZone;
+				ostype = If ($Template.OSType) { $Template.OSType } Else { 'Server' };
 			}
 		} # If
 	} # Foreach
@@ -1090,14 +1096,20 @@ function Get-LabUnattendFile {
 			<ComputerName>$($VM.ComputerName)</ComputerName>
 			<ProductKey>$($VM.ProductKey)</ProductKey>
 		</component>
-        <component name="Microsoft-Windows-Deployment" processorArchitecture="x86" publicKeyToken="31bf3856ad364e35" language="neutral" versionScope="nonSxS" xmlns:wcm="http://schemas.microsoft.com/WMIConfig/2002/State" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
-			<RunSynchronous>
-				<RunSynchronousCommand wcm:action="add">
-					<Order>1</Order>
-					<Path>net user administrator /active:yes</Path>
-				</RunSynchronousCommand>
-			</RunSynchronous>
-		</component>
+"@
+		If ($VM.OSType -eq 'Desktop') {
+			$UnattendContent += @"
+			<component name="Microsoft-Windows-Deployment" processorArchitecture="x86" publicKeyToken="31bf3856ad364e35" language="neutral" versionScope="nonSxS" xmlns:wcm="http://schemas.microsoft.com/WMIConfig/2002/State" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+				<RunSynchronous>
+					<RunSynchronousCommand wcm:action="add">
+						<Order>1</Order>
+						<Path>net user administrator /active:yes</Path>
+					</RunSynchronousCommand>
+				</RunSynchronous>
+			</component>
+"@
+		} # If
+		$UnattendContent += @"
 	</settings>
 	<settings pass="oobeSystem">
 		<component name="Microsoft-Windows-Shell-Setup" processorArchitecture="amd64" publicKeyToken="31bf3856ad364e35" language="neutral" versionScope="nonSxS" xmlns:wcm="http://schemas.microsoft.com/WMIConfig/2002/State" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
@@ -1437,7 +1449,7 @@ function Get-LabVMs {
 			$ProductKey = $VM.productkey
 		} # If
 
-		# Get the Product Key (from the template or VM)
+		# Get the Timezone (from the template or VM)
 		[String]$Timezone = "Pacific Standard Time"
 		If ($VMTemplate.timezone) {
 			$Timezone = $VMTemplate.timezone
@@ -1445,6 +1457,13 @@ function Get-LabVMs {
 		If ($VM.timezone) {
 			$Timezone = $VM.timezone
 		} # If
+
+		# Get the OS Type
+		If ($VMTemplate.ostype) {
+			$OSType = $VMTemplate.ostype
+		} Else {
+			$OSType = 'Server'
+		} # If	
 
 		$LabVMs += @{
 			Name = $VM.name;
@@ -1463,7 +1482,8 @@ function Get-LabVMs {
 			SetupComplete = $SetupComplete;
 			DSCConfigFile = $DSCConfigFile;
 			DSCConfigName = $VM.DSC.ConfigName;
-			DSCParameters = $DSCParameters
+			DSCParameters = $DSCParameters;
+			OSType = $OSType;
 		}
 	} # Foreach        
 
@@ -1653,26 +1673,29 @@ function Initialize-LabVMs {
 			Start-VM -VMName $VM.Name
 		} # If
 
-		# Has this VM been initialized before (do we have a cer for it)
-		If (-not (Test-Path "$VMPath\$($VM.Name)\LabBuilder Files\SelfSigned.cer")) {
-			# No, so check it is initialized and download the cert.
-			If (Wait-LabVMInit -VM $VM) {
-				Write-Verbose "Attempting to download certificate for VM $($VM.Name) ..."
-				If (Get-LabVMSelfSignedCert -Configuration $Configuration -VM $VM) {
-					Write-Verbose "Certificate for VM $($VM.Name) was downloaded successfully ..."
+		# We only perform this section of VM Initialization (DSC, Cert, etc) with Server OS
+		If ($VM.OSType -eq 'Server') {
+			# Has this VM been initialized before (do we have a cer for it)
+			If (-not (Test-Path "$VMPath\$($VM.Name)\LabBuilder Files\SelfSigned.cer")) {
+				# No, so check it is initialized and download the cert.
+				If (Wait-LabVMInit -VM $VM) {
+					Write-Verbose "Attempting to download certificate for VM $($VM.Name) ..."
+					If (Get-LabVMSelfSignedCert -Configuration $Configuration -VM $VM) {
+						Write-Verbose "Certificate for VM $($VM.Name) was downloaded successfully ..."
+					} Else {
+						Write-Verbose "Certificate for VM $($VM.Name) could not be downloaded ..."
+					} # If
 				} Else {
-					Write-Verbose "Certificate for VM $($VM.Name) could not be downloaded ..."
+					Write-Verbose "Initialization for VM $($VM.Name) did not complete ..."
 				} # If
-			} Else {
-				Write-Verbose "Initialization for VM $($VM.Name) did not complete ..."
 			} # If
+
+			# Create any DSC Files for the VM
+			Initialize-LabVMDSC -Configuration $Configuration -VM $VM
+
+			# Attempt to start DSC on the VM
+			Start-LabVMDSC -Configuration $Configuration -VM $VM
 		} # If
-
-		# Create any DSC Files for the VM
-		Initialize-LabVMDSC -Configuration $Configuration -VM $VM
-
-		# Attempt to start DSC on the VM
-		Start-LabVMDSC -Configuration $Configuration -VM $VM
 	} # Foreach
 	Return $True
 } # Initialize-LabVMs

@@ -315,6 +315,7 @@ Describe "Get-LabVMTemplates" {
         "processorcount":  "1",
         "templatevhd":  "C:\\Pester Lab\\Virtual Hard Disk Templates\\Windows Server 2012 R2 Datacenter Full.vhdx",
         "memorystartupbytes":  null,
+        "ostype":  "Server",
         "datavhdsize":  null,
         "name":  "Pester Windows Server 2012 R2 Datacenter Full",
         "administratorpassword":  "None",
@@ -330,6 +331,7 @@ Describe "Get-LabVMTemplates" {
         "processorcount":  "1",
         "templatevhd":  "C:\\Pester Lab\\Virtual Hard Disk Templates\\Windows Server 2012 R2 Datacenter Core.vhdx",
         "memorystartupbytes":  null,
+        "ostype":  "Server",
         "datavhdsize":  null,
         "name":  "Pester Windows Server 2012 R2 Datacenter Core",
         "administratorpassword":  "None",
@@ -345,6 +347,7 @@ Describe "Get-LabVMTemplates" {
         "processorcount":  "1",
         "templatevhd":  "C:\\Pester Lab\\Virtual Hard Disk Templates\\Windows 10 Enterprise.vhdx",
         "memorystartupbytes":  null,
+        "ostype":  "Client",
         "datavhdsize":  null,
         "name":  "Pester Windows 10 Enterprise",
         "administratorpassword":  "None",
@@ -615,13 +618,23 @@ Describe "Get-LabVMs" {
 		It "Returns Template Object that matches Expected Object" {
 			$ExpectedVMs = [String] @"
 {
-    "DataVHDSize":  0,
-    "DSCConfigName":  "ROOTCA",
-    "AdministratorPassword":  "Something",
     "TemplateVHD":  "C:\\Pester Lab\\Virtual Hard Disk Templates\\Windows Server 2012 R2 Datacenter Full.vhdx",
-    "ProductKey":  "DDDDD-DDDDD-DDDDD-DDDDD-DDDDD",
+    "ProcessorCount":  1,
+    "TimeZone":  "Pacific Standard Time",
+    "Template":  "Pester Windows Server 2012 R2 Datacenter Full",
+    "MemoryStartupBytes":  10737418240,
+    "SetupComplete":  "",
+    "OSType":  "Server",
+    "DSCConfigName":  "ROOTCA",
+    "DSCParameters":  "\r\n          CACommonName = \"PESTER.LOCAL Root CA\"\r\n          CADistinguishedNameSuffix = \"DC=PESTER,DC=LOCAL\"\r\n        ",
+    "UseDifferencingDisk":  "Y",
+    "DSCConfigFile":  "C:\\Users\\Daniel\\Source\\GitHub\\LabBuilder\\LabBuilder\\Tests\\PesterTestConfig\\PesterTest.DSC.ps1",
     "ComputerName":  "PESTER01",
+    "ProductKey":  "DDDDD-DDDDD-DDDDD-DDDDD-DDDDD",
+    "DataVHDSize":  0,
+    "Name":  "PESTER01",
     "UnattendFile":  "",
+    "AdministratorPassword":  "Something",
     "Adapters":  [
                      {
                          "IPv6":  {
@@ -695,16 +708,7 @@ Describe "Get-LabVMs" {
                                   },
                          "MACAddress":  "00155D010804"
                      }
-                 ],
-    "ProcessorCount":  1,
-    "Template":  "Pester Windows Server 2012 R2 Datacenter Full",
-    "UseDifferencingDisk":  "Y",
-    "SetupComplete":  "",
-    "DSCParameters":  "\r\n          CACommonName = \"PESTER.LOCAL Root CA\"\r\n          CADistinguishedNameSuffix = \"DC=PESTER,DC=LOCAL\"\r\n        ",
-    "TimeZone":  "Pacific Standard Time",
-    "MemoryStartupBytes":  10737418240,
-    "DSCConfigFile":  "C:\\Users\\Daniel\\Source\\GitHub\\LabBuilder\\LabBuilder\\Tests\\PesterTestConfig\\PesterTest.DSC.ps1",
-    "Name":  "PESTER01"
+                 ]
 }
 "@
 			[String]::Compare(($VMs | ConvertTo-Json -Depth 4),$ExpectedVMs,$true) | Should Be 0

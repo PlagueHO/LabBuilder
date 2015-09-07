@@ -31,19 +31,22 @@
               processorcount="1"
               administratorpassword="P@ssword!1"
               productkey="W3GGN-FT8W3-Y4M27-J84CP-Q3VJ9"
-              timezone="New Zealand Standard Time" />
+              timezone="New Zealand Standard Time" 
+              ostype="Server" />
     <template name="Template Windows Server 2012 R2 Datacenter Core"
               memorystartupbytes="1GB"
               processorcount="1"
               administratorpassword="P@ssword!1"
               productkey="W3GGN-FT8W3-Y4M27-J84CP-Q3VJ9"
-              timezone="New Zealand Standard Time" />
+              timezone="New Zealand Standard Time" 
+              ostype="Server" />
     <template name="Template Windows 10 Enterprise"
               memorystartupbytes="2GB"
               processorcount="1"
               administratorpassword="P@ssword!1"
               productkey="KK86J-6TNXJ-MHJ2M-GYMJG-BP2JR"
-              timezone="New Zealand Standard Time" />
+              timezone="New Zealand Standard Time" 
+              ostype="Client" />
   </templates>
 
   <vms>
@@ -332,14 +335,6 @@
       template="Template Windows 10 Enterprise"
       computername="DA_IT01"
       usedifferencingbootdisk="Y">
-      <dsc configname="MEMBER_CLIENT"
-           configfile="MEMBER_CLIENT.DSC.ps1">
-        <parameters>
-          DomainName = "LABBUILDER.COM"
-          DomainAdminPassword = "P@ssword!1"
-          PSDscAllowDomainUser = $True
-        </parameters>
-      </dsc>
       <adapters>
         <adapter name="General Purpose External"
                  switchname="General Purpose External" />
