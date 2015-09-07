@@ -942,16 +942,16 @@ function Start-LabVMDSC {
 	[Boolean]$Complete = $False
 	[Boolean]$ConfigCopyComplete = $False
 	[Boolean]$ModuleCopyComplete = $False
-	[String]$IPAddress = (Get-VMNetworkAdapter -VMName $VM.Name).Where({$_.SwitchName -eq (Get-VMSwitch -SwitchType External).Name}).IPAddresses.Where({$_.Contains('.')})
-	If ($IPAddress) {
-		Throw "An externally accessible IPv4 address for $($VM.ComputerName) could not be identified."
-	}
 	
 	While ((-not $Complete) -and (((Get-Date) - $StartTime).Seconds) -lt $TimeOut) {
 		While (-not ($Session) -or ($Session.State -ne 'Opened')) {
 			# Try and connect to the remote VM for up to $Timeout (5 minutes) seconds.
 			Try {
 				Write-Verbose "Attempting connection to $($VM.ComputerName) ..."
+				[String]$IPAddress = (Get-VMNetworkAdapter -VMName $VM.Name).Where({$_.SwitchName -eq (Get-VMSwitch -SwitchType External).Name}).IPAddresses.Where({$_.Contains('.')})
+				If ($IPAddress) {
+					Throw "An externally accessible IPv4 address for $($VM.ComputerName) could not be identified."
+				}
 				$Session = New-PSSession -ComputerName $IPAddress -Credential $AdmininistratorCredential -ErrorAction Stop
 			} Catch {
 				Write-Verbose "Connection to $($VM.ComputerName) failed - retrying in 5 seconds ..."
@@ -1455,19 +1455,20 @@ function Get-LabVMSelfSignedCert {
 	[DateTime]$StartTime = Get-Date
 	[System.Management.Automation.Runspaces.PSSession]$Session = $null
 	[PSCredential]$AdmininistratorCredential = New-Object System.Management.Automation.PSCredential ("Administrator", (ConvertTo-SecureString $VM.AdministratorPassword -AsPlainText -Force))
-	[String]$IPAddress = (Get-VMNetworkAdapter -VMName $VM.Name).Where({$_.SwitchName -eq (Get-VMSwitch -SwitchType External).Name}).IPAddresses.Where({$_.Contains('.')})
-	If ($IPAddress) {
-		Throw "An externally accessible IPv4 address for $($VM.ComputerName) could not be identified."
-	}
 	[Boolean]$Complete = $False
 	While ((-not $Complete)  -and (((Get-Date) - $StartTime).Seconds) -lt $TimeOut) {
 		While (-not ($Session) -or ($Session.State -ne 'Opened')) {
 			# Try and connect to the remote VM for up to $Timeout (5 minutes) seconds.
 			Try {
 				Write-Verbose "Connecting to $($VM.ComputerName) ..."
+				[String]$IPAddress = (Get-VMNetworkAdapter -VMName $VM.Name).Where({$_.SwitchName -eq (Get-VMSwitch -SwitchType External).Name}).IPAddresses.Where({$_.Contains('.')})
+				If ($IPAddress) {
+					Throw "An externally accessible IPv4 address for $($VM.ComputerName) could not be identified."
+				}
 				$Session = New-PSSession -ComputerName $IPAddress -Credential $AdmininistratorCredential -ErrorAction Stop
 			} Catch {
-				Write-Verbose "Connecting to $($VM.ComputerName) ..."
+				Write-Verbose "Connection to $($VM.ComputerName) failed - retrying in 5 seconds ..."
+				Sleep 5
 			} # Try
 		} # While
 
@@ -1715,20 +1716,20 @@ function Wait-LabVMInit {
 	# Make sure the VM has started
 	Wait-LabVMStart -VM $VM
 
-	[String]$IPAddress = (Get-VMNetworkAdapter -VMName $VM.Name).Where({$_.SwitchName -eq (Get-VMSwitch -SwitchType External).Name}).IPAddresses.Where({$_.Contains('.')})
-	If ($IPAddress) {
-		Throw "An externally accessible IPv4 address for $($VM.ComputerName) could not be identified."
-	}
-
 	[Boolean]$Complete = $False
 	While ((-not $Complete)  -and (((Get-Date) - $StartTime).Seconds) -lt $TimeOut) {
 		While (-not ($Session) -or ($Session.State -ne 'Opened')) {
 			# Try and connect to the remote VM for up to $Timeout (5 minutes) seconds.
 			Try {
 				Write-Verbose "Connecting to $($VM.ComputerName) ..."
+				[String]$IPAddress = (Get-VMNetworkAdapter -VMName $VM.Name).Where({$_.SwitchName -eq (Get-VMSwitch -SwitchType External).Name}).IPAddresses.Where({$_.Contains('.')})
+				If ($IPAddress) {
+					Throw "An externally accessible IPv4 address for $($VM.ComputerName) could not be identified."
+				}
 				$Session = New-PSSession -ComputerName $IPAddress -Credential $AdmininistratorCredential -ErrorAction Stop
 			} Catch {
-				Write-Verbose "Connecting to $($VM.ComputerName) ..."
+				Write-Verbose "Connection to $($VM.ComputerName) failed - retrying in 5 seconds ..."
+				Sleep 5
 			} # Try
 		} # While
 
