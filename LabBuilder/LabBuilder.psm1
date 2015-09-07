@@ -670,13 +670,34 @@ function Set-LabDSCMOFFile {
 		Write-Verbose "Identifying Modules used by DSC Config File $($VM.DSCConfigFile) in VM $($VM.Name) ..."
 		$DSCModules = Get-ModulesInDSCConfig -DSCConfigFile $($VM.DSCConfigFile)
 		Foreach ($ModuleName in $DSCModules) {
-			Write-Verbose "Saving Module $ModuleName required by DSC Config File $($VM.DSCConfigFile) in VM $($VM.Name) ..."
-			Save-Module -Name $ModuleName -Path "$VMPath\$($VM.Name)\LabBuilder Files\DSC Modules\" -Force
 			If (($InstalledModules | Where-Object -Property Name -EQ $ModuleName).Count -eq 0) {
 				# The Module isn't available on this computer, so try and install it
-				Write-Verbose "Installing Module $ModuleName required by DSC Config File $($VM.DSCConfigFile) in VM $($VM.Name) ..."
-				Find-Module -Name $ModuleName | Install-Module -Verbose
+				Write-Verbose "Searching for Module $ModuleName required by DSC Config File $($VM.DSCConfigFile) in VM $($VM.Name) ..."
+				$NewModule = Find-Module -Name $ModuleName
+				If ($NewModule) {
+					Write-Verbose "Installing Module $ModuleName required by DSC Config File $($VM.DSCConfigFile) in VM $($VM.Name) ..."
+					Try {
+						$NewModule | Install-Module -Verbose
+					} Catch {
+						Throw "Module $ModuleName required by DSC Config File $($VM.DSCConfigFile) in VM $($VM.Name) could not be downloaded ..."					
+					}
+				} Else {
+					Throw "Module $ModuleName required by DSC Config File $($VM.DSCConfigFile) in VM $($VM.Name) could not be found or downloaded ..."
+				}
 			} # If
+			Write-Verbose "Saving Module $ModuleName required by DSC Config File $($VM.DSCConfigFile) in VM $($VM.Name) to LabBuilder files ..."
+			# Find where the module is actually stored
+			[String]$ModulePath = ''
+			Foreach ($Path in $ENV:PSModulePath.Split(';')) {
+				$ModulePath = Join-Path -Path $Path -ChildPath $ModuleName
+				If (Test-Path -Path $ModulePath) {
+					Break
+				} # If
+			} # Foreach
+			If (-not $ModulePath) {
+				Throw "Module $ModuleName required by DSC Config File $($VM.DSCConfigFile) in VM $($VM.Name) could not be found in the module path."
+			}
+			Copy-Item -Path $ModulePath -Destination "$VMPath\$($VM.Name)\LabBuilder Files\DSC Modules\" -Recurse -Force
 		} # Foreach
 
 		# Add the VM Self-Signed Certificate to the Local Machine store and get the Thumbprint	
@@ -684,7 +705,7 @@ function Set-LabDSCMOFFile {
 		$Certificate = Import-Certificate -FilePath $CertificateFile -CertStoreLocation "Cert:LocalMachine\My"
 		[String]$CertificateThumbprint = $Certificate.Thumbprint
 
-		# Set the predictated MOF File name
+		# Set the predicted MOF File name
 		$DSCMOFFile = Join-Path -Path $ENV:Temp -ChildPath "$($VM.ComputerName).mof"
 		$DSCMOFMetaFile = ([System.IO.Path]::ChangeExtension($DSCMOFFile,"meta.mof"))
 			

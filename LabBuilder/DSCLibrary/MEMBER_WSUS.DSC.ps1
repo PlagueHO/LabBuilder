@@ -1,21 +1,21 @@
 <#########################################################################################################################################
 DSC Template Configuration File For use by LabBuilder
 .Title
-	MEMBER_DHCP
+	MEMBER_WSUS
 .Desription
-	Builds a Server that is joined to a domain and then made into a DHCP Server.
-	Requires cDHCPServer Resource from https://github.com/iainbrighton/xDhcpServer
+	Builds a Server that is joined to a domain and then installs WSUS components.
+	Requires cMicrosoftUpdate resource from https://github.com/fabiendibot/cMicrosoftUpdate
 .Parameters:          
 	DomainName = "LABBUILDER.COM"
 	DomainAdminPassword = "P@ssword!1"
 #########################################################################################################################################>
 
-Configuration MEMBER_DHCP
+Configuration MEMBER_WSUS
 {
 	Import-DscResource -ModuleName 'PSDesiredStateConfiguration'
 	Import-DscResource -ModuleName xActiveDirectory
 	Import-DscResource -ModuleName xComputerManagement
-	Import-DscResource -ModuleName xDHCPServer
+	Import-DscResource -ModuleName cMicrosoftUpdate
 	Node $AllNodes.NodeName {
 		# Assemble the Local Admin Credentials
 		If ($Node.LocalAdminPassword) {
@@ -48,11 +48,19 @@ Configuration MEMBER_DHCP
 			DependsOn = "[xWaitForADDomain]DscDomainWait" 
         } 
 
-		WindowsFeature DHCPInstall 
+		WindowsFeature UpdateServicesWIDDBInstall 
         { 
             Ensure = "Present" 
-            Name = "DHCP" 
+            Name = "UpdateServices-WidDB" 
 			DependsOn = "[xComputer]JoinDomain" 
         } 
+
+		WindowsFeature UpdateServicesServicesInstall 
+        { 
+            Ensure = "Present" 
+            Name = "UpdateServices-Services" 
+			DependsOn = "[WindowsFeature]UpdateServicesWIDDBInstall" 
+        } 
+
 	}
 }
