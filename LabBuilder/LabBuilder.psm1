@@ -1004,7 +1004,7 @@ function Start-LabVMDSC {
 		# Finally, Start DSC up!
 		If (($Session) -and ($Session.State -eq 'Opened') -and ($ConfigCopyComplete) -and ($ModuleCopyComplete)) {
 			Write-Verbose "Starting DSC on VM $($VM.ComputerName) ..."
-			Invoke-Command -Session $Session { c:\windows\setup\scripts\StartDSC.ps1 } -AsJob
+			Invoke-Command -Session $Session { c:\windows\setup\scripts\StartDSC.ps1 }
 			Remove-PSSession -Session $Session		
 			$Complete = $True
 		} # If
