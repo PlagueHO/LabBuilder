@@ -19,6 +19,7 @@
         <adapter name="LM" macaddress="00155D010704" />
       </adapters>
     </switch>
+    <switch name="General Purpose Internal" type="Internal" /> 
     <switch name="Domain Private Site A" type="Private" vlan="2" />
     <switch name="Domain Private Site B" type="Private" vlan="3" />
     <switch name="Domain Private Site C" type="Private" vlan="4" />
@@ -61,8 +62,8 @@
           </parameters>
       </dsc>
       <adapters>
-        <adapter name="General Purpose External"
-                 switchname="General Purpose External" />
+        <adapter name="General Purpose Internal"
+                 switchname="General Purpose Internal" />
       </adapters>
     </vm>
     
@@ -78,8 +79,8 @@
         </parameters>
       </dsc>
       <adapters>
-        <adapter name="General Purpose External"
-                 switchname="General Purpose External" />
+        <adapter name="General Purpose Internal"
+                 switchname="General Purpose Internal" />
         <adapter name="Domain Private Site A"
                  switchname="Domain Private Site A">
           <ipv4 address="192.168.128.10"
@@ -107,8 +108,8 @@
         </parameters>
       </dsc>
       <adapters>
-        <adapter name="General Purpose External"
-                 switchname="General Purpose External" />
+        <adapter name="General Purpose Internal"
+                 switchname="General Purpose Internal" />
         <adapter name="Domain Private Site A"
                  switchname="Domain Private Site A">
           <ipv4 address="192.168.128.11"
@@ -136,8 +137,8 @@
         </parameters>
       </dsc>
       <adapters>
-        <adapter name="General Purpose External"
-                 switchname="General Purpose External" />
+        <adapter name="General Purpose Internal"
+                 switchname="General Purpose Internal" />
         <adapter name="Domain Private Site A"
                  switchname="Domain Private Site A">
           <ipv4 address="192.168.128.16"
@@ -165,8 +166,8 @@
         </parameters>
       </dsc>
       <adapters>
-        <adapter name="General Purpose External"
-                 switchname="General Purpose External" />
+        <adapter name="General Purpose Internal"
+                 switchname="General Purpose Internal" />
         <adapter name="Domain Private Site A"
                  switchname="Domain Private Site A">
           <ipv4 address="192.168.128.17"
