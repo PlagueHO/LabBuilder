@@ -63,9 +63,7 @@
       </dsc>
       <adapters>
         <adapter name="General Purpose External"
-                 switchname="General Purpose External" >
-          <ipv4 dnsserver=""/>
-        </adapter>
+                 switchname="General Purpose External" />
       </adapters>
     </vm>
     
@@ -82,9 +80,8 @@
       </dsc>
       <adapters>
         <adapter name="General Purpose External"
-                 switchname="General Purpose External" >
-          <ipv4 dnsserver=""/>
-        </adapter>
+                 switchname="General Purpose External" />
+        
         <adapter name="Domain Private Site A"
                  switchname="Domain Private Site A">
           <ipv4 address="192.168.128.10"
@@ -113,9 +110,7 @@
       </dsc>
       <adapters>
         <adapter name="General Purpose External"
-                 switchname="General Purpose External" >
-          <ipv4 dnsserver=""/>
-        </adapter>
+                 switchname="General Purpose External" />
         <adapter name="Domain Private Site A"
                  switchname="Domain Private Site A">
           <ipv4 address="192.168.128.11"
@@ -144,9 +139,7 @@
       </dsc>
       <adapters>
         <adapter name="General Purpose External"
-                 switchname="General Purpose External" >
-          <ipv4 dnsserver=""/>
-        </adapter>
+                 switchname="General Purpose External" />
         <adapter name="Domain Private Site A"
                  switchname="Domain Private Site A">
           <ipv4 address="192.168.128.16"
@@ -175,9 +168,7 @@
       </dsc>
       <adapters>
         <adapter name="General Purpose External"
-                 switchname="General Purpose External" >
-          <ipv4 dnsserver=""/>
-        </adapter>
+                 switchname="General Purpose External" />
         <adapter name="Domain Private Site A"
                  switchname="Domain Private Site A">
           <ipv4 address="192.168.128.17"
