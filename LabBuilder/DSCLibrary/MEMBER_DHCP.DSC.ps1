@@ -5,7 +5,7 @@ DSC Template Configuration File For use by LabBuilder
 .Desription
 	Builds a Server that is joined to a domain and then made into a DHCP Server.
 .Parameters:          
-	DomainName = "BMDLAB.COM"
+	DomainName = "LABBUILDER.COM"
 	DomainAdminPassword = "P@ssword!1"
 #########################################################################################################################################>
 

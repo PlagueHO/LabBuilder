@@ -5,16 +5,15 @@ DSC Template Configuration File For use by LabBuilder
 .Desription
 	Builds a Server that is joined to a domain and then contains Remote Access components.
 .Parameters:          
-	DomainName = "BMDLAB.COM"
+	DomainName = "LABBUILDER.COM"
 	DomainAdminPassword = "P@ssword!1"
 #########################################################################################################################################>
 
-Configuration MEMBER_DHCP
+Configuration MEMBER_REMOTEACCESS
 {
 	Import-DscResource -ModuleName 'PSDesiredStateConfiguration'
 	Import-DscResource -ModuleName xActiveDirectory
 	Import-DscResource -ModuleName xComputerManagement
-	Import-DscResource -ModuleName xDHCpServer
 	Node $AllNodes.NodeName {
 		# Assemble the Local Admin Credentials
 		If ($Node.LocalAdminPassword) {

@@ -5,7 +5,7 @@ DSC Template Configuration File For use by LabBuilder
 .Desription
 	Builds a Domain Controller as the first DC in a forest with the name of the Domain Name parameter passed.
 .Parameters:          
-	DomainName = "BMDLAB.COM"
+	DomainName = "LABBUILDER.COM"
 	DomainAdminPassword = "P@ssword!1"
 #########################################################################################################################################>
 

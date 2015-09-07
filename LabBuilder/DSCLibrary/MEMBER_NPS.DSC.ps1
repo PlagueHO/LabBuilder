@@ -1,18 +1,19 @@
 <#########################################################################################################################################
 DSC Template Configuration File For use by LabBuilder
 .Title
-	DC_SECONDARY
+	MEMBER_NPS
 .Desription
-	Builds a Domain Controller and adds it to the existing domain provided in the Parameter DomainName.
+	Builds a Server that is joined to a domain and then contains NPS/Radius components.
 .Parameters:          
 	DomainName = "LABBUILDER.COM"
 	DomainAdminPassword = "P@ssword!1"
 #########################################################################################################################################>
 
-Configuration DC_SECONDARY
+Configuration MEMBER_NPS
 {
 	Import-DscResource -ModuleName 'PSDesiredStateConfiguration'
-	Import-DscResource -ModuleName xActiveDirectory 
+	Import-DscResource -ModuleName xActiveDirectory
+	Import-DscResource -ModuleName xComputerManagement
 	Node $AllNodes.NodeName {
 		# Assemble the Local Admin Credentials
 		If ($Node.LocalAdminPassword) {
@@ -22,17 +23,10 @@ Configuration DC_SECONDARY
 			[PSCredential]$DomainAdminCredential = New-Object System.Management.Automation.PSCredential ("$($Node.DomainName)\Administrator", (ConvertTo-SecureString $Node.DomainAdminPassword -AsPlainText -Force))
 		}
 
-		WindowsFeature DNSInstall 
+		WindowsFeature RSATADPowerShell
         { 
             Ensure = "Present" 
-            Name = "DNS" 
-        } 
-
-		WindowsFeature ADDSInstall 
-        { 
-            Ensure = "Present" 
-            Name = "AD-Domain-Services" 
-			DependsOn = "[WindowsFeature]DNSInstall" 
+            Name = "RSAT-AD-PowerShell" 
         } 
 
         xWaitForADDomain DscDomainWait
@@ -41,15 +35,30 @@ Configuration DC_SECONDARY
             DomainUserCredential = $DomainAdminCredential 
             RetryCount = 20 
             RetryIntervalSec = 30 
-            DependsOn = "[WindowsFeature]ADDSInstall"
+			DependsOn = "[WindowsFeature]RSATADPowerShell" 
         }
-        
-		xADDomainController SecondaryDC
-        {
-            DomainName = $Node.DomainName
-            DomainAdministratorCredential = $DomainAdminCredential
-            SafemodeAdministratorPassword = $LocalAdminCredential 
-            DependsOn = "[xWaitForADDomain]DscDomainWait"
-        }	
+
+		xComputer JoinDomain 
+        { 
+            Name          = $Node.NodeName
+            DomainName    = $Node.DomainName
+            Credential    = $DomainAdminCredential 
+			DependsOn = "[xWaitForADDomain]DscDomainWait" 
+        } 
+
+		WindowsFeature NPASPolicyServerInstall 
+        { 
+            Ensure = "Present" 
+            Name = "NPAS-Policy-Server" 
+			DependsOn = "[xComputer]JoinDomain" 
+        } 
+
+		WindowsFeature NPASHealthInstall 
+        { 
+            Ensure = "Present" 
+            Name = "NPAS-Health" 
+			DependsOn = "[WindowsFeature]NAPSPolicyServerInstall" 
+        } 
+
 	}
 }

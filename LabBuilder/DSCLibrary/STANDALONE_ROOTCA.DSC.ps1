@@ -5,7 +5,7 @@ DSC Template Configuration File For use by LabBuilder
 .Desription
 	Builds a Standalone Root CA.
 .Parameters:    
-	CACommonName = "BMDLAB.COM Root CA"
+	CACommonName = "LABBUILDER.COM Root CA"
 	CADistinguishedNameSuffix = "DC=BMDLAB,DC=COM"
 	DSConfigDN = "CN=Configuration,DC=BMDLAB,DC=COM"
 	CRLPublicationURLs = "1:C:\Windows\system32\CertSrv\CertEnroll\%1_%3%4.crt\n2:ldap:///CN=%7,CN=AIA,CN=Public Key Services,CN=Services,%6%11\n2:http://pki.bmdlab.local/CertEnroll/%1_%3%4.crt"
