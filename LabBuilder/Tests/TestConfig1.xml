@@ -328,6 +328,35 @@
       </adapters>
     </vm>
 
+    <vm name="LABBUILDER.COM DA_IT01"
+      template="Template Windows 10 Enterprise"
+      computername="DA_IT01"
+      usedifferencingbootdisk="Y">
+      <dsc configname="MEMBER_CLIENT"
+           configfile="MEMBER_CLIENT.DSC.ps1">
+        <parameters>
+          DomainName = "LABBUILDER.COM"
+          DomainAdminPassword = "P@ssword!1"
+          PSDscAllowDomainUser = $True
+        </parameters>
+      </dsc>
+      <adapters>
+        <adapter name="General Purpose External"
+                 switchname="General Purpose External" />
+        <adapter name="Domain Private Site A"
+                 switchname="Domain Private Site A">
+          <ipv4 address="192.168.128.50"
+                defaultgateway="192.168.128.19"
+                subnetmask="24"
+                dnsserver="192.168.128.10,192.168.128.11"/>
+          <ipv6 address="fd53:ccc5:895a:bc00::50"
+                defaultgateway=""
+                subnetmask="64"
+                dnsserver="fd53:ccc5:895a:bc00::a,fd53:ccc5:895a:bc00::b"/>
+        </adapter>
+      </adapters>
+    </vm>
+
   </vms>
 
 </labbuilderconfig>
