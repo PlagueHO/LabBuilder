@@ -57,7 +57,7 @@ Configuration MEMBER_NPS
         { 
             Ensure = "Present" 
             Name = "NPAS-Health" 
-			DependsOn = "[WindowsFeature]NAPSPolicyServerInstall" 
+			DependsOn = "[WindowsFeature]NPASPolicyServerInstall" 
         } 
 
 	}
