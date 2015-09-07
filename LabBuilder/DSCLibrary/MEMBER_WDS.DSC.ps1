@@ -1,20 +1,19 @@
 <#########################################################################################################################################
 DSC Template Configuration File For use by LabBuilder
 .Title
-	MEMBER_DHCP
+	MEMBER_WDS
 .Desription
-	Builds a Server that is joined to a domain and then made into a DHCP Server.
+	Builds a Server that is joined to a domain and then installs WSUS components.
 .Parameters:          
 	DomainName = "LABBUILDER.COM"
 	DomainAdminPassword = "P@ssword!1"
 #########################################################################################################################################>
 
-Configuration MEMBER_DHCP
+Configuration MEMBER_WDS
 {
 	Import-DscResource -ModuleName 'PSDesiredStateConfiguration'
 	Import-DscResource -ModuleName xActiveDirectory
 	Import-DscResource -ModuleName xComputerManagement
-	Import-DscResource -ModuleName xDHCPServer
 	Node $AllNodes.NodeName {
 		# Assemble the Local Admin Credentials
 		If ($Node.LocalAdminPassword) {
@@ -47,11 +46,19 @@ Configuration MEMBER_DHCP
 			DependsOn = "[xWaitForADDomain]DscDomainWait" 
         } 
 
-		WindowsFeature DHCPInstall 
+		WindowsFeature WDSDeploymentInstall 
         { 
             Ensure = "Present" 
-            Name = "DHCP" 
+            Name = "WDS-Deployment" 
 			DependsOn = "[xComputer]JoinDomain" 
-        }
+        } 
+
+		WindowsFeature WDSTransportInstall 
+        { 
+            Ensure = "Present" 
+            Name = "WDS-Transport" 
+			DependsOn = "[WindowsFeature]WDSDeploymentInstall" 
+        } 
+
 	}
 }

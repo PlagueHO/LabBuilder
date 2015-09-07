@@ -270,6 +270,64 @@
       </adapters>
     </vm>
 
+    <vm name="LABBUILDER.COM SA_WDS"
+      template="Template Windows Server 2012 R2 Datacenter CORE"
+      computername="SA_WDS"
+      usedifferencingbootdisk="Y">
+      <dsc configname="MEMBER_WDS"
+           configfile="MEMBER_WDS.DSC.ps1">
+        <parameters>
+          DomainName = "LABBUILDER.COM"
+          DomainAdminPassword = "P@ssword!1"
+          PSDscAllowDomainUser = $True
+        </parameters>
+      </dsc>
+      <adapters>
+        <adapter name="General Purpose External"
+                 switchname="General Purpose External" />
+        <adapter name="Domain Private Site A"
+                 switchname="Domain Private Site A">
+          <ipv4 address="192.168.128.21"
+                defaultgateway="192.168.128.19"
+                subnetmask="24"
+                dnsserver="192.168.128.10,192.168.128.11"/>
+          <ipv6 address="fd53:ccc5:895a:bc00::15"
+                defaultgateway=""
+                subnetmask="64"
+                dnsserver="fd53:ccc5:895a:bc00::a,fd53:ccc5:895a:bc00::b"/>
+        </adapter>
+      </adapters>
+    </vm>
+
+    <vm name="LABBUILDER.COM SA_WSUS"
+      template="Template Windows Server 2012 R2 Datacenter CORE"
+      computername="SA_WSUS"
+      usedifferencingbootdisk="Y">
+      <dsc configname="MEMBER_WSUS"
+           configfile="MEMBER_WSUS.DSC.ps1">
+        <parameters>
+          DomainName = "LABBUILDER.COM"
+          DomainAdminPassword = "P@ssword!1"
+          PSDscAllowDomainUser = $True
+        </parameters>
+      </dsc>
+      <adapters>
+        <adapter name="General Purpose External"
+                 switchname="General Purpose External" />
+        <adapter name="Domain Private Site A"
+                 switchname="Domain Private Site A">
+          <ipv4 address="192.168.128.22"
+                defaultgateway="192.168.128.19"
+                subnetmask="24"
+                dnsserver="192.168.128.10,192.168.128.11"/>
+          <ipv6 address="fd53:ccc5:895a:bc00::16"
+                defaultgateway=""
+                subnetmask="64"
+                dnsserver="fd53:ccc5:895a:bc00::a,fd53:ccc5:895a:bc00::b"/>
+        </adapter>
+      </adapters>
+    </vm>
+
   </vms>
 
 </labbuilderconfig>
