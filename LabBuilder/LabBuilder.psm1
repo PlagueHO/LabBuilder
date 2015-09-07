@@ -949,7 +949,7 @@ function Start-LabVMDSC {
 			Try {
 				Write-Verbose "Attempting connection to $($VM.ComputerName) ..."
 				[String]$IPAddress = (Get-VMNetworkAdapter -VMName $VM.Name).Where({$_.SwitchName -eq (Get-VMSwitch -SwitchType External).Name}).IPAddresses.Where({$_.Contains('.')})
-				If ($IPAddress) {
+				If (-not $IPAddress) {
 					Throw "An externally accessible IPv4 address for $($VM.ComputerName) could not be identified."
 				}
 				$Session = New-PSSession -ComputerName $IPAddress -Credential $AdmininistratorCredential -ErrorAction Stop
@@ -1462,7 +1462,7 @@ function Get-LabVMSelfSignedCert {
 			Try {
 				Write-Verbose "Connecting to $($VM.ComputerName) ..."
 				[String]$IPAddress = (Get-VMNetworkAdapter -VMName $VM.Name).Where({$_.SwitchName -eq (Get-VMSwitch -SwitchType External).Name}).IPAddresses.Where({$_.Contains('.')})
-				If ($IPAddress) {
+				If (-not $IPAddress) {
 					Throw "An externally accessible IPv4 address for $($VM.ComputerName) could not be identified."
 				}
 				$Session = New-PSSession -ComputerName $IPAddress -Credential $AdmininistratorCredential -ErrorAction Stop
@@ -1723,7 +1723,7 @@ function Wait-LabVMInit {
 			Try {
 				Write-Verbose "Connecting to $($VM.ComputerName) ..."
 				[String]$IPAddress = (Get-VMNetworkAdapter -VMName $VM.Name).Where({$_.SwitchName -eq (Get-VMSwitch -SwitchType External).Name}).IPAddresses.Where({$_.Contains('.')})
-				If ($IPAddress) {
+				If (-not $IPAddress) {
 					Throw "An externally accessible IPv4 address for $($VM.ComputerName) could not be identified."
 				}
 				$Session = New-PSSession -ComputerName $IPAddress -Credential $AdmininistratorCredential -ErrorAction Stop
