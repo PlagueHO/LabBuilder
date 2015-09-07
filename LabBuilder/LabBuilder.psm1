@@ -718,7 +718,9 @@ $NetworkingDSCConfig += @"
 "@
 					If ($Adapter.IPv4.DefaultGateway) {
 $NetworkingDSCConfig += @"
+
 		DefaultGateway = '$($Adapter.IPv4.DefaultGateway)'
+
 "@
 					}
 $NetworkingDSCConfig += @"
@@ -752,7 +754,9 @@ $NetworkingDSCConfig += @"
 "@
 					If ($Adapter.IPv6.DefaultGateway) {
 $NetworkingDSCConfig += @"
+
 		DefaultGateway = '$($Adapter.IPv6.DefaultGateway)'
+
 "@
 					}
 $NetworkingDSCConfig += @"
