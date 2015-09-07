@@ -1096,8 +1096,9 @@ function Get-LabUnattendFile {
 			<ComputerName>$($VM.ComputerName)</ComputerName>
 			<ProductKey>$($VM.ProductKey)</ProductKey>
 		</component>
+
 "@
-		If ($VM.OSType -eq 'Desktop') {
+		If ($VM.OSType -eq 'Client') {
 			$UnattendContent += @"
 			<component name="Microsoft-Windows-Deployment" processorArchitecture="x86" publicKeyToken="31bf3856ad364e35" language="neutral" versionScope="nonSxS" xmlns:wcm="http://schemas.microsoft.com/WMIConfig/2002/State" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
 				<RunSynchronous>
@@ -1107,6 +1108,7 @@ function Get-LabUnattendFile {
 					</RunSynchronousCommand>
 				</RunSynchronous>
 			</component>
+
 "@
 		} # If
 		$UnattendContent += @"
