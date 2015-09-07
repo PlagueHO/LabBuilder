@@ -13,7 +13,8 @@ Configuration MEMBER_DHCP
 {
 	Import-DscResource -ModuleName 'PSDesiredStateConfiguration'
 	Import-DscResource -ModuleName xActiveDirectory
-	Import-DscResource -ModuleName xComputerManagement 
+	Import-DscResource -ModuleName xComputerManagement
+	Import-DscResource -ModuleName xDHCpServer
 	Node $AllNodes.NodeName {
 		# Assemble the Local Admin Credentials
 		If ($Node.LocalAdminPassword) {
@@ -23,12 +24,19 @@ Configuration MEMBER_DHCP
 			[PSCredential]$DomainAdminCredential = New-Object System.Management.Automation.PSCredential ("$($Node.DomainName)\Administrator", (ConvertTo-SecureString $Node.DomainAdminPassword -AsPlainText -Force))
 		}
 
+		WindowsFeature RSATADPowerShell
+        { 
+            Ensure = "Present" 
+            Name = "RSAT-AD-PowerShell" 
+        } 
+
         xWaitForADDomain DscDomainWait
         {
             DomainName = $Node.DomainName
             DomainUserCredential = $DomainAdminCredential 
             RetryCount = 20 
             RetryIntervalSec = 30 
+			DependsOn = "[WindowsFeature]RSATADPowerShell" 
         }
 
 		xComputer JoinDomain 
