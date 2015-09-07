@@ -708,7 +708,10 @@ Describe "Get-LabVMs" {
                                   },
                          "MACAddress":  "00155D010804"
                      }
-                 ]
+                 ],
+    "InstallMSU":  [
+                       "http://download.microsoft.com/download/1/D/8/1D8B5022-5477-4B9A-8104-6A71FF9D98AB/WindowsTH-KB2693643-x64.msu"
+                   ]
 }
 "@
 			[String]::Compare(($VMs | ConvertTo-Json -Depth 4),$ExpectedVMs,$true) | Should Be 0

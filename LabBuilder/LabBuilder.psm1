@@ -1171,9 +1171,20 @@ function Set-LabVMInitializationFiles {
 	Mount-WindowsImage -ImagePath $VMBootDiskPath -Path $MountPoint -Index 1 | Out-Null
 
 	# Copy the WMF 5.0 Installer to the VM in case it is needed
-	Write-Verbose "Applying VM $($VM.Name) WMF 5.0 ..."
 	# This contains a bug at the moment - waiting for MS to resolve
+	# Write-Verbose "Applying VM $($VM.Name) WMF 5.0 ..."
 	# Add-WindowsPackage -PackagePath $Script:WMF5InstallerPath -Path $MountPoint | Out-Null
+
+	# Apply any additional MSU Updates
+	Foreach ($URL in $VM.InstallMSU) {
+		$MSUFilename = $URL.Substring($URL.LastIndexOf("/") + 1)
+		$MSUPath = Join-Path -Path $Script:WorkingFolder -ChildPath $MSUFilename
+		If (-not (Test-Path -Path $MSUPath)) {
+			Invoke-WebRequest -Uri $URL -OutFile $MSUPath
+		} # If
+		# Once downloaded apply the update
+		Add-WindowsPackage -PackagePath $MSUPath -Path $MountPoint | Out-Null
+	} # Foreach
 
 	# Create the scripts folder where setup scripts will be put
 	New-Item -Path "$MountPoint\Windows\Setup\Scripts" -ItemType Directory | Out-Null
@@ -1465,7 +1476,14 @@ function Get-LabVMs {
 			$OSType = $VMTemplate.ostype
 		} Else {
 			$OSType = 'Server'
-		} # If	
+		} # If
+
+		# Do we have any MSU files that are listed as needing to be applied to the OS before
+		# first boot up?
+		[String[]]$InstallMSU = @()
+		Foreach ($Update in $VM.Install.MSU) {
+			$InstallMSU += $Update.URL
+		} # Foreach
 
 		$LabVMs += @{
 			Name = $VM.name;
@@ -1486,6 +1504,7 @@ function Get-LabVMs {
 			DSCConfigName = $VM.DSC.ConfigName;
 			DSCParameters = $DSCParameters;
 			OSType = $OSType;
+			InstallMSU = $InstallMSU;
 		}
 	} # Foreach        
 
