@@ -58,10 +58,10 @@
            configfile="STANDALONE_ROOTCA.DSC.ps1">
           <parameters>
             CACommonName = "LABBUILDER.COM Root CA"
-            CADistinguishedNameSuffix = "DC=BMDLAB,DC=COM"
-            DSConfigDN = "CN=Configuration,DC=BMDLAB,DC=COM"
-            CRLPublicationURLs = "1:C:\Windows\system32\CertSrv\CertEnroll\%1_%3%4.crt\n2:ldap:///CN=%7,CN=AIA,CN=Public Key Services,CN=Services,%6%11\n2:http://pki.bmdlab.local/CertEnroll/%1_%3%4.crt"
-            CACertPublicationURLs = "1:C:\Windows\system32\CertSrv\CertEnroll\%1_%3%4.crt\n2:ldap:///CN=%7,CN=AIA,CN=Public Key Services,CN=Services,%6%11\n2:http://pki.bmdlab.local/CertEnroll/%1_%3%4.crt"
+            CADistinguishedNameSuffix = "DC=LABBUILDER,DC=COM"
+            DSConfigDN = "CN=Configuration,DC=LABBUILDER,DC=COM"
+            CRLPublicationURLs = "1:C:\Windows\system32\CertSrv\CertEnroll\%1_%3%4.crt\n2:ldap:///CN=%7,CN=AIA,CN=Public Key Services,CN=Services,%6%11\n2:http://pki.labbuilder.com/CertEnroll/%1_%3%4.crt"
+            CACertPublicationURLs = "1:C:\Windows\system32\CertSrv\CertEnroll\%1_%3%4.crt\n2:ldap:///CN=%7,CN=AIA,CN=Public Key Services,CN=Services,%6%11\n2:http://pki.labbuilder.com/CertEnroll/%1_%3%4.crt"
           </parameters>
       </dsc>
       <adapters>
@@ -84,7 +84,6 @@
       <adapters>
         <adapter name="General Purpose External"
                  switchname="General Purpose External" />
-        
         <adapter name="Domain Private Site A"
                  switchname="Domain Private Site A">
           <ipv4 address="192.168.128.10"
@@ -324,6 +323,41 @@
                 subnetmask="24"
                 dnsserver="192.168.128.10,192.168.128.11"/>
           <ipv6 address="fd53:ccc5:895a:bc00::16"
+                defaultgateway=""
+                subnetmask="64"
+                dnsserver="fd53:ccc5:895a:bc00::a,fd53:ccc5:895a:bc00::b"/>
+        </adapter>
+      </adapters>
+    </vm>
+
+    <vm name="LABBUILDER.COM SA_SUBCA"
+      template="Template Windows Server 2012 R2 Datacenter CORE"
+      computername="SA_SUBCA"
+      usedifferencingbootdisk="Y">
+      <dsc configname="MEMBER_SUBCA"
+           configfile="MEMBER_SUBCA.DSC.ps1">
+        <parameters>
+          DomainName = "LABBUILDER.COM"
+          DomainAdminPassword = "P@ssword!1"
+          PSDscAllowDomainUser = $True
+          CACommonName = "LABBUILDER.COM Issuing CA"
+          CADistinguishedNameSuffix = "DC=LABBUILDER,DC=COM"
+          DSConfigDN = "CN=Configuration,DC=LABBUILDER,DC=COM"
+          CRLPublicationURLs = "1:C:\Windows\system32\CertSrv\CertEnroll\%1_%3%4.crt\n2:ldap:///CN=%7,CN=AIA,CN=Public Key Services,CN=Services,%6%11\n2:http://pki.labbuilder.com/CertEnroll/%1_%3%4.crt"
+          CACertPublicationURLs = "1:C:\Windows\system32\CertSrv\CertEnroll\%1_%3%4.crt\n2:ldap:///CN=%7,CN=AIA,CN=Public Key Services,CN=Services,%6%11\n2:http://pki.labbuilder.com/CertEnroll/%1_%3%4.crt"
+
+        </parameters>
+      </dsc>
+      <adapters>
+        <adapter name="General Purpose External"
+                 switchname="General Purpose External" />
+        <adapter name="Domain Private Site A"
+                 switchname="Domain Private Site A">
+          <ipv4 address="192.168.128.23"
+                defaultgateway="192.168.128.19"
+                subnetmask="24"
+                dnsserver="192.168.128.10,192.168.128.11"/>
+          <ipv6 address="fd53:ccc5:895a:bc00::17"
                 defaultgateway=""
                 subnetmask="64"
                 dnsserver="fd53:ccc5:895a:bc00::a,fd53:ccc5:895a:bc00::b"/>

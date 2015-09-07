@@ -1,57 +1,79 @@
 <#########################################################################################################################################
 DSC Template Configuration File For use by LabBuilder
 .Title
-	STANDALONE_ROOTCA
+	MEMBER_SUBCA
 .Desription
-	Builds a Standalone Root CA.
+	Builds a Member Subordinate CA.
 .Parameters:    
-	CACommonName = "LABBUILDER.COM Root CA"
+	CACommonName = "LABBUILDER.COM Issuing CA"
 	CADistinguishedNameSuffix = "DC=LABBUILDER,DC=COM"
 	DSConfigDN = "CN=Configuration,DC=LABBUILDER,DC=COM"
 	CRLPublicationURLs = "1:C:\Windows\system32\CertSrv\CertEnroll\%1_%3%4.crt\n2:ldap:///CN=%7,CN=AIA,CN=Public Key Services,CN=Services,%6%11\n2:http://pki.labbuilder.com/CertEnroll/%1_%3%4.crt"
 	CACertPublicationURLs = "1:C:\Windows\system32\CertSrv\CertEnroll\%1_%3%4.crt\n2:ldap:///CN=%7,CN=AIA,CN=Public Key Services,CN=Services,%6%11\n2:http://pki.labbuilder.com/CertEnroll/%1_%3%4.crt"  
 #########################################################################################################################################>
 
-Configuration STANDALONE_ROOTCA
+Configuration MEMBER_SUBCA
 {
 	Import-DscResource -ModuleName 'PSDesiredStateConfiguration'
+	Import-DscResource -ModuleName xActiveDirectory
+	Import-DscResource -ModuleName xComputerManagement
 	Import-DscResource -ModuleName xAdcsDeployment
 	Node $AllNodes.NodeName {
 		# Assemble the Local Admin Credentials
 		If ($Node.LocalAdminPassword) {
 			[PSCredential]$LocalAdminCredential = New-Object System.Management.Automation.PSCredential ("Administrator", (ConvertTo-SecureString $Node.LocalAdminPassword -AsPlainText -Force))
 		}
+		If ($Node.DomainAdminPassword) {
+			[PSCredential]$DomainAdminCredential = New-Object System.Management.Automation.PSCredential ("$($Node.DomainName)\Administrator", (ConvertTo-SecureString $Node.DomainAdminPassword -AsPlainText -Force))
+		}
+
+		WindowsFeature RSATADPowerShell
+        { 
+            Ensure = "Present" 
+            Name = "RSAT-AD-PowerShell" 
+        } 
+
+        xWaitForADDomain DscDomainWait
+        {
+            DomainName = $Node.DomainName
+            DomainUserCredential = $DomainAdminCredential 
+            RetryCount = 100 
+            RetryIntervalSec = 10 
+			DependsOn = "[WindowsFeature]RSATADPowerShell" 
+        }
+
+		xComputer JoinDomain 
+        { 
+            Name          = $Node.NodeName
+            DomainName    = $Node.DomainName
+            Credential    = $DomainAdminCredential 
+			DependsOn = "[xWaitForADDomain]DscDomainWait" 
+        } 
 
 		WindowsFeature ADCSCA {
 			Name = 'ADCS-Cert-Authority'
 			Ensure = 'Present'
-			}
+			DependsOn = "[xComputer]JoinDomain"
+		}
 		
 		WindowsFeature ADCSRSAT {
 			Name = 'RSAT-ADCS'
 			Ensure = 'Present'
-			}
-
-		File CAPolicy
-		{
-			Ensure = 'Present'
-			DestinationPath = 'C:\Windows\CAPolicy.inf'
-			Contents = "[Version]`r`n Signature= `"$Windows NT$`"`r`n[Certsrv_Server]`r`n RenewalKeyLength=4096`r`n RenewalValidityPeriod=Years`r`n RenewalValidityPeriodUnits=20`r`n CRLDeltaPeriod=Days`r`n CRLDeltaPeriodUnits=0`r`n[CRLDistributionPoint]`r`n[AuthorityInformationAccess]`r`n"
-			Type = 'File'
-			DependsOn = '[WindowsFeature]ADCSCA'
+			DependsOn = "[WindowsFeature]ADCSCA"
 		}
-		
+	
 		xADCSCertificationAuthority ADCS
         {
             Ensure = 'Present'
             Credential = $LocalAdminCredential
-            CAType = 'StandaloneRootCA'
+            CAType = 'EnterpriseSubordinateCA'
 			CACommonName = $Node.CACommonName
 			CADistinguishedNameSuffix = $Node.CADistinguishedNameSuffix
 			ValidityPeriod = 'Years'
 			ValidityPeriodUnits = 20
-            DependsOn = '[File]CAPolicy'
+            DependsOn = '[WindowsFeature]ADCSRSAT'
         }
+
 		Script ADCSAdvConfig
 		{
 			SetScript = {
