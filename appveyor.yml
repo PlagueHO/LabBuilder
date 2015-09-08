@@ -20,7 +20,7 @@ build: false
 test_script:
     - ps:
         $ProjectRoot = $ENV:APPVEYOR_BUILD_FOLDER
-        Set-Location $ProjectRoot
+        Set-Location -Path $ProjectRoot
         Import-Module Pester
         $res = Invoke-Pester -Path "$ProjectRoot\Tests" -OutputFormat NUnitXml -OutputFile "$ProjectRoot\TestResults.xml" -PassThru
         (New-Object 'System.Net.WebClient').UploadFile("https://ci.appveyor.com/api/testresults/nunit/$($env:APPVEYOR_JOB_ID)", (Resolve-Path "$ProjectRoot\TestResults.xml"))
