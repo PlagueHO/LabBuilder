@@ -15,6 +15,8 @@ if (Get-Module LabBuilder -All)
 Import-Module "$here\LabBuilder.psd1" -Force -DisableNameChecking
 $Global:TestConfigPath = "$here\Tests\PesterTestConfig"
 $Global:TestConfigOKPath = "$Global:TestConfigPath\PesterTestConfig.OK.xml"
+New-Item -Path $here -Name Artifacts -Force -ErrorAction SilentlyContinue
+$Global:ArtifactPath = "$here\Artifacts"
 
 InModuleScope LabBuilder {
 ##########################################################################################################################################
@@ -166,7 +168,7 @@ Describe "Get-LabSwitches" {
 	Context "Valid configuration is passed" {
 		$Config = Get-LabConfiguration -Path $Global:TestConfigOKPath
 		$Switches = Get-LabSwitches -Configuration $Config
-		# Set-Content -Path "$($ENV:Temp)\Switches.json" -Value ($Switches | ConvertTo-Json -Depth 4)
+		Set-Content -Path "$($Global:ArtifactPath)\Switches.json" -Value ($Switches | ConvertTo-Json -Depth 4)
 		
 		It "Returns Switches Object that matches Expected Object" {
 			$ExpectedSwitches = [string] @"
@@ -315,7 +317,7 @@ Describe "Get-LabVMTemplates" {
 	Context "Valid configuration is passed" {
 		$Config = Get-LabConfiguration -Path $Global:TestConfigOKPath
 		$Templates = Get-LabVMTemplates -Configuration $Config 
-		# Set-Content -Path "$($ENV:Temp)\VMTemplates.json" -Value ($Templates | ConvertTo-Json -Depth 2)
+		Set-Content -Path "$($Global:ArtifactPath)\VMTemplates.json" -Value ($Templates | ConvertTo-Json -Depth 2)
 		It "Returns Template Object that matches Expected Object" {
 		$ExpectedTemplates = [string] @"
 [
@@ -613,7 +615,7 @@ Describe "Get-LabUnattendFile" {
 </unattend>
 "@
 		[String]$UnattendFile = Get-LabUnattendFile -Configuration $Config -VM $VMs
-		# Set-Content -Path "$($ENV:Temp)\UnattendFile.xml" -Value $UnattendFile
+		Set-Content -Path "$($Global:ArtifactPath)\UnattendFile.xml" -Value $UnattendFile
 		It "Returns Expected File Content" {
 			$UnattendFile | Should Be $True
 			[String]::Compare($UnattendFile,$ExpectedUnattendFile,$true) | Should Be 0
@@ -781,7 +783,7 @@ Describe "Get-LabVMs" {
 		$Switches = Get-LabSwitches -Configuration $Config
 		$VMTemplates = Get-LabVMTemplates -Configuration $Config
 		$VMs = Get-LabVMs -Configuration $Config -VMTemplates $VMTemplates -Switches $Switches
-		# Set-Content -Path "$($ENV:Temp)\VMs.json" -Value ($VMs | ConvertTo-Json -Depth 4)
+		Set-Content -Path "$($Global:ArtifactPath)\VMs.json" -Value ($VMs | ConvertTo-Json -Depth 4)
 		It "Returns Template Object that matches Expected Object" {
 			$ExpectedVMs = [String] @"
 {

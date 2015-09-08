@@ -31,3 +31,11 @@ test_script:
 #---------------------------------# 
 #      deployment configuration   # 
 #---------------------------------# 
+
+#---------------------------------#
+#      artifacts configuration    #
+#---------------------------------#
+
+artifacts:
+  - path: C:\projects\LabBuilder\LabBuilder\Artifacts
+    name: myapp
