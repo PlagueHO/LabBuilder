@@ -3,6 +3,7 @@
 #      environment configuration  # 
 #---------------------------------# 
 version: 0.1.{build}.0
+os: unstable
 install: 
   - cinst -y pester
 
