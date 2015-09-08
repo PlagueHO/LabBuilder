@@ -10,10 +10,6 @@
             vhdparentpath="c:\vm\LABBUILDER.COM\Virtual Hard Disk Templates"
             configpath=".\..\DSCLibrary\" />
 
-  <resources>
-    <module name="cMicrosoftUpdate" url="https://github.com/fabiendibot/cMicrosoftUpdate/archive/master.zip" folder="cMicrosoftUpdate-master" />  
-  </resources>
-  
   <switches>
     <switch name="General Purpose External" type="External">
       <adapters>
@@ -54,30 +50,26 @@
   </templates>
 
   <vms>   
-    <vm name="LABBUILDER.COM SA_DC1"
-        template="Template Windows Server 2012 R2 Datacenter CORE"
-        computername="SA_DC1"
+    <vm name="LABBUILDER.COM SS_DEFAULT"
+        template="Template Windows Server 2012 R2 Datacenter FULL"
+        computername="SS_DEFAULT"
         usedifferencingbootdisk="Y">
-      <dsc configname="DC_FORESTPRIMARY"
-           configfile="DC_FORESTPRIMARY.DSC.ps1">
-        <parameters>
-          DomainName = "LABBUILDER.COM"
-          DomainAdminPassword = "P@ssword!1"
-        </parameters>
+      <dsc configname="STANDALONE_DEFAULT"
+           configfile="STANDALONE_DEFAULT.DSC.ps1">
       </dsc>
       <adapters>
         <adapter name="General Purpose External"
                  switchname="General Purpose External" />
         <adapter name="Domain Private Site A"
                  switchname="Domain Private Site A">
-          <ipv4 address="192.168.128.10"
-                defaultgateway="192.168.128.19"
+          <ipv4 address="192.168.10.2"
+                defaultgateway="192.168.10.1"
                 subnetmask="24"
-                dnsserver="192.168.128.10"/>
-          <ipv6 address="fd53:ccc5:895a:bc00::a"
-                defaultgateway="fd53:ccc5:895a:bc00::13"
+                dnsserver="192.168.10.2"/>
+          <ipv6 address="fd53:ccc5:895a:ba00::2"
+                defaultgateway="fd53:ccc5:895a:ba00::1"
                 subnetmask="64"
-                dnsserver="fd53:ccc5:895a:bc00::a"/>
+                dnsserver="fd53:ccc5:895a:ba00::2"/>
         </adapter>
       </adapters>
     </vm>
