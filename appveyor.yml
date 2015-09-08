@@ -6,7 +6,7 @@ version: 0.1.{build}.0
 os: unstable
 install: 
   - cinst -y pester
-  - ps: install-windowsfeature hyper-V,hyper-v-powershell
+  - ps: install-windowsfeature hyper-v-powershell
 #---------------------------------# 
 #      build configuration        # 
 #---------------------------------# 
