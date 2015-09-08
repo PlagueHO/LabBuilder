@@ -248,42 +248,37 @@ function Initialize-LabHyperV {
 
 	# Download any other resources required by this lab
 	If ($Configuration.labbuilderconfig.resources) {
-		Foreach ($Module in $Configuration.labbuilderconfig.resources.modules) {
+		$InstalledModules = Get-Module -ListAvailable
+		Foreach ($Module in $Configuration.labbuilderconfig.resources.module) {
 			If (-not $Module.Name) {
 				Throw "Lab Builder Module Resource Name is missing."
 			} # If
-			# Is the module installed
-			[String]$ModulePath = ''
-			Foreach ($Path in $ENV:PSModulePath.Split(';')) {
-				$ModulePath = Join-Path -Path $Path -ChildPath $Module.Name
-				If (Test-Path -Path $ModulePath) {
-					Break
-				} # If
-			} # Foreach
-			If (-not $ModulePath) {
+			# Is the module installed?
+			If (($InstalledModules | Where-Object -Property Name -EQ $Module.Name).Count -eq 0) {
 				# The module is not installed - so download it
 				$FileName = $Module.URL.Substring($Module.URL.LastIndexOf("/") + 1)
 				$FilePath = Join-Path -Path $Script:WorkingFolder -ChildPath $FileName
 				Try {
-					Invoke-WebRequest -Uri $URL -OutFile $FilePath
+					Invoke-WebRequest -Uri $($Module.URL) -OutFile $FilePath
 				} Catch {
 					Throw "The Lab Builder Module Resource $($Module.Name) could not be downloaded."
 				} # Try
-				If (-not (Test-Path -Path $FilePath)) {
+				If (Test-Path -Path $FilePath) {
+					[String]$ModulesFolder = "$($ENV:ProgramFiles)\WindowsPowerShell\Modules\"
 					# Extract this straight into the modules folder
 					Try {
-						Expand-Archive -Path $FilePath -DestinationPath $($Script:WorkingFolder) -Force
+						Expand-Archive -Path $FilePath -DestinationPath $ModulesFolder -Force
 					} Catch {
 						Throw "The Lab Builder Module Resource $($Module.Name) could not be extracted."
 					} # Try
 					If ($Module.Folder) {
 						# This zip file contains a folder that is not the name of the module so it must be
 						# renamed. This is usually the case with source downloaded directly from GitHub
-						$ModulePath = Join-Path -Path $($ENV:ProgramFiles) -ChildPath $($Module.Name)
+						$ModulePath = Join-Path -Path $ModulesFolder -ChildPath $($Module.Name)
 						If (Test-Path -Path $ModulePath) {
 							Remove-Item -Path $ModulePath
 						}
-						Rename-Item -Path (Join-Path -Path $($ENV:ProgramFiles) -ChildPath $($Module.Folder)) `
+						Rename-Item -Path (Join-Path -Path $ModulesFolder -ChildPath $($Module.Folder)) `
 							-NewName $($Module.Name) -Force
 					} # If
 				} # If
