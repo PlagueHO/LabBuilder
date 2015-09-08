@@ -8,10 +8,16 @@ $here = Split-Path -Parent $MyInvocation.MyCommand.Path
 $sut = (Split-Path -Leaf $MyInvocation.MyCommand.Path).Replace(".Tests.", ".")
 
 Set-Location $here
-Import-Module "$here\LabBuilder.psd1" -Force
+if (Get-Module LabBuilder -All)
+{
+    Get-Module LabBuilder -All | Remove-Module
+}
+
+Import-Module "$here\LabBuilder.psd1" -Force -DisableNameChecking
 $TestConfigPath = "$here\Tests\PesterTestConfig"
 $TestConfigOKPath = "$TestConfigPath\PesterTestConfig.OK.xml"
 
+InModuleScope LabBuilder {
 ##########################################################################################################################################
 Describe "Get-LabConfiguration" {
 	Context "No parameters passed" {
@@ -77,15 +83,28 @@ Describe "Test-LabConfiguration" {
 ##########################################################################################################################################
 Describe "Install-LabHyperV" {
 
+	#region Mocks
+    Mock Get-WindowsOptionalFeature { [PSObject]@{ FeatureName = 'Mock'; State = 'Disabled'; } }
+	Mock Enable-WindowsOptionalFeature 
+	Mock Get-WindowsFeature { [PSObject]@{ Name = 'Mock'; Installed = $false; } }
+	Mock Install-WindowsFeature
+	#endregion
+
 	Context "The function exists" {
 		$Config = Get-LabConfiguration -Path $TestConfigOKPath
-		If ((Get-CimInstance Win32_OperatingSystem).ProductType -eq 1) {
-			Mock Get-WindowsOptionalFeature { [PSCustomObject]@{ Name = 'Dummy'; State = 'Enabled'; } }
-		} Else {
-			Mock Get-WindowsFeature { [PSCustomObject]@{ Name = 'Dummy'; Installed = $false; } }
-		}		
 		It "Returns True" {
 			Install-LabHyperV | Should Be $True
+		}
+		If ((Get-CimInstance Win32_OperatingSystem).ProductType -eq 1) {
+			It "Calls Mocked commands" {
+				Assert-MockCalled Get-WindowsOptionalFeature -Exactly 1
+				Assert-MockCalled Enable-WindowsOptionalFeature -Exactly 1
+			}
+		} Else {
+			It "Calls Mocked commands" {
+				Assert-MockCalled Get-WindowsFeature -Exactly 1
+				Assert-MockCalled Install-WindowsFeature -Exactly 1
+			}
 		}
 	}
 }
@@ -213,6 +232,13 @@ Describe "Get-LabSwitches" {
 ##########################################################################################################################################
 Describe "Initialize-LabSwitches" {
 
+	#region Mocks
+    Mock Get-VMSwitch
+    Mock New-VMSwitch
+    Mock Add-VMNetworkAdapter
+    Mock Set-VMNetworkAdapterVlan
+    #endregion
+
 	Context "No parameters passed" {
 		It "Fails" {
 			{ Initialize-LabSwitches } | Should Throw
@@ -222,25 +248,27 @@ Describe "Initialize-LabSwitches" {
 		$Config = Get-LabConfiguration -Path $TestConfigOKPath
 		$Switches = Get-LabSwitches -Configuration $Config
 
-		Get-VMSwitch -Name  Pester* | Remove-VMSwitch
-
 		It "Returns True" {
 			Initialize-LabSwitches -Configuration $Config -Switches $Switches | Should Be $True
 		}
-		It "Creates 2 Pester Internal Switches" {
-			(Get-VMSwitch -Name Pester* | Where-Object -Property SwitchType -EQ Internal).Count | Should Be 2
+		It "Calls Mocked commands" {
+			Assert-MockCalled Get-VMSwitch -Exactly 5
+			Assert-MockCalled New-VMSwitch -Exactly 5
+			Assert-MockCalled Add-VMNetworkAdapter -Exactly 4
+			Assert-MockCalled Set-VMNetworkAdapterVlan -Exactly 0
 		}
-		It "Creates 2 Pester Private Switches" {
-			(Get-VMSwitch -Name Pester* | Where-Object -Property SwitchType -EQ Private).Count | Should Be 2
-		}
-
-		Get-VMSwitch -Name  Pester* | Remove-VMSwitch
 	}
 }
 ##########################################################################################################################################
 
 ##########################################################################################################################################
 Describe "Remove-LabSwitches" {
+
+	#region Mocks
+    Mock Get-VMSwitch
+    Mock Remove-VMSwitch
+    #endregion
+
 	Context "No parameters passed" {
 		It "Fails" {
 			{ Remove-LabSwitches } | Should Throw
@@ -249,16 +277,12 @@ Describe "Remove-LabSwitches" {
 	Context "Valid configuration is passed" {	
 		$Config = Get-LabConfiguration -Path $TestConfigOKPath
 		$Switches = Get-LabSwitches -Configuration $Config
-		New-VMSwitch -Name "Pester Test Private Vlan" -SwitchType "Private"
-		New-VMSwitch -Name "Pester Test Private" -SwitchType "Private"
-		New-VMSwitch -Name "Pester Test Internal Vlan" -SwitchType "Internal"
-		New-VMSwitch -Name "Pester Test Internal" -SwitchType "Internal"
 
 		It "Returns True" {
 			Remove-LabSwitches -Configuration $Config -Switches $Switches | Should Be $True
 		}
-		It "Removes All Pester Switches" {
-			(Get-VMSwitch -Name Pester*).Count | Should Be 0
+		It "Calls Mocked commands" {
+			Assert-MockCalled Get-VMSwitch -Exactly 5
 		}
 	}
 }
@@ -351,6 +375,12 @@ Describe "Get-LabVMTemplates" {
 
 ##########################################################################################################################################
 Describe "Initialize-LabVMTemplates" {
+	#region Mocks
+    Mock Optimize-VHD
+    Mock Set-ItemProperty -ParameterFilter { ($Name -eq 'IsReadOnly') -and ($Value -eq $True) }
+    Mock Set-ItemProperty -ParameterFilter { ($Name -eq 'IsReadOnly') -and ($Value -eq $False) }
+    #endregion
+
 	Context "No parameters passed" {
 		It "Fails" {
 			{ Initialize-LabVMTemplates } | Should Throw
@@ -358,8 +388,8 @@ Describe "Initialize-LabVMTemplates" {
 	}
 	Context "Valid configuration is passed" {	
 		$Config = Get-LabConfiguration -Path $TestConfigOKPath
-		New-Item -Path $Config.labbuilderconfig.SelectNodes('settings').vmpath -ItemType Directory
-		New-Item -Path $Config.labbuilderconfig.SelectNodes('settings').vhdparentpath -ItemType Directory
+		New-Item -Path $Config.labbuilderconfig.settings.vmpath -ItemType Directory -Force -ErrorAction SilentlyContinue
+		New-Item -Path $Config.labbuilderconfig.settings.vhdparentpath -ItemType Directory -Force -ErrorAction SilentlyContinue
 		$VMTemplates = Get-LabVMTemplates -Configuration $Config
 
 		It "Returns True" {
@@ -374,15 +404,26 @@ Describe "Initialize-LabVMTemplates" {
 		It "Creates file C:\Pester Lab\Virtual Hard Disk Templates\Windows 10 Enterprise.vhdx" {
 			Test-Path "C:\Pester Lab\Virtual Hard Disk Templates\Windows 10 Enterprise.vhdx" | Should Be $True
 		}
+		It "Calls Mocked commands" {
+			Assert-MockCalled Optimize-VHD -Exactly 3
+			Assert-MockCalled Set-ItemProperty -Exactly 3 -ParameterFilter { ($Name -eq 'IsReadOnly') -and ($Value -eq $True) }
+			Assert-MockCalled Set-ItemProperty -Exactly 3 -ParameterFilter { ($Name -eq 'IsReadOnly') -and ($Value -eq $False) }
+		}
 
-		Remove-Item -Path $Config.labbuilderconfig.SelectNodes('settings').vmpath -Recurse -Force -ErrorAction SilentlyContinue
-		Remove-Item -Path $Config.labbuilderconfig.SelectNodes('settings').vhdparentpath -Recurse -Force -ErrorAction SilentlyContinue
+		Remove-Item -Path $Config.labbuilderconfig.settings.vmpath -Recurse -Force -ErrorAction SilentlyContinue
+		Remove-Item -Path $Config.labbuilderconfig.settings.vhdparentpath -Recurse -Force -ErrorAction SilentlyContinue
 	}
 }
 ##########################################################################################################################################
 
 ##########################################################################################################################################
 Describe "Remove-LabVMTemplates" {
+	#region Mocks
+    Mock Set-ItemProperty -ParameterFilter { ($Name -eq 'IsReadOnly') -and ($Value -eq $False) }
+    Mock Remove-Item
+    Mock Test-Path -MockWith { $True }
+    #endregion
+
 	Context "No parameters passed" {
 		It "Fails" {
 			{ Remove-LabVMTemplates } | Should Throw
@@ -391,39 +432,42 @@ Describe "Remove-LabVMTemplates" {
 	Context "Valid configuration is passed" {	
 		$Config = Get-LabConfiguration -Path $TestConfigOKPath
 		$VMTemplates = Get-LabVMTemplates -Configuration $Config
-		New-Item -Path $Config.labbuilderconfig.SelectNodes('settings').vmpath -ItemType Directory
-		New-Item -Path $Config.labbuilderconfig.SelectNodes('settings').vhdparentpath -ItemType Directory
-		Set-Content -Path 'C:\Pester Lab\Virtual Hard Disk Templates\Windows Server 2012 R2 Datacenter Full.vhdx' -Value 'Dummy file'
-		Set-Content -Path 'C:\Pester Lab\Virtual Hard Disk Templates\Windows Server 2012 R2 Datacenter Core.vhdx' -Value 'Dummy file'
-		Set-Content -Path 'C:\Pester Lab\Virtual Hard Disk Templates\Windows 10 Enterprise.vhdx' -Value 'Dummy file'
+		New-Item -Path $Config.labbuilderconfig.settings.vmpath -ItemType Directory -Force -ErrorAction SilentlyContinue
+		New-Item -Path $Config.labbuilderconfig.settings.vhdparentpath -ItemType Directory -Force -ErrorAction SilentlyContinue
 		
 		It "Returns True" {
 			Remove-LabVMTemplates -Configuration $Config -VMTemplates $VMTemplates | Should Be $True
 		}
-		It "Removes file C:\Pester Lab\Virtual Hard Disk Templates\Windows Server 2012 R2 Datacenter Full.vhdx" {
-			Test-Path "C:\Pester Lab\Virtual Hard Disk Templates\Windows Server 2012 R2 Datacenter Full.vhdx" | Should Be $False
-		}
-		It "Removes file C:\Pester Lab\Virtual Hard Disk Templates\Windows Server 2012 R2 Datacenter Core.vhdx" {
-			Test-Path "C:\Pester Lab\Virtual Hard Disk Templates\Windows Server 2012 R2 Datacenter Core.vhdx" | Should Be $False
-		}
-		It "Removes file C:\Pester Lab\Virtual Hard Disk Templates\Windows 10 Enterprise.vhdx" {
-			Test-Path "C:\Pester Lab\Virtual Hard Disk Templates\Windows 10 Enterprise.vhdx" | Should Be $False
+		It "Calls Mocked commands" {
+			Assert-MockCalled Set-ItemProperty -Exactly 3 -ParameterFilter { ($Name -eq 'IsReadOnly') -and ($Value -eq $False) }
+			Assert-MockCalled Remove-Item -Exactly 3
 		}
 
-		Remove-Item -Path $Config.labbuilderconfig.SelectNodes('settings').vmpath -Recurse -Force -ErrorAction SilentlyContinue
-		Remove-Item -Path $Config.labbuilderconfig.SelectNodes('settings').vhdparentpath -Recurse -Force -ErrorAction SilentlyContinue
+		Remove-Item -Path $Config.labbuilderconfig.settings.vmpath -Recurse -Force -ErrorAction SilentlyContinue
+		Remove-Item -Path $Config.labbuilderconfig.settings.vhdparentpath -Recurse -Force -ErrorAction SilentlyContinue
 	}
 }
 ##########################################################################################################################################
 
 ##########################################################################################################################################
 Describe "Set-LabDSCMOFFile" {
+    Remove-Item -Path "C:\Pester Lab\PESTER01\LabBuilder Files" -Recurse -Force -ErrorAction SilentlyContinue
+
+	#region Mocks
+    Mock Import-Certificate -MockWith {
+		[PSCustomObject]@{
+			Thumbprint = '1234567890ABCDEF'
+		}
+    } # Mock
+    Mock Remove-Item -ParameterFilter {$path -eq 'Cert:LocalMachine\My\1234567890ABCDEF'}
+    #endregion
+
 	Context "No parameters passed" {
 		It "Fails" {
 			{ Set-LabDSCMOFFile } | Should Throw
 		}
 	}
-	Context "Valid Parameters Passed" {
+ 	Context "Valid Parameters Passed" {
 		$Config = Get-LabConfiguration -Path $TestConfigOKPath
 		$Switches = Get-LabSwitches -Configuration $Config
 		$VMTemplates = Get-LabVMTemplates -Configuration $Config
@@ -432,12 +476,25 @@ Describe "Set-LabDSCMOFFile" {
 		It "Returns True" {
 			$Result | Should Be $True
 		}
+		It "Appropriate Lab Builder Files Should be produced" {
+			Test-Path -Path 'C:\Pester Lab\PESTER01\LabBuilder Files\Pester01.mof' | Should Be $True
+			Test-Path -Path 'C:\Pester Lab\PESTER01\LabBuilder Files\Pester01.meta.mof' | Should Be $True
+			Test-Path -Path 'C:\Pester Lab\PESTER01\LabBuilder Files\DSC.ps1' | Should Be $True
+			Test-Path -Path 'C:\Pester Lab\PESTER01\LabBuilder Files\DSCConfigData.psd1' | Should Be $True
+			Test-Path -Path 'C:\Pester Lab\PESTER01\LabBuilder Files\DSCNetworking.ps1' | Should Be $True
+		}
 	}
+    Remove-Item -Path "C:\Pester Lab\PESTER01\LabBuilder Files" -Recurse -Force -ErrorAction SilentlyContinue
+
 }
 ##########################################################################################################################################
 
 ##########################################################################################################################################
 Describe "Set-LabDSCStartFile" {
+	#region Mocks
+    Mock Get-VMNetworkAdapter -MockWith { [PSObject]@{ Name = 'Dummy'; MacAddress = '00-11-22-33-44-55'; } }
+    Mock Set-Content
+    #endregion
 	Context "No parameters passed" {
 		It "Fails" {
 			{ Set-LabDSCStartFile } | Should Throw
@@ -447,10 +504,15 @@ Describe "Set-LabDSCStartFile" {
 		$Config = Get-LabConfiguration -Path $TestConfigOKPath
 		$Switches = Get-LabSwitches -Configuration $Config
 		$VMTemplates = Get-LabVMTemplates -Configuration $Config
+
 		$VMs = Get-LabVMs -Configuration $Config -VMTemplates $VMTemplates -Switches $Switches
 		[String]$DSCStartFile = Set-LabDSCStartFile -Configuration $Config -VM $VMs
 		It "Returns Expected File Content" {
 			$DSCStartFile | Should Be $True
+		}
+		It "Calls Mocked commands" {
+			Assert-MockCalled Get-VMNetworkAdapter -Exactly 4
+			Assert-MockCalled Set-Content -Exactly 1
 		}
 	}
 }
@@ -468,9 +530,75 @@ Describe "Get-LabUnattendFile" {
 		$Switches = Get-LabSwitches -Configuration $Config
 		$VMTemplates = Get-LabVMTemplates -Configuration $Config
 		$VMs = Get-LabVMs -Configuration $Config -VMTemplates $VMTemplates -Switches $Switches
+		$ExpectedUnattendFile = [String] @"
+<?xml version="1.0" encoding="utf-8"?>
+<unattend xmlns="urn:schemas-microsoft-com:unattend">
+	<settings pass="offlineServicing">
+		<component name="Microsoft-Windows-LUA-Settings" processorArchitecture="amd64" publicKeyToken="31bf3856ad364e35" language="neutral" versionScope="nonSxS" xmlns:wcm="http://schemas.microsoft.com/WMIConfig/2002/State" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+			<EnableLUA>false</EnableLUA>
+		</component>
+	</settings>
+	<settings pass="generalize">
+		<component name="Microsoft-Windows-Security-SPP" processorArchitecture="amd64" publicKeyToken="31bf3856ad364e35" language="neutral" versionScope="nonSxS" xmlns:wcm="http://schemas.microsoft.com/WMIConfig/2002/State" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+			<SkipRearm>1</SkipRearm>
+		</component>
+	</settings>
+	<settings pass="specialize">
+		<component name="Microsoft-Windows-International-Core" processorArchitecture="amd64" publicKeyToken="31bf3856ad364e35" language="neutral" versionScope="nonSxS" xmlns:wcm="http://schemas.microsoft.com/WMIConfig/2002/State" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+			<InputLocale>0409:00000409</InputLocale>
+			<SystemLocale>en-US</SystemLocale>
+			<UILanguage>en-US</UILanguage>
+			<UILanguageFallback>en-US</UILanguageFallback>
+			<UserLocale>en-US</UserLocale>
+		</component>
+		<component name="Microsoft-Windows-Security-SPP-UX" processorArchitecture="amd64" publicKeyToken="31bf3856ad364e35" language="neutral" versionScope="nonSxS" xmlns:wcm="http://schemas.microsoft.com/WMIConfig/2002/State" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+			<SkipAutoActivation>true</SkipAutoActivation>
+		</component>
+		<component name="Microsoft-Windows-SQMApi" processorArchitecture="amd64" publicKeyToken="31bf3856ad364e35" language="neutral" versionScope="nonSxS" xmlns:wcm="http://schemas.microsoft.com/WMIConfig/2002/State" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+			<CEIPEnabled>0</CEIPEnabled>
+		</component>
+		<component name="Microsoft-Windows-Shell-Setup" processorArchitecture="amd64" publicKeyToken="31bf3856ad364e35" language="neutral" versionScope="nonSxS" xmlns:wcm="http://schemas.microsoft.com/WMIConfig/2002/State" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+			<ComputerName>PESTER01</ComputerName>
+			<ProductKey>DDDDD-DDDDD-DDDDD-DDDDD-DDDDD</ProductKey>
+		</component>
+	</settings>
+	<settings pass="oobeSystem">
+		<component name="Microsoft-Windows-Shell-Setup" processorArchitecture="amd64" publicKeyToken="31bf3856ad364e35" language="neutral" versionScope="nonSxS" xmlns:wcm="http://schemas.microsoft.com/WMIConfig/2002/State" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+			<OOBE>
+				<HideEULAPage>true</HideEULAPage>
+				<HideOEMRegistrationScreen>true</HideOEMRegistrationScreen>
+				<HideOnlineAccountScreens>true</HideOnlineAccountScreens>
+				<HideWirelessSetupInOOBE>true</HideWirelessSetupInOOBE>
+				<NetworkLocation>Work</NetworkLocation>
+				<ProtectYourPC>1</ProtectYourPC>
+				<SkipUserOOBE>true</SkipUserOOBE>
+				<SkipMachineOOBE>true</SkipMachineOOBE>
+			</OOBE>
+			<UserAccounts>
+			   <AdministratorPassword>
+				  <Value>Something</Value>
+				  <PlainText>true</PlainText>
+			   </AdministratorPassword>
+			</UserAccounts>
+			<RegisteredOrganization>PESTER.LOCAL</RegisteredOrganization>
+			<RegisteredOwner>tester@pester.local</RegisteredOwner>
+			<DisableAutoDaylightTimeSet>false</DisableAutoDaylightTimeSet>
+			<TimeZone>Pacific Standard Time</TimeZone>
+		</component>
+		<component name="Microsoft-Windows-ehome-reg-inf" processorArchitecture="x86" publicKeyToken="31bf3856ad364e35" language="neutral" versionScope="NonSxS" xmlns:wcm="http://schemas.microsoft.com/WMIConfig/2002/State" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+			<RestartEnabled>true</RestartEnabled>
+		</component>
+		<component name="Microsoft-Windows-ehome-reg-inf" processorArchitecture="amd64" publicKeyToken="31bf3856ad364e35" language="neutral" versionScope="NonSxS" xmlns:wcm="http://schemas.microsoft.com/WMIConfig/2002/State" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+			<RestartEnabled>true</RestartEnabled>
+		</component>
+	</settings>
+</unattend>
+"@
 		[String]$UnattendFile = Get-LabUnattendFile -Configuration $Config -VM $VMs
+		# Set-Content -Path "$($ENV:Temp)\UnattendFile.xml" -Value $UnattendFile
 		It "Returns Expected File Content" {
 			$UnattendFile | Should Be $True
+			[String]::Compare($UnattendFile,$ExpectedUnattendFile,$true) | Should Be 0
 		}
 	}
 }
@@ -478,10 +606,42 @@ Describe "Get-LabUnattendFile" {
 
 ##########################################################################################################################################
 Describe "Set-LabVMInitializationFiles" {
+	#region Mocks
+    Mock Mount-WindowsImage
+    Mock Dismount-WindowsImage
+    Mock Invoke-WebRequest
+    Mock Add-WindowsPackage
+    Mock Set-Content
+    Mock Copy-Item
+    #endregion
 	Context "No parameters passed" {
 		It "Fails" {
 			{ Set-LabVMInitializationFiles } | Should Throw
 		}
+    }
+	Context "Valid configuration is passed" {	
+		$Config = Get-LabConfiguration -Path $TestConfigOKPath
+		New-Item -Path $Config.labbuilderconfig.settings.vmpath -ItemType Directory -Force -ErrorAction SilentlyContinue
+		New-Item -Path $Config.labbuilderconfig.settings.vhdparentpath -ItemType Directory -Force -ErrorAction SilentlyContinue
+
+		$Templates = Get-LabVMTemplates -Configuration $Config
+		$Switches = Get-LabSwitches -Configuration $Config
+		$VMs = Get-LabVMs -Configuration $Config -VMTemplates $Templates -Switches $Switches
+				
+		It "Returns True" {
+			Set-LabVMInitializationFiles -Configuration $Config -VM $VMs -VMBootDiskPath 'c:\Dummy\' | Should Be $True
+		}
+		It "Calls Mocked commands" {
+			Assert-MockCalled Mount-WindowsImage -Exactly 1
+			Assert-MockCalled Dismount-WindowsImage -Exactly 1
+			Assert-MockCalled Invoke-WebRequest -Exactly 1
+			Assert-MockCalled Add-WindowsPackage -Exactly 1
+			Assert-MockCalled Set-Content -Exactly 6
+			Assert-MockCalled Copy-Item -Exactly 1
+		}
+
+		Remove-Item -Path $Config.labbuilderconfig.settings.vmpath -Recurse -Force -ErrorAction SilentlyContinue
+		Remove-Item -Path $Config.labbuilderconfig.settings.vhdparentpath -Recurse -Force -ErrorAction SilentlyContinue
 	}
 }
 ##########################################################################################################################################
@@ -607,8 +767,8 @@ Describe "Get-LabVMs" {
     "MemoryStartupBytes":  10737418240,
     "SetupComplete":  "",
     "OSType":  "Server",
-    "DSCConfigName":  "ROOTCA",
-    "DSCParameters":  "\r\n          CACommonName = \"PESTER.LOCAL Root CA\"\r\n          CADistinguishedNameSuffix = \"DC=PESTER,DC=LOCAL\"\r\n        ",
+    "DSCConfigName":  "STANDALONE_DEFAULT",
+    "DSCParameters":  "\r\n          Dummy = \"Dummy\"\r\n        ",
     "UseDifferencingDisk":  "Y",
     "DSCConfigFile":  "C:\\Users\\Daniel\\Source\\GitHub\\LabBuilder\\LabBuilder\\Tests\\PesterTestConfig\\PesterTest.DSC.ps1",
     "ComputerName":  "PESTER01",
@@ -714,6 +874,21 @@ Describe "Get-LabVMSelfSignedCert" {
 
 ##########################################################################################################################################
 Describe "Initialize-LabVMs" {
+	#region Mocks
+    Mock New-VHD
+    Mock New-VM
+    Mock Get-VM -MockWith { [PSObject]@{ ProcessorCount = '2'; State = 'Off' } }
+    Mock Set-VM
+    Mock Get-VMHardDiskDrive
+    Mock Set-LabVMInitializationFiles
+    Mock Get-VMNetworkAdapter
+    Mock Add-VMNetworkAdapter
+    Mock Start-VM
+    Mock Wait-LabVMInit -MockWith { $True }
+    Mock Get-LabVMSelfSignedCert
+    Mock Initialize-LabVMDSC
+    Mock Start-LabVMDSC
+    #endregion
 
 	Context "No parameters passed" {
 		It "Fails" {
@@ -722,32 +897,48 @@ Describe "Initialize-LabVMs" {
 	}
 	Context "Valid configuration is passed" {	
 		$Config = Get-LabConfiguration -Path $TestConfigOKPath
-		New-Item -Path $Config.labbuilderconfig.SelectNodes('settings').vmpath -ItemType Directory
-		New-Item -Path $Config.labbuilderconfig.SelectNodes('settings').vhdparentpath -ItemType Directory
-
-		Set-Content -Path 'C:\Pester Lab\Virtual Hard Disk Templates\Windows Server 2012 R2 Datacenter Full.vhdx' -Value 'Dummy file'
-		Set-Content -Path 'C:\Pester Lab\Virtual Hard Disk Templates\Windows Server 2012 R2 Datacenter Core.vhdx' -Value 'Dummy file'
-		Set-Content -Path 'C:\Pester Lab\Virtual Hard Disk Templates\Windows 10 Enterprise.vhdx' -Value 'Dummy file'
+		New-Item -Path $Config.labbuilderconfig.settings.vmpath -ItemType Directory -Force -ErrorAction SilentlyContinue
+		New-Item -Path $Config.labbuilderconfig.settings.vhdparentpath -ItemType Directory -Force -ErrorAction SilentlyContinue
 
 		$Templates = Get-LabVMTemplates -Configuration $Config
-		Initialize-LabVMTemplates -Configuration $Config -VMTemplates $Templates
 		$Switches = Get-LabSwitches -Configuration $Config
-		Initialize-LabSwitches -Configuration $Config -Switches $Switches
 		$VMs = Get-LabVMs -Configuration $Config -VMTemplates $Templates -Switches $Switches
 				
 		It "Returns True" {
 			Initialize-LabVMs -Configuration $Config -VMs $VMs | Should Be $True
 		}
-
-		Remove-Item -Path $Config.labbuilderconfig.SelectNodes('settings').vmpath -Recurse -Force -ErrorAction SilentlyContinue
-		Remove-Item -Path $Config.labbuilderconfig.SelectNodes('settings').vhdparentpath -Recurse -Force -ErrorAction SilentlyContinue
+		It "Calls Mocked commands" {
+			Assert-MockCalled New-VHD -Exactly 1
+			Assert-MockCalled New-VM -Exactly 1
+			Assert-MockCalled Set-VM -Exactly 1
+			Assert-MockCalled Get-VMHardDiskDrive -Exactly 1
+			Assert-MockCalled Set-LabVMInitializationFiles -Exactly 1
+            Assert-MockCalled Get-VMNetworkAdapter -Exactly 9
+            Assert-MockCalled Add-VMNetworkAdapter -Exactly 4
+            Assert-MockCalled Start-VM -Exactly 1
+            Assert-MockCalled Wait-LabVMInit -Exactly 1
+            Assert-MockCalled Get-LabVMSelfSignedCert -Exactly 1
+            Assert-MockCalled Initialize-LabVMDSC -Exactly 1
+            Assert-MockCalled Start-LabVMDSC -Exactly 1
+		}
+        
+		Remove-Item -Path $Config.labbuilderconfig.settings.vmpath -Recurse -Force -ErrorAction SilentlyContinue
+		Remove-Item -Path $Config.labbuilderconfig.settings.vhdparentpath -Recurse -Force -ErrorAction SilentlyContinue
 	}
 }
 ##########################################################################################################################################
 
 ##########################################################################################################################################
 Describe "Remove-LabVMs" {
-	Context "No parameters passed" {
+	#region Mocks
+    Mock Get-VM -MockWith { [PSObject]@{ Name = 'PESTER01'; State = 'Running'; } }
+    Mock Stop-VM
+    Mock Wait-LabVMOff -MockWith { Return $True }
+    Mock Get-VMHardDiskDrive
+    Mock Remove-VM
+    #endregion
+
+   	Context "No parameters passed" {
 		It "Fails" {
 			{ Remove-LabVMs } | Should Throw
 		}
@@ -759,14 +950,16 @@ Describe "Remove-LabVMs" {
 		$VMs = Get-LabVMs -Configuration $Config -VMTemplates $Templates -Switches $Switches
 
 		# Create the dummy VM's that the Remove-LabVMs function 
-		New-VM -Name 'PESTER01'
 		It "Returns True" {
 			Remove-LabVMs -Configuration $Config -VMs $VMs | Should Be $True
 		}
-		It "Removes the VM PESTER01" {
-			(Get-VM -Name 'PESTER01').Count | Should Be 0
+		It "Calls Mocked commands" {
+			Assert-MockCalled Get-VM -Exactly 4
+			Assert-MockCalled Stop-VM -Exactly 1
+			Assert-MockCalled Wait-LabVMOff -Exactly 1
+			Assert-MockCalled Get-VMHardDiskDrive -Exactly 1
+			Assert-MockCalled Remove-VM -Exactly 1
 		}
-		Remove-VM -Name PESTER.* -Confirm:$true
 	}
 }
 ##########################################################################################################################################
@@ -820,3 +1013,4 @@ Describe "Uninstall-Lab" {
 	}
 }
 ##########################################################################################################################################
+}

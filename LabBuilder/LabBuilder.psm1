@@ -100,11 +100,8 @@ function Get-LabConfiguration {
 		[parameter(
 			Position=0)]
 		[ValidateNotNullOrEmpty()]
-		[String]$Path
+		[String]$Path = $(Throw "Configuration file parameter is missing.")
 	) # Param
-	If (-not $Path) {
-		Throw "Configuration file parameter is missing."
-	} # If
 	If (-not (Test-Path -Path $Path)) {
 		Throw "Configuration file $Path is not found."
 	} # If
@@ -138,10 +135,9 @@ function Test-LabConfiguration {
 	[OutputType([Boolean])]
 	param (
 		[Parameter(
-			Mandatory=$True,
 			Position=0)]
 		[ValidateNotNullOrEmpty()]
-		[XML]$Configuration
+		[XML]$Configuration = $(Throw "Configuration XML parameter is missing.")
 	)
 
 	If ($Configuration.labbuilderconfig -eq $null) {
@@ -189,17 +185,17 @@ function Install-LabHyperV {
 	# Install Hyper-V Components
 	If ((Get-CimInstance Win32_OperatingSystem).ProductType -eq 1) {
 		# Desktop OS
-		$Feature = Get-WindowsOptionalFeature -Online -FeatureName '*Hyper-V*' | Where-Object -Property State -Eq 'Disabled'
+		[Array]$Feature = Get-WindowsOptionalFeature -Online -FeatureName '*Hyper-V*' | Where-Object -Property State -Eq 'Disabled'
 		If ($Feature.Count -gt 0 ) {
 			Write-Verbose "Installing Lab Desktop Hyper-V Components ..."
-			$Feature | Enable-WindowsOptionalFeature -Online
+			$Feature.Foreach( { Enable-WindowsOptionalFeature -Online -FeatureName $_.FeatureName } )
 		}
 	} Else {
 		# Server OS
-		$Geature = Get-WindowsFeature -Name Hyper-V | Where-Object -Property Installed -EQ $False
+		[Array]$Geature = Get-WindowsFeature -Name Hyper-V | Where-Object -Property Installed -EQ $False
 		If ($Feature.Count -gt 0 ) {
 			Write-Verbose "Installing Lab Server Hyper-V Components ..."
-			$Feature | Install-WindowsFeature -IncludeAllSubFeature -IncludeManagementTools
+			$Feature.Foreach( { Install-WindowsFeature -IncludeAllSubFeature -IncludeManagementTools -Name $_.Name } )
 		}
 	}
 
@@ -213,10 +209,9 @@ function Initialize-LabHyperV {
 	[OutputType([Boolean])]
 	param (
 		[Parameter(
-			Mandatory=$True,
 			Position=0)]
 		[ValidateNotNullOrEmpty()]
-		[XML]$Configuration
+		[XML]$Configuration = $(Throw "Configuration XML parameter is missing.")
 	)
 	
 	If ($Configuration.labbuilderconfig -eq $null) {
@@ -291,21 +286,20 @@ function Initialize-LabHyperV {
 
 ##########################################################################################################################################
 function Get-LabSwitches {
-	[OutputType([System.Collections.Hashtable[]])]
+	[OutputType([Array])]
 	[CmdLetBinding()]
 	param (
 		[Parameter(
-			Mandatory=$True,
 			Position=0)]
 		[ValidateNotNullOrEmpty()]
-		[XML]$Configuration
+		[XML]$Configuration = $(Throw "Configuration XML parameter is missing.")
 	)
 
 	If ($Configuration.labbuilderconfig -eq $null) {
 		Throw "Configuration is invalid."
 	}
 
-	[System.Collections.Hashtable[]]$Switches = @()
+	[Array]$Switches = @() 
 	$ConfigSwitches = $Configuration.labbuilderconfig.SelectNodes('switches').Switch
 	Foreach ($ConfigSwitch in $ConfigSwitches) {
 		# It can't be switch because if the name attrib/node is missing the name property on the XML object defaults to the name
@@ -328,11 +322,11 @@ function Get-LabSwitches {
 		} Else {
 			$ConfigAdapters = $null
 		}
-		$Switches += @{
+		$Switches += [PSObject]@{
 			name = $ConfigSwitch.Name;
 			type = $ConfigSwitch.Type;
 			vlan = $ConfigSwitch.Vlan;
-			adapters = $ConfigAdapters } 
+			adapters = $ConfigAdapters }
 	}
 	return $Switches
 } # Get-LabSwitches
@@ -344,34 +338,32 @@ function Initialize-LabSwitches {
 	[OutputType([Boolean])]
 	param (
 		[Parameter(
-			Mandatory=$true,
 			Position=0)]
 		[ValidateNotNullOrEmpty()]
-		[XML]$Configuration,
+		[XML]$Configuration = $(Throw "Configuration XML parameter is missing."),
 
 		[Parameter(
-			Mandatory=$true,
 			Position=1)]
 		[ValidateNotNullOrEmpty()]
-		[System.Collections.Hashtable[]]$Switches
+		[Array]$Switches = $(Throw "Switches parameter is missing.")
 	)
 
 	# Create Hyper-V Switches
-	Foreach ($Switch in $Switches) {
-		If ((Get-VMSwitch | Where-Object -Property Name -eq $Switch.Name).Count -eq 0) {
-			[String]$SwitchName = $Switch.Name
-			[string]$SwitchType = $Switch.Type
+	Foreach ($VMSwitch in $Switches) {
+		If ((Get-VMSwitch | Where-Object -Property Name -eq $($VMSwitch.Name)).Count -eq 0) {
+			[String]$SwitchName = $VMSwitch.Name
+			[string]$SwitchType = $VMSwitch.Type
 			Write-Verbose "Creating Virtual Switch '$SwitchName' ..."
 			Switch ($SwitchType) {
 				'External' {
 					New-VMSwitch -Name $SwitchName -NetAdapterName (Get-NetAdapter | Where-Object { $_.Status -eq 'Up' } | Select-Object -First 1 -ExpandProperty Name) | Out-Null
-					If ($Switch.Adapters) {
-						Foreach ($Adapter in $Switch.Adapters) {
-							If ($Switch.VLan) {
+					If ($VMSwitch.Adapters) {
+						Foreach ($Adapter in $VMSwitch.Adapters) {
+							If ($VMSwitch.VLan) {
 								# A default VLAN is assigned to this Switch so assign it to the management adapters
-								Add-VMNetworkAdapter -ManagementOS -SwitchName $Switch.Name -Name $Adapter.Name -StaticMacAddress $Adapter.MacAddress -Passthru | Set-VMNetworkAdapterVlan -Access -VlanId $Switch.Vlan | Out-Nul
+								Add-VMNetworkAdapter -ManagementOS -SwitchName $SwitchName -Name $($Adapter.Name) -StaticMacAddress $($Adapter.MacAddress) -Passthru | Set-VMNetworkAdapterVlan -Access -VlanId $($Switch.Vlan) | Out-Null
 							} Else { 
-								Add-VMNetworkAdapter -ManagementOS -SwitchName $Switch.Name -Name $Adapter.Name -StaticMacAddress $Adapter.MacAddress | Out-Null
+								Add-VMNetworkAdapter -ManagementOS -SwitchName $SwitchName -Name $($Adapter.Name) -StaticMacAddress $($Adapter.MacAddress) | Out-Null
 							} # If
 						} # Foreach
 					} # If
@@ -401,16 +393,14 @@ function Remove-LabSwitches {
 	[OutputType([Boolean])]
 	param (
 		[Parameter(
-			Mandatory=$true,
 			Position=0)]
 		[ValidateNotNullOrEmpty()]
-		[XML]$Configuration,
+		[XML]$Configuration = $(Throw "Configuration XML parameter is missing."),
 
 		[Parameter(
-			Mandatory=$true,
 			Position=1)]
 		[ValidateNotNullOrEmpty()]
-		[System.Collections.Hashtable[]]$Switches
+		[System.Collections.Hashtable[]]$Switches = $(Throw "Switches parameter is missing.")
 	)
 
 	# Delete Hyper-V Switches
@@ -456,10 +446,9 @@ function Get-LabVMTemplates {
 	[CmdLetBinding()]
 	param (
 		[Parameter(
-			Mandatory=$true,
 			Position=0)]
 		[ValidateNotNullOrEmpty()]
-		[XML]$Configuration
+		[XML]$Configuration = $(Throw "Configuration XML parameter is missing.")
 	)
 
 	[System.Collections.Hashtable[]]$VMTemplates = @()
@@ -589,16 +578,14 @@ function Initialize-LabVMTemplates {
 	[OutputType([Boolean])]
 	param (
 		[Parameter(
-			Mandatory=$true,
 			Position=0)]
 		[ValidateNotNullOrEmpty()]
-		[XML]$Configuration,
+		[XML]$Configuration = $(Throw "Configuration XML parameter is missing."),
 
 		[Parameter(
-			Mandatory=$true,
 			Position=1)]
 		[ValidateNotNullOrEmpty()]
-		[System.Collections.Hashtable[]]$VMTemplates
+		[System.Collections.Hashtable[]]$VMTemplates = $(Throw "VMTemplates parameter is missing.")
 	)
 	
 	Foreach ($VMTemplate in $VMTemplates) {
@@ -630,21 +617,19 @@ function Remove-LabVMTemplates {
 	[OutputType([Boolean])]
 	param (
 		[Parameter(
-			Mandatory=$true,
 			Position=0)]
 		[ValidateNotNullOrEmpty()]
-		[XML]$Configuration,
+		[XML]$Configuration = $(Throw "Configuration XML parameter is missing."),
 
 		[Parameter(
-			Mandatory=$true,
 			Position=1)]
 		[ValidateNotNullOrEmpty()]
-		[System.Collections.Hashtable[]]$VMTemplates
+		[System.Collections.Hashtable[]]$VMTemplates = $(Throw "VMTemplates parameter is missing.")
 	)
 	
 	Foreach ($VMTemplate in $VMTemplates) {
 		If (Test-Path $VMTemplate.templatevhd) {
-			Set-ItemProperty -Path $VMTemplate.vhd -Name IsReadOnly -Value $False
+			Set-ItemProperty -Path $VMTemplate.templatevhd -Name IsReadOnly -Value $False
 			Write-Verbose "Deleting Template VHD $($VMTemplate.templatevhd) ..."
 			Remove-Item -Path $VMTemplate.templatevhd -Confirm:$false -Force
 		}
@@ -675,11 +660,13 @@ function Set-LabDSCMOFFile {
 	[CmdLetBinding()]
 	[OutputType([Boolean])]
 	param (
-		[Parameter(Mandatory=$true)]
-		[XML]$Configuration,
+		[Parameter(
+            Position=0)]
+		[XML]$Configuration = $(Throw "Configuration XML parameter is missing."),
 
-		[Parameter(Mandatory=$true)]
-		[System.Collections.Hashtable]$VM
+		[Parameter(
+            Position=1)]
+		[System.Collections.Hashtable]$VM = $(Throw "VM parameter is missing.")
 	)
 
 	[String]$DSCMOFFile = ''
@@ -911,11 +898,13 @@ function Set-LabDSCStartFile {
 	[CmdLetBinding()]
 	[OutputType([Boolean])]
 	param (
-		[Parameter(Mandatory=$true)]
-		[XML]$Configuration,
+		[Parameter(
+            Position=0)]
+		[XML]$Configuration = $(Throw "Configuration XML parameter is missing."),
 
-		[Parameter(Mandatory=$true)]
-		[System.Collections.Hashtable]$VM
+		[Parameter(
+            Position=1)]
+		[System.Collections.Hashtable]$VM = $(Throw "VM parameter is missing.")
 	)
 
 	[String]$DSCStartPs = ''
@@ -926,7 +915,7 @@ function Set-LabDSCStartFile {
 	Foreach ($Adapter in $VM.Adapters) {
 		$NetAdapter = Get-VMNetworkAdapter -VMName $($VM.Name) -Name $($Adapter.Name)
 		If (-not $NetAdapter) {
-			Throw "VM Network Adapter $($Adapter.Name) could not be found attached to VM ($VM.Name)."
+			Throw "VM Network Adapter $($Adapter.Name) could not be found attached to VM $($VM.Name)."
 		} # If
 		$MacAddress = $NetAdapter.MacAddress
 		If (-not $MacAddress) {
@@ -954,11 +943,13 @@ Start-DSCConfiguration -Path `"$($ENV:SystemRoot)\Setup\Scripts\`" -Force -Wait 
 function Initialize-LabVMDSC {
 	[CmdLetBinding()]
 	param (
-		[Parameter(Mandatory=$true)]
-		[XML]$Configuration,
+		[Parameter(
+            Position=0)]
+		[XML]$Configuration = $(Throw "Configuration XML parameter is missing."),
 
-		[Parameter(Mandatory=$true)]
-		[System.Collections.Hashtable]$VM
+		[Parameter(
+            Position=1)]
+		[System.Collections.Hashtable]$VM = $(Throw "VM parameter is missing.")
 	)
 
 	# Are there any DSC Settings to manage?
@@ -973,11 +964,13 @@ function Initialize-LabVMDSC {
 function Start-LabVMDSC {
 	[CmdLetBinding()]
 	param (
-		[Parameter(Mandatory=$true)]
-		[XML]$Configuration,
+		[Parameter(
+            Position=0)]
+		[XML]$Configuration = $(Throw "Configuration XML parameter is missing."),
 
-		[Parameter(Mandatory=$true)]
-		[System.Collections.Hashtable]$VM,
+		[Parameter(
+            Position=1)]
+		[System.Collections.Hashtable]$VM = $(Throw "VM parameter is missing."),
 
 		[Int]$Timeout = 300
 	)
@@ -1070,11 +1063,13 @@ function Get-LabUnattendFile {
 	[CmdLetBinding()]
 	[OutputType([String])]
 	param (
-		[Parameter(Mandatory=$true)]
-		[XML]$Configuration,
+		[Parameter(
+            Position=0)]
+		[XML]$Configuration = $(Throw "Configuration XML parameter is missing."),
 
-		[Parameter(Mandatory=$true)]
-		[System.Collections.Hashtable]$VM
+		[Parameter(
+            Position=1)]
+		[System.Collections.Hashtable]$VM = $(Throw "VM parameter is missing.")
 	)
 	If ($VM.UnattendFile) {
 		[String]$UnattendContent = Get-Content -Path $VM.UnattendFile
@@ -1169,15 +1164,19 @@ function Get-LabUnattendFile {
 ##########################################################################################################################################
 function Set-LabVMInitializationFiles {
 	[CmdLetBinding()]
+    [OutputType([Boolean])]
 	param (
-		[Parameter(Mandatory=$true)]
-		[XML]$Configuration,
+		[Parameter(
+            Position=0)]
+		[XML]$Configuration = $(Throw "Configuration XML parameter is missing."),
 
-		[Parameter(Mandatory=$true)]
-		[String]$VMBootDiskPath,
-
-		[Parameter(Mandatory=$true)]
-		[System.Collections.Hashtable]$VM
+		[Parameter(
+            Position=1)]
+		[System.Collections.Hashtable]$VM = $(Throw "VM parameter is missing.")
+,
+		[Parameter(
+            Position=2)]
+		[String]$VMBootDiskPath = $(Throw "VMBootDiskPath parameter is missing.")
 	)
 
 	# Mount the VMs Boot VHD so that files can be loaded into it
@@ -1270,6 +1269,7 @@ Add-Content -Path `"$($ENV:SystemRoot)\Setup\Scripts\SetupComplete.log`" -Value 
 	Write-Verbose "Dismounting VM $($VM.Name) Boot Disk VHDx $VMBootDiskPath ..."
 	Dismount-WindowsImage -Path $MountPoint -Save | Out-Null
 	Remove-Item -Path $MountPoint -Recurse -Force | Out-Null
+    Return $True
 } # Set-LabVMInitializationFiles
 ##########################################################################################################################################
 
@@ -1279,22 +1279,19 @@ function Get-LabVMs {
 	[CmdLetBinding()]
 	param (
 		[Parameter(
-			Mandatory=$true,
 			Position=0)]
 		[ValidateNotNullOrEmpty()]
-		[XML]$Configuration,
+		[XML]$Configuration = $(Throw "Configuration XML parameter is missing."),
 
 		[Parameter(
-			Mandatory=$true,
 			Position=1)]
 		[ValidateNotNullOrEmpty()]
-		[System.Collections.Hashtable[]]$VMTemplates,
+		[System.Collections.Hashtable[]]$VMTemplates = $(Throw "VMTemplates parameter is missing."),
 
 		[Parameter(
-			Mandatory=$true,
 			Position=2)]
 		[ValidateNotNullOrEmpty()]
-		[System.Collections.Hashtable[]]$Switches
+		[System.Collections.Hashtable[]]$Switches = $(Throw "Switches parameter is missing.")
 	)
 
 	[System.Collections.Hashtable[]]$LabVMs = @()
@@ -1533,11 +1530,13 @@ function Get-LabVMSelfSignedCert {
 	[CmdLetBinding()]
 	[OutputType([Boolean])]
 	param (
-		[Parameter(Mandatory=$true)]
-		[XML]$Configuration,
+		[Parameter(
+            Position=0)]
+		[XML]$Configuration = $(Throw "Configuration XML parameter is missing."),
 
-		[Parameter(Mandatory=$true)]
-		[System.Collections.Hashtable]$VM,
+		[Parameter(
+            Position=1)]
+		[System.Collections.Hashtable]$VM = $(Throw "VM parameter is missing."),
 
 		[Int]$Timeout = 300
 	)
@@ -1591,20 +1590,18 @@ function Initialize-LabVMs {
 	[OutputType([Boolean])]
 	param (
 		[Parameter(
-			Mandatory=$true,
 			Position=0)]
 		[ValidateNotNullOrEmpty()]
-		[XML]$Configuration,
+		[XML]$Configuration = $(Throw "Configuration XML parameter is missing."),
 
 		[Parameter(
-			Mandatory=$true,
 			Position=1)]
 		[ValidateNotNullOrEmpty()]
-		[System.Collections.Hashtable[]]$VMs
+		[System.Collections.Hashtable[]]$VMs = $(Throw "VMs parameter is missing.")
 	)
 	
 	$CurrentVMs = Get-VM
-	[String]$VMPath = $Configuration.labbuilderconfig.SelectNodes('settings').vmpath
+	[String]$VMPath = $Configuration.labbuilderconfig.settings.vmpath
 
 	Foreach ($VM in $VMs) {
 		If (($CurrentVMs | Where-Object -Property Name -eq $VM.Name).Count -eq 0) {
@@ -1744,22 +1741,20 @@ function Remove-LabVMs {
 	[OutputType([Boolean])]
 	param (
 		[Parameter(
-			Mandatory=$true,
 			Position=0)]
 		[ValidateNotNullOrEmpty()]
-		[XML]$Configuration,
+		[XML]$Configuration = $(Throw "Configuration XML parameter is missing."),
 
 		[Parameter(
-			Mandatory=$true,
 			position=1)]
 		[ValidateNotNullOrEmpty()]
-		[System.Collections.Hashtable[]]$VMs,
+		[System.Collections.Hashtable[]]$VMs = $(Throw "VMs parameter is missing."),
 
 		[Switch]$RemoveVHDs
 	)
 	
 	$CurrentVMs = Get-VM
-	[String]$VMPath = $Configuration.labbuilderconfig.SelectNodes('settings').vmpath
+	[String]$VMPath = $Configuration.labbuilderconfig.settings.vmpath
 	
 	Foreach ($VM in $VMs) {
 		If (($CurrentVMs | Where-Object -Property Name -eq $VM.Name).Count -ne 0) {
@@ -1795,8 +1790,9 @@ function Wait-LabVMInit {
 	[OutputType([Boolean])]
 	[CmdLetBinding()]
 	param (
-		[Parameter(Mandatory=$true)]
-		[System.Collections.Hashtable]$VM,
+		[Parameter(
+            Position=0)]
+		[System.Collections.Hashtable]$VM = $(Throw "VM parameter is missing."),
 
 		[Int]$Timeout = 300
 	)
@@ -1853,8 +1849,9 @@ function Wait-LabVMStart {
 	[OutputType([Boolean])]
 	[CmdLetBinding()]
 	param (
-		[Parameter(Mandatory=$true)]
-		[System.Collections.Hashtable]$VM
+		[Parameter(
+            Position=0)]
+		[System.Collections.Hashtable]$VM = $(Throw "VM parameter is missing.")
 	)
 	$Heartbeat = Get-VMIntegrationService -VMName $VM.Name -Name Heartbeat
 	while ($Heartbeat.PrimaryStatusDescription -ne "OK")
@@ -1872,8 +1869,9 @@ function Wait-LabVMOff {
 	[OutputType([Boolean])]
 	[CmdLetBinding()]
 	param (
-		[Parameter(Mandatory=$true)]
-		[System.Collections.Hashtable]$VM
+		[Parameter(
+            Position=0)]
+		[System.Collections.Hashtable]$VM = $(Throw "VM parameter is missing.")
 	)
 	$RunningVM = Get-VM -Name $VM.Name
 	while ($RunningVM.State -ne "Off")
@@ -1891,8 +1889,8 @@ Function Install-Lab {
 	[CmdLetBinding()]
 	param (
 		[parameter(
-			Mandatory=$true)]
-		[String]$Path,
+			Position=0)]
+		[String]$Path = $(Throw "Path parameter is missing."),
 
 		[Switch]$CheckEnvironment
 	) # Param
@@ -1924,8 +1922,8 @@ Function Uninstall-Lab {
 	[CmdLetBinding()]
 	param (
 		[parameter(
-			Mandatory=$true)]
-		[String]$Path,
+			Position=0)]
+		[String]$Path = $(Throw "Path XML parameter is missing."),
 
 		[Switch]$RemoveSwitches,
 

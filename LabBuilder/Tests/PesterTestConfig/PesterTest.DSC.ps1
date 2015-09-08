@@ -1,27 +1,19 @@
-Configuration ROOTCA
+<#########################################################################################################################################
+DSC Template Configuration File For use by LabBuilder
+.Title
+	STANDALONE_DEFAULT
+.Desription
+	Builds a Standalone computer with no additional DSC resources.
+.Parameters:          
+#########################################################################################################################################>
+
+Configuration STANDALONE_DEFAULT
 {
-	Import-DscResource –ModuleName 'PSDesiredStateConfiguration'
-	Import-DscResource -ModuleName xAdcsDeployment
+	Import-DscResource -ModuleName 'PSDesiredStateConfiguration'
 	Node $AllNodes.NodeName {
 		# Assemble the Local Admin Credentials
 		If ($Node.LocalAdminPassword) {
 			[PSCredential]$LocalAdminCredential = New-Object System.Management.Automation.PSCredential ("Administrator", (ConvertTo-SecureString $Node.LocalAdminPassword -AsPlainText -Force))
 		}
-
-		WindowsFeature ADCSCA {
-			Name = 'ADCS-Cert-Authority'
-			Ensure = 'Present'
-			}
-		xADCSCertificationAuthority ADCS
-        {
-            Ensure = 'Present'
-            Credential = $LocalAdminCredential
-            CAType = 'StandaloneRootCA'
-			CACommonName = $Node.CACommonName
-			CADistinguishedNameSuffix = $Node.CADistinguishedNameSuffix
-			ValidityPeriod = 'Years'
-			ValidityPeriodUnits = 20
-            DependsOn = '[WindowsFeature]ADCSCA'
-        }
 	}
 }
