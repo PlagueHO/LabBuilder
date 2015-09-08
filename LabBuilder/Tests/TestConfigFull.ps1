@@ -1,10 +1,10 @@
 ﻿##########################################################################################################################################
 Function Test-LabBuilderInstall {
-	Install-Lab -Path "$PSScriptRoot\TestConfig1.xml" -Verbose
+	Install-Lab -Path "$PSScriptRoot\TestConfigFull.xml" -Verbose
 } # Function Test-LabBuilderInstall
 ##########################################################################################################################################
 Function Test-LabBuilderUninstall {
-	Uninstall-Lab -Path "$PSScriptRoot\TestConfig1.xml" -Verbose -RemoveVHDs -RemoveTemplates
+	Uninstall-Lab -Path "$PSScriptRoot\TestConfigFull.xml" -Verbose -RemoveVHDs -RemoveTemplates
 } # Function Test-LabBuilderUnnstall
 ##########################################################################################################################################
 Function Test-LabBuilderLoadModule {
