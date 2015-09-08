@@ -50,8 +50,8 @@ Describe "Test-LabConfiguration" {
 
 	$Config = Get-LabConfiguration -Path $Global:TestConfigOKPath
 
-	Remove-Item -Path $Config.labbuilderconfig.SelectNodes('settings').vmpath -Recurse -Force -ErrorAction SilentlyContinue
-	Remove-Item -Path $Config.labbuilderconfig.SelectNodes('settings').vhdparentpath -Recurse -Force -ErrorAction SilentlyContinue
+	Remove-Item -Path $Config.labbuilderconfig.settings.vmpath -Recurse -Force -ErrorAction SilentlyContinue
+	Remove-Item -Path $Config.labbuilderconfig.settings.vhdparentpath -Recurse -Force -ErrorAction SilentlyContinue
 
 	Context "Valid Configuration is provided and VMPath folder does not exist" {
 		It "Fails" {
@@ -59,7 +59,7 @@ Describe "Test-LabConfiguration" {
 		}
 	}
 	
-	New-Item -Path $Config.labbuilderconfig.SelectNodes('settings').vmpath -ItemType Directory
+	New-Item -Path $Config.labbuilderconfig.settings.vmpath -ItemType Directory
 
 	Context "Valid Configuration is provided and VHDParentPath folder does not exist" {
 		It "Fails" {
@@ -67,15 +67,15 @@ Describe "Test-LabConfiguration" {
 		}
 	}
 	
-	New-Item -Path $Config.labbuilderconfig.SelectNodes('settings').vhdparentpath -ItemType Directory
+	New-Item -Path $Config.labbuilderconfig.settings.vhdparentpath -ItemType Directory
 
 	Context "Valid Configuration is provided and all paths exist" {
 		It "Returns True" {
 			Test-LabConfiguration -Configuration $Config | Should Be $True
 		}
 	}
-	Remove-Item -Path $Config.labbuilderconfig.SelectNodes('settings').vmpath -Recurse -Force -ErrorAction SilentlyContinue
-	Remove-Item -Path $Config.labbuilderconfig.SelectNodes('settings').vhdparentpath -Recurse -Force -ErrorAction SilentlyContinue
+	Remove-Item -Path $Config.labbuilderconfig.settings.vmpath -Recurse -Force -ErrorAction SilentlyContinue
+	Remove-Item -Path $Config.labbuilderconfig.settings.vhdparentpath -Recurse -Force -ErrorAction SilentlyContinue
 }
 ##########################################################################################################################################
 
@@ -83,10 +83,13 @@ Describe "Test-LabConfiguration" {
 Describe "Install-LabHyperV" {
 
 	#region Mocks
-    Mock Get-WindowsOptionalFeature { [PSObject]@{ FeatureName = 'Mock'; State = 'Disabled'; } }
-	Mock Enable-WindowsOptionalFeature 
-	Mock Get-WindowsFeature { [PSObject]@{ Name = 'Mock'; Installed = $false; } }
-	Mock Install-WindowsFeature
+	If ((Get-CimInstance Win32_OperatingSystem).ProductType -eq 1) {
+		Mock Get-WindowsOptionalFeature { [PSObject]@{ FeatureName = 'Mock'; State = 'Disabled'; } }
+		Mock Enable-WindowsOptionalFeature 
+	} Else {
+		Mock Get-WindowsFeature { [PSObject]@{ Name = 'Mock'; Installed = $false; } }
+		Mock Install-WindowsFeature
+	}
 	#endregion
 
 	Context "The function exists" {
@@ -111,6 +114,10 @@ Describe "Install-LabHyperV" {
 
 ##########################################################################################################################################
 Describe "Initialize-LabHyperV" {
+	#region Mocks
+	Mock Set-VMHost
+	#endregion
+
 	Context "No parameters passed" {
 		It "Fails" {
 			{ Initialize-LabHyperV } | Should Throw
@@ -119,21 +126,12 @@ Describe "Initialize-LabHyperV" {
 	Context "Valid configuration is passed" {
 		$Config = Get-LabConfiguration -Path $Global:TestConfigOKPath
 	
-		$CurrentMacAddressMinimum = (Get-VMHost).MacAddressMinimum
-		$CurrentMacAddressMaximum = (Get-VMHost).MacAddressMaximum
-		Set-VMHost -MacAddressMinimum '001000000000' -MacAddressMaximum '0010000000FF'
-
 		It "Returns True" {
 			Initialize-LabHyperV -Configuration $Config | Should Be $True
 		}
-		It "MacAddressMinumum should be $($Config.labbuilderconfig.SelectNodes('settings').macaddressminimum)" {
-			(Get-VMHost).MacAddressMinimum | Should Be $Config.labbuilderconfig.SelectNodes('settings').macaddressminimum
-		}
-		It "MacAddressMaximum should be $($Config.labbuilderconfig.SelectNodes('settings').macaddressmaximum)" {
-			(Get-VMHost).MacAddressMaximum | Should Be $Config.labbuilderconfig.SelectNodes('settings').macaddressmaximum
-		}
-		
-		Set-VMHost -MacAddressMinimum $CurrentMacAddressMinimum -MacAddressMaximum $CurrentMacAddressMaximum
+		It "Calls Mocked commands" {
+			Assert-MockCalled  Set-VMHost -Exactly 1
+		}		
 	}
 }
 ##########################################################################################################################################
@@ -289,6 +287,11 @@ Describe "Remove-LabSwitches" {
 
 ##########################################################################################################################################
 Describe "Get-LabVMTemplates" {
+
+	#region Mocks
+    Mock Get-VM
+    #endregion
+
 	Context "No parameters passed" {
 		It "Fails" {
 			{ Get-LabVMTemplates } | Should Throw
@@ -368,6 +371,9 @@ Describe "Get-LabVMTemplates" {
 "@
 			[String]::Compare(($Templates | ConvertTo-Json -Depth 2),$ExpectedTemplates,$true) | Should Be 0
 		}
+		It "Calls Mocked commands" {
+			Assert-MockCalled Get-VM -Exactly 1
+		}
 	}
 }
 ##########################################################################################################################################
@@ -375,7 +381,7 @@ Describe "Get-LabVMTemplates" {
 ##########################################################################################################################################
 Describe "Initialize-LabVMTemplates" {
 	#region Mocks
-    Mock Optimize-VHD
+	Mock Optimize-VHD
     Mock Set-ItemProperty -ParameterFilter { ($Name -eq 'IsReadOnly') -and ($Value -eq $True) }
     Mock Set-ItemProperty -ParameterFilter { ($Name -eq 'IsReadOnly') -and ($Value -eq $False) }
     #endregion
@@ -474,6 +480,10 @@ Describe "Set-LabDSCMOFFile" {
 		$Result = Set-LabDSCMOFFile -Configuration $Config -VM $VMs
 		It "Returns True" {
 			$Result | Should Be $True
+		}
+		It "Calls Mocked commands" {
+			Assert-MockCalled Import-Certificate -Exactly 1
+			Assert-MockCalled Remove-Item -Exactly 1
 		}
 		It "Appropriate Lab Builder Files Should be produced" {
 			Test-Path -Path 'C:\Pester Lab\PESTER01\LabBuilder Files\Pester01.mof' | Should Be $True
