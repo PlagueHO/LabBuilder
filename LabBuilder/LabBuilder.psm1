@@ -192,7 +192,7 @@ function Install-LabHyperV {
 		}
 	} Else {
 		# Server OS
-		[Array]$Geature = Get-WindowsFeature -Name Hyper-V | Where-Object -Property Installed -EQ $False
+		[Array]$Feature = Get-WindowsFeature -Name Hyper-V | Where-Object -Property Installed -EQ $false
 		If ($Feature.Count -gt 0 ) {
 			Write-Verbose "Installing Lab Server Hyper-V Components ..."
 			$Feature.Foreach( { Install-WindowsFeature -IncludeAllSubFeature -IncludeManagementTools -Name $_.Name } )
@@ -1696,7 +1696,7 @@ function Initialize-LabVMs {
 				$VMNetworkAdapter | Set-VMNetworkAdapter -DynamicMacAddress | Out-Null
 			} # If
 			# Enable Device Naming (although the feature is buggy at the moment)
-			$VMNetworkAdapter | Set-VMNetworkAdapter -DeviceNaming On | Out-Null
+			# $VMNetworkAdapter | Set-VMNetworkAdapter -DeviceNaming On | Out-Null
 		} # Foreach
 		
 		# The VM is now ready to be started

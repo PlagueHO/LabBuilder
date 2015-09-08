@@ -504,7 +504,8 @@ Describe "Set-LabDSCMOFFile" {
 ##########################################################################################################################################
 Describe "Set-LabDSCStartFile" {
 	#region Mocks
-    Mock Get-VMNetworkAdapter -MockWith { [PSObject]@{ Name = 'Dummy'; MacAddress = '00-11-22-33-44-55'; } }
+    Mock Get-VM
+	Mock Get-VMNetworkAdapter -MockWith { [PSObject]@{ Name = 'Dummy'; MacAddress = '00-11-22-33-44-55'; } }
     Mock Set-Content
     #endregion
 	Context "No parameters passed" {
