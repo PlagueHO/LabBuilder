@@ -22,7 +22,7 @@ test_script:
         $ProjectRoot = $ENV:APPVEYOR_BUILD_FOLDER;
         Set-Location -Path $ProjectRoot;
         Import-Module Pester;
-        $res = Invoke-Pester -Path "$ProjectRoot\Tests" -OutputFormat NUnitXml -OutputFile "$ProjectRoot\TestResults.xml" -PassThru;
+        $res = Invoke-Pester -Path $ProjectRoot -OutputFormat NUnitXml -OutputFile "$ProjectRoot\TestResults.xml" -PassThru;
         (New-Object 'System.Net.WebClient').UploadFile("https://ci.appveyor.com/api/testresults/nunit/$($env:APPVEYOR_JOB_ID)", (Resolve-Path "$ProjectRoot\TestResults.xml"));
         if ($res.FailedCount -gt 0) { 
             throw "$($res.FailedCount) tests failed.";
