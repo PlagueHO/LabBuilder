@@ -381,6 +381,7 @@ Describe "Get-LabVMTemplates" {
 ##########################################################################################################################################
 Describe "Initialize-LabVMTemplates" {
 	#region Mocks
+	Mock Get-VM
 	Mock Optimize-VHD
     Mock Set-ItemProperty -ParameterFilter { ($Name -eq 'IsReadOnly') -and ($Value -eq $True) }
     Mock Set-ItemProperty -ParameterFilter { ($Name -eq 'IsReadOnly') -and ($Value -eq $False) }
@@ -424,7 +425,8 @@ Describe "Initialize-LabVMTemplates" {
 ##########################################################################################################################################
 Describe "Remove-LabVMTemplates" {
 	#region Mocks
-    Mock Set-ItemProperty -ParameterFilter { ($Name -eq 'IsReadOnly') -and ($Value -eq $False) }
+    Mock Get-VM
+	Mock Set-ItemProperty -ParameterFilter { ($Name -eq 'IsReadOnly') -and ($Value -eq $False) }
     Mock Remove-Item
     Mock Test-Path -MockWith { $True }
     #endregion
@@ -459,7 +461,8 @@ Describe "Set-LabDSCMOFFile" {
     Remove-Item -Path "C:\Pester Lab\PESTER01\LabBuilder Files" -Recurse -Force -ErrorAction SilentlyContinue
 
 	#region Mocks
-    Mock Import-Certificate -MockWith {
+    Mock Get-VM
+	Mock Import-Certificate -MockWith {
 		[PSCustomObject]@{
 			Thumbprint = '1234567890ABCDEF'
 		}
@@ -493,8 +496,8 @@ Describe "Set-LabDSCMOFFile" {
 			Test-Path -Path 'C:\Pester Lab\PESTER01\LabBuilder Files\DSCNetworking.ps1' | Should Be $True
 		}
 	}
-    Remove-Item -Path "C:\Pester Lab\PESTER01\LabBuilder Files" -Recurse -Force -ErrorAction SilentlyContinue
-
+ 
+	   Remove-Item -Path "C:\Pester Lab\PESTER01\LabBuilder Files" -Recurse -Force -ErrorAction SilentlyContinue
 }
 ##########################################################################################################################################
 
@@ -529,6 +532,11 @@ Describe "Set-LabDSCStartFile" {
 
 ##########################################################################################################################################
 Describe "Get-LabUnattendFile" {
+
+	#region Mocks
+    Mock Get-VM
+    #endregion
+
 	Context "No parameters passed" {
 		It "Fails" {
 			{ Get-LabUnattendFile } | Should Throw
@@ -615,14 +623,17 @@ Describe "Get-LabUnattendFile" {
 
 ##########################################################################################################################################
 Describe "Set-LabVMInitializationFiles" {
+
 	#region Mocks
-    Mock Mount-WindowsImage
+    Mock Get-VM
+	Mock Mount-WindowsImage
     Mock Dismount-WindowsImage
     Mock Invoke-WebRequest
     Mock Add-WindowsPackage
     Mock Set-Content
     Mock Copy-Item
     #endregion
+
 	Context "No parameters passed" {
 		It "Fails" {
 			{ Set-LabVMInitializationFiles } | Should Throw
@@ -657,6 +668,10 @@ Describe "Set-LabVMInitializationFiles" {
 
 ##########################################################################################################################################
 Describe "Get-LabVMs" {
+
+	#region mocks
+	Mock Get-VM
+	#endregion
 
 	Context "No parameters passed" {
 		It "Fails" {

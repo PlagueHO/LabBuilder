@@ -1297,7 +1297,6 @@ function Get-LabVMs {
 	[System.Collections.Hashtable[]]$LabVMs = @()
 	[String]$VHDParentPath = $Configuration.labbuilderconfig.settings.vhdparentpath
 	$VMs = $Configuration.labbuilderconfig.SelectNodes('vms').vm
-	$CurrentSwitches = Get-VMSwitch
 
 	Foreach ($VM in $VMs) {
 		If ($VM.Name -eq 'VM') {

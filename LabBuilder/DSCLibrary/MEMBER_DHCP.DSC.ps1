@@ -53,5 +53,24 @@ Configuration MEMBER_DHCP
             Name = "DHCP" 
 			DependsOn = "[xComputer]JoinDomain" 
         }
+		Script DHCPAuthorize
+		{
+			SetScript = {
+				Set-DHCPServerInDC
+			}
+			GetScript = {
+				Return @{
+					'Authorized' = (@(Get-DHCPServerInDC | Where-Object { $_.IPAddress -In (Get-NetIPAddress).IPAddress }).Count -gt 0);
+				}
+			}
+			TestScript = { 
+				If (@(Get-DHCPServerInDC | Where-Object { $_.IPAddress -In (Get-NetIPAddress).IPAddress }).Count -eq 0) {
+					Return $False
+				}
+				Return $True
+			}
+			DependsOn = '[WindowsFeature]DHCPInstall'
+		}
+
 	}
 }
