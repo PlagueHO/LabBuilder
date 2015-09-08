@@ -10,6 +10,10 @@
             vhdparentpath="c:\vm\LABBUILDER.COM\Virtual Hard Disk Templates"
             configpath=".\..\DSCLibrary\" />
 
+  <reosurces>
+    <module name="cMicrosoftUpdate" url="https://github.com/fabiendibot/cMicrosoftUpdate/archive/master.zip" folder="cMicrosoftUpdate-master" />  
+  </reosurces>
+  
   <switches>
     <switch name="General Purpose External" type="External">
       <adapters>

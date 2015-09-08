@@ -226,12 +226,12 @@ function Initialize-LabHyperV {
 	# Install Hyper-V Components
 	Write-Verbose "Initializing Lab Hyper-V Components ..."
 	
-	[String]$MacAddressMinimum = $Configuration.labbuilderconfig.SelectNodes('settings').macaddressminimum
+	[String]$MacAddressMinimum = $Configuration.labbuilderconfig.settings.macaddressminimum
 	If (-not $MacAddressMinimum) {
 		$MacAddressMinimum = '00155D010600'
 	}
 
-	[String]$MacAddressMaximum = $Configuration.labbuilderconfig.SelectNodes('settings').macaddressmaximum
+	[String]$MacAddressMaximum = $Configuration.labbuilderconfig.settings.macaddressmaximum
 	If (-not $MacAddressMaximum) {
 		$MacAddressMaximum = '00155D0106FF'
 	}
@@ -241,36 +241,57 @@ function Initialize-LabHyperV {
 	# Download the New-SelfSignedCertificateEx.ps1 script
 	Download-CertGenerator
 
-	Return $True
-} # Initialize-LabHyperV
-##########################################################################################################################################
-
-##########################################################################################################################################
-function Initialize-LabDSC {
-	[CmdLetBinding()]
-	[OutputType([Boolean])]
-	param (
-		[Parameter(
-			Mandatory=$True,
-			Position=0)]
-		[ValidateNotNullOrEmpty()]
-		[XML]$Configuration
-	)
-	
-	If ($Configuration.labbuilderconfig -eq $null) {
-		Throw "Configuration is invalid."
-	}
-	
 	# Download WMF 5.0 in case any VMs need it
 	If (-not (Download-WMF5Installer)) {
 		Throw "An error occurred downloading the WMF 5.0 Installer."
 	}
 
-	# Install DSC Components
-	Write-Verbose "Configuring Lab DSC Components ..."
-	
+	# Download any other resources required by this lab
+	If ($Configuration.labbuilderconfig.resources) {
+		Foreach ($Module in $Configuration.labbuilderconfig.resources.modules) {
+			If (-not $Module.Name) {
+				Throw "Lab Builder Module Resource Name is missing."
+			} # If
+			# Is the module installed
+			[String]$ModulePath = ''
+			Foreach ($Path in $ENV:PSModulePath.Split(';')) {
+				$ModulePath = Join-Path -Path $Path -ChildPath $Module.Name
+				If (Test-Path -Path $ModulePath) {
+					Break
+				} # If
+			} # Foreach
+			If (-not $ModulePath) {
+				# The module is not installed - so download it
+				$FileName = $Module.URL.Substring($Module.URL.LastIndexOf("/") + 1)
+				$FilePath = Join-Path -Path $Script:WorkingFolder -ChildPath $FileName
+				Try {
+					Invoke-WebRequest -Uri $URL -OutFile $FilePath
+				} Catch {
+					Throw "The Lab Builder Module Resource $($Module.Name) could not be downloaded."
+				} # Try
+				If (-not (Test-Path -Path $FilePath)) {
+					# Extract this straight into the modules folder
+					Try {
+						Expand-Archive -Path $FilePath -DestinationPath $($Script:WorkingFolder) -Force
+					} Catch {
+						Throw "The Lab Builder Module Resource $($Module.Name) could not be extracted."
+					} # Try
+					If ($Module.Folder) {
+						# This zip file contains a folder that is not the name of the module so it must be
+						# renamed. This is usually the case with source downloaded directly from GitHub
+						$ModulePath = Join-Path -Path $($ENV:ProgramFiles) -ChildPath $($Module.Name)
+						If (Test-Path -Path $ModulePath) {
+							Remove-Item -Path $ModulePath
+						}
+						Rename-Item -Path (Join-Path -Path $($ENV:ProgramFiles) -ChildPath $($Module.Folder)) `
+							-NewName $($Module.Name) -Force
+					} # If
+				} # If
+			} # If
+		} # Foreach
+	} # If
 	Return $True
-} # Initialize-LabDSC
+} # Initialize-LabHyperV
 ##########################################################################################################################################
 
 ##########################################################################################################################################
@@ -1892,8 +1913,6 @@ Function Install-Lab {
 	}
 	Initialize-LabHyperV -Configuration $Config | Out-Null
 
-	Initialize-LabDSC -Configuration $Config | Out-Null
-
 	$Switches = Get-LabSwitches -Configuration $Config
 	Initialize-LabSwitches -Configuration $Config -Switches $Switches | Out-Null
 
@@ -1952,7 +1971,7 @@ Function Uninstall-Lab {
 # Export the Module Cmdlets
 Export-ModuleMember -Function `
 	Get-LabConfiguration,Test-LabConfiguration, `
-	Install-LabHyperV,Initialize-LabHyperV,Initialize-LabDSC, `
+	Install-LabHyperV,Initialize-LabHyperV, `
 	Get-LabSwitches,Initialize-LabSwitches,Remove-LabSwitches, `
 	Get-LabVMTemplates,Initialize-LabVMTemplates,Remove-LabVMTemplates, `
 	Get-LabVMs,Initialize-LabVMs,Remove-LabVMs, `

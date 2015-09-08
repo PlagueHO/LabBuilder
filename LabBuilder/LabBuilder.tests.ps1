@@ -121,24 +121,6 @@ Describe "Initialize-LabHyperV" {
 ##########################################################################################################################################
 
 ##########################################################################################################################################
-Describe "Initialize-LabDSC" {
-
-	Context "No parameters passed" {
-		It "Fails" {
-			{ Initialize-LabDSC } | Should Throw
-		}
-	}
-	Context "Valid configuration is passed" {
-		$Config = Get-LabConfiguration -Path $TestConfigOKPath
-
-		It "Returns True" {
-			Initialize-LabDSC -Configuration $Config | Should Be $True
-		}
-	}
-}
-##########################################################################################################################################
-
-##########################################################################################################################################
 Describe "Get-LabSwitches" {
 	Context "No parameters passed" {
 		It "Fails" {
