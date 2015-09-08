@@ -6,7 +6,7 @@ version: 0.1.{build}.0
 os: unstable
 install: 
   - cinst -y pester
-
+  - ps: install-windowsfeature RSAT-Hyper-V-Tools
 #---------------------------------# 
 #      build configuration        # 
 #---------------------------------# 
