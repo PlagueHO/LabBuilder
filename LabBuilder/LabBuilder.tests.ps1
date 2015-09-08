@@ -5,7 +5,6 @@
 #
 
 $here = Split-Path -Parent $MyInvocation.MyCommand.Path
-$sut = (Split-Path -Leaf $MyInvocation.MyCommand.Path).Replace(".Tests.", ".")
 
 Set-Location $here
 if (Get-Module LabBuilder -All)
@@ -14,8 +13,8 @@ if (Get-Module LabBuilder -All)
 }
 
 Import-Module "$here\LabBuilder.psd1" -Force -DisableNameChecking
-$TestConfigPath = "$here\Tests\PesterTestConfig"
-$TestConfigOKPath = "$TestConfigPath\PesterTestConfig.OK.xml"
+$Global:TestConfigPath = "$here\Tests\PesterTestConfig"
+$Global:TestConfigOKPath = "$Global:TestConfigPath\PesterTestConfig.OK.xml"
 
 InModuleScope LabBuilder {
 ##########################################################################################################################################
@@ -32,7 +31,7 @@ Describe "Get-LabConfiguration" {
 	}
 	Context "Path is provided and valid XML file exists" {
 		It "Returns XmlDocument object with valid content" {
-			$Config = Get-LabConfiguration -Path $TestConfigOKPath
+			$Config = Get-LabConfiguration -Path $Global:TestConfigOKPath
 			$Config.GetType().Name | Should Be 'XmlDocument'
 			$Config.labbuilderconfig | Should Not Be $null
 		}
@@ -49,7 +48,7 @@ Describe "Test-LabConfiguration" {
 		}
 	}
 
-	$Config = Get-LabConfiguration -Path $TestConfigOKPath
+	$Config = Get-LabConfiguration -Path $Global:TestConfigOKPath
 
 	Remove-Item -Path $Config.labbuilderconfig.SelectNodes('settings').vmpath -Recurse -Force -ErrorAction SilentlyContinue
 	Remove-Item -Path $Config.labbuilderconfig.SelectNodes('settings').vhdparentpath -Recurse -Force -ErrorAction SilentlyContinue
@@ -91,7 +90,7 @@ Describe "Install-LabHyperV" {
 	#endregion
 
 	Context "The function exists" {
-		$Config = Get-LabConfiguration -Path $TestConfigOKPath
+		$Config = Get-LabConfiguration -Path $Global:TestConfigOKPath
 		It "Returns True" {
 			Install-LabHyperV | Should Be $True
 		}
@@ -118,7 +117,7 @@ Describe "Initialize-LabHyperV" {
 		}
 	}
 	Context "Valid configuration is passed" {
-		$Config = Get-LabConfiguration -Path $TestConfigOKPath
+		$Config = Get-LabConfiguration -Path $Global:TestConfigOKPath
 	
 		$CurrentMacAddressMinimum = (Get-VMHost).MacAddressMinimum
 		$CurrentMacAddressMaximum = (Get-VMHost).MacAddressMaximum
@@ -148,26 +147,26 @@ Describe "Get-LabSwitches" {
 	}
 	Context "Configuration passed with switch missing Switch Name." {
 		It "Fails" {
-			{ Get-LabSwitches -Configuration (Get-LabConfiguration -Path "$TestConfigPath\PesterTestConfig.SwitchFail.NoName.xml") } | Should Throw
+			{ Get-LabSwitches -Configuration (Get-LabConfiguration -Path "$Global:TestConfigPath\PesterTestConfig.SwitchFail.NoName.xml") } | Should Throw
 		}
 	}
 	Context "Configuration passed with switch missing Switch Type." {
 		It "Fails" {
-			{ Get-LabSwitches -Configuration (Get-LabConfiguration -Path "$TestConfigPath\PesterTestConfig.SwitchFail.NoType.xml") } | Should Throw
+			{ Get-LabSwitches -Configuration (Get-LabConfiguration -Path "$Global:TestConfigPath\PesterTestConfig.SwitchFail.NoType.xml") } | Should Throw
 		}
 	}
 	Context "Configuration passed with switch invalid Switch Type." {
 		It "Fails" {
-			{ Get-LabSwitches -Configuration (Get-LabConfiguration -Path "$TestConfigPath\PesterTestConfig.SwitchFail.BadType.xml") } | Should Throw
+			{ Get-LabSwitches -Configuration (Get-LabConfiguration -Path "$Global:TestConfigPath\PesterTestConfig.SwitchFail.BadType.xml") } | Should Throw
 		}
 	}
 	Context "Configuration passed with switch containing adapters but is not External type." {
 		It "Fails" {
-			{ Get-LabSwitches -Configuration (Get-LabConfiguration -Path "$TestConfigPath\PesterTestConfig.SwitchFail.AdaptersSet.xml") } | Should Throw
+			{ Get-LabSwitches -Configuration (Get-LabConfiguration -Path "$Global:TestConfigPath\PesterTestConfig.SwitchFail.AdaptersSet.xml") } | Should Throw
 		}
 	}
 	Context "Valid configuration is passed" {
-		$Config = Get-LabConfiguration -Path $TestConfigOKPath
+		$Config = Get-LabConfiguration -Path $Global:TestConfigOKPath
 		$Switches = Get-LabSwitches -Configuration $Config
 		# Set-Content -Path "$($ENV:Temp)\Switches.json" -Value ($Switches | ConvertTo-Json -Depth 4)
 		
@@ -245,7 +244,7 @@ Describe "Initialize-LabSwitches" {
 		}
 	}
 	Context "Valid configuration is passed" {	
-		$Config = Get-LabConfiguration -Path $TestConfigOKPath
+		$Config = Get-LabConfiguration -Path $Global:TestConfigOKPath
 		$Switches = Get-LabSwitches -Configuration $Config
 
 		It "Returns True" {
@@ -275,7 +274,7 @@ Describe "Remove-LabSwitches" {
 		}
 	}
 	Context "Valid configuration is passed" {	
-		$Config = Get-LabConfiguration -Path $TestConfigOKPath
+		$Config = Get-LabConfiguration -Path $Global:TestConfigOKPath
 		$Switches = Get-LabSwitches -Configuration $Config
 
 		It "Returns True" {
@@ -297,21 +296,21 @@ Describe "Get-LabVMTemplates" {
 	}
 	Context "Configuration passed with template missing Template Name." {
 		It "Fails" {
-			{ Get-LabVMTemplates -Configuration (Get-LabConfiguration -Path "$TestConfigPath\PesterTestConfig.TemplateFail.NoName.xml") } | Should Throw
+			{ Get-LabVMTemplates -Configuration (Get-LabConfiguration -Path "$Global:TestConfigPath\PesterTestConfig.TemplateFail.NoName.xml") } | Should Throw
 		}
 	}
 	Context "Configuration passed with template missing VHD Path." {
 		It "Fails" {
-			{ Get-LabVMTemplates -Configuration (Get-LabConfiguration -Path "$TestConfigPath\PesterTestConfig.TemplateFail.NoVHD.xml") } | Should Throw
+			{ Get-LabVMTemplates -Configuration (Get-LabConfiguration -Path "$Global:TestConfigPath\PesterTestConfig.TemplateFail.NoVHD.xml") } | Should Throw
 		}
 	}
 	Context "Configuration passed with template with Source VHD set to non-existent file." {
 		It "Fails" {
-			{ Get-LabVMTemplates -Configuration (Get-LabConfiguration -Path "$TestConfigPath\PesterTestConfig.TemplateFail.BadSourceVHD.xml") } | Should Throw
+			{ Get-LabVMTemplates -Configuration (Get-LabConfiguration -Path "$Global:TestConfigPath\PesterTestConfig.TemplateFail.BadSourceVHD.xml") } | Should Throw
 		}
 	}
 	Context "Valid configuration is passed" {
-		$Config = Get-LabConfiguration -Path $TestConfigOKPath
+		$Config = Get-LabConfiguration -Path $Global:TestConfigOKPath
 		$Templates = Get-LabVMTemplates -Configuration $Config 
 		# Set-Content -Path "$($ENV:Temp)\VMTemplates.json" -Value ($Templates | ConvertTo-Json -Depth 2)
 		It "Returns Template Object that matches Expected Object" {
@@ -387,7 +386,7 @@ Describe "Initialize-LabVMTemplates" {
 		}
 	}
 	Context "Valid configuration is passed" {	
-		$Config = Get-LabConfiguration -Path $TestConfigOKPath
+		$Config = Get-LabConfiguration -Path $Global:TestConfigOKPath
 		New-Item -Path $Config.labbuilderconfig.settings.vmpath -ItemType Directory -Force -ErrorAction SilentlyContinue
 		New-Item -Path $Config.labbuilderconfig.settings.vhdparentpath -ItemType Directory -Force -ErrorAction SilentlyContinue
 		$VMTemplates = Get-LabVMTemplates -Configuration $Config
@@ -430,7 +429,7 @@ Describe "Remove-LabVMTemplates" {
 		}
 	}
 	Context "Valid configuration is passed" {	
-		$Config = Get-LabConfiguration -Path $TestConfigOKPath
+		$Config = Get-LabConfiguration -Path $Global:TestConfigOKPath
 		$VMTemplates = Get-LabVMTemplates -Configuration $Config
 		New-Item -Path $Config.labbuilderconfig.settings.vmpath -ItemType Directory -Force -ErrorAction SilentlyContinue
 		New-Item -Path $Config.labbuilderconfig.settings.vhdparentpath -ItemType Directory -Force -ErrorAction SilentlyContinue
@@ -468,7 +467,7 @@ Describe "Set-LabDSCMOFFile" {
 		}
 	}
  	Context "Valid Parameters Passed" {
-		$Config = Get-LabConfiguration -Path $TestConfigOKPath
+		$Config = Get-LabConfiguration -Path $Global:TestConfigOKPath
 		$Switches = Get-LabSwitches -Configuration $Config
 		$VMTemplates = Get-LabVMTemplates -Configuration $Config
 		$VMs = Get-LabVMs -Configuration $Config -VMTemplates $VMTemplates -Switches $Switches
@@ -501,7 +500,7 @@ Describe "Set-LabDSCStartFile" {
 		}
 	}
 	Context "Valid Parameters Passed" {
-		$Config = Get-LabConfiguration -Path $TestConfigOKPath
+		$Config = Get-LabConfiguration -Path $Global:TestConfigOKPath
 		$Switches = Get-LabSwitches -Configuration $Config
 		$VMTemplates = Get-LabVMTemplates -Configuration $Config
 
@@ -526,7 +525,7 @@ Describe "Get-LabUnattendFile" {
 		}
 	}
 	Context "Valid Parameters Passed" {
-		$Config = Get-LabConfiguration -Path $TestConfigOKPath
+		$Config = Get-LabConfiguration -Path $Global:TestConfigOKPath
 		$Switches = Get-LabSwitches -Configuration $Config
 		$VMTemplates = Get-LabVMTemplates -Configuration $Config
 		$VMs = Get-LabVMs -Configuration $Config -VMTemplates $VMTemplates -Switches $Switches
@@ -620,7 +619,7 @@ Describe "Set-LabVMInitializationFiles" {
 		}
     }
 	Context "Valid configuration is passed" {	
-		$Config = Get-LabConfiguration -Path $TestConfigOKPath
+		$Config = Get-LabConfiguration -Path $Global:TestConfigOKPath
 		New-Item -Path $Config.labbuilderconfig.settings.vmpath -ItemType Directory -Force -ErrorAction SilentlyContinue
 		New-Item -Path $Config.labbuilderconfig.settings.vhdparentpath -ItemType Directory -Force -ErrorAction SilentlyContinue
 
@@ -656,7 +655,7 @@ Describe "Get-LabVMs" {
 	}
 	Context "Configuration passed with VM missing VM Name." {
 		It "Fails" {
-			$Config = Get-LabConfiguration -Path "$TestConfigPath\PesterTestConfig.VMFail.NoName.xml"
+			$Config = Get-LabConfiguration -Path "$Global:TestConfigPath\PesterTestConfig.VMFail.NoName.xml"
 			$Switches = Get-LabSwitches -Configuration $Config
 			$VMTemplates = Get-LabVMTemplates -Configuration $Config
 			{ Get-LabVMs -Configuration $Config -VMTemplates $VMTemplates -Switches $Switches } | Should Throw
@@ -664,7 +663,7 @@ Describe "Get-LabVMs" {
 	}
 	Context "Configuration passed with VM missing Template." {
 		It "Fails" {
-			$Config = Get-LabConfiguration -Path "$TestConfigPath\PesterTestConfig.VMFail.NoTemplate.xml"
+			$Config = Get-LabConfiguration -Path "$Global:TestConfigPath\PesterTestConfig.VMFail.NoTemplate.xml"
 			$Switches = Get-LabSwitches -Configuration $Config
 			$VMTemplates = Get-LabVMTemplates -Configuration $Config
 			{ Get-LabVMs -Configuration $Config -VMTemplates $VMTemplates -Switches $Switches } | Should Throw
@@ -672,7 +671,7 @@ Describe "Get-LabVMs" {
 	}
 	Context "Configuration passed with VM invalid Template." {
 		It "Fails" {
-			$Config = Get-LabConfiguration -Path "$TestConfigPath\PesterTestConfig.VMFail.BadTemplate.xml"
+			$Config = Get-LabConfiguration -Path "$Global:TestConfigPath\PesterTestConfig.VMFail.BadTemplate.xml"
 			$Switches = Get-LabSwitches -Configuration $Config
 			$VMTemplates = Get-LabVMTemplates -Configuration $Config
 			{ Get-LabVMs -Configuration $Config -VMTemplates $VMTemplates -Switches $Switches } | Should Throw
@@ -680,7 +679,7 @@ Describe "Get-LabVMs" {
 	}
 	Context "Configuration passed with VM missing adapter name." {
 		It "Fails" {
-			$Config = Get-LabConfiguration -Path "$TestConfigPath\PesterTestConfig.VMFail.NoAdapterName.xml"
+			$Config = Get-LabConfiguration -Path "$Global:TestConfigPath\PesterTestConfig.VMFail.NoAdapterName.xml"
 			$Switches = Get-LabSwitches -Configuration $Config
 			$VMTemplates = Get-LabVMTemplates -Configuration $Config
 			{ Get-LabVMs -Configuration $Config -VMTemplates $VMTemplates -Switches $Switches } | Should Throw
@@ -688,7 +687,7 @@ Describe "Get-LabVMs" {
 	}
 	Context "Configuration passed with VM missing adapter switch name." {
 		It "Fails" {
-			$Config = Get-LabConfiguration -Path "$TestConfigPath\PesterTestConfig.VMFail.NoAdapterSwitch.xml"
+			$Config = Get-LabConfiguration -Path "$Global:TestConfigPath\PesterTestConfig.VMFail.NoAdapterSwitch.xml"
 			$Switches = Get-LabSwitches -Configuration $Config
 			$VMTemplates = Get-LabVMTemplates -Configuration $Config
 			{ Get-LabVMs -Configuration $Config -VMTemplates $VMTemplates -Switches $Switches } | Should Throw
@@ -696,7 +695,7 @@ Describe "Get-LabVMs" {
 	}
 	Context "Configuration passed with VM invalid adapter switch name." {
 		It "Fails" {
-			$Config = Get-LabConfiguration -Path "$TestConfigPath\PesterTestConfig.VMFail.BadAdapterSwitch.xml"
+			$Config = Get-LabConfiguration -Path "$Global:TestConfigPath\PesterTestConfig.VMFail.BadAdapterSwitch.xml"
 			$Switches = Get-LabSwitches -Configuration $Config
 			$VMTemplates = Get-LabVMTemplates -Configuration $Config
 			{ Get-LabVMs -Configuration $Config -VMTemplates $VMTemplates -Switches $Switches } | Should Throw
@@ -704,7 +703,7 @@ Describe "Get-LabVMs" {
 	}
 	Context "Configuration passed with VM unattend file that can't be found." {
 		It "Fails" {
-			$Config = Get-LabConfiguration -Path "$TestConfigPath\PesterTestConfig.VMFail.BadUnattendFile.xml"
+			$Config = Get-LabConfiguration -Path "$Global:TestConfigPath\PesterTestConfig.VMFail.BadUnattendFile.xml"
 			$Switches = Get-LabSwitches -Configuration $Config
 			$VMTemplates = Get-LabVMTemplates -Configuration $Config
 			{ Get-LabVMs -Configuration $Config -VMTemplates $VMTemplates -Switches $Switches } | Should Throw
@@ -712,7 +711,7 @@ Describe "Get-LabVMs" {
 	}
 	Context "Configuration passed with VM setup complete file that can't be found." {
 		It "Fails" {
-			$Config = Get-LabConfiguration -Path "$TestConfigPath\PesterTestConfig.VMFail.BadSetupCompleteFile.xml"
+			$Config = Get-LabConfiguration -Path "$Global:TestConfigPath\PesterTestConfig.VMFail.BadSetupCompleteFile.xml"
 			$Switches = Get-LabSwitches -Configuration $Config
 			$VMTemplates = Get-LabVMTemplates -Configuration $Config
 			{ Get-LabVMs -Configuration $Config -VMTemplates $VMTemplates -Switches $Switches } | Should Throw
@@ -720,7 +719,7 @@ Describe "Get-LabVMs" {
 	}
 	Context "Configuration passed with VM setup complete file with an invalid file extension." {
 		It "Fails" {
-			$Config = Get-LabConfiguration -Path "$TestConfigPath\PesterTestConfig.VMFail.BadSetupCompleteFileType.xml"
+			$Config = Get-LabConfiguration -Path "$Global:TestConfigPath\PesterTestConfig.VMFail.BadSetupCompleteFileType.xml"
 			$Switches = Get-LabSwitches -Configuration $Config
 			$VMTemplates = Get-LabVMTemplates -Configuration $Config
 			{ Get-LabVMs -Configuration $Config -VMTemplates $VMTemplates -Switches $Switches } | Should Throw
@@ -728,7 +727,7 @@ Describe "Get-LabVMs" {
 	}
 	Context "Configuration passed with VM DSC Config File that can't be found." {
 		It "Fails" {
-			$Config = Get-LabConfiguration -Path "$TestConfigPath\PesterTestConfig.VMFail.BadDSCConfigFile.xml"
+			$Config = Get-LabConfiguration -Path "$Global:TestConfigPath\PesterTestConfig.VMFail.BadDSCConfigFile.xml"
 			$Switches = Get-LabSwitches -Configuration $Config
 			$VMTemplates = Get-LabVMTemplates -Configuration $Config
 			{ Get-LabVMs -Configuration $Config -VMTemplates $VMTemplates -Switches $Switches } | Should Throw
@@ -736,7 +735,7 @@ Describe "Get-LabVMs" {
 	}
 	Context "Configuration passed with VM DSC Config File with an invalid file extension." {
 		It "Fails" {
-			$Config = Get-LabConfiguration -Path "$TestConfigPath\PesterTestConfig.VMFail.BadDSCConfigFileType.xml"
+			$Config = Get-LabConfiguration -Path "$Global:TestConfigPath\PesterTestConfig.VMFail.BadDSCConfigFileType.xml"
 			$Switches = Get-LabSwitches -Configuration $Config
 			$VMTemplates = Get-LabVMTemplates -Configuration $Config
 			{ Get-LabVMs -Configuration $Config -VMTemplates $VMTemplates -Switches $Switches } | Should Throw
@@ -744,7 +743,7 @@ Describe "Get-LabVMs" {
 	}
 	Context "Configuration passed with VM DSC Config File but no DSC Name." {
 		It "Fails" {
-			$Config = Get-LabConfiguration -Path "$TestConfigPath\PesterTestConfig.VMFail.BadDSCNameMissing.xml"
+			$Config = Get-LabConfiguration -Path "$Global:TestConfigPath\PesterTestConfig.VMFail.BadDSCNameMissing.xml"
 			$Switches = Get-LabSwitches -Configuration $Config
 			$VMTemplates = Get-LabVMTemplates -Configuration $Config
 			{ Get-LabVMs -Configuration $Config -VMTemplates $VMTemplates -Switches $Switches } | Should Throw
@@ -752,7 +751,7 @@ Describe "Get-LabVMs" {
 	}
 
 	Context "Valid configuration is passed" {
-		$Config = Get-LabConfiguration -Path $TestConfigOKPath
+		$Config = Get-LabConfiguration -Path $Global:TestConfigOKPath
 		$Switches = Get-LabSwitches -Configuration $Config
 		$VMTemplates = Get-LabVMTemplates -Configuration $Config
 		$VMs = Get-LabVMs -Configuration $Config -VMTemplates $VMTemplates -Switches $Switches
@@ -896,7 +895,7 @@ Describe "Initialize-LabVMs" {
 		}
 	}
 	Context "Valid configuration is passed" {	
-		$Config = Get-LabConfiguration -Path $TestConfigOKPath
+		$Config = Get-LabConfiguration -Path $Global:TestConfigOKPath
 		New-Item -Path $Config.labbuilderconfig.settings.vmpath -ItemType Directory -Force -ErrorAction SilentlyContinue
 		New-Item -Path $Config.labbuilderconfig.settings.vhdparentpath -ItemType Directory -Force -ErrorAction SilentlyContinue
 
@@ -944,7 +943,7 @@ Describe "Remove-LabVMs" {
 		}
 	}
 	Context "Valid configuration is passed" {	
-		$Config = Get-LabConfiguration -Path $TestConfigOKPath
+		$Config = Get-LabConfiguration -Path $Global:TestConfigOKPath
 		$Templates = Get-LabVMTemplates -Configuration $Config
 		$Switches = Get-LabSwitches -Configuration $Config
 		$VMs = Get-LabVMs -Configuration $Config -VMTemplates $Templates -Switches $Switches
