@@ -618,7 +618,7 @@ Describe "Get-LabUnattendFile" {
 "@
 		[String]$UnattendFile = Get-LabUnattendFile -Configuration $Config -VM $VMs
 		Set-Content -Path "$($Global:ArtifactPath)\UnattendFile.xml" -Value $UnattendFile
-		Set-Content -Path "$($Global:ArtifactPath)\$ExpectedUnattendFile.xml" -Value $ExpectedUnattendFile
+		Set-Content -Path "$($Global:ArtifactPath)\ExpectedUnattendFile.xml" -Value $ExpectedUnattendFile
 		It "Returns Expected File Content" {
 			$UnattendFile | Should Be $True
 			[String]::Compare($UnattendFile,$ExpectedUnattendFile,$true) | Should Be 0
