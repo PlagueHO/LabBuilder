@@ -77,7 +77,7 @@ Configuration MEMBER_SUBCA
 			CADistinguishedNameSuffix = $Node.CADistinguishedNameSuffix
 			ValidityPeriod = 'Years'
 			ValidityPeriodUnits = 20
-            DependsOn = '[WindowsFeature]ADCSRSAT'
+            DependsOn = '[xComputer]JoinDomain'
         }
 
 		Script ADCSAdvConfig
