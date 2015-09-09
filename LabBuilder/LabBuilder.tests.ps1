@@ -167,7 +167,7 @@ Describe "Get-LabSwitches" {
 	}
 	Context "Valid configuration is passed" {
 		$Config = Get-LabConfiguration -Path $Global:TestConfigOKPath
-		$Switches = Get-LabSwitches -Configuration $Config
+		[Array]$Switches = Get-LabSwitches -Configuration $Config
 		Set-Content -Path "$($Global:ArtifactPath)\Switches.json" -Value ($Switches | ConvertTo-Json -Depth 4) -Encoding UTF8 -NoNewLine
 		
 		It "Returns Switches Object that matches Expected Object" {
@@ -196,7 +196,7 @@ Describe "Initialize-LabSwitches" {
 	}
 	Context "Valid configuration is passed" {	
 		$Config = Get-LabConfiguration -Path $Global:TestConfigOKPath
-		$Switches = Get-LabSwitches -Configuration $Config
+		[Array]$Switches = Get-LabSwitches -Configuration $Config
 
 		It "Returns True" {
 			Initialize-LabSwitches -Configuration $Config -Switches $Switches | Should Be $True
@@ -226,7 +226,7 @@ Describe "Remove-LabSwitches" {
 	}
 	Context "Valid configuration is passed" {	
 		$Config = Get-LabConfiguration -Path $Global:TestConfigOKPath
-		$Switches = Get-LabSwitches -Configuration $Config
+		[Array]$Switches = Get-LabSwitches -Configuration $Config
 
 		It "Returns True" {
 			Remove-LabSwitches -Configuration $Config -Switches $Switches | Should Be $True
@@ -267,7 +267,7 @@ Describe "Get-LabVMTemplates" {
 	}
 	Context "Valid configuration is passed" {
 		$Config = Get-LabConfiguration -Path $Global:TestConfigOKPath
-		$Templates = Get-LabVMTemplates -Configuration $Config 
+		[Array]$Templates = Get-LabVMTemplates -Configuration $Config 
 		Set-Content -Path "$($Global:ArtifactPath)\VMTemplates.json" -Value ($Templates | ConvertTo-Json -Depth 2) -Encoding UTF8 -NoNewLine
 		It "Returns Template Object that matches Expected Object" {
 			$ExpectedTemplates = Get-Content -Path "$Global:TestConfigPath\ExpectedTemplates.json" -Raw
@@ -298,10 +298,10 @@ Describe "Initialize-LabVMTemplates" {
 		$Config = Get-LabConfiguration -Path $Global:TestConfigOKPath
 		New-Item -Path $Config.labbuilderconfig.settings.vmpath -ItemType Directory -Force -ErrorAction SilentlyContinue
 		New-Item -Path $Config.labbuilderconfig.settings.vhdparentpath -ItemType Directory -Force -ErrorAction SilentlyContinue
-		$VMTemplates = Get-LabVMTemplates -Configuration $Config
+		[array]$Templates = Get-LabVMTemplates -Configuration $Config
 
 		It "Returns True" {
-			Initialize-LabVMTemplates -Configuration $Config -VMTemplates $VMTemplates | Should Be $True
+			Initialize-LabVMTemplates -Configuration $Config -VMTemplates $Templates | Should Be $True
 		}
 		It "Creates file C:\Pester Lab\Virtual Hard Disk Templates\Windows Server 2012 R2 Datacenter Full.vhdx" {
 			Test-Path "C:\Pester Lab\Virtual Hard Disk Templates\Windows Server 2012 R2 Datacenter Full.vhdx" | Should Be $True
@@ -340,12 +340,12 @@ Describe "Remove-LabVMTemplates" {
 	}
 	Context "Valid configuration is passed" {	
 		$Config = Get-LabConfiguration -Path $Global:TestConfigOKPath
-		$VMTemplates = Get-LabVMTemplates -Configuration $Config
+		[Array]$Templates = Get-LabVMTemplates -Configuration $Config
 		New-Item -Path $Config.labbuilderconfig.settings.vmpath -ItemType Directory -Force -ErrorAction SilentlyContinue
 		New-Item -Path $Config.labbuilderconfig.settings.vhdparentpath -ItemType Directory -Force -ErrorAction SilentlyContinue
 		
 		It "Returns True" {
-			Remove-LabVMTemplates -Configuration $Config -VMTemplates $VMTemplates | Should Be $True
+			Remove-LabVMTemplates -Configuration $Config -VMTemplates $Templates | Should Be $True
 		}
 		It "Calls Mocked commands" {
 			Assert-MockCalled Set-ItemProperty -Exactly 3 -ParameterFilter { ($Name -eq 'IsReadOnly') -and ($Value -eq $False) }
@@ -366,6 +366,7 @@ Describe "Set-LabDSCMOFFile" {
 
 	#region Mocks
     Mock Import-Module { param($module) }
+	Mock Find-Module { [PSObject]@{ Name = 'Dummy'; } }
 	Mock Get-VM
 	Mock Import-Certificate -MockWith {
 		[PSCustomObject]@{
@@ -382,17 +383,16 @@ Describe "Set-LabDSCMOFFile" {
 	}
  	Context "Valid Parameters Passed" {
 		$Config = Get-LabConfiguration -Path $Global:TestConfigOKPath
-		$Switches = Get-LabSwitches -Configuration $Config
-		$VMTemplates = Get-LabVMTemplates -Configuration $Config
-		$VMs = Get-LabVMs -Configuration $Config -VMTemplates $VMTemplates -Switches $Switches
-		$Result = Set-LabDSCMOFFile -Configuration $Config -VM $VMs
+		[Array]$Switches = Get-LabSwitches -Configuration $Config
+		[Array]$Templates = Get-LabVMTemplates -Configuration $Config
+		[Array]$VMs = Get-LabVMs -Configuration $Config -VMTemplates $Templates -Switches $Switches
+		$Result = Set-LabDSCMOFFile -Configuration $Config -VM $VMs[0]
 		It "Returns True" {
 			$Result | Should Be $True
 		}
 		It "Calls Mocked commands" {
 			Assert-MockCalled Import-Certificate -Exactly 1
 			Assert-MockCalled Remove-Item -Exactly 1
-			Assert-MockCalled Import-Module -Exactly 1
 		}
 		It "Appropriate Lab Builder Files Should be produced" {
 			Test-Path -Path 'C:\Pester Lab\PESTER01\LabBuilder Files\Pester01.mof' | Should Be $True
@@ -403,7 +403,7 @@ Describe "Set-LabDSCMOFFile" {
 		}
 	}
  
-	   Remove-Item -Path "C:\Pester Lab\PESTER01\LabBuilder Files" -Recurse -Force -ErrorAction SilentlyContinue
+	Remove-Item -Path "C:\Pester Lab\PESTER01\LabBuilder Files" -Recurse -Force -ErrorAction SilentlyContinue
 }
 ##########################################################################################################################################
 
@@ -421,11 +421,10 @@ Describe "Set-LabDSCStartFile" {
 	}
 	Context "Valid Parameters Passed" {
 		$Config = Get-LabConfiguration -Path $Global:TestConfigOKPath
-		$Switches = Get-LabSwitches -Configuration $Config
-		$VMTemplates = Get-LabVMTemplates -Configuration $Config
-
-		$VMs = Get-LabVMs -Configuration $Config -VMTemplates $VMTemplates -Switches $Switches
-		[String]$DSCStartFile = Set-LabDSCStartFile -Configuration $Config -VM $VMs
+		[Array]$Switches = Get-LabSwitches -Configuration $Config
+		[Array]$Templates = Get-LabVMTemplates -Configuration $Config
+		[Array]$VMs = Get-LabVMs -Configuration $Config -VMTemplates $Templates -Switches $Switches
+		[String]$DSCStartFile = Set-LabDSCStartFile -Configuration $Config -VM $VMs[0]
 		It "Returns Expected File Content" {
 			$DSCStartFile | Should Be $True
 		}
@@ -451,10 +450,10 @@ Describe "Get-LabUnattendFile" {
 	}
 	Context "Valid Parameters Passed" {
 		$Config = Get-LabConfiguration -Path $Global:TestConfigOKPath
-		$Switches = Get-LabSwitches -Configuration $Config
-		$VMTemplates = Get-LabVMTemplates -Configuration $Config
-		$VMs = Get-LabVMs -Configuration $Config -VMTemplates $VMTemplates -Switches $Switches
-		[String]$UnattendFile = Get-LabUnattendFile -Configuration $Config -VM $VMs
+		[Array]$Switches = Get-LabSwitches -Configuration $Config
+		[Array]$Templates = Get-LabVMTemplates -Configuration $Config
+		[Array]$VMs = Get-LabVMs -Configuration $Config -VMTemplates $Templates -Switches $Switches
+		[String]$UnattendFile = Get-LabUnattendFile -Configuration $Config -VM $VMs[0]
 		Set-Content -Path "$($Global:ArtifactPath)\UnattendFile.xml" -Value $UnattendFile -Encoding UTF8 -NoNewLine
 		It "Returns Expected File Content" {
 			$UnattendFile | Should Be $True
@@ -488,12 +487,12 @@ Describe "Set-LabVMInitializationFiles" {
 		New-Item -Path $Config.labbuilderconfig.settings.vmpath -ItemType Directory -Force -ErrorAction SilentlyContinue
 		New-Item -Path $Config.labbuilderconfig.settings.vhdparentpath -ItemType Directory -Force -ErrorAction SilentlyContinue
 
-		$Templates = Get-LabVMTemplates -Configuration $Config
-		$Switches = Get-LabSwitches -Configuration $Config
-		$VMs = Get-LabVMs -Configuration $Config -VMTemplates $Templates -Switches $Switches
+		[Array]$Templates = Get-LabVMTemplates -Configuration $Config
+		[Array]$Switches = Get-LabSwitches -Configuration $Config
+		[Array]$VMs = Get-LabVMs -Configuration $Config -VMTemplates $Templates -Switches $Switches
 				
 		It "Returns True" {
-			Set-LabVMInitializationFiles -Configuration $Config -VM $VMs -VMBootDiskPath 'c:\Dummy\' | Should Be $True
+			Set-LabVMInitializationFiles -Configuration $Config -VM $VMs[0] -VMBootDiskPath 'c:\Dummy\' | Should Be $True
 		}
 		It "Calls Mocked commands" {
 			Assert-MockCalled Mount-WindowsImage -Exactly 1
@@ -525,105 +524,107 @@ Describe "Get-LabVMs" {
 	Context "Configuration passed with VM missing VM Name." {
 		It "Fails" {
 			$Config = Get-LabConfiguration -Path "$Global:TestConfigPath\PesterTestConfig.VMFail.NoName.xml"
-			$Switches = Get-LabSwitches -Configuration $Config
-			$VMTemplates = Get-LabVMTemplates -Configuration $Config
-			{ Get-LabVMs -Configuration $Config -VMTemplates $VMTemplates -Switches $Switches } | Should Throw
+			[Array]$Switches = Get-LabSwitches -Configuration $Config
+			[array]$Templates = Get-LabVMTemplates -Configuration $Config
+			{ Get-LabVMs -Configuration $Config -VMTemplates $Templates -Switches $Switches } | Should Throw
 		}
 	}
 	Context "Configuration passed with VM missing Template." {
 		It "Fails" {
 			$Config = Get-LabConfiguration -Path "$Global:TestConfigPath\PesterTestConfig.VMFail.NoTemplate.xml"
-			$Switches = Get-LabSwitches -Configuration $Config
-			$VMTemplates = Get-LabVMTemplates -Configuration $Config
-			{ Get-LabVMs -Configuration $Config -VMTemplates $VMTemplates -Switches $Switches } | Should Throw
+			[Array]$Switches = Get-LabSwitches -Configuration $Config
+			[array]$Templates = Get-LabVMTemplates -Configuration $Config
+			{ Get-LabVMs -Configuration $Config -VMTemplates $Templates -Switches $Switches } | Should Throw
 		}
 	}
 	Context "Configuration passed with VM invalid Template." {
 		It "Fails" {
 			$Config = Get-LabConfiguration -Path "$Global:TestConfigPath\PesterTestConfig.VMFail.BadTemplate.xml"
-			$Switches = Get-LabSwitches -Configuration $Config
-			$VMTemplates = Get-LabVMTemplates -Configuration $Config
-			{ Get-LabVMs -Configuration $Config -VMTemplates $VMTemplates -Switches $Switches } | Should Throw
+			[Array]$Switches = Get-LabSwitches -Configuration $Config
+			[array]$Templates = Get-LabVMTemplates -Configuration $Config
+			{ Get-LabVMs -Configuration $Config -VMTemplates $Templates -Switches $Switches } | Should Throw
 		}
 	}
 	Context "Configuration passed with VM missing adapter name." {
 		It "Fails" {
 			$Config = Get-LabConfiguration -Path "$Global:TestConfigPath\PesterTestConfig.VMFail.NoAdapterName.xml"
-			$Switches = Get-LabSwitches -Configuration $Config
-			$VMTemplates = Get-LabVMTemplates -Configuration $Config
-			{ Get-LabVMs -Configuration $Config -VMTemplates $VMTemplates -Switches $Switches } | Should Throw
+			[Array]$Switches = Get-LabSwitches -Configuration $Config
+			[array]$Templates = Get-LabVMTemplates -Configuration $Config
+			{ Get-LabVMs -Configuration $Config -VMTemplates $Templates -Switches $Switches } | Should Throw
 		}
 	}
 	Context "Configuration passed with VM missing adapter switch name." {
 		It "Fails" {
 			$Config = Get-LabConfiguration -Path "$Global:TestConfigPath\PesterTestConfig.VMFail.NoAdapterSwitch.xml"
-			$Switches = Get-LabSwitches -Configuration $Config
-			$VMTemplates = Get-LabVMTemplates -Configuration $Config
-			{ Get-LabVMs -Configuration $Config -VMTemplates $VMTemplates -Switches $Switches } | Should Throw
+			[Array]$Switches = Get-LabSwitches -Configuration $Config
+			[array]$Templates = Get-LabVMTemplates -Configuration $Config
+			{ Get-LabVMs -Configuration $Config -VMTemplates $Templates -Switches $Switches } | Should Throw
 		}
 	}
 	Context "Configuration passed with VM invalid adapter switch name." {
 		It "Fails" {
 			$Config = Get-LabConfiguration -Path "$Global:TestConfigPath\PesterTestConfig.VMFail.BadAdapterSwitch.xml"
-			$Switches = Get-LabSwitches -Configuration $Config
-			$VMTemplates = Get-LabVMTemplates -Configuration $Config
-			{ Get-LabVMs -Configuration $Config -VMTemplates $VMTemplates -Switches $Switches } | Should Throw
+			[Array]$Switches = Get-LabSwitches -Configuration $Config
+			[array]$Templates = Get-LabVMTemplates -Configuration $Config
+			{ Get-LabVMs -Configuration $Config -VMTemplates $Templates -Switches $Switches } | Should Throw
 		}
 	}
 	Context "Configuration passed with VM unattend file that can't be found." {
 		It "Fails" {
 			$Config = Get-LabConfiguration -Path "$Global:TestConfigPath\PesterTestConfig.VMFail.BadUnattendFile.xml"
-			$Switches = Get-LabSwitches -Configuration $Config
-			$VMTemplates = Get-LabVMTemplates -Configuration $Config
-			{ Get-LabVMs -Configuration $Config -VMTemplates $VMTemplates -Switches $Switches } | Should Throw
+			[Array]$Switches = Get-LabSwitches -Configuration $Config
+			[array]$Templates = Get-LabVMTemplates -Configuration $Config
+			{ Get-LabVMs -Configuration $Config -VMTemplates $Templates -Switches $Switches } | Should Throw
 		}
 	}
 	Context "Configuration passed with VM setup complete file that can't be found." {
 		It "Fails" {
 			$Config = Get-LabConfiguration -Path "$Global:TestConfigPath\PesterTestConfig.VMFail.BadSetupCompleteFile.xml"
-			$Switches = Get-LabSwitches -Configuration $Config
-			$VMTemplates = Get-LabVMTemplates -Configuration $Config
-			{ Get-LabVMs -Configuration $Config -VMTemplates $VMTemplates -Switches $Switches } | Should Throw
+			[Array]$Switches = Get-LabSwitches -Configuration $Config
+			[array]$Templates = Get-LabVMTemplates -Configuration $Config
+			{ Get-LabVMs -Configuration $Config -VMTemplates $Templates -Switches $Switches } | Should Throw
 		}
 	}
 	Context "Configuration passed with VM setup complete file with an invalid file extension." {
 		It "Fails" {
 			$Config = Get-LabConfiguration -Path "$Global:TestConfigPath\PesterTestConfig.VMFail.BadSetupCompleteFileType.xml"
-			$Switches = Get-LabSwitches -Configuration $Config
-			$VMTemplates = Get-LabVMTemplates -Configuration $Config
-			{ Get-LabVMs -Configuration $Config -VMTemplates $VMTemplates -Switches $Switches } | Should Throw
+			[Array]$Switches = Get-LabSwitches -Configuration $Config
+			[array]$Templates = Get-LabVMTemplates -Configuration $Config
+			{ Get-LabVMs -Configuration $Config -VMTemplates $Templates -Switches $Switches } | Should Throw
 		}
 	}
 	Context "Configuration passed with VM DSC Config File that can't be found." {
 		It "Fails" {
 			$Config = Get-LabConfiguration -Path "$Global:TestConfigPath\PesterTestConfig.VMFail.BadDSCConfigFile.xml"
-			$Switches = Get-LabSwitches -Configuration $Config
-			$VMTemplates = Get-LabVMTemplates -Configuration $Config
-			{ Get-LabVMs -Configuration $Config -VMTemplates $VMTemplates -Switches $Switches } | Should Throw
+			[Array]$Switches = Get-LabSwitches -Configuration $Config
+			[array]$Templates = Get-LabVMTemplates -Configuration $Config
+			{ Get-LabVMs -Configuration $Config -VMTemplates $Templates -Switches $Switches } | Should Throw
 		}
 	}
 	Context "Configuration passed with VM DSC Config File with an invalid file extension." {
 		It "Fails" {
 			$Config = Get-LabConfiguration -Path "$Global:TestConfigPath\PesterTestConfig.VMFail.BadDSCConfigFileType.xml"
-			$Switches = Get-LabSwitches -Configuration $Config
-			$VMTemplates = Get-LabVMTemplates -Configuration $Config
-			{ Get-LabVMs -Configuration $Config -VMTemplates $VMTemplates -Switches $Switches } | Should Throw
+			[Array]$Switches = Get-LabSwitches -Configuration $Config
+			[array]$Templates = Get-LabVMTemplates -Configuration $Config
+			{ Get-LabVMs -Configuration $Config -VMTemplates $Templates -Switches $Switches } | Should Throw
 		}
 	}
 	Context "Configuration passed with VM DSC Config File but no DSC Name." {
 		It "Fails" {
 			$Config = Get-LabConfiguration -Path "$Global:TestConfigPath\PesterTestConfig.VMFail.BadDSCNameMissing.xml"
-			$Switches = Get-LabSwitches -Configuration $Config
-			$VMTemplates = Get-LabVMTemplates -Configuration $Config
-			{ Get-LabVMs -Configuration $Config -VMTemplates $VMTemplates -Switches $Switches } | Should Throw
+			[Array]$Switches = Get-LabSwitches -Configuration $Config
+			[Array]$Templates = Get-LabVMTemplates -Configuration $Config
+			{ Get-LabVMs -Configuration $Config -VMTemplates $Templates -Switches $Switches } | Should Throw
 		}
 	}
 
 	Context "Valid configuration is passed" {
 		$Config = Get-LabConfiguration -Path $Global:TestConfigOKPath
-		$Switches = Get-LabSwitches -Configuration $Config
-		$VMTemplates = Get-LabVMTemplates -Configuration $Config
-		$VMs = Get-LabVMs -Configuration $Config -VMTemplates $VMTemplates -Switches $Switches
+		[Array]$Switches = Get-LabSwitches -Configuration $Config
+		[Array]$Templates = Get-LabVMTemplates -Configuration $Config
+		[Array]$VMs = Get-LabVMs -Configuration $Config -VMTemplates $Templates -Switches $Switches
+		# Clear this value out because it is completely dependent on where the test is run from. 
+		$VMs[0].DSCConfigFile = ""
 		Set-Content -Path "$($Global:ArtifactPath)\VMs.json" -Value ($VMs | ConvertTo-Json -Depth 4) -Encoding UTF8 -NoNewLine
 		It "Returns Template Object that matches Expected Object" {
 			$ExpectedVMs = Get-Content -Path "$Global:TestConfigPath\ExpectedVMs.json" -Raw
@@ -671,9 +672,9 @@ Describe "Initialize-LabVMs" {
 		New-Item -Path $Config.labbuilderconfig.settings.vmpath -ItemType Directory -Force -ErrorAction SilentlyContinue
 		New-Item -Path $Config.labbuilderconfig.settings.vhdparentpath -ItemType Directory -Force -ErrorAction SilentlyContinue
 
-		$Templates = Get-LabVMTemplates -Configuration $Config
-		$Switches = Get-LabSwitches -Configuration $Config
-		$VMs = Get-LabVMs -Configuration $Config -VMTemplates $Templates -Switches $Switches
+		[Array]$Templates = Get-LabVMTemplates -Configuration $Config
+		[Array]$Switches = Get-LabSwitches -Configuration $Config
+		[Array]$VMs = Get-LabVMs -Configuration $Config -VMTemplates $Templates -Switches $Switches
 				
 		It "Returns True" {
 			Initialize-LabVMs -Configuration $Config -VMs $VMs | Should Be $True
@@ -716,9 +717,9 @@ Describe "Remove-LabVMs" {
 	}
 	Context "Valid configuration is passed" {	
 		$Config = Get-LabConfiguration -Path $Global:TestConfigOKPath
-		$Templates = Get-LabVMTemplates -Configuration $Config
-		$Switches = Get-LabSwitches -Configuration $Config
-		$VMs = Get-LabVMs -Configuration $Config -VMTemplates $Templates -Switches $Switches
+		[Array]$Templates = Get-LabVMTemplates -Configuration $Config
+		[Array]$Switches = Get-LabSwitches -Configuration $Config
+		[Array]$VMs = Get-LabVMs -Configuration $Config -VMTemplates $Templates -Switches $Switches
 
 		# Create the dummy VM's that the Remove-LabVMs function 
 		It "Returns True" {

@@ -1,4 +1,4 @@
-{
+﻿{
     "TemplateVHD":  "C:\\Pester Lab\\Virtual Hard Disk Templates\\Windows Server 2012 R2 Datacenter Full.vhdx",
     "ProcessorCount":  1,
     "TimeZone":  "Pacific Standard Time",
@@ -9,7 +9,7 @@
     "DSCConfigName":  "STANDALONE_DEFAULT",
     "DSCParameters":  "\r\n          Dummy = \"Dummy\"\r\n        ",
     "UseDifferencingDisk":  "Y",
-    "DSCConfigFile":  "C:\\Users\\Daniel\\Source\\GitHub\\LabBuilder\\LabBuilder\\Tests\\PesterTestConfig\\PesterTest.DSC.ps1",
+    "DSCConfigFile":  "",
     "ComputerName":  "PESTER01",
     "ProductKey":  "DDDDD-DDDDD-DDDDD-DDDDD-DDDDD",
     "DataVHDSize":  0,
