@@ -28,9 +28,11 @@ test_script:
             throw "$($res.FailedCount) tests failed.";
         };
         Get-ChildItem "$ProjectRoot\LabBuilder\LabBuilder\Artifacts\*.*" | % {
-            Add-AppveyorMessage "Artifact: $_.FullName";
-            Push-AppveyorArtifact $_.FullName -FileName $_.Name;
-            };
+            Add-AppveyorMessage "Artifact: $_.FullName"
+		};
+        Get-ChildItem "$ProjectRoot\LabBuilder\LabBuilder\Artifacts\*.*" | % {
+            Push-AppveyorArtifact $_.FullName -FileName $_.Name
+        };
     
 #---------------------------------# 
 #      deployment configuration   # 
