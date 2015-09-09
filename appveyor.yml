@@ -27,6 +27,7 @@ test_script:
         if ($res.FailedCount -gt 0) { 
             throw "$($res.FailedCount) tests failed.";
         };
+        Get-ChildItem "$ProjectRoot\LabBuilder\LabBuilder\Artifact\*.*" | % { Write-Host "Artifact: $_.Fullname" };
         Get-ChildItem "$ProjectRoot\LabBuilder\LabBuilder\Artifact\*.*" | % { Push-AppveyorArtifact $_.FullName -FileName $_.Name };
     
 #---------------------------------# 
