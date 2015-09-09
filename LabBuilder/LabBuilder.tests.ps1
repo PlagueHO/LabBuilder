@@ -222,6 +222,7 @@ Describe "Get-LabSwitches" {
     }
 ]
 "@
+			Set-Content -Path "$($Global:ArtifactPath)\Switches.json" -Value ($ExpectedSwitches | ConvertTo-Json -Depth 4)
 			[String]::Compare(($Switches | ConvertTo-Json -Depth 4),$ExpectedSwitches,$true) | Should Be 0
 		}
 	}
@@ -371,6 +372,7 @@ Describe "Get-LabVMTemplates" {
     }
 ]
 "@
+			Set-Content -Path "$($Global:ArtifactPath)\VMTemplates.json" -Value $ExpectedTemplates
 			[String]::Compare(($Templates | ConvertTo-Json -Depth 2),$ExpectedTemplates,$true) | Should Be 0
 		}
 		It "Calls Mocked commands" {
@@ -616,6 +618,7 @@ Describe "Get-LabUnattendFile" {
 "@
 		[String]$UnattendFile = Get-LabUnattendFile -Configuration $Config -VM $VMs
 		Set-Content -Path "$($Global:ArtifactPath)\UnattendFile.xml" -Value $UnattendFile
+		Set-Content -Path "$($Global:ArtifactPath)\$ExpectedUnattendFile.xml" -Value $ExpectedUnattendFile
 		It "Returns Expected File Content" {
 			$UnattendFile | Should Be $True
 			[String]::Compare($UnattendFile,$ExpectedUnattendFile,$true) | Should Be 0
@@ -883,6 +886,7 @@ Describe "Get-LabVMs" {
                    ]
 }
 "@
+			Set-Content -Path "$($Global:ArtifactPath)\VMs.json" -Value $ExpectedVMs
 			[String]::Compare(($VMs | ConvertTo-Json -Depth 4),$ExpectedVMs,$true) | Should Be 0
 		}
 	}
