@@ -362,6 +362,8 @@ Describe "Remove-LabVMTemplates" {
 Describe "Set-LabDSCMOFFile" {
     Remove-Item -Path "C:\Pester Lab\PESTER01\LabBuilder Files" -Recurse -Force -ErrorAction SilentlyContinue
 
+	Import-Module PowerShellGet
+
 	#region Mocks
     Mock Import-Module { param($module) }
 	Mock Get-VM

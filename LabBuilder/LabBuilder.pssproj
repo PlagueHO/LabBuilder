@@ -36,6 +36,7 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="DSCLibrary\MEMBER_FILESERVER.DSC.ps1" />
     <Compile Include="DSCLibrary\MEMBER_WDS.DSC.ps1" />
     <Compile Include="DSCLibrary\MEMBER_WSUS.DSC.ps1" />
     <Compile Include="DSCLibrary\MEMBER_NPS.DSC.ps1" />
@@ -52,6 +53,7 @@
     <Compile Include="DSCLibrary\STANDALONE_ROOTCA.DSC.ps1" />
     <Compile Include="Tests\PesterTestConfig\PesterTest.DSC.ps1" />
     <Compile Include="Tests\PesterTestConfig\PesterTestConfig.OK.xml" />
+    <Compile Include="Tests\TestConfigDCandDHCPOnly.ps1" />
     <Compile Include="Tests\TestConfigSimple.ps1" />
     <Compile Include="Tests\TestConfigFull.ps1" />
   </ItemGroup>
@@ -63,6 +65,10 @@
     <Folder Include="Tests\PesterTestConfig\" />
   </ItemGroup>
   <ItemGroup>
+    <Content Include="Tests\PesterTestConfig\ExpectedSwitches.json" />
+    <Content Include="Tests\PesterTestConfig\ExpectedTemplates.json" />
+    <Content Include="Tests\PesterTestConfig\ExpectedUnattendFile.xml" />
+    <Content Include="Tests\PesterTestConfig\ExpectedVMs.json" />
     <Content Include="Tests\PesterTestConfig\PesterTestConfig.TemplateFail.NoVHD.xml" />
     <Content Include="Tests\PesterTestConfig\PesterTestConfig.VMFail.BadDSCNameMissing.xml" />
     <Content Include="Tests\PesterTestConfig\PesterTestConfig.VMFail.BadDSCConfigFileType.xml" />
@@ -82,6 +88,7 @@
     <Content Include="Tests\PesterTestConfig\PesterTestConfig.SwitchFail.BadType.xml" />
     <Content Include="Tests\PesterTestConfig\PesterTestConfig.SwitchFail.NoType.xml" />
     <Content Include="Tests\PesterTestConfig\PesterTestConfig.SwitchFail.NoName.xml" />
+    <Content Include="Tests\TestConfigDCandDHCPOnly.xml" />
     <Content Include="Tests\TestConfigSimple.xml" />
     <Content Include="Tests\TestConfigFull.xml" />
   </ItemGroup>
