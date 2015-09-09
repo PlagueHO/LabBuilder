@@ -362,11 +362,7 @@ Describe "Remove-LabVMTemplates" {
 Describe "Set-LabDSCMOFFile" {
     Remove-Item -Path "C:\Pester Lab\PESTER01\LabBuilder Files" -Recurse -Force -ErrorAction SilentlyContinue
 
-	Import-Module PowerShellGet
-
 	#region Mocks
-    Mock Import-Module { param($module) }
-	Mock Find-Module { [PSObject]@{ Name = 'Dummy'; } }
 	Mock Get-VM
 	Mock Import-Certificate -MockWith {
 		[PSCustomObject]@{
@@ -374,7 +370,7 @@ Describe "Set-LabDSCMOFFile" {
 		}
     } # Mock
     Mock Remove-Item -ParameterFilter {$path -eq 'Cert:LocalMachine\My\1234567890ABCDEF'}
-    #endregion
+	#endregion
 
 	Context "No parameters passed" {
 		It "Fails" {
@@ -383,6 +379,7 @@ Describe "Set-LabDSCMOFFile" {
 	}
  	Context "Valid Parameters Passed" {
 		$Config = Get-LabConfiguration -Path $Global:TestConfigOKPath
+		Initialize-LabHyperV -Configuration $Config
 		[Array]$Switches = Get-LabSwitches -Configuration $Config
 		[Array]$Templates = Get-LabVMTemplates -Configuration $Config
 		[Array]$VMs = Get-LabVMs -Configuration $Config -VMTemplates $Templates -Switches $Switches
@@ -403,7 +400,7 @@ Describe "Set-LabDSCMOFFile" {
 		}
 	}
  
-	Remove-Item -Path "C:\Pester Lab\PESTER01\LabBuilder Files" -Recurse -Force -ErrorAction SilentlyContinue
+	#Remove-Item -Path "C:\Pester Lab\PESTER01\LabBuilder Files" -Recurse -Force -ErrorAction SilentlyContinue
 }
 ##########################################################################################################################################
 

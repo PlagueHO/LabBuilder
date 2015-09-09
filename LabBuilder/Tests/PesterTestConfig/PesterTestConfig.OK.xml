@@ -11,6 +11,10 @@
             macaddressminimum="001122334400"
             macaddressmaximum="0011223344FF" />
 
+  <resources>
+    <module name="xNetworking" url="https://github.com/PlagueHO/xNetworking/archive/dev.zip" folder="xNetworking-dev" />
+  </resources>
+
   <switches>
     <switch name="Pester Test External" type="External" >
       <adapters>
