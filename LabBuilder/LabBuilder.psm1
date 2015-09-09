@@ -674,8 +674,8 @@ function Set-LabDSCMOFFile {
 	[String]$VMPath = $Configuration.labbuilderconfig.settings.vmpath
 
 	# Make sure the appropriate folders exist
-	New-Item -Path "$VMPath\$($VM.Name)\LabBuilder Files" -ItemType Directory
-	New-Item -Path "$VMPath\$($VM.Name)\LabBuilder Files\DSC Modules" -ItemType Directory
+	New-Item -Path "$VMPath\$($VM.Name)\LabBuilder Files" -ItemType Directory -Force -ErrorAction SilentlyContinue
+	New-Item -Path "$VMPath\$($VM.Name)\LabBuilder Files\DSC Modules" -ItemType Directory -Force -ErrorAction SilentlyContinue
 
 	If ($VM.DSCConfigFile) {
 		# Make sure all the modules required to create the MOF file are installed
