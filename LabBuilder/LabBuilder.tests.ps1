@@ -222,7 +222,7 @@ Describe "Get-LabSwitches" {
     }
 ]
 "@
-			Set-Content -Path "$($Global:ArtifactPath)\Switches.json" -Value ($ExpectedSwitches | ConvertTo-Json -Depth 4)
+			Set-Content -Path "$($Global:ArtifactPath)\Switches.json" -Value $ExpectedSwitches
 			[String]::Compare(($Switches | ConvertTo-Json -Depth 4),$ExpectedSwitches,$true) | Should Be 0
 		}
 	}
