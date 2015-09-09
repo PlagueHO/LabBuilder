@@ -456,7 +456,7 @@ function Get-LabVMTemplates {
 
 	# Get a list of all templates in the Hyper-V system matching the phrase found in the fromvm config setting
 	[String]$FromVM=$Configuration.labbuilderconfig.SelectNodes('templates').fromvm
-	If (($FromVM -ne $null) -and ($FromVM -ne '')) {
+	If ($FromVM) {
 		$Templates = Get-VM -Name $FromVM
 		Foreach ($Template in $Templates) {
 			[String]$VHDFilepath = ($Template | Get-VMHardDiskDrive).Path
@@ -1588,6 +1588,58 @@ function Get-LabVMSelfSignedCert {
 ##########################################################################################################################################
 
 ##########################################################################################################################################
+function Start-LabVM {
+	[CmdLetBinding()]
+	[OutputType([Boolean])]
+	param (
+		[Parameter(
+			Position=0)]
+		[ValidateNotNullOrEmpty()]
+		[XML]$Configuration = $(Throw "Configuration XML parameter is missing."),
+
+		[Parameter(
+			Position=1)]
+		[ValidateNotNullOrEmpty()]
+		$VM = $(Throw "VM parameter is missing.")
+	)
+
+	[String]$VMPath = $Configuration.labbuilderconfig.settings.vmpath
+
+	# The VM is now ready to be started
+	If ((Get-VM -Name $VM.Name).State -eq 'Off') {
+		Write-Verbose "VM $($VM.Name) is starting ..."
+
+		Start-VM -VMName $VM.Name
+	} # If
+
+	# We only perform this section of VM Initialization (DSC, Cert, etc) with Server OS
+	If ($VM.OSType -eq 'Server') {
+		# Has this VM been initialized before (do we have a cer for it)
+		If (-not (Test-Path "$VMPath\$($VM.Name)\LabBuilder Files\SelfSigned.cer")) {
+			# No, so check it is initialized and download the cert.
+			If (Wait-LabVMInit -VM $VM) {
+				Write-Verbose "Attempting to download certificate for VM $($VM.Name) ..."
+				If (Get-LabVMSelfSignedCert -Configuration $Configuration -VM $VM) {
+					Write-Verbose "Certificate for VM $($VM.Name) was downloaded successfully ..."
+				} Else {
+					Write-Verbose "Certificate for VM $($VM.Name) could not be downloaded ..."
+				} # If
+			} Else {
+				Write-Verbose "Initialization for VM $($VM.Name) did not complete ..."
+			} # If
+		} # If
+
+		# Create any DSC Files for the VM
+		Initialize-LabVMDSC -Configuration $Configuration -VM $VM
+
+		# Attempt to start DSC on the VM
+		Start-LabVMDSC -Configuration $Configuration -VM $VM
+	} # If
+	Return $True
+} # Start-LabVM
+##########################################################################################################################################
+
+##########################################################################################################################################
 function Initialize-LabVMs {
 	[CmdLetBinding()]
 	[OutputType([Boolean])]
@@ -1702,37 +1754,8 @@ function Initialize-LabVMs {
 			# Enable Device Naming (although the feature is buggy at the moment)
 			# $VMNetworkAdapter | Set-VMNetworkAdapter -DeviceNaming On | Out-Null
 		} # Foreach
-		
-		# The VM is now ready to be started
-		If ((Get-VM -Name $VM.Name).State -eq 'Off') {
-			Write-Verbose "VM $($VM.Name) is starting ..."
 
-			Start-VM -VMName $VM.Name
-		} # If
-
-		# We only perform this section of VM Initialization (DSC, Cert, etc) with Server OS
-		If ($VM.OSType -eq 'Server') {
-			# Has this VM been initialized before (do we have a cer for it)
-			If (-not (Test-Path "$VMPath\$($VM.Name)\LabBuilder Files\SelfSigned.cer")) {
-				# No, so check it is initialized and download the cert.
-				If (Wait-LabVMInit -VM $VM) {
-					Write-Verbose "Attempting to download certificate for VM $($VM.Name) ..."
-					If (Get-LabVMSelfSignedCert -Configuration $Configuration -VM $VM) {
-						Write-Verbose "Certificate for VM $($VM.Name) was downloaded successfully ..."
-					} Else {
-						Write-Verbose "Certificate for VM $($VM.Name) could not be downloaded ..."
-					} # If
-				} Else {
-					Write-Verbose "Initialization for VM $($VM.Name) did not complete ..."
-				} # If
-			} # If
-
-			# Create any DSC Files for the VM
-			Initialize-LabVMDSC -Configuration $Configuration -VM $VM
-
-			# Attempt to start DSC on the VM
-			Start-LabVMDSC -Configuration $Configuration -VM $VM
-		} # If
+		Start-LabVM -Configuration $Config -VM $VM
 	} # Foreach
 	Return $True
 } # Initialize-LabVMs
@@ -1973,7 +1996,7 @@ Export-ModuleMember -Function `
 	Get-LabVMs,Initialize-LabVMs,Remove-LabVMs, `
 	Set-LabDSCMOFFile,Set-LabDSCStartFile,Initialize-LabVMDSC, `
 	Get-LabUnattendFile, Set-LabVMInitializationFiles, `
-	Wait-LabVMStart, Wait-LabVMOff, Wait-LabVMInit, `
+	Start-LabVM, Wait-LabVMStart, Wait-LabVMOff, Wait-LabVMInit, `
 	Get-LabVMSelfSignedCert, `
 	Install-Lab,Uninstall-Lab
 ##########################################################################################################################################

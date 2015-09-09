@@ -70,6 +70,28 @@ Configuration MEMBER_DHCP
 			}
 			DependsOn = '[xComputer]JoinDomain'
 		}
-
+		Foreach ($Scope in $Node.Scopes) {
+			xDhcpServerScope Scope
+			{
+				Ensure = 'Present'
+				IPStartRange = $Scope.Start
+				IPEndRange = $Scope.End
+				Name = $Scope.Name
+				SubnetMask = $Scope.SubnetMask
+				State = 'Active'
+				AddressFamily = $Scope.AddressFamily
+			}
+		}
+		Foreach ($Reservation in $Node.Reservations) {
+			xDhcpServerReservation PullServerIP
+			{
+				Ensure = 'Present'
+				ScopeID = $Reservation.ScopeId
+				ClientMACAddress = $Reservation.ClientMACAddress
+				IPAddress = $Reservation.IPAddress
+				Name = $Resevation.Name
+				AddressFamily = $Reservation.AddressFamily
+			}
+		}
 	}
 }

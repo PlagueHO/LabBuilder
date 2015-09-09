@@ -8,6 +8,7 @@ install:
   - cinst -y pester
   - ps:
       install-windowsfeature hyper-v-powershell
+      Get-PackageProvider -name nuget -ForceBootStrap -Force
 #---------------------------------# 
 #      build configuration        # 
 #---------------------------------# 

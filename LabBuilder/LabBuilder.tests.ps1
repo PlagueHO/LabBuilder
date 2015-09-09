@@ -643,6 +643,51 @@ Describe "Get-LabVMSelfSignedCert" {
 ##########################################################################################################################################
 
 ##########################################################################################################################################
+Describe "Start-LabVM" {
+	#region Mocks
+	Mock Get-VM -ParameterFilter { $Name -eq 'PESTER01' } -MockWith { [PSObject]@{ Name='PESTER01'; State='Off' } }
+    Mock Get-VM -ParameterFilter { $Name -eq 'pester template *' }
+	Mock Start-VM
+    Mock Wait-LabVMInit -MockWith { $True }
+    Mock Get-LabVMSelfSignedCert -MockWith { $True }
+    Mock Initialize-LabVMDSC
+    Mock Start-LabVMDSC
+    #endregion
+
+	Context "No parameters passed" {
+		It "Fails" {
+			{ Start-LabVM } | Should Throw
+		}
+	}
+	Context "Valid configuration is passed" {	
+		$Config = Get-LabConfiguration -Path $Global:TestConfigOKPath
+		New-Item -Path $Config.labbuilderconfig.settings.vmpath -ItemType Directory -Force -ErrorAction SilentlyContinue
+		New-Item -Path $Config.labbuilderconfig.settings.vhdparentpath -ItemType Directory -Force -ErrorAction SilentlyContinue
+
+		[Array]$Templates = Get-LabVMTemplates -Configuration $Config
+		[Array]$Switches = Get-LabSwitches -Configuration $Config
+		[Array]$VMs = Get-LabVMs -Configuration $Config -VMTemplates $Templates -Switches $Switches
+				
+		It "Returns True" {
+			Start-LabVM -Configuration $Config -VM $VMs[0] | Should Be $True
+		}
+		It "Calls Mocked commands" {
+            Assert-MockCalled Get-VM -ParameterFilter { $Name -eq 'PESTER01' } -Exactly 1
+            Assert-MockCalled Get-VM -ParameterFilter { $Name -eq 'pester template *' } -Exactly 1
+			Assert-MockCalled Start-VM -Exactly 1
+            Assert-MockCalled Wait-LabVMInit -Exactly 1
+            Assert-MockCalled Get-LabVMSelfSignedCert -Exactly 1
+            Assert-MockCalled Initialize-LabVMDSC -Exactly 1
+            Assert-MockCalled Start-LabVMDSC -Exactly 1
+		}
+        
+		Remove-Item -Path $Config.labbuilderconfig.settings.vmpath -Recurse -Force -ErrorAction SilentlyContinue
+		Remove-Item -Path $Config.labbuilderconfig.settings.vhdparentpath -Recurse -Force -ErrorAction SilentlyContinue
+	}
+}
+##########################################################################################################################################
+
+##########################################################################################################################################
 Describe "Initialize-LabVMs" {
 	#region Mocks
     Mock New-VHD

@@ -142,6 +142,22 @@
           DomainName = "LABBUILDER.COM"
           DomainAdminPassword = "P@ssword!1"
           PSDscAllowDomainUser = $True
+          Scopes = @(
+              @{ Name = 'Site A';
+                 Start = '192.168.128.50';
+                 End = '192.168.128.254';
+                 SubnetMask = '255.255.255.0';
+                 AddressFamily = 'IPv4'
+              },
+              @{ Name = 'Site A';
+                 Start = 'fd53:ccc5:895a:bc50';
+                 End = 'fd53:ccc5:895a:bcFE';
+                 SubnetMask = '64';
+                 AddressFamily = 'IPv6'
+              }
+            )
+          Reservations = @(
+          )
         </parameters>
       </dsc>
       <adapters>
@@ -435,16 +451,7 @@
         <adapter name="General Purpose External"
                  switchname="General Purpose External" />
         <adapter name="Domain Private Site A"
-                 switchname="Domain Private Site A">
-          <ipv4 address="192.168.128.50"
-                defaultgateway="192.168.128.19"
-                subnetmask="24"
-                dnsserver="192.168.128.10,192.168.128.11"/>
-          <ipv6 address="fd53:ccc5:895a:bc00::50"
-                defaultgateway=""
-                subnetmask="64"
-                dnsserver="fd53:ccc5:895a:bc00::a,fd53:ccc5:895a:bc00::b"/>
-        </adapter>
+                 switchname="Domain Private Site A" />
       </adapters>
       <install>
         <msu url="http://download.microsoft.com/download/1/D/8/1D8B5022-5477-4B9A-8104-6A71FF9D98AB/WindowsTH-KB2693643-x64.msu" />
