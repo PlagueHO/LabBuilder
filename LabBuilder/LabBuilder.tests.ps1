@@ -168,61 +168,11 @@ Describe "Get-LabSwitches" {
 	Context "Valid configuration is passed" {
 		$Config = Get-LabConfiguration -Path $Global:TestConfigOKPath
 		$Switches = Get-LabSwitches -Configuration $Config
-		Set-Content -Path "$($Global:ArtifactPath)\Switches.json" -Value ($Switches | ConvertTo-Json -Depth 4)
+		Set-Content -Path "$($Global:ArtifactPath)\Switches.json" -Value ($Switches | ConvertTo-Json -Depth 4) -Encoding UTF8 -NoNewLine
 		
 		It "Returns Switches Object that matches Expected Object" {
-			$ExpectedSwitches = [string] @"
-[
-    {
-        "vlan":  null,
-        "name":  "Pester Test External",
-        "adapters":  [
-                         {
-                             "name":  "Cluster",
-                             "macaddress":  "00155D010701"
-                         },
-                         {
-                             "name":  "Management",
-                             "macaddress":  "00155D010702"
-                         },
-                         {
-                             "name":  "SMB",
-                             "macaddress":  "00155D010703"
-                         },
-                         {
-                             "name":  "LM",
-                             "macaddress":  "00155D010704"
-                         }
-                     ],
-        "type":  "External"
-    },
-    {
-        "vlan":  "2",
-        "name":  "Pester Test Private Vlan",
-        "adapters":  null,
-        "type":  "Private"
-    },
-    {
-        "vlan":  null,
-        "name":  "Pester Test Private",
-        "adapters":  null,
-        "type":  "Private"
-    },
-    {
-        "vlan":  "3",
-        "name":  "Pester Test Internal Vlan",
-        "adapters":  null,
-        "type":  "Internal"
-    },
-    {
-        "vlan":  null,
-        "name":  "Pester Test Internal",
-        "adapters":  null,
-        "type":  "Internal"
-    }
-]
-"@
-			Set-Content -Path "$($Global:ArtifactPath)\Switches.json" -Value $ExpectedSwitches
+			$ExpectedSwitches = Get-Content -Path "$Global:TestConfigPath\ExpectedSwitches.json" -Raw
+            $SwitchesJSON = ($Switches | ConvertTo-Json -Depth 4)
 			[String]::Compare(($Switches | ConvertTo-Json -Depth 4),$ExpectedSwitches,$true) | Should Be 0
 		}
 	}
@@ -318,61 +268,9 @@ Describe "Get-LabVMTemplates" {
 	Context "Valid configuration is passed" {
 		$Config = Get-LabConfiguration -Path $Global:TestConfigOKPath
 		$Templates = Get-LabVMTemplates -Configuration $Config 
-		Set-Content -Path "$($Global:ArtifactPath)\VMTemplates.json" -Value ($Templates | ConvertTo-Json -Depth 2)
+		Set-Content -Path "$($Global:ArtifactPath)\VMTemplates.json" -Value ($Templates | ConvertTo-Json -Depth 2) -Encoding UTF8 -NoNewLine
 		It "Returns Template Object that matches Expected Object" {
-		$ExpectedTemplates = [string] @"
-[
-    {
-        "processorcount":  "1",
-        "templatevhd":  "C:\\Pester Lab\\Virtual Hard Disk Templates\\Windows Server 2012 R2 Datacenter Full.vhdx",
-        "memorystartupbytes":  null,
-        "ostype":  "Server",
-        "datavhdsize":  null,
-        "name":  "Pester Windows Server 2012 R2 Datacenter Full",
-        "administratorpassword":  "None",
-        "installiso":  ".\\Tests\\PesterTestConfig\\9600.16384.130821-1623_x64fre_Server_EN-US_IRM_SSS_DV5.iso",
-        "productkey":  "AAAAA-AAAAA-AAAAA-AAAAA-AAAAA",
-        "edition":  "Windows Server 2012 R2 SERVERDATACENTER",
-        "vhd":  "Windows Server 2012 R2 Datacenter Full.vhdx",
-        "timezone":  "Pacific Standard Time",
-        "sourcevhd":  ".\\Tests\\PesterTestConfig\\Windows Server 2012 R2 Datacenter Full.vhdx",
-        "allowcreate":  "Y"
-    },
-    {
-        "processorcount":  "1",
-        "templatevhd":  "C:\\Pester Lab\\Virtual Hard Disk Templates\\Windows Server 2012 R2 Datacenter Core.vhdx",
-        "memorystartupbytes":  null,
-        "ostype":  "Server",
-        "datavhdsize":  null,
-        "name":  "Pester Windows Server 2012 R2 Datacenter Core",
-        "administratorpassword":  "None",
-        "installiso":  ".\\Tests\\PesterTestConfig\\9600.16384.130821-1623_x64fre_Server_EN-US_IRM_SSS_DV5.iso",
-        "productkey":  "BBBBB-BBBBB-BBBBB-BBBBB-BBBBB",
-        "edition":  "Windows Server 2012 R2 SERVERDATACENTERCORE",
-        "vhd":  "Windows Server 2012 R2 Datacenter Core.vhdx",
-        "timezone":  "Pacific Standard Time",
-        "sourcevhd":  ".\\Tests\\PesterTestConfig\\Windows Server 2012 R2 Datacenter Full.vhdx",
-        "allowcreate":  "Y"
-    },
-    {
-        "processorcount":  "1",
-        "templatevhd":  "C:\\Pester Lab\\Virtual Hard Disk Templates\\Windows 10 Enterprise.vhdx",
-        "memorystartupbytes":  null,
-        "ostype":  "Client",
-        "datavhdsize":  null,
-        "name":  "Pester Windows 10 Enterprise",
-        "administratorpassword":  "None",
-        "installiso":  ".\\Tests\\PesterTestConfig\\10240.16384.150709-1700.TH1_CLIENTENTERPRISE_VOL_X64FRE_EN-US.iso",
-        "productkey":  "CCCCC-CCCCC-CCCCC-CCCCC-CCCCC",
-        "edition":  "Windows 10 Enterprise",
-        "vhd":  "Windows 10 Enterprise.vhdx",
-        "timezone":  "Pacific Standard Time",
-        "sourcevhd":  ".\\Tests\\PesterTestConfig\\Windows 10 Enterprise.vhdx",
-        "allowcreate":  "Y"
-    }
-]
-"@
-			Set-Content -Path "$($Global:ArtifactPath)\VMTemplates.json" -Value $ExpectedTemplates
+			$ExpectedTemplates = Get-Content -Path "$Global:TestConfigPath\ExpectedTemplates.json" -Raw
 			[String]::Compare(($Templates | ConvertTo-Json -Depth 2),$ExpectedTemplates,$true) | Should Be 0
 		}
 		It "Calls Mocked commands" {
@@ -464,6 +362,9 @@ Describe "Remove-LabVMTemplates" {
 Describe "Set-LabDSCMOFFile" {
     Remove-Item -Path "C:\Pester Lab\PESTER01\LabBuilder Files" -Recurse -Force -ErrorAction SilentlyContinue
 
+	# Trust all the package sources otherwise the Install-Module command will fail.
+	Get-PackageSource | Set-PackageSource -Trusted
+
 	#region Mocks
     Mock Get-VM
 	Mock Import-Certificate -MockWith {
@@ -552,75 +453,11 @@ Describe "Get-LabUnattendFile" {
 		$Switches = Get-LabSwitches -Configuration $Config
 		$VMTemplates = Get-LabVMTemplates -Configuration $Config
 		$VMs = Get-LabVMs -Configuration $Config -VMTemplates $VMTemplates -Switches $Switches
-		$ExpectedUnattendFile = [String] @"
-<?xml version="1.0" encoding="utf-8"?>
-<unattend xmlns="urn:schemas-microsoft-com:unattend">
-	<settings pass="offlineServicing">
-		<component name="Microsoft-Windows-LUA-Settings" processorArchitecture="amd64" publicKeyToken="31bf3856ad364e35" language="neutral" versionScope="nonSxS" xmlns:wcm="http://schemas.microsoft.com/WMIConfig/2002/State" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
-			<EnableLUA>false</EnableLUA>
-		</component>
-	</settings>
-	<settings pass="generalize">
-		<component name="Microsoft-Windows-Security-SPP" processorArchitecture="amd64" publicKeyToken="31bf3856ad364e35" language="neutral" versionScope="nonSxS" xmlns:wcm="http://schemas.microsoft.com/WMIConfig/2002/State" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
-			<SkipRearm>1</SkipRearm>
-		</component>
-	</settings>
-	<settings pass="specialize">
-		<component name="Microsoft-Windows-International-Core" processorArchitecture="amd64" publicKeyToken="31bf3856ad364e35" language="neutral" versionScope="nonSxS" xmlns:wcm="http://schemas.microsoft.com/WMIConfig/2002/State" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
-			<InputLocale>0409:00000409</InputLocale>
-			<SystemLocale>en-US</SystemLocale>
-			<UILanguage>en-US</UILanguage>
-			<UILanguageFallback>en-US</UILanguageFallback>
-			<UserLocale>en-US</UserLocale>
-		</component>
-		<component name="Microsoft-Windows-Security-SPP-UX" processorArchitecture="amd64" publicKeyToken="31bf3856ad364e35" language="neutral" versionScope="nonSxS" xmlns:wcm="http://schemas.microsoft.com/WMIConfig/2002/State" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
-			<SkipAutoActivation>true</SkipAutoActivation>
-		</component>
-		<component name="Microsoft-Windows-SQMApi" processorArchitecture="amd64" publicKeyToken="31bf3856ad364e35" language="neutral" versionScope="nonSxS" xmlns:wcm="http://schemas.microsoft.com/WMIConfig/2002/State" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
-			<CEIPEnabled>0</CEIPEnabled>
-		</component>
-		<component name="Microsoft-Windows-Shell-Setup" processorArchitecture="amd64" publicKeyToken="31bf3856ad364e35" language="neutral" versionScope="nonSxS" xmlns:wcm="http://schemas.microsoft.com/WMIConfig/2002/State" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
-			<ComputerName>PESTER01</ComputerName>
-			<ProductKey>DDDDD-DDDDD-DDDDD-DDDDD-DDDDD</ProductKey>
-		</component>
-	</settings>
-	<settings pass="oobeSystem">
-		<component name="Microsoft-Windows-Shell-Setup" processorArchitecture="amd64" publicKeyToken="31bf3856ad364e35" language="neutral" versionScope="nonSxS" xmlns:wcm="http://schemas.microsoft.com/WMIConfig/2002/State" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
-			<OOBE>
-				<HideEULAPage>true</HideEULAPage>
-				<HideOEMRegistrationScreen>true</HideOEMRegistrationScreen>
-				<HideOnlineAccountScreens>true</HideOnlineAccountScreens>
-				<HideWirelessSetupInOOBE>true</HideWirelessSetupInOOBE>
-				<NetworkLocation>Work</NetworkLocation>
-				<ProtectYourPC>1</ProtectYourPC>
-				<SkipUserOOBE>true</SkipUserOOBE>
-				<SkipMachineOOBE>true</SkipMachineOOBE>
-			</OOBE>
-			<UserAccounts>
-			   <AdministratorPassword>
-				  <Value>Something</Value>
-				  <PlainText>true</PlainText>
-			   </AdministratorPassword>
-			</UserAccounts>
-			<RegisteredOrganization>PESTER.LOCAL</RegisteredOrganization>
-			<RegisteredOwner>tester@pester.local</RegisteredOwner>
-			<DisableAutoDaylightTimeSet>false</DisableAutoDaylightTimeSet>
-			<TimeZone>Pacific Standard Time</TimeZone>
-		</component>
-		<component name="Microsoft-Windows-ehome-reg-inf" processorArchitecture="x86" publicKeyToken="31bf3856ad364e35" language="neutral" versionScope="NonSxS" xmlns:wcm="http://schemas.microsoft.com/WMIConfig/2002/State" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
-			<RestartEnabled>true</RestartEnabled>
-		</component>
-		<component name="Microsoft-Windows-ehome-reg-inf" processorArchitecture="amd64" publicKeyToken="31bf3856ad364e35" language="neutral" versionScope="NonSxS" xmlns:wcm="http://schemas.microsoft.com/WMIConfig/2002/State" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
-			<RestartEnabled>true</RestartEnabled>
-		</component>
-	</settings>
-</unattend>
-"@
 		[String]$UnattendFile = Get-LabUnattendFile -Configuration $Config -VM $VMs
-		Set-Content -Path "$($Global:ArtifactPath)\UnattendFile.xml" -Value $UnattendFile
-		Set-Content -Path "$($Global:ArtifactPath)\ExpectedUnattendFile.xml" -Value $ExpectedUnattendFile
+		Set-Content -Path "$($Global:ArtifactPath)\UnattendFile.xml" -Value $UnattendFile -Encoding UTF8 -NoNewLine
 		It "Returns Expected File Content" {
 			$UnattendFile | Should Be $True
+			$ExpectedUnattendFile = Get-Content -Path "$Global:TestConfigPath\ExpectedUnattendFile.xml" -Raw
 			[String]::Compare($UnattendFile,$ExpectedUnattendFile,$true) | Should Be 0
 		}
 	}
@@ -786,107 +623,9 @@ Describe "Get-LabVMs" {
 		$Switches = Get-LabSwitches -Configuration $Config
 		$VMTemplates = Get-LabVMTemplates -Configuration $Config
 		$VMs = Get-LabVMs -Configuration $Config -VMTemplates $VMTemplates -Switches $Switches
-		Set-Content -Path "$($Global:ArtifactPath)\VMs.json" -Value ($VMs | ConvertTo-Json -Depth 4)
+		Set-Content -Path "$($Global:ArtifactPath)\VMs.json" -Value ($VMs | ConvertTo-Json -Depth 4) -Encoding UTF8 -NoNewLine
 		It "Returns Template Object that matches Expected Object" {
-			$ExpectedVMs = [String] @"
-{
-    "TemplateVHD":  "C:\\Pester Lab\\Virtual Hard Disk Templates\\Windows Server 2012 R2 Datacenter Full.vhdx",
-    "ProcessorCount":  1,
-    "TimeZone":  "Pacific Standard Time",
-    "Template":  "Pester Windows Server 2012 R2 Datacenter Full",
-    "MemoryStartupBytes":  10737418240,
-    "SetupComplete":  "",
-    "OSType":  "Server",
-    "DSCConfigName":  "STANDALONE_DEFAULT",
-    "DSCParameters":  "\r\n          Dummy = \"Dummy\"\r\n        ",
-    "UseDifferencingDisk":  "Y",
-    "DSCConfigFile":  "C:\\Users\\Daniel\\Source\\GitHub\\LabBuilder\\LabBuilder\\Tests\\PesterTestConfig\\PesterTest.DSC.ps1",
-    "ComputerName":  "PESTER01",
-    "ProductKey":  "DDDDD-DDDDD-DDDDD-DDDDD-DDDDD",
-    "DataVHDSize":  0,
-    "Name":  "PESTER01",
-    "UnattendFile":  "",
-    "AdministratorPassword":  "Something",
-    "Adapters":  [
-                     {
-                         "IPv6":  {
-                                      "dnsserver":  "fd53:ccc5:895a:0000::1",
-                                      "subnetmask":  "64",
-                                      "Address":  "fd53:ccc5:895a:0000::1",
-                                      "defaultgateway":  ""
-                                  },
-                         "Name":  "Pester Test Private Vlan",
-                         "SwitchName":  "Pester Test Private Vlan",
-                         "VLan":  "2",
-                         "IPv4":  {
-                                      "dnsserver":  "192.168.16.1",
-                                      "subnetmask":  "24",
-                                      "Address":  "192.168.16.1",
-                                      "defaultgateway":  ""
-                                  },
-                         "MACAddress":  "00155D010801"
-                     },
-                     {
-                         "IPv6":  {
-                                      "dnsserver":  "fd53:ccc5:895a:0000::2",
-                                      "subnetmask":  "64",
-                                      "Address":  "fd53:ccc5:895a:0000::2",
-                                      "defaultgateway":  ""
-                                  },
-                         "Name":  "Pester Test Internal Vlan",
-                         "SwitchName":  "Pester Test Internal Vlan",
-                         "VLan":  "3",
-                         "IPv4":  {
-                                      "dnsserver":  "192.168.16.2",
-                                      "subnetmask":  "24",
-                                      "Address":  "192.168.16.2",
-                                      "defaultgateway":  ""
-                                  },
-                         "MACAddress":  "00155D010802"
-                     },
-                     {
-                         "IPv6":  {
-                                      "dnsserver":  "fd53:ccc5:895a:0000::3",
-                                      "subnetmask":  "64",
-                                      "Address":  "fd53:ccc5:895a:0000::3",
-                                      "defaultgateway":  ""
-                                  },
-                         "Name":  "Pester Test Private",
-                         "SwitchName":  "Pester Test Private",
-                         "VLan":  "3",
-                         "IPv4":  {
-                                      "dnsserver":  "192.168.16.3",
-                                      "subnetmask":  "24",
-                                      "Address":  "192.168.16.3",
-                                      "defaultgateway":  ""
-                                  },
-                         "MACAddress":  "00155D010803"
-                     },
-                     {
-                         "IPv6":  {
-                                      "dnsserver":  "fd53:ccc5:895a:0000::4",
-                                      "subnetmask":  "64",
-                                      "Address":  "fd53:ccc5:895a:0000::4",
-                                      "defaultgateway":  ""
-                                  },
-                         "Name":  "Pester Test Internal",
-                         "SwitchName":  "Pester Test Internal",
-                         "VLan":  "4",
-                         "IPv4":  {
-                                      "dnsserver":  "192.168.16.4",
-                                      "subnetmask":  "24",
-                                      "Address":  "192.168.16.4",
-                                      "defaultgateway":  ""
-                                  },
-                         "MACAddress":  "00155D010804"
-                     }
-                 ],
-    "InstallMSU":  [
-                       "http://download.microsoft.com/download/1/D/8/1D8B5022-5477-4B9A-8104-6A71FF9D98AB/WindowsTH-KB2693643-x64.msu"
-                   ]
-}
-"@
-			Set-Content -Path "$($Global:ArtifactPath)\VMs.json" -Value $ExpectedVMs
+			$ExpectedVMs = Get-Content -Path "$Global:TestConfigPath\ExpectedVMs.json" -Raw
 			[String]::Compare(($VMs | ConvertTo-Json -Depth 4),$ExpectedVMs,$true) | Should Be 0
 		}
 	}

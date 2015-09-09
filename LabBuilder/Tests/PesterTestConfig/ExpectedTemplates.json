@@ -1,0 +1,50 @@
+﻿[
+    {
+        "processorcount":  "1",
+        "templatevhd":  "C:\\Pester Lab\\Virtual Hard Disk Templates\\Windows Server 2012 R2 Datacenter Full.vhdx",
+        "memorystartupbytes":  null,
+        "ostype":  "Server",
+        "datavhdsize":  null,
+        "name":  "Pester Windows Server 2012 R2 Datacenter Full",
+        "administratorpassword":  "None",
+        "installiso":  ".\\Tests\\PesterTestConfig\\9600.16384.130821-1623_x64fre_Server_EN-US_IRM_SSS_DV5.iso",
+        "productkey":  "AAAAA-AAAAA-AAAAA-AAAAA-AAAAA",
+        "edition":  "Windows Server 2012 R2 SERVERDATACENTER",
+        "vhd":  "Windows Server 2012 R2 Datacenter Full.vhdx",
+        "timezone":  "Pacific Standard Time",
+        "sourcevhd":  ".\\Tests\\PesterTestConfig\\Windows Server 2012 R2 Datacenter Full.vhdx",
+        "allowcreate":  "Y"
+    },
+    {
+        "processorcount":  "1",
+        "templatevhd":  "C:\\Pester Lab\\Virtual Hard Disk Templates\\Windows Server 2012 R2 Datacenter Core.vhdx",
+        "memorystartupbytes":  null,
+        "ostype":  "Server",
+        "datavhdsize":  null,
+        "name":  "Pester Windows Server 2012 R2 Datacenter Core",
+        "administratorpassword":  "None",
+        "installiso":  ".\\Tests\\PesterTestConfig\\9600.16384.130821-1623_x64fre_Server_EN-US_IRM_SSS_DV5.iso",
+        "productkey":  "BBBBB-BBBBB-BBBBB-BBBBB-BBBBB",
+        "edition":  "Windows Server 2012 R2 SERVERDATACENTERCORE",
+        "vhd":  "Windows Server 2012 R2 Datacenter Core.vhdx",
+        "timezone":  "Pacific Standard Time",
+        "sourcevhd":  ".\\Tests\\PesterTestConfig\\Windows Server 2012 R2 Datacenter Full.vhdx",
+        "allowcreate":  "Y"
+    },
+    {
+        "processorcount":  "1",
+        "templatevhd":  "C:\\Pester Lab\\Virtual Hard Disk Templates\\Windows 10 Enterprise.vhdx",
+        "memorystartupbytes":  null,
+        "ostype":  "Client",
+        "datavhdsize":  null,
+        "name":  "Pester Windows 10 Enterprise",
+        "administratorpassword":  "None",
+        "installiso":  ".\\Tests\\PesterTestConfig\\10240.16384.150709-1700.TH1_CLIENTENTERPRISE_VOL_X64FRE_EN-US.iso",
+        "productkey":  "CCCCC-CCCCC-CCCCC-CCCCC-CCCCC",
+        "edition":  "Windows 10 Enterprise",
+        "vhd":  "Windows 10 Enterprise.vhdx",
+        "timezone":  "Pacific Standard Time",
+        "sourcevhd":  ".\\Tests\\PesterTestConfig\\Windows 10 Enterprise.vhdx",
+        "allowcreate":  "Y"
+    }
+]

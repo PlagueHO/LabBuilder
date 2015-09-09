@@ -56,6 +56,7 @@ Configuration MEMBER_DHCP
 
 		Script DHCPAuthorize
 		{
+			PSDSCRunAsCredential = $DomainAdminCredential
 			SetScript = {
 				Add-DHCPServerInDC
 			}
