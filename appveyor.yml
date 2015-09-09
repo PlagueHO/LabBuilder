@@ -31,5 +31,6 @@ test_script:
 #---------------------------------# 
 #      deployment configuration   # 
 #---------------------------------# 
-deploy_script:
+
+on_finish:
     - ps: Get-ChildItem "$ProjectRoot\LabBuilder\LabBuilder\Artifacts\*.*" | Foreach-Object { Push-AppveyorArtifact $_ }
