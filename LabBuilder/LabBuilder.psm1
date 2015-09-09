@@ -686,7 +686,7 @@ function Set-LabDSCMOFFile {
 				If ($NewModule) {
 					Write-Verbose "Installing Module $ModuleName required by DSC Config File $($VM.DSCConfigFile) in VM $($VM.Name) ..."
 					Try {
-						$NewModule | Install-Module -Verbose
+						$NewModule | Install-Module
 					} Catch {
 						Throw "Module $ModuleName required by DSC Config File $($VM.DSCConfigFile) in VM $($VM.Name) could not be downloaded ..."					
 					}

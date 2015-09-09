@@ -362,11 +362,9 @@ Describe "Remove-LabVMTemplates" {
 Describe "Set-LabDSCMOFFile" {
     Remove-Item -Path "C:\Pester Lab\PESTER01\LabBuilder Files" -Recurse -Force -ErrorAction SilentlyContinue
 
-	# Trust all the package sources otherwise the Install-Module command will fail.
-	Get-PackageSource | Set-PackageSource -Trusted
-
 	#region Mocks
-    Mock Get-VM
+    Mock Import-Module { param($module) }
+	Mock Get-VM
 	Mock Import-Certificate -MockWith {
 		[PSCustomObject]@{
 			Thumbprint = '1234567890ABCDEF'
@@ -392,6 +390,7 @@ Describe "Set-LabDSCMOFFile" {
 		It "Calls Mocked commands" {
 			Assert-MockCalled Import-Certificate -Exactly 1
 			Assert-MockCalled Remove-Item -Exactly 1
+			Assert-MockCalled Import-Module -Exacty 1
 		}
 		It "Appropriate Lab Builder Files Should be produced" {
 			Test-Path -Path 'C:\Pester Lab\PESTER01\LabBuilder Files\Pester01.mof' | Should Be $True
