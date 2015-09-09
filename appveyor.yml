@@ -33,4 +33,4 @@ test_script:
 #---------------------------------# 
 
 on_finish:
-    - ps: Get-ChildItem "$ProjectRoot\LabBuilder\LabBuilder\Artifacts\*.*" | Foreach-Object { Push-AppveyorArtifact $_ }
+    - ps: Get-ChildItem "$ProjectRoot\LabBuilder\Artifacts\*.*" | Foreach-Object { Push-AppveyorArtifact $_ }

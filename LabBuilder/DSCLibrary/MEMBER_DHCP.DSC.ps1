@@ -53,10 +53,11 @@ Configuration MEMBER_DHCP
             Name = "DHCP" 
 			DependsOn = "[xComputer]JoinDomain" 
         }
+
 		Script DHCPAuthorize
 		{
 			SetScript = {
-				Set-DHCPServerInDC
+				Add-DHCPServerInDC
 			}
 			GetScript = {
 				Return @{
@@ -64,10 +65,7 @@ Configuration MEMBER_DHCP
 				}
 			}
 			TestScript = { 
-				If (@(Get-DHCPServerInDC | Where-Object { $_.IPAddress -In (Get-NetIPAddress).IPAddress }).Count -eq 0) {
-					Return $False
-				}
-				Return $True
+				Return (-not (@(Get-DHCPServerInDC | Where-Object { $_.IPAddress -In (Get-NetIPAddress).IPAddress }).Count -eq 0))
 			}
 			DependsOn = '[WindowsFeature]DHCPInstall'
 		}
