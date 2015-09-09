@@ -27,14 +27,9 @@ test_script:
         if ($res.FailedCount -gt 0) { 
             throw "$($res.FailedCount) tests failed.";
         };
-        Get-ChildItem "$ProjectRoot\LabBuilder\LabBuilder\Artifacts\*.*" | % {
-            Add-AppveyorMessage "Artifact $_.FullName"
-        };
-        Get-ChildItem "$ProjectRoot\LabBuilder\LabBuilder\Artifacts\*.*" | % {
-            Push-AppveyorArtifact $_.FullName -FileName $_.Name
-        };
-    
+
 #---------------------------------# 
 #      deployment configuration   # 
 #---------------------------------# 
-
+deploy_script:
+    - ps: Get-ChildItem "$ProjectRoot\LabBuilder\LabBuilder\Artifacts\*.*" | Foreach-Object { Push-AppveyorArtifact $_ }
