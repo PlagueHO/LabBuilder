@@ -370,6 +370,7 @@ Describe "Set-LabDSCMOFFile" {
 		}
     } # Mock
     Mock Remove-Item -ParameterFilter {$path -eq 'Cert:LocalMachine\My\1234567890ABCDEF'}
+	Mock Set-VMHost
 	#endregion
 
 	Context "No parameters passed" {
