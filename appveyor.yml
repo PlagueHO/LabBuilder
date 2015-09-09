@@ -1,4 +1,4 @@
-
+﻿
 #---------------------------------# 
 #      environment configuration  # 
 #---------------------------------# 
@@ -38,4 +38,3 @@ test_script:
 
 artifacts:
   - path: C:\projects\LabBuilder\LabBuilder\Artifacts
-    name: myapp

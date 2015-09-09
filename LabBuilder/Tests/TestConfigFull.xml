@@ -11,6 +11,7 @@
             configpath=".\..\DSCLibrary\" />
 
   <resources>
+    <module name="xNetworking" url="https://github.com/PlagueHO/xNetworking/archive/dev.zip" folder="xNetworking-dev" />
     <module name="cMicrosoftUpdate" url="https://github.com/fabiendibot/cMicrosoftUpdate/archive/master.zip" folder="cMicrosoftUpdate-master" />  
   </resources>
   

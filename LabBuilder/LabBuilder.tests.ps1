@@ -15,8 +15,8 @@ if (Get-Module LabBuilder -All)
 Import-Module "$here\LabBuilder.psd1" -Force -DisableNameChecking
 $Global:TestConfigPath = "$here\Tests\PesterTestConfig"
 $Global:TestConfigOKPath = "$Global:TestConfigPath\PesterTestConfig.OK.xml"
-New-Item -Path $here -Name Artifacts -Force -ErrorAction SilentlyContinue
 $Global:ArtifactPath = "$here\Artifacts"
+New-Item -Path "$Global:ArtifactPath" -ItemType Directory -Force -ErrorAction SilentlyContinue
 
 InModuleScope LabBuilder {
 ##########################################################################################################################################

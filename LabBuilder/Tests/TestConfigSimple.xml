@@ -10,6 +10,10 @@
             vhdparentpath="c:\vm\LABBUILDER.COM\Virtual Hard Disk Templates"
             configpath=".\..\DSCLibrary\" />
 
+  <resources>
+    <module name="xNetworking" url="https://github.com/PlagueHO/xNetworking/archive/dev.zip" folder="xNetworking-dev" />
+  </resources>
+
   <switches>
     <switch name="General Purpose External" type="External">
       <adapters>
