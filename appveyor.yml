@@ -29,7 +29,7 @@ test_script:
         };
         Get-ChildItem "$ProjectRoot\LabBuilder\LabBuilder\Artifacts\*.*" | % {
             Add-AppveyorMessage "Artifact $_.FullName"
-		};
+        };
         Get-ChildItem "$ProjectRoot\LabBuilder\LabBuilder\Artifacts\*.*" | % {
             Push-AppveyorArtifact $_.FullName -FileName $_.Name
         };
