@@ -1,15 +1,15 @@
 <#########################################################################################################################################
 DSC Template Configuration File For use by LabBuilder
 .Title
-	MEMBER_NPS
+	MEMBER_FILESERVER
 .Desription
-	Builds a Server that is joined to a domain and then contains NPS/Radius components.
+	Builds a Server that is joined to a domain and then made into a File Server.
 .Parameters:          
 	DomainName = "LABBUILDER.COM"
 	DomainAdminPassword = "P@ssword!1"
 #########################################################################################################################################>
 
-Configuration MEMBER_NPS
+Configuration MEMBER_FILESERVER
 {
 	Import-DscResource -ModuleName 'PSDesiredStateConfiguration'
 	Import-DscResource -ModuleName xActiveDirectory
@@ -23,24 +23,59 @@ Configuration MEMBER_NPS
 			[PSCredential]$DomainAdminCredential = New-Object System.Management.Automation.PSCredential ("$($Node.DomainName)\Administrator", (ConvertTo-SecureString $Node.DomainAdminPassword -AsPlainText -Force))
 		}
 
-		WindowsFeature NPASPolicyServerInstall 
+		WindowsFeature FileServerInstall 
         { 
             Ensure = "Present" 
-            Name = "NPAS-Policy-Server" 
-        } 
+            Name = "FS-FileServer" 
+        }
 
-		WindowsFeature NPASHealthInstall 
+		WindowsFeature DataDedupInstall 
         { 
             Ensure = "Present" 
-            Name = "NPAS-Health" 
-			DependsOn = "[WindowsFeature]NPASPolicyServerInstall" 
-        } 
+            Name = "FS-Data-Deduplication" 
+			DependsOn = "[WindowsFeature]FileServerInstall" 
+        }
+
+		WindowsFeature DFSNameSpaceInstall 
+        { 
+            Ensure = "Present" 
+            Name = "FS-DFS-Namespace" 
+			DependsOn = "[WindowsFeature]DataDedupInstall" 
+        }
+
+		WindowsFeature DFSReplicationInstall 
+        { 
+            Ensure = "Present" 
+            Name = "FS-DFS-Replication" 
+			DependsOn = "[WindowsFeature]DFSNameSpaceInstall" 
+        }
+
+		WindowsFeature FSResourceManagerInstall 
+        { 
+            Ensure = "Present" 
+            Name = "FS-Resource-Manager" 
+			DependsOn = "[WindowsFeature]DFSReplicationInstall" 
+        }
+
+		WindowsFeature FSSyncShareInstall 
+        { 
+            Ensure = "Present" 
+            Name = "FS-SyncShareService" 
+			DependsOn = "[WindowsFeature]FSResourceManagerInstall" 
+        }
+
+		WindowsFeature StorageServicesInstall 
+        { 
+            Ensure = "Present" 
+            Name = "Storage-Services" 
+			DependsOn = "[WindowsFeature]FSSyncShareInstall" 
+        }
 
 		WindowsFeature RSATADPowerShell
         { 
             Ensure = "Present" 
             Name = "RSAT-AD-PowerShell" 
-			DependsOn = "[WindowsFeature]NPASHealthInstall" 
+			DependsOn = "[WindowsFeature]StorageServicesInstall"
         } 
 
         xWaitForADDomain DscDomainWait

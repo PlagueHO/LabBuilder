@@ -23,10 +23,24 @@ Configuration MEMBER_WDS
 			[PSCredential]$DomainAdminCredential = New-Object System.Management.Automation.PSCredential ("$($Node.DomainName)\Administrator", (ConvertTo-SecureString $Node.DomainAdminPassword -AsPlainText -Force))
 		}
 
+		WindowsFeature WDSDeploymentInstall 
+        { 
+            Ensure = "Present" 
+            Name = "WDS-Deployment" 
+        } 
+
+		WindowsFeature WDSTransportInstall 
+        { 
+            Ensure = "Present" 
+            Name = "WDS-Transport" 
+			DependsOn = "[WindowsFeature]WDSDeploymentInstall" 
+        } 
+
 		WindowsFeature RSATADPowerShell
         { 
             Ensure = "Present" 
             Name = "RSAT-AD-PowerShell" 
+			DependsOn = "[WindowsFeature]WDSTransportInstall" 
         } 
 
         xWaitForADDomain DscDomainWait
@@ -45,20 +59,5 @@ Configuration MEMBER_WDS
             Credential    = $DomainAdminCredential 
 			DependsOn = "[xWaitForADDomain]DscDomainWait" 
         } 
-
-		WindowsFeature WDSDeploymentInstall 
-        { 
-            Ensure = "Present" 
-            Name = "WDS-Deployment" 
-			DependsOn = "[xComputer]JoinDomain" 
-        } 
-
-		WindowsFeature WDSTransportInstall 
-        { 
-            Ensure = "Present" 
-            Name = "WDS-Transport" 
-			DependsOn = "[WindowsFeature]WDSDeploymentInstall" 
-        } 
-
 	}
 }

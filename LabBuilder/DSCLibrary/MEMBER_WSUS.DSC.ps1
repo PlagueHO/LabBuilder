@@ -25,10 +25,24 @@ Configuration MEMBER_WSUS
 			[PSCredential]$DomainAdminCredential = New-Object System.Management.Automation.PSCredential ("$($Node.DomainName)\Administrator", (ConvertTo-SecureString $Node.DomainAdminPassword -AsPlainText -Force))
 		}
 
+		WindowsFeature UpdateServicesWIDDBInstall 
+        { 
+            Ensure = "Present" 
+            Name = "UpdateServices-WidDB" 
+        } 
+
+		WindowsFeature UpdateServicesServicesInstall 
+        { 
+            Ensure = "Present" 
+            Name = "UpdateServices-Services" 
+			DependsOn = "[WindowsFeature]UpdateServicesWIDDBInstall" 
+        } 
+
 		WindowsFeature RSATADPowerShell
         { 
             Ensure = "Present" 
             Name = "RSAT-AD-PowerShell" 
+			DependsOn = "[WindowsFeature]UpdateServicesServicesInstall" 
         } 
 
         xWaitForADDomain DscDomainWait
@@ -47,20 +61,5 @@ Configuration MEMBER_WSUS
             Credential    = $DomainAdminCredential 
 			DependsOn = "[xWaitForADDomain]DscDomainWait" 
         } 
-
-		WindowsFeature UpdateServicesWIDDBInstall 
-        { 
-            Ensure = "Present" 
-            Name = "UpdateServices-WidDB" 
-			DependsOn = "[xComputer]JoinDomain" 
-        } 
-
-		WindowsFeature UpdateServicesServicesInstall 
-        { 
-            Ensure = "Present" 
-            Name = "UpdateServices-Services" 
-			DependsOn = "[WindowsFeature]UpdateServicesWIDDBInstall" 
-        } 
-
 	}
 }

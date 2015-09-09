@@ -27,10 +27,28 @@ Configuration MEMBER_SUBCA
 			[PSCredential]$DomainAdminCredential = New-Object System.Management.Automation.PSCredential ("$($Node.DomainName)\Administrator", (ConvertTo-SecureString $Node.DomainAdminPassword -AsPlainText -Force))
 		}
 
+		WindowsFeature ADCSCA {
+			Name = 'ADCS-Cert-Authority'
+			Ensure = 'Present'
+		}
+
+		WindowsFeature WebEnrollmentCA {
+			Name = 'ADCS-Web-Enrollment'
+			Ensure = 'Present'
+			DependsOn = "[WindowsFeature]ADCSCA"
+		}
+
+		WindowsFeature OnlineResponderCA {
+			Name = 'ADCS-Online-Cert'
+			Ensure = 'Present'
+			DependsOn = "[WindowsFeature]WebEnrollmentCA"
+		}
+
 		WindowsFeature RSATADPowerShell
         { 
             Ensure = "Present" 
             Name = "RSAT-AD-PowerShell" 
+			DependsOn = "[WindowsFeature]OnlineResponderCA"
         } 
 
         xWaitForADDomain DscDomainWait
@@ -49,19 +67,7 @@ Configuration MEMBER_SUBCA
             Credential    = $DomainAdminCredential 
 			DependsOn = "[xWaitForADDomain]DscDomainWait" 
         } 
-
-		WindowsFeature ADCSCA {
-			Name = 'ADCS-Cert-Authority'
-			Ensure = 'Present'
-			DependsOn = "[xComputer]JoinDomain"
-		}
-		
-		WindowsFeature ADCSRSAT {
-			Name = 'RSAT-ADCS'
-			Ensure = 'Present'
-			DependsOn = "[WindowsFeature]ADCSCA"
-		}
-	
+			
 		xADCSCertificationAuthority ADCS
         {
             Ensure = 'Present'

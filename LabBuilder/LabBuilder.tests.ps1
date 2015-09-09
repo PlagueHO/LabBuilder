@@ -390,7 +390,7 @@ Describe "Set-LabDSCMOFFile" {
 		It "Calls Mocked commands" {
 			Assert-MockCalled Import-Certificate -Exactly 1
 			Assert-MockCalled Remove-Item -Exactly 1
-			Assert-MockCalled Import-Module -Exacty 1
+			Assert-MockCalled Import-Module -Exactly 1
 		}
 		It "Appropriate Lab Builder Files Should be produced" {
 			Test-Path -Path 'C:\Pester Lab\PESTER01\LabBuilder Files\Pester01.mof' | Should Be $True

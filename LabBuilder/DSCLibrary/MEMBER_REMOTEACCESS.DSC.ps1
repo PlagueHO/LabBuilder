@@ -23,10 +23,24 @@ Configuration MEMBER_REMOTEACCESS
 			[PSCredential]$DomainAdminCredential = New-Object System.Management.Automation.PSCredential ("$($Node.DomainName)\Administrator", (ConvertTo-SecureString $Node.DomainAdminPassword -AsPlainText -Force))
 		}
 
+		WindowsFeature DirectAccessVPNInstall 
+        { 
+            Ensure = "Present" 
+            Name = "DirectAccess-VPN" 
+        } 
+
+		WindowsFeature RoutingInstall 
+        { 
+            Ensure = "Present" 
+            Name = "Routing" 
+			DependsOn = "[WindowsFeature]DirectAccessVPNInstall" 
+        } 
+
 		WindowsFeature RSATADPowerShell
         { 
             Ensure = "Present" 
             Name = "RSAT-AD-PowerShell" 
+			DependsOn = "[WindowsFeature]RoutingInstall" 
         } 
 
         xWaitForADDomain DscDomainWait
@@ -44,20 +58,6 @@ Configuration MEMBER_REMOTEACCESS
             DomainName    = $Node.DomainName
             Credential    = $DomainAdminCredential 
 			DependsOn = "[xWaitForADDomain]DscDomainWait" 
-        } 
-
-		WindowsFeature DirectAccessVPNInstall 
-        { 
-            Ensure = "Present" 
-            Name = "DirectAccess-VPN" 
-			DependsOn = "[xComputer]JoinDomain" 
-        } 
-
-		WindowsFeature RoutingInstall 
-        { 
-            Ensure = "Present" 
-            Name = "Routing" 
-			DependsOn = "[WindowsFeature]DirectAccessVPNInstall" 
         } 
 	}
 }

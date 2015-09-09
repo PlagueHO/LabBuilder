@@ -24,10 +24,17 @@ Configuration MEMBER_DHCP
 			[PSCredential]$DomainAdminCredential = New-Object System.Management.Automation.PSCredential ("$($Node.DomainName)\Administrator", (ConvertTo-SecureString $Node.DomainAdminPassword -AsPlainText -Force))
 		}
 
+		WindowsFeature DHCPInstall 
+        { 
+            Ensure = "Present" 
+            Name = "DHCP" 
+        }
+
 		WindowsFeature RSATADPowerShell
         { 
             Ensure = "Present" 
             Name = "RSAT-AD-PowerShell" 
+			DependsOn = "[WindowsFeature]DHCPInstall" 
         } 
 
         xWaitForADDomain DscDomainWait
@@ -47,13 +54,6 @@ Configuration MEMBER_DHCP
 			DependsOn = "[xWaitForADDomain]DscDomainWait" 
         } 
 
-		WindowsFeature DHCPInstall 
-        { 
-            Ensure = "Present" 
-            Name = "DHCP" 
-			DependsOn = "[xComputer]JoinDomain" 
-        }
-
 		Script DHCPAuthorize
 		{
 			PSDSCRunAsCredential = $DomainAdminCredential
@@ -68,7 +68,7 @@ Configuration MEMBER_DHCP
 			TestScript = { 
 				Return (-not (@(Get-DHCPServerInDC | Where-Object { $_.IPAddress -In (Get-NetIPAddress).IPAddress }).Count -eq 0))
 			}
-			DependsOn = '[WindowsFeature]DHCPInstall'
+			DependsOn = '[xComputer]JoinDomain'
 		}
 
 	}
