@@ -70,8 +70,10 @@ Configuration MEMBER_DHCP
 			}
 			DependsOn = '[xComputer]JoinDomain'
 		}
+		[Int]$Count=0
 		Foreach ($Scope in $Node.Scopes) {
-			xDhcpServerScope Scope
+			$Count++
+			xDhcpServerScope "Scope$Count"
 			{
 				Ensure = 'Present'
 				IPStartRange = $Scope.Start
@@ -82,8 +84,10 @@ Configuration MEMBER_DHCP
 				AddressFamily = $Scope.AddressFamily
 			}
 		}
+		[Int]$Count=0
 		Foreach ($Reservation in $Node.Reservations) {
-			xDhcpServerReservation PullServerIP
+			$Count++
+			xDhcpServerReservation "Reservation$Count"
 			{
 				Ensure = 'Present'
 				ScopeID = $Reservation.ScopeId

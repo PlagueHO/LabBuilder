@@ -18,20 +18,20 @@
 ##########################################################################################################################################
 function Test-Admin()
 {
-    # Get the ID and security principal of the current user account
-    $myWindowsID=[System.Security.Principal.WindowsIdentity]::GetCurrent()
-    $myWindowsPrincipal=new-object System.Security.Principal.WindowsPrincipal($myWindowsID)
+	# Get the ID and security principal of the current user account
+	$myWindowsID=[System.Security.Principal.WindowsIdentity]::GetCurrent()
+	$myWindowsPrincipal=new-object System.Security.Principal.WindowsPrincipal($myWindowsID)
   
-    # Get the security principal for the Administrator role
-    $adminRole=[System.Security.Principal.WindowsBuiltInRole]::Administrator
+	# Get the security principal for the Administrator role
+	$adminRole=[System.Security.Principal.WindowsBuiltInRole]::Administrator
   
-    # Check to see if we are currently running "as Administrator"
-    Return ($myWindowsPrincipal.IsInRole($adminRole))
+	# Check to see if we are currently running "as Administrator"
+	Return ($myWindowsPrincipal.IsInRole($adminRole))
 }
 ##########################################################################################################################################
 function Download-WMF5Installer()
 {
-    # Only downloads for Win8.1/WS2K12R2
+	# Only downloads for Win8.1/WS2K12R2
 	[String]$URL = $Script:WMF5DownloadURL
 	If (-not (Test-Path -Path $Script:WMF5InstallerPath)) {
 		Try {
@@ -40,7 +40,7 @@ function Download-WMF5Installer()
 			Return $False
 		}
 	}
-    Return $True
+	Return $True
 } # Download-WMF5Installer
 ##########################################################################################################################################
 function Download-CertGenerator()
@@ -61,7 +61,7 @@ function Download-CertGenerator()
 		} # Try
 	} # If
 	
-    Return $True
+	Return $True
 } # Download-CertGenerator
 ##########################################################################################################################################
 function Get-ModulesInDSCConfig()
@@ -116,14 +116,14 @@ function Get-LabConfiguration {
 	# be provided with config
 	[String]$ConfigPath = [System.IO.Path]::GetDirectoryName($Path)
 	[String]$XMLConfigPath = $Configuration.labbuilderconfig.settings.configpath
-    If ($XMLConfigPath) {
+	If ($XMLConfigPath) {
 		If ($XMLConfigPath.Substring(0,1) -eq '.') {
 			# A relative path was provided in the config path so add the actual path of the XML to it
 			[String]$FullConfigPath = Join-Path -Path $ConfigPath -ChildPath $XMLConfigPath
 		} # If
 	} Else {
-        [String]$FullConfigPath = $ConfigPath
-    }
+		[String]$FullConfigPath = $ConfigPath
+	}
 	$Configuration.labbuilderconfig.settings.setattribute('fullconfigpath',$FullConfigPath)
 	Return $Configuration
 } # Get-LabConfiguration
@@ -661,11 +661,11 @@ function Set-LabDSCMOFFile {
 	[OutputType([Boolean])]
 	param (
 		[Parameter(
-            Position=0)]
+			Position=0)]
 		[XML]$Configuration = $(Throw "Configuration XML parameter is missing."),
 
 		[Parameter(
-            Position=1)]
+			Position=1)]
 		[System.Collections.Hashtable]$VM = $(Throw "VM parameter is missing.")
 	)
 
@@ -848,7 +848,7 @@ $NetworkingDSCConfig += @"
 		@{
 			NodeName = '$($VM.ComputerName)'
 			CertificateFile = '$CertificateFile'
-            Thumbprint = '$CertificateThumbprint' 
+			Thumbprint = '$CertificateThumbprint' 
 			LocalAdminPassword = '$($VM.administratorpassword)'
 			$($VM.DSCParameters)
 		}
@@ -903,11 +903,11 @@ function Set-LabDSCStartFile {
 	[OutputType([Boolean])]
 	param (
 		[Parameter(
-            Position=0)]
+			Position=0)]
 		[XML]$Configuration = $(Throw "Configuration XML parameter is missing."),
 
 		[Parameter(
-            Position=1)]
+			Position=1)]
 		[System.Collections.Hashtable]$VM = $(Throw "VM parameter is missing.")
 	)
 
@@ -948,11 +948,11 @@ function Initialize-LabVMDSC {
 	[CmdLetBinding()]
 	param (
 		[Parameter(
-            Position=0)]
+			Position=0)]
 		[XML]$Configuration = $(Throw "Configuration XML parameter is missing."),
 
 		[Parameter(
-            Position=1)]
+			Position=1)]
 		[System.Collections.Hashtable]$VM = $(Throw "VM parameter is missing.")
 	)
 
@@ -969,11 +969,11 @@ function Start-LabVMDSC {
 	[CmdLetBinding()]
 	param (
 		[Parameter(
-            Position=0)]
+			Position=0)]
 		[XML]$Configuration = $(Throw "Configuration XML parameter is missing."),
 
 		[Parameter(
-            Position=1)]
+			Position=1)]
 		[System.Collections.Hashtable]$VM = $(Throw "VM parameter is missing."),
 
 		[Int]$Timeout = 300
@@ -1068,11 +1068,11 @@ function Get-LabUnattendFile {
 	[OutputType([String])]
 	param (
 		[Parameter(
-            Position=0)]
+			Position=0)]
 		[XML]$Configuration = $(Throw "Configuration XML parameter is missing."),
 
 		[Parameter(
-            Position=1)]
+			Position=1)]
 		[System.Collections.Hashtable]$VM = $(Throw "VM parameter is missing.")
 	)
 	If ($VM.UnattendFile) {
@@ -1168,18 +1168,18 @@ function Get-LabUnattendFile {
 ##########################################################################################################################################
 function Set-LabVMInitializationFiles {
 	[CmdLetBinding()]
-    [OutputType([Boolean])]
+	[OutputType([Boolean])]
 	param (
 		[Parameter(
-            Position=0)]
+			Position=0)]
 		[XML]$Configuration = $(Throw "Configuration XML parameter is missing."),
 
 		[Parameter(
-            Position=1)]
+			Position=1)]
 		[System.Collections.Hashtable]$VM = $(Throw "VM parameter is missing.")
 ,
 		[Parameter(
-            Position=2)]
+			Position=2)]
 		[String]$VMBootDiskPath = $(Throw "VMBootDiskPath parameter is missing.")
 	)
 
@@ -1227,10 +1227,10 @@ Enable-PSRemoting -SkipNetworkProfileCheck -Force
 Add-Content -Path `"`$(`$ENV:SystemRoot)\Setup\Scripts\SetupComplete.log`" -Value 'Windows Remoting Enabled ...' -Encoding Ascii
 "@
 	If ($VM.SetupComplete) {
-        [String]$SetupComplete = $VM.SetupComplete
-        If (-not (Test-Path -Path $SetupComplete)) {
-            Throw "SetupComplete Script file $SetupComplete could not be found for VM $($VM.Name)."
-        }
+		[String]$SetupComplete = $VM.SetupComplete
+		If (-not (Test-Path -Path $SetupComplete)) {
+			Throw "SetupComplete Script file $SetupComplete could not be found for VM $($VM.Name)."
+		}
 		[String]$Extension = [System.IO.Path]::GetExtension($SetupComplete)
 		Switch ($Extension.ToLower()) {
 			'.ps1' {
@@ -1273,7 +1273,7 @@ Add-Content -Path `"$($ENV:SystemRoot)\Setup\Scripts\SetupComplete.log`" -Value 
 	Write-Verbose "Dismounting VM $($VM.Name) Boot Disk VHDx $VMBootDiskPath ..."
 	Dismount-WindowsImage -Path $MountPoint -Save | Out-Null
 	Remove-Item -Path $MountPoint -Recurse -Force | Out-Null
-    Return $True
+	Return $True
 } # Set-LabVMInitializationFiles
 ##########################################################################################################################################
 
@@ -1534,11 +1534,11 @@ function Get-LabVMSelfSignedCert {
 	[OutputType([Boolean])]
 	param (
 		[Parameter(
-            Position=0)]
+			Position=0)]
 		[XML]$Configuration = $(Throw "Configuration XML parameter is missing."),
 
 		[Parameter(
-            Position=1)]
+			Position=1)]
 		[System.Collections.Hashtable]$VM = $(Throw "VM parameter is missing."),
 
 		[Int]$Timeout = 300
@@ -1817,7 +1817,7 @@ function Wait-LabVMInit {
 	[CmdLetBinding()]
 	param (
 		[Parameter(
-            Position=0)]
+			Position=0)]
 		[System.Collections.Hashtable]$VM = $(Throw "VM parameter is missing."),
 
 		[Int]$Timeout = 300
@@ -1876,7 +1876,7 @@ function Wait-LabVMStart {
 	[CmdLetBinding()]
 	param (
 		[Parameter(
-            Position=0)]
+			Position=0)]
 		[System.Collections.Hashtable]$VM = $(Throw "VM parameter is missing.")
 	)
 	$Heartbeat = Get-VMIntegrationService -VMName $VM.Name -Name Heartbeat
@@ -1896,7 +1896,7 @@ function Wait-LabVMOff {
 	[CmdLetBinding()]
 	param (
 		[Parameter(
-            Position=0)]
+			Position=0)]
 		[System.Collections.Hashtable]$VM = $(Throw "VM parameter is missing.")
 	)
 	$RunningVM = Get-VM -Name $VM.Name

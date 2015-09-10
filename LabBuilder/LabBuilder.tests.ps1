@@ -9,7 +9,7 @@ $here = Split-Path -Parent $MyInvocation.MyCommand.Path
 Set-Location $here
 if (Get-Module LabBuilder -All)
 {
-    Get-Module LabBuilder -All | Remove-Module
+	Get-Module LabBuilder -All | Remove-Module
 }
 
 Import-Module "$here\LabBuilder.psd1" -Force -DisableNameChecking
@@ -172,7 +172,7 @@ Describe "Get-LabSwitches" {
 		
 		It "Returns Switches Object that matches Expected Object" {
 			$ExpectedSwitches = Get-Content -Path "$Global:TestConfigPath\ExpectedSwitches.json" -Raw
-            $SwitchesJSON = ($Switches | ConvertTo-Json -Depth 4)
+			$SwitchesJSON = ($Switches | ConvertTo-Json -Depth 4)
 			[String]::Compare(($Switches | ConvertTo-Json -Depth 4),$ExpectedSwitches,$true) | Should Be 0
 		}
 	}
@@ -183,11 +183,11 @@ Describe "Get-LabSwitches" {
 Describe "Initialize-LabSwitches" {
 
 	#region Mocks
-    Mock Get-VMSwitch
-    Mock New-VMSwitch
-    Mock Add-VMNetworkAdapter
-    Mock Set-VMNetworkAdapterVlan
-    #endregion
+	Mock Get-VMSwitch
+	Mock New-VMSwitch
+	Mock Add-VMNetworkAdapter
+	Mock Set-VMNetworkAdapterVlan
+	#endregion
 
 	Context "No parameters passed" {
 		It "Fails" {
@@ -215,9 +215,9 @@ Describe "Initialize-LabSwitches" {
 Describe "Remove-LabSwitches" {
 
 	#region Mocks
-    Mock Get-VMSwitch
-    Mock Remove-VMSwitch
-    #endregion
+	Mock Get-VMSwitch
+	Mock Remove-VMSwitch
+	#endregion
 
 	Context "No parameters passed" {
 		It "Fails" {
@@ -242,8 +242,8 @@ Describe "Remove-LabSwitches" {
 Describe "Get-LabVMTemplates" {
 
 	#region Mocks
-    Mock Get-VM
-    #endregion
+	Mock Get-VM
+	#endregion
 
 	Context "No parameters passed" {
 		It "Fails" {
@@ -285,9 +285,9 @@ Describe "Initialize-LabVMTemplates" {
 	#region Mocks
 	Mock Get-VM
 	Mock Optimize-VHD
-    Mock Set-ItemProperty -ParameterFilter { ($Name -eq 'IsReadOnly') -and ($Value -eq $True) }
-    Mock Set-ItemProperty -ParameterFilter { ($Name -eq 'IsReadOnly') -and ($Value -eq $False) }
-    #endregion
+	Mock Set-ItemProperty -ParameterFilter { ($Name -eq 'IsReadOnly') -and ($Value -eq $True) }
+	Mock Set-ItemProperty -ParameterFilter { ($Name -eq 'IsReadOnly') -and ($Value -eq $False) }
+	#endregion
 
 	Context "No parameters passed" {
 		It "Fails" {
@@ -327,11 +327,11 @@ Describe "Initialize-LabVMTemplates" {
 ##########################################################################################################################################
 Describe "Remove-LabVMTemplates" {
 	#region Mocks
-    Mock Get-VM
+	Mock Get-VM
 	Mock Set-ItemProperty -ParameterFilter { ($Name -eq 'IsReadOnly') -and ($Value -eq $False) }
-    Mock Remove-Item
-    Mock Test-Path -MockWith { $True }
-    #endregion
+	Mock Remove-Item
+	Mock Test-Path -MockWith { $True }
+	#endregion
 
 	Context "No parameters passed" {
 		It "Fails" {
@@ -360,7 +360,7 @@ Describe "Remove-LabVMTemplates" {
 
 ##########################################################################################################################################
 Describe "Set-LabDSCMOFFile" {
-    Remove-Item -Path "C:\Pester Lab\PESTER01\LabBuilder Files" -Recurse -Force -ErrorAction SilentlyContinue
+	Remove-Item -Path "C:\Pester Lab\PESTER01\LabBuilder Files" -Recurse -Force -ErrorAction SilentlyContinue
 
 	#region Mocks
 	Mock Get-VM
@@ -368,8 +368,8 @@ Describe "Set-LabDSCMOFFile" {
 		[PSCustomObject]@{
 			Thumbprint = '1234567890ABCDEF'
 		}
-    } # Mock
-    Mock Remove-Item -ParameterFilter {$path -eq 'Cert:LocalMachine\My\1234567890ABCDEF'}
+	} # Mock
+	Mock Remove-Item -ParameterFilter {$path -eq 'Cert:LocalMachine\My\1234567890ABCDEF'}
 	Mock Set-VMHost
 	#endregion
 
@@ -378,7 +378,7 @@ Describe "Set-LabDSCMOFFile" {
 			{ Set-LabDSCMOFFile } | Should Throw
 		}
 	}
- 	Context "Valid Parameters Passed" {
+	Context "Valid Parameters Passed" {
 		$Config = Get-LabConfiguration -Path $Global:TestConfigOKPath
 		Initialize-LabHyperV -Configuration $Config
 		[Array]$Switches = Get-LabSwitches -Configuration $Config
@@ -408,10 +408,10 @@ Describe "Set-LabDSCMOFFile" {
 ##########################################################################################################################################
 Describe "Set-LabDSCStartFile" {
 	#region Mocks
-    Mock Get-VM
+	Mock Get-VM
 	Mock Get-VMNetworkAdapter -MockWith { [PSObject]@{ Name = 'Dummy'; MacAddress = '00-11-22-33-44-55'; } }
-    Mock Set-Content
-    #endregion
+	Mock Set-Content
+	#endregion
 	Context "No parameters passed" {
 		It "Fails" {
 			{ Set-LabDSCStartFile } | Should Throw
@@ -438,8 +438,8 @@ Describe "Set-LabDSCStartFile" {
 Describe "Get-LabUnattendFile" {
 
 	#region Mocks
-    Mock Get-VM
-    #endregion
+	Mock Get-VM
+	#endregion
 
 	Context "No parameters passed" {
 		It "Fails" {
@@ -466,20 +466,20 @@ Describe "Get-LabUnattendFile" {
 Describe "Set-LabVMInitializationFiles" {
 
 	#region Mocks
-    Mock Get-VM
+	Mock Get-VM
 	Mock Mount-WindowsImage
-    Mock Dismount-WindowsImage
-    Mock Invoke-WebRequest
-    Mock Add-WindowsPackage
-    Mock Set-Content
-    Mock Copy-Item
-    #endregion
+	Mock Dismount-WindowsImage
+	Mock Invoke-WebRequest
+	Mock Add-WindowsPackage
+	Mock Set-Content
+	Mock Copy-Item
+	#endregion
 
 	Context "No parameters passed" {
 		It "Fails" {
 			{ Set-LabVMInitializationFiles } | Should Throw
 		}
-    }
+	}
 	Context "Valid configuration is passed" {	
 		$Config = Get-LabConfiguration -Path $Global:TestConfigOKPath
 		New-Item -Path $Config.labbuilderconfig.settings.vmpath -ItemType Directory -Force -ErrorAction SilentlyContinue
@@ -646,13 +646,13 @@ Describe "Get-LabVMSelfSignedCert" {
 Describe "Start-LabVM" {
 	#region Mocks
 	Mock Get-VM -ParameterFilter { $Name -eq 'PESTER01' } -MockWith { [PSObject]@{ Name='PESTER01'; State='Off' } }
-    Mock Get-VM -ParameterFilter { $Name -eq 'pester template *' }
+	Mock Get-VM -ParameterFilter { $Name -eq 'pester template *' }
 	Mock Start-VM
-    Mock Wait-LabVMInit -MockWith { $True }
-    Mock Get-LabVMSelfSignedCert -MockWith { $True }
-    Mock Initialize-LabVMDSC
-    Mock Start-LabVMDSC
-    #endregion
+	Mock Wait-LabVMInit -MockWith { $True }
+	Mock Get-LabVMSelfSignedCert -MockWith { $True }
+	Mock Initialize-LabVMDSC
+	Mock Start-LabVMDSC
+	#endregion
 
 	Context "No parameters passed" {
 		It "Fails" {
@@ -672,15 +672,15 @@ Describe "Start-LabVM" {
 			Start-LabVM -Configuration $Config -VM $VMs[0] | Should Be $True
 		}
 		It "Calls Mocked commands" {
-            Assert-MockCalled Get-VM -ParameterFilter { $Name -eq 'PESTER01' } -Exactly 1
-            Assert-MockCalled Get-VM -ParameterFilter { $Name -eq 'pester template *' } -Exactly 1
+			Assert-MockCalled Get-VM -ParameterFilter { $Name -eq 'PESTER01' } -Exactly 1
+			Assert-MockCalled Get-VM -ParameterFilter { $Name -eq 'pester template *' } -Exactly 1
 			Assert-MockCalled Start-VM -Exactly 1
-            Assert-MockCalled Wait-LabVMInit -Exactly 1
-            Assert-MockCalled Get-LabVMSelfSignedCert -Exactly 1
-            Assert-MockCalled Initialize-LabVMDSC -Exactly 1
-            Assert-MockCalled Start-LabVMDSC -Exactly 1
+			Assert-MockCalled Wait-LabVMInit -Exactly 1
+			Assert-MockCalled Get-LabVMSelfSignedCert -Exactly 1
+			Assert-MockCalled Initialize-LabVMDSC -Exactly 1
+			Assert-MockCalled Start-LabVMDSC -Exactly 1
 		}
-        
+		
 		Remove-Item -Path $Config.labbuilderconfig.settings.vmpath -Recurse -Force -ErrorAction SilentlyContinue
 		Remove-Item -Path $Config.labbuilderconfig.settings.vhdparentpath -Recurse -Force -ErrorAction SilentlyContinue
 	}
@@ -690,20 +690,20 @@ Describe "Start-LabVM" {
 ##########################################################################################################################################
 Describe "Initialize-LabVMs" {
 	#region Mocks
-    Mock New-VHD
-    Mock New-VM
-    Mock Get-VM -MockWith { [PSObject]@{ ProcessorCount = '2'; State = 'Off' } }
-    Mock Set-VM
-    Mock Get-VMHardDiskDrive
-    Mock Set-LabVMInitializationFiles
-    Mock Get-VMNetworkAdapter
-    Mock Add-VMNetworkAdapter
-    Mock Start-VM
-    Mock Wait-LabVMInit -MockWith { $True }
-    Mock Get-LabVMSelfSignedCert
-    Mock Initialize-LabVMDSC
-    Mock Start-LabVMDSC
-    #endregion
+	Mock New-VHD
+	Mock New-VM
+	Mock Get-VM -MockWith { [PSObject]@{ ProcessorCount = '2'; State = 'Off' } }
+	Mock Set-VM
+	Mock Get-VMHardDiskDrive
+	Mock Set-LabVMInitializationFiles
+	Mock Get-VMNetworkAdapter
+	Mock Add-VMNetworkAdapter
+	Mock Start-VM
+	Mock Wait-LabVMInit -MockWith { $True }
+	Mock Get-LabVMSelfSignedCert
+	Mock Initialize-LabVMDSC
+	Mock Start-LabVMDSC
+	#endregion
 
 	Context "No parameters passed" {
 		It "Fails" {
@@ -728,15 +728,15 @@ Describe "Initialize-LabVMs" {
 			Assert-MockCalled Set-VM -Exactly 1
 			Assert-MockCalled Get-VMHardDiskDrive -Exactly 1
 			Assert-MockCalled Set-LabVMInitializationFiles -Exactly 1
-            Assert-MockCalled Get-VMNetworkAdapter -Exactly 9
-            Assert-MockCalled Add-VMNetworkAdapter -Exactly 4
-            Assert-MockCalled Start-VM -Exactly 1
-            Assert-MockCalled Wait-LabVMInit -Exactly 1
-            Assert-MockCalled Get-LabVMSelfSignedCert -Exactly 1
-            Assert-MockCalled Initialize-LabVMDSC -Exactly 1
-            Assert-MockCalled Start-LabVMDSC -Exactly 1
+			Assert-MockCalled Get-VMNetworkAdapter -Exactly 9
+			Assert-MockCalled Add-VMNetworkAdapter -Exactly 4
+			Assert-MockCalled Start-VM -Exactly 1
+			Assert-MockCalled Wait-LabVMInit -Exactly 1
+			Assert-MockCalled Get-LabVMSelfSignedCert -Exactly 1
+			Assert-MockCalled Initialize-LabVMDSC -Exactly 1
+			Assert-MockCalled Start-LabVMDSC -Exactly 1
 		}
-        
+		
 		Remove-Item -Path $Config.labbuilderconfig.settings.vmpath -Recurse -Force -ErrorAction SilentlyContinue
 		Remove-Item -Path $Config.labbuilderconfig.settings.vhdparentpath -Recurse -Force -ErrorAction SilentlyContinue
 	}
@@ -746,14 +746,14 @@ Describe "Initialize-LabVMs" {
 ##########################################################################################################################################
 Describe "Remove-LabVMs" {
 	#region Mocks
-    Mock Get-VM -MockWith { [PSObject]@{ Name = 'PESTER01'; State = 'Running'; } }
-    Mock Stop-VM
-    Mock Wait-LabVMOff -MockWith { Return $True }
-    Mock Get-VMHardDiskDrive
-    Mock Remove-VM
-    #endregion
+	Mock Get-VM -MockWith { [PSObject]@{ Name = 'PESTER01'; State = 'Running'; } }
+	Mock Stop-VM
+	Mock Wait-LabVMOff -MockWith { Return $True }
+	Mock Get-VMHardDiskDrive
+	Mock Remove-VM
+	#endregion
 
-   	Context "No parameters passed" {
+	Context "No parameters passed" {
 		It "Fails" {
 			{ Remove-LabVMs } | Should Throw
 		}
