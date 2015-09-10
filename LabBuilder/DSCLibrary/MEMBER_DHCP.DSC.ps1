@@ -81,6 +81,7 @@ Configuration MEMBER_DHCP
 				Name = $Scope.Name
 				SubnetMask = $Scope.SubnetMask
 				State = 'Active'
+				LeaseDuration = '00:08:00'
 				AddressFamily = $Scope.AddressFamily
 			}
 		}
@@ -93,8 +94,21 @@ Configuration MEMBER_DHCP
 				ScopeID = $Reservation.ScopeId
 				ClientMACAddress = $Reservation.ClientMACAddress
 				IPAddress = $Reservation.IPAddress
-				Name = $Resevation.Name
+				Name = $Reservation.Name
 				AddressFamily = $Reservation.AddressFamily
+			}
+		}
+		[Int]$Count=0
+		Foreach ($ScopeOption in $Node.ScopeOptions) {
+			$Count++
+			xDhcpServerOption "ScopeOption$Count"
+			{
+				Ensure = 'Present'
+				ScopeID = $ScopeOption.ScopeId
+				DnsDomain = $Node.DomainName
+				DnsServerIPAddress = $ScopeOption.DNServerIPAddress
+				Router = $ScopeOption.Router
+				AddressFamily = $ScopeOption.AddressFamily
 			}
 		}
 	}

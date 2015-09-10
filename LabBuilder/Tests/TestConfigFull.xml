@@ -143,21 +143,95 @@
           DomainAdminPassword = "P@ssword!1"
           PSDscAllowDomainUser = $True
           Scopes = @(
-              @{ Name = 'Site A';
+              @{ Name = 'Site A Primary';
                  Start = '192.168.128.50';
                  End = '192.168.128.254';
                  SubnetMask = '255.255.255.0';
                  AddressFamily = 'IPv4'
-              },
-              @{ Name = 'Site A';
-                 Start = 'fd53:ccc5:895a:bc50';
-                 End = 'fd53:ccc5:895a:bcFE';
-                 SubnetMask = '64';
-                 AddressFamily = 'IPv6'
               }
             )
           Reservations = @(
-          )
+              @{ Name = 'SA_DC1';
+                 ScopeID = '192.168.128.0';
+                 ClientMACAddress = '000000000000';
+                 IPAddress = '192.168.128.10';
+                 AddressFamily = 'IPv4'
+              },
+              @{ Name = 'SA_DC2';
+                 ScopeID = '192.168.128.0';
+                 ClientMACAddress = '000000000001';
+                 IPAddress = '192.168.128.11';
+                 AddressFamily = 'IPv4'
+              },
+              @{ Name = 'SA_DHCP1';
+                 ScopeID = '192.168.128.0';
+                 ClientMACAddress = '000000000002';
+                 IPAddress = '192.168.128.16';
+                 AddressFamily = 'IPv4'
+              },
+              @{ Name = 'SA_DHCP2';
+                 ScopeID = '192.168.128.0';
+                 ClientMACAddress = '000000000003';
+                 IPAddress = '192.168.128.17';
+                 AddressFamily = 'IPv4'
+              },
+              @{ Name = 'SA_NPS';
+                 ScopeID = '192.168.128.0';
+                 ClientMACAddress = '000000000004';
+                 IPAddress = '192.168.128.18';
+                 AddressFamily = 'IPv4'
+              },
+              @{ Name = 'SA_EDGE1';
+                 ScopeID = '192.168.128.0';
+                 ClientMACAddress = '000000000005';
+                 IPAddress = '192.168.128.19';
+                 AddressFamily = 'IPv4'
+              },
+              @{ Name = 'SA_EDGE2';
+                 ScopeID = '192.168.128.0';
+                 ClientMACAddress = '000000000006';
+                 IPAddress = '192.168.128.20';
+                 AddressFamily = 'IPv4'
+              },
+              @{ Name = 'SA_WDS';
+                 ScopeID = '192.168.128.0';
+                 ClientMACAddress = '000000000007';
+                 IPAddress = '192.168.128.21';
+                 AddressFamily = 'IPv4'
+              },
+              @{ Name = 'SA_WSUS';
+                 ScopeID = '192.168.128.0';
+                 ClientMACAddress = '000000000008';
+                 IPAddress = '192.168.128.22';
+                 AddressFamily = 'IPv4'
+              },
+              @{ Name = 'SA_SUBCA';
+                 ScopeID = '192.168.128.0';
+                 ClientMACAddress = '000000000009';
+                 IPAddress = '192.168.128.23';
+                 AddressFamily = 'IPv4'
+              },
+              @{ Name = 'SA_FS1';
+                 ScopeID = '192.168.128.0';
+                 ClientMACAddress = '00000000000A';
+                 IPAddress = '192.168.128.24';
+                 AddressFamily = 'IPv4'
+              },
+              @{ Name = 'SA_FS2';
+                 ScopeID = '192.168.128.0';
+                 ClientMACAddress = '00000000000B';
+                 IPAddress = '192.168.128.25';
+                 AddressFamily = 'IPv4'
+              }
+            )
+          ScopeOption = @(
+              @{ Name = 'SA_DC1';
+                 ScopeID = '192.168.128.0';
+                 DNServerIPAddress = @('192.168.128.10','192.168.128.11');
+                 Router = '192.168.128.19';
+                 AddressFamily = 'IPv4'
+              }
+            )
         </parameters>
       </dsc>
       <adapters>
