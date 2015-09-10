@@ -8,7 +8,7 @@ DSC Template Configuration File For use by LabBuilder
 	CACommonName = "LABBUILDER.COM Issuing CA"
 	CADistinguishedNameSuffix = "DC=LABBUILDER,DC=COM"
 	DSConfigDN = "CN=Configuration,DC=LABBUILDER,DC=COM"
-	CRLPublicationURLs = "1:C:\Windows\system32\CertSrv\CertEnroll\%1_%3%4.crt\n2:ldap:///CN=%7,CN=AIA,CN=Public Key Services,CN=Services,%6%11\n2:http://pki.labbuilder.com/CertEnroll/%1_%3%4.crt"
+	CRLPublicationURLs = "1:C:\Windows\system32\CertSrv\CertEnroll\%3%8%9.crl\n10:ldap:///CN=%7%8,CN=%2,CN=CDP,CN=Public Key Services,CN=Services,%6%10\n2:http://pki.labbuilder.com/CertEnroll/%3%8%9.crl"
 	CACertPublicationURLs = "1:C:\Windows\system32\CertSrv\CertEnroll\%1_%3%4.crt\n2:ldap:///CN=%7,CN=AIA,CN=Public Key Services,CN=Services,%6%11\n2:http://pki.labbuilder.com/CertEnroll/%1_%3%4.crt"  
 #########################################################################################################################################>
 
@@ -68,6 +68,15 @@ Configuration MEMBER_SUBCA
 			DependsOn = "[xWaitForADDomain]DscDomainWait" 
         } 
 			
+		File CAPolicy
+		{
+			Ensure = 'Present'
+			DestinationPath = 'C:\Windows\CAPolicy.inf'
+			Contents = "[Version]`r`n Signature= `"$Windows NT$`"`r`n[Certsrv_Server]`r`n RenewalKeyLength=2048`r`n RenewalValidityPeriod=Years`r`n RenewalValidityPeriodUnits=10`r`n LoadDefaultTemplates=1`r`n AlternateSignatureAlgorithm=1`r`n"
+			Type = 'File'
+			DependsOn = '[xComputer]JoinDomain'
+		}
+
 		xADCSCertificationAuthority ADCS
         {
             Ensure = 'Present'
@@ -76,8 +85,8 @@ Configuration MEMBER_SUBCA
 			CACommonName = $Node.CACommonName
 			CADistinguishedNameSuffix = $Node.CADistinguishedNameSuffix
 			ValidityPeriod = 'Years'
-			ValidityPeriodUnits = 20
-            DependsOn = '[xComputer]JoinDomain'
+			ValidityPeriodUnits = 1
+            DependsOn = '[File]CAPolicy'
         }
 
 		Script ADCSAdvConfig

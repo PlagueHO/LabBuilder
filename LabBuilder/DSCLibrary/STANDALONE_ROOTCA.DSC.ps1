@@ -8,7 +8,7 @@ DSC Template Configuration File For use by LabBuilder
 	CACommonName = "LABBUILDER.COM Root CA"
 	CADistinguishedNameSuffix = "DC=LABBUILDER,DC=COM"
 	DSConfigDN = "CN=Configuration,DC=LABBUILDER,DC=COM"
-	CRLPublicationURLs = "1:C:\Windows\system32\CertSrv\CertEnroll\%1_%3%4.crt\n2:ldap:///CN=%7,CN=AIA,CN=Public Key Services,CN=Services,%6%11\n2:http://pki.labbuilder.com/CertEnroll/%1_%3%4.crt"
+	CRLPublicationURLs = "1:C:\Windows\system32\CertSrv\CertEnroll\%3%8%9.crl\n10:ldap:///CN=%7%8,CN=%2,CN=CDP,CN=Public Key Services,CN=Services,%6%10\n2:http://pki.labbuilder.com/CertEnroll/%3%8%9.crl"
 	CACertPublicationURLs = "1:C:\Windows\system32\CertSrv\CertEnroll\%1_%3%4.crt\n2:ldap:///CN=%7,CN=AIA,CN=Public Key Services,CN=Services,%6%11\n2:http://pki.labbuilder.com/CertEnroll/%1_%3%4.crt"  
 #########################################################################################################################################>
 
@@ -16,6 +16,7 @@ Configuration STANDALONE_ROOTCA
 {
 	Import-DscResource -ModuleName 'PSDesiredStateConfiguration'
 	Import-DscResource -ModuleName xAdcsDeployment
+	Import-DscResource -ModuleName xSmbShare
 	Node $AllNodes.NodeName {
 		# Assemble the Local Admin Credentials
 		If ($Node.LocalAdminPassword) {
@@ -88,5 +89,15 @@ Configuration STANDALONE_ROOTCA
 			}
 			DependsOn = '[xADCSCertificationAuthority]ADCS'
 		}
+
+		xSmbShare CertEnrollShare
+		{
+			Ensure = "Present" 
+			Name   = "CertEnroll"
+			Path = "C:\Windows\System32\CertSrv\CertEnroll\"  
+			ReadAccess = "Everyone"
+			Description = "Contains Public RootCA Certificate and CRL"
+			DependsOn = '[Script]ADCSAdvConfig'
+		} 
 	}
 }

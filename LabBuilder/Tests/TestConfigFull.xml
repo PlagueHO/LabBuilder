@@ -65,7 +65,7 @@
             CACommonName = "LABBUILDER.COM Root CA"
             CADistinguishedNameSuffix = "DC=LABBUILDER,DC=COM"
             DSConfigDN = "CN=Configuration,DC=LABBUILDER,DC=COM"
-            CRLPublicationURLs = "1:C:\Windows\system32\CertSrv\CertEnroll\%1_%3%4.crt\n2:ldap:///CN=%7,CN=AIA,CN=Public Key Services,CN=Services,%6%11\n2:http://pki.labbuilder.com/CertEnroll/%1_%3%4.crt"
+            CRLPublicationURLs = "1:C:\Windows\system32\CertSrv\CertEnroll\%3%8%9.crl\n10:ldap:///CN=%7%8,CN=%2,CN=CDP,CN=Public Key Services,CN=Services,%6%10\n2:http://pki.labbuilder.com/CertEnroll/%3%8%9.crl"
             CACertPublicationURLs = "1:C:\Windows\system32\CertSrv\CertEnroll\%1_%3%4.crt\n2:ldap:///CN=%7,CN=AIA,CN=Public Key Services,CN=Services,%6%11\n2:http://pki.labbuilder.com/CertEnroll/%1_%3%4.crt"
           </parameters>
       </dsc>
@@ -281,7 +281,7 @@
     </vm>
 
     <vm name="LABBUILDER.COM SA_NPS"
-      template="Template Windows Server 2012 R2 Datacenter CORE"
+      template="Template Windows Server 2012 R2 Datacenter Full"
       computername="SA_NPS"
       usedifferencingbootdisk="Y">
       <dsc configname="MEMBER_NPS"
@@ -368,9 +368,10 @@
     </vm>
 
     <vm name="LABBUILDER.COM SA_WDS"
-      template="Template Windows Server 2012 R2 Datacenter CORE"
+      template="Template Windows Server 2012 R2 Datacenter Full"
       computername="SA_WDS"
-      usedifferencingbootdisk="Y">
+      usedifferencingbootdisk="Y"
+      datavhdsize="10GB" >
       <dsc configname="MEMBER_WDS"
            configfile="MEMBER_WDS.DSC.ps1">
         <parameters>
@@ -399,7 +400,8 @@
     <vm name="LABBUILDER.COM SA_WSUS"
       template="Template Windows Server 2012 R2 Datacenter CORE"
       computername="SA_WSUS"
-      usedifferencingbootdisk="Y">
+      usedifferencingbootdisk="Y" 
+      datavhdsize="10GB" >
       <dsc configname="MEMBER_WSUS"
            configfile="MEMBER_WSUS.DSC.ps1">
         <parameters>
@@ -438,8 +440,9 @@
           CACommonName = "LABBUILDER.COM Issuing CA"
           CADistinguishedNameSuffix = "DC=LABBUILDER,DC=COM"
           DSConfigDN = "CN=Configuration,DC=LABBUILDER,DC=COM"
-          CRLPublicationURLs = "1:C:\Windows\system32\CertSrv\CertEnroll\%1_%3%4.crt\n2:ldap:///CN=%7,CN=AIA,CN=Public Key Services,CN=Services,%6%11\n2:http://pki.labbuilder.com/CertEnroll/%1_%3%4.crt"
+          CRLPublicationURLs = "1:C:\Windows\system32\CertSrv\CertEnroll\%3%8%9.crl\n10:ldap:///CN=%7%8,CN=%2,CN=CDP,CN=Public Key Services,CN=Services,%6%10\n2:http://pki.labbuilder.com/CertEnroll/%3%8%9.crl"
           CACertPublicationURLs = "1:C:\Windows\system32\CertSrv\CertEnroll\%1_%3%4.crt\n2:ldap:///CN=%7,CN=AIA,CN=Public Key Services,CN=Services,%6%11\n2:http://pki.labbuilder.com/CertEnroll/%1_%3%4.crt"
+          RootCAPath = "\\SS_ROOTCA\CertEnroll\"
         </parameters>
       </dsc>
       <adapters>
@@ -462,7 +465,8 @@
     <vm name="LABBUILDER.COM SA_FS1"
         template="Template Windows Server 2012 R2 Datacenter CORE"
         computername="SA_FS1"
-        usedifferencingbootdisk="Y">
+        usedifferencingbootdisk="Y"
+        datavhdsize="10GB" >
       <dsc configname="MEMBER_FILESERVER"
            configfile="MEMBER_FILESERVER.DSC.ps1">
         <parameters>
@@ -491,7 +495,8 @@
     <vm name="LABBUILDER.COM SA_FS2"
         template="Template Windows Server 2012 R2 Datacenter CORE"
         computername="SA_FS2"
-        usedifferencingbootdisk="Y">
+        usedifferencingbootdisk="Y" 
+        datavhdsize="10GB" >
       <dsc configname="MEMBER_FILESERVER"
            configfile="MEMBER_FILESERVER.DSC.ps1">
         <parameters>
