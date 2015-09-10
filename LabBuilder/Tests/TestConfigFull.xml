@@ -224,7 +224,7 @@
                  AddressFamily = 'IPv4'
               }
             )
-          ScopeOption = @(
+          ScopeOptions = @(
               @{ Name = 'SA_DC1';
                  ScopeID = '192.168.128.0';
                  DNServerIPAddress = @('192.168.128.10','192.168.128.11');
