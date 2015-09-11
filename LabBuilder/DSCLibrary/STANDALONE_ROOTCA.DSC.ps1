@@ -16,7 +16,8 @@ Configuration STANDALONE_ROOTCA
 {
 	Import-DscResource -ModuleName 'PSDesiredStateConfiguration'
 	Import-DscResource -ModuleName xAdcsDeployment
-	Import-DscResource -ModuleName xSmbShare
+	Import-DscResource -ModuleName xWebAdministration
+	Import-DscResource -ModuleName xPSDesiredStateConfiguration
 	Node $AllNodes.NodeName {
 		# Assemble the Local Admin Credentials
 		If ($Node.LocalAdminPassword) {
@@ -26,12 +27,20 @@ Configuration STANDALONE_ROOTCA
 		WindowsFeature ADCSCA {
 			Name = 'ADCS-Cert-Authority'
 			Ensure = 'Present'
-			}
+		}
 		
+        WindowsFeature ADCSWebEnrollment
+        {
+            Ensure = 'Present'
+            Name = 'ADCS-Web-Enrollment'
+            DependsOn = '[WindowsFeature]ADCSCA'
+        }
+
 		WindowsFeature ADCSRSAT {
 			Name = 'RSAT-ADCS'
 			Ensure = 'Present'
-			}
+			DependsOn = '[WindowsFeature]ADCSWebEnrollment'
+		}
 
 		File CAPolicy
 		{
@@ -39,10 +48,10 @@ Configuration STANDALONE_ROOTCA
 			DestinationPath = 'C:\Windows\CAPolicy.inf'
 			Contents = "[Version]`r`n Signature= `"$Windows NT$`"`r`n[Certsrv_Server]`r`n RenewalKeyLength=4096`r`n RenewalValidityPeriod=Years`r`n RenewalValidityPeriodUnits=20`r`n CRLDeltaPeriod=Days`r`n CRLDeltaPeriodUnits=0`r`n[CRLDistributionPoint]`r`n[AuthorityInformationAccess]`r`n"
 			Type = 'File'
-			DependsOn = '[WindowsFeature]ADCSCA'
+			DependsOn = '[WindowsFeature]ADCSRSAT'
 		}
 		
-		xADCSCertificationAuthority ADCS
+		xADCSCertificationAuthority ConfigCA
         {
             Ensure = 'Present'
             Credential = $LocalAdminCredential
@@ -53,6 +62,14 @@ Configuration STANDALONE_ROOTCA
 			ValidityPeriodUnits = 20
             DependsOn = '[File]CAPolicy'
         }
+
+		xADCSWebEnrollment ConfigWebEnrollment {
+            Ensure = 'Present'
+            Name = 'ConfigWebEnrollment'
+            Credential = $LocalAdminCredential
+            DependsOn = '[xADCSCertificationAuthority]ConfigCA'
+        }
+
 		Script ADCSAdvConfig
 		{
 			SetScript = {
@@ -87,17 +104,26 @@ Configuration STANDALONE_ROOTCA
 				}
 				Return $True
 			}
-			DependsOn = '[xADCSCertificationAuthority]ADCS'
+			DependsOn = '[xADCSWebEnrollment]ConfigWebEnrollment'
 		}
+        
+        Foreach ($SubCA in $Node.SubCAs) {
+			WaitForAny "WaitForSubCA_$SubCA"
+			{
+				ResourceName = '[xADCSCertificationAuthority]ADCS'
+				NodeName = $SubCA
+				RetryIntervalSec = 30
+				RetryCount = 30
+				DependsOn = '[Script]ADCSAdvConfig'
+			}
 
-		xSmbShare CertEnrollShare
-		{
-			Ensure = "Present" 
-			Name   = "CertEnroll"
-			Path = "C:\Windows\System32\CertSrv\CertEnroll\"  
-			ReadAccess = "Everyone"
-			Description = "Contains Public RootCA Certificate and CRL"
-			DependsOn = '[Script]ADCSAdvConfig'
-		} 
+			xRemoteFile "DownloadSubCA_$SubCA"
+			{
+				DestinationPath = "C:\Windows\System32\CertSrv\CertEnroll\$SubCA Request.csr"
+				Uri = "http://$SubCA/CertEnroll/$SubCA Request.csr"
+				DependsOn = "[WaitForAny]WaitForSubCA_$SubCA"
+			}
+
+		}
 	}
 }

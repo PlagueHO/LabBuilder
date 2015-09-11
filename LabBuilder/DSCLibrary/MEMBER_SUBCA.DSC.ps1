@@ -18,6 +18,7 @@ Configuration MEMBER_SUBCA
 	Import-DscResource -ModuleName xActiveDirectory
 	Import-DscResource -ModuleName xComputerManagement
 	Import-DscResource -ModuleName xAdcsDeployment
+	Import-DscResource -ModuleName xPSDesiredStateConfiguration
 	Node $AllNodes.NodeName {
 		# Assemble the Local Admin Credentials
 		If ($Node.LocalAdminPassword) {
@@ -77,17 +78,69 @@ Configuration MEMBER_SUBCA
 			DependsOn = '[xComputer]JoinDomain'
 		}
 
-		xADCSCertificationAuthority ADCS
+		File CertEnrollFolder
+		{
+			Ensure = 'Present'
+			DestinationPath = 'C:\Windows\System32\CertSrv\CertEnroll'
+			Type = 'Directory'
+			DependsOn = '[File]CAPolicy'
+		}
+
+		xRemoteFile DownloadRootCACRTFile
+		{
+			DestinationPath = "C:\Windows\System32\CertSrv\CertEnroll\$($Node.RootCACRTName)"
+			Uri = "http://$($Node.RootCAName)/CertEnroll/$($Node.RootCACRTName)"
+			DependsOn = '[File]CertEnrollFolder'
+		}
+
+        WaitForAny RootCA
+        {
+            ResourceName = '[xADCSWebEnrollment]ConfigWebEnrollment'
+            NodeName = $Node.RootCAName
+            RetryIntervalSec = 30
+            RetryCount = 30
+        }
+
+		xADCSCertificationAuthority ConfigCA
         {
             Ensure = 'Present'
-            Credential = $LocalAdminCredential
+            Credential = $DomainAdminCredential
             CAType = 'EnterpriseSubordinateCA'
 			CACommonName = $Node.CACommonName
 			CADistinguishedNameSuffix = $Node.CADistinguishedNameSuffix
-			ValidityPeriod = 'Years'
-			ValidityPeriodUnits = 1
-            DependsOn = '[File]CAPolicy'
+			OverwriteExistingCAinDS  = $True
+			OutputCertRequestFile = "c:\windows\system32\certsrv\certenroll\$($Node.NodeName) Request.csr"
+            DependsOn = '[xRemoteFile]DownloadRootCACRTFile'
         }
+
+		xADCSWebEnrollment ConfigWebEnrollment {
+            Ensure = 'Present'
+            Name = 'ConfigWebEnrollment'
+            Credential = $LocalAdminCredential
+            DependsOn = '[xADCSCertificationAuthority]ConfigCA'
+        }
+
+		# Set the IIS Mime Type to allow the CSR request to be downloaded by the Root CA
+		Script SetCSRMimeType
+		{
+			SetScript = {
+				Add-WebConfigurationProperty -PSPath IIS:\ -Filter //staticContent -Name "." -Value @{fileExtension='.csr';mimeType='application/pkcs10'}
+			}
+			GetScript = {
+				Return @{
+					'MimeType' = ((Get-WebConfigurationProperty -Filter "//staticContent/mimeMap[@fileExtension='.csr']" -PSPath IIS:\ -Name *).mimeType);
+				}
+			}
+			TestScript = { 
+				If (-not (Get-WebConfigurationProperty -Filter "//staticContent/mimeMap[@fileExtension='.csr']" -PSPath IIS:\ -Name *)) {
+					# Mime type is not set
+					Return $False
+				}
+				# Mime Type is already set
+				Return $True
+			}
+			DependsOn = '[xADCSWebEnrollment]ConfigWebEnrollment'
+		}
 
 		Script ADCSAdvConfig
 		{
@@ -123,7 +176,7 @@ Configuration MEMBER_SUBCA
 				}
 				Return $True
 			}
-			DependsOn = '[xADCSCertificationAuthority]ADCS'
+			DependsOn = '[Script]SetCSRMimeType'
 		}
 	}
 }
