@@ -91,20 +91,21 @@ Configuration MEMBER_SUBCA
 			DependsOn = '[File]CAPolicy'
 		}
 
-		xRemoteFile DownloadRootCACRTFile
-		{
-			DestinationPath = "C:\Windows\System32\CertSrv\CertEnroll\$($Node.RootCACRTName)"
-			Uri = "http://$($Node.RootCAName)/CertEnroll/$($Node.RootCACRTName)"
-			DependsOn = '[File]CertEnrollFolder'
-		}
-
         WaitForAny RootCA
         {
             ResourceName = '[xADCSWebEnrollment]ConfigWebEnrollment'
             NodeName = $Node.RootCAName
             RetryIntervalSec = 30
             RetryCount = 30
+			DependsOn = "[File]CertEnrollFolder"
         }
+
+		xRemoteFile DownloadRootCACRTFile
+		{
+			DestinationPath = "C:\Windows\System32\CertSrv\CertEnroll\$($Node.RootCACRTName)"
+			Uri = "http://$($Node.RootCAName)/CertEnroll/$($Node.RootCACRTName)"
+			DependsOn = '[WaitForAny]RootCA'
+		}
 
 		xADCSCertificationAuthority ConfigCA
         {
@@ -149,7 +150,7 @@ Configuration MEMBER_SUBCA
 
 		WaitForAny SubCACer
 		{
-			ResourceName = '[Script]IssueCert_SA_SUBCA'
+			ResourceName = "[Script]IssueCert_$($Node.NodeName)"
 			NodeName = $Node.RootCAName
 			RetryIntervalSec = 30
 			RetryCount = 30
