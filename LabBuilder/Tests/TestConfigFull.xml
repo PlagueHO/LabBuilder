@@ -56,7 +56,7 @@
 
   <vms>
     <vm name="LABBUILDER.COM SS_ROOTCA"
-        template="Template Windows Server 2012 R2 Datacenter Full"
+        template="Template Windows Server 2012 R2 Datacenter CORE"
         computername="SS_ROOTCA"
         usedifferencingbootdisk="Y">
       <dsc configname="STANDALONE_ROOTCA"

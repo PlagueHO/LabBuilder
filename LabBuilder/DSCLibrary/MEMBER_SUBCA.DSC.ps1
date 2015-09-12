@@ -33,39 +33,37 @@ Configuration MEMBER_SUBCA
 			[PSCredential]$DomainAdminCredential = New-Object System.Management.Automation.PSCredential ("$($Node.DomainName)\Administrator", (ConvertTo-SecureString $Node.DomainAdminPassword -AsPlainText -Force))
 		}
 
+		# Install the CA Service
 		WindowsFeature ADCSCA {
 			Name = 'ADCS-Cert-Authority'
 			Ensure = 'Present'
 		}
 
+		# Install the Web Enrollment Service
 		WindowsFeature WebEnrollmentCA {
 			Name = 'ADCS-Web-Enrollment'
 			Ensure = 'Present'
 			DependsOn = "[WindowsFeature]ADCSCA"
 		}
 
+		# Install the Online Responder Service
 		WindowsFeature OnlineResponderCA {
 			Name = 'ADCS-Online-Cert'
 			Ensure = 'Present'
 			DependsOn = "[WindowsFeature]WebEnrollmentCA"
 		}
 
-		WindowsFeature RSATADPowerShell
-        { 
-            Ensure = "Present" 
-            Name = "RSAT-AD-PowerShell" 
-			DependsOn = "[WindowsFeature]OnlineResponderCA"
-        } 
-
-        xWaitForADDomain DscDomainWait
+        # Wait for the Domain to be available so we can join it.
+		xWaitForADDomain DscDomainWait
         {
             DomainName = $Node.DomainName
             DomainUserCredential = $DomainAdminCredential 
             RetryCount = 100 
             RetryIntervalSec = 10 
-			DependsOn = "[WindowsFeature]RSATADPowerShell" 
+			DependsOn = "[WindowsFeature]OnlineResponderCA" 
         }
 
+		# Join this Server to the Domain so that it can be an Enterprise CA.
 		xComputer JoinDomain 
         { 
             Name          = $Node.NodeName
@@ -74,6 +72,7 @@ Configuration MEMBER_SUBCA
 			DependsOn = "[xWaitForADDomain]DscDomainWait" 
         } 
 			
+		# Create the CAPolicy.inf file that sets basic parameters for certificate issuance for this CA.
 		File CAPolicy
 		{
 			Ensure = 'Present'
@@ -83,6 +82,8 @@ Configuration MEMBER_SUBCA
 			DependsOn = '[xComputer]JoinDomain'
 		}
 
+		# Make a CertEnroll folder to put the Root CA certificate into.
+		# The CA Web Enrollment server would also create this but we need it now.
 		File CertEnrollFolder
 		{
 			Ensure = 'Present'
@@ -91,7 +92,9 @@ Configuration MEMBER_SUBCA
 			DependsOn = '[File]CAPolicy'
 		}
 
-        WaitForAny RootCA
+        # Wait for the RootCA Web Enrollment to complete so we can grab the Root CA certificate
+		# file.
+		WaitForAny RootCA
         {
             ResourceName = '[xADCSWebEnrollment]ConfigWebEnrollment'
             NodeName = $Node.RootCAName
@@ -100,6 +103,7 @@ Configuration MEMBER_SUBCA
 			DependsOn = "[File]CertEnrollFolder"
         }
 
+		# Download the Root CA certificate file.
 		xRemoteFile DownloadRootCACRTFile
 		{
 			DestinationPath = "C:\Windows\System32\CertSrv\CertEnroll\$($Node.RootCACRTName)"
@@ -107,6 +111,8 @@ Configuration MEMBER_SUBCA
 			DependsOn = '[WaitForAny]RootCA'
 		}
 
+		# Configure the Sub CA which will create the Certificate CSR file that Root CA will use
+		# to issue a certificate for this Sub CA.
 		xADCSCertificationAuthority ConfigCA
         {
             Ensure = 'Present'
@@ -119,6 +125,7 @@ Configuration MEMBER_SUBCA
             DependsOn = '[xRemoteFile]DownloadRootCACRTFile'
         }
 
+		# Configure the Web Enrollment Feature
 		xADCSWebEnrollment ConfigWebEnrollment {
             Ensure = 'Present'
             Name = 'ConfigWebEnrollment'
@@ -148,6 +155,7 @@ Configuration MEMBER_SUBCA
 			DependsOn = '[xADCSWebEnrollment]ConfigWebEnrollment'
 		}
 
+		# Wait for the Root CA to have completed issuance of the certificate for this SubCA.
 		WaitForAny SubCACer
 		{
 			ResourceName = "[Script]IssueCert_$($Node.NodeName)"
@@ -157,6 +165,7 @@ Configuration MEMBER_SUBCA
 			DependsOn = "[Script]SetCSRMimeType"
 		}
 
+		# Download the Certificate for this SubCA.
 		xRemoteFile DownloadSubCACERFile
 		{
 			DestinationPath = "C:\Windows\System32\CertSrv\CertEnroll\$($Node.NodeName).cer"
@@ -164,6 +173,29 @@ Configuration MEMBER_SUBCA
 			DependsOn = '[WaitForAny]SubCACer'
 		}
 
+		# Install the Root CA and the SubCA Certificates into this machine.
+		Script InstallSubCACert
+		{
+			SetScript = {
+				Write-Verbose "Installing Certificates..."
+				Import-Certificate -FilePath "C:\Windows\System32\CertSrv\CertEnroll\$($Node.NodeName).cer" -CertStoreLocation cert:\CA\
+				Import-Certificate -FilePath "C:\Windows\System32\CertSrv\CertEnroll\$($Node.RootCACRTName).cer" -CertStoreLocation cert:\Root\
+			}
+			GetScript = {
+				Return @{
+				}
+			}
+			TestScript = { 
+				If ((Get-ChildItem -Path Cert:\LocalMachine\CA | Where-Object -Property Subject -EQ "CN=$($Node.NodeName)").Count -EQ 0) {
+					Return $False
+				}
+				Return $True
+			}
+			DependsOn = '[xRemoteFile]DownloadSubCACERFile'
+		}
+
+		# Perform final configuration of the CA which will cause the CA service to startup
+		# It should be able to start up once the SubCA certificate has been installed.
 		Script ADCSAdvConfig
 		{
 			SetScript = {
@@ -198,7 +230,7 @@ Configuration MEMBER_SUBCA
 				}
 				Return $True
 			}
-			DependsOn = '[xRemoteFile]DownloadSubCACERFile'
+			DependsOn = '[Script]InstallSubCACert'
 		}
 	}
 }

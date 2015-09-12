@@ -39,13 +39,6 @@ Configuration STANDALONE_ROOTCA
             DependsOn = '[WindowsFeature]ADCSCA'
         }
 
-		# Install the ADCS RSAT tools (not completely required)
-		WindowsFeature ADCSRSAT {
-			Name = 'RSAT-ADCS'
-			Ensure = 'Present'
-			DependsOn = '[WindowsFeature]ADCSWebEnrollment'
-		}
-
 		# Create the CAPolicy.inf file which defines basic properties about the ROOT CA certificate
 		File CAPolicy
 		{
@@ -53,7 +46,7 @@ Configuration STANDALONE_ROOTCA
 			DestinationPath = 'C:\Windows\CAPolicy.inf'
 			Contents = "[Version]`r`n Signature= `"$Windows NT$`"`r`n[Certsrv_Server]`r`n RenewalKeyLength=4096`r`n RenewalValidityPeriod=Years`r`n RenewalValidityPeriodUnits=20`r`n CRLDeltaPeriod=Days`r`n CRLDeltaPeriodUnits=0`r`n[CRLDistributionPoint]`r`n[AuthorityInformationAccess]`r`n"
 			Type = 'File'
-			DependsOn = '[WindowsFeature]ADCSRSAT'
+			DependsOn = '[WindowsFeature]ADCSWebEnrollment'
 		}
 		
 		# Configure the CA as Standalone Root CA
