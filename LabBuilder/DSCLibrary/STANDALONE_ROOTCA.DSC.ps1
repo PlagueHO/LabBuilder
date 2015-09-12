@@ -5,18 +5,18 @@ DSC Template Configuration File For use by LabBuilder
 .Desription
 	Builds a Standalone Root CA.
 .Parameters:    
-	CACommonName = "LABBUILDER.COM Root CA"
-	CADistinguishedNameSuffix = "DC=LABBUILDER,DC=COM"
-	DSConfigDN = "CN=Configuration,DC=LABBUILDER,DC=COM"
-	CRLPublicationURLs = "1:C:\Windows\system32\CertSrv\CertEnroll\%3%8%9.crl\n10:ldap:///CN=%7%8,CN=%2,CN=CDP,CN=Public Key Services,CN=Services,%6%10\n2:http://pki.labbuilder.com/CertEnroll/%3%8%9.crl"
-	CACertPublicationURLs = "1:C:\Windows\system32\CertSrv\CertEnroll\%1_%3%4.crt\n2:ldap:///CN=%7,CN=AIA,CN=Public Key Services,CN=Services,%6%11\n2:http://pki.labbuilder.com/CertEnroll/%1_%3%4.crt"  
+            CACommonName = "LABBUILDER.COM Root CA"
+            CADistinguishedNameSuffix = "DC=LABBUILDER,DC=COM"
+            DSConfigDN = "CN=Configuration,DC=LABBUILDER,DC=COM"
+            CRLPublicationURLs = "1:C:\Windows\system32\CertSrv\CertEnroll\%3%8%9.crl\n10:ldap:///CN=%7%8,CN=%2,CN=CDP,CN=Public Key Services,CN=Services,%6%10\n2:http://pki.labbuilder.com/CertEnroll/%3%8%9.crl"
+            CACertPublicationURLs = "1:C:\Windows\system32\CertSrv\CertEnroll\%1_%3%4.crt\n2:ldap:///CN=%7,CN=AIA,CN=Public Key Services,CN=Services,%6%11\n2:http://pki.labbuilder.com/CertEnroll/%1_%3%4.crt"
+            SubCAs = @('SA_SUBCA')
 #########################################################################################################################################>
 
 Configuration STANDALONE_ROOTCA
 {
 	Import-DscResource -ModuleName 'PSDesiredStateConfiguration'
 	Import-DscResource -ModuleName xAdcsDeployment
-	Import-DscResource -ModuleName xWebAdministration
 	Import-DscResource -ModuleName xPSDesiredStateConfiguration
 	Node $AllNodes.NodeName {
 		# Assemble the Local Admin Credentials
@@ -24,24 +24,29 @@ Configuration STANDALONE_ROOTCA
 			[PSCredential]$LocalAdminCredential = New-Object System.Management.Automation.PSCredential ("Administrator", (ConvertTo-SecureString $Node.LocalAdminPassword -AsPlainText -Force))
 		}
 
+		# Install the ADCS Certificate Authority
 		WindowsFeature ADCSCA {
 			Name = 'ADCS-Cert-Authority'
 			Ensure = 'Present'
 		}
 		
-        WindowsFeature ADCSWebEnrollment
+		# Install ADCS Web Enrollment - only required because it creates the CertEnroll virtual folder
+		# Which we use to pass certificates to the Issuing/Sub CAs       
+		WindowsFeature ADCSWebEnrollment
         {
             Ensure = 'Present'
             Name = 'ADCS-Web-Enrollment'
             DependsOn = '[WindowsFeature]ADCSCA'
         }
 
+		# Install the ADCS RSAT tools (not completely required)
 		WindowsFeature ADCSRSAT {
 			Name = 'RSAT-ADCS'
 			Ensure = 'Present'
 			DependsOn = '[WindowsFeature]ADCSWebEnrollment'
 		}
 
+		# Create the CAPolicy.inf file which defines basic properties about the ROOT CA certificate
 		File CAPolicy
 		{
 			Ensure = 'Present'
@@ -51,6 +56,7 @@ Configuration STANDALONE_ROOTCA
 			DependsOn = '[WindowsFeature]ADCSRSAT'
 		}
 		
+		# Configure the CA as Standalone Root CA
 		xADCSCertificationAuthority ConfigCA
         {
             Ensure = 'Present'
@@ -63,6 +69,7 @@ Configuration STANDALONE_ROOTCA
             DependsOn = '[File]CAPolicy'
         }
 
+		# Configure the ADCS Web Enrollment
 		xADCSWebEnrollment ConfigWebEnrollment {
             Ensure = 'Present'
             Name = 'ConfigWebEnrollment'
@@ -70,6 +77,7 @@ Configuration STANDALONE_ROOTCA
             DependsOn = '[xADCSCertificationAuthority]ConfigCA'
         }
 
+		# Set the advanced CA properties
 		Script ADCSAdvConfig
 		{
 			SetScript = {
@@ -107,16 +115,20 @@ Configuration STANDALONE_ROOTCA
 			DependsOn = '[xADCSWebEnrollment]ConfigWebEnrollment'
 		}
         
-        Foreach ($SubCA in $Node.SubCAs) {
+        # Generate Issuing certificates for any SubCAs
+		Foreach ($SubCA in $Node.SubCAs) {
+			
+			# Wait for SubCA to generate CSR
 			WaitForAny "WaitForSubCA_$SubCA"
 			{
-				ResourceName = '[xADCSCertificationAuthority]ADCS'
+				ResourceName = '[xADCSCertificationAuthority]ConfigCA'
 				NodeName = $SubCA
 				RetryIntervalSec = 30
 				RetryCount = 30
 				DependsOn = '[Script]ADCSAdvConfig'
 			}
 
+			# Download the CSR fro the SubCA
 			xRemoteFile "DownloadSubCA_$SubCA"
 			{
 				DestinationPath = "C:\Windows\System32\CertSrv\CertEnroll\$SubCA Request.csr"
@@ -124,6 +136,42 @@ Configuration STANDALONE_ROOTCA
 				DependsOn = "[WaitForAny]WaitForSubCA_$SubCA"
 			}
 
+			# Generate the Issuing Certificate from the CSR
+			Script "IssueCert_$SubCA"
+			{
+				SetScript = {
+					Write-Verbose "Submitting C:\Windows\System32\CertSrv\CertEnroll\$Using:SubCA Request.csr to $($Using:Node.CACommonName)"
+					[String]$RequestResult = & "$($ENV:SystemRoot)\System32\Certreq.exe" -Config ".\$($Using:Node.CACommonName)" -Submit "C:\Windows\System32\CertSrv\CertEnroll\$Using:SubCA Request.csr"
+					$Matches = [Regex]::Match($RequestResult, 'RequestId:\s([0-9]*)')
+					If ($Matches.Groups.Count -lt 2) {
+						Write-Verbose "Error getting Request ID from SubCA certificate submission."
+						Throw "Error getting Request ID from SubCA certificate submission."
+					}
+					[int]$RequestId = $Matches.Groups[1].Value
+					Write-Verbose "Issuing $RequestId in $($Using:Node.CACommonName)"
+					[String]$SubmitResult = & "$($ENV:SystemRoot)\System32\CertUtil.exe" -Resubmit $RequestId
+					If ($SubmitResult -notlike 'Certificate issued.*') {
+						Write-Verbose "Unexpected result issuing SubCA request."
+						Throw "Unexpected result issuing SubCA request."
+					}
+					Write-Verbose "Retrieving C:\Windows\System32\CertSrv\CertEnroll\$Using:SubCA.csr from $($Using:Node.CACommonName)"
+					[String]$RetrieveResult = & "$($ENV:SystemRoot)\System32\Certreq.exe" -Config ".\$($Using:Node.CACommonName)" -Retrieve $RequestId "C:\Windows\System32\CertSrv\CertEnroll\$Using:SubCA.cer"
+				}
+				GetScript = {
+					Return @{
+						'Generated' = (Test-Path -Path "C:\Windows\System32\CertSrv\CertEnroll\$Using:SubCA.cer");
+					}
+				}
+				TestScript = { 
+					If (-not (Test-Path -Path "C:\Windows\System32\CertSrv\CertEnroll\$Using:SubCA.cer")) {
+						# SubCA Cert is not yet created
+						Return $False
+					}
+					# SubCA Cert has been created
+					Return $True
+				}
+				DependsOn = "[xRemoteFile]DownloadSubCA_$SubCA"
+			}
 		}
 	}
 }

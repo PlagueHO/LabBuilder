@@ -5,11 +5,16 @@ DSC Template Configuration File For use by LabBuilder
 .Desription
 	Builds a Member Subordinate CA.
 .Parameters:    
-	CACommonName = "LABBUILDER.COM Issuing CA"
-	CADistinguishedNameSuffix = "DC=LABBUILDER,DC=COM"
-	DSConfigDN = "CN=Configuration,DC=LABBUILDER,DC=COM"
-	CRLPublicationURLs = "1:C:\Windows\system32\CertSrv\CertEnroll\%3%8%9.crl\n10:ldap:///CN=%7%8,CN=%2,CN=CDP,CN=Public Key Services,CN=Services,%6%10\n2:http://pki.labbuilder.com/CertEnroll/%3%8%9.crl"
-	CACertPublicationURLs = "1:C:\Windows\system32\CertSrv\CertEnroll\%1_%3%4.crt\n2:ldap:///CN=%7,CN=AIA,CN=Public Key Services,CN=Services,%6%11\n2:http://pki.labbuilder.com/CertEnroll/%1_%3%4.crt"  
+          DomainName = "LABBUILDER.COM"
+          DomainAdminPassword = "P@ssword!1"
+          PSDscAllowDomainUser = $True
+          CACommonName = "LABBUILDER.COM Issuing CA"
+          CADistinguishedNameSuffix = "DC=LABBUILDER,DC=COM"
+          DSConfigDN = "CN=Configuration,DC=LABBUILDER,DC=COM"
+          CRLPublicationURLs = "1:C:\Windows\system32\CertSrv\CertEnroll\%3%8%9.crl\n10:ldap:///CN=%7%8,CN=%2,CN=CDP,CN=Public Key Services,CN=Services,%6%10\n2:http://pki.labbuilder.com/CertEnroll/%3%8%9.crl"
+          CACertPublicationURLs = "1:C:\Windows\system32\CertSrv\CertEnroll\%1_%3%4.crt\n2:ldap:///CN=%7,CN=AIA,CN=Public Key Services,CN=Services,%6%11\n2:http://pki.labbuilder.com/CertEnroll/%1_%3%4.crt"
+          RootCAName = "SS_ROOTCA"
+          RootCACRTName = "SS_ROOTCA_LABBUILDER.COM Root CA.crt"
 #########################################################################################################################################>
 
 Configuration MEMBER_SUBCA
@@ -142,6 +147,22 @@ Configuration MEMBER_SUBCA
 			DependsOn = '[xADCSWebEnrollment]ConfigWebEnrollment'
 		}
 
+		WaitForAny SubCACer
+		{
+			ResourceName = '[Script]IssueCert_SA_SUBCA'
+			NodeName = $Node.RootCAName
+			RetryIntervalSec = 30
+			RetryCount = 30
+			DependsOn = "[Script]SetCSRMimeType"
+		}
+
+		xRemoteFile DownloadSubCACERFile
+		{
+			DestinationPath = "C:\Windows\System32\CertSrv\CertEnroll\$($Node.NodeName).cer"
+			Uri = "http://$($Node.RootCAName)/CertEnroll/$($Node.NodeName).cer"
+			DependsOn = '[WaitForAny]SubCACer'
+		}
+
 		Script ADCSAdvConfig
 		{
 			SetScript = {
@@ -176,7 +197,7 @@ Configuration MEMBER_SUBCA
 				}
 				Return $True
 			}
-			DependsOn = '[Script]SetCSRMimeType'
+			DependsOn = '[xRemoteFile]DownloadSubCACERFile'
 		}
 	}
 }
