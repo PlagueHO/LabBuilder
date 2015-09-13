@@ -33,10 +33,18 @@ Configuration MEMBER_SUBCA
 			[PSCredential]$DomainAdminCredential = New-Object System.Management.Automation.PSCredential ("$($Node.DomainName)\Administrator", (ConvertTo-SecureString $Node.DomainAdminPassword -AsPlainText -Force))
 		}
 
+		# Install the RSAT PowerShell Module which is required by the xWaitForResource
+		WindowsFeature RSATADPowerShell
+		{ 
+			Ensure = "Present" 
+			Name = "RSAT-AD-PowerShell" 
+		} 
+
 		# Install the CA Service
 		WindowsFeature ADCSCA {
 			Name = 'ADCS-Cert-Authority'
 			Ensure = 'Present'
+			DependsOn = "[WindowsFeature]RSATADPowerShell" 
 		}
 
 		# Install the Web Enrollment Service
@@ -178,15 +186,15 @@ Configuration MEMBER_SUBCA
 		{
 			SetScript = {
 				Write-Verbose "Installing Certificates..."
-				Import-Certificate -FilePath "C:\Windows\System32\CertSrv\CertEnroll\$($Node.NodeName).cer" -CertStoreLocation cert:\LocalMachine\CA\
-				Import-Certificate -FilePath "C:\Windows\System32\CertSrv\CertEnroll\$($Node.RootCACRTName)" -CertStoreLocation cert:\LocalMachine\Root\
+				Import-Certificate -FilePath "C:\Windows\System32\CertSrv\CertEnroll\$($Using:Node.NodeName).cer" -CertStoreLocation cert:\LocalMachine\CA\
+				Import-Certificate -FilePath "C:\Windows\System32\CertSrv\CertEnroll\$($Using:Node.RootCACRTName)" -CertStoreLocation cert:\LocalMachine\Root\
 			}
 			GetScript = {
 				Return @{
 				}
 			}
 			TestScript = { 
-				If ((Get-ChildItem -Path Cert:\LocalMachine\CA | Where-Object -Property Subject -EQ "CN=$($Node.NodeName)").Count -EQ 0) {
+				If ((Get-ChildItem -Path Cert:\LocalMachine\CA | Where-Object -Property Subject -EQ "CN=$($Using:Node.NodeName)").Count -EQ 0) {
 					Return $False
 				}
 				Return $True
