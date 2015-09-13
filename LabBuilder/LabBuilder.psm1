@@ -650,7 +650,7 @@ Configuration ConfigLCM {
 			RefreshMode = 'Push'
 			ConfigurationMode = 'ApplyAndAutoCorrect'
 			CertificateId = $Thumbprint
-			ConfigurationModeFrequencyMins = 10
+			ConfigurationModeFrequencyMins = 15
 			RefreshFrequencyMins = 30
 			RebootNodeIfNeeded = $True
 			ActionAfterReboot = 'ContuinueConfiguration'
