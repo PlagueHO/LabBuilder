@@ -3,7 +3,7 @@ DSC Template Configuration File For use by LabBuilder
 .Title
 	MEMBER_SUBCA
 .Desription
-	Builds a Member Subordinate CA.
+	Builds a Enterprise Subordinate\Issuing CA.
 .Parameters:    
 		  DomainName = "LABBUILDER.COM"
 		  DomainAdminPassword = "P@ssword!1"
@@ -13,10 +13,9 @@ DSC Template Configuration File For use by LabBuilder
 		  DSConfigDN = "CN=Configuration,DC=LABBUILDER,DC=COM"
 		  CRLPublicationURLs = "1:C:\Windows\system32\CertSrv\CertEnroll\%3%8%9.crl\n10:ldap:///CN=%7%8,CN=%2,CN=CDP,CN=Public Key Services,CN=Services,%6%10\n2:http://pki.labbuilder.com/CertEnroll/%3%8%9.crl"
 		  CACertPublicationURLs = "1:C:\Windows\system32\CertSrv\CertEnroll\%1_%3%4.crt\n2:ldap:///CN=%7,CN=AIA,CN=Public Key Services,CN=Services,%6%11\n2:http://pki.labbuilder.com/CertEnroll/%1_%3%4.crt"
-		  RootCAName = "SS_ROOTCA"
-		  RootCACRTName = "SS_ROOTCA_LABBUILDER.COM Root CA.crt"
+          RootCAName = "SS_ROOTCA"
+          RootCACommonName = "LABBUILDER.COM Root CA"
 #########################################################################################################################################>
-
 Configuration MEMBER_SUBCA
 {
 	Import-DscResource -ModuleName 'PSDesiredStateConfiguration'
@@ -114,8 +113,8 @@ Configuration MEMBER_SUBCA
 		# Download the Root CA certificate file.
 		xRemoteFile DownloadRootCACRTFile
 		{
-			DestinationPath = "C:\Windows\System32\CertSrv\CertEnroll\$($Node.RootCACRTName)"
-			Uri = "http://$($Node.RootCAName)/CertEnroll/$($Node.RootCACRTName)"
+			DestinationPath = "C:\Windows\System32\CertSrv\CertEnroll\$($Node.RootCAName)_$($Node.RootCACommonName).crt"
+			Uri = "http://$($Node.RootCAName)/CertEnroll/$($Node.RootCAName)_$($Node.RootCACommonName).crt"
 			DependsOn = '[WaitForAny]RootCA'
 		}
 
@@ -181,13 +180,53 @@ Configuration MEMBER_SUBCA
 			DependsOn = '[WaitForAny]SubCACer'
 		}
 
-		# Install the Root CA and the SubCA Certificates into this machine.
+		# Install the Sub CA Certificate to the LocalMachine CA Store
 		Script InstallSubCACert
 		{
 			SetScript = {
-				Write-Verbose "Installing Certificates..."
+				Write-Verbose "Installing the Sub CA Certificate..."
 				Import-Certificate -FilePath "C:\Windows\System32\CertSrv\CertEnroll\$($Using:Node.NodeName).cer" -CertStoreLocation cert:\LocalMachine\CA\
-				Import-Certificate -FilePath "C:\Windows\System32\CertSrv\CertEnroll\$($Using:Node.RootCACRTName)" -CertStoreLocation cert:\LocalMachine\Root\
+			}
+			GetScript = {
+				Return @{
+				}
+			}
+			TestScript = { 
+				If ((Get-ChildItem -Path Cert:\LocalMachine\CA | Where-Object -FilterScript { ($_.Subject -Like "CN=$($Using:Node.CACommonName),*") -and ($_.Issuer -Like "CN=$($Using:Node.RootCACommonName),*") } ).Count -EQ 0) {
+					Write-Verbose "Sub CA Certificate Needs to be installed..."
+					Return $False
+				}
+				Return $True
+			}
+			DependsOn = '[xRemoteFile]DownloadSubCACERFile'
+		}
+
+		# Install the Root CA Certificate to the LocalMachine Root Store
+		Script InstallRootCACert
+		{
+			SetScript = {
+				Write-Verbose "Installing the Root CA Certificate..."
+				Import-Certificate -FilePath "C:\Windows\System32\CertSrv\CertEnroll\$($Using:Node.RootCAName)_$($Using:Node.RootCACommonName).crt" -CertStoreLocation cert:\LocalMachine\Root\
+			}
+			GetScript = {
+				Return @{
+				}
+			}
+			TestScript = { 
+				If ((Get-ChildItem -Path Cert:\LocalMachine\Root | Where-Object -FilterScript { ($_.Subject -Like "CN=$($Using:Node.RootCACommonName),*") -and ($_.Issuer -Like "CN=$($Using:Node.RootCACommonName),*") } ).Count -EQ 0) {
+					Write-Verbose "Root CA Certificate Needs to be installed..."
+					Return $False
+				}
+				Return $True
+			}
+			DependsOn = '[Script]InstallSubCACert'
+		}
+
+		# Register the Sub CA Certificate with the Certification Authority
+		Script RegisterSubCA
+		{
+			SetScript = {
+				Write-Verbose "Registering the Sub CA Certificate with the Certification Authority..."
 				& "$($ENV:SystemRoot)\system32\certutil.exe" -silent -installCert "C:\Windows\System32\CertSrv\CertEnroll\$($Using:Node.NodeName).cer"
 			}
 			GetScript = {
@@ -195,13 +234,13 @@ Configuration MEMBER_SUBCA
 				}
 			}
 			TestScript = { 
-				If ((Get-ChildItem -Path Cert:\LocalMachine\CA | Where-Object -FilterScript { ($_.Subject -EQ "CN=$($Using:Node.NodeName)") -and ($_.Issuer -NE "CN=$($Using:Node.NodeName)") } ).Count -EQ 0) {
-					Write-Verbose "SubCA Certificate Needs to be installed..."
+				If (-not (Get-ChildItem 'HKLM:\System\CurrentControlSet\Services\CertSvc\Configuration').GetValue('CACertHash')) {
+					Write-Verbose "Sub CA Certificate needs to be registered with the Certification Authority..."
 					Return $False
 				}
 				Return $True
 			}
-			DependsOn = '[xRemoteFile]DownloadSubCACERFile'
+			DependsOn = '[Script]InstallRootCACert'
 		}
 
 		# Perform final configuration of the CA which will cause the CA service to startup
@@ -240,7 +279,7 @@ Configuration MEMBER_SUBCA
 				}
 				Return $True
 			}
-			DependsOn = '[Script]InstallSubCACert'
+			DependsOn = '[Script]RegisterSubCA'
 		}
 	}
 }
