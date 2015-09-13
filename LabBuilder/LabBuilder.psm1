@@ -639,17 +639,22 @@ function Remove-LabVMTemplates {
 ##########################################################################################################################################
 
 ##########################################################################################################################################
+[DSCLocalConfigurationManager()]
 Configuration ConfigLCM {
 	Param (
 		[String]$ComputerName,
 		[String]$Thumbprint
 	)
 	Node $ComputerName {
-		LocalConfigurationManager {
+		Settings {
+			RefreshMode = 'Push'
 			ConfigurationMode = 'ApplyAndAutoCorrect'
 			CertificateId = $Thumbprint
+			ConfigurationModeFrequencyMins = 10
 			RefreshFrequencyMins = 30
 			RebootNodeIfNeeded = $True
+			ActionAfterReboot = 'ContuinueConfiguration'
+
 		} 
 	}
 }

@@ -165,6 +165,33 @@ Configuration STANDALONE_ROOTCA
 				}
 				DependsOn = "[xRemoteFile]DownloadSubCA_$SubCA"
 			}
+
+			# Wait for SubCA to install the CA Certificate
+			WaitForAny "WaitForComplete_$SubCA"
+			{
+				ResourceName = '[Script]InstallSubCACert'
+				NodeName = $SubCA
+				RetryIntervalSec = 30
+				RetryCount = 30
+				DependsOn = "[Script]IssueCert_$SubCA"
+			}
+
+			# Shutdown the Root CA - it is no longer needed because it has issued all SubCAs
+			Script ShutdownRootCA
+			{
+				SetScript = {
+					Stop-Computer
+				}
+				GetScript = {
+					Return @{
+					}
+				}
+				TestScript = { 
+					# SubCA Cert is not yet created
+					Return $False
+				}
+				DependsOn = "[WaitForAny]WaitForComplete_$SubCA"
+			}
 		}
 	}
 }
