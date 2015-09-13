@@ -653,8 +653,7 @@ Configuration ConfigLCM {
 			ConfigurationModeFrequencyMins = 15
 			RefreshFrequencyMins = 30
 			RebootNodeIfNeeded = $True
-			ActionAfterReboot = 'ContuinueConfiguration'
-
+			ActionAfterReboot = 'ContinueConfiguration'
 		} 
 	}
 }
