@@ -938,7 +938,7 @@ Get-NetAdapter | Where-Object { `$_.MacAddress.Replace('-','') -eq '$MacAddress'
 	# Start the actual DSC Configuration
 	$DSCStartPs += @"
 Set-DscLocalConfigurationManager -Path `"$($ENV:SystemRoot)\Setup\Scripts\`" -Verbose  *>> `"$($ENV:SystemRoot)\Setup\Scripts\DSC.log`"
-Start-DSCConfiguration -Path `"$($ENV:SystemRoot)\Setup\Scripts\`" -Force -Wait -Verbose  *>> `"$($ENV:SystemRoot)\Setup\Scripts\DSC.log`"
+Start-DSCConfiguration -Path `"$($ENV:SystemRoot)\Setup\Scripts\`" -Force -Verbose  *>> `"$($ENV:SystemRoot)\Setup\Scripts\DSC.log`"
 
 "@
 	Set-Content -Path "$VMPath\$($VM.Name)\LabBuilder Files\StartDSC.ps1" -Value $DSCStartPs -Force | Out-Null
@@ -1056,10 +1056,7 @@ function Start-LabVMDSC {
 		# Finally, Start DSC up!
 		If (($Session) -and ($Session.State -eq 'Opened') -and ($ConfigCopyComplete) -and ($ModuleCopyComplete)) {
 			Write-Verbose "Starting DSC on VM $($VM.ComputerName) ..."
-			$Job = Invoke-Command -Session $Session { Start-Job { c:\windows\setup\scripts\StartDSC.ps1 } }
-			# Hold the session open otherwise it terminates the job. Pity.
-			# ToDo: Manage the sessions so that they eventually close when the jobs are complete
-			# Remove-PSSession -Session $Session		
+			Invoke-Command -Session $Session { c:\windows\setup\scripts\StartDSC.ps1 }
 			$Complete = $True
 		} # If
 	} # While

@@ -195,6 +195,7 @@ Configuration MEMBER_SUBCA
 			}
 			TestScript = { 
 				If ((Get-ChildItem -Path Cert:\LocalMachine\CA | Where-Object -Property Subject -EQ "CN=$($Using:Node.NodeName)").Count -EQ 0) {
+					Write-Verbose "SubCA Certificate Needs to be installed..."
 					Return $False
 				}
 				Return $True
