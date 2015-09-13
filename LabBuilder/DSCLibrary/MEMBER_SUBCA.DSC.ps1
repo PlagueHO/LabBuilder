@@ -188,13 +188,14 @@ Configuration MEMBER_SUBCA
 				Write-Verbose "Installing Certificates..."
 				Import-Certificate -FilePath "C:\Windows\System32\CertSrv\CertEnroll\$($Using:Node.NodeName).cer" -CertStoreLocation cert:\LocalMachine\CA\
 				Import-Certificate -FilePath "C:\Windows\System32\CertSrv\CertEnroll\$($Using:Node.RootCACRTName)" -CertStoreLocation cert:\LocalMachine\Root\
+				& "$($ENV:SystemRoot)\system32\certutil.exe" -silent -installCert "C:\Windows\System32\CertSrv\CertEnroll\$($Using:Node.NodeName).cer"
 			}
 			GetScript = {
 				Return @{
 				}
 			}
 			TestScript = { 
-				If ((Get-ChildItem -Path Cert:\LocalMachine\CA | Where-Object -Property Subject -EQ "CN=$($Using:Node.NodeName)").Count -EQ 0) {
+				If ((Get-ChildItem -Path Cert:\LocalMachine\CA | Where-Object -FilterScript { ($_.Subject -EQ "CN=$($Using:Node.NodeName)") -and ($_.Issuer -NE "CN=$($Using:Node.NodeName)") } ).Count -EQ 0) {
 					Write-Verbose "SubCA Certificate Needs to be installed..."
 					Return $False
 				}

@@ -429,7 +429,7 @@
     </vm>
 
     <vm name="LABBUILDER.COM SA_SUBCA"
-      template="Template Windows Server 2012 R2 Datacenter Full"
+      template="Template Windows Server 2012 R2 Datacenter CORE"
       computername="SA_SUBCA"
       usedifferencingbootdisk="Y">
       <dsc configname="MEMBER_SUBCA"
