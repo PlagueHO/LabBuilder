@@ -227,7 +227,7 @@ Configuration MEMBER_SUBCA
 		{
 			SetScript = {
 				Write-Verbose "Registering the Sub CA Certificate with the Certification Authority..."
-				& "$($ENV:SystemRoot)\system32\certutil.exe" -silent -installCert "C:\Windows\System32\CertSrv\CertEnroll\$($Using:Node.NodeName).cer"
+				& "$($ENV:SystemRoot)\system32\certutil.exe" -silent -f -installCert "C:\Windows\System32\CertSrv\CertEnroll\$($Using:Node.NodeName).cer"
 			}
 			GetScript = {
 				Return @{
@@ -281,5 +281,14 @@ Configuration MEMBER_SUBCA
 			}
 			DependsOn = '[Script]RegisterSubCA'
 		}
+		
+		# Configure the Online Responder Feature
+		xADCSOnlineResponder ConfigOnlineResponder {
+			Ensure = 'Present'
+			Name = 'ConfigOnlineResponder'
+			Credential = $LocalAdminCredential
+			DependsOn = '[Script]ADCSAdvConfig'
+		}
+
 	}
 }

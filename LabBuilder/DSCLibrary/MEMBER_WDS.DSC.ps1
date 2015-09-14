@@ -14,6 +14,7 @@ Configuration MEMBER_WDS
 	Import-DscResource -ModuleName 'PSDesiredStateConfiguration'
 	Import-DscResource -ModuleName xActiveDirectory
 	Import-DscResource -ModuleName xComputerManagement
+	Import-DscResource -ModuleName xStorage
 	Node $AllNodes.NodeName {
 		# Assemble the Local Admin Credentials
 		If ($Node.LocalAdminPassword) {
@@ -58,6 +59,21 @@ Configuration MEMBER_WDS
             DomainName    = $Node.DomainName
             Credential    = $DomainAdminCredential 
 			DependsOn = "[xWaitForADDomain]DscDomainWait" 
-        } 
+        }
+		
+		xWaitforDisk Disk2
+        {
+			DiskNumber = 1
+			RetryIntervalSec = 60
+			RetryCount = 60
+			DependsOn = "[xComputer]JoinDomain" 
+        }
+        
+		xDisk DVolume
+        {
+			DiskNumber = 1
+			DriveLetter = 'D'
+			DependsOn = "[xWaitforDisk]Disk2" 
+		}
 	}
 }

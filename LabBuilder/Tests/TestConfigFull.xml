@@ -12,6 +12,7 @@
 
   <resources>
     <module name="xNetworking" url="https://github.com/PlagueHO/xNetworking/archive/dev.zip" folder="xNetworking-dev" />
+    <module name="xADCSDeployment" url="https://github.com/PlagueHO/xAdcsDeployment/archive/dev.zip" folder="xAdcsDeployment-dev" />
     <module name="cMicrosoftUpdate" url="https://github.com/fabiendibot/cMicrosoftUpdate/archive/master.zip" folder="cMicrosoftUpdate-master" />  
   </resources>
   
@@ -60,7 +61,8 @@
         computername="SS_ROOTCA"
         usedifferencingbootdisk="Y">
       <dsc configname="STANDALONE_ROOTCA"
-           configfile="STANDALONE_ROOTCA.DSC.ps1">
+           configfile="STANDALONE_ROOTCA.DSC.ps1"
+           logging="Y">
           <parameters>
             CACommonName = "LABBUILDER.COM Root CA"
             CADistinguishedNameSuffix = "DC=LABBUILDER,DC=COM"
@@ -429,11 +431,12 @@
     </vm>
 
     <vm name="LABBUILDER.COM SA_SUBCA"
-      template="Template Windows Server 2012 R2 Datacenter CORE"
+      template="Template Windows Server 2012 R2 Datacenter Full"
       computername="SA_SUBCA"
       usedifferencingbootdisk="Y">
       <dsc configname="MEMBER_SUBCA"
-           configfile="MEMBER_SUBCA.DSC.ps1">
+           configfile="MEMBER_SUBCA.DSC.ps1"
+           logging="Y">
         <parameters>
           DomainName = "LABBUILDER.COM"
           DomainAdminPassword = "P@ssword!1"
@@ -470,7 +473,8 @@
         usedifferencingbootdisk="Y"
         datavhdsize="10GB" >
       <dsc configname="MEMBER_FILESERVER"
-           configfile="MEMBER_FILESERVER.DSC.ps1">
+           configfile="MEMBER_FILESERVER.DSC.ps1"
+           logging="Y">
         <parameters>
           DomainName = "LABBUILDER.COM"
           DomainAdminPassword = "P@ssword!1"

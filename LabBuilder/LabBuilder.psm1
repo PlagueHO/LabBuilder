@@ -935,6 +935,21 @@ Get-NetAdapter | Where-Object { `$_.MacAddress.Replace('-','') -eq '$MacAddress'
 "@
 	} # Foreach
 
+	# Enable DSC logging (as long as it hasn't been already)
+	If ($VM.DSCLogging) {
+		$DSCStartPs += @"
+`$Result = & "wevtutil.exe" get-log "Microsoft-Windows-Dsc/Analytic"
+If (-not (`$Result -like '*enabled: true*')) {
+	& "wevtutil.exe" set-log "Microsoft-Windows-Dsc/Analytic" /q:true /e:true
+}
+`$Result = & "wevtutil.exe" get-log "Microsoft-Windows-Dsc/Debug"
+If (-not (`$Result -like '*enabled: true*')) {
+	& "wevtutil.exe" set-log "Microsoft-Windows-Dsc/Debug" /q:true /e:true
+}
+
+"@
+	} # If
+
 	# Start the actual DSC Configuration
 	$DSCStartPs += @"
 Set-DscLocalConfigurationManager -Path `"$($ENV:SystemRoot)\Setup\Scripts\`" -Verbose  *>> `"$($ENV:SystemRoot)\Setup\Scripts\DSC.log`"
@@ -1436,6 +1451,12 @@ function Get-LabVMs {
 			$DSCParameters = $VM.DSC.Parameters
 		} # If
 
+		# Load the DSC Parameters
+		[BOolean]$DSCLogging = $False
+		If ($VM.DSC.Logging -eq 'Y') {
+			$DSCLogging = $True
+		} # If
+
 		# Get the Memory Startup Bytes (from the template or VM)
 		[Int64]$MemoryStartupBytes = 1GB
 		If ($VMTemplate.memorystartupbytes) {
@@ -1457,10 +1478,10 @@ function Get-LabVMs {
 		# Get the data VHD Size (from the template or VM)
 		[Int64]$DataVHDSize = 0
 		If ($VMTemplate.datavhdsize) {
-			$MemoryStartupBytes = $VMTemplate.datavhdsize
+			$DataVHDSize = $VMTemplate.datavhdsize
 		} # If
 		If ($VM.DataVHDSize) {
-			$MemoryStartupBytes = (Invoke-Expression $VM.DataVHDSize)
+			$DataVHDSize = (Invoke-Expression $VM.DataVHDSize)
 		} # If
 		
 		# Get the Administrator password (from the template or VM)
@@ -1522,6 +1543,7 @@ function Get-LabVMs {
 			DSCConfigFile = $DSCConfigFile;
 			DSCConfigName = $VM.DSC.ConfigName;
 			DSCParameters = $DSCParameters;
+			DSCLogging = $DSCLogging;
 			OSType = $OSType;
 			InstallMSU = $InstallMSU;
 		}
