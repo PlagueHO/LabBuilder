@@ -118,7 +118,15 @@ Configuration MEMBER_SUBCA
 			DependsOn = '[WaitForAny]RootCA'
 		}
 
-		# Configure the Sub CA which will create the Certificate CSR file that Root CA will use
+		# Download the Root CA certificate revocation list.
+		xRemoteFile DownloadRootCACRLFile
+		{
+			DestinationPath = "C:\Windows\System32\CertSrv\CertEnroll\$($Node.RootCACommonName).crl"
+			Uri = "http://$($Node.RootCAName)/CertEnroll/$($Node.RootCACommonName).crl"
+			DependsOn = '[xRemoteFile]DownloadRootCACRTFile'
+		}
+
+		# Configure the Sub CA which will create the Certificate REQ file that Root CA will use
 		# to issue a certificate for this Sub CA.
 		xADCSCertificationAuthority ConfigCA
 		{
@@ -128,8 +136,8 @@ Configuration MEMBER_SUBCA
 			CACommonName = $Node.CACommonName
 			CADistinguishedNameSuffix = $Node.CADistinguishedNameSuffix
 			OverwriteExistingCAinDS  = $True
-			OutputCertRequestFile = "c:\windows\system32\certsrv\certenroll\$($Node.NodeName) Request.csr"
-			DependsOn = '[xRemoteFile]DownloadRootCACRTFile'
+			OutputCertRequestFile = "c:\windows\system32\certsrv\certenroll\$($Node.NodeName).req"
+			DependsOn = '[xRemoteFile]DownloadRootCACRLFile'
 		}
 
 		# Configure the Web Enrollment Feature
@@ -140,19 +148,19 @@ Configuration MEMBER_SUBCA
 			DependsOn = '[xADCSCertificationAuthority]ConfigCA'
 		}
 
-		# Set the IIS Mime Type to allow the CSR request to be downloaded by the Root CA
-		Script SetCSRMimeType
+		# Set the IIS Mime Type to allow the REQ request to be downloaded by the Root CA
+		Script SetREQMimeType
 		{
 			SetScript = {
-				Add-WebConfigurationProperty -PSPath IIS:\ -Filter //staticContent -Name "." -Value @{fileExtension='.csr';mimeType='application/pkcs10'}
+				Add-WebConfigurationProperty -PSPath IIS:\ -Filter //staticContent -Name "." -Value @{fileExtension='.req';mimeType='application/pkcs10'}
 			}
 			GetScript = {
 				Return @{
-					'MimeType' = ((Get-WebConfigurationProperty -Filter "//staticContent/mimeMap[@fileExtension='.csr']" -PSPath IIS:\ -Name *).mimeType);
+					'MimeType' = ((Get-WebConfigurationProperty -Filter "//staticContent/mimeMap[@fileExtension='.req']" -PSPath IIS:\ -Name *).mimeType);
 				}
 			}
 			TestScript = { 
-				If (-not (Get-WebConfigurationProperty -Filter "//staticContent/mimeMap[@fileExtension='.csr']" -PSPath IIS:\ -Name *)) {
+				If (-not (Get-WebConfigurationProperty -Filter "//staticContent/mimeMap[@fileExtension='.req']" -PSPath IIS:\ -Name *)) {
 					# Mime type is not set
 					Return $False
 				}
@@ -169,14 +177,14 @@ Configuration MEMBER_SUBCA
 			NodeName = $Node.RootCAName
 			RetryIntervalSec = 30
 			RetryCount = 30
-			DependsOn = "[Script]SetCSRMimeType"
+			DependsOn = "[Script]SetREQMimeType"
 		}
 
-		# Download the Certificate for this SubCA.
+		# Download the Certificate for this SubCA but rename it so that it'll match the name expected by the CA
 		xRemoteFile DownloadSubCACERFile
 		{
-			DestinationPath = "C:\Windows\System32\CertSrv\CertEnroll\$($Node.NodeName).cer"
-			Uri = "http://$($Node.RootCAName)/CertEnroll/$($Node.NodeName).cer"
+			DestinationPath = "C:\Windows\System32\CertSrv\CertEnroll\$($Node.NodeName)_$($Node.CACommonName).crt"
+			Uri = "http://$($Node.RootCAName)/CertEnroll/$($Node.NodeName).crt"
 			DependsOn = '[WaitForAny]SubCACer'
 		}
 
@@ -185,7 +193,7 @@ Configuration MEMBER_SUBCA
 		{
 			SetScript = {
 				Write-Verbose "Installing the Sub CA Certificate..."
-				Import-Certificate -FilePath "C:\Windows\System32\CertSrv\CertEnroll\$($Using:Node.NodeName).cer" -CertStoreLocation cert:\LocalMachine\CA\
+				Import-Certificate -FilePath "C:\Windows\System32\CertSrv\CertEnroll\$($Node.NodeName)_$($Node.CACommonName).crt" -CertStoreLocation cert:\LocalMachine\CA\
 			}
 			GetScript = {
 				Return @{
@@ -227,7 +235,7 @@ Configuration MEMBER_SUBCA
 		{
 			SetScript = {
 				Write-Verbose "Registering the Sub CA Certificate with the Certification Authority..."
-				& "$($ENV:SystemRoot)\system32\certutil.exe" -silent -f -installCert "C:\Windows\System32\CertSrv\CertEnroll\$($Using:Node.NodeName).cer"
+				& "$($ENV:SystemRoot)\system32\certutil.exe" -silent -f -installCert "C:\Windows\System32\CertSrv\CertEnroll\$($Node.NodeName)_$($Node.CACommonName).crt"
 			}
 			GetScript = {
 				Return @{

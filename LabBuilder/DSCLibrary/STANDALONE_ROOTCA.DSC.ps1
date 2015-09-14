@@ -111,7 +111,7 @@ Configuration STANDALONE_ROOTCA
         # Generate Issuing certificates for any SubCAs
 		Foreach ($SubCA in $Node.SubCAs) {
 			
-			# Wait for SubCA to generate CSR
+			# Wait for SubCA to generate REQ
 			WaitForAny "WaitForSubCA_$SubCA"
 			{
 				ResourceName = '[xADCSCertificationAuthority]ConfigCA'
@@ -121,20 +121,20 @@ Configuration STANDALONE_ROOTCA
 				DependsOn = '[Script]ADCSAdvConfig'
 			}
 
-			# Download the CSR fro the SubCA
+			# Download the REQ from the SubCA
 			xRemoteFile "DownloadSubCA_$SubCA"
 			{
-				DestinationPath = "C:\Windows\System32\CertSrv\CertEnroll\$SubCA Request.csr"
-				Uri = "http://$SubCA/CertEnroll/$SubCA Request.csr"
+				DestinationPath = "C:\Windows\System32\CertSrv\CertEnroll\$SubCA.req"
+				Uri = "http://$SubCA/CertEnroll/$SubCA.req"
 				DependsOn = "[WaitForAny]WaitForSubCA_$SubCA"
 			}
 
-			# Generate the Issuing Certificate from the CSR
+			# Generate the Issuing Certificate from the REQ
 			Script "IssueCert_$SubCA"
 			{
 				SetScript = {
-					Write-Verbose "Submitting C:\Windows\System32\CertSrv\CertEnroll\$Using:SubCA Request.csr to $($Using:Node.CACommonName)"
-					[String]$RequestResult = & "$($ENV:SystemRoot)\System32\Certreq.exe" -Config ".\$($Using:Node.CACommonName)" -Submit "C:\Windows\System32\CertSrv\CertEnroll\$Using:SubCA Request.csr"
+					Write-Verbose "Submitting C:\Windows\System32\CertSrv\CertEnroll\$Using:SubCA.req to $($Using:Node.CACommonName)"
+					[String]$RequestResult = & "$($ENV:SystemRoot)\System32\Certreq.exe" -Config ".\$($Using:Node.CACommonName)" -Submit "C:\Windows\System32\CertSrv\CertEnroll\$Using:SubCA.req"
 					$Matches = [Regex]::Match($RequestResult, 'RequestId:\s([0-9]*)')
 					If ($Matches.Groups.Count -lt 2) {
 						Write-Verbose "Error getting Request ID from SubCA certificate submission."
@@ -147,16 +147,16 @@ Configuration STANDALONE_ROOTCA
 						Write-Verbose "Unexpected result issuing SubCA request."
 						Throw "Unexpected result issuing SubCA request."
 					}
-					Write-Verbose "Retrieving C:\Windows\System32\CertSrv\CertEnroll\$Using:SubCA.csr from $($Using:Node.CACommonName)"
-					[String]$RetrieveResult = & "$($ENV:SystemRoot)\System32\Certreq.exe" -Config ".\$($Using:Node.CACommonName)" -Retrieve $RequestId "C:\Windows\System32\CertSrv\CertEnroll\$Using:SubCA.cer"
+					Write-Verbose "Retrieving C:\Windows\System32\CertSrv\CertEnroll\$Using:SubCA.req from $($Using:Node.CACommonName)"
+					[String]$RetrieveResult = & "$($ENV:SystemRoot)\System32\Certreq.exe" -Config ".\$($Using:Node.CACommonName)" -Retrieve $RequestId "C:\Windows\System32\CertSrv\CertEnroll\$Using:SubCA.crt"
 				}
 				GetScript = {
 					Return @{
-						'Generated' = (Test-Path -Path "C:\Windows\System32\CertSrv\CertEnroll\$Using:SubCA.cer");
+						'Generated' = (Test-Path -Path "C:\Windows\System32\CertSrv\CertEnroll\$Using:SubCA.crt");
 					}
 				}
 				TestScript = { 
-					If (-not (Test-Path -Path "C:\Windows\System32\CertSrv\CertEnroll\$Using:SubCA.cer")) {
+					If (-not (Test-Path -Path "C:\Windows\System32\CertSrv\CertEnroll\$Using:SubCA.crt")) {
 						# SubCA Cert is not yet created
 						Return $False
 					}
