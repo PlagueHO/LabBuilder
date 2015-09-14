@@ -948,6 +948,18 @@ If (-not (`$Result -like '*enabled: true*')) {
 }
 
 "@
+	} Else {
+		$DSCStartPs += @"
+`$Result = & "wevtutil.exe" get-log "Microsoft-Windows-Dsc/Analytic"
+If (`$Result -like '*enabled: true*') {
+	& "wevtutil.exe" set-log "Microsoft-Windows-Dsc/Analytic" /q:true /e:false
+}
+`$Result = & "wevtutil.exe" get-log "Microsoft-Windows-Dsc/Debug"
+If (`$Result -like '*enabled: true*') {
+	& "wevtutil.exe" set-log "Microsoft-Windows-Dsc/Debug" /q:true /e:false
+}
+
+"@
 	} # If
 
 	# Start the actual DSC Configuration
