@@ -187,36 +187,16 @@ Configuration MEMBER_SUBCA
 			DependsOn = '[WaitForAny]SubCACer'
 		}
 
-		# Install the Sub CA Certificate to the LocalMachine CA Store
-		Script InstallSubCACert
-		{
-			SetScript = {
-				Write-Verbose "Installing the Sub CA Certificate..."
-				Import-Certificate -FilePath "C:\Windows\System32\CertSrv\CertEnroll\$($Node.NodeName)_$($Node.CACommonName).crt" -CertStoreLocation cert:\LocalMachine\CA\
-			}
-			GetScript = {
-				Return @{
-				}
-			}
-			TestScript = { 
-				If ((Get-ChildItem -Path Cert:\LocalMachine\CA | Where-Object -FilterScript { ($_.Subject -Like "CN=$($Using:Node.CACommonName),*") -and ($_.Issuer -Like "CN=$($Using:Node.RootCACommonName),*") } ).Count -EQ 0) {
-					Write-Verbose "Sub CA Certificate Needs to be installed..."
-					Return $False
-				}
-				Return $True
-			}
-			DependsOn = '[xRemoteFile]DownloadSubCACERFile'
-		}
-
 		# Install the Root CA Certificate to the LocalMachine Root Store
 		Script InstallRootCACert
 		{
 			SetScript = {
-				Write-Verbose "Installing the Root CA Certificate..."
+				Write-Verbose "Installing the Root CA Certificate C:\Windows\System32\CertSrv\CertEnroll\$($Using:Node.RootCAName)_$($Using:Node.RootCACommonName).crt..."
 				Import-Certificate -FilePath "C:\Windows\System32\CertSrv\CertEnroll\$($Using:Node.RootCAName)_$($Using:Node.RootCACommonName).crt" -CertStoreLocation cert:\LocalMachine\Root\
 			}
 			GetScript = {
 				Return @{
+					Installed = ((Get-ChildItem -Path Cert:\LocalMachine\Root | Where-Object -FilterScript { ($_.Subject -Like "CN=$($Using:Node.RootCACommonName),*") -and ($_.Issuer -Like "CN=$($Using:Node.RootCACommonName),*") } ).Count -EQ 0)
 				}
 			}
 			TestScript = { 
@@ -226,15 +206,37 @@ Configuration MEMBER_SUBCA
 				}
 				Return $True
 			}
-			DependsOn = '[Script]InstallSubCACert'
+			DependsOn = '[xRemoteFile]DownloadSubCACERFile'
+		}
+
+		# Install the Sub CA Certificate to the LocalMachine CA Store
+		Script InstallSubCACert
+		{
+			SetScript = {
+				Write-Verbose "Installing the Sub CA Certificate C:\Windows\System32\CertSrv\CertEnroll\$($Using:Node.NodeName)_$($Using:Node.CACommonName).crt..."
+				Import-Certificate -FilePath "C:\Windows\System32\CertSrv\CertEnroll\$($Using:Node.NodeName)_$($Using:Node.CACommonName).crt" -CertStoreLocation cert:\LocalMachine\CA\
+			}
+			GetScript = {
+				Return @{
+					Installed = ((Get-ChildItem -Path Cert:\LocalMachine\CA | Where-Object -FilterScript { ($_.Subject -Like "CN=$($Using:Node.CACommonName),*") -and ($_.Issuer -Like "CN=$($Using:Node.RootCACommonName),*") } ).Count -EQ 0)
+				}
+			}
+			TestScript = { 
+				If ((Get-ChildItem -Path Cert:\LocalMachine\CA | Where-Object -FilterScript { ($_.Subject -Like "CN=$($Using:Node.CACommonName),*") -and ($_.Issuer -Like "CN=$($Using:Node.RootCACommonName),*") } ).Count -EQ 0) {
+					Write-Verbose "Sub CA Certificate Needs to be installed..."
+					Return $False
+				}
+				Return $True
+			}
+			DependsOn = '[Script]InstallRootCACert'
 		}
 
 		# Register the Sub CA Certificate with the Certification Authority
 		Script RegisterSubCA
 		{
 			SetScript = {
-				Write-Verbose "Registering the Sub CA Certificate with the Certification Authority..."
-				& "$($ENV:SystemRoot)\system32\certutil.exe" -installCert "C:\Windows\System32\CertSrv\CertEnroll\$($Node.NodeName)_$($Node.CACommonName).crt"
+				Write-Verbose "Registering the Sub CA Certificate with the Certification Authority C:\Windows\System32\CertSrv\CertEnroll\$($Using:Node.NodeName)_$($Using:Node.CACommonName).crt..."
+				& "$($ENV:SystemRoot)\system32\certutil.exe" -installCert "C:\Windows\System32\CertSrv\CertEnroll\$($Using:Node.NodeName)_$($Using:Node.CACommonName).crt"
 			}
 			GetScript = {
 				Return @{
