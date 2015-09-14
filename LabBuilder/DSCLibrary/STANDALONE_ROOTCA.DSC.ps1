@@ -75,8 +75,6 @@ Configuration STANDALONE_ROOTCA
 			SetScript = {
 				If ($Using:Node.CADistinguishedNameSuffix) {
 					& "$($ENV:SystemRoot)\system32\certutil.exe" -setreg CA\DSConfigDN "CN=Configuration,$($Using:Node.CADistinguishedNameSuffix)"
-				}
-				If ($Using:Node.CADistinguishedNameSuffix) {
 					& "$($ENV:SystemRoot)\system32\certutil.exe" -setreg CA\DSDomainDN "$($Using:Node.CADistinguishedNameSuffix)"
 				}
 				If ($Using:Node.CRLPublicationURLs) {
