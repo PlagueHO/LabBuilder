@@ -125,6 +125,34 @@ Configuration MEMBER_SUBCA
 			DependsOn = '[xRemoteFile]DownloadRootCACRTFile'
 		}
 
+		# Install the Root CA Certificate to the LocalMachine Root Store
+		Script InstallRootCACert
+		{
+			SetScript = {
+				Write-Verbose "Registering the Root CA Certificate C:\Windows\System32\CertSrv\CertEnroll\$($Using:Node.RootCAName)_$($Using:Node.RootCACommonName).crt in DS..."
+				& "$($ENV:SystemRoot)\system32\certutil.exe" -f -dspublish "C:\Windows\System32\CertSrv\CertEnroll\$($Using:Node.RootCAName)_$($Using:Node.RootCACommonName).crt"
+				Write-Verbose "Registering the Root CA CRL C:\Windows\System32\CertSrv\CertEnroll\$($Node.RootCACommonName).crl in DS..."
+				& "$($ENV:SystemRoot)\system32\certutil.exe" -f -dspublish "C:\Windows\System32\CertSrv\CertEnroll\$($Node.RootCACommonName).crl"
+				Write-Verbose "Installing the Root CA Certificate C:\Windows\System32\CertSrv\CertEnroll\$($Using:Node.RootCAName)_$($Using:Node.RootCACommonName).crt..."
+				& "$($ENV:SystemRoot)\system32\certutil.exe" -addstore -f root "C:\Windows\System32\CertSrv\CertEnroll\$($Using:Node.RootCAName)_$($Using:Node.RootCACommonName).crt"
+				Write-Verbose "Installing the Root CA CRL C:\Windows\System32\CertSrv\CertEnroll\$($Node.RootCACommonName).crl..."
+				& "$($ENV:SystemRoot)\system32\certutil.exe" -addstore -f root "C:\Windows\System32\CertSrv\CertEnroll\$($Node.RootCACommonName).crl"
+			}
+			GetScript = {
+				Return @{
+					Installed = ((Get-ChildItem -Path Cert:\LocalMachine\Root | Where-Object -FilterScript { ($_.Subject -Like "CN=$($Using:Node.RootCACommonName),*") -and ($_.Issuer -Like "CN=$($Using:Node.RootCACommonName),*") } ).Count -EQ 0)
+				}
+			}
+			TestScript = { 
+				If ((Get-ChildItem -Path Cert:\LocalMachine\Root | Where-Object -FilterScript { ($_.Subject -Like "CN=$($Using:Node.RootCACommonName),*") -and ($_.Issuer -Like "CN=$($Using:Node.RootCACommonName),*") } ).Count -EQ 0) {
+					Write-Verbose "Root CA Certificate Needs to be installed..."
+					Return $False
+				}
+				Return $True
+			}
+			DependsOn = '[xRemoteFile]DownloadRootCACRTFile'
+		}
+
 		# Configure the Sub CA which will create the Certificate REQ file that Root CA will use
 		# to issue a certificate for this Sub CA.
 		xADCSCertificationAuthority ConfigCA
@@ -136,7 +164,7 @@ Configuration MEMBER_SUBCA
 			CADistinguishedNameSuffix = $Node.CADistinguishedNameSuffix
 			OverwriteExistingCAinDS  = $True
 			OutputCertRequestFile = "c:\windows\system32\certsrv\certenroll\$($Node.NodeName).req"
-			DependsOn = '[xRemoteFile]DownloadRootCACRLFile'
+			DependsOn = '[Script]InstallRootCACert'
 		}
 
 		# Configure the Web Enrollment Feature
@@ -187,28 +215,6 @@ Configuration MEMBER_SUBCA
 			DependsOn = '[WaitForAny]SubCACer'
 		}
 
-		# Install the Root CA Certificate to the LocalMachine Root Store
-		Script InstallRootCACert
-		{
-			SetScript = {
-				Write-Verbose "Installing the Root CA Certificate C:\Windows\System32\CertSrv\CertEnroll\$($Using:Node.RootCAName)_$($Using:Node.RootCACommonName).crt..."
-				Import-Certificate -FilePath "C:\Windows\System32\CertSrv\CertEnroll\$($Using:Node.RootCAName)_$($Using:Node.RootCACommonName).crt" -CertStoreLocation cert:\LocalMachine\Root\
-			}
-			GetScript = {
-				Return @{
-					Installed = ((Get-ChildItem -Path Cert:\LocalMachine\Root | Where-Object -FilterScript { ($_.Subject -Like "CN=$($Using:Node.RootCACommonName),*") -and ($_.Issuer -Like "CN=$($Using:Node.RootCACommonName),*") } ).Count -EQ 0)
-				}
-			}
-			TestScript = { 
-				If ((Get-ChildItem -Path Cert:\LocalMachine\Root | Where-Object -FilterScript { ($_.Subject -Like "CN=$($Using:Node.RootCACommonName),*") -and ($_.Issuer -Like "CN=$($Using:Node.RootCACommonName),*") } ).Count -EQ 0) {
-					Write-Verbose "Root CA Certificate Needs to be installed..."
-					Return $False
-				}
-				Return $True
-			}
-			DependsOn = '[xRemoteFile]DownloadSubCACERFile'
-		}
-
 		# Install the Sub CA Certificate to the LocalMachine CA Store
 		Script InstallSubCACert
 		{
@@ -228,7 +234,7 @@ Configuration MEMBER_SUBCA
 				}
 				Return $True
 			}
-			DependsOn = '[Script]InstallRootCACert'
+			DependsOn = '[xRemoteFile]DownloadSubCACERFile'
 		}
 
 		# Register the Sub CA Certificate with the Certification Authority
@@ -249,7 +255,7 @@ Configuration MEMBER_SUBCA
 				}
 				Return $True
 			}
-			DependsOn = '[Script]InstallRootCACert'
+			DependsOn = '[Script]InstallSubCACert'
 		}
 
 		# Perform final configuration of the CA which will cause the CA service to startup
