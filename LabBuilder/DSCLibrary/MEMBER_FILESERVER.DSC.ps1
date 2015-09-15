@@ -101,7 +101,8 @@ Configuration MEMBER_FILESERVER
 		xFirewall FSRMFirewall1
         {
 			Name = "FSRM-WMI-ASYNC-In-TCP"
-			State = "Enabled" 
+			State = "Enabled"
+			Access = "Allow"
 			DependsOn = "[xComputer]JoinDomain" 
         }
 
@@ -109,6 +110,7 @@ Configuration MEMBER_FILESERVER
         {
 			Name = "FSRM-WMI-WINMGMT-In-TCP"
 			State = "Enabled" 
+			Access = "Allow"
 			DependsOn = "[xComputer]JoinDomain" 
         }
 
@@ -116,6 +118,7 @@ Configuration MEMBER_FILESERVER
         {
 			Name = "FSRM-RemoteRegistry-In (RPC)"
 			State = "Enabled" 
+			Access = "Allow"
 			DependsOn = "[xComputer]JoinDomain" 
         }
 		
@@ -123,6 +126,7 @@ Configuration MEMBER_FILESERVER
         {
 			Name = "FSRM-Task-Scheduler-In (RPC)"
 			State = "Enabled" 
+			Access = "Allow"
 			DependsOn = "[xComputer]JoinDomain" 
         }
 
@@ -130,6 +134,7 @@ Configuration MEMBER_FILESERVER
         {
 			Name = "FSRM-SrmReports-In (RPC)"
 			State = "Enabled" 
+			Access = "Allow"
 			DependsOn = "[xComputer]JoinDomain" 
         }
 
@@ -137,6 +142,7 @@ Configuration MEMBER_FILESERVER
         {
 			Name = "FSRM-RpcSs-In (RPC-EPMAP)"
 			State = "Enabled" 
+			Access = "Allow"
 			DependsOn = "[xComputer]JoinDomain" 
         }
 		
@@ -144,6 +150,7 @@ Configuration MEMBER_FILESERVER
         {
 			Name = "FSRM-System-In (TCP-445)"
 			State = "Enabled" 
+			Access = "Allow"
 			DependsOn = "[xComputer]JoinDomain" 
         }
 		
