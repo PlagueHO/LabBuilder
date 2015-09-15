@@ -22,6 +22,7 @@ Configuration MEMBER_SUBCA
 	Import-DscResource -ModuleName xComputerManagement
 	Import-DscResource -ModuleName xAdcsDeployment
 	Import-DscResource -ModuleName xPSDesiredStateConfiguration
+	Import-DscResource -ModuleName xNetworking
 	Node $AllNodes.NodeName {
 		# Assemble the Local Admin Credentials
 		If ($Node.LocalAdminPassword) {
@@ -290,5 +291,29 @@ Configuration MEMBER_SUBCA
 			DependsOn = '[Script]ADCSAdvConfig'
 		}
 
+		# Enable Online Responder FireWall rules so we can remote manage Online Responder
+		xFirewall OnlineResponderFirewall1
+        {
+			Name = "Microsoft-Windows-OnlineRevocationServices-OcspSvc-DCOM-In"
+			State = "Enabled"
+			Access = "Allow"
+			DependsOn = "[xADCSOnlineResponder]ConfigOnlineResponder" 
+        }
+
+		xFirewall OnlineResponderirewall2
+        {
+			Name = "Microsoft-Windows-CertificateServices-OcspSvc-RPC-TCP-In"
+			State = "Enabled" 
+			Access = "Allow"
+			DependsOn = "[xADCSOnlineResponder]ConfigOnlineResponder" 
+        }
+
+		xFirewall OnlineResponderFirewall3
+        {
+			Name = "Microsoft-Windows-OnlineRevocationServices-OcspSvc-TCP-Out"
+			State = "Enabled" 
+			Access = "Allow"
+			DependsOn = "[xADCSOnlineResponder]ConfigOnlineResponder" 
+        }
 	}
 }
