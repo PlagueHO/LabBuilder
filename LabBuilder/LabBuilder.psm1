@@ -1752,9 +1752,11 @@ function Initialize-LabVMs {
 			If (Test-Path -Path $VMDataDiskPath) {
 				Write-Verbose "VM $($VM.Name) data disk $VMDataDiskPath already exists ..."
 				# Does the disk need to shrink or grow?
-				If ((Get-VHD -Path $VMDataDiskPath).Size -ne $VMs.DataVHDSize) {
-					Write-Verbose "VM $($VM.Name) Data Disk $VMDataDiskPath resizing to $($VMs.DataVHDSize) ..."
+				If ((Get-VHD -Path $VMDataDiskPath).Size -lt $VMs.DataVHDSize) {
+					Write-Verbose "VM $($VM.Name) Data Disk $VMDataDiskPath expanding to $($VMs.DataVHDSize) ..."
 					Resize-VHD -Path $VMDataDiskPath -SizeBytes $VMs.DataVHDSize | Out-Null
+				} Elseif ((Get-VHD -Path $VMDataDiskPath).Size -gt $VMs.DataVHDSize) {
+					Throw "VM $($VM.Name) Data Disk $VMDataDiskPath cannot be shrunk to $($VMs.DataVHDSize) ..."
 				}
 			} Else {
 				# Create a new VHD
