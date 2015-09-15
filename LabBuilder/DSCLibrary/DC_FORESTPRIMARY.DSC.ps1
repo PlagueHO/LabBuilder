@@ -59,11 +59,32 @@ Configuration DC_FORESTPRIMARY
             DependsOn = "[xADDomain]PrimaryDC" 
         } 
 		
+		# Enable AD Recycle bin
 		xADRecycleBin RecycleBin
         {
 			EnterpriseAdministratorCredential = $DomainAdminCredential
 			ForestFQDN = $Node.DomainName
 		    DependsOn = "[xWaitForADDomain]DscForestWait"
         }
+
+		# Install a KDS Root Key so we can create MSA/gMSA accounts
+		Script CreateKDSRootKey
+		{
+			SetScript = {
+				Add-KDSRootKey -EffectiveTime ((Get-Date).AddHours(-10))			}
+			GetScript = {
+				Return @{
+					KDSRootKey = (Get-KDSRootKey)
+				}
+			}
+			TestScript = { 
+				If (-not (Get-KDSRootKey)) {
+					Write-Verbose "KDS Root Key Needs to be installed..."
+					Return $False
+				}
+				Return $True
+			}
+			DependsOn = '[xWaitForADDomain]DscForestWait'
+		}
 	}
 }

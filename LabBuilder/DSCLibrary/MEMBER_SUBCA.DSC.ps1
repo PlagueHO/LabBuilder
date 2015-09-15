@@ -125,14 +125,14 @@ Configuration MEMBER_SUBCA
 			DependsOn = '[xRemoteFile]DownloadRootCACRTFile'
 		}
 
-		# Install the Root CA Certificate to the LocalMachine Root Store
+		# Install the Root CA Certificate to the LocalMachine Root Store and DS
 		Script InstallRootCACert
 		{
 			SetScript = {
 				Write-Verbose "Registering the Root CA Certificate C:\Windows\System32\CertSrv\CertEnroll\$($Using:Node.RootCAName)_$($Using:Node.RootCACommonName).crt in DS..."
-				& "$($ENV:SystemRoot)\system32\certutil.exe" -f -dspublish "C:\Windows\System32\CertSrv\CertEnroll\$($Using:Node.RootCAName)_$($Using:Node.RootCACommonName).crt"
+				& "$($ENV:SystemRoot)\system32\certutil.exe" -f -dspublish "C:\Windows\System32\CertSrv\CertEnroll\$($Using:Node.RootCAName)_$($Using:Node.RootCACommonName).crt" RootCA
 				Write-Verbose "Registering the Root CA CRL C:\Windows\System32\CertSrv\CertEnroll\$($Node.RootCACommonName).crl in DS..."
-				& "$($ENV:SystemRoot)\system32\certutil.exe" -f -dspublish "C:\Windows\System32\CertSrv\CertEnroll\$($Node.RootCACommonName).crl"
+				& "$($ENV:SystemRoot)\system32\certutil.exe" -f -dspublish "C:\Windows\System32\CertSrv\CertEnroll\$($Node.RootCACommonName).crl" $($Using:Node.RootCAName)
 				Write-Verbose "Installing the Root CA Certificate C:\Windows\System32\CertSrv\CertEnroll\$($Using:Node.RootCAName)_$($Using:Node.RootCACommonName).crt..."
 				& "$($ENV:SystemRoot)\system32\certutil.exe" -addstore -f root "C:\Windows\System32\CertSrv\CertEnroll\$($Using:Node.RootCAName)_$($Using:Node.RootCACommonName).crt"
 				Write-Verbose "Installing the Root CA CRL C:\Windows\System32\CertSrv\CertEnroll\$($Node.RootCACommonName).crl..."
@@ -215,10 +215,12 @@ Configuration MEMBER_SUBCA
 			DependsOn = '[WaitForAny]SubCACer'
 		}
 
-		# Install the Sub CA Certificate to the LocalMachine CA Store
+		# Install the Sub CA Certificate to the LocalMachine CA Store and DS
 		Script InstallSubCACert
 		{
 			SetScript = {
+				Write-Verbose "Registering the Sub CA Certificate C:\Windows\System32\CertSrv\CertEnroll\$($Using:Node.NodeName)_$($Using:Node.CACommonName).crt in DS..."
+				& "$($ENV:SystemRoot)\system32\certutil.exe" -f -dspublish "C:\Windows\System32\CertSrv\CertEnroll\$($Using:Node.NodeName)_$($Using:Node.CACommonName).crt" SubCA
 				Write-Verbose "Installing the Sub CA Certificate C:\Windows\System32\CertSrv\CertEnroll\$($Using:Node.NodeName)_$($Using:Node.CACommonName).crt..."
 				Import-Certificate -FilePath "C:\Windows\System32\CertSrv\CertEnroll\$($Using:Node.NodeName)_$($Using:Node.CACommonName).crt" -CertStoreLocation cert:\LocalMachine\CA\
 			}

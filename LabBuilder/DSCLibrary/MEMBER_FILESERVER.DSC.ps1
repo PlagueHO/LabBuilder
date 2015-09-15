@@ -15,6 +15,7 @@ Configuration MEMBER_FILESERVER
 	Import-DscResource -ModuleName xActiveDirectory
 	Import-DscResource -ModuleName xComputerManagement
 	Import-DscResource -ModuleName xStorage
+	Import-DSCResource -ModuleName xNetworking 
 	Node $AllNodes.NodeName {
 		# Assemble the Local Admin Credentials
 		If ($Node.LocalAdminPassword) {
@@ -96,6 +97,56 @@ Configuration MEMBER_FILESERVER
 			DependsOn = "[xWaitForADDomain]DscDomainWait" 
         } 
 
+		# Enable FSRM FireWall rules so we can remote manage FSRM
+		xFirewall FSRMFirewall1
+        {
+			Name = "FSRM-WMI-ASYNC-In-TCP"
+			State = "Enabled" 
+			DependsOn = "[xComputer]JoinDomain" 
+        }
+
+		xFirewall FSRMFirewall2
+        {
+			Name = "FSRM-WMI-WINMGMT-In-TCP"
+			State = "Enabled" 
+			DependsOn = "[xComputer]JoinDomain" 
+        }
+
+		xFirewall FSRMFirewall3
+        {
+			Name = "FSRM-RemoteRegistry-In (RPC)"
+			State = "Enabled" 
+			DependsOn = "[xComputer]JoinDomain" 
+        }
+		
+		xFirewall FSRMFirewall4
+        {
+			Name = "FSRM-Task-Scheduler-In (RPC)"
+			State = "Enabled" 
+			DependsOn = "[xComputer]JoinDomain" 
+        }
+
+		xFirewall FSRMFirewall5
+        {
+			Name = "FSRM-SrmReports-In (RPC)"
+			State = "Enabled" 
+			DependsOn = "[xComputer]JoinDomain" 
+        }
+
+		xFirewall FSRMFirewall6
+        {
+			Name = "FSRM-RpcSs-In (RPC-EPMAP)"
+			State = "Enabled" 
+			DependsOn = "[xComputer]JoinDomain" 
+        }
+		
+		xFirewall FSRMFirewall7
+        {
+			Name = "FSRM-System-In (TCP-445)"
+			State = "Enabled" 
+			DependsOn = "[xComputer]JoinDomain" 
+        }
+		
 		xWaitforDisk Disk2
         {
 			DiskNumber = 1
