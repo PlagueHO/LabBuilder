@@ -304,7 +304,7 @@
                 subnetmask="24"
                 dnsserver="192.168.128.10,192.168.128.11"/>
           <ipv6 address="fd53:ccc5:895a:bc00::12"
-                defaultgateway=""
+                defaultgateway="fd53:ccc5:895a:bc00::13"
                 subnetmask="64"
                 dnsserver="fd53:ccc5:895a:bc00::a,fd53:ccc5:895a:bc00::b"/>
         </adapter>
@@ -392,7 +392,7 @@
                 subnetmask="24"
                 dnsserver="192.168.128.10,192.168.128.11"/>
           <ipv6 address="fd53:ccc5:895a:bc00::15"
-                defaultgateway=""
+                defaultgateway="fd53:ccc5:895a:bc00::13"
                 subnetmask="64"
                 dnsserver="fd53:ccc5:895a:bc00::a,fd53:ccc5:895a:bc00::b"/>
         </adapter>
@@ -422,7 +422,7 @@
                 subnetmask="24"
                 dnsserver="192.168.128.10,192.168.128.11"/>
           <ipv6 address="fd53:ccc5:895a:bc00::16"
-                defaultgateway=""
+                defaultgateway="fd53:ccc5:895a:bc00::13"
                 subnetmask="64"
                 dnsserver="fd53:ccc5:895a:bc00::a,fd53:ccc5:895a:bc00::b"/>
         </adapter>
@@ -458,7 +458,7 @@
                 subnetmask="24"
                 dnsserver="192.168.128.10,192.168.128.11"/>
           <ipv6 address="fd53:ccc5:895a:bc00::17"
-                defaultgateway=""
+                defaultgateway="fd53:ccc5:895a:bc00::13"
                 subnetmask="64"
                 dnsserver="fd53:ccc5:895a:bc00::a,fd53:ccc5:895a:bc00::b"/>
         </adapter>
@@ -489,7 +489,7 @@
                 subnetmask="24"
                 dnsserver="192.168.128.10,192.168.128.11"/>
           <ipv6 address="fd53:ccc5:895a:bc00::18"
-                defaultgateway=""
+                defaultgateway="fd53:ccc5:895a:bc00::13"
                 subnetmask="64"
                 dnsserver="fd53:ccc5:895a:bc00::a,fd53:ccc5:895a:bc00::b"/>
         </adapter>
@@ -519,7 +519,7 @@
                 subnetmask="24"
                 dnsserver="192.168.128.10,192.168.128.11"/>
           <ipv6 address="fd53:ccc5:895a:bc00::19"
-                defaultgateway=""
+                defaultgateway="fd53:ccc5:895a:bc00::13"
                 subnetmask="64"
                 dnsserver="fd53:ccc5:895a:bc00::a,fd53:ccc5:895a:bc00::b"/>
         </adapter>

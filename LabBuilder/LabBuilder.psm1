@@ -756,8 +756,7 @@ $NetworkingDSCConfig += @"
 	}
 
 "@
-				} # If
-				If ($Adapter.IPv4.DefaultGateway) {
+					If ($Adapter.IPv4.DefaultGateway) {
 $NetworkingDSCConfig += @"
 	xDefaultGatewayAddress IPv4G_$AdapterCount {
 		InterfaceAlias = '$($Adapter.Name)'
@@ -766,7 +765,7 @@ $NetworkingDSCConfig += @"
 	}
 
 "@
-				} Else {
+					} Else {
 $NetworkingDSCConfig += @"
 	xDefaultGatewayAddress IPv4G_$AdapterCount {
 		InterfaceAlias = '$($Adapter.Name)'
@@ -774,6 +773,7 @@ $NetworkingDSCConfig += @"
 	}
 
 "@
+					} # If
 				} # If
 				If ($Adapter.IPv4.DNSServer -ne $null) {
 $NetworkingDSCConfig += @"
@@ -797,8 +797,7 @@ $NetworkingDSCConfig += @"
 	}
 
 "@
-				} # If
-				If ($Adapter.IPv6.DefaultGateway) {
+					If ($Adapter.IPv6.DefaultGateway) {
 $NetworkingDSCConfig += @"
 	xDefaultGatewayAddress IPv6G_$AdapterCount {
 		InterfaceAlias = '$($Adapter.Name)'
@@ -807,7 +806,7 @@ $NetworkingDSCConfig += @"
 	}
 
 "@
-				} Else {
+					} Else {
 $NetworkingDSCConfig += @"
 	xDefaultGatewayAddress IPv6G_$AdapterCount {
 		InterfaceAlias = '$($Adapter.Name)'
@@ -815,6 +814,7 @@ $NetworkingDSCConfig += @"
 	}
 
 "@
+					} # If
 				} # If
 				If ($Adapter.IPv6.DNSServer -ne $null) {
 $NetworkingDSCConfig += @"
