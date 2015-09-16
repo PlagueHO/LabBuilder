@@ -753,16 +753,25 @@ $NetworkingDSCConfig += @"
 		AddressFamily  = 'IPv4'
 		IPAddress      = '$($Adapter.IPv4.Address.Replace(",","','"))'
 		SubnetMask     = '$($Adapter.IPv4.SubnetMask)'
-"@
-					If ($Adapter.IPv4.DefaultGateway) {
-$NetworkingDSCConfig += @"
-
-		DefaultGateway = '$($Adapter.IPv4.DefaultGateway)'
+	}
 
 "@
-					}
+				} # If
+				If ($Adapter.IPv4.DefaultGateway) {
 $NetworkingDSCConfig += @"
-			}
+	xDefaultGatewayAddress IPv4G_$AdapterCount {
+		InterfaceAlias = '$($Adapter.Name)'
+		AddressFamily  = 'IPv4'
+		Address        = '$($Adapter.IPv4.DefaultGateway)'
+	}
+
+"@
+				} Else {
+$NetworkingDSCConfig += @"
+	xDefaultGatewayAddress IPv4G_$AdapterCount {
+		InterfaceAlias = '$($Adapter.Name)'
+		AddressFamily  = 'IPv4'
+	}
 
 "@
 				} # If
@@ -777,10 +786,6 @@ $NetworkingDSCConfig += @"
 "@
 				} # If
 			} # If
-# This code is disabled until issue #20 is resolved:
-# https://github.com/PowerShell/xNetworking
-<#
-
 			If ($Adapter.IPv6) {
 				If ($Adapter.IPv6.Address) {
 $NetworkingDSCConfig += @"
@@ -789,16 +794,25 @@ $NetworkingDSCConfig += @"
 		AddressFamily  = 'IPv6'
 		IPAddress      = '$($Adapter.IPv6.Address.Replace(",","','"))'
 		SubnetMask     = '$($Adapter.IPv6.SubnetMask)'
-"@
-					If ($Adapter.IPv6.DefaultGateway) {
-$NetworkingDSCConfig += @"
-
-		DefaultGateway = '$($Adapter.IPv6.DefaultGateway)'
+	}
 
 "@
-					}
+				} # If
+				If ($Adapter.IPv6.DefaultGateway) {
 $NetworkingDSCConfig += @"
-			}
+	xDefaultGatewayAddress IPv6G_$AdapterCount {
+		InterfaceAlias = '$($Adapter.Name)'
+		AddressFamily  = 'IPv6'
+		Address        = '$($Adapter.IPv6.DefaultGateway)'
+	}
+
+"@
+				} Else {
+$NetworkingDSCConfig += @"
+	xDefaultGatewayAddress IPv6G_$AdapterCount {
+		InterfaceAlias = '$($Adapter.Name)'
+		AddressFamily  = 'IPv6'
+	}
 
 "@
 				} # If
@@ -813,7 +827,6 @@ $NetworkingDSCConfig += @"
 "@
 				} # If
 			} # If
-#>
 		} # Endfor
 $NetworkingDSCConfig += @"
 }

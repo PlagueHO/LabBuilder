@@ -154,6 +154,14 @@ Configuration MEMBER_FILESERVER
 			DependsOn = "[xComputer]JoinDomain" 
         }
 		
+		xFirewall FSRMFirewall8
+        {
+			Name = "FSRM-SrmSvc-In (RPC)"
+			State = "Enabled"
+			Access = "Allow"
+			DependsOn = "[xComputer]JoinDomain" 
+        }
+
 		xWaitforDisk Disk2
         {
 			DiskNumber = 1
