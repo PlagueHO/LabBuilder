@@ -15,7 +15,7 @@ Configuration MEMBER_FILESERVER
 	Import-DscResource -ModuleName xActiveDirectory
 	Import-DscResource -ModuleName xComputerManagement
 	Import-DscResource -ModuleName xStorage
-	Import-DSCResource -ModuleName xNetworking 
+	Import-DscResource -ModuleName xNetworking
 	Node $AllNodes.NodeName {
 		# Assemble the Local Admin Credentials
 		If ($Node.LocalAdminPassword) {
@@ -176,6 +176,5 @@ Configuration MEMBER_FILESERVER
 			DriveLetter = 'D'
 			DependsOn = "[xWaitforDisk]Disk2" 
 		}
-
 	}
 }

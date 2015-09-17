@@ -13,7 +13,8 @@
   <resources>
     <module name="xNetworking" url="https://github.com/PlagueHO/xNetworking/archive/dev.zip" folder="xNetworking-dev" />
     <module name="xADCSDeployment" url="https://github.com/PlagueHO/xAdcsDeployment/archive/dev.zip" folder="xAdcsDeployment-dev" />
-    <module name="cMicrosoftUpdate" url="https://github.com/fabiendibot/cMicrosoftUpdate/archive/master.zip" folder="cMicrosoftUpdate-master" />  
+    <module name="cMicrosoftUpdate" url="https://github.com/fabiendibot/cMicrosoftUpdate/archive/master.zip" folder="cMicrosoftUpdate-master" />
+    <module name="cFSRM" url="https://github.com/PlagueHO/cFSRM/archive/dev.zip" folder="cFSRM-dev" />
   </resources>
   
   <switches>
