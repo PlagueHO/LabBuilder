@@ -31,6 +31,7 @@
     <switch name="Domain Private Site A" type="Private" vlan="2" />
     <switch name="Domain Private Site B" type="Private" vlan="3" />
     <switch name="Domain Private Site C" type="Private" vlan="4" />
+    <switch name="Remediation Site A" type="Private" vlan="5" />
     <switch name="Internet" type="Private" vlan="9" />
   </switches>
 
@@ -279,8 +280,7 @@
               }
             )
           ScopeOptions = @(
-              @{ Name = 'SA_DC1';
-                 ScopeID = '192.168.128.0';
+              @{ ScopeID = '192.168.128.0';
                  DNServerIPAddress = @('192.168.128.10','192.168.128.11');
                  Router = '192.168.128.19';
                  AddressFamily = 'IPv4'
@@ -315,6 +315,21 @@
           DomainName = "LABBUILDER.COM"
           DomainAdminPassword = "P@ssword!1"
           PSDscAllowDomainUser = $True
+          Scopes = @(
+              @{ Name = 'Remediation Site A';
+                 Start = '192.168.129.50';
+                 End = '192.168.129.254';
+                 SubnetMask = '255.255.255.0';
+                 AddressFamily = 'IPv4'
+              }
+            )
+          ScopeOptions = @(
+              @{ ScopeID = '192.168.129.0';
+                 DNServerIPAddress = '';
+                 Router = '';
+                 AddressFamily = 'IPv4'
+              }
+            )
         </parameters>
       </dsc>
       <adapters>
@@ -330,6 +345,17 @@
                 defaultgateway="fd53:ccc5:895a:bc00::13"
                 subnetmask="64"
                 dnsserver="fd53:ccc5:895a:bc00::a,fd53:ccc5:895a:bc00::b"/>
+        </adapter>
+        <adapter name="Remediation Site A"
+                 switchname="Remediation Site A">
+          <ipv4 address="192.168.129.17"
+                defaultgateway=""
+                subnetmask="24"
+                dnsserver=""/>
+          <ipv6 address="fd53:ccc5:895a:bd00::11"
+                defaultgateway=""
+                subnetmask="64"
+                dnsserver=""/>
         </adapter>
       </adapters>
     </vm>
@@ -425,6 +451,17 @@
                 subnetmask="64"
                 dnsserver="fd53:ccc5:895a:bc00::a,fd53:ccc5:895a:bc00::b"/>
         </adapter>
+        <adapter name="Remediation Site A"
+                 switchname="Remediation Site A">
+          <ipv4 address="192.168.129.20"
+                defaultgateway=""
+                subnetmask="24"
+                dnsserver=""/>
+          <ipv6 address="fd53:ccc5:895a:bd00::14"
+                defaultgateway=""
+                subnetmask="64"
+                dnsserver=""/>
+        </adapter>
         <adapter name="Internet"
                  switchname="Internet" >
           <ipv4 address="131.0.0.51"
@@ -491,6 +528,17 @@
                 defaultgateway="fd53:ccc5:895a:bc00::13"
                 subnetmask="64"
                 dnsserver="fd53:ccc5:895a:bc00::a,fd53:ccc5:895a:bc00::b"/>
+        </adapter>
+        <adapter name="Remediation Site A"
+                 switchname="Remediation Site A">
+          <ipv4 address="192.168.129.22"
+                defaultgateway=""
+                subnetmask="24"
+                dnsserver=""/>
+          <ipv6 address="fd53:ccc5:895a:bd00::16"
+                defaultgateway=""
+                subnetmask="64"
+                dnsserver=""/>
         </adapter>
       </adapters>
     </vm>
