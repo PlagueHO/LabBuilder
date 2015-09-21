@@ -31,7 +31,6 @@
     <switch name="Domain Private Site A" type="Private" vlan="2" />
     <switch name="Domain Private Site B" type="Private" vlan="3" />
     <switch name="Domain Private Site C" type="Private" vlan="4" />
-    <switch name="Remediation Site A" type="Private" vlan="5" />
     <switch name="Internet" type="Private" vlan="9" />
   </switches>
 
@@ -346,17 +345,6 @@
                 subnetmask="64"
                 dnsserver="fd53:ccc5:895a:bc00::a,fd53:ccc5:895a:bc00::b"/>
         </adapter>
-        <adapter name="Remediation Site A"
-                 switchname="Remediation Site A">
-          <ipv4 address="192.168.129.17"
-                defaultgateway=""
-                subnetmask="24"
-                dnsserver=""/>
-          <ipv6 address="fd53:ccc5:895a:bd00::11"
-                defaultgateway=""
-                subnetmask="64"
-                dnsserver=""/>
-        </adapter>
       </adapters>
     </vm>
 
@@ -451,17 +439,6 @@
                 subnetmask="64"
                 dnsserver="fd53:ccc5:895a:bc00::a,fd53:ccc5:895a:bc00::b"/>
         </adapter>
-        <adapter name="Remediation Site A"
-                 switchname="Remediation Site A">
-          <ipv4 address="192.168.129.20"
-                defaultgateway=""
-                subnetmask="24"
-                dnsserver=""/>
-          <ipv6 address="fd53:ccc5:895a:bd00::14"
-                defaultgateway=""
-                subnetmask="64"
-                dnsserver=""/>
-        </adapter>
         <adapter name="Internet"
                  switchname="Internet" >
           <ipv4 address="131.0.0.51"
@@ -528,17 +505,6 @@
                 defaultgateway="fd53:ccc5:895a:bc00::13"
                 subnetmask="64"
                 dnsserver="fd53:ccc5:895a:bc00::a,fd53:ccc5:895a:bc00::b"/>
-        </adapter>
-        <adapter name="Remediation Site A"
-                 switchname="Remediation Site A">
-          <ipv4 address="192.168.129.22"
-                defaultgateway=""
-                subnetmask="24"
-                dnsserver=""/>
-          <ipv6 address="fd53:ccc5:895a:bd00::16"
-                defaultgateway=""
-                subnetmask="64"
-                dnsserver=""/>
         </adapter>
       </adapters>
     </vm>
