@@ -13,6 +13,7 @@ Configuration DC_FORESTPRIMARY
 {
 	Import-DscResource -ModuleName 'PSDesiredStateConfiguration'
 	Import-DscResource -ModuleName xActiveDirectory
+	Import-DscResource -ModuleName xDNSServer
 	Node $AllNodes.NodeName {
 		# Assemble the Local Admin Credentials
 		If ($Node.LocalAdminPassword) {
@@ -86,5 +87,49 @@ Configuration DC_FORESTPRIMARY
 			}
 			DependsOn = '[xWaitForADDomain]DscForestWait'
 		}
+
+<#
+		# Create a Reverse Lookup Zone
+		xDnsServerPrimaryZone GlobalNamesZone
+        {
+			Name = $Node.ReverseZone
+		    DynamicUpdate = 
+			Ensure = 'Present'
+			DependsOn = '[xWaitForADDomain]DscForestWait'
+		}
+
+		# Create a Global Names zone - can't do this until the resource supports it
+		xDnsServerPrimaryZone GlobalNamesZone
+        {
+			Name = 'GlobalNames'
+		    DynamicUpdate = 
+			Ensure = 'Present'
+			DependsOn = '[xWaitForADDomain]DscForestWait'
+        }
+
+		# Enable GlobalNames in DNS Server
+		Script InstallRootCACert
+		{
+			PSDSCRunAsCredential = $DomainAdminCredential
+			SetScript = {
+				Write-Verbose "Enabling Global Name Zone..."
+				Set-DNSServerGlobalNameZone -Enable
+			}
+			GetScript = {
+				Return @{
+					Enable = (Get-DNSServerGlobalNameZone).Enable
+				}
+			}
+			TestScript = { 
+				If (-not (Get-DNSServerGlobalNameZone).Enable) {
+					Write-Verbose "Global Name Zone needs to be enabled..."
+					Return $False
+				}
+				Return $True
+			}
+			DependsOn = '[xDnsServerPrimaryZone]GlobalNamesZone'
+		}	
+#>
+
 	}
 }

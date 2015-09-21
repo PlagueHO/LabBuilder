@@ -15,6 +15,7 @@
     <module name="xADCSDeployment" url="https://github.com/PlagueHO/xAdcsDeployment/archive/dev.zip" folder="xAdcsDeployment-dev" />
     <module name="cMicrosoftUpdate" url="https://github.com/fabiendibot/cMicrosoftUpdate/archive/master.zip" folder="cMicrosoftUpdate-master" />
     <module name="cFSRM" url="https://github.com/PlagueHO/cFSRM/archive/dev.zip" folder="cFSRM-dev" />
+    
   </resources>
   
   <switches>
@@ -30,6 +31,7 @@
     <switch name="Domain Private Site A" type="Private" vlan="2" />
     <switch name="Domain Private Site B" type="Private" vlan="3" />
     <switch name="Domain Private Site C" type="Private" vlan="4" />
+    <switch name="Internet" type="Private" vlan="9" />
   </switches>
 
   <templates fromvm="template *">
@@ -77,7 +79,42 @@
                  switchname="General Purpose External" />
       </adapters>
     </vm>
-    
+
+    <vm name="LABBUILDER.COM SS_DHCPDNS"
+        template="Template Windows Server 2012 R2 Datacenter Full"
+        computername="SS_DHCPDNS"
+        usedifferencingbootdisk="Y">
+      <dsc configname="STANDALONE_DHCPDNS"
+           configfile="STANDALONE_DHCPDNS.DSC.ps1"
+           logging="Y">
+        <parameters>
+          Scopes = @(
+            @{ Name = 'Internet';
+               Start = '131.0.0.50';
+               End = '131.0.0.250';
+               SubnetMask = '255.0.0.0';
+               AddressFamily = 'IPv4'
+            }
+          )
+        </parameters>
+      </dsc>
+      <adapters>
+        <adapter name="General Purpose External"
+                 switchname="General Purpose External" />
+        <adapter name="Internet"
+                 switchname="Internet">
+          <ipv4 address="131.0.0.10"
+                defaultgateway=""
+                subnetmask="0"
+                dnsserver="131.0.0.10"/>
+          <ipv6 address="2001:54b9:f782:ae41::10"
+                defaultgateway=""
+                subnetmask="0"
+                dnsserver="2001:54b9:f782:ae41::10"/>
+        </adapter>
+      </adapters>
+    </vm>
+
     <vm name="LABBUILDER.COM SA_DC1"
         template="Template Windows Server 2012 R2 Datacenter CORE"
         computername="SA_DC1"
