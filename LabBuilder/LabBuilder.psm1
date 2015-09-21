@@ -16,6 +16,10 @@
 ##########################################################################################################################################
 # Helper functions that aren't exported
 ##########################################################################################################################################
+<#
+.Synopsis
+   Returns True if running as Administrator
+#>
 function Test-Admin()
 {
 	# Get the ID and security principal of the current user account
@@ -29,6 +33,10 @@ function Test-Admin()
 	Return ($myWindowsPrincipal.IsInRole($adminRole))
 }
 ##########################################################################################################################################
+<#
+.Synopsis
+   Download the latest Windows Management Framework 5.0 Installer to the Working Folder
+#>
 function Download-WMF5Installer()
 {
 	# Only downloads for Win8.1/WS2K12R2
@@ -43,6 +51,10 @@ function Download-WMF5Installer()
 	Return $True
 } # Download-WMF5Installer
 ##########################################################################################################################################
+<#
+.Synopsis
+   Download the Certificate Generator script from TechNet Script Center to the Working Folder
+#>
 function Download-CertGenerator()
 {
 	[String]$URL = $Script:CertGenDownloadURL
@@ -64,6 +76,19 @@ function Download-CertGenerator()
 	Return $True
 } # Download-CertGenerator
 ##########################################################################################################################################
+<#
+.Synopsis
+   Get a list of all Resources imported in a DSC Config
+.DESCRIPTION
+   Uses RegEx to pull a list of Resources that are imported in a DSC Configuration using the Import-DSCResource cmdlet
+.PARAMETER DSCConfigFile
+   Contains the path to the DSC Config file to extract resource module names from
+.EXAMPLE
+   Get-ModulesInDSCConfig -DSCConfigFile c:\mydsc\Server01.ps1
+   Return the DSC Resource module list from file c:\mydsc\server01.ps1
+.OUTPUTS
+   An array of strings containing resource module names
+#>
 function Get-ModulesInDSCConfig()
 {
 	[CmdletBinding()]
@@ -93,6 +118,17 @@ function Get-ModulesInDSCConfig()
 ##########################################################################################################################################
 # Main CmdLets
 ##########################################################################################################################################
+<#
+.Synopsis
+   Loads a Lab Builder Configuration file and returns a Configuration object
+.PARAMETER Path
+   This is the path to the Lab Builder configration file to load.
+.EXAMPLE
+   $MyLab = Get-LabConfiguration -Path c:\MyLab\LabConfig1.xml
+   Loads the LabConfig1.xml configuration into variable MyLab
+.OUTPUTS
+   XML Object containing the Lab Configuration that was loaded.
+#>
 function Get-LabConfiguration {
 	[CmdLetBinding()]
 	[OutputType([XML])]
@@ -130,6 +166,18 @@ function Get-LabConfiguration {
 ##########################################################################################################################################
 
 ##########################################################################################################################################
+<#
+.Synopsis
+   Tests the Lab Builder configuration passed to ensure it is valid and related files can be found.
+.PARAMETER Configuration
+	Contains the Lab Builder configuration object that was laoded by the Get-LabConfiguration object.
+.EXAMPLE
+   $Config = Get-LabConfiguration -Path c:\mylab\config.xml
+   Test-LabConfiguration -Configuration $Config
+   Loads a Lab Bulder configuration and tests it is valid.   
+.OUTPUTS
+   Returns True if the configuration is valid.
+#>
 function Test-LabConfiguration {
 	[CmdLetBinding()]
 	[OutputType([Boolean])]
@@ -177,6 +225,22 @@ function Test-LabConfiguration {
 ##########################################################################################################################################
 
 ##########################################################################################################################################
+<#
+.Synopsis
+   Short description
+.DESCRIPTION
+   Long description
+.EXAMPLE
+   Example of how to use this cmdlet
+.EXAMPLE
+   Another example of how to use this cmdlet
+.INPUTS
+   Inputs to this cmdlet (if any)
+.OUTPUTS
+   Output from this cmdlet (if any)
+.NOTES
+   General notes
+#>
 function Install-LabHyperV {
 	[CmdLetBinding()]
 	[OutputType([Boolean])]
@@ -204,6 +268,22 @@ function Install-LabHyperV {
 ##########################################################################################################################################
 
 ##########################################################################################################################################
+<#
+.Synopsis
+   Short description
+.DESCRIPTION
+   Long description
+.EXAMPLE
+   Example of how to use this cmdlet
+.EXAMPLE
+   Another example of how to use this cmdlet
+.INPUTS
+   Inputs to this cmdlet (if any)
+.OUTPUTS
+   Output from this cmdlet (if any)
+.NOTES
+   General notes
+#>
 function Initialize-LabHyperV {
 	[CmdLetBinding()]
 	[OutputType([Boolean])]
@@ -285,6 +365,22 @@ function Initialize-LabHyperV {
 ##########################################################################################################################################
 
 ##########################################################################################################################################
+<#
+.Synopsis
+   Short description
+.DESCRIPTION
+   Long description
+.EXAMPLE
+   Example of how to use this cmdlet
+.EXAMPLE
+   Another example of how to use this cmdlet
+.INPUTS
+   Inputs to this cmdlet (if any)
+.OUTPUTS
+   Output from this cmdlet (if any)
+.NOTES
+   General notes
+#>
 function Get-LabSwitches {
 	[OutputType([Array])]
 	[CmdLetBinding()]
@@ -333,6 +429,22 @@ function Get-LabSwitches {
 ##########################################################################################################################################
 
 ##########################################################################################################################################
+<#
+.Synopsis
+   Short description
+.DESCRIPTION
+   Long description
+.EXAMPLE
+   Example of how to use this cmdlet
+.EXAMPLE
+   Another example of how to use this cmdlet
+.INPUTS
+   Inputs to this cmdlet (if any)
+.OUTPUTS
+   Output from this cmdlet (if any)
+.NOTES
+   General notes
+#>
 function Initialize-LabSwitches {
 	[CmdLetBinding()]
 	[OutputType([Boolean])]
@@ -388,6 +500,22 @@ function Initialize-LabSwitches {
 ##########################################################################################################################################
 
 ##########################################################################################################################################
+<#
+.Synopsis
+   Short description
+.DESCRIPTION
+   Long description
+.EXAMPLE
+   Example of how to use this cmdlet
+.EXAMPLE
+   Another example of how to use this cmdlet
+.INPUTS
+   Inputs to this cmdlet (if any)
+.OUTPUTS
+   Output from this cmdlet (if any)
+.NOTES
+   General notes
+#>
 function Remove-LabSwitches {
 	[CmdLetBinding()]
 	[OutputType([Boolean])]
@@ -441,6 +569,22 @@ function Remove-LabSwitches {
 ##########################################################################################################################################
 
 ##########################################################################################################################################
+<#
+.Synopsis
+   Short description
+.DESCRIPTION
+   Long description
+.EXAMPLE
+   Example of how to use this cmdlet
+.EXAMPLE
+   Another example of how to use this cmdlet
+.INPUTS
+   Inputs to this cmdlet (if any)
+.OUTPUTS
+   Output from this cmdlet (if any)
+.NOTES
+   General notes
+#>
 function Get-LabVMTemplates {
 	[OutputType([System.Collections.Hashtable[]])]
 	[CmdLetBinding()]
@@ -573,6 +717,22 @@ function Get-LabVMTemplates {
 ##########################################################################################################################################
 
 ##########################################################################################################################################
+<#
+.Synopsis
+   Short description
+.DESCRIPTION
+   Long description
+.EXAMPLE
+   Example of how to use this cmdlet
+.EXAMPLE
+   Another example of how to use this cmdlet
+.INPUTS
+   Inputs to this cmdlet (if any)
+.OUTPUTS
+   Output from this cmdlet (if any)
+.NOTES
+   General notes
+#>
 function Initialize-LabVMTemplates {
 	[CmdLetBinding()]
 	[OutputType([Boolean])]
@@ -612,6 +772,22 @@ function Initialize-LabVMTemplates {
 ##########################################################################################################################################
 
 ##########################################################################################################################################
+<#
+.Synopsis
+   Short description
+.DESCRIPTION
+   Long description
+.EXAMPLE
+   Example of how to use this cmdlet
+.EXAMPLE
+   Another example of how to use this cmdlet
+.INPUTS
+   Inputs to this cmdlet (if any)
+.OUTPUTS
+   Output from this cmdlet (if any)
+.NOTES
+   General notes
+#>
 function Remove-LabVMTemplates {
 	[CmdLetBinding()]
 	[OutputType([Boolean])]
@@ -639,27 +815,22 @@ function Remove-LabVMTemplates {
 ##########################################################################################################################################
 
 ##########################################################################################################################################
-[DSCLocalConfigurationManager()]
-Configuration ConfigLCM {
-	Param (
-		[String]$ComputerName,
-		[String]$Thumbprint
-	)
-	Node $ComputerName {
-		Settings {
-			RefreshMode = 'Push'
-			ConfigurationMode = 'ApplyAndAutoCorrect'
-			CertificateId = $Thumbprint
-			ConfigurationModeFrequencyMins = 15
-			RefreshFrequencyMins = 30
-			RebootNodeIfNeeded = $True
-			ActionAfterReboot = 'ContinueConfiguration'
-		} 
-	}
-}
-##########################################################################################################################################
-
-##########################################################################################################################################
+<#
+.Synopsis
+   Short description
+.DESCRIPTION
+   Long description
+.EXAMPLE
+   Example of how to use this cmdlet
+.EXAMPLE
+   Another example of how to use this cmdlet
+.INPUTS
+   Inputs to this cmdlet (if any)
+.OUTPUTS
+   Output from this cmdlet (if any)
+.NOTES
+   General notes
+#>
 function Set-LabDSCMOFFile {
 	[CmdLetBinding()]
 	[OutputType([Boolean])]
@@ -915,6 +1086,22 @@ $NetworkingDSCConfig += @"
 ##########################################################################################################################################
 
 ##########################################################################################################################################
+<#
+.Synopsis
+   Short description
+.DESCRIPTION
+   Long description
+.EXAMPLE
+   Example of how to use this cmdlet
+.EXAMPLE
+   Another example of how to use this cmdlet
+.INPUTS
+   Inputs to this cmdlet (if any)
+.OUTPUTS
+   Output from this cmdlet (if any)
+.NOTES
+   General notes
+#>
 function Set-LabDSCStartFile {
 	[CmdLetBinding()]
 	[OutputType([Boolean])]
@@ -993,6 +1180,22 @@ Start-DSCConfiguration -Path `"$($ENV:SystemRoot)\Setup\Scripts\`" -Force -Debug
 ##########################################################################################################################################
 
 ##########################################################################################################################################
+<#
+.Synopsis
+   Short description
+.DESCRIPTION
+   Long description
+.EXAMPLE
+   Example of how to use this cmdlet
+.EXAMPLE
+   Another example of how to use this cmdlet
+.INPUTS
+   Inputs to this cmdlet (if any)
+.OUTPUTS
+   Output from this cmdlet (if any)
+.NOTES
+   General notes
+#>
 function Initialize-LabVMDSC {
 	[CmdLetBinding()]
 	param (
@@ -1014,6 +1217,22 @@ function Initialize-LabVMDSC {
 ##########################################################################################################################################
 
 ##########################################################################################################################################
+<#
+.Synopsis
+   Short description
+.DESCRIPTION
+   Long description
+.EXAMPLE
+   Example of how to use this cmdlet
+.EXAMPLE
+   Another example of how to use this cmdlet
+.INPUTS
+   Inputs to this cmdlet (if any)
+.OUTPUTS
+   Output from this cmdlet (if any)
+.NOTES
+   General notes
+#>
 function Start-LabVMDSC {
 	[CmdLetBinding()]
 	param (
@@ -1112,6 +1331,22 @@ function Start-LabVMDSC {
 ##########################################################################################################################################
 
 ##########################################################################################################################################
+<#
+.Synopsis
+   Short description
+.DESCRIPTION
+   Long description
+.EXAMPLE
+   Example of how to use this cmdlet
+.EXAMPLE
+   Another example of how to use this cmdlet
+.INPUTS
+   Inputs to this cmdlet (if any)
+.OUTPUTS
+   Output from this cmdlet (if any)
+.NOTES
+   General notes
+#>
 function Get-LabUnattendFile {
 	[CmdLetBinding()]
 	[OutputType([String])]
@@ -1215,6 +1450,22 @@ function Get-LabUnattendFile {
 ##########################################################################################################################################
 
 ##########################################################################################################################################
+<#
+.Synopsis
+   Short description
+.DESCRIPTION
+   Long description
+.EXAMPLE
+   Example of how to use this cmdlet
+.EXAMPLE
+   Another example of how to use this cmdlet
+.INPUTS
+   Inputs to this cmdlet (if any)
+.OUTPUTS
+   Output from this cmdlet (if any)
+.NOTES
+   General notes
+#>
 function Set-LabVMInitializationFiles {
 	[CmdLetBinding()]
 	[OutputType([Boolean])]
@@ -1327,6 +1578,22 @@ Add-Content -Path `"$($ENV:SystemRoot)\Setup\Scripts\SetupComplete.log`" -Value 
 ##########################################################################################################################################
 
 ##########################################################################################################################################
+<#
+.Synopsis
+   Short description
+.DESCRIPTION
+   Long description
+.EXAMPLE
+   Example of how to use this cmdlet
+.EXAMPLE
+   Another example of how to use this cmdlet
+.INPUTS
+   Inputs to this cmdlet (if any)
+.OUTPUTS
+   Output from this cmdlet (if any)
+.NOTES
+   General notes
+#>
 function Get-LabVMs {
 	[OutputType([System.Collections.Hashtable[]])]
 	[CmdLetBinding()]
@@ -1585,6 +1852,22 @@ function Get-LabVMs {
 ##########################################################################################################################################
 
 ##########################################################################################################################################
+<#
+.Synopsis
+   Short description
+.DESCRIPTION
+   Long description
+.EXAMPLE
+   Example of how to use this cmdlet
+.EXAMPLE
+   Another example of how to use this cmdlet
+.INPUTS
+   Inputs to this cmdlet (if any)
+.OUTPUTS
+   Output from this cmdlet (if any)
+.NOTES
+   General notes
+#>
 function Get-LabVMSelfSignedCert {
 	[CmdLetBinding()]
 	[OutputType([Boolean])]
@@ -1644,6 +1927,22 @@ function Get-LabVMSelfSignedCert {
 ##########################################################################################################################################
 
 ##########################################################################################################################################
+<#
+.Synopsis
+   Short description
+.DESCRIPTION
+   Long description
+.EXAMPLE
+   Example of how to use this cmdlet
+.EXAMPLE
+   Another example of how to use this cmdlet
+.INPUTS
+   Inputs to this cmdlet (if any)
+.OUTPUTS
+   Output from this cmdlet (if any)
+.NOTES
+   General notes
+#>
 function Start-LabVM {
 	[CmdLetBinding()]
 	[OutputType([Boolean])]
@@ -1696,6 +1995,22 @@ function Start-LabVM {
 ##########################################################################################################################################
 
 ##########################################################################################################################################
+<#
+.Synopsis
+   Short description
+.DESCRIPTION
+   Long description
+.EXAMPLE
+   Example of how to use this cmdlet
+.EXAMPLE
+   Another example of how to use this cmdlet
+.INPUTS
+   Inputs to this cmdlet (if any)
+.OUTPUTS
+   Output from this cmdlet (if any)
+.NOTES
+   General notes
+#>
 function Initialize-LabVMs {
 	[CmdLetBinding()]
 	[OutputType([Boolean])]
@@ -1820,6 +2135,22 @@ function Initialize-LabVMs {
 ##########################################################################################################################################
 
 ##########################################################################################################################################
+<#
+.Synopsis
+   Short description
+.DESCRIPTION
+   Long description
+.EXAMPLE
+   Example of how to use this cmdlet
+.EXAMPLE
+   Another example of how to use this cmdlet
+.INPUTS
+   Inputs to this cmdlet (if any)
+.OUTPUTS
+   Output from this cmdlet (if any)
+.NOTES
+   General notes
+#>
 function Remove-LabVMs {
 	[CmdLetBinding()]
 	[OutputType([Boolean])]
@@ -1870,6 +2201,22 @@ function Remove-LabVMs {
 ##########################################################################################################################################
 
 ##########################################################################################################################################
+<#
+.Synopsis
+   Short description
+.DESCRIPTION
+   Long description
+.EXAMPLE
+   Example of how to use this cmdlet
+.EXAMPLE
+   Another example of how to use this cmdlet
+.INPUTS
+   Inputs to this cmdlet (if any)
+.OUTPUTS
+   Output from this cmdlet (if any)
+.NOTES
+   General notes
+#>
 function Wait-LabVMInit {
 	[OutputType([Boolean])]
 	[CmdLetBinding()]
@@ -1929,6 +2276,22 @@ function Wait-LabVMInit {
 ##########################################################################################################################################
 
 ##########################################################################################################################################
+<#
+.Synopsis
+   Short description
+.DESCRIPTION
+   Long description
+.EXAMPLE
+   Example of how to use this cmdlet
+.EXAMPLE
+   Another example of how to use this cmdlet
+.INPUTS
+   Inputs to this cmdlet (if any)
+.OUTPUTS
+   Output from this cmdlet (if any)
+.NOTES
+   General notes
+#>
 function Wait-LabVMStart {
 	[OutputType([Boolean])]
 	[CmdLetBinding()]
@@ -1949,6 +2312,22 @@ function Wait-LabVMStart {
 ##########################################################################################################################################
 
 ##########################################################################################################################################
+<#
+.Synopsis
+   Short description
+.DESCRIPTION
+   Long description
+.EXAMPLE
+   Example of how to use this cmdlet
+.EXAMPLE
+   Another example of how to use this cmdlet
+.INPUTS
+   Inputs to this cmdlet (if any)
+.OUTPUTS
+   Output from this cmdlet (if any)
+.NOTES
+   General notes
+#>
 function Wait-LabVMOff {
 	[OutputType([Boolean])]
 	[CmdLetBinding()]
@@ -1969,6 +2348,22 @@ function Wait-LabVMOff {
 ##########################################################################################################################################
 
 ##########################################################################################################################################
+<#
+.Synopsis
+   Short description
+.DESCRIPTION
+   Long description
+.EXAMPLE
+   Example of how to use this cmdlet
+.EXAMPLE
+   Another example of how to use this cmdlet
+.INPUTS
+   Inputs to this cmdlet (if any)
+.OUTPUTS
+   Output from this cmdlet (if any)
+.NOTES
+   General notes
+#>
 Function Install-Lab {
 	[CmdLetBinding()]
 	param (
@@ -2002,6 +2397,22 @@ Function Install-Lab {
 ##########################################################################################################################################
 
 ##########################################################################################################################################
+<#
+.Synopsis
+   Short description
+.DESCRIPTION
+   Long description
+.EXAMPLE
+   Example of how to use this cmdlet
+.EXAMPLE
+   Another example of how to use this cmdlet
+.INPUTS
+   Inputs to this cmdlet (if any)
+.OUTPUTS
+   Output from this cmdlet (if any)
+.NOTES
+   General notes
+#>
 Function Uninstall-Lab {
 	[CmdLetBinding()]
 	param (
@@ -2042,6 +2453,29 @@ Function Uninstall-Lab {
 		Remove-LabSwitches -Configuration $Config -Switches $Switches | Out-Null
 	} # If
 } # Uninstall-Lab
+##########################################################################################################################################
+
+##########################################################################################################################################
+# DSC Config Files
+##########################################################################################################################################
+[DSCLocalConfigurationManager()]
+Configuration ConfigLCM {
+	Param (
+		[String]$ComputerName,
+		[String]$Thumbprint
+	)
+	Node $ComputerName {
+		Settings {
+			RefreshMode = 'Push'
+			ConfigurationMode = 'ApplyAndAutoCorrect'
+			CertificateId = $Thumbprint
+			ConfigurationModeFrequencyMins = 15
+			RefreshFrequencyMins = 30
+			RebootNodeIfNeeded = $True
+			ActionAfterReboot = 'ContinueConfiguration'
+		} 
+	}
+}
 ##########################################################################################################################################
 
 ##########################################################################################################################################
