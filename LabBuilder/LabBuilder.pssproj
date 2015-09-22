@@ -36,6 +36,7 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="DSCLibrary\MEMBER_DHCPDNS.DSC.ps1" />
     <Compile Include="DSCLibrary\MEMBER_FILESERVER.DSC.ps1" />
     <Compile Include="DSCLibrary\MEMBER_WDS.DSC.ps1" />
     <Compile Include="DSCLibrary\MEMBER_WSUS.DSC.ps1" />
@@ -43,6 +44,7 @@
     <Compile Include="DSCLibrary\MEMBER_REMOTEACCESS.DSC.ps1" />
     <Compile Include="DSCLibrary\MEMBER_DHCP.DSC.ps1" />
     <Compile Include="DSCLibrary\MEMBER_SUBCA.DSC.ps1" />
+    <Compile Include="DSCLibrary\STANDALONE_DHCPDNS.DSC.ps1" />
     <Compile Include="LabBuilder.psd1" />
     <Compile Include="LabBuilder.psm1" />
     <Compile Include="LabBuilder.tests.ps1" />

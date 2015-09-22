@@ -276,8 +276,6 @@ function Install-LabHyperV {
    Loads a Lab Builder configuration and applies the base system settings.   
 .OUTPUTS
    Returns true if the Hyper-V could be initialized correctly.
-.NOTES
-   General notes
 #>
 function Initialize-LabConfiguration {
 	[CmdLetBinding()]
@@ -362,19 +360,18 @@ function Initialize-LabConfiguration {
 ##########################################################################################################################################
 <#
 .Synopsis
-   Short description
+   Gets an array of switches from a Lab Configuration file.
 .DESCRIPTION
-   Long description
+   Takes a provided Lab Configuration file and returns the list of switches required for this Lab.
+   This list is usually passed to Initialize-LabSwitches to configure the swtiches required for this lab.
+.PARAMETER Configuration
+   Contains the Lab Builder configuration object that was loaded by the Get-LabConfiguration object.
 .EXAMPLE
-   Example of how to use this cmdlet
-.EXAMPLE
-   Another example of how to use this cmdlet
-.INPUTS
-   Inputs to this cmdlet (if any)
+   $Config = Get-LabConfiguration -Path c:\mylab\config.xml
+   $Switches = Get-LabSwitches -Configuration $Config
+   Loads a Lab Builder configuration and pulls the array of switches from it.
 .OUTPUTS
-   Output from this cmdlet (if any)
-.NOTES
-   General notes
+   Returns an array of switches.
 #>
 function Get-LabSwitches {
 	[OutputType([Array])]
