@@ -115,21 +115,21 @@ Describe "Install-LabHyperV" {
 ##########################################################################################################################################
 
 ##########################################################################################################################################
-Describe "Initialize-LabHyperV" {
+Describe "Initialize-LabConfiguration" {
 	#region Mocks
 	Mock Set-VMHost
 	#endregion
 
 	Context "No parameters passed" {
 		It "Fails" {
-			{ Initialize-LabHyperV } | Should Throw
+			{ Initialize-LabConfiguration } | Should Throw
 		}
 	}
 	Context "Valid configuration is passed" {
 		$Config = Get-LabConfiguration -Path $Global:TestConfigOKPath
 	
 		It "Returns True" {
-			Initialize-LabHyperV -Configuration $Config | Should Be $True
+			Initialize-LabConfiguration -Configuration $Config | Should Be $True
 		}
 		It "Calls Mocked commands" {
 			Assert-MockCalled  Set-VMHost -Exactly 1
@@ -380,7 +380,7 @@ Describe "Set-LabDSCMOFFile" {
 	}
 	Context "Valid Parameters Passed" {
 		$Config = Get-LabConfiguration -Path $Global:TestConfigOKPath
-		Initialize-LabHyperV -Configuration $Config
+		Initialize-LabConfiguration -Configuration $Config
 		[Array]$Switches = Get-LabSwitches -Configuration $Config
 		[Array]$Templates = Get-LabVMTemplates -Configuration $Config
 		[Array]$VMs = Get-LabVMs -Configuration $Config -VMTemplates $Templates -Switches $Switches

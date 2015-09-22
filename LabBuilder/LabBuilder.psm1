@@ -170,11 +170,11 @@ function Get-LabConfiguration {
 .Synopsis
    Tests the Lab Builder configuration passed to ensure it is valid and related files can be found.
 .PARAMETER Configuration
-	Contains the Lab Builder configuration object that was laoded by the Get-LabConfiguration object.
+	Contains the Lab Builder configuration object that was loaded by the Get-LabConfiguration object.
 .EXAMPLE
    $Config = Get-LabConfiguration -Path c:\mylab\config.xml
    Test-LabConfiguration -Configuration $Config
-   Loads a Lab Bulder configuration and tests it is valid.   
+   Loads a Lab Builder configuration and tests it is valid.   
 .OUTPUTS
    Returns True if the configuration is valid.
 #>
@@ -227,19 +227,12 @@ function Test-LabConfiguration {
 ##########################################################################################################################################
 <#
 .Synopsis
-   Short description
+   Ensures the Hyper-V features are installed onto the system.
 .DESCRIPTION
-   Long description
+   If the Hyper-V features are not installed onto this system they will be installed.
 .EXAMPLE
-   Example of how to use this cmdlet
-.EXAMPLE
-   Another example of how to use this cmdlet
-.INPUTS
-   Inputs to this cmdlet (if any)
-.OUTPUTS
-   Output from this cmdlet (if any)
-.NOTES
-   General notes
+   Install-LabHyperV
+   Installs the appropriate Hyper-V features if they are not currently installed.
 #>
 function Install-LabHyperV {
 	[CmdLetBinding()]
@@ -270,21 +263,23 @@ function Install-LabHyperV {
 ##########################################################################################################################################
 <#
 .Synopsis
-   Short description
+   Initializes the system from information provided in the Lab Configuration object provided.
 .DESCRIPTION
-   Long description
+   This function should be run after loading a Lab Configuration file. It will ensure any required
+   modules and files are downloaded and also that the Hyper-V system on this machine is configured
+   with any required settings (MAC Addresses range) provided in the configuration object.
+.PARAMETER Configuration
+   Contains the Lab Builder configuration object that was loaded by the Get-LabConfiguration object.
 .EXAMPLE
-   Example of how to use this cmdlet
-.EXAMPLE
-   Another example of how to use this cmdlet
-.INPUTS
-   Inputs to this cmdlet (if any)
+   $Config = Get-LabConfiguration -Path c:\mylab\config.xml
+   Initialize-LabConfiguration -Configuration $Config
+   Loads a Lab Builder configuration and applies the base system settings.   
 .OUTPUTS
-   Output from this cmdlet (if any)
+   Returns true if the Hyper-V could be initialized correctly.
 .NOTES
    General notes
 #>
-function Initialize-LabHyperV {
+function Initialize-LabConfiguration {
 	[CmdLetBinding()]
 	[OutputType([Boolean])]
 	param (
@@ -361,7 +356,7 @@ function Initialize-LabHyperV {
 		} # Foreach
 	} # If
 	Return $True
-} # Initialize-LabHyperV
+} # Initialize-LabConfiguration
 ##########################################################################################################################################
 
 ##########################################################################################################################################
@@ -2383,7 +2378,7 @@ Function Install-Lab {
 	If ($CheckEnvironment) {
 		Install-LabHyperV | Out-Null
 	}
-	Initialize-LabHyperV -Configuration $Config | Out-Null
+	Initialize-LabConfiguration -Configuration $Config | Out-Null
 
 	$Switches = Get-LabSwitches -Configuration $Config
 	Initialize-LabSwitches -Configuration $Config -Switches $Switches | Out-Null
@@ -2482,7 +2477,7 @@ Configuration ConfigLCM {
 # Export the Module Cmdlets
 Export-ModuleMember -Function `
 	Get-LabConfiguration,Test-LabConfiguration, `
-	Install-LabHyperV,Initialize-LabHyperV, `
+	Install-LabHyperV,Initialize-LabConfiguration, `
 	Get-LabSwitches,Initialize-LabSwitches,Remove-LabSwitches, `
 	Get-LabVMTemplates,Initialize-LabVMTemplates,Remove-LabVMTemplates, `
 	Get-LabVMs,Initialize-LabVMs,Remove-LabVMs, `
