@@ -423,17 +423,21 @@ function Get-LabSwitches {
 ##########################################################################################################################################
 <#
 .Synopsis
-   Short description
+   Creates Hyper-V Virtual Switches from a provided array.
 .DESCRIPTION
-   Long description
+   Takes an array of switches that were pulled from a Lab Configuration object by calling Get-LabSwitches
+   and ensures that they Hyper-V Virtual Switches on the system are configured to match.
+.PARAMETER Configuration
+   Contains the Lab Builder configuration object that was loaded by the Get-LabConfiguration object.
+.PARAMETER Switches
+   The array of switches pulled from the Lab Configuration file using Get-LabSwitches
 .EXAMPLE
-   Example of how to use this cmdlet
-.EXAMPLE
-   Another example of how to use this cmdlet
-.INPUTS
-   Inputs to this cmdlet (if any)
+   $Config = Get-LabConfiguration -Path c:\mylab\config.xml
+   $Switches = Get-LabSwitches -Configuration $Config
+   Initialize-LabSwitches -Configuration $Config -Switches $Switches
+   Initializes the Hyper-V switches in the configured in the Lab c:\mylab\config.xml
 .OUTPUTS
-   Output from this cmdlet (if any)
+   Returns true if the Lab switches were created correctly.
 .NOTES
    General notes
 #>
