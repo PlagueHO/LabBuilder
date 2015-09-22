@@ -438,8 +438,6 @@ function Get-LabSwitches {
    Initializes the Hyper-V switches in the configured in the Lab c:\mylab\config.xml
 .OUTPUTS
    Returns true if the Lab switches were created correctly.
-.NOTES
-   General notes
 #>
 function Initialize-LabSwitches {
 	[CmdLetBinding()]
@@ -498,20 +496,21 @@ function Initialize-LabSwitches {
 ##########################################################################################################################################
 <#
 .Synopsis
-   Short description
+   Removes all Hyper-V Virtual Switches provided.
 .DESCRIPTION
-   Long description
+   This cmdlet is used to remove any Hyper-V Virtual Switches that were created by
+   the Initialize-LabSwitches cmdlet.
+.PARAMETER Configuration
+   Contains the Lab Builder configuration object that was loaded by the Get-LabConfiguration object.
+.PARAMETER Switches
+   The array of switches pulled from the Lab Configuration file using Get-LabSwitches
 .EXAMPLE
-   Example of how to use this cmdlet
-.EXAMPLE
-   Another example of how to use this cmdlet
-.INPUTS
-   Inputs to this cmdlet (if any)
+   $Config = Get-LabConfiguration -Path c:\mylab\config.xml
+   $Switches = Get-LabSwitches -Configuration $Config
+   Remove-LabSwitches -Configuration $Config -Switches $Switches
+   Removes any Hyper-V switches in the configured in the Lab c:\mylab\config.xml
 .OUTPUTS
-   Output from this cmdlet (if any)
-.NOTES
-   General notes
-#>
+   Returns true if the Lab switches were created correctly.#>
 function Remove-LabSwitches {
 	[CmdLetBinding()]
 	[OutputType([Boolean])]
