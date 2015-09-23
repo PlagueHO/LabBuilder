@@ -77,6 +77,7 @@
             CRLOverlapPeriod = 'Hours'
             ValidityPeriodUnits = 10
             ValidityPeriod = 'Years'
+            AuditFilter = 127
             SubCAs = @('SA_SUBCA')
           </parameters>
       </dsc>
