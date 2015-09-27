@@ -101,64 +101,64 @@ Configuration MEMBER_FILESERVER
 		xFirewall FSRMFirewall1
         {
 			Name = "FSRM-WMI-ASYNC-In-TCP"
-			State = "Enabled"
-			Access = "Allow"
+			Ensure = 'Present'
+			Enabled = 'True'
 			DependsOn = "[xComputer]JoinDomain" 
         }
 
 		xFirewall FSRMFirewall2
         {
 			Name = "FSRM-WMI-WINMGMT-In-TCP"
-			State = "Enabled" 
-			Access = "Allow"
+			Ensure = 'Present'
+			Enabled = 'True' 
 			DependsOn = "[xComputer]JoinDomain" 
         }
 
 		xFirewall FSRMFirewall3
         {
 			Name = "FSRM-RemoteRegistry-In (RPC)"
-			State = "Enabled" 
-			Access = "Allow"
+			Ensure = 'Present'
+			Enabled = 'True' 
 			DependsOn = "[xComputer]JoinDomain" 
         }
 		
 		xFirewall FSRMFirewall4
         {
 			Name = "FSRM-Task-Scheduler-In (RPC)"
-			State = "Enabled" 
-			Access = "Allow"
+			Ensure = 'Present'
+			Enabled = 'True' 
 			DependsOn = "[xComputer]JoinDomain" 
         }
 
 		xFirewall FSRMFirewall5
         {
 			Name = "FSRM-SrmReports-In (RPC)"
-			State = "Enabled" 
-			Access = "Allow"
+			Ensure = 'Present'
+			Enabled = 'True' 
 			DependsOn = "[xComputer]JoinDomain" 
         }
 
 		xFirewall FSRMFirewall6
         {
 			Name = "FSRM-RpcSs-In (RPC-EPMAP)"
-			State = "Enabled" 
-			Access = "Allow"
+			Ensure = 'Present'
+			Enabled = 'True' 
 			DependsOn = "[xComputer]JoinDomain" 
         }
 		
 		xFirewall FSRMFirewall7
         {
 			Name = "FSRM-System-In (TCP-445)"
-			State = "Enabled" 
-			Access = "Allow"
+			Ensure = 'Present'
+			Enabled = 'True' 
 			DependsOn = "[xComputer]JoinDomain" 
         }
 		
 		xFirewall FSRMFirewall8
         {
 			Name = "FSRM-SrmSvc-In (RPC)"
-			State = "Enabled"
-			Access = "Allow"
+			Ensure = 'Present'
+			Enabled = 'True'
 			DependsOn = "[xComputer]JoinDomain" 
         }
 

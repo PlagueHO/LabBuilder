@@ -24,10 +24,17 @@ Configuration MEMBER_DHCP
 			[PSCredential]$DomainAdminCredential = New-Object System.Management.Automation.PSCredential ("$($Node.DomainName)\Administrator", (ConvertTo-SecureString $Node.DomainAdminPassword -AsPlainText -Force))
 		}
 
+		WindowsFeature NPASPolicyServerInstall 
+        { 
+            Ensure = "Present" 
+            Name = "NPAS-Policy-Server" 
+        } 
+
 		WindowsFeature DHCPInstall 
         { 
             Ensure = "Present" 
             Name = "DHCP" 
+			DependsOn = "[WindowsFeature]NPASPolicyServerInstall"
         }
 
 		WindowsFeature RSATADPowerShell

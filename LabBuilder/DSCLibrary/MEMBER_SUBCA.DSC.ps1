@@ -295,24 +295,21 @@ Configuration MEMBER_SUBCA
 		xFirewall OnlineResponderFirewall1
         {
 			Name = "Microsoft-Windows-OnlineRevocationServices-OcspSvc-DCOM-In"
-			State = "Enabled"
-			Access = "Allow"
+			Enabled = "True"
 			DependsOn = "[xADCSOnlineResponder]ConfigOnlineResponder" 
         }
 
 		xFirewall OnlineResponderirewall2
         {
 			Name = "Microsoft-Windows-CertificateServices-OcspSvc-RPC-TCP-In"
-			State = "Enabled" 
-			Access = "Allow"
+			Enabled = "True"
 			DependsOn = "[xADCSOnlineResponder]ConfigOnlineResponder" 
         }
 
 		xFirewall OnlineResponderFirewall3
         {
 			Name = "Microsoft-Windows-OnlineRevocationServices-OcspSvc-TCP-Out"
-			State = "Enabled" 
-			Access = "Allow"
+			Enabled = "True"
 			DependsOn = "[xADCSOnlineResponder]ConfigOnlineResponder" 
         }
 	}
