@@ -194,11 +194,11 @@
     </vm>
 
     <vm name="LABBUILDER.COM SA_DHCP1"
-        template="Template Windows Server 2012 R2 Datacenter CORE"
+        template="Template Windows Server 2012 R2 Datacenter Full"
         computername="SA_DHCP1"
         usedifferencingbootdisk="Y">
-      <dsc configname="MEMBER_DHCP"
-           configfile="MEMBER_DHCP.DSC.ps1">
+      <dsc configname="MEMBER_DHCPNPAS"
+           configfile="MEMBER_DHCPNPAS.DSC.ps1">
         <parameters>
           DomainName = "LABBUILDER.COM"
           DomainAdminPassword = "P@ssword!1"
@@ -312,11 +312,11 @@
     </vm>
 
     <vm name="LABBUILDER.COM SA_DHCP2"
-      template="Template Windows Server 2012 R2 Datacenter CORE"
+      template="Template Windows Server 2012 R2 Datacenter Full"
       computername="SA_DHCP2"
       usedifferencingbootdisk="Y">
-      <dsc configname="MEMBER_DHCP"
-           configfile="MEMBER_DHCP.DSC.ps1">
+      <dsc configname="MEMBER_DHCPNPAS"
+           configfile="MEMBER_DHCPNPAS.DSC.ps1">
         <parameters>
           DomainName = "LABBUILDER.COM"
           DomainAdminPassword = "P@ssword!1"

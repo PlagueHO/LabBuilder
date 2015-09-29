@@ -1,15 +1,17 @@
 <#########################################################################################################################################
 DSC Template Configuration File For use by LabBuilder
 .Title
-	MEMBER_DHCP
+	MEMBER_DHCPNPAS
 .Desription
-	Builds a Server that is joined to a domain and then made into a DHCP Server.
+	Builds a Server that is joined to a domain and then made into a DHCP Server. NPAS is also installed.
+.Notes
+    NPAS requires a full server install, so ensure that this OS is not a Core version.
 .Parameters:          
 	DomainName = "LABBUILDER.COM"
 	DomainAdminPassword = "P@ssword!1"
 #########################################################################################################################################>
 
-Configuration MEMBER_DHCP
+Configuration MEMBER_DHCPNPAS
 {
 	Import-DscResource -ModuleName 'PSDesiredStateConfiguration'
 	Import-DscResource -ModuleName xActiveDirectory
@@ -24,10 +26,17 @@ Configuration MEMBER_DHCP
 			[PSCredential]$DomainAdminCredential = New-Object System.Management.Automation.PSCredential ("$($Node.DomainName)\Administrator", (ConvertTo-SecureString $Node.DomainAdminPassword -AsPlainText -Force))
 		}
 
+		WindowsFeature NPASPolicyServerInstall 
+        { 
+            Ensure = "Present" 
+            Name = "NPAS-Policy-Server" 
+        } 
+
 		WindowsFeature DHCPInstall 
         { 
             Ensure = "Present" 
             Name = "DHCP" 
+			DependsOn = "[WindowsFeature]NPASPolicyServerInstall"
         }
 
 		WindowsFeature RSATADPowerShell
