@@ -13,9 +13,7 @@
   <resources>
     <module name="xNetworking" url="https://github.com/PlagueHO/xNetworking/archive/dev.zip" folder="xNetworking-dev" />
     <module name="xADCSDeployment" url="https://github.com/PlagueHO/xAdcsDeployment/archive/dev.zip" folder="xAdcsDeployment-dev" />
-    <module name="cMicrosoftUpdate" url="https://github.com/fabiendibot/cMicrosoftUpdate/archive/master.zip" folder="cMicrosoftUpdate-master" />
-    <module name="cFSRM" url="https://github.com/PlagueHO/cFSRM/archive/dev.zip" folder="cFSRM-dev" />
-    
+    <module name="cMicrosoftUpdate" url="https://github.com/fabiendibot/cMicrosoftUpdate/archive/master.zip" folder="cMicrosoftUpdate-master" />   
   </resources>
   
   <switches>
@@ -194,11 +192,11 @@
     </vm>
 
     <vm name="LABBUILDER.COM SA_DHCP1"
-        template="Template Windows Server 2012 R2 Datacenter Full"
+        template="Template Windows Server 2012 R2 Datacenter CORE"
         computername="SA_DHCP1"
         usedifferencingbootdisk="Y">
-      <dsc configname="MEMBER_DHCPNPAS"
-           configfile="MEMBER_DHCPNPAS.DSC.ps1">
+      <dsc configname="MEMBER_DHCP"
+           configfile="MEMBER_DHCP.DSC.ps1">
         <parameters>
           DomainName = "LABBUILDER.COM"
           DomainAdminPassword = "P@ssword!1"
@@ -312,11 +310,11 @@
     </vm>
 
     <vm name="LABBUILDER.COM SA_DHCP2"
-      template="Template Windows Server 2012 R2 Datacenter Full"
+      template="Template Windows Server 2012 R2 Datacenter CORE"
       computername="SA_DHCP2"
       usedifferencingbootdisk="Y">
-      <dsc configname="MEMBER_DHCPNPAS"
-           configfile="MEMBER_DHCPNPAS.DSC.ps1">
+      <dsc configname="MEMBER_DHCP"
+           configfile="MEMBER_DHCP.DSC.ps1">
         <parameters>
           DomainName = "LABBUILDER.COM"
           DomainAdminPassword = "P@ssword!1"
