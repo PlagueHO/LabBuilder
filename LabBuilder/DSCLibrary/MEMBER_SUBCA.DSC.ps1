@@ -53,11 +53,28 @@ Configuration MEMBER_SUBCA
 			DependsOn = "[WindowsFeature]ADCSCA"
 		}
 
-		# Install the Online Responder Service
-		WindowsFeature OnlineResponderCA {
-			Name = 'ADCS-Online-Cert'
-			Ensure = 'Present'
-			DependsOn = "[WindowsFeature]WebEnrollmentCA"
+		if ($Node.InstallOnlineResponder) {
+			# Install the Online Responder Service
+			WindowsFeature OnlineResponderCA {
+				Name = 'ADCS-Online-Cert'
+				Ensure = 'Present'
+				DependsOn = "[WindowsFeature]WebEnrollmentCA"
+			}
+		}
+
+		if ($Node.InstallEnrollmentWebService) {
+			# Install the Enrollment Web Service/Enrollment Policy Web Service
+			WindowsFeature EnrollmentWebSvc {
+				Name = 'ADCS-Enroll-Web-Svc'
+				Ensure = 'Present'
+				DependsOn = "[WindowsFeature]WebEnrollmentCA"
+			}
+
+			WindowsFeature EnrollmentWebPol {
+				Name = 'ADCS-Enroll-Web-Pol'
+				Ensure = 'Present'
+				DependsOn = "[WindowsFeature]WebEnrollmentCA"
+			}
 		}
 
 		# Wait for the Domain to be available so we can join it.
@@ -67,7 +84,7 @@ Configuration MEMBER_SUBCA
 			DomainUserCredential = $DomainAdminCredential 
 			RetryCount = 100 
 			RetryIntervalSec = 10 
-			DependsOn = "[WindowsFeature]OnlineResponderCA" 
+			DependsOn = "[WindowsFeature]WebEnrollmentCA" 
 		}
 
 		# Join this Server to the Domain so that it can be an Enterprise CA.
@@ -283,34 +300,36 @@ Configuration MEMBER_SUBCA
 			DependsOn = '[Script]RegisterSubCA'
 		}
 		
-		# Configure the Online Responder Feature
-		xADCSOnlineResponder ConfigOnlineResponder {
-			Ensure = 'Present'
-			Name = 'ConfigOnlineResponder'
-			Credential = $LocalAdminCredential
-			DependsOn = '[Script]ADCSAdvConfig'
+		if ($Node.InstallOnlineResponder) {
+			# Configure the Online Responder Feature
+			xADCSOnlineResponder ConfigOnlineResponder {
+				Ensure = 'Present'
+				Name = 'ConfigOnlineResponder'
+				Credential = $LocalAdminCredential
+				DependsOn = '[Script]ADCSAdvConfig'
+			}
+
+			# Enable Online Responder FireWall rules so we can remote manage Online Responder
+			xFirewall OnlineResponderFirewall1
+			{
+				Name = "Microsoft-Windows-OnlineRevocationServices-OcspSvc-DCOM-In"
+				Enabled = "True"
+				DependsOn = "[xADCSOnlineResponder]ConfigOnlineResponder" 
+			}
+
+			xFirewall OnlineResponderirewall2
+			{
+				Name = "Microsoft-Windows-CertificateServices-OcspSvc-RPC-TCP-In"
+				Enabled = "True"
+				DependsOn = "[xADCSOnlineResponder]ConfigOnlineResponder" 
+			}
+
+			xFirewall OnlineResponderFirewall3
+			{
+				Name = "Microsoft-Windows-OnlineRevocationServices-OcspSvc-TCP-Out"
+				Enabled = "True"
+				DependsOn = "[xADCSOnlineResponder]ConfigOnlineResponder" 
+			}
 		}
-
-		# Enable Online Responder FireWall rules so we can remote manage Online Responder
-		xFirewall OnlineResponderFirewall1
-        {
-			Name = "Microsoft-Windows-OnlineRevocationServices-OcspSvc-DCOM-In"
-			Enabled = "True"
-			DependsOn = "[xADCSOnlineResponder]ConfigOnlineResponder" 
-        }
-
-		xFirewall OnlineResponderirewall2
-        {
-			Name = "Microsoft-Windows-CertificateServices-OcspSvc-RPC-TCP-In"
-			Enabled = "True"
-			DependsOn = "[xADCSOnlineResponder]ConfigOnlineResponder" 
-        }
-
-		xFirewall OnlineResponderFirewall3
-        {
-			Name = "Microsoft-Windows-OnlineRevocationServices-OcspSvc-TCP-Out"
-			Enabled = "True"
-			DependsOn = "[xADCSOnlineResponder]ConfigOnlineResponder" 
-        }
 	}
 }
