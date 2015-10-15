@@ -39,6 +39,7 @@
     <Compile Include="DSCLibrary\MEMBER_DHCPNPAS.DSC.ps1" />
     <Compile Include="DSCLibrary\MEMBER_DHCPDNS.DSC.ps1" />
     <Compile Include="DSCLibrary\MEMBER_FILESERVER.DSC.ps1" />
+    <Compile Include="DSCLibrary\MEMBER_NPS_DFSTEST.DSC.ps1" />
     <Compile Include="DSCLibrary\MEMBER_WDS.DSC.ps1" />
     <Compile Include="DSCLibrary\MEMBER_WSUS.DSC.ps1" />
     <Compile Include="DSCLibrary\MEMBER_NPS.DSC.ps1" />

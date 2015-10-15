@@ -2075,17 +2075,17 @@ function Initialize-LabVMs {
 		} # If
 
 		# Do we need to add a data disk?
-		If ($VM.DataVHDSize -and ($VMs.DataVHDSize -gt 0)) {
+		If ($VM.DataVHDSize -and ($VM.DataVHDSize -gt 0)) {
 			[String]$VMDataDiskPath = "$VMPath\$($VM.Name)\Virtual Hard Disks\$($VM.Name) Data Disk.vhdx"
 			# Does the disk already exist?
 			If (Test-Path -Path $VMDataDiskPath) {
 				Write-Verbose "VM $($VM.Name) data disk $VMDataDiskPath already exists ..."
 				# Does the disk need to shrink or grow?
-				If ((Get-VHD -Path $VMDataDiskPath).Size -lt $VMs.DataVHDSize) {
-					Write-Verbose "VM $($VM.Name) Data Disk $VMDataDiskPath expanding to $($VMs.DataVHDSize) ..."
-					Resize-VHD -Path $VMDataDiskPath -SizeBytes $VMs.DataVHDSize | Out-Null
-				} Elseif ((Get-VHD -Path $VMDataDiskPath).Size -gt $VMs.DataVHDSize) {
-					Throw "VM $($VM.Name) Data Disk $VMDataDiskPath cannot be shrunk to $($VMs.DataVHDSize) ..."
+				If ((Get-VHD -Path $VMDataDiskPath).Size -lt $VM.DataVHDSize) {
+					Write-Verbose "VM $($VM.Name) Data Disk $VMDataDiskPath expanding to $($VM.DataVHDSize) ..."
+					Resize-VHD -Path $VMDataDiskPath -SizeBytes $VM.DataVHDSize | Out-Null
+				} Elseif ((Get-VHD -Path $VMDataDiskPath).Size -gt $VM.DataVHDSize) {
+					Throw "VM $($VM.Name) Data Disk $VMDataDiskPath cannot be shrunk to $($VM.DataVHDSize) ..."
 				}
 			} Else {
 				# Create a new VHD
@@ -2093,7 +2093,7 @@ function Initialize-LabVMs {
 				New-VHD -Path $VMDataDiskPath -SizeBytes $VM.DataVHDSize -Dynamic | Out-Null
 			} # If
 			# Does the disk already exist in the VM
-			If ((Get-VMHardDiskDrive -VMName $VMs.Name | Where-Object -Property Path -EQ $VMDataDiskPath).Count -EQ 0) {
+			If ((Get-VMHardDiskDrive -VMName $VM.Name | Where-Object -Property Path -EQ $VMDataDiskPath).Count -EQ 0) {
 				Write-Verbose "VM $($VM.Name) data disk $VMDataDiskPath is being added to VM ..."
 				Add-VMHardDiskDrive -VMName $VM.Name -Path $VMDataDiskPath -ControllerType SCSI -ControllerLocation 1 -ControllerNumber 0 | Out-Null
 			} # If

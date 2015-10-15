@@ -357,8 +357,8 @@
       template="Template Windows Server 2012 R2 Datacenter Full"
       computername="SA_NPS"
       usedifferencingbootdisk="Y">
-      <dsc configname="MEMBER_NPS"
-           configfile="MEMBER_NPS.DSC.ps1">
+      <dsc configname="MEMBER_NPS_DFSTEST"
+           configfile="MEMBER_NPS_DFSTEST.DSC.ps1">
         <parameters>
           DomainName = "LABBUILDER.COM"
           DomainAdminPassword = "P@ssword!1"
