@@ -30,67 +30,67 @@ Configuration MEMBER_NPS_DFSTEST
 		}
 
 		WindowsFeature NPASPolicyServerInstall 
-        { 
-            Ensure = "Present" 
-            Name = "NPAS-Policy-Server" 
-        } 
+		{ 
+			Ensure = "Present" 
+			Name = "NPAS-Policy-Server" 
+		} 
 
 		WindowsFeature NPASHealthInstall 
-        { 
-            Ensure = "Present" 
-            Name = "NPAS-Health" 
+		{ 
+			Ensure = "Present" 
+			Name = "NPAS-Health" 
 			DependsOn = "[WindowsFeature]NPASPolicyServerInstall" 
-        } 
+		} 
 
 		WindowsFeature RSATNPAS
-        { 
-            Ensure = "Present" 
-            Name = "RSAT-NPAS" 
+		{ 
+			Ensure = "Present" 
+			Name = "RSAT-NPAS" 
 			DependsOn = "[WindowsFeature]NPASPolicyServerInstall" 
-        } 
+		} 
 
 		WindowsFeature RSATDFSMgmtConInstall 
-        { 
-            Ensure = "Present" 
-            Name = "RSAT-DFS-Mgmt-Con" 
+		{ 
+			Ensure = "Present" 
+			Name = "RSAT-DFS-Mgmt-Con" 
 			DependsOn = "[WindowsFeature]RSATNPAS" 
-        }
+		}
 
 		WindowsFeature RSATADPowerShell
-        { 
-            Ensure = "Present" 
-            Name = "RSAT-AD-PowerShell" 
+		{ 
+			Ensure = "Present" 
+			Name = "RSAT-AD-PowerShell" 
 			DependsOn = "[WindowsFeature]RSATDFSMgmtConInstall" 
-        } 
+		} 
 
-        xWaitForADDomain DscDomainWait
-        {
-            DomainName = $Node.DomainName
-            DomainUserCredential = $DomainAdminCredential 
-            RetryCount = 100 
-            RetryIntervalSec = 10 
+		xWaitForADDomain DscDomainWait
+		{
+			DomainName = $Node.DomainName
+			DomainUserCredential = $DomainAdminCredential 
+			RetryCount = 100 
+			RetryIntervalSec = 10 
 			DependsOn = "[WindowsFeature]RSATADPowerShell" 
-        }
+		}
 
 		xComputer JoinDomain 
-        { 
-            Name          = $Node.NodeName
-            DomainName    = $Node.DomainName
-            Credential    = $DomainAdminCredential 
+		{ 
+			Name          = $Node.NodeName
+			DomainName    = $Node.DomainName
+			Credential    = $DomainAdminCredential 
 			DependsOn = "[xWaitForADDomain]DscDomainWait" 
-        } 
-        
+		} 
+		
 		cDFSRepGroup RGPublic
-        {
-            GroupName = 'Public'
-            Description = 'Public files for use by all departments'
-            Ensure = 'Present'
-            Members = 'SA_FS1','SA_FS2'
-            Folders = 'Software','Misc'
+		{
+			GroupName = 'Public'
+			Description = 'Public files for use by all departments'
+			Ensure = 'Present'
+			Members = 'SA_FS1','SA_FS2'
+			Folders = 'Software','Misc'
 			Topology = 'Fullmesh'
 			ContentPaths = 'd:\public\Software','d:\public\Misc'
-            PSDSCRunAsCredential = $DomainAdminCredential
+			PSDSCRunAsCredential = $DomainAdminCredential
 			DependsOn = '[xComputer]JoinDomain'
-        } # End of RGPublic Resource
+		} # End of RGPublic Resource
 	}
 }
