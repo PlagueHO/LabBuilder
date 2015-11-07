@@ -51,7 +51,7 @@
     <Compile Include="DSCLibrary\STANDALONE_DHCPDNS.DSC.ps1" />
     <Compile Include="LabBuilder.psd1" />
     <Compile Include="LabBuilder.psm1" />
-    <Compile Include="LabBuilder.tests.ps1" />
+    <Compile Include="Tests\Unit\LabBuilder.tests.ps1" />
     <Compile Include="README.md" />
     <Compile Include="DSCLibrary\STANDALONE_DEFAULT.DSC.ps1" />
     <Compile Include="DSCLibrary\DC_FORESTPRIMARY.DSC.ps1" />
@@ -68,6 +68,7 @@
     <Folder Include="Artifacts\" />
     <Folder Include="TestHelpers\" />
     <Folder Include="Tests\" />
+    <Folder Include="Tests\Unit\" />
     <Folder Include="Tests\PesterTestConfig\" />
   </ItemGroup>
   <ItemGroup>

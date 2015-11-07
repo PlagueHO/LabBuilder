@@ -1,21 +1,35 @@
 ﻿#Requires -version 5.0
 
-##########################################################################################################################################
+####################################################################################################
+# Localization Strings
+data LocalizedData
+{
+    # culture="en-US"
+    ConvertFrom-StringData -StringData @'
+ConfigurationFileNotFoundError=Configuration file {0} is not found.
+ConfigurationFileEmptyError=Configuration file {0} is empty.
+ConfigurationInvalidError=Configuration is invalid.
+ConfigurationMissingElementError=Element '{0}' is missing or empty in the configuration.
+PathNotFoundError={0} path '{1}' is not found.
+'@
+}
+
+####################################################################################################
 # Module Variables
-##########################################################################################################################################
+####################################################################################################
 # This is the URL to the WMF Production Preview
 [String]$Script:WorkingFolder = $ENV:Temp
 [String]$Script:WMF5DownloadURL = 'http://download.microsoft.com/download/3/F/D/3FD04B49-26F9-4D9A-8C34-4533B9D5B020/Win8.1AndW2K12R2-KB3066437-x64.msu'
-[String]$Script:WMF5InstallerFilename = ($Script:WMF5DownloadURL).Substring(($Script:WMF5DownloadURL).LastIndexOf("/") + 1)
+[String]$Script:WMF5InstallerFilename = ($Script:WMF5DownloadURL).Substring(($Script:WMF5DownloadURL).LastIndexOf('/') + 1)
 [String]$Script:WMF5InstallerPath = Join-Path -Path $Script:WorkingFolder -ChildPath $Script:WMF5InstallerFilename
 [String]$Script:CertGenDownloadURL = 'https://gallery.technet.microsoft.com/scriptcenter/Self-signed-certificate-5920a7c6/file/101251/1/New-SelfSignedCertificateEx.zip'
-[String]$Script:CertGenZipFilename = ($Script:CertGenDownloadURL).Substring(($Script:CertGenDownloadURL).LastIndexOf("/") + 1)
+[String]$Script:CertGenZipFilename = ($Script:CertGenDownloadURL).Substring(($Script:CertGenDownloadURL).LastIndexOf('/') + 1)
 [String]$Script:CertGenZipPath = Join-Path -Path $Script:WorkingFolder -ChildPath $Script:CertGenZipFilename
 [String]$Script:CertGenPS1Filename = 'New-SelfSignedCertificateEx.ps1'
 [String]$Script:CertGenPS1Path = Join-Path -Path $Script:WorkingFolder -ChildPath $Script:CertGenPS1Filename
-##########################################################################################################################################
+####################################################################################################
 # Helper functions that aren't exported
-##########################################################################################################################################
+####################################################################################################
 <#
 .Synopsis
    Returns True if running as Administrator
@@ -32,7 +46,7 @@ function Test-Admin()
 	# Check to see if we are currently running "as Administrator"
 	Return ($myWindowsPrincipal.IsInRole($adminRole))
 }
-##########################################################################################################################################
+####################################################################################################
 <#
 .Synopsis
    Download the latest Windows Management Framework 5.0 Installer to the Working Folder
@@ -41,16 +55,14 @@ function Download-WMF5Installer()
 {
 	# Only downloads for Win8.1/WS2K12R2
 	[String]$URL = $Script:WMF5DownloadURL
-	If (-not (Test-Path -Path $Script:WMF5InstallerPath)) {
-		Try {
-			Invoke-WebRequest -Uri $URL -OutFile $Script:WMF5InstallerPath
-		} Catch {
-			Return $False
-		}
+	If (-not (Test-Path -Path $Script:WMF5InstallerPath))
+    {
+        Invoke-WebRequest `
+                -Uri $URL `
+                -OutFile $Script:WMF5InstallerPath
 	}
-	Return $True
 } # Download-WMF5Installer
-##########################################################################################################################################
+####################################################################################################
 <#
 .Synopsis
    Download the Certificate Generator script from TechNet Script Center to the Working Folder
@@ -59,35 +71,27 @@ function Download-CertGenerator()
 {
 	[String]$URL = $Script:CertGenDownloadURL
 	If (-not (Test-Path -Path $Script:CertGenZipPath)) {
-		Try {
-			Invoke-WebRequest -Uri $URL -OutFile $Script:CertGenZipPath
-		} Catch {
-			Return $False
-		} # Try
+        Invoke-WebRequest -Uri $URL -OutFile $Script:CertGenZipPath
 	} # If
 	If (-not (Test-Path -Path $Script:CertGenPS1Path)) {
-		Try {
-			Expand-Archive -Path $Script:CertGenZipPath -DestinationPath $Script:WorkingFolder
-		} Catch {
-			Return $False
-		} # Try
+    	Expand-Archive `
+        -Path $Script:CertGenZipPath `
+        -DestinationPath $Script:WorkingFolder
 	} # If
-	
-	Return $True
 } # Download-CertGenerator
-##########################################################################################################################################
+####################################################################################################
 <#
 .Synopsis
-   Get a list of all Resources imported in a DSC Config
+    Get a list of all Resources imported in a DSC Config
 .DESCRIPTION
-   Uses RegEx to pull a list of Resources that are imported in a DSC Configuration using the Import-DSCResource cmdlet
+    Uses RegEx to pull a list of Resources that are imported in a DSC Configuration using the Import-DSCResource cmdlet
 .PARAMETER DSCConfigFile
-   Contains the path to the DSC Config file to extract resource module names from
+    Contains the path to the DSC Config file to extract resource module names from
 .EXAMPLE
-   Get-ModulesInDSCConfig -DSCConfigFile c:\mydsc\Server01.ps1
-   Return the DSC Resource module list from file c:\mydsc\server01.ps1
+    Get-ModulesInDSCConfig -DSCConfigFile c:\mydsc\Server01.ps1
+    Return the DSC Resource module list from file c:\mydsc\server01.ps1
 .OUTPUTS
-   An array of strings containing resource module names
+    An array of strings containing resource module names
 #>
 function Get-ModulesInDSCConfig()
 {
@@ -103,47 +107,66 @@ function Get-ModulesInDSCConfig()
 	[String[]]$Modules = $Null
 	[String]$Content = Get-Content -Path $DSCConfigFile
 	$Regex = "Import\-DscResource\s(?:\-ModuleName\s)?'?`"?([A-Za-z0-9]+)`"?'?"
-	$Matches = [regex]::matches($Content, $Regex, "IgnoreCase")
+	$Matches = [regex]::matches($Content, $Regex, 'IgnoreCase')
 	Foreach ($Match in $Matches) {
 		If ($Match.Groups[1].Value -ne 'PSDesiredStateConfiguration') {
 			$Modules += $Match.Groups[1].Value
 		} # If
 	} # Foreach
 	# Add the xNetworking DSC Resource because it is always used
-	$Modules += "xNetworking"
+	$Modules += 'xNetworking'
 	Return $Modules
 } # Get-ModulesInDSCConfig
-##########################################################################################################################################
+####################################################################################################
 
-##########################################################################################################################################
+####################################################################################################
 # Main CmdLets
-##########################################################################################################################################
+####################################################################################################
 <#
 .Synopsis
-   Loads a Lab Builder Configuration file and returns a Configuration object
+    Loads a Lab Builder Configuration file and returns a Configuration object
 .PARAMETER Path
-   This is the path to the Lab Builder configration file to load.
+    This is the path to the Lab Builder configration file to load.
 .EXAMPLE
-   $MyLab = Get-LabConfiguration -Path c:\MyLab\LabConfig1.xml
-   Loads the LabConfig1.xml configuration into variable MyLab
+    $MyLab = Get-LabConfiguration -Path c:\MyLab\LabConfig1.xml
+    Loads the LabConfig1.xml configuration into variable MyLab
 .OUTPUTS
-   XML Object containing the Lab Configuration that was loaded.
+    XML Object containing the Lab Configuration that was loaded.
 #>
 function Get-LabConfiguration {
 	[CmdLetBinding()]
 	[OutputType([XML])]
 	param (
 		[parameter(
+            Mandatory,
 			Position=0)]
 		[ValidateNotNullOrEmpty()]
-		[String]$Path = $(Throw "Configuration file parameter is missing.")
+		[String]$Path
 	) # Param
 	If (-not (Test-Path -Path $Path)) {
-		Throw "Configuration file $Path is not found."
+        $errorId = 'ConfigurationFileNotFoundError'
+        $errorCategory = [System.Management.Automation.ErrorCategory]::InvalidArgument
+        $errorMessage = $($LocalizedData.ConfigurationFileNotFoundError) `
+            -f $Path
+        $exception = New-Object -TypeName System.InvalidOperationException `
+            -ArgumentList $errorMessage
+        $errorRecord = New-Object -TypeName System.Management.Automation.ErrorRecord `
+            -ArgumentList $exception, $errorId, $errorCategory, $null
+
+        $PSCmdlet.ThrowTerminatingError($errorRecord)        
 	} # If
 	$Content = Get-Content -Path $Path -Raw
 	If (-not $Content) {
-		Throw "Configuration file $Path is empty."
+        $errorId = 'ConfigurationFileEmptyError'
+        $errorCategory = [System.Management.Automation.ErrorCategory]::InvalidArgument
+        $errorMessage = $($LocalizedData.ConfigurationFileEmptyError) `
+            -f $Path
+        $exception = New-Object -TypeName System.InvalidOperationException `
+            -ArgumentList $errorMessage
+        $errorRecord = New-Object -TypeName System.Management.Automation.ErrorRecord `
+            -ArgumentList $exception, $errorId, $errorCategory, $null
+
+        $PSCmdlet.ThrowTerminatingError($errorRecord)        
 	} # If
 	[XML]$Configuration = New-Object -TypeName XML
 	$Configuration.LoadXML($Content)
@@ -163,68 +186,119 @@ function Get-LabConfiguration {
 	$Configuration.labbuilderconfig.settings.setattribute('fullconfigpath',$FullConfigPath)
 	Return $Configuration
 } # Get-LabConfiguration
-##########################################################################################################################################
+####################################################################################################
 
-##########################################################################################################################################
+####################################################################################################
 <#
 .Synopsis
-   Tests the Lab Builder configuration passed to ensure it is valid and related files can be found.
+    Tests the Lab Builder configuration passed to ensure it is valid and related files can be found.
 .PARAMETER Configuration
-	Contains the Lab Builder configuration object that was loaded by the Get-LabConfiguration object.
+	Contains the Lab Builder configuration object that was loaded by the Get-LabConfiguration
+    object.
 .EXAMPLE
    $Config = Get-LabConfiguration -Path c:\mylab\config.xml
    Test-LabConfiguration -Configuration $Config
    Loads a Lab Builder configuration and tests it is valid.   
 .OUTPUTS
-   Returns True if the configuration is valid.
+   Returns True if the configuration is valid. Throws an error if invalid.
 #>
 function Test-LabConfiguration {
 	[CmdLetBinding()]
 	[OutputType([Boolean])]
 	param (
 		[Parameter(
+            Mandatory,
 			Position=0)]
 		[ValidateNotNullOrEmpty()]
-		[XML]$Configuration = $(Throw "Configuration XML parameter is missing.")
+		[XML]$Configuration
 	)
 
-	If ($Configuration.labbuilderconfig -eq $null) {
-		Throw "Configuration is invalid."
-	}
+	If ((-not $Configuration.labbuilderconfig) `
+        -or (-not $Configuration.labbuilderconfig.settings)) {
+        $errorId = 'ConfigurationInvalidError'
+        $errorCategory = [System.Management.Automation.ErrorCategory]::InvalidArgument
+        $errorMessage = $($LocalizedData.ConfigurationInvalidError)
+        $exception = New-Object -TypeName System.InvalidOperationException `
+            -ArgumentList $errorMessage
+        $errorRecord = New-Object -TypeName System.Management.Automation.ErrorRecord `
+            -ArgumentList $exception, $errorId, $errorCategory, $null
 
-	If ($Configuration.labbuilderconfig.settings -eq $null) {
-		Throw "Configuration is invalid."
+        $PSCmdlet.ThrowTerminatingError($errorRecord)        
 	}
 
 	# Check folders exist
 	[String]$VMPath = $Configuration.labbuilderconfig.settings.vmpath
 	If (-not $VMPath) {
-		Throw "<settings>\<vmpath> is missing or empty in the configuration."
+        $errorId = 'ConfigurationMissingElementError'
+        $errorCategory = [System.Management.Automation.ErrorCategory]::InvalidArgument
+        $errorMessage = $($LocalizedData.ConfigurationMissingElementError) `
+            -f '<settings>\<vmpath>'
+        $exception = New-Object -TypeName System.InvalidOperationException `
+            -ArgumentList $errorMessage
+        $errorRecord = New-Object -TypeName System.Management.Automation.ErrorRecord `
+            -ArgumentList $exception, $errorId, $errorCategory, $null
+
+        $PSCmdlet.ThrowTerminatingError($errorRecord)      
 	}
 
 	If (-not (Test-Path -Path $VMPath)) {
-		Throw "The VM Path $VMPath is not found."
+        $errorId = 'PathNotFoundError'
+        $errorCategory = [System.Management.Automation.ErrorCategory]::InvalidArgument
+        $errorMessage = $($LocalizedData.PathNotFoundError) `
+            -f '<settings>\<vmpath>',$VMPath
+        $exception = New-Object -TypeName System.InvalidOperationException `
+            -ArgumentList $errorMessage
+        $errorRecord = New-Object -TypeName System.Management.Automation.ErrorRecord `
+            -ArgumentList $exception, $errorId, $errorCategory, $null
+
+        $PSCmdlet.ThrowTerminatingError($errorRecord)      
 	}
 
 	[String]$VHDParentPath = $Configuration.labbuilderconfig.settings.vhdparentpath
 	If (-not $VHDParentPath) {
-		Throw "<settings>\<vhdparentpath> is missing or empty in the configuration."
+        $errorId = 'ConfigurationMissingElementError'
+        $errorCategory = [System.Management.Automation.ErrorCategory]::InvalidArgument
+        $errorMessage = $($LocalizedData.ConfigurationMissingElementError) `
+            -f '<settings>\<vhdparentpath>'
+        $exception = New-Object -TypeName System.InvalidOperationException `
+            -ArgumentList $errorMessage
+        $errorRecord = New-Object -TypeName System.Management.Automation.ErrorRecord `
+            -ArgumentList $exception, $errorId, $errorCategory, $null
+
+        $PSCmdlet.ThrowTerminatingError($errorRecord)      
 	}
 
 	If (-not (Test-Path -Path $VHDParentPath)) {
-		Throw "The VHD Parent Path $VHDParentPath is not found."
+        $errorId = 'PathNotFoundError'
+        $errorCategory = [System.Management.Automation.ErrorCategory]::InvalidArgument
+        $errorMessage = $($LocalizedData.PathNotFoundError) `
+            -f '<settings>\<vhdparentpath>',$VHDParentPath
+        $exception = New-Object -TypeName System.InvalidOperationException `
+            -ArgumentList $errorMessage
+        $errorRecord = New-Object -TypeName System.Management.Automation.ErrorRecord `
+            -ArgumentList $exception, $errorId, $errorCategory, $null
+
+        $PSCmdlet.ThrowTerminatingError($errorRecord)      
 	}
 
 	[String]$FullConfigPath = $Configuration.labbuilderconfig.settings.fullconfigpath
 	If (-not (Test-Path -Path $FullConfigPath)) {
-		Throw "The Config Path $FullConfigPath could not be found."
+        $errorId = 'PathNotFoundError'
+        $errorCategory = [System.Management.Automation.ErrorCategory]::InvalidArgument
+        $errorMessage = $($LocalizedData.PathNotFoundError) `
+            -f '<settings>\<fullconfigpath>',$FullConfigPath
+        $exception = New-Object -TypeName System.InvalidOperationException `
+            -ArgumentList $errorMessage
+        $errorRecord = New-Object -TypeName System.Management.Automation.ErrorRecord `
+            -ArgumentList $exception, $errorId, $errorCategory, $null
+
+        $PSCmdlet.ThrowTerminatingError($errorRecord)      
 	}
-
-	Return $True
+    Return $true
 } # Test-LabConfiguration
-##########################################################################################################################################
+####################################################################################################
 
-##########################################################################################################################################
+####################################################################################################
 <#
 .Synopsis
    Ensures the Hyper-V features are installed onto the system.
@@ -244,23 +318,23 @@ function Install-LabHyperV {
 		# Desktop OS
 		[Array]$Feature = Get-WindowsOptionalFeature -Online -FeatureName '*Hyper-V*' | Where-Object -Property State -Eq 'Disabled'
 		If ($Feature.Count -gt 0 ) {
-			Write-Verbose "Installing Lab Desktop Hyper-V Components ..."
+			Write-Verbose 'Installing Lab Desktop Hyper-V Components ...'
 			$Feature.Foreach( { Enable-WindowsOptionalFeature -Online -FeatureName $_.FeatureName } )
 		}
 	} Else {
 		# Server OS
 		[Array]$Feature = Get-WindowsFeature -Name Hyper-V | Where-Object -Property Installed -EQ $false
 		If ($Feature.Count -gt 0 ) {
-			Write-Verbose "Installing Lab Server Hyper-V Components ..."
+			Write-Verbose 'Installing Lab Server Hyper-V Components ...'
 			$Feature.Foreach( { Install-WindowsFeature -IncludeAllSubFeature -IncludeManagementTools -Name $_.Name } )
 		}
 	}
 
 	Return $True
 } # Install-LabHyperV
-##########################################################################################################################################
+####################################################################################################
 
-##########################################################################################################################################
+####################################################################################################
 <#
 .Synopsis
    Initializes the system from information provided in the Lab Configuration object provided.
@@ -284,15 +358,15 @@ function Initialize-LabConfiguration {
 		[Parameter(
 			Position=0)]
 		[ValidateNotNullOrEmpty()]
-		[XML]$Configuration = $(Throw "Configuration XML parameter is missing.")
+		[XML]$Configuration = $(Throw 'Configuration XML parameter is missing.')
 	)
 	
 	If ($Configuration.labbuilderconfig -eq $null) {
-		Throw "Configuration is invalid."
+		Throw 'Configuration is invalid.'
 	}
 
 	# Install Hyper-V Components
-	Write-Verbose "Initializing Lab Hyper-V Components ..."
+	Write-Verbose 'Initializing Lab Hyper-V Components ...'
 	
 	[String]$MacAddressMinimum = $Configuration.labbuilderconfig.settings.macaddressminimum
 	If (-not $MacAddressMinimum) {
@@ -309,22 +383,20 @@ function Initialize-LabConfiguration {
 	# Download the New-SelfSignedCertificateEx.ps1 script
 	Download-CertGenerator
 
-	# Download WMF 5.0 in case any VMs need it
-	If (-not (Download-WMF5Installer)) {
-		Throw "An error occurred downloading the WMF 5.0 Installer."
-	}
+	# Download WMF 5.0 in case any VMs need it	
+    Download-WMF5Installer
 
 	# Download any other resources required by this lab
 	If ($Configuration.labbuilderconfig.resources) {
 		$InstalledModules = Get-Module -ListAvailable
 		Foreach ($Module in $Configuration.labbuilderconfig.resources.module) {
 			If (-not $Module.Name) {
-				Throw "Lab Builder Module Resource Name is missing."
+				Throw 'Lab Builder Module Resource Name is missing.'
 			} # If
 			# Is the module installed?
 			If (($InstalledModules | Where-Object -Property Name -EQ $Module.Name).Count -eq 0) {
 				# The module is not installed - so download it
-				$FileName = $Module.URL.Substring($Module.URL.LastIndexOf("/") + 1)
+				$FileName = $Module.URL.Substring($Module.URL.LastIndexOf('/') + 1)
 				$FilePath = Join-Path -Path $Script:WorkingFolder -ChildPath $FileName
 				Try {
 					Invoke-WebRequest -Uri $($Module.URL) -OutFile $FilePath
@@ -355,9 +427,9 @@ function Initialize-LabConfiguration {
 	} # If
 	Return $True
 } # Initialize-LabConfiguration
-##########################################################################################################################################
+####################################################################################################
 
-##########################################################################################################################################
+####################################################################################################
 <#
 .Synopsis
    Gets an array of switches from a Lab Configuration file.
@@ -380,11 +452,11 @@ function Get-LabSwitches {
 		[Parameter(
 			Position=0)]
 		[ValidateNotNullOrEmpty()]
-		[XML]$Configuration = $(Throw "Configuration XML parameter is missing.")
+		[XML]$Configuration = $(Throw 'Configuration XML parameter is missing.')
 	)
 
 	If ($Configuration.labbuilderconfig -eq $null) {
-		Throw "Configuration is invalid."
+		Throw 'Configuration is invalid.'
 	}
 
 	[Array]$Switches = @() 
@@ -396,7 +468,7 @@ function Get-LabSwitches {
 			Throw "The switch name cannot be 'switch' or empty."
 		}
 		If ($ConfigSwitch.Type -notin 'Private','Internal','External') {
-			Throw "The switch type must be Private, Internal or External."
+			Throw 'The switch type must be Private, Internal or External.'
 		}
 		# Assemble the list of Adapters if any are specified for this switch (only if an external switch)
 		If ($ConfigSwitch.Adapters) {
@@ -405,7 +477,7 @@ function Get-LabSwitches {
 				$ConfigAdapters += @{ name = $Adapter.Name; macaddress = $Adapter.MacAddress }
 			}
 			If (($ConfigAdapters.Count -gt 0) -and ($ConfigSwitch.Type -ne 'External')) {
-				Throw "Adapters can only be specified for External type switches."
+				Throw 'Adapters can only be specified for External type switches.'
 			}
 		} Else {
 			$ConfigAdapters = $null
@@ -418,9 +490,9 @@ function Get-LabSwitches {
 	}
 	return $Switches
 } # Get-LabSwitches
-##########################################################################################################################################
+####################################################################################################
 
-##########################################################################################################################################
+####################################################################################################
 <#
 .Synopsis
    Creates Hyper-V Virtual Switches from a provided array.
@@ -446,12 +518,12 @@ function Initialize-LabSwitches {
 		[Parameter(
 			Position=0)]
 		[ValidateNotNullOrEmpty()]
-		[XML]$Configuration = $(Throw "Configuration XML parameter is missing."),
+		[XML]$Configuration = $(Throw 'Configuration XML parameter is missing.'),
 
 		[Parameter(
 			Position=1)]
 		[ValidateNotNullOrEmpty()]
-		[Array]$Switches = $(Throw "Switches parameter is missing.")
+		[Array]$Switches = $(Throw 'Switches parameter is missing.')
 	)
 
 	# Create Hyper-V Switches
@@ -491,9 +563,9 @@ function Initialize-LabSwitches {
 	} # Foreach       
 	Return $True 
 } # Initialize-LabSwitches
-##########################################################################################################################################
+####################################################################################################
 
-##########################################################################################################################################
+####################################################################################################
 <#
 .Synopsis
    Removes all Hyper-V Virtual Switches provided.
@@ -518,12 +590,12 @@ function Remove-LabSwitches {
 		[Parameter(
 			Position=0)]
 		[ValidateNotNullOrEmpty()]
-		[XML]$Configuration = $(Throw "Configuration XML parameter is missing."),
+		[XML]$Configuration = $(Throw 'Configuration XML parameter is missing.'),
 
 		[Parameter(
 			Position=1)]
 		[ValidateNotNullOrEmpty()]
-		[System.Collections.Hashtable[]]$Switches = $(Throw "Switches parameter is missing.")
+		[System.Collections.Hashtable[]]$Switches = $(Throw 'Switches parameter is missing.')
 	)
 
 	# Delete Hyper-V Switches
@@ -561,9 +633,9 @@ function Remove-LabSwitches {
 	} # Foreach        
 	Return $True
 } # Remove-LabSwitches
-##########################################################################################################################################
+####################################################################################################
 
-##########################################################################################################################################
+####################################################################################################
 <#
 .Synopsis
    Short description
@@ -587,7 +659,7 @@ function Get-LabVMTemplates {
 		[Parameter(
 			Position=0)]
 		[ValidateNotNullOrEmpty()]
-		[XML]$Configuration = $(Throw "Configuration XML parameter is missing.")
+		[XML]$Configuration = $(Throw 'Configuration XML parameter is missing.')
 	)
 
 	[System.Collections.Hashtable[]]$VMTemplates = @()
@@ -675,7 +747,7 @@ function Get-LabVMTemplates {
 				If ($Templates.OSType) {
 					$VMTemplate.OSType = $Template.OSType
 				} Else {
-					$VMTemplate.OSType = "Server"
+					$VMTemplate.OSType = 'Server'
 				}
 
 				$Found = $True
@@ -709,9 +781,9 @@ function Get-LabVMTemplates {
 	} # Foreach
 	Return $VMTemplates
 } # Get-LabVMTemplates
-##########################################################################################################################################
+####################################################################################################
 
-##########################################################################################################################################
+####################################################################################################
 <#
 .Synopsis
    Short description
@@ -735,12 +807,12 @@ function Initialize-LabVMTemplates {
 		[Parameter(
 			Position=0)]
 		[ValidateNotNullOrEmpty()]
-		[XML]$Configuration = $(Throw "Configuration XML parameter is missing."),
+		[XML]$Configuration = $(Throw 'Configuration XML parameter is missing.'),
 
 		[Parameter(
 			Position=1)]
 		[ValidateNotNullOrEmpty()]
-		[System.Collections.Hashtable[]]$VMTemplates = $(Throw "VMTemplates parameter is missing.")
+		[System.Collections.Hashtable[]]$VMTemplates = $(Throw 'VMTemplates parameter is missing.')
 	)
 	
 	Foreach ($VMTemplate in $VMTemplates) {
@@ -764,9 +836,9 @@ function Initialize-LabVMTemplates {
 	}
 	Return $True
 } # Initialize-LabVMTemplates
-##########################################################################################################################################
+####################################################################################################
 
-##########################################################################################################################################
+####################################################################################################
 <#
 .Synopsis
    Short description
@@ -790,12 +862,12 @@ function Remove-LabVMTemplates {
 		[Parameter(
 			Position=0)]
 		[ValidateNotNullOrEmpty()]
-		[XML]$Configuration = $(Throw "Configuration XML parameter is missing."),
+		[XML]$Configuration = $(Throw 'Configuration XML parameter is missing.'),
 
 		[Parameter(
 			Position=1)]
 		[ValidateNotNullOrEmpty()]
-		[System.Collections.Hashtable[]]$VMTemplates = $(Throw "VMTemplates parameter is missing.")
+		[System.Collections.Hashtable[]]$VMTemplates = $(Throw 'VMTemplates parameter is missing.')
 	)
 	
 	Foreach ($VMTemplate in $VMTemplates) {
@@ -807,9 +879,9 @@ function Remove-LabVMTemplates {
 	}
 	Return $True
 } # Remove-LabVMTemplates
-##########################################################################################################################################
+####################################################################################################
 
-##########################################################################################################################################
+####################################################################################################
 <#
 .Synopsis
    Short description
@@ -832,11 +904,11 @@ function Set-LabDSCMOFFile {
 	param (
 		[Parameter(
 			Position=0)]
-		[XML]$Configuration = $(Throw "Configuration XML parameter is missing."),
+		[XML]$Configuration = $(Throw 'Configuration XML parameter is missing.'),
 
 		[Parameter(
 			Position=1)]
-		[System.Collections.Hashtable]$VM = $(Throw "VM parameter is missing.")
+		[System.Collections.Hashtable]$VM = $(Throw 'VM parameter is missing.')
 	)
 
 	[String]$DSCMOFFile = ''
@@ -885,12 +957,12 @@ function Set-LabDSCMOFFile {
 
 		# Add the VM Self-Signed Certificate to the Local Machine store and get the Thumbprint	
 		[String]$CertificateFile = "$VMPath\$($VM.Name)\LabBuilder Files\SelfSigned.cer"
-		$Certificate = Import-Certificate -FilePath $CertificateFile -CertStoreLocation "Cert:LocalMachine\My"
+		$Certificate = Import-Certificate -FilePath $CertificateFile -CertStoreLocation 'Cert:LocalMachine\My'
 		[String]$CertificateThumbprint = $Certificate.Thumbprint
 
 		# Set the predicted MOF File name
 		$DSCMOFFile = Join-Path -Path $ENV:Temp -ChildPath "$($VM.ComputerName).mof"
-		$DSCMOFMetaFile = ([System.IO.Path]::ChangeExtension($DSCMOFFile,"meta.mof"))
+		$DSCMOFMetaFile = ([System.IO.Path]::ChangeExtension($DSCMOFFile,'meta.mof'))
 			
 		# Generate the LCM MOF File
 		Write-Verbose "Creating VM $($VM.Name) DSC LCM MOF File ..."
@@ -917,7 +989,7 @@ $NetworkingDSCConfig += @"
 	xIPAddress IPv4_$AdapterCount {
 		InterfaceAlias = '$($Adapter.Name)'
 		AddressFamily  = 'IPv4'
-		IPAddress      = '$($Adapter.IPv4.Address.Replace(",","','"))'
+		IPAddress      = '$($Adapter.IPv4.Address.Replace(',',"','"))'
 		SubnetMask     = '$($Adapter.IPv4.SubnetMask)'
 	}
 
@@ -946,7 +1018,7 @@ $NetworkingDSCConfig += @"
 	xDnsServerAddress IPv4D_$AdapterCount {
 		InterfaceAlias = '$($Adapter.Name)'
 		AddressFamily  = 'IPv4'
-		Address        = '$($Adapter.IPv4.DNSServer.Replace(",","','"))'
+		Address        = '$($Adapter.IPv4.DNSServer.Replace(',',"','"))'
 	}
 
 "@
@@ -958,7 +1030,7 @@ $NetworkingDSCConfig += @"
 	xIPAddress IPv6_$AdapterCount {
 		InterfaceAlias = '$($Adapter.Name)'
 		AddressFamily  = 'IPv6'
-		IPAddress      = '$($Adapter.IPv6.Address.Replace(",","','"))'
+		IPAddress      = '$($Adapter.IPv6.Address.Replace(',',"','"))'
 		SubnetMask     = '$($Adapter.IPv6.SubnetMask)'
 	}
 
@@ -987,7 +1059,7 @@ $NetworkingDSCConfig += @"
 	xDnsServerAddress IPv6D_$AdapterCount {
 		InterfaceAlias = '$($Adapter.Name)'
 		AddressFamily  = 'IPv6'
-		Address        = '$($Adapter.IPv6.DNSServer.Replace(",","','"))'
+		Address        = '$($Adapter.IPv6.DNSServer.Replace(',',"','"))'
 	}
 
 "@
@@ -997,18 +1069,18 @@ $NetworkingDSCConfig += @"
 $NetworkingDSCConfig += @"
 }
 "@
-		[String]$NetworkingDSCFile = Join-Path -Path "$VMPath\$($VM.Name)\LabBuilder Files" -ChildPath "DSCNetworking.ps1"
+		[String]$NetworkingDSCFile = Join-Path -Path "$VMPath\$($VM.Name)\LabBuilder Files" -ChildPath 'DSCNetworking.ps1'
 		Set-Content -Path $NetworkingDSCFile -Value $NetworkingDSCConfig | Out-Null
 		. $NetworkingDSCFile
 
-		[String]$DSCFile = Join-Path -Path "$VMPath\$($VM.Name)\LabBuilder Files" -ChildPath "DSC.ps1"
+		[String]$DSCFile = Join-Path -Path "$VMPath\$($VM.Name)\LabBuilder Files" -ChildPath 'DSC.ps1'
 		[String]$DSCContent = Get-Content -Path $VM.DSCConfigFile -Raw
 		
-		If (-not ($DSCContent -match "Networking Network {}")) {
+		If (-not ($DSCContent -match 'Networking Network {}')) {
 			# Add the Networking Configuration item to the base DSC Config File
 			# Find the location of the line containing "Node $AllNodes.NodeName {"
 			[String]$Regex = '\s*Node\s.*{.*'
-			$Matches = [regex]::matches($DSCContent, $Regex, "IgnoreCase")
+			$Matches = [regex]::matches($DSCContent, $Regex, 'IgnoreCase')
 			If ($Matches.Count -eq 1) {
 				$DSCContent = $DSCContent.Insert($Matches[0].Index+$Matches[0].Length,"`r`nNetworking Network {}`r`n")
 			} Else {
@@ -1039,7 +1111,7 @@ $NetworkingDSCConfig += @"
 }
 "@
 		# Write it to a temp file
-		[String]$ConfigurationFile = Join-Path -Path "$VMPath\$($VM.Name)\LabBuilder Files" -ChildPath "DSCConfigData.psd1"
+		[String]$ConfigurationFile = Join-Path -Path "$VMPath\$($VM.Name)\LabBuilder Files" -ChildPath 'DSCConfigData.psd1'
 		If (Test-Path -Path $ConfigurationFile) {
 			Remove-Item -Path $ConfigurationFile -Force | Out-Null
 		}
@@ -1078,9 +1150,9 @@ $NetworkingDSCConfig += @"
 		Return $False
 	} # If
 } # Set-LabDSCMOFFile
-##########################################################################################################################################
+####################################################################################################
 
-##########################################################################################################################################
+####################################################################################################
 <#
 .Synopsis
    Short description
@@ -1103,11 +1175,11 @@ function Set-LabDSCStartFile {
 	param (
 		[Parameter(
 			Position=0)]
-		[XML]$Configuration = $(Throw "Configuration XML parameter is missing."),
+		[XML]$Configuration = $(Throw 'Configuration XML parameter is missing.'),
 
 		[Parameter(
 			Position=1)]
-		[System.Collections.Hashtable]$VM = $(Throw "VM parameter is missing.")
+		[System.Collections.Hashtable]$VM = $(Throw 'VM parameter is missing.')
 	)
 
 	[String]$DSCStartPs = ''
@@ -1172,9 +1244,9 @@ Start-DSCConfiguration -Path `"$($ENV:SystemRoot)\Setup\Scripts\`" -Force -Debug
 
 	Return $True
 } # Set-LabDSCStartFile
-##########################################################################################################################################
+####################################################################################################
 
-##########################################################################################################################################
+####################################################################################################
 <#
 .Synopsis
    Short description
@@ -1196,11 +1268,11 @@ function Initialize-LabVMDSC {
 	param (
 		[Parameter(
 			Position=0)]
-		[XML]$Configuration = $(Throw "Configuration XML parameter is missing."),
+		[XML]$Configuration = $(Throw 'Configuration XML parameter is missing.'),
 
 		[Parameter(
 			Position=1)]
-		[System.Collections.Hashtable]$VM = $(Throw "VM parameter is missing.")
+		[System.Collections.Hashtable]$VM = $(Throw 'VM parameter is missing.')
 	)
 
 	# Are there any DSC Settings to manage?
@@ -1209,9 +1281,9 @@ function Initialize-LabVMDSC {
 	# Generate the DSC Start up Script file
 	Set-LabDSCStartFile -Configuration $Configuration -VM $VM
 } # Initialize-LabVMDSC
-##########################################################################################################################################
+####################################################################################################
 
-##########################################################################################################################################
+####################################################################################################
 <#
 .Synopsis
    Short description
@@ -1233,18 +1305,18 @@ function Start-LabVMDSC {
 	param (
 		[Parameter(
 			Position=0)]
-		[XML]$Configuration = $(Throw "Configuration XML parameter is missing."),
+		[XML]$Configuration = $(Throw 'Configuration XML parameter is missing.'),
 
 		[Parameter(
 			Position=1)]
-		[System.Collections.Hashtable]$VM = $(Throw "VM parameter is missing."),
+		[System.Collections.Hashtable]$VM = $(Throw 'VM parameter is missing.'),
 
 		[Int]$Timeout = 300
 	)
 	[String]$VMPath = $Configuration.labbuilderconfig.settings.vmpath
 	[DateTime]$StartTime = Get-Date
 	[System.Management.Automation.Runspaces.PSSession]$Session = $null
-	[PSCredential]$AdmininistratorCredential = New-Object System.Management.Automation.PSCredential ("Administrator", (ConvertTo-SecureString $VM.AdministratorPassword -AsPlainText -Force))
+	[PSCredential]$AdmininistratorCredential = New-Object System.Management.Automation.PSCredential ('Administrator', (ConvertTo-SecureString $VM.AdministratorPassword -AsPlainText -Force))
 
 	[Boolean]$Complete = $False
 	[Boolean]$ConfigCopyComplete = $False
@@ -1323,9 +1395,9 @@ function Start-LabVMDSC {
 
 	Return $Complete
 } # Start-LabVMDSC
-##########################################################################################################################################
+####################################################################################################
 
-##########################################################################################################################################
+####################################################################################################
 <#
 .Synopsis
    Short description
@@ -1348,11 +1420,11 @@ function Get-LabUnattendFile {
 	param (
 		[Parameter(
 			Position=0)]
-		[XML]$Configuration = $(Throw "Configuration XML parameter is missing."),
+		[XML]$Configuration = $(Throw 'Configuration XML parameter is missing.'),
 
 		[Parameter(
 			Position=1)]
-		[System.Collections.Hashtable]$VM = $(Throw "VM parameter is missing.")
+		[System.Collections.Hashtable]$VM = $(Throw 'VM parameter is missing.')
 	)
 	If ($VM.UnattendFile) {
 		[String]$UnattendContent = Get-Content -Path $VM.UnattendFile
@@ -1442,9 +1514,9 @@ function Get-LabUnattendFile {
 		}
 	Return $UnattendContent
 } # Get-LabUnattendFile
-##########################################################################################################################################
+####################################################################################################
 
-##########################################################################################################################################
+####################################################################################################
 <#
 .Synopsis
    Short description
@@ -1467,15 +1539,15 @@ function Set-LabVMInitializationFiles {
 	param (
 		[Parameter(
 			Position=0)]
-		[XML]$Configuration = $(Throw "Configuration XML parameter is missing."),
+		[XML]$Configuration = $(Throw 'Configuration XML parameter is missing.'),
 
 		[Parameter(
 			Position=1)]
-		[System.Collections.Hashtable]$VM = $(Throw "VM parameter is missing.")
+		[System.Collections.Hashtable]$VM = $(Throw 'VM parameter is missing.')
 ,
 		[Parameter(
 			Position=2)]
-		[String]$VMBootDiskPath = $(Throw "VMBootDiskPath parameter is missing.")
+		[String]$VMBootDiskPath = $(Throw 'VMBootDiskPath parameter is missing.')
 	)
 
 	# Mount the VMs Boot VHD so that files can be loaded into it
@@ -1491,7 +1563,7 @@ function Set-LabVMInitializationFiles {
 
 	# Apply any additional MSU Updates
 	Foreach ($URL in $VM.InstallMSU) {
-		$MSUFilename = $URL.Substring($URL.LastIndexOf("/") + 1)
+		$MSUFilename = $URL.Substring($URL.LastIndexOf('/') + 1)
 		$MSUPath = Join-Path -Path $Script:WorkingFolder -ChildPath $MSUFilename
 		If (-not (Test-Path -Path $MSUPath)) {
 			Invoke-WebRequest -Uri $URL -OutFile $MSUPath
@@ -1570,9 +1642,9 @@ Add-Content -Path `"$($ENV:SystemRoot)\Setup\Scripts\SetupComplete.log`" -Value 
 	Remove-Item -Path $MountPoint -Recurse -Force | Out-Null
 	Return $True
 } # Set-LabVMInitializationFiles
-##########################################################################################################################################
+####################################################################################################
 
-##########################################################################################################################################
+####################################################################################################
 <#
 .Synopsis
    Short description
@@ -1596,17 +1668,17 @@ function Get-LabVMs {
 		[Parameter(
 			Position=0)]
 		[ValidateNotNullOrEmpty()]
-		[XML]$Configuration = $(Throw "Configuration XML parameter is missing."),
+		[XML]$Configuration = $(Throw 'Configuration XML parameter is missing.'),
 
 		[Parameter(
 			Position=1)]
 		[ValidateNotNullOrEmpty()]
-		[System.Collections.Hashtable[]]$VMTemplates = $(Throw "VMTemplates parameter is missing."),
+		[System.Collections.Hashtable[]]$VMTemplates = $(Throw 'VMTemplates parameter is missing.'),
 
 		[Parameter(
 			Position=2)]
 		[ValidateNotNullOrEmpty()]
-		[System.Collections.Hashtable[]]$Switches = $(Throw "Switches parameter is missing.")
+		[System.Collections.Hashtable[]]$Switches = $(Throw 'Switches parameter is missing.')
 	)
 
 	[System.Collections.Hashtable[]]$LabVMs = @()
@@ -1778,7 +1850,7 @@ function Get-LabVMs {
 		} # If
 		
 		# Get the Administrator password (from the template or VM)
-		[String]$AdministratorPassword = ""
+		[String]$AdministratorPassword = ''
 		If ($VMTemplate.administratorpassword) {
 			$AdministratorPassword = $VMTemplate.administratorpassword
 		} # If
@@ -1787,7 +1859,7 @@ function Get-LabVMs {
 		} # If
 
 		# Get the Product Key (from the template or VM)
-		[String]$ProductKey = ""
+		[String]$ProductKey = ''
 		If ($VMTemplate.productkey) {
 			$ProductKey = $VMTemplate.productkey
 		} # If
@@ -1796,7 +1868,7 @@ function Get-LabVMs {
 		} # If
 
 		# Get the Timezone (from the template or VM)
-		[String]$Timezone = "Pacific Standard Time"
+		[String]$Timezone = 'Pacific Standard Time'
 		If ($VMTemplate.timezone) {
 			$Timezone = $VMTemplate.timezone
 		} # If
@@ -1844,9 +1916,9 @@ function Get-LabVMs {
 
 	Return $LabVMs
 } # Get-LabVMs
-##########################################################################################################################################
+####################################################################################################
 
-##########################################################################################################################################
+####################################################################################################
 <#
 .Synopsis
    Short description
@@ -1869,18 +1941,18 @@ function Get-LabVMSelfSignedCert {
 	param (
 		[Parameter(
 			Position=0)]
-		[XML]$Configuration = $(Throw "Configuration XML parameter is missing."),
+		[XML]$Configuration = $(Throw 'Configuration XML parameter is missing.'),
 
 		[Parameter(
 			Position=1)]
-		[System.Collections.Hashtable]$VM = $(Throw "VM parameter is missing."),
+		[System.Collections.Hashtable]$VM = $(Throw 'VM parameter is missing.'),
 
 		[Int]$Timeout = 300
 	)
 	[String]$VMPath = $Configuration.labbuilderconfig.SelectNodes('settings').vmpath
 	[DateTime]$StartTime = Get-Date
 	[System.Management.Automation.Runspaces.PSSession]$Session = $null
-	[PSCredential]$AdmininistratorCredential = New-Object System.Management.Automation.PSCredential ("Administrator", (ConvertTo-SecureString $VM.AdministratorPassword -AsPlainText -Force))
+	[PSCredential]$AdmininistratorCredential = New-Object System.Management.Automation.PSCredential ('Administrator', (ConvertTo-SecureString $VM.AdministratorPassword -AsPlainText -Force))
 	[Boolean]$Complete = $False
 	While ((-not $Complete)  -and (((Get-Date) - $StartTime).Seconds) -lt $TimeOut) {
 		While (-not ($Session) -or ($Session.State -ne 'Opened')) {
@@ -1902,7 +1974,7 @@ function Get-LabVMSelfSignedCert {
 			# We connected OK - download the Certificate file
 			While ((-not $Complete) -and (((Get-Date) - $StartTime).Seconds) -lt $TimeOut) {
 				Try {
-					Copy-Item -Path "c:\windows\SelfSigned.cer" -Destination "$VMPath\$($VM.Name)\LabBuilder Files\" -FromSession $Session -ErrorAction Stop
+					Copy-Item -Path 'c:\windows\SelfSigned.cer' -Destination "$VMPath\$($VM.Name)\LabBuilder Files\" -FromSession $Session -ErrorAction Stop
 					$Complete = $True
 				} Catch {
 					Write-Verbose "Waiting for Certificate file on $($VM.ComputerName) ..."
@@ -1919,9 +1991,9 @@ function Get-LabVMSelfSignedCert {
 	Return $Complete
 
 } # Get-LabVMSelfSignedCert
-##########################################################################################################################################
+####################################################################################################
 
-##########################################################################################################################################
+####################################################################################################
 <#
 .Synopsis
    Short description
@@ -1945,12 +2017,12 @@ function Start-LabVM {
 		[Parameter(
 			Position=0)]
 		[ValidateNotNullOrEmpty()]
-		[XML]$Configuration = $(Throw "Configuration XML parameter is missing."),
+		[XML]$Configuration = $(Throw 'Configuration XML parameter is missing.'),
 
 		[Parameter(
 			Position=1)]
 		[ValidateNotNullOrEmpty()]
-		$VM = $(Throw "VM parameter is missing.")
+		$VM = $(Throw 'VM parameter is missing.')
 	)
 
 	[String]$VMPath = $Configuration.labbuilderconfig.settings.vmpath
@@ -1987,9 +2059,9 @@ function Start-LabVM {
 	} # If
 	Return $True
 } # Start-LabVM
-##########################################################################################################################################
+####################################################################################################
 
-##########################################################################################################################################
+####################################################################################################
 <#
 .Synopsis
    Short description
@@ -2013,12 +2085,12 @@ function Initialize-LabVMs {
 		[Parameter(
 			Position=0)]
 		[ValidateNotNullOrEmpty()]
-		[XML]$Configuration = $(Throw "Configuration XML parameter is missing."),
+		[XML]$Configuration = $(Throw 'Configuration XML parameter is missing.'),
 
 		[Parameter(
 			Position=1)]
 		[ValidateNotNullOrEmpty()]
-		[System.Collections.Hashtable[]]$VMs = $(Throw "VMs parameter is missing.")
+		[System.Collections.Hashtable[]]$VMs = $(Throw 'VMs parameter is missing.')
 	)
 	
 	$CurrentVMs = Get-VM
@@ -2127,9 +2199,9 @@ function Initialize-LabVMs {
 	} # Foreach
 	Return $True
 } # Initialize-LabVMs
-##########################################################################################################################################
+####################################################################################################
 
-##########################################################################################################################################
+####################################################################################################
 <#
 .Synopsis
    Short description
@@ -2153,12 +2225,12 @@ function Remove-LabVMs {
 		[Parameter(
 			Position=0)]
 		[ValidateNotNullOrEmpty()]
-		[XML]$Configuration = $(Throw "Configuration XML parameter is missing."),
+		[XML]$Configuration = $(Throw 'Configuration XML parameter is missing.'),
 
 		[Parameter(
 			position=1)]
 		[ValidateNotNullOrEmpty()]
-		[System.Collections.Hashtable[]]$VMs = $(Throw "VMs parameter is missing."),
+		[System.Collections.Hashtable[]]$VMs = $(Throw 'VMs parameter is missing.'),
 
 		[Switch]$RemoveVHDs
 	)
@@ -2193,9 +2265,9 @@ function Remove-LabVMs {
 	}
 	Return $true
 }
-##########################################################################################################################################
+####################################################################################################
 
-##########################################################################################################################################
+####################################################################################################
 <#
 .Synopsis
    Short description
@@ -2218,7 +2290,7 @@ function Wait-LabVMInit {
 	param (
 		[Parameter(
 			Position=0)]
-		[System.Collections.Hashtable]$VM = $(Throw "VM parameter is missing."),
+		[System.Collections.Hashtable]$VM = $(Throw 'VM parameter is missing.'),
 
 		[Int]$Timeout = 300
 	)
@@ -2226,7 +2298,7 @@ function Wait-LabVMInit {
 	[DateTime]$StartTime = Get-Date
 	[Boolean]$Found = $False
 	[System.Management.Automation.Runspaces.PSSession]$Session = $null
-	[PSCredential]$AdmininistratorCredential = New-Object System.Management.Automation.PSCredential ("Administrator", (ConvertTo-SecureString $VM.AdministratorPassword -AsPlainText -Force))
+	[PSCredential]$AdmininistratorCredential = New-Object System.Management.Automation.PSCredential ('Administrator', (ConvertTo-SecureString $VM.AdministratorPassword -AsPlainText -Force))
 
 	# Make sure the VM has started
 	Wait-LabVMStart -VM $VM
@@ -2268,9 +2340,9 @@ function Wait-LabVMInit {
 
 	Return $Complete
 } # Wait-LabVMInit
-##########################################################################################################################################
+####################################################################################################
 
-##########################################################################################################################################
+####################################################################################################
 <#
 .Synopsis
    Short description
@@ -2293,10 +2365,10 @@ function Wait-LabVMStart {
 	param (
 		[Parameter(
 			Position=0)]
-		[System.Collections.Hashtable]$VM = $(Throw "VM parameter is missing.")
+		[System.Collections.Hashtable]$VM = $(Throw 'VM parameter is missing.')
 	)
 	$Heartbeat = Get-VMIntegrationService -VMName $VM.Name -Name Heartbeat
-	while ($Heartbeat.PrimaryStatusDescription -ne "OK")
+	while ($Heartbeat.PrimaryStatusDescription -ne 'OK')
 	{
 		$Heartbeat = Get-VMIntegrationService -VMName $VM.Name -Name Heartbeat
 		sleep 1
@@ -2304,9 +2376,9 @@ function Wait-LabVMStart {
 
 	Return $True
 } # Wait-LabVMStart
-##########################################################################################################################################
+####################################################################################################
 
-##########################################################################################################################################
+####################################################################################################
 <#
 .Synopsis
    Short description
@@ -2329,10 +2401,10 @@ function Wait-LabVMOff {
 	param (
 		[Parameter(
 			Position=0)]
-		[System.Collections.Hashtable]$VM = $(Throw "VM parameter is missing.")
+		[System.Collections.Hashtable]$VM = $(Throw 'VM parameter is missing.')
 	)
 	$RunningVM = Get-VM -Name $VM.Name
-	while ($RunningVM.State -ne "Off")
+	while ($RunningVM.State -ne 'Off')
 	{
 		$RunningVM = Get-VM -Name $VM.Name
 		sleep 1
@@ -2340,9 +2412,9 @@ function Wait-LabVMOff {
 
 	Return $True
 } # Wait-LabVMOff
-##########################################################################################################################################
+####################################################################################################
 
-##########################################################################################################################################
+####################################################################################################
 <#
 .Synopsis
    Short description
@@ -2364,16 +2436,14 @@ Function Install-Lab {
 	param (
 		[parameter(
 			Position=0)]
-		[String]$Path = $(Throw "Path parameter is missing."),
+		[String]$Path = $(Throw 'Path parameter is missing.'),
 
 		[Switch]$CheckEnvironment
 	) # Param
 
 	[XML]$Config = Get-LabConfiguration -Path $Path
 	# Make sure everything is OK to install the lab
-	If (-not (Test-LabConfiguration -Configuration $Config)) {
-		return
-	}
+	Test-LabConfiguration -Configuration $Config
 	   
 	If ($CheckEnvironment) {
 		Install-LabHyperV | Out-Null
@@ -2389,9 +2459,9 @@ Function Install-Lab {
 	$VMs = Get-LabVMs -Configuration $Config -VMTemplates $VMTemplates -Switches $Switches
 	Initialize-LabVMs -Configuration $Config -VMs $VMs | Out-Null
 } # Build-Lab
-##########################################################################################################################################
+####################################################################################################
 
-##########################################################################################################################################
+####################################################################################################
 <#
 .Synopsis
    Short description
@@ -2413,7 +2483,7 @@ Function Uninstall-Lab {
 	param (
 		[parameter(
 			Position=0)]
-		[String]$Path = $(Throw "Path XML parameter is missing."),
+		[String]$Path = $(Throw 'Path XML parameter is missing.'),
 
 		[Switch]$RemoveSwitches,
 
@@ -2425,9 +2495,7 @@ Function Uninstall-Lab {
 	[XML]$Config = Get-LabConfiguration -Path $Path
 
 	# Make sure everything is OK to install the lab
-	If (-not (Test-LabConfiguration -Configuration $Config)) {
-		return
-	} # If
+	Test-LabConfiguration -Configuration $Config
 
 	$VMTemplates = Get-LabVMTemplates -Configuration $Config
 
@@ -2448,11 +2516,11 @@ Function Uninstall-Lab {
 		Remove-LabSwitches -Configuration $Config -Switches $Switches | Out-Null
 	} # If
 } # Uninstall-Lab
-##########################################################################################################################################
+####################################################################################################
 
-##########################################################################################################################################
+####################################################################################################
 # DSC Config Files
-##########################################################################################################################################
+####################################################################################################
 [DSCLocalConfigurationManager()]
 Configuration ConfigLCM {
 	Param (
@@ -2471,9 +2539,9 @@ Configuration ConfigLCM {
 		} 
 	}
 }
-##########################################################################################################################################
+####################################################################################################
 
-##########################################################################################################################################
+####################################################################################################
 # Export the Module Cmdlets
 Export-ModuleMember -Function `
 	Get-LabConfiguration,Test-LabConfiguration, `
@@ -2486,4 +2554,4 @@ Export-ModuleMember -Function `
 	Start-LabVM, Wait-LabVMStart, Wait-LabVMOff, Wait-LabVMInit, `
 	Get-LabVMSelfSignedCert, `
 	Install-Lab,Uninstall-Lab
-##########################################################################################################################################
+####################################################################################################

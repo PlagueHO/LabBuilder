@@ -5,84 +5,162 @@
 #
 
 $here = Split-Path -Parent $MyInvocation.MyCommand.Path
+$root = Resolve-Path -Path "$here\..\..\"
 
-Set-Location $here
+Set-Location $root
 if (Get-Module LabBuilder -All)
 {
 	Get-Module LabBuilder -All | Remove-Module
 }
 
-Import-Module "$here\LabBuilder.psd1" -Force -DisableNameChecking
-$Global:TestConfigPath = "$here\Tests\PesterTestConfig"
+Import-Module "$root\LabBuilder.psd1" -Force -DisableNameChecking
+$Global:TestConfigPath = "$root\Tests\PesterTestConfig"
 $Global:TestConfigOKPath = "$Global:TestConfigPath\PesterTestConfig.OK.xml"
-$Global:ArtifactPath = "$here\Artifacts"
+$Global:ArtifactPath = "$root\Artifacts"
 New-Item -Path "$Global:ArtifactPath" -ItemType Directory -Force -ErrorAction SilentlyContinue
 
 InModuleScope LabBuilder {
 ##########################################################################################################################################
-Describe "Get-LabConfiguration" {
-	Context "No parameters passed" {
-		It "Fails" {
-			{ Get-LabConfiguration } | Should Throw
-		}
-	}
-	Context "Path is provided but file does not exist" {
-		It "Fails" {
-			{ Get-LabConfiguration -Path 'c:\doesntexist.xml' } | Should Throw
-		}
-	}
-	Context "Path is provided and valid XML file exists" {
-		It "Returns XmlDocument object with valid content" {
+Describe 'Get-LabConfiguration' {
+	Context 'Path is provided and valid XML file exists' {
+		It 'Returns XmlDocument object with valid content' {
 			$Config = Get-LabConfiguration -Path $Global:TestConfigOKPath
 			$Config.GetType().Name | Should Be 'XmlDocument'
 			$Config.labbuilderconfig | Should Not Be $null
 		}
 	}
+
+	Context 'Path is provided but file does not exist' {
+
+		It 'Throws ConfigurationFileNotFoundError Exception' {
+            $errorId = 'ConfigurationFileNotFoundError'
+            $errorCategory = [System.Management.Automation.ErrorCategory]::InvalidArgument
+            $errorMessage = $($LocalizedData.ConfigurationFileNotFoundError) `
+                -f 'c:\doesntexist.xml'
+            $exception = New-Object -TypeName System.InvalidOperationException `
+                -ArgumentList $errorMessage
+            $errorRecord = New-Object -TypeName System.Management.Automation.ErrorRecord `
+                -ArgumentList $exception, $errorId, $errorCategory, $null
+
+            Mock Test-Path -MockWith { $false }
+
+			{ Get-LabConfiguration -Path 'c:\doesntexist.xml' } | Should Throw $errorRecord
+		}
+	}
+
+	Context 'Path is provided and file exists but is empty' {
+		It 'Throws ConfigurationFileEmptyError Exception' {
+            $errorId = 'ConfigurationFileEmptyError'
+            $errorCategory = [System.Management.Automation.ErrorCategory]::InvalidArgument
+            $errorMessage = $($LocalizedData.ConfigurationFileEmptyError) `
+                -f 'c:\isempty.xml'
+            $exception = New-Object -TypeName System.InvalidOperationException `
+                -ArgumentList $errorMessage
+            $errorRecord = New-Object -TypeName System.Management.Automation.ErrorRecord `
+                -ArgumentList $exception, $errorId, $errorCategory, $null
+
+            Mock Test-Path -MockWith { $true }
+            Mock Get-Content -MockWith {''}
+
+			{ Get-LabConfiguration -Path 'c:\isempty.xml' } | Should Throw $errorRecord
+		}
+	}
 }
 ##########################################################################################################################################
 
 ##########################################################################################################################################
-Describe "Test-LabConfiguration" {
-
-	Context "No parameters passed" {
-		It "Fails" {
-			{ Test-LabConfiguration } | Should Throw
-		}
-	}
+Describe 'Test-LabConfiguration' {
 
 	$Config = Get-LabConfiguration -Path $Global:TestConfigOKPath
 
-	Remove-Item -Path $Config.labbuilderconfig.settings.vmpath -Recurse -Force -ErrorAction SilentlyContinue
-	Remove-Item -Path $Config.labbuilderconfig.settings.vhdparentpath -Recurse -Force -ErrorAction SilentlyContinue
+    Mock Test-Path -ParameterFilter { $Path -eq 'c:\exists\' } -MockWith { $true }
+    Mock Test-Path -ParameterFilter { $Path -eq 'c:\doesnotexist\' } -MockWith { $false }
 
-	Context "Valid Configuration is provided and VMPath folder does not exist" {
-		It "Fails" {
-			{ Test-LabConfiguration -Configuration $Config } | Should Throw
-		}
-	}
-	
-	New-Item -Path $Config.labbuilderconfig.settings.vmpath -ItemType Directory
+	Context 'Valid Configuration is provided and all paths exist' {
+		It 'Returns True' {
+            $Config.labbuilderconfig.settings.vmpath = 'c:\exists\'
+            $Config.labbuilderconfig.settings.vhdparentpath = 'c:\exists\'
 
-	Context "Valid Configuration is provided and VHDParentPath folder does not exist" {
-		It "Fails" {
-			{ Test-LabConfiguration -Configuration $Config } | Should Throw
-		}
-	}
-	
-	New-Item -Path $Config.labbuilderconfig.settings.vhdparentpath -ItemType Directory
-
-	Context "Valid Configuration is provided and all paths exist" {
-		It "Returns True" {
 			Test-LabConfiguration -Configuration $Config | Should Be $True
 		}
 	}
-	Remove-Item -Path $Config.labbuilderconfig.settings.vmpath -Recurse -Force -ErrorAction SilentlyContinue
-	Remove-Item -Path $Config.labbuilderconfig.settings.vhdparentpath -Recurse -Force -ErrorAction SilentlyContinue
+
+	Context 'Valid Configuration is provided and VMPath is empty' {
+		It 'Throws ConfigurationMissingElementError Exception' {
+            $Config.labbuilderconfig.settings.vmpath = ''
+            $Config.labbuilderconfig.settings.vhdparentpath = 'c:\exists\'
+
+            $errorId = 'ConfigurationMissingElementError'
+            $errorCategory = [System.Management.Automation.ErrorCategory]::InvalidArgument
+            $errorMessage = $($LocalizedData.ConfigurationMissingElementError) `
+                -f '<settings>\<vmpath>'
+            $exception = New-Object -TypeName System.InvalidOperationException `
+                -ArgumentList $errorMessage
+            $errorRecord = New-Object -TypeName System.Management.Automation.ErrorRecord `
+                -ArgumentList $exception, $errorId, $errorCategory, $null
+
+            { Test-LabConfiguration -Configuration $Config } | Should Throw $ErrorRecord
+		}
+	}
+
+	Context 'Valid Configuration is provided and VMPath folder does not exist' {
+		It 'Throws PathNotFoundError Exception' {
+            $Config.labbuilderconfig.settings.vmpath = 'c:\doesnotexist\'
+            $Config.labbuilderconfig.settings.vhdparentpath = 'c:\exists\'
+           
+            $errorId = 'PathNotFoundError'
+            $errorCategory = [System.Management.Automation.ErrorCategory]::InvalidArgument
+            $errorMessage = $($LocalizedData.PathNotFoundError) `
+                -f '<settings>\<vmpath>','c:\doesnotexist\'
+            $exception = New-Object -TypeName System.InvalidOperationException `
+                -ArgumentList $errorMessage
+            $errorRecord = New-Object -TypeName System.Management.Automation.ErrorRecord `
+                -ArgumentList $exception, $errorId, $errorCategory, $null
+
+			{ Test-LabConfiguration -Configuration $Config } | Should Throw $errorRecord
+		}
+	}
+	
+	Context 'Valid Configuration is provided and VHDParentPath is empty' {
+		It 'Throws ConfigurationMissingElementError Exception' {
+            $Config.labbuilderconfig.settings.vmpath = 'c:\exists\'
+            $Config.labbuilderconfig.settings.vhdparentpath = ''
+
+            $errorId = 'ConfigurationMissingElementError'
+            $errorCategory = [System.Management.Automation.ErrorCategory]::InvalidArgument
+            $errorMessage = $($LocalizedData.ConfigurationMissingElementError) `
+                -f '<settings>\<vhdparentpath>'
+            $exception = New-Object -TypeName System.InvalidOperationException `
+                -ArgumentList $errorMessage
+            $errorRecord = New-Object -TypeName System.Management.Automation.ErrorRecord `
+                -ArgumentList $exception, $errorId, $errorCategory, $null
+
+            { Test-LabConfiguration -Configuration $Config } | Should Throw $errorRecord
+		}
+	}
+
+	Context 'Valid Configuration is provided and VHDParentPath folder does not exist' {
+		It 'Throws PathNotFoundError Exception' {
+            $Config.labbuilderconfig.settings.vmpath = 'c:\exists\'
+            $Config.labbuilderconfig.settings.vhdparentpath = 'c:\doesnotexist\'
+            
+            $errorId = 'PathNotFoundError'
+            $errorCategory = [System.Management.Automation.ErrorCategory]::InvalidArgument
+            $errorMessage = $($LocalizedData.PathNotFoundError) `
+                -f '<settings>\<vhdparentpath>','c:\doesnotexist\'
+            $exception = New-Object -TypeName System.InvalidOperationException `
+                -ArgumentList $errorMessage
+            $errorRecord = New-Object -TypeName System.Management.Automation.ErrorRecord `
+                -ArgumentList $exception, $errorId, $errorCategory, $null
+
+			{ Test-LabConfiguration -Configuration $Config } | Should Throw $errorRecord
+		}
+	}
 }
 ##########################################################################################################################################
 
 ##########################################################################################################################################
-Describe "Install-LabHyperV" {
+Describe 'Install-LabHyperV' {
 
 	#region Mocks
 	If ((Get-CimInstance Win32_OperatingSystem).ProductType -eq 1) {
@@ -94,18 +172,18 @@ Describe "Install-LabHyperV" {
 	}
 	#endregion
 
-	Context "The function exists" {
+	Context 'The function exists' {
 		$Config = Get-LabConfiguration -Path $Global:TestConfigOKPath
-		It "Returns True" {
+		It 'Returns True' {
 			Install-LabHyperV | Should Be $True
 		}
 		If ((Get-CimInstance Win32_OperatingSystem).ProductType -eq 1) {
-			It "Calls Mocked commands" {
+			It 'Calls Mocked commands' {
 				Assert-MockCalled Get-WindowsOptionalFeature -Exactly 1
 				Assert-MockCalled Enable-WindowsOptionalFeature -Exactly 1
 			}
 		} Else {
-			It "Calls Mocked commands" {
+			It 'Calls Mocked commands' {
 				Assert-MockCalled Get-WindowsFeature -Exactly 1
 				Assert-MockCalled Install-WindowsFeature -Exactly 1
 			}
@@ -115,23 +193,23 @@ Describe "Install-LabHyperV" {
 ##########################################################################################################################################
 
 ##########################################################################################################################################
-Describe "Initialize-LabConfiguration" {
+Describe 'Initialize-LabConfiguration' {
 	#region Mocks
 	Mock Set-VMHost
 	#endregion
 
-	Context "No parameters passed" {
-		It "Fails" {
+	Context 'No parameters passed' {
+		It 'Fails' {
 			{ Initialize-LabConfiguration } | Should Throw
 		}
 	}
-	Context "Valid configuration is passed" {
+	Context 'Valid configuration is passed' {
 		$Config = Get-LabConfiguration -Path $Global:TestConfigOKPath
 	
-		It "Returns True" {
+		It 'Returns True' {
 			Initialize-LabConfiguration -Configuration $Config | Should Be $True
 		}
-		It "Calls Mocked commands" {
+		It 'Calls Mocked commands' {
 			Assert-MockCalled  Set-VMHost -Exactly 1
 		}		
 	}
@@ -139,38 +217,38 @@ Describe "Initialize-LabConfiguration" {
 ##########################################################################################################################################
 
 ##########################################################################################################################################
-Describe "Get-LabSwitches" {
-	Context "No parameters passed" {
-		It "Fails" {
+Describe 'Get-LabSwitches' {
+	Context 'No parameters passed' {
+		It 'Fails' {
 			{ Get-LabConfiguration } | Should Throw
 		}
 	}
-	Context "Configuration passed with switch missing Switch Name." {
-		It "Fails" {
+	Context 'Configuration passed with switch missing Switch Name.' {
+		It 'Fails' {
 			{ Get-LabSwitches -Configuration (Get-LabConfiguration -Path "$Global:TestConfigPath\PesterTestConfig.SwitchFail.NoName.xml") } | Should Throw
 		}
 	}
-	Context "Configuration passed with switch missing Switch Type." {
-		It "Fails" {
+	Context 'Configuration passed with switch missing Switch Type.' {
+		It 'Fails' {
 			{ Get-LabSwitches -Configuration (Get-LabConfiguration -Path "$Global:TestConfigPath\PesterTestConfig.SwitchFail.NoType.xml") } | Should Throw
 		}
 	}
-	Context "Configuration passed with switch invalid Switch Type." {
-		It "Fails" {
+	Context 'Configuration passed with switch invalid Switch Type.' {
+		It 'Fails' {
 			{ Get-LabSwitches -Configuration (Get-LabConfiguration -Path "$Global:TestConfigPath\PesterTestConfig.SwitchFail.BadType.xml") } | Should Throw
 		}
 	}
-	Context "Configuration passed with switch containing adapters but is not External type." {
-		It "Fails" {
+	Context 'Configuration passed with switch containing adapters but is not External type.' {
+		It 'Fails' {
 			{ Get-LabSwitches -Configuration (Get-LabConfiguration -Path "$Global:TestConfigPath\PesterTestConfig.SwitchFail.AdaptersSet.xml") } | Should Throw
 		}
 	}
-	Context "Valid configuration is passed" {
+	Context 'Valid configuration is passed' {
 		$Config = Get-LabConfiguration -Path $Global:TestConfigOKPath
 		[Array]$Switches = Get-LabSwitches -Configuration $Config
 		Set-Content -Path "$($Global:ArtifactPath)\Switches.json" -Value ($Switches | ConvertTo-Json -Depth 4) -Encoding UTF8 -NoNewLine
 		
-		It "Returns Switches Object that matches Expected Object" {
+		It 'Returns Switches Object that matches Expected Object' {
 			$ExpectedSwitches = Get-Content -Path "$Global:TestConfigPath\ExpectedSwitches.json" -Raw
 			$SwitchesJSON = ($Switches | ConvertTo-Json -Depth 4)
 			[String]::Compare(($Switches | ConvertTo-Json -Depth 4),$ExpectedSwitches,$true) | Should Be 0
@@ -180,7 +258,7 @@ Describe "Get-LabSwitches" {
 ##########################################################################################################################################
 
 ##########################################################################################################################################
-Describe "Initialize-LabSwitches" {
+Describe 'Initialize-LabSwitches' {
 
 	#region Mocks
 	Mock Get-VMSwitch
@@ -189,19 +267,19 @@ Describe "Initialize-LabSwitches" {
 	Mock Set-VMNetworkAdapterVlan
 	#endregion
 
-	Context "No parameters passed" {
-		It "Fails" {
+	Context 'No parameters passed' {
+		It 'Fails' {
 			{ Initialize-LabSwitches } | Should Throw
 		}
 	}
-	Context "Valid configuration is passed" {	
+	Context 'Valid configuration is passed' {	
 		$Config = Get-LabConfiguration -Path $Global:TestConfigOKPath
 		[Array]$Switches = Get-LabSwitches -Configuration $Config
 
-		It "Returns True" {
+		It 'Returns True' {
 			Initialize-LabSwitches -Configuration $Config -Switches $Switches | Should Be $True
 		}
-		It "Calls Mocked commands" {
+		It 'Calls Mocked commands' {
 			Assert-MockCalled Get-VMSwitch -Exactly 5
 			Assert-MockCalled New-VMSwitch -Exactly 5
 			Assert-MockCalled Add-VMNetworkAdapter -Exactly 4
@@ -212,26 +290,26 @@ Describe "Initialize-LabSwitches" {
 ##########################################################################################################################################
 
 ##########################################################################################################################################
-Describe "Remove-LabSwitches" {
+Describe 'Remove-LabSwitches' {
 
 	#region Mocks
 	Mock Get-VMSwitch
 	Mock Remove-VMSwitch
 	#endregion
 
-	Context "No parameters passed" {
-		It "Fails" {
+	Context 'No parameters passed' {
+		It 'Fails' {
 			{ Remove-LabSwitches } | Should Throw
 		}
 	}
-	Context "Valid configuration is passed" {	
+	Context 'Valid configuration is passed' {	
 		$Config = Get-LabConfiguration -Path $Global:TestConfigOKPath
 		[Array]$Switches = Get-LabSwitches -Configuration $Config
 
-		It "Returns True" {
+		It 'Returns True' {
 			Remove-LabSwitches -Configuration $Config -Switches $Switches | Should Be $True
 		}
-		It "Calls Mocked commands" {
+		It 'Calls Mocked commands' {
 			Assert-MockCalled Get-VMSwitch -Exactly 5
 		}
 	}
@@ -239,41 +317,41 @@ Describe "Remove-LabSwitches" {
 ##########################################################################################################################################
 
 ##########################################################################################################################################
-Describe "Get-LabVMTemplates" {
+Describe 'Get-LabVMTemplates' {
 
 	#region Mocks
 	Mock Get-VM
 	#endregion
 
-	Context "No parameters passed" {
-		It "Fails" {
+	Context 'No parameters passed' {
+		It 'Fails' {
 			{ Get-LabVMTemplates } | Should Throw
 		}
 	}
-	Context "Configuration passed with template missing Template Name." {
-		It "Fails" {
+	Context 'Configuration passed with template missing Template Name.' {
+		It 'Fails' {
 			{ Get-LabVMTemplates -Configuration (Get-LabConfiguration -Path "$Global:TestConfigPath\PesterTestConfig.TemplateFail.NoName.xml") } | Should Throw
 		}
 	}
-	Context "Configuration passed with template missing VHD Path." {
-		It "Fails" {
+	Context 'Configuration passed with template missing VHD Path.' {
+		It 'Fails' {
 			{ Get-LabVMTemplates -Configuration (Get-LabConfiguration -Path "$Global:TestConfigPath\PesterTestConfig.TemplateFail.NoVHD.xml") } | Should Throw
 		}
 	}
-	Context "Configuration passed with template with Source VHD set to non-existent file." {
-		It "Fails" {
+	Context 'Configuration passed with template with Source VHD set to non-existent file.' {
+		It 'Fails' {
 			{ Get-LabVMTemplates -Configuration (Get-LabConfiguration -Path "$Global:TestConfigPath\PesterTestConfig.TemplateFail.BadSourceVHD.xml") } | Should Throw
 		}
 	}
-	Context "Valid configuration is passed" {
+	Context 'Valid configuration is passed' {
 		$Config = Get-LabConfiguration -Path $Global:TestConfigOKPath
 		[Array]$Templates = Get-LabVMTemplates -Configuration $Config 
 		Set-Content -Path "$($Global:ArtifactPath)\VMTemplates.json" -Value ($Templates | ConvertTo-Json -Depth 2) -Encoding UTF8 -NoNewLine
-		It "Returns Template Object that matches Expected Object" {
+		It 'Returns Template Object that matches Expected Object' {
 			$ExpectedTemplates = Get-Content -Path "$Global:TestConfigPath\ExpectedTemplates.json" -Raw
 			[String]::Compare(($Templates | ConvertTo-Json -Depth 2),$ExpectedTemplates,$true) | Should Be 0
 		}
-		It "Calls Mocked commands" {
+		It 'Calls Mocked commands' {
 			Assert-MockCalled Get-VM -Exactly 1
 		}
 	}
@@ -281,7 +359,7 @@ Describe "Get-LabVMTemplates" {
 ##########################################################################################################################################
 
 ##########################################################################################################################################
-Describe "Initialize-LabVMTemplates" {
+Describe 'Initialize-LabVMTemplates' {
 	#region Mocks
 	Mock Get-VM
 	Mock Optimize-VHD
@@ -289,30 +367,30 @@ Describe "Initialize-LabVMTemplates" {
 	Mock Set-ItemProperty -ParameterFilter { ($Name -eq 'IsReadOnly') -and ($Value -eq $False) }
 	#endregion
 
-	Context "No parameters passed" {
-		It "Fails" {
+	Context 'No parameters passed' {
+		It 'Fails' {
 			{ Initialize-LabVMTemplates } | Should Throw
 		}
 	}
-	Context "Valid configuration is passed" {	
+	Context 'Valid configuration is passed' {	
 		$Config = Get-LabConfiguration -Path $Global:TestConfigOKPath
 		New-Item -Path $Config.labbuilderconfig.settings.vmpath -ItemType Directory -Force -ErrorAction SilentlyContinue
 		New-Item -Path $Config.labbuilderconfig.settings.vhdparentpath -ItemType Directory -Force -ErrorAction SilentlyContinue
 		[array]$Templates = Get-LabVMTemplates -Configuration $Config
 
-		It "Returns True" {
+		It 'Returns True' {
 			Initialize-LabVMTemplates -Configuration $Config -VMTemplates $Templates | Should Be $True
 		}
-		It "Creates file C:\Pester Lab\Virtual Hard Disk Templates\Windows Server 2012 R2 Datacenter Full.vhdx" {
-			Test-Path "C:\Pester Lab\Virtual Hard Disk Templates\Windows Server 2012 R2 Datacenter Full.vhdx" | Should Be $True
+		It 'Creates file C:\Pester Lab\Virtual Hard Disk Templates\Windows Server 2012 R2 Datacenter Full.vhdx' {
+			Test-Path 'C:\Pester Lab\Virtual Hard Disk Templates\Windows Server 2012 R2 Datacenter Full.vhdx' | Should Be $True
 		}
-		It "Creates file C:\Pester Lab\Virtual Hard Disk Templates\Windows Server 2012 R2 Datacenter Core.vhdx" {
-			Test-Path "C:\Pester Lab\Virtual Hard Disk Templates\Windows Server 2012 R2 Datacenter Core.vhdx" | Should Be $True
+		It 'Creates file C:\Pester Lab\Virtual Hard Disk Templates\Windows Server 2012 R2 Datacenter Core.vhdx' {
+			Test-Path 'C:\Pester Lab\Virtual Hard Disk Templates\Windows Server 2012 R2 Datacenter Core.vhdx' | Should Be $True
 		}
-		It "Creates file C:\Pester Lab\Virtual Hard Disk Templates\Windows 10 Enterprise.vhdx" {
-			Test-Path "C:\Pester Lab\Virtual Hard Disk Templates\Windows 10 Enterprise.vhdx" | Should Be $True
+		It 'Creates file C:\Pester Lab\Virtual Hard Disk Templates\Windows 10 Enterprise.vhdx' {
+			Test-Path 'C:\Pester Lab\Virtual Hard Disk Templates\Windows 10 Enterprise.vhdx' | Should Be $True
 		}
-		It "Calls Mocked commands" {
+		It 'Calls Mocked commands' {
 			Assert-MockCalled Optimize-VHD -Exactly 3
 			Assert-MockCalled Set-ItemProperty -Exactly 3 -ParameterFilter { ($Name -eq 'IsReadOnly') -and ($Value -eq $True) }
 			Assert-MockCalled Set-ItemProperty -Exactly 3 -ParameterFilter { ($Name -eq 'IsReadOnly') -and ($Value -eq $False) }
@@ -325,7 +403,7 @@ Describe "Initialize-LabVMTemplates" {
 ##########################################################################################################################################
 
 ##########################################################################################################################################
-Describe "Remove-LabVMTemplates" {
+Describe 'Remove-LabVMTemplates' {
 	#region Mocks
 	Mock Get-VM
 	Mock Set-ItemProperty -ParameterFilter { ($Name -eq 'IsReadOnly') -and ($Value -eq $False) }
@@ -333,21 +411,21 @@ Describe "Remove-LabVMTemplates" {
 	Mock Test-Path -MockWith { $True }
 	#endregion
 
-	Context "No parameters passed" {
-		It "Fails" {
+	Context 'No parameters passed' {
+		It 'Fails' {
 			{ Remove-LabVMTemplates } | Should Throw
 		}
 	}
-	Context "Valid configuration is passed" {	
+	Context 'Valid configuration is passed' {	
 		$Config = Get-LabConfiguration -Path $Global:TestConfigOKPath
 		[Array]$Templates = Get-LabVMTemplates -Configuration $Config
 		New-Item -Path $Config.labbuilderconfig.settings.vmpath -ItemType Directory -Force -ErrorAction SilentlyContinue
 		New-Item -Path $Config.labbuilderconfig.settings.vhdparentpath -ItemType Directory -Force -ErrorAction SilentlyContinue
 		
-		It "Returns True" {
+		It 'Returns True' {
 			Remove-LabVMTemplates -Configuration $Config -VMTemplates $Templates | Should Be $True
 		}
-		It "Calls Mocked commands" {
+		It 'Calls Mocked commands' {
 			Assert-MockCalled Set-ItemProperty -Exactly 3 -ParameterFilter { ($Name -eq 'IsReadOnly') -and ($Value -eq $False) }
 			Assert-MockCalled Remove-Item -Exactly 3
 		}
@@ -359,8 +437,8 @@ Describe "Remove-LabVMTemplates" {
 ##########################################################################################################################################
 
 ##########################################################################################################################################
-Describe "Set-LabDSCMOFFile" {
-	Remove-Item -Path "C:\Pester Lab\PESTER01\LabBuilder Files" -Recurse -Force -ErrorAction SilentlyContinue
+Describe 'Set-LabDSCMOFFile' {
+	Remove-Item -Path 'C:\Pester Lab\PESTER01\LabBuilder Files' -Recurse -Force -ErrorAction SilentlyContinue
 
 	#region Mocks
 	Mock Get-VM
@@ -373,26 +451,26 @@ Describe "Set-LabDSCMOFFile" {
 	Mock Set-VMHost
 	#endregion
 
-	Context "No parameters passed" {
-		It "Fails" {
+	Context 'No parameters passed' {
+		It 'Fails' {
 			{ Set-LabDSCMOFFile } | Should Throw
 		}
 	}
-	Context "Valid Parameters Passed" {
+	Context 'Valid Parameters Passed' {
 		$Config = Get-LabConfiguration -Path $Global:TestConfigOKPath
 		Initialize-LabConfiguration -Configuration $Config
 		[Array]$Switches = Get-LabSwitches -Configuration $Config
 		[Array]$Templates = Get-LabVMTemplates -Configuration $Config
 		[Array]$VMs = Get-LabVMs -Configuration $Config -VMTemplates $Templates -Switches $Switches
 		$Result = Set-LabDSCMOFFile -Configuration $Config -VM $VMs[0]
-		It "Returns True" {
+		It 'Returns True' {
 			$Result | Should Be $True
 		}
-		It "Calls Mocked commands" {
+		It 'Calls Mocked commands' {
 			Assert-MockCalled Import-Certificate -Exactly 1
 			Assert-MockCalled Remove-Item -Exactly 1
 		}
-		It "Appropriate Lab Builder Files Should be produced" {
+		It 'Appropriate Lab Builder Files Should be produced' {
 			Test-Path -Path 'C:\Pester Lab\PESTER01\LabBuilder Files\Pester01.mof' | Should Be $True
 			Test-Path -Path 'C:\Pester Lab\PESTER01\LabBuilder Files\Pester01.meta.mof' | Should Be $True
 			Test-Path -Path 'C:\Pester Lab\PESTER01\LabBuilder Files\DSC.ps1' | Should Be $True
@@ -406,27 +484,27 @@ Describe "Set-LabDSCMOFFile" {
 ##########################################################################################################################################
 
 ##########################################################################################################################################
-Describe "Set-LabDSCStartFile" {
+Describe 'Set-LabDSCStartFile' {
 	#region Mocks
 	Mock Get-VM
 	Mock Get-VMNetworkAdapter -MockWith { [PSObject]@{ Name = 'Dummy'; MacAddress = '00-11-22-33-44-55'; } }
 	Mock Set-Content
 	#endregion
-	Context "No parameters passed" {
-		It "Fails" {
+	Context 'No parameters passed' {
+		It 'Fails' {
 			{ Set-LabDSCStartFile } | Should Throw
 		}
 	}
-	Context "Valid Parameters Passed" {
+	Context 'Valid Parameters Passed' {
 		$Config = Get-LabConfiguration -Path $Global:TestConfigOKPath
 		[Array]$Switches = Get-LabSwitches -Configuration $Config
 		[Array]$Templates = Get-LabVMTemplates -Configuration $Config
 		[Array]$VMs = Get-LabVMs -Configuration $Config -VMTemplates $Templates -Switches $Switches
 		[String]$DSCStartFile = Set-LabDSCStartFile -Configuration $Config -VM $VMs[0]
-		It "Returns Expected File Content" {
+		It 'Returns Expected File Content' {
 			$DSCStartFile | Should Be $True
 		}
-		It "Calls Mocked commands" {
+		It 'Calls Mocked commands' {
 			Assert-MockCalled Get-VMNetworkAdapter -Exactly 4
 			Assert-MockCalled Set-Content -Exactly 1
 		}
@@ -435,25 +513,25 @@ Describe "Set-LabDSCStartFile" {
 ##########################################################################################################################################
 
 ##########################################################################################################################################
-Describe "Get-LabUnattendFile" {
+Describe 'Get-LabUnattendFile' {
 
 	#region Mocks
 	Mock Get-VM
 	#endregion
 
-	Context "No parameters passed" {
-		It "Fails" {
+	Context 'No parameters passed' {
+		It 'Fails' {
 			{ Get-LabUnattendFile } | Should Throw
 		}
 	}
-	Context "Valid Parameters Passed" {
+	Context 'Valid Parameters Passed' {
 		$Config = Get-LabConfiguration -Path $Global:TestConfigOKPath
 		[Array]$Switches = Get-LabSwitches -Configuration $Config
 		[Array]$Templates = Get-LabVMTemplates -Configuration $Config
 		[Array]$VMs = Get-LabVMs -Configuration $Config -VMTemplates $Templates -Switches $Switches
 		[String]$UnattendFile = Get-LabUnattendFile -Configuration $Config -VM $VMs[0]
 		Set-Content -Path "$($Global:ArtifactPath)\UnattendFile.xml" -Value $UnattendFile -Encoding UTF8 -NoNewLine
-		It "Returns Expected File Content" {
+		It 'Returns Expected File Content' {
 			$UnattendFile | Should Be $True
 			$ExpectedUnattendFile = Get-Content -Path "$Global:TestConfigPath\ExpectedUnattendFile.xml" -Raw
 			[String]::Compare($UnattendFile,$ExpectedUnattendFile,$true) | Should Be 0
@@ -463,7 +541,7 @@ Describe "Get-LabUnattendFile" {
 ##########################################################################################################################################
 
 ##########################################################################################################################################
-Describe "Set-LabVMInitializationFiles" {
+Describe 'Set-LabVMInitializationFiles' {
 
 	#region Mocks
 	Mock Get-VM
@@ -475,12 +553,12 @@ Describe "Set-LabVMInitializationFiles" {
 	Mock Copy-Item
 	#endregion
 
-	Context "No parameters passed" {
-		It "Fails" {
+	Context 'No parameters passed' {
+		It 'Fails' {
 			{ Set-LabVMInitializationFiles } | Should Throw
 		}
 	}
-	Context "Valid configuration is passed" {	
+	Context 'Valid configuration is passed' {	
 		$Config = Get-LabConfiguration -Path $Global:TestConfigOKPath
 		New-Item -Path $Config.labbuilderconfig.settings.vmpath -ItemType Directory -Force -ErrorAction SilentlyContinue
 		New-Item -Path $Config.labbuilderconfig.settings.vhdparentpath -ItemType Directory -Force -ErrorAction SilentlyContinue
@@ -489,10 +567,10 @@ Describe "Set-LabVMInitializationFiles" {
 		[Array]$Switches = Get-LabSwitches -Configuration $Config
 		[Array]$VMs = Get-LabVMs -Configuration $Config -VMTemplates $Templates -Switches $Switches
 				
-		It "Returns True" {
+		It 'Returns True' {
 			Set-LabVMInitializationFiles -Configuration $Config -VM $VMs[0] -VMBootDiskPath 'c:\Dummy\' | Should Be $True
 		}
-		It "Calls Mocked commands" {
+		It 'Calls Mocked commands' {
 			Assert-MockCalled Mount-WindowsImage -Exactly 1
 			Assert-MockCalled Dismount-WindowsImage -Exactly 1
 			Assert-MockCalled Invoke-WebRequest -Exactly 1
@@ -508,59 +586,59 @@ Describe "Set-LabVMInitializationFiles" {
 ##########################################################################################################################################
 
 ##########################################################################################################################################
-Describe "Get-LabVMs" {
+Describe 'Get-LabVMs' {
 
 	#region mocks
 	Mock Get-VM
 	#endregion
 
-	Context "No parameters passed" {
-		It "Fails" {
+	Context 'No parameters passed' {
+		It 'Fails' {
 			{ Get-LabVMs } | Should Throw
 		}
 	}
-	Context "Configuration passed with VM missing VM Name." {
-		It "Fails" {
+	Context 'Configuration passed with VM missing VM Name.' {
+		It 'Fails' {
 			$Config = Get-LabConfiguration -Path "$Global:TestConfigPath\PesterTestConfig.VMFail.NoName.xml"
 			[Array]$Switches = Get-LabSwitches -Configuration $Config
 			[array]$Templates = Get-LabVMTemplates -Configuration $Config
 			{ Get-LabVMs -Configuration $Config -VMTemplates $Templates -Switches $Switches } | Should Throw
 		}
 	}
-	Context "Configuration passed with VM missing Template." {
-		It "Fails" {
+	Context 'Configuration passed with VM missing Template.' {
+		It 'Fails' {
 			$Config = Get-LabConfiguration -Path "$Global:TestConfigPath\PesterTestConfig.VMFail.NoTemplate.xml"
 			[Array]$Switches = Get-LabSwitches -Configuration $Config
 			[array]$Templates = Get-LabVMTemplates -Configuration $Config
 			{ Get-LabVMs -Configuration $Config -VMTemplates $Templates -Switches $Switches } | Should Throw
 		}
 	}
-	Context "Configuration passed with VM invalid Template." {
-		It "Fails" {
+	Context 'Configuration passed with VM invalid Template.' {
+		It 'Fails' {
 			$Config = Get-LabConfiguration -Path "$Global:TestConfigPath\PesterTestConfig.VMFail.BadTemplate.xml"
 			[Array]$Switches = Get-LabSwitches -Configuration $Config
 			[array]$Templates = Get-LabVMTemplates -Configuration $Config
 			{ Get-LabVMs -Configuration $Config -VMTemplates $Templates -Switches $Switches } | Should Throw
 		}
 	}
-	Context "Configuration passed with VM missing adapter name." {
-		It "Fails" {
+	Context 'Configuration passed with VM missing adapter name.' {
+		It 'Fails' {
 			$Config = Get-LabConfiguration -Path "$Global:TestConfigPath\PesterTestConfig.VMFail.NoAdapterName.xml"
 			[Array]$Switches = Get-LabSwitches -Configuration $Config
 			[array]$Templates = Get-LabVMTemplates -Configuration $Config
 			{ Get-LabVMs -Configuration $Config -VMTemplates $Templates -Switches $Switches } | Should Throw
 		}
 	}
-	Context "Configuration passed with VM missing adapter switch name." {
-		It "Fails" {
+	Context 'Configuration passed with VM missing adapter switch name.' {
+		It 'Fails' {
 			$Config = Get-LabConfiguration -Path "$Global:TestConfigPath\PesterTestConfig.VMFail.NoAdapterSwitch.xml"
 			[Array]$Switches = Get-LabSwitches -Configuration $Config
 			[array]$Templates = Get-LabVMTemplates -Configuration $Config
 			{ Get-LabVMs -Configuration $Config -VMTemplates $Templates -Switches $Switches } | Should Throw
 		}
 	}
-	Context "Configuration passed with VM invalid adapter switch name." {
-		It "Fails" {
+	Context 'Configuration passed with VM invalid adapter switch name.' {
+		It 'Fails' {
 			$Config = Get-LabConfiguration -Path "$Global:TestConfigPath\PesterTestConfig.VMFail.BadAdapterSwitch.xml"
 			[Array]$Switches = Get-LabSwitches -Configuration $Config
 			[array]$Templates = Get-LabVMTemplates -Configuration $Config
@@ -568,7 +646,7 @@ Describe "Get-LabVMs" {
 		}
 	}
 	Context "Configuration passed with VM unattend file that can't be found." {
-		It "Fails" {
+		It 'Fails' {
 			$Config = Get-LabConfiguration -Path "$Global:TestConfigPath\PesterTestConfig.VMFail.BadUnattendFile.xml"
 			[Array]$Switches = Get-LabSwitches -Configuration $Config
 			[array]$Templates = Get-LabVMTemplates -Configuration $Config
@@ -576,15 +654,15 @@ Describe "Get-LabVMs" {
 		}
 	}
 	Context "Configuration passed with VM setup complete file that can't be found." {
-		It "Fails" {
+		It 'Fails' {
 			$Config = Get-LabConfiguration -Path "$Global:TestConfigPath\PesterTestConfig.VMFail.BadSetupCompleteFile.xml"
 			[Array]$Switches = Get-LabSwitches -Configuration $Config
 			[array]$Templates = Get-LabVMTemplates -Configuration $Config
 			{ Get-LabVMs -Configuration $Config -VMTemplates $Templates -Switches $Switches } | Should Throw
 		}
 	}
-	Context "Configuration passed with VM setup complete file with an invalid file extension." {
-		It "Fails" {
+	Context 'Configuration passed with VM setup complete file with an invalid file extension.' {
+		It 'Fails' {
 			$Config = Get-LabConfiguration -Path "$Global:TestConfigPath\PesterTestConfig.VMFail.BadSetupCompleteFileType.xml"
 			[Array]$Switches = Get-LabSwitches -Configuration $Config
 			[array]$Templates = Get-LabVMTemplates -Configuration $Config
@@ -592,23 +670,23 @@ Describe "Get-LabVMs" {
 		}
 	}
 	Context "Configuration passed with VM DSC Config File that can't be found." {
-		It "Fails" {
+		It 'Fails' {
 			$Config = Get-LabConfiguration -Path "$Global:TestConfigPath\PesterTestConfig.VMFail.BadDSCConfigFile.xml"
 			[Array]$Switches = Get-LabSwitches -Configuration $Config
 			[array]$Templates = Get-LabVMTemplates -Configuration $Config
 			{ Get-LabVMs -Configuration $Config -VMTemplates $Templates -Switches $Switches } | Should Throw
 		}
 	}
-	Context "Configuration passed with VM DSC Config File with an invalid file extension." {
-		It "Fails" {
+	Context 'Configuration passed with VM DSC Config File with an invalid file extension.' {
+		It 'Fails' {
 			$Config = Get-LabConfiguration -Path "$Global:TestConfigPath\PesterTestConfig.VMFail.BadDSCConfigFileType.xml"
 			[Array]$Switches = Get-LabSwitches -Configuration $Config
 			[array]$Templates = Get-LabVMTemplates -Configuration $Config
 			{ Get-LabVMs -Configuration $Config -VMTemplates $Templates -Switches $Switches } | Should Throw
 		}
 	}
-	Context "Configuration passed with VM DSC Config File but no DSC Name." {
-		It "Fails" {
+	Context 'Configuration passed with VM DSC Config File but no DSC Name.' {
+		It 'Fails' {
 			$Config = Get-LabConfiguration -Path "$Global:TestConfigPath\PesterTestConfig.VMFail.BadDSCNameMissing.xml"
 			[Array]$Switches = Get-LabSwitches -Configuration $Config
 			[Array]$Templates = Get-LabVMTemplates -Configuration $Config
@@ -616,15 +694,15 @@ Describe "Get-LabVMs" {
 		}
 	}
 
-	Context "Valid configuration is passed" {
+	Context 'Valid configuration is passed' {
 		$Config = Get-LabConfiguration -Path $Global:TestConfigOKPath
 		[Array]$Switches = Get-LabSwitches -Configuration $Config
 		[Array]$Templates = Get-LabVMTemplates -Configuration $Config
 		[Array]$VMs = Get-LabVMs -Configuration $Config -VMTemplates $Templates -Switches $Switches
 		# Clear this value out because it is completely dependent on where the test is run from. 
-		$VMs[0].DSCConfigFile = ""
+		$VMs[0].DSCConfigFile = ''
 		Set-Content -Path "$($Global:ArtifactPath)\VMs.json" -Value ($VMs | ConvertTo-Json -Depth 4) -Encoding UTF8 -NoNewLine
-		It "Returns Template Object that matches Expected Object" {
+		It 'Returns Template Object that matches Expected Object' {
 			$ExpectedVMs = Get-Content -Path "$Global:TestConfigPath\ExpectedVMs.json" -Raw
 			[String]::Compare(($VMs | ConvertTo-Json -Depth 4),$ExpectedVMs,$true) | Should Be 0
 		}
@@ -633,9 +711,9 @@ Describe "Get-LabVMs" {
 ##########################################################################################################################################
 
 ##########################################################################################################################################
-Describe "Get-LabVMSelfSignedCert" {
-	Context "No parameters passed" {
-		It "Fails" {
+Describe 'Get-LabVMSelfSignedCert' {
+	Context 'No parameters passed' {
+		It 'Fails' {
 			{ Get-LabVMSelfSignedCert } | Should Throw
 		}
 	}
@@ -643,7 +721,7 @@ Describe "Get-LabVMSelfSignedCert" {
 ##########################################################################################################################################
 
 ##########################################################################################################################################
-Describe "Start-LabVM" {
+Describe 'Start-LabVM' {
 	#region Mocks
 	Mock Get-VM -ParameterFilter { $Name -eq 'PESTER01' } -MockWith { [PSObject]@{ Name='PESTER01'; State='Off' } }
 	Mock Get-VM -ParameterFilter { $Name -eq 'pester template *' }
@@ -654,12 +732,12 @@ Describe "Start-LabVM" {
 	Mock Start-LabVMDSC
 	#endregion
 
-	Context "No parameters passed" {
-		It "Fails" {
+	Context 'No parameters passed' {
+		It 'Fails' {
 			{ Start-LabVM } | Should Throw
 		}
 	}
-	Context "Valid configuration is passed" {	
+	Context 'Valid configuration is passed' {	
 		$Config = Get-LabConfiguration -Path $Global:TestConfigOKPath
 		New-Item -Path $Config.labbuilderconfig.settings.vmpath -ItemType Directory -Force -ErrorAction SilentlyContinue
 		New-Item -Path $Config.labbuilderconfig.settings.vhdparentpath -ItemType Directory -Force -ErrorAction SilentlyContinue
@@ -668,10 +746,10 @@ Describe "Start-LabVM" {
 		[Array]$Switches = Get-LabSwitches -Configuration $Config
 		[Array]$VMs = Get-LabVMs -Configuration $Config -VMTemplates $Templates -Switches $Switches
 				
-		It "Returns True" {
+		It 'Returns True' {
 			Start-LabVM -Configuration $Config -VM $VMs[0] | Should Be $True
 		}
-		It "Calls Mocked commands" {
+		It 'Calls Mocked commands' {
 			Assert-MockCalled Get-VM -ParameterFilter { $Name -eq 'PESTER01' } -Exactly 1
 			Assert-MockCalled Get-VM -ParameterFilter { $Name -eq 'pester template *' } -Exactly 1
 			Assert-MockCalled Start-VM -Exactly 1
@@ -688,7 +766,7 @@ Describe "Start-LabVM" {
 ##########################################################################################################################################
 
 ##########################################################################################################################################
-Describe "Initialize-LabVMs" {
+Describe 'Initialize-LabVMs' {
 	#region Mocks
 	Mock New-VHD
 	Mock New-VM
@@ -705,12 +783,12 @@ Describe "Initialize-LabVMs" {
 	Mock Start-LabVMDSC
 	#endregion
 
-	Context "No parameters passed" {
-		It "Fails" {
+	Context 'No parameters passed' {
+		It 'Fails' {
 			{ Initialize-LabVMs } | Should Throw
 		}
 	}
-	Context "Valid configuration is passed" {	
+	Context 'Valid configuration is passed' {	
 		$Config = Get-LabConfiguration -Path $Global:TestConfigOKPath
 		New-Item -Path $Config.labbuilderconfig.settings.vmpath -ItemType Directory -Force -ErrorAction SilentlyContinue
 		New-Item -Path $Config.labbuilderconfig.settings.vhdparentpath -ItemType Directory -Force -ErrorAction SilentlyContinue
@@ -719,10 +797,10 @@ Describe "Initialize-LabVMs" {
 		[Array]$Switches = Get-LabSwitches -Configuration $Config
 		[Array]$VMs = Get-LabVMs -Configuration $Config -VMTemplates $Templates -Switches $Switches
 				
-		It "Returns True" {
+		It 'Returns True' {
 			Initialize-LabVMs -Configuration $Config -VMs $VMs | Should Be $True
 		}
-		It "Calls Mocked commands" {
+		It 'Calls Mocked commands' {
 			Assert-MockCalled New-VHD -Exactly 1
 			Assert-MockCalled New-VM -Exactly 1
 			Assert-MockCalled Set-VM -Exactly 1
@@ -744,7 +822,7 @@ Describe "Initialize-LabVMs" {
 ##########################################################################################################################################
 
 ##########################################################################################################################################
-Describe "Remove-LabVMs" {
+Describe 'Remove-LabVMs' {
 	#region Mocks
 	Mock Get-VM -MockWith { [PSObject]@{ Name = 'PESTER01'; State = 'Running'; } }
 	Mock Stop-VM
@@ -753,22 +831,22 @@ Describe "Remove-LabVMs" {
 	Mock Remove-VM
 	#endregion
 
-	Context "No parameters passed" {
-		It "Fails" {
+	Context 'No parameters passed' {
+		It 'Fails' {
 			{ Remove-LabVMs } | Should Throw
 		}
 	}
-	Context "Valid configuration is passed" {	
+	Context 'Valid configuration is passed' {	
 		$Config = Get-LabConfiguration -Path $Global:TestConfigOKPath
 		[Array]$Templates = Get-LabVMTemplates -Configuration $Config
 		[Array]$Switches = Get-LabSwitches -Configuration $Config
 		[Array]$VMs = Get-LabVMs -Configuration $Config -VMTemplates $Templates -Switches $Switches
 
 		# Create the dummy VM's that the Remove-LabVMs function 
-		It "Returns True" {
+		It 'Returns True' {
 			Remove-LabVMs -Configuration $Config -VMs $VMs | Should Be $True
 		}
-		It "Calls Mocked commands" {
+		It 'Calls Mocked commands' {
 			Assert-MockCalled Get-VM -Exactly 4
 			Assert-MockCalled Stop-VM -Exactly 1
 			Assert-MockCalled Wait-LabVMOff -Exactly 1
@@ -780,9 +858,9 @@ Describe "Remove-LabVMs" {
 ##########################################################################################################################################
 
 ##########################################################################################################################################
-Describe "Wait-LabVMInit" {
-	Context "No parameters passed" {
-		It "Fails" {
+Describe 'Wait-LabVMInit' {
+	Context 'No parameters passed' {
+		It 'Fails' {
 			{ Wait-LabVMInit } | Should Throw
 		}
 	}
@@ -790,9 +868,9 @@ Describe "Wait-LabVMInit" {
 ##########################################################################################################################################
 
 ##########################################################################################################################################
-Describe "Wait-LabVMStart" {
-	Context "No parameters passed" {
-		It "Fails" {
+Describe 'Wait-LabVMStart' {
+	Context 'No parameters passed' {
+		It 'Fails' {
 			{ Wait-LabVMStart } | Should Throw
 		}
 	}
@@ -800,9 +878,9 @@ Describe "Wait-LabVMStart" {
 ##########################################################################################################################################
 
 ##########################################################################################################################################
-Describe "Wait-LabVMOff" {
-	Context "No parameters passed" {
-		It "Fails" {
+Describe 'Wait-LabVMOff' {
+	Context 'No parameters passed' {
+		It 'Fails' {
 			{ Wait-LabVMOff } | Should Throw
 		}
 	}
@@ -810,9 +888,9 @@ Describe "Wait-LabVMOff" {
 ##########################################################################################################################################
 
 ##########################################################################################################################################
-Describe "Install-Lab" {
-	Context "No parameters passed" {
-		It "Fails" {
+Describe 'Install-Lab' {
+	Context 'No parameters passed' {
+		It 'Fails' {
 			{ Install-Lab } | Should Throw
 		}
 	}
@@ -820,9 +898,9 @@ Describe "Install-Lab" {
 ##########################################################################################################################################
 
 ##########################################################################################################################################
-Describe "Uninstall-Lab" {
-	Context "No parameters passed" {
-		It "Fails" {
+Describe 'Uninstall-Lab' {
+	Context 'No parameters passed' {
+		It 'Fails' {
 			{ Uninstall-Lab } | Should Throw
 		}
 	}
