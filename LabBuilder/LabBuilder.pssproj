@@ -38,6 +38,7 @@
   <ItemGroup>
     <Compile Include="DSCLibrary\MEMBER_DHCPNPAS.DSC.ps1" />
     <Compile Include="DSCLibrary\MEMBER_DHCPDNS.DSC.ps1" />
+    <Compile Include="DSCLibrary\MEMBER_FILESERVER_FSRMTEST.DSC.ps1" />
     <Compile Include="DSCLibrary\MEMBER_FILESERVER.DSC.ps1" />
     <Compile Include="DSCLibrary\MEMBER_NPS_DFSTEST.DSC.ps1" />
     <Compile Include="DSCLibrary\MEMBER_WDS.DSC.ps1" />
