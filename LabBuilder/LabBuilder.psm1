@@ -1052,7 +1052,7 @@ $NetworkingDSCConfig += @"
 		} # If
 
 		# Remove the VM Self-Signed Certificate from the Local Machine Store
-		Remove-Item -Path "Cert:LocalMachine\My\$CertificateThumbprint" -Force | OUt-Null
+		Remove-Item -Path "Cert:LocalMachine\My\$CertificateThumbprint" -Force | Out-Null
 
 		Write-Verbose "DSC MOF File $DSCMOFFile for VM $($VM.Name) was created successfully ..."
 
@@ -1062,14 +1062,14 @@ $NetworkingDSCConfig += @"
 
 		If (-not $VM.DSCMOFFile) {
 			# Remove Temporary files created by DSC
-			Remove-Item -Path $DSCMOFFile -Force | OUt-Null
+			Remove-Item -Path $DSCMOFFile -Force | Out-Null
 		}
 
 		If (Test-Path -Path $DSCMOFMetaFile) {
 			Copy-Item -Path $DSCMOFMetaFile -Destination "$VMPath\$($VM.Name)\LabBuilder Files\$($VM.ComputerName).meta.mof" -Force | Out-Null
 			If (-not $VM.DSCMOFFile) {
 				# Remove Temporary files created by DSC
-				Remove-Item -Path $DSCMOFMetaFile -Force | OUt-Null
+				Remove-Item -Path $DSCMOFMetaFile -Force | Out-Null
 			}
 		} # If
 
@@ -1271,12 +1271,12 @@ function Start-LabVMDSC {
 			While ((-not $ConfigCopyComplete) -and (((Get-Date) - $StartTime).Seconds) -lt $TimeOut) {
 				Try {
 					Write-Verbose "Copying DSC MOF Files to $($VM.ComputerName) ..."
-					Copy-Item -Path "$VMPath\$($VM.Name)\LabBuilder Files\$($VM.ComputerName).mof" -Destination c:\Windows\Setup\Scripts -ToSession $Session -Force -ErrorAction Stop
+					Copy-Item -Path "$VMPath\$($VM.Name)\LabBuilder Files\$($VM.ComputerName).mof" -Destination c:\Windows\Setup\Scripts -ToSession $Session -Force -ErrorAction Stop | Out-Null
 					If (Test-Path -Path "$VMPath\$($VM.Name)\LabBuilder Files\$($VM.ComputerName).meta.mof") {
-						Copy-Item -Path "$VMPath\$($VM.Name)\LabBuilder Files\$($VM.ComputerName).meta.mof" -Destination c:\Windows\Setup\Scripts -ToSession $Session -Force -ErrorAction Stop
+						Copy-Item -Path "$VMPath\$($VM.Name)\LabBuilder Files\$($VM.ComputerName).meta.mof" -Destination c:\Windows\Setup\Scripts -ToSession $Session -Force -ErrorAction Stop | Out-Null
 					} # If
-					Copy-Item -Path "$VMPath\$($VM.Name)\LabBuilder Files\StartDSC.ps1" -Destination c:\Windows\Setup\Scripts -ToSession $Session -Force -ErrorAction Stop
-					Copy-Item -Path "$VMPath\$($VM.Name)\LabBuilder Files\StartDSCDebug.ps1" -Destination c:\Windows\Setup\Scripts -ToSession $Session -Force -ErrorAction Stop
+					Copy-Item -Path "$VMPath\$($VM.Name)\LabBuilder Files\StartDSC.ps1" -Destination c:\Windows\Setup\Scripts -ToSession $Session -Force -ErrorAction Stop | Out-Null
+					Copy-Item -Path "$VMPath\$($VM.Name)\LabBuilder Files\StartDSCDebug.ps1" -Destination c:\Windows\Setup\Scripts -ToSession $Session -Force -ErrorAction Stop | Out-Null
 					$ConfigCopyComplete = $True
 				} Catch {
 					Write-Verbose "Copying DSC MOF Files to $($VM.ComputerName) failed - retrying in 5 seconds ..."
@@ -1980,10 +1980,10 @@ function Start-LabVM {
 		} # If
 
 		# Create any DSC Files for the VM
-		Initialize-LabVMDSC -Configuration $Configuration -VM $VM
+		Initialize-LabVMDSC -Configuration $Configuration -VM $VM | Out-Null
 
 		# Attempt to start DSC on the VM
-		Start-LabVMDSC -Configuration $Configuration -VM $VM
+		Start-LabVMDSC -Configuration $Configuration -VM $VM | Out-Null
 	} # If
 	Return $True
 } # Start-LabVM
@@ -2123,7 +2123,7 @@ function Initialize-LabVMs {
 			# $VMNetworkAdapter | Set-VMNetworkAdapter -DeviceNaming On | Out-Null
 		} # Foreach
 
-		Start-LabVM -Configuration $Config -VM $VM
+		Start-LabVM -Configuration $Config -VM $VM | Out-Null
 	} # Foreach
 	Return $True
 } # Initialize-LabVMs

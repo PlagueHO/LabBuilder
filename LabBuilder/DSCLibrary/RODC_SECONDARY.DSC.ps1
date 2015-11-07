@@ -54,7 +54,6 @@ Configuration RODC_SECONDARY
             SafemodeAdministratorPassword = $LocalAdminCredential 
             DependsOn = "[xWaitForADDomain]DscDomainWait"
         }	
-	}
 #>
-
+	}
 }
