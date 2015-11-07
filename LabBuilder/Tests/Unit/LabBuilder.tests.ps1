@@ -162,7 +162,8 @@ Describe 'Test-LabConfiguration' {
 ##########################################################################################################################################
 Describe 'Install-LabHyperV' {
 
-	#region Mocks
+    $Config = Get-LabConfiguration -Path $Global:TestConfigOKPath
+
 	If ((Get-CimInstance Win32_OperatingSystem).ProductType -eq 1) {
 		Mock Get-WindowsOptionalFeature { [PSObject]@{ FeatureName = 'Mock'; State = 'Disabled'; } }
 		Mock Enable-WindowsOptionalFeature 
@@ -170,12 +171,11 @@ Describe 'Install-LabHyperV' {
 		Mock Get-WindowsFeature { [PSObject]@{ Name = 'Mock'; Installed = $false; } }
 		Mock Install-WindowsFeature
 	}
-	#endregion
 
-	Context 'The function exists' {
-		$Config = Get-LabConfiguration -Path $Global:TestConfigOKPath
-		It 'Returns True' {
-			Install-LabHyperV | Should Be $True
+	Context 'The function is called' {
+
+		It 'Does not throw an Exception' {
+			{ Install-LabHyperV } | Should Not Throw
 		}
 		If ((Get-CimInstance Win32_OperatingSystem).ProductType -eq 1) {
 			It 'Calls Mocked commands' {
@@ -194,35 +194,41 @@ Describe 'Install-LabHyperV' {
 
 ##########################################################################################################################################
 Describe 'Initialize-LabConfiguration' {
-	#region Mocks
-	Mock Set-VMHost
-	#endregion
+    $Config = Get-LabConfiguration -Path $Global:TestConfigOKPath
 
-	Context 'No parameters passed' {
-		It 'Fails' {
-			{ Initialize-LabConfiguration } | Should Throw
-		}
-	}
+    Mock Download-CertGenerator
+    Mock Download-WMF5Installer
+    Mock Download-LabResources
+	Mock Set-VMHost
+
 	Context 'Valid configuration is passed' {
-		$Config = Get-LabConfiguration -Path $Global:TestConfigOKPath
-	
-		It 'Returns True' {
-			Initialize-LabConfiguration -Configuration $Config | Should Be $True
+		It 'Does not throw an Exception' {
+			{ Initialize-LabConfiguration -Configuration $Config } | Should Not Throw
 		}
 		It 'Calls Mocked commands' {
-			Assert-MockCalled  Set-VMHost -Exactly 1
+			Assert-MockCalled Download-CertGenerator -Exactly 1
+			Assert-MockCalled Download-WMF5Installer -Exactly 1
+			Assert-MockCalled Download-LabResources -Exactly 1
+			Assert-MockCalled Set-VMHost -Exactly 1
 		}		
 	}
 }
 ##########################################################################################################################################
 
 ##########################################################################################################################################
-Describe 'Get-LabSwitches' {
-	Context 'No parameters passed' {
-		It 'Fails' {
-			{ Get-LabConfiguration } | Should Throw
+Describe 'Download-LabResources' {
+    $Config = Get-LabConfiguration -Path $Global:TestConfigOKPath
+
+	Context 'Valid configuration is passed' {
+		It 'Does not throw an Exception' {
+			{ Download-LabResources -Configuration $Config } | Should Not Throw
 		}
 	}
+}
+##########################################################################################################################################
+
+##########################################################################################################################################
+Describe 'Get-LabSwitches' {
 	Context 'Configuration passed with switch missing Switch Name.' {
 		It 'Fails' {
 			{ Get-LabSwitches -Configuration (Get-LabConfiguration -Path "$Global:TestConfigPath\PesterTestConfig.SwitchFail.NoName.xml") } | Should Throw
@@ -267,11 +273,6 @@ Describe 'Initialize-LabSwitches' {
 	Mock Set-VMNetworkAdapterVlan
 	#endregion
 
-	Context 'No parameters passed' {
-		It 'Fails' {
-			{ Initialize-LabSwitches } | Should Throw
-		}
-	}
 	Context 'Valid configuration is passed' {	
 		$Config = Get-LabConfiguration -Path $Global:TestConfigOKPath
 		[Array]$Switches = Get-LabSwitches -Configuration $Config
@@ -297,11 +298,6 @@ Describe 'Remove-LabSwitches' {
 	Mock Remove-VMSwitch
 	#endregion
 
-	Context 'No parameters passed' {
-		It 'Fails' {
-			{ Remove-LabSwitches } | Should Throw
-		}
-	}
 	Context 'Valid configuration is passed' {	
 		$Config = Get-LabConfiguration -Path $Global:TestConfigOKPath
 		[Array]$Switches = Get-LabSwitches -Configuration $Config
@@ -323,11 +319,6 @@ Describe 'Get-LabVMTemplates' {
 	Mock Get-VM
 	#endregion
 
-	Context 'No parameters passed' {
-		It 'Fails' {
-			{ Get-LabVMTemplates } | Should Throw
-		}
-	}
 	Context 'Configuration passed with template missing Template Name.' {
 		It 'Fails' {
 			{ Get-LabVMTemplates -Configuration (Get-LabConfiguration -Path "$Global:TestConfigPath\PesterTestConfig.TemplateFail.NoName.xml") } | Should Throw
@@ -367,11 +358,6 @@ Describe 'Initialize-LabVMTemplates' {
 	Mock Set-ItemProperty -ParameterFilter { ($Name -eq 'IsReadOnly') -and ($Value -eq $False) }
 	#endregion
 
-	Context 'No parameters passed' {
-		It 'Fails' {
-			{ Initialize-LabVMTemplates } | Should Throw
-		}
-	}
 	Context 'Valid configuration is passed' {	
 		$Config = Get-LabConfiguration -Path $Global:TestConfigOKPath
 		New-Item -Path $Config.labbuilderconfig.settings.vmpath -ItemType Directory -Force -ErrorAction SilentlyContinue
@@ -411,11 +397,6 @@ Describe 'Remove-LabVMTemplates' {
 	Mock Test-Path -MockWith { $True }
 	#endregion
 
-	Context 'No parameters passed' {
-		It 'Fails' {
-			{ Remove-LabVMTemplates } | Should Throw
-		}
-	}
 	Context 'Valid configuration is passed' {	
 		$Config = Get-LabConfiguration -Path $Global:TestConfigOKPath
 		[Array]$Templates = Get-LabVMTemplates -Configuration $Config
@@ -451,11 +432,6 @@ Describe 'Set-LabDSCMOFFile' {
 	Mock Set-VMHost
 	#endregion
 
-	Context 'No parameters passed' {
-		It 'Fails' {
-			{ Set-LabDSCMOFFile } | Should Throw
-		}
-	}
 	Context 'Valid Parameters Passed' {
 		$Config = Get-LabConfiguration -Path $Global:TestConfigOKPath
 		Initialize-LabConfiguration -Configuration $Config
@@ -490,11 +466,7 @@ Describe 'Set-LabDSCStartFile' {
 	Mock Get-VMNetworkAdapter -MockWith { [PSObject]@{ Name = 'Dummy'; MacAddress = '00-11-22-33-44-55'; } }
 	Mock Set-Content
 	#endregion
-	Context 'No parameters passed' {
-		It 'Fails' {
-			{ Set-LabDSCStartFile } | Should Throw
-		}
-	}
+
 	Context 'Valid Parameters Passed' {
 		$Config = Get-LabConfiguration -Path $Global:TestConfigOKPath
 		[Array]$Switches = Get-LabSwitches -Configuration $Config
@@ -519,11 +491,6 @@ Describe 'Get-LabUnattendFile' {
 	Mock Get-VM
 	#endregion
 
-	Context 'No parameters passed' {
-		It 'Fails' {
-			{ Get-LabUnattendFile } | Should Throw
-		}
-	}
 	Context 'Valid Parameters Passed' {
 		$Config = Get-LabConfiguration -Path $Global:TestConfigOKPath
 		[Array]$Switches = Get-LabSwitches -Configuration $Config
@@ -553,11 +520,6 @@ Describe 'Set-LabVMInitializationFiles' {
 	Mock Copy-Item
 	#endregion
 
-	Context 'No parameters passed' {
-		It 'Fails' {
-			{ Set-LabVMInitializationFiles } | Should Throw
-		}
-	}
 	Context 'Valid configuration is passed' {	
 		$Config = Get-LabConfiguration -Path $Global:TestConfigOKPath
 		New-Item -Path $Config.labbuilderconfig.settings.vmpath -ItemType Directory -Force -ErrorAction SilentlyContinue
@@ -592,11 +554,6 @@ Describe 'Get-LabVMs' {
 	Mock Get-VM
 	#endregion
 
-	Context 'No parameters passed' {
-		It 'Fails' {
-			{ Get-LabVMs } | Should Throw
-		}
-	}
 	Context 'Configuration passed with VM missing VM Name.' {
 		It 'Fails' {
 			$Config = Get-LabConfiguration -Path "$Global:TestConfigPath\PesterTestConfig.VMFail.NoName.xml"
@@ -712,11 +669,6 @@ Describe 'Get-LabVMs' {
 
 ##########################################################################################################################################
 Describe 'Get-LabVMSelfSignedCert' {
-	Context 'No parameters passed' {
-		It 'Fails' {
-			{ Get-LabVMSelfSignedCert } | Should Throw
-		}
-	}
 }
 ##########################################################################################################################################
 
@@ -732,11 +684,6 @@ Describe 'Start-LabVM' {
 	Mock Start-LabVMDSC
 	#endregion
 
-	Context 'No parameters passed' {
-		It 'Fails' {
-			{ Start-LabVM } | Should Throw
-		}
-	}
 	Context 'Valid configuration is passed' {	
 		$Config = Get-LabConfiguration -Path $Global:TestConfigOKPath
 		New-Item -Path $Config.labbuilderconfig.settings.vmpath -ItemType Directory -Force -ErrorAction SilentlyContinue
@@ -783,11 +730,6 @@ Describe 'Initialize-LabVMs' {
 	Mock Start-LabVMDSC
 	#endregion
 
-	Context 'No parameters passed' {
-		It 'Fails' {
-			{ Initialize-LabVMs } | Should Throw
-		}
-	}
 	Context 'Valid configuration is passed' {	
 		$Config = Get-LabConfiguration -Path $Global:TestConfigOKPath
 		New-Item -Path $Config.labbuilderconfig.settings.vmpath -ItemType Directory -Force -ErrorAction SilentlyContinue
@@ -831,11 +773,6 @@ Describe 'Remove-LabVMs' {
 	Mock Remove-VM
 	#endregion
 
-	Context 'No parameters passed' {
-		It 'Fails' {
-			{ Remove-LabVMs } | Should Throw
-		}
-	}
 	Context 'Valid configuration is passed' {	
 		$Config = Get-LabConfiguration -Path $Global:TestConfigOKPath
 		[Array]$Templates = Get-LabVMTemplates -Configuration $Config
@@ -859,51 +796,26 @@ Describe 'Remove-LabVMs' {
 
 ##########################################################################################################################################
 Describe 'Wait-LabVMInit' {
-	Context 'No parameters passed' {
-		It 'Fails' {
-			{ Wait-LabVMInit } | Should Throw
-		}
-	}
 }
 ##########################################################################################################################################
 
 ##########################################################################################################################################
 Describe 'Wait-LabVMStart' {
-	Context 'No parameters passed' {
-		It 'Fails' {
-			{ Wait-LabVMStart } | Should Throw
-		}
-	}
 }
 ##########################################################################################################################################
 
 ##########################################################################################################################################
 Describe 'Wait-LabVMOff' {
-	Context 'No parameters passed' {
-		It 'Fails' {
-			{ Wait-LabVMOff } | Should Throw
-		}
-	}
 }
 ##########################################################################################################################################
 
 ##########################################################################################################################################
 Describe 'Install-Lab' {
-	Context 'No parameters passed' {
-		It 'Fails' {
-			{ Install-Lab } | Should Throw
-		}
-	}
 }
 ##########################################################################################################################################
 
 ##########################################################################################################################################
 Describe 'Uninstall-Lab' {
-	Context 'No parameters passed' {
-		It 'Fails' {
-			{ Uninstall-Lab } | Should Throw
-		}
-	}
 }
 ##########################################################################################################################################
 }
