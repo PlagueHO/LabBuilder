@@ -147,6 +147,8 @@ function Download-CertGenerator()
 .DESCRIPTION
     Uses RegEx to pull a list of Resources that are imported in a DSC Configuration using the
     Import-DSCResource cmdlet
+    
+    The xNetworking will always be included and the PSDesiredConfigration will always be excluded.
 .PARAMETER DSCConfigFile
     Contains the path to the DSC Config file to extract resource module names from
 .EXAMPLE

@@ -143,6 +143,20 @@ Describe 'Download-CertGenerator' {
 ####################################################################################################
 
 ####################################################################################################
+Describe 'Get-ModulesInDSCConfig' {
+	Context 'Called with Test DSC Resource File' {
+		$Modules = Get-ModulesInDSCConfig `
+            -DSCConfigFile (Join-Path -Path $Global:TestConfigPath -ChildPath 'PesterTest.DSC.ps1')
+        It 'Should Return Expected Modules' {
+            @(Compare-Object -ReferenceObject $Modules `
+                -DifferenceObject @('xActiveDirectory','xComputerManagement','xDHCPServer','xNetworking')).Count `
+            | Should Be 0
+        }
+	}
+}
+####################################################################################################
+
+####################################################################################################
 Describe 'Get-LabConfiguration' {
 	Context 'Path is provided and valid XML file exists' {
 		It 'Returns XmlDocument object with valid content' {

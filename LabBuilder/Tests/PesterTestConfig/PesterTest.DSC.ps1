@@ -10,6 +10,9 @@ DSC Template Configuration File For use by LabBuilder
 Configuration STANDALONE_DEFAULT
 {
 	Import-DscResource -ModuleName 'PSDesiredStateConfiguration'
+	Import-DscResource -ModuleName xActiveDirectory
+	Import-DscResource -ModuleName xComputerManagement
+	Import-DscResource -ModuleName xDHCPServer
 	Node $AllNodes.NodeName {
 		# Assemble the Local Admin Credentials
 		If ($Node.LocalAdminPassword) {
