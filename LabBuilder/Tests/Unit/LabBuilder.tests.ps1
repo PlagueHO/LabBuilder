@@ -17,10 +17,132 @@ Import-Module "$root\LabBuilder.psd1" -Force -DisableNameChecking
 $Global:TestConfigPath = "$root\Tests\PesterTestConfig"
 $Global:TestConfigOKPath = "$Global:TestConfigPath\PesterTestConfig.OK.xml"
 $Global:ArtifactPath = "$root\Artifacts"
-New-Item -Path "$Global:ArtifactPath" -ItemType Directory -Force -ErrorAction SilentlyContinue
+$null = New-Item -Path "$Global:ArtifactPath" -ItemType Directory -Force -ErrorAction SilentlyContinue
 
 InModuleScope LabBuilder {
-##########################################################################################################################################
+####################################################################################################
+Describe 'Download-WMF5Installer' {
+	Context 'WMF 5.0 Installer File Exists' {
+        It 'Does not throw an Exception' {
+		    Mock Test-Path -MockWith { $true }
+            Mock Invoke-WebRequest
+
+			{ Download-WMF5Installer } | Should Not Throw
+		}
+        It 'Calls appropriate mocks' {
+            Assert-MockCalled Test-Path -Exactly 1
+            Assert-MockCalled Invoke-WebRequest -Exactly 0
+        }
+	}
+
+	Context 'WMF 5.0 Installer File Does Not Exist' {
+        It 'Does not throw an Exception' {
+		    Mock Test-Path -MockWith { $false }
+            Mock Invoke-WebRequest
+
+			{ Download-WMF5Installer } | Should Not Throw
+		}
+        It 'Calls appropriate mocks' {
+            Assert-MockCalled Test-Path -Exactly 1
+            Assert-MockCalled Invoke-WebRequest -Exactly 1
+        }
+	}
+
+	Context 'WMF 5.0 Installer File Does Not Exist and Fails Downloading' {
+        It 'Throws a FileDownloadError Exception' {
+		    Mock Test-Path -MockWith { $false }
+            Mock Invoke-WebRequest { Throw ('Download Error') }
+
+            $errorId = 'FileDownloadError'
+            $errorCategory = [System.Management.Automation.ErrorCategory]::InvalidOperation
+            $errorMessage = $($LocalizedData.FileDownloadError) `
+                -f 'WMF 5.0 Installer','http://download.microsoft.com/download/3/F/D/3FD04B49-26F9-4D9A-8C34-4533B9D5B020/Win8.1AndW2K12R2-KB3066437-x64.msu','Download Error'
+            $exception = New-Object -TypeName System.InvalidOperationException `
+                -ArgumentList $errorMessage
+            $errorRecord = New-Object -TypeName System.Management.Automation.ErrorRecord `
+                -ArgumentList $exception, $errorId, $errorCategory, $null
+
+			{ Download-WMF5Installer } | Should Throw $errorRecord
+		}
+        It 'Calls appropriate mocks' {
+            Assert-MockCalled Test-Path -Exactly 1
+            Assert-MockCalled Invoke-WebRequest -Exactly 1
+        }
+	}
+}
+####################################################################################################
+
+####################################################################################################
+Describe 'Download-CertGenerator' {
+	Context 'Certificate Generator Zip File and PS1 File Exists' {
+        It 'Does not throw an Exception' {
+		    Mock Test-Path -MockWith { $true }
+            Mock Invoke-WebRequest
+
+			{ Download-CertGenerator } | Should Not Throw
+		}
+        It 'Calls appropriate mocks' {
+            Assert-MockCalled Test-Path -Exactly 2
+            Assert-MockCalled Invoke-WebRequest -Exactly 0
+        }
+	}
+
+	Context 'Certificate Generator Zip File Exists but PS1 File Does Not' {
+        It 'Does not throw an Exception' {
+		    Mock Test-Path -ParameterFilter { $Path -like '*.zip' } -MockWith { $true }
+		    Mock Test-Path -ParameterFilter { $Path -like '*.ps1' } -MockWith { $false }
+            Mock Expand-Archive
+            Mock Invoke-WebRequest
+
+			{ Download-CertGenerator } | Should Not Throw
+		}
+        It 'Calls appropriate mocks' {
+            Assert-MockCalled Test-Path -Exactly 2
+            Assert-MockCalled Expand-Archive -Exactly 1
+            Assert-MockCalled Invoke-WebRequest -Exactly 0
+        }
+	}
+
+	Context 'Certificate Generator Zip File Does Not Exist' {
+        It 'Does not throw an Exception' {
+		    Mock Test-Path -MockWith { $false }
+            Mock Expand-Archive
+            Mock Invoke-WebRequest
+
+			{ Download-CertGenerator } | Should Not Throw
+		}
+        It 'Calls appropriate mocks' {
+            Assert-MockCalled Test-Path -Exactly 2
+            Assert-MockCalled Expand-Archive -Exactly 1
+            Assert-MockCalled Invoke-WebRequest -Exactly 1
+        }
+	}
+
+	Context 'Certificate Generator Zip File Does Not Exist and Fails Downloading' {
+        It 'Throws a FileDownloadError Exception' {
+		    Mock Test-Path -MockWith { $false }
+            Mock Invoke-WebRequest { Throw ('Download Error') }
+
+            $errorId = 'FileDownloadError'
+            $errorCategory = [System.Management.Automation.ErrorCategory]::InvalidOperation
+            $errorMessage = $($LocalizedData.FileDownloadError) `
+                -f 'Certificate Generator','https://gallery.technet.microsoft.com/scriptcenter/Self-signed-certificate-5920a7c6/file/101251/1/New-SelfSignedCertificateEx.zip','Download Error'
+            $exception = New-Object -TypeName System.InvalidOperationException `
+                -ArgumentList $errorMessage
+            $errorRecord = New-Object -TypeName System.Management.Automation.ErrorRecord `
+                -ArgumentList $exception, $errorId, $errorCategory, $null
+
+			{ Download-CertGenerator } | Should Throw $errorRecord
+		}
+        It 'Calls appropriate mocks' {
+            Assert-MockCalled Test-Path -Exactly 1
+            Assert-MockCalled Invoke-WebRequest -Exactly 1
+        }
+	}
+}
+####################################################################################################
+
+####################################################################################################
 Describe 'Get-LabConfiguration' {
 	Context 'Path is provided and valid XML file exists' {
 		It 'Returns XmlDocument object with valid content' {
@@ -31,7 +153,6 @@ Describe 'Get-LabConfiguration' {
 	}
 
 	Context 'Path is provided but file does not exist' {
-
 		It 'Throws ConfigurationFileNotFoundError Exception' {
             $errorId = 'ConfigurationFileNotFoundError'
             $errorCategory = [System.Management.Automation.ErrorCategory]::InvalidArgument
@@ -66,9 +187,9 @@ Describe 'Get-LabConfiguration' {
 		}
 	}
 }
-##########################################################################################################################################
+####################################################################################################
 
-##########################################################################################################################################
+####################################################################################################
 Describe 'Test-LabConfiguration' {
 
 	$Config = Get-LabConfiguration -Path $Global:TestConfigOKPath
@@ -157,9 +278,9 @@ Describe 'Test-LabConfiguration' {
 		}
 	}
 }
-##########################################################################################################################################
+####################################################################################################
 
-##########################################################################################################################################
+####################################################################################################
 Describe 'Install-LabHyperV' {
 
     $Config = Get-LabConfiguration -Path $Global:TestConfigOKPath
@@ -173,26 +294,25 @@ Describe 'Install-LabHyperV' {
 	}
 
 	Context 'The function is called' {
-
 		It 'Does not throw an Exception' {
 			{ Install-LabHyperV } | Should Not Throw
 		}
 		If ((Get-CimInstance Win32_OperatingSystem).ProductType -eq 1) {
-			It 'Calls Mocked commands' {
+			It 'Calls appropriate mocks' {
 				Assert-MockCalled Get-WindowsOptionalFeature -Exactly 1
 				Assert-MockCalled Enable-WindowsOptionalFeature -Exactly 1
 			}
 		} Else {
-			It 'Calls Mocked commands' {
+			It 'Calls appropriate mocks' {
 				Assert-MockCalled Get-WindowsFeature -Exactly 1
 				Assert-MockCalled Install-WindowsFeature -Exactly 1
 			}
 		}
 	}
 }
-##########################################################################################################################################
+####################################################################################################
 
-##########################################################################################################################################
+####################################################################################################
 Describe 'Initialize-LabConfiguration' {
     $Config = Get-LabConfiguration -Path $Global:TestConfigOKPath
 
@@ -205,7 +325,7 @@ Describe 'Initialize-LabConfiguration' {
 		It 'Does not throw an Exception' {
 			{ Initialize-LabConfiguration -Configuration $Config } | Should Not Throw
 		}
-		It 'Calls Mocked commands' {
+		It 'Calls appropriate mocks' {
 			Assert-MockCalled Download-CertGenerator -Exactly 1
 			Assert-MockCalled Download-WMF5Installer -Exactly 1
 			Assert-MockCalled Download-LabResources -Exactly 1
@@ -213,9 +333,9 @@ Describe 'Initialize-LabConfiguration' {
 		}		
 	}
 }
-##########################################################################################################################################
+####################################################################################################
 
-##########################################################################################################################################
+####################################################################################################
 Describe 'Download-LabResources' {
     $Config = Get-LabConfiguration -Path $Global:TestConfigOKPath
 
@@ -225,9 +345,9 @@ Describe 'Download-LabResources' {
 		}
 	}
 }
-##########################################################################################################################################
+####################################################################################################
 
-##########################################################################################################################################
+####################################################################################################
 Describe 'Get-LabSwitches' {
 	Context 'Configuration passed with switch missing Switch Name.' {
 		It 'Fails' {
@@ -261,9 +381,9 @@ Describe 'Get-LabSwitches' {
 		}
 	}
 }
-##########################################################################################################################################
+####################################################################################################
 
-##########################################################################################################################################
+####################################################################################################
 Describe 'Initialize-LabSwitches' {
 
 	#region Mocks
@@ -288,9 +408,9 @@ Describe 'Initialize-LabSwitches' {
 		}
 	}
 }
-##########################################################################################################################################
+####################################################################################################
 
-##########################################################################################################################################
+####################################################################################################
 Describe 'Remove-LabSwitches' {
 
 	#region Mocks
@@ -310,9 +430,9 @@ Describe 'Remove-LabSwitches' {
 		}
 	}
 }
-##########################################################################################################################################
+####################################################################################################
 
-##########################################################################################################################################
+####################################################################################################
 Describe 'Get-LabVMTemplates' {
 
 	#region Mocks
@@ -347,9 +467,9 @@ Describe 'Get-LabVMTemplates' {
 		}
 	}
 }
-##########################################################################################################################################
+####################################################################################################
 
-##########################################################################################################################################
+####################################################################################################
 Describe 'Initialize-LabVMTemplates' {
 	#region Mocks
 	Mock Get-VM
@@ -386,9 +506,9 @@ Describe 'Initialize-LabVMTemplates' {
 		Remove-Item -Path $Config.labbuilderconfig.settings.vhdparentpath -Recurse -Force -ErrorAction SilentlyContinue
 	}
 }
-##########################################################################################################################################
+####################################################################################################
 
-##########################################################################################################################################
+####################################################################################################
 Describe 'Remove-LabVMTemplates' {
 	#region Mocks
 	Mock Get-VM
@@ -415,9 +535,9 @@ Describe 'Remove-LabVMTemplates' {
 		Remove-Item -Path $Config.labbuilderconfig.settings.vhdparentpath -Recurse -Force -ErrorAction SilentlyContinue
 	}
 }
-##########################################################################################################################################
+####################################################################################################
 
-##########################################################################################################################################
+####################################################################################################
 Describe 'Set-LabDSCMOFFile' {
 	Remove-Item -Path 'C:\Pester Lab\PESTER01\LabBuilder Files' -Recurse -Force -ErrorAction SilentlyContinue
 
@@ -457,9 +577,9 @@ Describe 'Set-LabDSCMOFFile' {
  
 	#Remove-Item -Path "C:\Pester Lab\PESTER01\LabBuilder Files" -Recurse -Force -ErrorAction SilentlyContinue
 }
-##########################################################################################################################################
+####################################################################################################
 
-##########################################################################################################################################
+####################################################################################################
 Describe 'Set-LabDSCStartFile' {
 	#region Mocks
 	Mock Get-VM
@@ -482,9 +602,9 @@ Describe 'Set-LabDSCStartFile' {
 		}
 	}
 }
-##########################################################################################################################################
+####################################################################################################
 
-##########################################################################################################################################
+####################################################################################################
 Describe 'Get-LabUnattendFile' {
 
 	#region Mocks
@@ -505,9 +625,9 @@ Describe 'Get-LabUnattendFile' {
 		}
 	}
 }
-##########################################################################################################################################
+####################################################################################################
 
-##########################################################################################################################################
+####################################################################################################
 Describe 'Set-LabVMInitializationFiles' {
 
 	#region Mocks
@@ -545,9 +665,9 @@ Describe 'Set-LabVMInitializationFiles' {
 		Remove-Item -Path $Config.labbuilderconfig.settings.vhdparentpath -Recurse -Force -ErrorAction SilentlyContinue
 	}
 }
-##########################################################################################################################################
+####################################################################################################
 
-##########################################################################################################################################
+####################################################################################################
 Describe 'Get-LabVMs' {
 
 	#region mocks
@@ -665,14 +785,14 @@ Describe 'Get-LabVMs' {
 		}
 	}
 }
-##########################################################################################################################################
+####################################################################################################
 
-##########################################################################################################################################
+####################################################################################################
 Describe 'Get-LabVMSelfSignedCert' {
 }
-##########################################################################################################################################
+####################################################################################################
 
-##########################################################################################################################################
+####################################################################################################
 Describe 'Start-LabVM' {
 	#region Mocks
 	Mock Get-VM -ParameterFilter { $Name -eq 'PESTER01' } -MockWith { [PSObject]@{ Name='PESTER01'; State='Off' } }
@@ -710,9 +830,9 @@ Describe 'Start-LabVM' {
 		Remove-Item -Path $Config.labbuilderconfig.settings.vhdparentpath -Recurse -Force -ErrorAction SilentlyContinue
 	}
 }
-##########################################################################################################################################
+####################################################################################################
 
-##########################################################################################################################################
+####################################################################################################
 Describe 'Initialize-LabVMs' {
 	#region Mocks
 	Mock New-VHD
@@ -761,9 +881,9 @@ Describe 'Initialize-LabVMs' {
 		Remove-Item -Path $Config.labbuilderconfig.settings.vhdparentpath -Recurse -Force -ErrorAction SilentlyContinue
 	}
 }
-##########################################################################################################################################
+####################################################################################################
 
-##########################################################################################################################################
+####################################################################################################
 Describe 'Remove-LabVMs' {
 	#region Mocks
 	Mock Get-VM -MockWith { [PSObject]@{ Name = 'PESTER01'; State = 'Running'; } }
@@ -792,30 +912,30 @@ Describe 'Remove-LabVMs' {
 		}
 	}
 }
-##########################################################################################################################################
+####################################################################################################
 
-##########################################################################################################################################
+####################################################################################################
 Describe 'Wait-LabVMInit' {
 }
-##########################################################################################################################################
+####################################################################################################
 
-##########################################################################################################################################
+####################################################################################################
 Describe 'Wait-LabVMStart' {
 }
-##########################################################################################################################################
+####################################################################################################
 
-##########################################################################################################################################
+####################################################################################################
 Describe 'Wait-LabVMOff' {
 }
-##########################################################################################################################################
+####################################################################################################
 
-##########################################################################################################################################
+####################################################################################################
 Describe 'Install-Lab' {
 }
-##########################################################################################################################################
+####################################################################################################
 
-##########################################################################################################################################
+####################################################################################################
 Describe 'Uninstall-Lab' {
 }
-##########################################################################################################################################
+####################################################################################################
 }

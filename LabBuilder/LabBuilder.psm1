@@ -6,11 +6,14 @@ data LocalizedData
 {
     # culture="en-US"
     ConvertFrom-StringData -StringData @'
+FileDownloadError=Error downloading {0} from '{1}'; {2}.
+FileExtractError=Error extracting {0}; {1}.
 ConfigurationFileNotFoundError=Configuration file {0} is not found.
 ConfigurationFileEmptyError=Configuration file {0} is empty.
 ConfigurationInvalidError=Configuration is invalid.
 ConfigurationMissingElementError=Element '{0}' is missing or empty in the configuration.
 PathNotFoundError={0} path '{1}' is not found.
+ResourceModuleNameEmptyError=Resource Module Name is missing or empty.
 '@
 }
 
@@ -53,13 +56,32 @@ function Test-Admin()
 #>
 function Download-WMF5Installer()
 {
+	[CmdletBinding()]
+    Param ()
+
 	# Only downloads for Win8.1/WS2K12R2
-	[String]$URL = $Script:WMF5DownloadURL
 	If (-not (Test-Path -Path $Script:WMF5InstallerPath))
     {
-        Invoke-WebRequest `
-                -Uri $URL `
-                -OutFile $Script:WMF5InstallerPath
+        try
+        {
+            Invoke-WebRequest `
+                -Uri $Script:WMF5DownloadURL `
+                -OutFile $Script:WMF5InstallerPath `
+                -ErrorAction Stop
+        }
+        catch
+        {
+            $errorId = 'FileDownloadError'
+            $errorCategory = [System.Management.Automation.ErrorCategory]::InvalidOperation
+            $errorMessage = $($LocalizedData.FileDownloadError) `
+                -f 'WMF 5.0 Installer',$Script:WMF5DownloadURL,$_.Exception.Message
+            $exception = New-Object -TypeName System.InvalidOperationException `
+                -ArgumentList $errorMessage
+            $errorRecord = New-Object -TypeName System.Management.Automation.ErrorRecord `
+                -ArgumentList $exception, $errorId, $errorCategory, $null
+            
+            $PSCmdlet.ThrowTerminatingError($errorRecord)
+        }
 	}
 } # Download-WMF5Installer
 ####################################################################################################
@@ -69,18 +91,53 @@ function Download-WMF5Installer()
 #>
 function Download-CertGenerator()
 {
-	[String]$URL = $Script:CertGenDownloadURL
+	[CmdletBinding()]
+    Param ()
 	If (-not (Test-Path -Path $Script:CertGenZipPath))
     {
-        Invoke-WebRequest `
-            -Uri $URL `
-            -OutFile $Script:CertGenZipPath
+        try
+        {
+            Invoke-WebRequest `
+                -Uri $Script:CertGenDownloadURL `
+                -OutFile $Script:CertGenZipPath `
+                -ErrorAction Stop
+        }
+        catch
+        {
+            $errorId = 'FileDownloadError'
+            $errorCategory = [System.Management.Automation.ErrorCategory]::InvalidOperation
+            $errorMessage = $($LocalizedData.FileDownloadError) `
+                -f 'Certificate Generator',$Script:CertGenDownloadURL,$_.Exception.Message
+            $exception = New-Object -TypeName System.InvalidOperationException `
+                -ArgumentList $errorMessage
+            $errorRecord = New-Object -TypeName System.Management.Automation.ErrorRecord `
+                -ArgumentList $exception, $errorId, $errorCategory, $null
+
+            $PSCmdlet.ThrowTerminatingError($errorRecord)        
+        }
 	} # If
 	If (-not (Test-Path -Path $Script:CertGenPS1Path))
     {
-    	Expand-Archive `
-            -Path $Script:CertGenZipPath `
-            -DestinationPath $Script:WorkingFolder
+        try	
+        {
+            Expand-Archive `
+                -Path $Script:CertGenZipPath `
+                -DestinationPath $Script:WorkingFolder `
+                -ErrorAction Stop
+        }
+        catch
+        {
+            $errorId = 'FileExtractError'
+            $errorCategory = [System.Management.Automation.ErrorCategory]::InvalidOperation
+            $errorMessage = $($LocalizedData.FileExtractError) `
+                -f 'Certificate Generator',$_.Exception.Message
+            $exception = New-Object -TypeName System.InvalidOperationException `
+                -ArgumentList $errorMessage
+            $errorRecord = New-Object -TypeName System.Management.Automation.ErrorRecord `
+                -ArgumentList $exception, $errorId, $errorCategory, $null
+
+            $PSCmdlet.ThrowTerminatingError($errorRecord)        
+        }
 	} # If
 } # Download-CertGenerator
 ####################################################################################################
@@ -88,7 +145,8 @@ function Download-CertGenerator()
 .Synopsis
     Get a list of all Resources imported in a DSC Config
 .DESCRIPTION
-    Uses RegEx to pull a list of Resources that are imported in a DSC Configuration using the Import-DSCResource cmdlet
+    Uses RegEx to pull a list of Resources that are imported in a DSC Configuration using the
+    Import-DSCResource cmdlet
 .PARAMETER DSCConfigFile
     Contains the path to the DSC Config file to extract resource module names from
 .EXAMPLE
@@ -440,43 +498,93 @@ function Download-LabResources {
 	Write-Verbose 'Downloading Lab Resources ...'
 	
 	# Download any other resources required by this lab
-	If ($Configuration.labbuilderconfig.resources) {
+	If ($Configuration.labbuilderconfig.resources) 
+    {
 		$InstalledModules = Get-Module -ListAvailable
-		Foreach ($Module in $Configuration.labbuilderconfig.resources.module) {
-			If (-not $Module.Name) {
-				Throw 'Lab Builder Module Resource Name is missing.'
+		Foreach ($Module in $Configuration.labbuilderconfig.resources.module)
+        {
+			If (-not $Module.Name)
+            {
+                $errorId = 'ResourceModuleNameEmptyError'
+                $errorCategory = [System.Management.Automation.ErrorCategory]::InvalidArgument
+                $errorMessage = $($LocalizedData.ResourceModuleNameEmptyError)
+                $exception = New-Object -TypeName System.InvalidOperationException `
+                    -ArgumentList $errorMessage
+                $errorRecord = New-Object -TypeName System.Management.Automation.ErrorRecord `
+                    -ArgumentList $exception, $errorId, $errorCategory, $null
+
+                $PSCmdlet.ThrowTerminatingError($errorRecord)
 			} # If
 			# Is the module installed?
-			If (($InstalledModules | Where-Object -Property Name -EQ $Module.Name).Count -eq 0) {
-				# The module is not installed - so download it
-				$FileName = $Module.URL.Substring($Module.URL.LastIndexOf('/') + 1)
-				$FilePath = Join-Path -Path $Script:WorkingFolder -ChildPath $FileName
-				Try {
-					Invoke-WebRequest `
-                        -Uri $($Module.URL) `
-                        -OutFile $FilePath
-				} Catch {
-					Throw "The Lab Builder Module Resource $($Module.Name) could not be downloaded."
-				} # Try
-				If (Test-Path -Path $FilePath) {
-					[String]$ModulesFolder = "$($ENV:ProgramFiles)\WindowsPowerShell\Modules\"
-					# Extract this straight into the modules folder
-					Try {
-						Expand-Archive -Path $FilePath -DestinationPath $ModulesFolder -Force
-					} Catch {
-						Throw "The Lab Builder Module Resource $($Module.Name) could not be extracted."
-					} # Try
-					If ($Module.Folder) {
-						# This zip file contains a folder that is not the name of the module so it must be
-						# renamed. This is usually the case with source downloaded directly from GitHub
-						$ModulePath = Join-Path -Path $ModulesFolder -ChildPath $($Module.Name)
-						If (Test-Path -Path $ModulePath) {
-							Remove-Item -Path $ModulePath
-						}
-						Rename-Item -Path (Join-Path -Path $ModulesFolder -ChildPath $($Module.Folder)) `
-							-NewName $($Module.Name) -Force
-					} # If
-				} # If
+			If ($InstalledModules.Where({ $_.Name -eq $Module.Name }).Count -eq 0)
+            {
+				# If a URL was specified, download this module via HTTP
+                if ($Module.URL)
+                {
+                    # The module is not installed - so download it
+				    $FileName = $Module.URL.Substring($Module.URL.LastIndexOf('/') + 1)
+				    $FilePath = Join-Path -Path $Script:WorkingFolder -ChildPath $FileName
+				    Try
+                    {
+					    Invoke-WebRequest `
+                            -Uri $($Module.URL) `
+                            -OutFile $FilePath `
+                            -ErrorAction Stop
+				    }
+                    Catch
+                    {
+                        $errorId = 'FileDownloadError'
+                        $errorCategory = [System.Management.Automation.ErrorCategory]::InvalidOperation
+                        $errorMessage = $($LocalizedData.FileDownloadError) `
+                            -f "Module Resource ${Module.Name}",$Module.URL,$_.Exception.Message
+                        $exception = New-Object -TypeName System.InvalidOperationException `
+                            -ArgumentList $errorMessage
+                        $errorRecord = New-Object -TypeName System.Management.Automation.ErrorRecord `
+                            -ArgumentList $exception, $errorId, $errorCategory, $null
+
+                        $PSCmdlet.ThrowTerminatingError($errorRecord)        
+				    } # Try
+				    If (Test-Path -Path $FilePath)
+                    {
+					    [String]$ModulesFolder = "$($ENV:ProgramFiles)\WindowsPowerShell\Modules\"
+					    # Extract this straight into the modules folder
+					    Try
+                        {
+						    Expand-Archive `
+                                -Path $FilePath `
+                                -DestinationPath $ModulesFolder `
+                                -Force `
+                                -ErrorAction Stop
+					    }
+                        Catch
+                        {
+                            $errorId = 'FileExtractError'
+                            $errorCategory = [System.Management.Automation.ErrorCategory]::InvalidArgument
+                            $errorMessage = $($LocalizedData.FileExtractError) `
+                                -f "Module Resource ${Module.Name}",$_.Exception.Message
+                            $exception = New-Object -TypeName System.InvalidOperationException `
+                                -ArgumentList $errorMessage
+                            $errorRecord = New-Object -TypeName System.Management.Automation.ErrorRecord `
+                                -ArgumentList $exception, $errorId, $errorCategory, $null
+
+                            $PSCmdlet.ThrowTerminatingError($errorRecord)        
+					    } # Try
+					    If ($Module.Folder)
+                        {
+						    # This zip file contains a folder that is not the name of the module so it must be
+						    # renamed. This is usually the case with source downloaded directly from GitHub
+						    $ModulePath = Join-Path -Path $ModulesFolder -ChildPath $($Module.Name)
+						    If (Test-Path -Path $ModulePath)
+                            {
+							    Remove-Item -Path $ModulePath
+						    }
+						    Rename-Item `
+                                -Path (Join-Path -Path $ModulesFolder -ChildPath $($Module.Folder)) `
+							    -NewName $($Module.Name) `
+                                -Force
+					    } # If
+				    } # If
+                } # If
 			} # If
 		} # Foreach
 	} # If
