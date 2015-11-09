@@ -442,6 +442,46 @@ Describe 'Download-LabModule' {
         }
 	}
 
+    Context 'Wrong version of module is installed; Valid URL, Folder and Minimum Version passed' {
+		It 'Does not throw an Exception' {
+			{
+                Download-LabModule `
+                    -Name 'xNetworking' `
+                    -URL $URL `
+                    -Folder 'xNetworkingDev' `
+                    -MinimumVersion '2.5.0.0'
+            } | Should Not Throw
+		}
+        It 'Should call appropriate Mocks' {
+            Assert-MockCalled Get-Module -Exactly 1
+            Assert-MockCalled Invoke-WebRequest -Exactly 1
+            Assert-MockCalled Expand-Archive -Exactly 1
+            Assert-MockCalled Rename-Item -Exactly 1
+            Assert-MockCalled Test-Path -Exactly 1
+            Assert-MockCalled Remove-Item -Exactly 0
+        }
+	}
+
+    Context 'Correct version of module is installed; Valid URL, Folder and Minimum Version passed' {
+		It 'Does not throw an Exception' {
+			{
+                Download-LabModule `
+                    -Name 'xNetworking' `
+                    -URL $URL `
+                    -Folder 'xNetworkingDev' `
+                    -MinimumVersion '2.4.0.0'
+            } | Should Not Throw
+		}
+        It 'Should call appropriate Mocks' {
+            Assert-MockCalled Get-Module -Exactly 1
+            Assert-MockCalled Invoke-WebRequest -Exactly 0
+            Assert-MockCalled Expand-Archive -Exactly 0
+            Assert-MockCalled Rename-Item -Exactly 0
+            Assert-MockCalled Test-Path -Exactly 0
+            Assert-MockCalled Remove-Item -Exactly 0
+        }
+	}
+
     Mock Get-Module -MockWith { }
     Mock Invoke-WebRequest -MockWith { Throw ('Download Error') }
 
