@@ -351,20 +351,43 @@ Describe 'Initialize-LabConfiguration' {
 
 ####################################################################################################
 Describe 'Download-LabModule' {
-    Mock Get-Module
+    $URL = 'https://github.com/PowerShell/xNetworking/archive/dev.zip'
+    
+    Mock Get-Module -MockWith { @( New-Object -TypeName PSObject -Property @{ Name = 'xNetworking'; Version = '2.4.0.0'; } ) }
     Mock Invoke-WebRequest
     Mock Expand-Archive
     Mock Rename-Item
     Mock Test-Path -MockWith { $false }
     Mock Remove-Item
 
-    Context 'Not installed Module using Valid URL and Folder' {
+    Context 'Correct module already installed; Valid URL and Folder passed' {
 		It 'Does not throw an Exception' {
 			{
                 Download-LabModule `
                     -Name 'xNetworking' `
-                    -URL 'https://github.com/PowerShell/xNetworking/archive/dev.zip' `
-                    -folder 'xNetworkingDev'
+                    -URL $URL `
+                    -Folder 'xNetworkingDev'
+            } | Should Not Throw
+		}
+        It 'Should call appropriate Mocks' {
+            Assert-MockCalled Get-Module -Exactly 1
+            Assert-MockCalled Invoke-WebRequest -Exactly 0
+            Assert-MockCalled Expand-Archive -Exactly 0
+            Assert-MockCalled Rename-Item -Exactly 0
+            Assert-MockCalled Test-Path -Exactly 0
+            Assert-MockCalled Remove-Item -Exactly 0
+        }
+	}
+
+    Mock Get-Module -MockWith { }
+
+    Context 'Module is not installed; Valid URL and Folder passed' {
+		It 'Does not throw an Exception' {
+			{
+                Download-LabModule `
+                    -Name 'xNetworking' `
+                    -URL $URL `
+                    -Folder 'xNetworkingDev'
             } | Should Not Throw
 		}
         It 'Should call appropriate Mocks' {
@@ -376,6 +399,80 @@ Describe 'Download-LabModule' {
             Assert-MockCalled Remove-Item -Exactly 0
         }
 	}
+
+    Mock Get-Module -MockWith { @( New-Object -TypeName PSObject -Property @{ Name = 'xNetworking'; Version = '2.4.0.0'; } ) }
+
+    Context 'Wrong version of module is installed; Valid URL, Folder and Required Version passed' {
+		It 'Does not throw an Exception' {
+			{
+                Download-LabModule `
+                    -Name 'xNetworking' `
+                    -URL $URL `
+                    -Folder 'xNetworkingDev' `
+                    -RequiredVersion '2.5.0.0'
+            } | Should Not Throw
+		}
+        It 'Should call appropriate Mocks' {
+            Assert-MockCalled Get-Module -Exactly 1
+            Assert-MockCalled Invoke-WebRequest -Exactly 1
+            Assert-MockCalled Expand-Archive -Exactly 1
+            Assert-MockCalled Rename-Item -Exactly 1
+            Assert-MockCalled Test-Path -Exactly 1
+            Assert-MockCalled Remove-Item -Exactly 0
+        }
+	}
+
+    Context 'Correct version of module is installed; Valid URL, Folder and Required Version passed' {
+		It 'Does not throw an Exception' {
+			{
+                Download-LabModule `
+                    -Name 'xNetworking' `
+                    -URL $URL `
+                    -Folder 'xNetworkingDev' `
+                    -RequiredVersion '2.4.0.0'
+            } | Should Not Throw
+		}
+        It 'Should call appropriate Mocks' {
+            Assert-MockCalled Get-Module -Exactly 1
+            Assert-MockCalled Invoke-WebRequest -Exactly 0
+            Assert-MockCalled Expand-Archive -Exactly 0
+            Assert-MockCalled Rename-Item -Exactly 0
+            Assert-MockCalled Test-Path -Exactly 0
+            Assert-MockCalled Remove-Item -Exactly 0
+        }
+	}
+
+    Mock Get-Module -MockWith { }
+    Mock Invoke-WebRequest -MockWith { Throw ('Download Error') }
+
+    Context 'Module is not installed; Bad URL passed' {
+		It 'Throws a FileDownloadError exception' {
+            $errorId = 'FileDownloadError'
+            $errorCategory = [System.Management.Automation.ErrorCategory]::InvalidOperation
+            $errorMessage = $($LocalizedData.FileDownloadError) `
+                -f 'Module Resource xNetworking',$URL,'Download Error'
+            $exception = New-Object -TypeName System.InvalidOperationException `
+                -ArgumentList $errorMessage
+            $errorRecord = New-Object -TypeName System.Management.Automation.ErrorRecord `
+                -ArgumentList $exception, $errorId, $errorCategory, $null
+
+			{
+                Download-LabModule `
+                    -Name 'xNetworking' `
+                    -URL $URL `
+                    -Folder 'xNetworkingDev'
+            } | Should Throw $errorRecord
+		}
+        It 'Should call appropriate Mocks' {
+            Assert-MockCalled Get-Module -Exactly 1
+            Assert-MockCalled Invoke-WebRequest -Exactly 1
+            Assert-MockCalled Expand-Archive -Exactly 0
+            Assert-MockCalled Rename-Item -Exactly 0
+            Assert-MockCalled Test-Path -Exactly 0
+            Assert-MockCalled Remove-Item -Exactly 0
+        }
+	}
+
 }
 ####################################################################################################
 

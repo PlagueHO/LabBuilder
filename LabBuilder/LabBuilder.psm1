@@ -510,7 +510,7 @@ function Download-LabModule {
         [String]$MinimumVersion
 	)
 
-    $InstalledModules = Get-Module -ListAvailable
+    $InstalledModules = @(Get-Module -ListAvailable)
 
     # Determine a query that will be used to decide if the module is already installed
     if ($RequiredVersion) {
