@@ -14,6 +14,12 @@ ConfigurationInvalidError=Configuration is invalid.
 ConfigurationMissingElementError=Element '{0}' is missing or empty in the configuration.
 PathNotFoundError={0} path '{1}' is not found.
 ResourceModuleNameEmptyError=Resource Module Name is missing or empty.
+ModuleNotAvailableError=Module '{0}' ({1}) could not be found in the repository.
+DownloadingLabResourcesMessage=Downloading Lab Resources.
+ModuleNotInstalledMessage=Module {0} ({1}) is not installed.
+DownloadingLabResourceWebMessage=Downloading Module {0} ({1}) from '{2}'.
+InstallingLabResourceWebMessage=Installing Module {0} ({1}) to Modules Folder '{2}'.
+InstalledLabResourceWebMessage=Installed Module {0} ({1}) to '{2}'.
 '@
 }
 
@@ -485,6 +491,182 @@ function Initialize-LabConfiguration {
    Download-LabResources -Configuration $Config
    Loads a Lab Builder configuration and downloads any resources required by it.   
 #>
+function Download-LabModule {
+	[CmdLetBinding()]
+	[OutputType([Boolean])]
+	param (
+		[Parameter(
+            Mandatory,
+			Position=0)]
+		[ValidateNotNullOrEmpty()]
+		[String]$Name,
+
+        [String]$URL,
+
+        [String]$Folder,
+        
+        [String]$RequiredVersion,
+
+        [String]$MinimumVersion
+	)
+
+    $InstalledModules = Get-Module -ListAvailable
+
+    # Determine a query that will be used to decide if the module is already installed
+    if ($RequiredVersion) {
+        [ScriptBlock]$Query = `
+            { ($_.Name -eq $Name) -and ($_.Version -eq $RequiredVersion) }
+        $VersionMessage = $RequiredVersion                
+    }
+    elseif ($MinimumVersion)
+    {
+        [ScriptBlock]$Query = `
+            { ($_.Name -eq $Name) -and ($_.Version -ge $MinimumVersion) }
+        $VersionMessage = "min ${MinimumVersion}"
+    }
+    else
+    {
+        [ScriptBlock]$Query = `
+            $Query = { $_.Name -eq $Name }
+        $VersionMessage = 'any version'
+    }
+
+	# Is the module installed?
+	If ($InstalledModules.Where($Query).Count -eq 0)
+    {
+    	Write-Verbose -Message ($LocalizedData.ModuleNotInstalledMessage `
+            -f $Name,$VersionMessage)
+
+		# If a URL was specified, download this module via HTTP
+        if ($URL)
+        {
+            # The module is not installed - so download it
+            # This is usually for downloading modules directly from github
+			$FileName = $URL.Substring($URL.LastIndexOf('/') + 1)
+			$FilePath = Join-Path -Path $Script:WorkingFolder -ChildPath $FileName
+
+            Write-Verbose -Message ($LocalizedData.DownloadingLabResourceWebMessage `
+                -f $Name,$VersionMessage,$URL)
+
+			Try
+            {
+				Invoke-WebRequest `
+                    -Uri $($URL) `
+                    -OutFile $FilePath `
+                    -ErrorAction Stop
+			}
+            Catch
+            {
+                $errorId = 'FileDownloadError'
+                $errorCategory = [System.Management.Automation.ErrorCategory]::InvalidOperation
+                $errorMessage = $($LocalizedData.FileDownloadError) `
+                    -f "Module Resource ${Name}",$URL,$_.Exception.Message
+                $exception = New-Object -TypeName System.InvalidOperationException `
+                    -ArgumentList $errorMessage
+                $errorRecord = New-Object -TypeName System.Management.Automation.ErrorRecord `
+                    -ArgumentList $exception, $errorId, $errorCategory, $null
+
+                $PSCmdlet.ThrowTerminatingError($errorRecord)        
+			} # Try
+
+			[String]$ModulesFolder = "$($ENV:ProgramFiles)\WindowsPowerShell\Modules\"
+
+            Write-Verbose -Message ($LocalizedData.InstallingLabResourceWebMessage `
+                -f $Name,$VersionMessage,$ModulesFolder)
+
+			# Extract this straight into the modules folder
+			Try
+            {
+				Expand-Archive `
+                    -Path $FilePath `
+                    -DestinationPath $ModulesFolder `
+                    -Force `
+                    -ErrorAction Stop
+			}
+            Catch
+            {
+                $errorId = 'FileExtractError'
+                $errorCategory = [System.Management.Automation.ErrorCategory]::InvalidArgument
+                $errorMessage = $($LocalizedData.FileExtractError) `
+                    -f "Module Resource ${Name}",$_.Exception.Message
+                $exception = New-Object -TypeName System.InvalidOperationException `
+                    -ArgumentList $errorMessage
+                $errorRecord = New-Object -TypeName System.Management.Automation.ErrorRecord `
+                    -ArgumentList $exception, $errorId, $errorCategory, $null
+
+                $PSCmdlet.ThrowTerminatingError($errorRecord)        
+			} # Try
+			If ($Folder)
+            {
+				# This zip file contains a folder that is not the name of the module so it must be
+				# renamed. This is usually the case with source downloaded directly from GitHub
+				$ModulePath = Join-Path -Path $ModulesFolder -ChildPath $($Name)
+				If (Test-Path -Path $ModulePath)
+                {
+					Remove-Item -Path $ModulePath -Recurse -Force
+				}
+				Rename-Item `
+                    -Path (Join-Path -Path $ModulesFolder -ChildPath $($Folder)) `
+					-NewName $($Name) `
+                    -Force
+			} # If
+
+            Write-Verbose -Message ($LocalizedData.InstalledLabResourceWebMessage `
+                -f $Name,$VersionMessage,$ModulePath)
+        }
+        else
+        {
+            # Install the package via PowerShellGet from the PowerShellGallery
+            # Make sure the Nuget Package provider is initialized.
+            $null = Get-PackageProvider -name nuget -ForceBootStrap -Force
+
+            # Install the module
+            $Splat = [PSObject] @{ Name = $ModuleName }
+            if ($RequiredVersion)
+            {
+                # Is a specific module version required?
+                $Splat += [PSObject] @{ RequiredVersion = $RequiredVersion }
+            }
+            elseif ($MinimumVersion)
+            {
+                # Is a specific module version minimum version?
+                $Splat += [PSObject] @{ MinimumVersion = $MinimumVersion }
+            }
+            try
+            {
+                Install-Module @Splat -Force -ErrorAction Stop
+            }
+            catch
+            {
+                $errorId = 'ModuleNotAvailableError'
+                $errorCategory = [System.Management.Automation.ErrorCategory]::InvalidArgument
+                $errorMessage = $($LocalizedData.ModuleNotAvailableError) `
+                    -f $Name,$VersionMessage
+                $exception = New-Object -TypeName System.InvalidOperationException `
+                    -ArgumentList $errorMessage
+                $errorRecord = New-Object -TypeName System.Management.Automation.ErrorRecord `
+                    -ArgumentList $exception, $errorId, $errorCategory, $null
+
+                $PSCmdlet.ThrowTerminatingError($errorRecord)
+            }
+            } # If
+	} # If
+}
+####################################################################################################
+
+####################################################################################################
+<#
+.Synopsis
+   Downloads any resources required by the configuration.
+.DESCRIPTION
+   It will ensure any required modules and files are downloaded.
+.PARAMETER Configuration
+   Contains the Lab Builder configuration object that was loaded by the Get-LabConfiguration object.
+.EXAMPLE
+   $Config = Get-LabConfiguration -Path c:\mylab\config.xml
+   Download-LabResources -Configuration $Config
+   Loads a Lab Builder configuration and downloads any resources required by it.   
+#>
 function Download-LabResources {
 	[CmdLetBinding()]
 	[OutputType([Boolean])]
@@ -497,15 +679,14 @@ function Download-LabResources {
 	)
 	
 	# Downloading Lab Resources
-	Write-Verbose 'Downloading Lab Resources ...'
+	Write-Verbose -Message $($LocalizedData.DownloadingLabResourcesMessage)
 	
 	# Download any other resources required by this lab
 	If ($Configuration.labbuilderconfig.resources) 
     {
-		$InstalledModules = Get-Module -ListAvailable
 		Foreach ($Module in $Configuration.labbuilderconfig.resources.module)
         {
-			If (-not $Module.Name)
+        	if (-not $Module.Name)
             {
                 $errorId = 'ResourceModuleNameEmptyError'
                 $errorCategory = [System.Management.Automation.ErrorCategory]::InvalidArgument
@@ -516,81 +697,28 @@ function Download-LabResources {
                     -ArgumentList $exception, $errorId, $errorCategory, $null
 
                 $PSCmdlet.ThrowTerminatingError($errorRecord)
-			} # If
-			# Is the module installed?
-			If ($InstalledModules.Where({ $_.Name -eq $Module.Name }).Count -eq 0)
+	        } # If
+            $Splat = [PSObject] @{ Name = $Module.Name }
+            if ($Module.URL)
             {
-				# If a URL was specified, download this module via HTTP
-                if ($Module.URL)
-                {
-                    # The module is not installed - so download it
-				    $FileName = $Module.URL.Substring($Module.URL.LastIndexOf('/') + 1)
-				    $FilePath = Join-Path -Path $Script:WorkingFolder -ChildPath $FileName
-				    Try
-                    {
-					    Invoke-WebRequest `
-                            -Uri $($Module.URL) `
-                            -OutFile $FilePath `
-                            -ErrorAction Stop
-				    }
-                    Catch
-                    {
-                        $errorId = 'FileDownloadError'
-                        $errorCategory = [System.Management.Automation.ErrorCategory]::InvalidOperation
-                        $errorMessage = $($LocalizedData.FileDownloadError) `
-                            -f "Module Resource ${Module.Name}",$Module.URL,$_.Exception.Message
-                        $exception = New-Object -TypeName System.InvalidOperationException `
-                            -ArgumentList $errorMessage
-                        $errorRecord = New-Object -TypeName System.Management.Automation.ErrorRecord `
-                            -ArgumentList $exception, $errorId, $errorCategory, $null
-
-                        $PSCmdlet.ThrowTerminatingError($errorRecord)        
-				    } # Try
-				    If (Test-Path -Path $FilePath)
-                    {
-					    [String]$ModulesFolder = "$($ENV:ProgramFiles)\WindowsPowerShell\Modules\"
-					    # Extract this straight into the modules folder
-					    Try
-                        {
-						    Expand-Archive `
-                                -Path $FilePath `
-                                -DestinationPath $ModulesFolder `
-                                -Force `
-                                -ErrorAction Stop
-					    }
-                        Catch
-                        {
-                            $errorId = 'FileExtractError'
-                            $errorCategory = [System.Management.Automation.ErrorCategory]::InvalidArgument
-                            $errorMessage = $($LocalizedData.FileExtractError) `
-                                -f "Module Resource ${Module.Name}",$_.Exception.Message
-                            $exception = New-Object -TypeName System.InvalidOperationException `
-                                -ArgumentList $errorMessage
-                            $errorRecord = New-Object -TypeName System.Management.Automation.ErrorRecord `
-                                -ArgumentList $exception, $errorId, $errorCategory, $null
-
-                            $PSCmdlet.ThrowTerminatingError($errorRecord)        
-					    } # Try
-					    If ($Module.Folder)
-                        {
-						    # This zip file contains a folder that is not the name of the module so it must be
-						    # renamed. This is usually the case with source downloaded directly from GitHub
-						    $ModulePath = Join-Path -Path $ModulesFolder -ChildPath $($Module.Name)
-						    If (Test-Path -Path $ModulePath)
-                            {
-							    Remove-Item -Path $ModulePath
-						    }
-						    Rename-Item `
-                                -Path (Join-Path -Path $ModulesFolder -ChildPath $($Module.Folder)) `
-							    -NewName $($Module.Name) `
-                                -Force
-					    } # If
-				    } # If
-                } # If
-			} # If
+                $Splat += [PSObject] @{ URL = $Module.URL }
+            }
+            if ($Module.Folder)
+            {
+                $Splat += [PSObject] @{ Folder = $Module.Folder }
+            }
+            if ($Module.RequiredVersion)
+            {
+                $Splat += [PSObject] @{ RequiredVersion = $Module.RequiredVersion }
+            }
+            if ($Module.MiniumVersion)
+            {
+                $Splat += [PSObject] @{ MiniumVersion = $Module.MiniumVersion }
+            }
+            Download-LabModule @Splat
 		} # Foreach
 	} # If
-} # Initialize-LabConfiguration
+} # Download-LabResources
 ####################################################################################################
 
 ####################################################################################################

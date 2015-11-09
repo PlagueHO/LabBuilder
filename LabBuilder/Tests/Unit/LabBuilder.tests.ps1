@@ -350,13 +350,47 @@ Describe 'Initialize-LabConfiguration' {
 ####################################################################################################
 
 ####################################################################################################
+Describe 'Download-LabModule' {
+    Mock Get-Module
+    Mock Invoke-WebRequest
+    Mock Expand-Archive
+    Mock Rename-Item
+    Mock Test-Path -MockWith { $false }
+    Mock Remove-Item
+
+    Context 'Not installed Module using Valid URL and Folder' {
+		It 'Does not throw an Exception' {
+			{
+                Download-LabModule `
+                    -Name 'xNetworking' `
+                    -URL 'https://github.com/PowerShell/xNetworking/archive/dev.zip' `
+                    -folder 'xNetworkingDev'
+            } | Should Not Throw
+		}
+        It 'Should call appropriate Mocks' {
+            Assert-MockCalled Get-Module -Exactly 1
+            Assert-MockCalled Invoke-WebRequest -Exactly 1
+            Assert-MockCalled Expand-Archive -Exactly 1
+            Assert-MockCalled Rename-Item -Exactly 1
+            Assert-MockCalled Test-Path -Exactly 1
+            Assert-MockCalled Remove-Item -Exactly 0
+        }
+	}
+}
+####################################################################################################
+
+####################################################################################################
 Describe 'Download-LabResources' {
     $Config = Get-LabConfiguration -Path $Global:TestConfigOKPath
 
 	Context 'Valid configuration is passed' {
-		It 'Does not throw an Exception' {
+		Mock Download-LabModule
+        It 'Does not throw an Exception' {
 			{ Download-LabResources -Configuration $Config } | Should Not Throw
 		}
+        It 'Should call appropriate Mocks' {
+            Assert-MockCalled Download-LabModule -Exactly 4
+        }
 	}
 }
 ####################################################################################################

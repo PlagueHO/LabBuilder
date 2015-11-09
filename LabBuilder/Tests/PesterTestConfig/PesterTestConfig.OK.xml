@@ -13,6 +13,9 @@
 
   <resources>
     <module name="xNetworking" url="https://github.com/PlagueHO/xNetworking/archive/dev.zip" folder="xNetworking-dev" />
+    <module name="xActiveDirectory" />
+    <module name="xExchange" minimumversion="1.3.0.0" />
+    <module name="xDNSServer" requiredversion="1.2.0.0" />
   </resources>
 
   <switches>
