@@ -907,9 +907,7 @@ Describe 'Remove-LabSwitches' {
 ####################################################################################################
 Describe 'Get-LabVMTemplates' {
 
-	#region Mocks
 	Mock Get-VM
-	#endregion
 
 	Context 'Configuration passed with template missing Template Name.' {
 		It 'Fails' {

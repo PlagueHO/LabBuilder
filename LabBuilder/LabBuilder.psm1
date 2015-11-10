@@ -17,6 +17,9 @@ ResourceModuleNameEmptyError=Resource Module Name is missing or empty.
 ModuleNotAvailableError=Error installing Module '{0}' ({1}); {2}.
 SwitchNameIsEmptyError=Switch name is empty.
 UnknownSwitchTypeError=Unknown switch type '{0}' specified for swtich '{1}'.
+EmptyTemplateNameError=Template Name is missing or empty.
+EmptyTemplateVHDNameError=VHD Name in Template '{0}' is missing or empty.
+TemplateSourceVHDNotFoundError=The Template Source VHD '{0}' in Template '{1}' could not be found.
 InstallingHyperVComponentsMesage=Installing {0} Hyper-V Components.
 InitializingHyperVComponentsMesage=Initializing Hyper-V Components.
 DownloadingLabResourcesMessage=Downloading Lab Resources.
@@ -1025,7 +1028,8 @@ function Get-LabVMTemplates {
 	[System.Collections.Hashtable[]]$VMTemplates = @()
 	[String]$VHDParentPath = $Configuration.labbuilderconfig.SelectNodes('settings').vhdparentpath
 
-	# Get a list of all templates in the Hyper-V system matching the phrase found in the fromvm config setting
+	# Get a list of all templates in the Hyper-V system matching the phrase found in the fromvm
+    # config setting
 	[String]$FromVM=$Configuration.labbuilderconfig.SelectNodes('templates').fromvm
 	If ($FromVM) {
 		$Templates = Get-VM -Name $FromVM
@@ -1044,15 +1048,33 @@ function Get-LabVMTemplates {
 	# Read the list of templates from the configuration file
 	$Templates = $Configuration.labbuilderconfig.SelectNodes('templates').template
 	Foreach ($Template in $Templates) {
-		# It can't be template because if the name attrib/node is missing the name property on the XML object defaults to the name
-		# Of the parent. So we can't easily tell if no name was specified or if they actually specified 'template' as the name.
+		# It can't be template because if the name attrib/node is missing the name property on
+        # the XML object defaults to the name of the parent. So we can't easily tell if no name
+        # was specified or if they actually specified 'template' as the name.
 		If ($Template.Name -eq 'template') {
-			Throw "The Template Name can't be 'template' or empty."
+            $errorId = 'EmptyTemplateNameError'
+            $errorCategory = [System.Management.Automation.ErrorCategory]::InvalidArgument
+            $errorMessage = $($LocalizedData.EmptyTemplateNameError)
+            $exception = New-Object -TypeName System.InvalidOperationException `
+                -ArgumentList $errorMessage
+            $errorRecord = New-Object -TypeName System.Management.Automation.ErrorRecord `
+                -ArgumentList $exception, $errorId, $errorCategory, $null
+
+            $PSCmdlet.ThrowTerminatingError($errorRecord)
 		} # If
 		If ($Template.SourceVHD) {
 			# A Source VHD file was specified - does it exist?
 			If (-not (Test-Path -Path $Templates.SourceVHD)) {
-				Throw "The Template Source VHD in Template $($Template.Name) could not be found."
+                $errorId = 'TemplateSourceVHDNotFoundError'
+                $errorCategory = [System.Management.Automation.ErrorCategory]::InvalidArgument
+                $errorMessage = $($LocalizedData.TemplateSourceVHDNotFoundError `
+                    -f $Template.Name,$VMTemplate.VHD)
+                $exception = New-Object -TypeName System.InvalidOperationException `
+                    -ArgumentList $errorMessage
+                $errorRecord = New-Object -TypeName System.Management.Automation.ErrorRecord `
+                    -ArgumentList $exception, $errorId, $errorCategory, $null
+
+                $PSCmdlet.ThrowTerminatingError($errorRecord)
 			} # If
 		} # If
 		
@@ -1072,14 +1094,24 @@ function Get-LabVMTemplates {
 		[Boolean]$Found = $False
 		Foreach ($VMTemplate in $VMTemplates) {
 			If ($VMTemplate.Name -eq $Template.Name) {
-				# The template already exists - so don't add it again, but update the VHD path if provided
+				# The template already exists - so don't add it again, but update the VHD path
+                # if provided
 				If ($Template.VHD) {
 					$VMTemplate.VHD = $Template.VHD
 					$VMTemplate.TemplateVHD = "$VHDParentPath\$([System.IO.Path]::GetFileName($Template.VHD))"
 				} # If
 				# Check that we do end up with a VHD filename in the template
 				If (-not $VMTemplate.VHD) {
-					Throw "The VHD name in template $($Template.Name) cannot be empty."
+                    $errorId = 'EmptyTemplateVHDNameError'
+                    $errorCategory = [System.Management.Automation.ErrorCategory]::InvalidArgument
+                    $errorMessage = $($LocalizedData.EmptyTemplateVHDNameError `
+                        -f $VMTemplate.VHD)
+                    $exception = New-Object -TypeName System.InvalidOperationException `
+                        -ArgumentList $errorMessage
+                    $errorRecord = New-Object -TypeName System.Management.Automation.ErrorRecord `
+                        -ArgumentList $exception, $errorId, $errorCategory, $null
+
+                    $PSCmdlet.ThrowTerminatingError($errorRecord)
 				} # If
 				$VMTemplate.SourceVHD = $Templates.SourceVHD
 				$VMTemplate.InstallISO = $Template.InstallISO
@@ -1117,7 +1149,16 @@ function Get-LabVMTemplates {
 		If (-not $Found) {
 			# Check that we do end up with a VHD filename in the template
 			If (-not $Template.VHD) {
-				Throw "The VHD name in template $($Template.Name) cannot be empty."
+                $errorId = 'EmptyTemplateVHDNameError'
+                $errorCategory = [System.Management.Automation.ErrorCategory]::InvalidArgument
+                $errorMessage = $($LocalizedData.EmptyTemplateVHDNameError `
+                    -f $VMTemplate.VHD)
+                $exception = New-Object -TypeName System.InvalidOperationException `
+                    -ArgumentList $errorMessage
+                $errorRecord = New-Object -TypeName System.Management.Automation.ErrorRecord `
+                    -ArgumentList $exception, $errorId, $errorCategory, $null
+
+                $PSCmdlet.ThrowTerminatingError($errorRecord)
 			} # If
 
 			# The template wasn't found in the list of templates so add it
