@@ -15,11 +15,17 @@ ConfigurationMissingElementError=Element '{0}' is missing or empty in the config
 PathNotFoundError={0} path '{1}' is not found.
 ResourceModuleNameEmptyError=Resource Module Name is missing or empty.
 ModuleNotAvailableError=Error installing Module '{0}' ({1}); {2}.
+SwitchNameIsEmptyError=Switch name is empty.
+UnknownSwitchTypeError=Unknown switch type '{0}' specified for swtich '{1}'.
+InstallingHyperVComponentsMesage=Installing {0} Hyper-V Components.
+InitializingHyperVComponentsMesage=Initializing Hyper-V Components.
 DownloadingLabResourcesMessage=Downloading Lab Resources.
 ModuleNotInstalledMessage=Module {0} ({1}) is not installed.
 DownloadingLabResourceWebMessage=Downloading Module {0} ({1}) from '{2}'.
 InstallingLabResourceWebMessage=Installing Module {0} ({1}) to Modules Folder '{2}'.
 InstalledLabResourceWebMessage=Installed Module {0} ({1}) to '{2}'.
+CreatingVirtualSwitchMessage=Creating {0} Virtual Switch '{1}'.
+DeleteingVirtualSwitchMessage=Deleting {0} Virtual Switch '{1}'.
 '@
 }
 
@@ -403,7 +409,8 @@ function Install-LabHyperV {
             | Where-Object -Property State -Eq 'Disabled'
 		If ($Feature.Count -gt 0 )
         {
-			Write-Verbose 'Installing Lab Desktop Hyper-V Components ...'
+    	    Write-Verbose -Message ($LocalizedData.InstallingHyperVComponentsMesage `
+                -f 'Desktop')
 			$Feature.Foreach( { 
                 Enable-WindowsOptionalFeature -Online -FeatureName $_.FeatureName
             } )
@@ -414,7 +421,8 @@ function Install-LabHyperV {
             | Where-Object -Property Installed -EQ $false
 		If ($Feature.Count -gt 0 )
         {
-			Write-Verbose 'Installing Lab Server Hyper-V Components ...'
+    	    Write-Verbose -Message ($LocalizedData.InstallingHyperVComponentsMesage `
+                -f 'Desktop')
 			$Feature.Foreach( {
                 Install-WindowsFeature -IncludeAllSubFeature -IncludeManagementTools -Name $_.Name
             } )
@@ -436,7 +444,9 @@ function Install-LabHyperV {
 .EXAMPLE
    $Config = Get-LabConfiguration -Path c:\mylab\config.xml
    Initialize-LabConfiguration -Configuration $Config
-   Loads a Lab Builder configuration and applies the base system settings.   
+   Loads a Lab Builder configuration and applies the base system settings.
+.OUTPUTS
+   None
 #>
 function Initialize-LabConfiguration {
 	[CmdLetBinding()]
@@ -450,7 +460,7 @@ function Initialize-LabConfiguration {
 	)
 	
 	# Install Hyper-V Components
-	Write-Verbose 'Initializing Lab Hyper-V Components ...'
+    Write-Verbose -Message ($LocalizedData.InitializingHyperVComponentsMesage)
 	
 	[String]$MacAddressMinimum = $Configuration.labbuilderconfig.settings.macaddressminimum
 	If (-not $MacAddressMinimum)
@@ -727,7 +737,8 @@ function Download-LabResources {
    Gets an array of switches from a Lab Configuration file.
 .DESCRIPTION
    Takes a provided Lab Configuration file and returns the list of switches required for this Lab.
-   This list is usually passed to Initialize-LabSwitches to configure the swtiches required for this lab.
+   This list is usually passed to Initialize-LabSwitches to configure the swtiches required for this
+   lab.
 .PARAMETER Configuration
    Contains the Lab Builder configuration object that was loaded by the Get-LabConfiguration object.
 .EXAMPLE
@@ -748,22 +759,20 @@ function Get-LabSwitches {
 		[XML]$Configuration
 	)
 
-	If ($Configuration.labbuilderconfig -eq $null) {
-		Throw 'Configuration is invalid.'
-	}
-
 	[Array]$Switches = @() 
 	$ConfigSwitches = $Configuration.labbuilderconfig.SelectNodes('switches').Switch
 	Foreach ($ConfigSwitch in $ConfigSwitches) {
-		# It can't be switch because if the name attrib/node is missing the name property on the XML object defaults to the name
-		# Of the parent. So we can't easily tell if no name was specified or if they actually specified 'switch' as the name.
+		# It can't be switch because if the name attrib/node is missing the name property on the
+		# XML object defaults to the name of the parent. So we can't easily tell if no name was
+        # specified or if they actually specified 'switch' as the name.
 		If ($ConfigSwitch.Name -eq 'switch') {
 			Throw "The switch name cannot be 'switch' or empty."
 		}
 		If ($ConfigSwitch.Type -notin 'Private','Internal','External') {
 			Throw 'The switch type must be Private, Internal or External.'
 		}
-		# Assemble the list of Adapters if any are specified for this switch (only if an external switch)
+		# Assemble the list of Adapters if any are specified for this switch (only if an external
+        # switch)
 		If ($ConfigSwitch.Adapters) {
 			[System.Collections.Hashtable[]]$ConfigAdapters = @()
 			Foreach ($Adapter in $ConfigSwitch.Adapters.Adapter) {
@@ -790,7 +799,8 @@ function Get-LabSwitches {
 .Synopsis
    Creates Hyper-V Virtual Switches from a provided array.
 .DESCRIPTION
-   Takes an array of switches that were pulled from a Lab Configuration object by calling Get-LabSwitches
+   Takes an array of switches that were pulled from a Lab Configuration object by calling
+   Get-LabSwitches
    and ensures that they Hyper-V Virtual Switches on the system are configured to match.
 .PARAMETER Configuration
    Contains the Lab Builder configuration object that was loaded by the Get-LabConfiguration object.
@@ -802,11 +812,10 @@ function Get-LabSwitches {
    Initialize-LabSwitches -Configuration $Config -Switches $Switches
    Initializes the Hyper-V switches in the configured in the Lab c:\mylab\config.xml
 .OUTPUTS
-   Returns true if the Lab switches were created correctly.
+   None.
 #>
 function Initialize-LabSwitches {
 	[CmdLetBinding()]
-	[OutputType([Boolean])]
 	param (
 		[Parameter(
             Mandatory,
@@ -825,38 +834,75 @@ function Initialize-LabSwitches {
 	Foreach ($VMSwitch in $Switches) {
 		If ((Get-VMSwitch | Where-Object -Property Name -eq $($VMSwitch.Name)).Count -eq 0) {
 			[String]$SwitchName = $VMSwitch.Name
+			If (-not $SwitchName) {
+                $errorId = 'UnknownSwitchTypeError'
+                $errorCategory = [System.Management.Automation.ErrorCategory]::InvalidArgument
+                $errorMessage = $($LocalizedData.SwitchNameIsEmptyError)
+                $exception = New-Object -TypeName System.InvalidOperationException `
+                    -ArgumentList $errorMessage
+                $errorRecord = New-Object -TypeName System.Management.Automation.ErrorRecord `
+                    -ArgumentList $exception, $errorId, $errorCategory, $null
+
+                $PSCmdlet.ThrowTerminatingError($errorRecord)
+			}
 			[string]$SwitchType = $VMSwitch.Type
-			Write-Verbose "Creating Virtual Switch '$SwitchName' ..."
+			Write-Verbose -Message $($LocalizedData.CreatingVirtualSwitchMessage `
+                -f $SwitchType,$SwitchName)
 			Switch ($SwitchType) {
 				'External' {
-					New-VMSwitch -Name $SwitchName -NetAdapterName (Get-NetAdapter | Where-Object { $_.Status -eq 'Up' } | Select-Object -First 1 -ExpandProperty Name) | Out-Null
+					$null = New-VMSwitch `
+                        -Name $SwitchName `
+                        -NetAdapterName (`
+                            Get-NetAdapter | `
+                            Where-Object { $_.Status -eq 'Up' } | `
+                            Select-Object -First 1 -ExpandProperty Name `
+                            )
 					If ($VMSwitch.Adapters) {
 						Foreach ($Adapter in $VMSwitch.Adapters) {
 							If ($VMSwitch.VLan) {
-								# A default VLAN is assigned to this Switch so assign it to the management adapters
-								Add-VMNetworkAdapter -ManagementOS -SwitchName $SwitchName -Name $($Adapter.Name) -StaticMacAddress $($Adapter.MacAddress) -Passthru | Set-VMNetworkAdapterVlan -Access -VlanId $($Switch.Vlan) | Out-Null
+								# A default VLAN is assigned to this Switch so assign it to the
+                                # management adapters
+								$null = Add-VMNetworkAdapter `
+                                    -ManagementOS `
+                                    -SwitchName $SwitchName `
+                                    -Name $($Adapter.Name) `
+                                    -StaticMacAddress $($Adapter.MacAddress) `
+                                    -Passthru | `
+                                    Set-VMNetworkAdapterVlan -Access -VlanId $($Switch.Vlan)
 							} Else { 
-								Add-VMNetworkAdapter -ManagementOS -SwitchName $SwitchName -Name $($Adapter.Name) -StaticMacAddress $($Adapter.MacAddress) | Out-Null
+								$null = Add-VMNetworkAdapter `
+                                    -ManagementOS `
+                                    -SwitchName $SwitchName `
+                                    -Name $($Adapter.Name) `
+                                    -StaticMacAddress $($Adapter.MacAddress)
 							} # If
 						} # Foreach
 					} # If
 					Break
 				} # 'External'
 				'Private' {
-					New-VMSwitch -Name $SwitchName -SwitchType Private | Out-Null
+					$null = New-VMSwitch -Name $SwitchName -SwitchType Private
 					Break
 				} # 'Private'
 				'Internal' {
-					New-VMSwitch -Name $SwitchName -SwitchType Internal | Out-Null
+					$null = New-VMSwitch -Name $SwitchName -SwitchType Internal
 					Break
 				} # 'Internal'
 				Default {
-					Throw "Unknown Switch Type $SwitchType."
+                    $errorId = 'UnknownSwitchTypeError'
+                    $errorCategory = [System.Management.Automation.ErrorCategory]::InvalidArgument
+                    $errorMessage = $($LocalizedData.UnknownSwitchTypeError `
+                        -f $SwitchType,$SwitchName)
+                    $exception = New-Object -TypeName System.InvalidOperationException `
+                        -ArgumentList $errorMessage
+                    $errorRecord = New-Object -TypeName System.Management.Automation.ErrorRecord `
+                        -ArgumentList $exception, $errorId, $errorCategory, $null
+
+                    $PSCmdlet.ThrowTerminatingError($errorRecord)
 				}
 			} # Switch
 		} # If
 	} # Foreach       
-	Return $True 
 } # Initialize-LabSwitches
 ####################################################################################################
 
@@ -880,7 +926,6 @@ function Initialize-LabSwitches {
    Returns true if the Lab switches were created correctly.#>
 function Remove-LabSwitches {
 	[CmdLetBinding()]
-	[OutputType([Boolean])]
 	param (
 		[Parameter(
             Mandatory,
@@ -900,16 +945,25 @@ function Remove-LabSwitches {
 		If ((Get-VMSwitch | Where-Object -Property Name -eq $Switch.Name).Count -ne 0) {
 			[String]$SwitchName = $Switch.Name
 			If (-not $SwitchName) {
-				Throw "The Switch Name can't be empty."
+                $errorId = 'UnknownSwitchTypeError'
+                $errorCategory = [System.Management.Automation.ErrorCategory]::InvalidArgument
+                $errorMessage = $($LocalizedData.SwitchNameIsEmptyError)
+                $exception = New-Object -TypeName System.InvalidOperationException `
+                    -ArgumentList $errorMessage
+                $errorRecord = New-Object -TypeName System.Management.Automation.ErrorRecord `
+                    -ArgumentList $exception, $errorId, $errorCategory, $null
+
+                $PSCmdlet.ThrowTerminatingError($errorRecord)
 			}
 			[string]$SwitchType = $Switch.Type
-			Write-Verbose "Deleting Virtual Switch '$SwitchName' ..."
+			Write-Verbose -Message $($LocalizedData.DeleteingVirtualSwitchMessage `
+                -f $SwitchType,$SwitchName)
 			Switch ($SwitchType) {
 				'External' {
 					If ($Switch.Adapters) {
-						Foreach ($Adapter in $Switch.Adapters) {
-								Remove-VMNetworkAdapter -ManagementOS -Name $Adapter.Name | Out-Null
-						} # Foreach
+						$Switch.Adapters.foreach( {
+							$null = Remove-VMNetworkAdapter -ManagementOS -Name $_.Name
+						} )
 					} # If
 					Remove-VMSwitch -Name $SwitchName
 					Break
@@ -923,12 +977,20 @@ function Remove-LabSwitches {
 					Break
 				} # 'Internal'
 				Default {
-					Throw "Unknown Switch Type $SwitchType."
+                    $errorId = 'UnknownSwitchTypeError'
+                    $errorCategory = [System.Management.Automation.ErrorCategory]::InvalidArgument
+                    $errorMessage = $($LocalizedData.UnknownSwitchTypeError `
+                        -f $SwitchType,$SwitchName)
+                    $exception = New-Object -TypeName System.InvalidOperationException `
+                        -ArgumentList $errorMessage
+                    $errorRecord = New-Object -TypeName System.Management.Automation.ErrorRecord `
+                        -ArgumentList $exception, $errorId, $errorCategory, $null
+
+                    $PSCmdlet.ThrowTerminatingError($errorRecord)
 				}
 			} # Switch
 		} # If
 	} # Foreach        
-	Return $True
 } # Remove-LabSwitches
 ####################################################################################################
 

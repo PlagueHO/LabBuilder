@@ -776,19 +776,17 @@ Describe 'Get-LabSwitches' {
 ####################################################################################################
 Describe 'Initialize-LabSwitches' {
 
-	#region Mocks
 	Mock Get-VMSwitch
 	Mock New-VMSwitch
 	Mock Add-VMNetworkAdapter
 	Mock Set-VMNetworkAdapterVlan
-	#endregion
+
+	$Config = Get-LabConfiguration -Path $Global:TestConfigOKPath
+	[Array]$Switches = Get-LabSwitches -Configuration $Config
 
 	Context 'Valid configuration is passed' {	
-		$Config = Get-LabConfiguration -Path $Global:TestConfigOKPath
-		[Array]$Switches = Get-LabSwitches -Configuration $Config
-
-		It 'Returns True' {
-			Initialize-LabSwitches -Configuration $Config -Switches $Switches | Should Be $True
+		It 'Does not throw an Exception' {
+			{ Initialize-LabSwitches -Configuration $Config -Switches $Switches } | Should Not Throw
 		}
 		It 'Calls Mocked commands' {
 			Assert-MockCalled Get-VMSwitch -Exactly 5
@@ -797,23 +795,66 @@ Describe 'Initialize-LabSwitches' {
 			Assert-MockCalled Set-VMNetworkAdapterVlan -Exactly 0
 		}
 	}
+
+	Context 'Valid configuration with invalid switch type passed' {	
+    	$Switches[0].Type='Invalid'
+		It 'Throws a UnknownSwitchTypeError Exception' {
+			$errorId = 'UnknownSwitchTypeError'
+            $errorCategory = [System.Management.Automation.ErrorCategory]::InvalidArgument
+            $errorMessage = $($LocalizedData.UnknownSwitchTypeError) `
+                -f 'Invalid',$Switches[0].Name
+            $exception = New-Object -TypeName System.InvalidOperationException `
+                -ArgumentList $errorMessage
+            $errorRecord = New-Object -TypeName System.Management.Automation.ErrorRecord `
+                -ArgumentList $exception, $errorId, $errorCategory, $null
+
+            { Initialize-LabSwitches -Configuration $Config -Switches $Switches } | Should Throw $errorRecord
+		}
+		It 'Calls Mocked commands' {
+			Assert-MockCalled Get-VMSwitch -Exactly 1
+			Assert-MockCalled New-VMSwitch -Exactly 0
+			Assert-MockCalled Add-VMNetworkAdapter -Exactly 0
+			Assert-MockCalled Set-VMNetworkAdapterVlan -Exactly 0
+		}
+	}
+
+	Context 'Valid configuration with blank switch name passed' {	
+    	$Switches[0].Type = 'External'
+        $Switches[0].Name = ''
+		It 'Throws a SwitchNameIsEmptyError Exception' {
+			$errorId = 'SwitchNameIsEmptyError'
+            $errorCategory = [System.Management.Automation.ErrorCategory]::InvalidArgument
+            $errorMessage = $($LocalizedData.SwitchNameIsEmptyError)
+            $exception = New-Object -TypeName System.InvalidOperationException `
+                -ArgumentList $errorMessage
+            $errorRecord = New-Object -TypeName System.Management.Automation.ErrorRecord `
+                -ArgumentList $exception, $errorId, $errorCategory, $null
+
+            { Initialize-LabSwitches -Configuration $Config -Switches $Switches } | Should Throw $errorRecord
+		}
+		It 'Calls Mocked commands' {
+			Assert-MockCalled Get-VMSwitch -Exactly 1
+			Assert-MockCalled New-VMSwitch -Exactly 0
+			Assert-MockCalled Add-VMNetworkAdapter -Exactly 0
+			Assert-MockCalled Set-VMNetworkAdapterVlan -Exactly 0
+		}
+	}
+
 }
 ####################################################################################################
 
 ####################################################################################################
 Describe 'Remove-LabSwitches' {
 
-	#region Mocks
 	Mock Get-VMSwitch
 	Mock Remove-VMSwitch
-	#endregion
 
 	Context 'Valid configuration is passed' {	
 		$Config = Get-LabConfiguration -Path $Global:TestConfigOKPath
 		[Array]$Switches = Get-LabSwitches -Configuration $Config
 
-		It 'Returns True' {
-			Remove-LabSwitches -Configuration $Config -Switches $Switches | Should Be $True
+		It 'Does not throw an Exception' {
+			{ Remove-LabSwitches -Configuration $Config -Switches $Switches } | Should Not Throw
 		}
 		It 'Calls Mocked commands' {
 			Assert-MockCalled Get-VMSwitch -Exactly 5
