@@ -14,7 +14,7 @@ ConfigurationInvalidError=Configuration is invalid.
 ConfigurationMissingElementError=Element '{0}' is missing or empty in the configuration.
 PathNotFoundError={0} path '{1}' is not found.
 ResourceModuleNameEmptyError=Resource Module Name is missing or empty.
-ModuleNotAvailableError=Module '{0}' ({1}) could not be found in the repository.
+ModuleNotAvailableError=Error installing Module '{0}' ({1}); {2}.
 DownloadingLabResourcesMessage=Downloading Lab Resources.
 ModuleNotInstalledMessage=Module {0} ({1}) is not installed.
 DownloadingLabResourceWebMessage=Downloading Module {0} ({1}) from '{2}'.
@@ -621,7 +621,7 @@ function Download-LabModule {
             $null = Get-PackageProvider -name nuget -ForceBootStrap -Force
 
             # Install the module
-            $Splat = [PSObject] @{ Name = $ModuleName }
+            $Splat = [PSObject] @{ Name = $Name }
             if ($RequiredVersion)
             {
                 # Is a specific module version required?
@@ -641,7 +641,7 @@ function Download-LabModule {
                 $errorId = 'ModuleNotAvailableError'
                 $errorCategory = [System.Management.Automation.ErrorCategory]::InvalidArgument
                 $errorMessage = $($LocalizedData.ModuleNotAvailableError) `
-                    -f $Name,$VersionMessage
+                    -f $Name,$VersionMessage,$_.Exception.Message
                 $exception = New-Object -TypeName System.InvalidOperationException `
                     -ArgumentList $errorMessage
                 $errorRecord = New-Object -TypeName System.Management.Automation.ErrorRecord `
@@ -649,7 +649,7 @@ function Download-LabModule {
 
                 $PSCmdlet.ThrowTerminatingError($errorRecord)
             }
-            } # If
+        } # If
 	} # If
 }
 ####################################################################################################

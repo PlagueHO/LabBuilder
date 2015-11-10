@@ -359,6 +359,8 @@ Describe 'Download-LabModule' {
     Mock Rename-Item
     Mock Test-Path -MockWith { $false }
     Mock Remove-Item
+    Mock Get-PackageProvider
+    Mock Install-Module
 
     Context 'Correct module already installed; Valid URL and Folder passed' {
 		It 'Does not throw an Exception' {
@@ -376,6 +378,8 @@ Describe 'Download-LabModule' {
             Assert-MockCalled Rename-Item -Exactly 0
             Assert-MockCalled Test-Path -Exactly 0
             Assert-MockCalled Remove-Item -Exactly 0
+            Assert-MockCalled Get-PackageProvider -Exactly 0
+            Assert-MockCalled Install-Module -Exactly 0
         }
 	}
 
@@ -397,6 +401,27 @@ Describe 'Download-LabModule' {
             Assert-MockCalled Rename-Item -Exactly 1
             Assert-MockCalled Test-Path -Exactly 1
             Assert-MockCalled Remove-Item -Exactly 0
+            Assert-MockCalled Get-PackageProvider -Exactly 0
+            Assert-MockCalled Install-Module -Exactly 0
+        }
+	}
+
+    Context 'Module is not installed; No URL or Folder passed' {
+		It 'Does not throw an Exception' {
+			{
+                Download-LabModule `
+                    -Name 'xNetworking'
+            } | Should Not Throw
+		}
+        It 'Should call appropriate Mocks' {
+            Assert-MockCalled Get-Module -Exactly 1
+            Assert-MockCalled Invoke-WebRequest -Exactly 0
+            Assert-MockCalled Expand-Archive -Exactly 0
+            Assert-MockCalled Rename-Item -Exactly 0
+            Assert-MockCalled Test-Path -Exactly 0
+            Assert-MockCalled Remove-Item -Exactly 0
+            Assert-MockCalled Get-PackageProvider -Exactly 1
+            Assert-MockCalled Install-Module -Exactly 1
         }
 	}
 
@@ -419,6 +444,28 @@ Describe 'Download-LabModule' {
             Assert-MockCalled Rename-Item -Exactly 1
             Assert-MockCalled Test-Path -Exactly 1
             Assert-MockCalled Remove-Item -Exactly 0
+            Assert-MockCalled Get-PackageProvider -Exactly 0
+            Assert-MockCalled Install-Module -Exactly 0
+        }
+	}
+
+    Context 'Wrong version of module is installed; No URL or Folder passed, but Required Version passed' {
+		It 'Does not throw an Exception' {
+			{
+                Download-LabModule `
+                    -Name 'xNetworking' `
+                    -RequiredVersion '2.5.0.0'
+            } | Should Not Throw
+		}
+        It 'Should call appropriate Mocks' {
+            Assert-MockCalled Get-Module -Exactly 1
+            Assert-MockCalled Invoke-WebRequest -Exactly 0
+            Assert-MockCalled Expand-Archive -Exactly 0
+            Assert-MockCalled Rename-Item -Exactly 0
+            Assert-MockCalled Test-Path -Exactly 0
+            Assert-MockCalled Remove-Item -Exactly 0
+            Assert-MockCalled Get-PackageProvider -Exactly 1
+            Assert-MockCalled Install-Module -Exactly 1
         }
 	}
 
@@ -439,6 +486,28 @@ Describe 'Download-LabModule' {
             Assert-MockCalled Rename-Item -Exactly 0
             Assert-MockCalled Test-Path -Exactly 0
             Assert-MockCalled Remove-Item -Exactly 0
+            Assert-MockCalled Get-PackageProvider -Exactly 0
+            Assert-MockCalled Install-Module -Exactly 0
+        }
+	}
+
+    Context 'Correct version of module is installed; No URL and Folder passed, but Required Version passed' {
+		It 'Does not throw an Exception' {
+			{
+                Download-LabModule `
+                    -Name 'xNetworking' `
+                    -RequiredVersion '2.4.0.0'
+            } | Should Not Throw
+		}
+        It 'Should call appropriate Mocks' {
+            Assert-MockCalled Get-Module -Exactly 1
+            Assert-MockCalled Invoke-WebRequest -Exactly 0
+            Assert-MockCalled Expand-Archive -Exactly 0
+            Assert-MockCalled Rename-Item -Exactly 0
+            Assert-MockCalled Test-Path -Exactly 0
+            Assert-MockCalled Remove-Item -Exactly 0
+            Assert-MockCalled Get-PackageProvider -Exactly 0
+            Assert-MockCalled Install-Module -Exactly 0
         }
 	}
 
@@ -459,6 +528,28 @@ Describe 'Download-LabModule' {
             Assert-MockCalled Rename-Item -Exactly 1
             Assert-MockCalled Test-Path -Exactly 1
             Assert-MockCalled Remove-Item -Exactly 0
+            Assert-MockCalled Get-PackageProvider -Exactly 0
+            Assert-MockCalled Install-Module -Exactly 0
+        }
+	}
+
+    Context 'Wrong version of module is installed; No URL and Folder passed, but Minimum Version passed' {
+		It 'Does not throw an Exception' {
+			{
+                Download-LabModule `
+                    -Name 'xNetworking' `
+                    -MinimumVersion '2.5.0.0'
+            } | Should Not Throw
+		}
+        It 'Should call appropriate Mocks' {
+            Assert-MockCalled Get-Module -Exactly 1
+            Assert-MockCalled Invoke-WebRequest -Exactly 0
+            Assert-MockCalled Expand-Archive -Exactly 0
+            Assert-MockCalled Rename-Item -Exactly 0
+            Assert-MockCalled Test-Path -Exactly 0
+            Assert-MockCalled Remove-Item -Exactly 0
+            Assert-MockCalled Get-PackageProvider -Exactly 1
+            Assert-MockCalled Install-Module -Exactly 1
         }
 	}
 
@@ -479,6 +570,28 @@ Describe 'Download-LabModule' {
             Assert-MockCalled Rename-Item -Exactly 0
             Assert-MockCalled Test-Path -Exactly 0
             Assert-MockCalled Remove-Item -Exactly 0
+            Assert-MockCalled Get-PackageProvider -Exactly 0
+            Assert-MockCalled Install-Module -Exactly 0
+        }
+	}
+
+    Context 'Correct version of module is installed; No URL and Folder passed, but Minimum Version passed' {
+		It 'Does not throw an Exception' {
+			{
+                Download-LabModule `
+                    -Name 'xNetworking' `
+                    -MinimumVersion '2.4.0.0'
+            } | Should Not Throw
+		}
+        It 'Should call appropriate Mocks' {
+            Assert-MockCalled Get-Module -Exactly 1
+            Assert-MockCalled Invoke-WebRequest -Exactly 0
+            Assert-MockCalled Expand-Archive -Exactly 0
+            Assert-MockCalled Rename-Item -Exactly 0
+            Assert-MockCalled Test-Path -Exactly 0
+            Assert-MockCalled Remove-Item -Exactly 0
+            Assert-MockCalled Get-PackageProvider -Exactly 0
+            Assert-MockCalled Install-Module -Exactly 0
         }
 	}
 
@@ -510,9 +623,40 @@ Describe 'Download-LabModule' {
             Assert-MockCalled Rename-Item -Exactly 0
             Assert-MockCalled Test-Path -Exactly 0
             Assert-MockCalled Remove-Item -Exactly 0
+            Assert-MockCalled Get-PackageProvider -Exactly 0
+            Assert-MockCalled Install-Module -Exactly 0
         }
 	}
 
+    Mock Install-Module -MockWith { Throw ("No match was found for the specified search criteria and module name 'xDoesNotExist'" )}
+
+    Context 'Module is not installed; Not available in Repository' {
+		It 'Throws a ModuleNotAvailableError exception' {
+            $errorId = 'ModuleNotAvailableError'
+            $errorCategory = [System.Management.Automation.ErrorCategory]::InvalidArgument
+            $errorMessage = $($LocalizedData.ModuleNotAvailableError) `
+                -f 'xDoesNotExist','any version',"No match was found for the specified search criteria and module name 'xDoesNotExist'"
+            $exception = New-Object -TypeName System.InvalidOperationException `
+                -ArgumentList $errorMessage
+            $errorRecord = New-Object -TypeName System.Management.Automation.ErrorRecord `
+                -ArgumentList $exception, $errorId, $errorCategory, $null
+
+			{
+                Download-LabModule `
+                    -Name 'xDoesNotExist'
+            } | Should Throw $errorRecord
+		}
+        It 'Should call appropriate Mocks' {
+            Assert-MockCalled Get-Module -Exactly 1
+            Assert-MockCalled Invoke-WebRequest -Exactly 0
+            Assert-MockCalled Expand-Archive -Exactly 0
+            Assert-MockCalled Rename-Item -Exactly 0
+            Assert-MockCalled Test-Path -Exactly 0
+            Assert-MockCalled Remove-Item -Exactly 0
+            Assert-MockCalled Get-PackageProvider -Exactly 1
+            Assert-MockCalled Install-Module -Exactly 1
+        }
+	}
 }
 ####################################################################################################
 
