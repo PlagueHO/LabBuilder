@@ -657,6 +657,67 @@ Describe 'Download-LabModule' {
             Assert-MockCalled Install-Module -Exactly 1
         }
 	}
+
+    Mock Install-Module -MockWith { Throw ("No match was found for the specified search criteria and module name 'xNetworking'" )}
+
+    Context 'Wrong version of module is installed; No URL or Folder passed, but Required Version passed. Required Version is not available' {
+		It ' Throws a ModuleNotAvailableError Exception' {
+            $errorId = 'ModuleNotAvailableError'
+            $errorCategory = [System.Management.Automation.ErrorCategory]::InvalidArgument
+            $errorMessage = $($LocalizedData.ModuleNotAvailableError) `
+                -f 'xNetworking','2.5.0.0',"No match was found for the specified search criteria and module name 'xNetworking'"
+            $exception = New-Object -TypeName System.InvalidOperationException `
+                -ArgumentList $errorMessage
+            $errorRecord = New-Object -TypeName System.Management.Automation.ErrorRecord `
+                -ArgumentList $exception, $errorId, $errorCategory, $null
+
+			{
+                Download-LabModule `
+                    -Name 'xNetworking' `
+                    -RequiredVersion '2.5.0.0'
+            } | Should Throw $errorRecord
+		}
+        It 'Should call appropriate Mocks' {
+            Assert-MockCalled Get-Module -Exactly 1
+            Assert-MockCalled Invoke-WebRequest -Exactly 0
+            Assert-MockCalled Expand-Archive -Exactly 0
+            Assert-MockCalled Rename-Item -Exactly 0
+            Assert-MockCalled Test-Path -Exactly 0
+            Assert-MockCalled Remove-Item -Exactly 0
+            Assert-MockCalled Get-PackageProvider -Exactly 1
+            Assert-MockCalled Install-Module -Exactly 1
+        }
+	}
+    
+    Context 'Wrong version of module is installed; No URL or Folder passed, but Minimum Version passed. Minimum Version is not available' {
+		It ' Throws a ModuleNotAvailableError Exception' {
+            $errorId = 'ModuleNotAvailableError'
+            $errorCategory = [System.Management.Automation.ErrorCategory]::InvalidArgument
+            $errorMessage = $($LocalizedData.ModuleNotAvailableError) `
+                -f 'xNetworking','min 2.5.0.0',"No match was found for the specified search criteria and module name 'xNetworking'"
+            $exception = New-Object -TypeName System.InvalidOperationException `
+                -ArgumentList $errorMessage
+            $errorRecord = New-Object -TypeName System.Management.Automation.ErrorRecord `
+                -ArgumentList $exception, $errorId, $errorCategory, $null
+
+			{
+                Download-LabModule `
+                    -Name 'xNetworking' `
+                    -MinimumVersion '2.5.0.0'
+            } | Should Throw $errorRecord
+		}
+        It 'Should call appropriate Mocks' {
+            Assert-MockCalled Get-Module -Exactly 1
+            Assert-MockCalled Invoke-WebRequest -Exactly 0
+            Assert-MockCalled Expand-Archive -Exactly 0
+            Assert-MockCalled Rename-Item -Exactly 0
+            Assert-MockCalled Test-Path -Exactly 0
+            Assert-MockCalled Remove-Item -Exactly 0
+            Assert-MockCalled Get-PackageProvider -Exactly 1
+            Assert-MockCalled Install-Module -Exactly 1
+        }
+	}
+
 }
 ####################################################################################################
 
