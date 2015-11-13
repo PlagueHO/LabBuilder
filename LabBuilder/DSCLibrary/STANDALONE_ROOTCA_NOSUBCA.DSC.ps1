@@ -1,18 +1,17 @@
 <#########################################################################################################################################
 DSC Template Configuration File For use by LabBuilder
 .Title
-	STANDALONE_ROOTCA
+	STANDALONE_ROOTCA_NOSUBCA
 .Desription
-	Builds a Standalone Root CA and creates Issuing CA certificates for Sub CAs.
+	Builds a Standalone Root CA with no Sub CAs.
 .Parameters:    
             CACommonName = "LABBUILDER.COM Root CA"
             CADistinguishedNameSuffix = "DC=LABBUILDER,DC=COM"
             CRLPublicationURLs = "1:C:\Windows\system32\CertSrv\CertEnroll\%3%8%9.crl\n10:ldap:///CN=%7%8,CN=%2,CN=CDP,CN=Public Key Services,CN=Services,%6%10\n2:http://pki.labbuilder.com/CertEnroll/%3%8%9.crl"
             CACertPublicationURLs = "1:C:\Windows\system32\CertSrv\CertEnroll\%1_%3%4.crt\n2:ldap:///CN=%7,CN=AIA,CN=Public Key Services,CN=Services,%6%11\n2:http://pki.labbuilder.com/CertEnroll/%1_%3%4.crt"
-            SubCAs = @('SA_SUBCA')
 #########################################################################################################################################>
 
-Configuration STANDALONE_ROOTCA
+Configuration STANDALONE_ROOTCA_NOSUBCA
 {
 	Import-DscResource -ModuleName 'PSDesiredStateConfiguration'
 	Import-DscResource -ModuleName xAdcsDeployment
@@ -155,93 +154,7 @@ Configuration STANDALONE_ROOTCA
 				}
 				Return $True
 			}
-			DependsOn = '[xADCSWebEnrollment]ConfigWebEnrollment'
-		}
-        
-        # Generate Issuing certificates for any SubCAs
-		Foreach ($SubCA in $Node.SubCAs) {
-			
-			# Wait for SubCA to generate REQ
-			WaitForAny "WaitForSubCA_$SubCA"
-			{
-				ResourceName = '[xADCSCertificationAuthority]ConfigCA'
-				NodeName = $SubCA
-				RetryIntervalSec = 30
-				RetryCount = 30
-				DependsOn = '[Script]ADCSAdvConfig'
-			}
-
-			# Download the REQ from the SubCA
-			xRemoteFile "DownloadSubCA_$SubCA"
-			{
-				DestinationPath = "C:\Windows\System32\CertSrv\CertEnroll\$SubCA.req"
-				Uri = "http://$SubCA/CertEnroll/$SubCA.req"
-				DependsOn = "[WaitForAny]WaitForSubCA_$SubCA"
-			}
-
-			# Generate the Issuing Certificate from the REQ
-			Script "IssueCert_$SubCA"
-			{
-				SetScript = {
-					Write-Verbose "Submitting C:\Windows\System32\CertSrv\CertEnroll\$Using:SubCA.req to $($Using:Node.CACommonName)"
-					[String]$RequestResult = & "$($ENV:SystemRoot)\System32\Certreq.exe" -Config ".\$($Using:Node.CACommonName)" -Submit "C:\Windows\System32\CertSrv\CertEnroll\$Using:SubCA.req"
-					$Matches = [Regex]::Match($RequestResult, 'RequestId:\s([0-9]*)')
-					If ($Matches.Groups.Count -lt 2) {
-						Write-Verbose "Error getting Request ID from SubCA certificate submission."
-						Throw "Error getting Request ID from SubCA certificate submission."
-					}
-					[int]$RequestId = $Matches.Groups[1].Value
-					Write-Verbose "Issuing $RequestId in $($Using:Node.CACommonName)"
-					[String]$SubmitResult = & "$($ENV:SystemRoot)\System32\CertUtil.exe" -Resubmit $RequestId
-					If ($SubmitResult -notlike 'Certificate issued.*') {
-						Write-Verbose "Unexpected result issuing SubCA request."
-						Throw "Unexpected result issuing SubCA request."
-					}
-					Write-Verbose "Retrieving C:\Windows\System32\CertSrv\CertEnroll\$Using:SubCA.req from $($Using:Node.CACommonName)"
-					[String]$RetrieveResult = & "$($ENV:SystemRoot)\System32\Certreq.exe" -Config ".\$($Using:Node.CACommonName)" -Retrieve $RequestId "C:\Windows\System32\CertSrv\CertEnroll\$Using:SubCA.crt"
-				}
-				GetScript = {
-					Return @{
-						'Generated' = (Test-Path -Path "C:\Windows\System32\CertSrv\CertEnroll\$Using:SubCA.crt");
-					}
-				}
-				TestScript = { 
-					If (-not (Test-Path -Path "C:\Windows\System32\CertSrv\CertEnroll\$Using:SubCA.crt")) {
-						# SubCA Cert is not yet created
-						Return $False
-					}
-					# SubCA Cert has been created
-					Return $True
-				}
-				DependsOn = "[xRemoteFile]DownloadSubCA_$SubCA"
-			}
-
-			# Wait for SubCA to install the CA Certificate
-			WaitForAny "WaitForComplete_$SubCA"
-			{
-				ResourceName = '[Script]InstallSubCACert'
-				NodeName = $SubCA
-				RetryIntervalSec = 30
-				RetryCount = 30
-				DependsOn = "[Script]IssueCert_$SubCA"
-			}
-
-			# Shutdown the Root CA - it is no longer needed because it has issued all SubCAs
-			Script ShutdownRootCA
-			{
-				SetScript = {
-					Stop-Computer
-				}
-				GetScript = {
-					Return @{
-					}
-				}
-				TestScript = { 
-					# SubCA Cert is not yet created
-					Return $False
-				}
-				DependsOn = "[WaitForAny]WaitForComplete_$SubCA"
-			}
+			DependsOn = '[xADCSWebEnrollment]ConfigWebEnrollment'       
 		}
 	}
 }

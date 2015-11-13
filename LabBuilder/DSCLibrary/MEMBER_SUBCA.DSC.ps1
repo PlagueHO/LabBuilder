@@ -183,6 +183,9 @@ Configuration MEMBER_SUBCA
 			CADistinguishedNameSuffix = $Node.CADistinguishedNameSuffix
 			OverwriteExistingCAinDS  = $True
 			OutputCertRequestFile = "c:\windows\system32\certsrv\certenroll\$($Node.NodeName).req"
+			CryptoProviderName = 'RSA#Microsoft Software Key Storage Provider'
+			HashAlgorithmName = 'SHA256'
+			KeyLength = 2048
 			DependsOn = '[Script]InstallRootCACert'
 		}
 
