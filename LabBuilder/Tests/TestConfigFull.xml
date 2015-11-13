@@ -85,12 +85,12 @@
       </adapters>
     </vm>
 
-    <vm name="LABBUILDER.COM SS_DHCPDNS"
+    <vm name="LABBUILDER.COM SS_INTERNET"
         template="Template Windows Server 2012 R2 Datacenter Full"
-        computername="SS_DHCPDNS"
+        computername="SS_INTERNET"
         usedifferencingbootdisk="Y">
-      <dsc configname="STANDALONE_DHCPDNS"
-           configfile="STANDALONE_DHCPDNS.DSC.ps1"
+      <dsc configname="STANDALONE_INTERNET"
+           configfile="STANDALONE_INTERNET.DSC.ps1"
            logging="Y">
         <parameters>
           Scopes = @(

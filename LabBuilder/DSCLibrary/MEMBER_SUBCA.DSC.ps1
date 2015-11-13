@@ -10,10 +10,10 @@ DSC Template Configuration File For use by LabBuilder
 		  PSDscAllowDomainUser = $True
 		  CACommonName = "LABBUILDER.COM Issuing CA"
 		  CADistinguishedNameSuffix = "DC=LABBUILDER,DC=COM"
-          CRLPublicationURLs = "65:C:\Windows\system32\CertSrv\CertEnroll\%3%8%9.crl\n79:ldap:///CN=%7%8,CN=%2,CN=CDP,CN=Public Key Services,CN=Services,%6%10\n6:http://pki.labbuilder.com/CertEnroll/%3%8%9.crl"
-          CACertPublicationURLs = "1:C:\Windows\system32\CertSrv\CertEnroll\%1_%3%4.crt\n2:ldap:///CN=%7,CN=AIA,CN=Public Key Services,CN=Services,%6%11\n2:http://pki.labbuilder.com/CertEnroll/%1_%3%4.crt"
-          RootCAName = "SS_ROOTCA"
-          RootCACommonName = "LABBUILDER.COM Root CA"
+		  CRLPublicationURLs = "65:C:\Windows\system32\CertSrv\CertEnroll\%3%8%9.crl\n79:ldap:///CN=%7%8,CN=%2,CN=CDP,CN=Public Key Services,CN=Services,%6%10\n6:http://pki.labbuilder.com/CertEnroll/%3%8%9.crl"
+		  CACertPublicationURLs = "1:C:\Windows\system32\CertSrv\CertEnroll\%1_%3%4.crt\n2:ldap:///CN=%7,CN=AIA,CN=Public Key Services,CN=Services,%6%11\n2:http://pki.labbuilder.com/CertEnroll/%1_%3%4.crt"
+		  RootCAName = "SS_ROOTCA"
+		  RootCACommonName = "LABBUILDER.COM Root CA"
 #########################################################################################################################################>
 Configuration MEMBER_SUBCA
 {

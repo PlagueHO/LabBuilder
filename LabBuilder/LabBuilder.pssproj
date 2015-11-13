@@ -49,6 +49,7 @@
     <Compile Include="DSCLibrary\MEMBER_DHCP.DSC.ps1" />
     <Compile Include="DSCLibrary\MEMBER_SUBCA.DSC.ps1" />
     <Compile Include="DSCLibrary\STANDALONE_DHCPDNS.DSC.ps1" />
+    <Compile Include="DSCLibrary\STANDALONE_ROOTCA.DSC.ps1" />
     <Compile Include="LabBuilder.psd1" />
     <Compile Include="LabBuilder.psm1" />
     <Compile Include="Tests\Unit\LabBuilder.tests.ps1" />
@@ -56,7 +57,7 @@
     <Compile Include="DSCLibrary\STANDALONE_DEFAULT.DSC.ps1" />
     <Compile Include="DSCLibrary\DC_FORESTPRIMARY.DSC.ps1" />
     <Compile Include="DSCLibrary\DC_SECONDARY.DSC.ps1" />
-    <Compile Include="DSCLibrary\STANDALONE_ROOTCA.DSC.ps1" />
+    <Compile Include="DSCLibrary\STANDALONE_ROOTCA_NOSUBCA.DSC.ps1" />
     <Compile Include="Tests\PesterTestConfig\PesterTest.DSC.ps1" />
     <Compile Include="Tests\PesterTestConfig\PesterTestConfig.OK.xml" />
     <Compile Include="Tests\TestConfigDCandDHCPOnly.ps1" />

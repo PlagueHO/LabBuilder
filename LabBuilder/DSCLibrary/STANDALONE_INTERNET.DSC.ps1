@@ -1,13 +1,13 @@
 <#########################################################################################################################################
 DSC Template Configuration File For use by LabBuilder
 .Title
-	STANDALONE_DHCPDNS
+	STANDALONE_INTERNET
 .Desription
-	Builds a Standalone DHCP and DNS Server.
+	Builds a Standalone DHCP, DNS and IIS Server to simulate the Internet.
 .Parameters:    
 #########################################################################################################################################>
 
-Configuration STANDALONE_DHCPDNS
+Configuration STANDALONE_INTERNET
 {
 	Import-DscResource -ModuleName 'PSDesiredStateConfiguration'
 	Import-DscResource -ModuleName xPSDesiredStateConfiguration
@@ -18,6 +18,12 @@ Configuration STANDALONE_DHCPDNS
 		If ($Node.LocalAdminPassword) {
 			[PSCredential]$LocalAdminCredential = New-Object System.Management.Automation.PSCredential ("Administrator", (ConvertTo-SecureString $Node.LocalAdminPassword -AsPlainText -Force))
 		}
+
+		WindowsFeature WebServerInstall 
+        { 
+            Ensure = "Present" 
+            Name = "Web-WebServer" 
+        }
 
 		WindowsFeature DHCPInstall 
         { 
@@ -30,6 +36,10 @@ Configuration STANDALONE_DHCPDNS
             Ensure = "Present" 
             Name = "DNS" 
         }
+
+		# Add the special DNS A records that Windows OS's use
+		# to identify if the internet is available.
+		# Can't be done yet because Resources are too limited.
 
 		# Add the DHCP Scope, Reservation and Options from
 		# the node configuration
