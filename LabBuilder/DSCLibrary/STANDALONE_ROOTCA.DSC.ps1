@@ -60,7 +60,7 @@ Configuration STANDALONE_ROOTCA
 			ValidityPeriodUnits = 20
 			CryptoProviderName = 'RSA#Microsoft Software Key Storage Provider'
 			HashAlgorithmName = 'SHA256'
-			KeyLength = 2048
+			KeyLength = 4096
             DependsOn = '[File]CAPolicy'
         }
 
