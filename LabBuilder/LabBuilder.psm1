@@ -1420,11 +1420,12 @@ function Set-LabDSCMOFFile {
             Copy-Item -Path $ModulePath -Destination "$VMPath\$($VM.Name)\LabBuilder Files\DSC Modules\" -Recurse -Force
         } # Foreach
 
-        # Add the VM Self-Signed Certificate to the Local Machine store and get the Thumbprint	
-        if (-not (Test-Path -Path "$VMPath\$($VM.Name)\LabBuilder Files\SelfSigned.cer")) {
-            # The self-signed certificate doesn't exist - create a new one and download it.
-            New-LabVMSelfSignedCert -Configuration $Configuration -VM $VM
+        if (-not (New-LabVMSelfSignedCert -Configuration $Configuration -VM $VM)) {
+            Throw "The self-signed certificate for VM $($VM.Name) could not be created and downloaded."
         }
+        # Remove any old self-signed certifcates for this VM
+        Get-ChildItem -Path cert:\LocalMachine\My | Where-Object { $_.FriendlyName -eq "$($VM.ComputerName) Self-Signed Certificate" } | Remove-Item
+        # Add the VM Self-Signed Certificate to the Local Machine store and get the Thumbprint	
         [String]$CertificateFile = "$VMPath\$($VM.Name)\LabBuilder Files\SelfSigned.cer"
         $Certificate = Import-Certificate -FilePath $CertificateFile -CertStoreLocation 'Cert:LocalMachine\My'
         [String]$CertificateThumbprint = $Certificate.Thumbprint
@@ -2573,7 +2574,7 @@ Export-Certificate -Type CERT -Cert `$Cert -FilePath `"`$(`$ENV:SystemRoot)\Self
             While ((-not $Complete) -and (((Get-Date) - $StartTime).Seconds) -lt $TimeOut) {
                 Try {
                     Invoke-Command -Session $Session -ScriptBlock {
-                        C:\Windows\CreateNewSelfSignedCert.ps1
+                        C:\Windows\Setup\Scripts\CreateNewSelfSignedCert.ps1
                     }
                     $Complete = $True
                 } Catch {
@@ -2658,7 +2659,7 @@ function Start-LabVM {
             # No, so check it is initialized and download the cert.
             If (Wait-LabVMInit -VM $VM) {
                 Write-Verbose "Attempting to download certificate for VM $($VM.Name) ..."
-                If (New-LabVMSelfSignedCert -Configuration $Configuration -VM $VM) {
+                If (Get-LabVMSelfSignedCert -Configuration $Configuration -VM $VM) {
                     Write-Verbose "Certificate for VM $($VM.Name) was downloaded successfully ..."
                 } Else {
                     Write-Verbose "Certificate for VM $($VM.Name) could not be downloaded ..."
@@ -2669,10 +2670,10 @@ function Start-LabVM {
         } # If
 
         # Create any DSC Files for the VM
-        Initialize-LabVMDSC -Configuration $Configuration -VM $VM | Out-Null
+        $null = Initialize-LabVMDSC -Configuration $Configuration -VM $VM
 
         # Attempt to start DSC on the VM
-        Start-LabVMDSC -Configuration $Configuration -VM $VM | Out-Null
+        $null = Start-LabVMDSC -Configuration $Configuration -VM $VM
     } # If
     Return $True
 } # Start-LabVM
