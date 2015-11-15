@@ -104,7 +104,7 @@
                AddressFamily = 'IPv4'
             },
             @{ Name = 'SA_EDGE2';
-               ScopeID = '131.0.0.0';
+               ScopeID = '131.107.0.0';
                ClientMACAddress = '000000000001';
                IPAddress = '131.107.0.51';
                AddressFamily = 'IPv4'
