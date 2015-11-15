@@ -1808,12 +1808,10 @@ function Start-LabVMDSC {
     [DateTime]$StartTime = Get-Date
     [System.Management.Automation.Runspaces.PSSession]$Session = $null
     [PSCredential]$AdmininistratorCredential = New-Object System.Management.Automation.PSCredential ('Administrator', (ConvertTo-SecureString $VM.AdministratorPassword -AsPlainText -Force))
-
+    [String]$ManagementSwitchName = ('LabBuilder Management {0}' -f $Configuration.labbuilderconfig.name)
     [Boolean]$Complete = $False
     [Boolean]$ConfigCopyComplete = $False
     [Boolean]$ModuleCopyComplete = $False
-
-    $ManagementSwitchName = ('LabBuilder Management {0}' -f $Configuration.labbuilderconfig.name)
     
     While ((-not $Complete) -and (((Get-Date) - $StartTime).Seconds) -lt $TimeOut) {
         While (-not ($Session) -or ($Session.State -ne 'Opened')) {
@@ -2491,6 +2489,7 @@ function Get-LabVMSelfSignedCert {
     [DateTime]$StartTime = Get-Date
     [System.Management.Automation.Runspaces.PSSession]$Session = $null
     [PSCredential]$AdmininistratorCredential = New-Object System.Management.Automation.PSCredential ('Administrator', (ConvertTo-SecureString $VM.AdministratorPassword -AsPlainText -Force))
+    [String]$ManagementSwitchName = ('LabBuilder Management {0}' -f $Configuration.labbuilderconfig.name)
     [Boolean]$Complete = $False
     While ((-not $Complete)  -and (((Get-Date) - $StartTime).Seconds) -lt $TimeOut) {
         While (-not ($Session) -or ($Session.State -ne 'Opened')) {
@@ -2569,6 +2568,7 @@ function New-LabVMSelfSignedCert {
     [DateTime]$StartTime = Get-Date
     [System.Management.Automation.Runspaces.PSSession]$Session = $null
     [PSCredential]$AdmininistratorCredential = New-Object System.Management.Automation.PSCredential ('Administrator', (ConvertTo-SecureString $VM.AdministratorPassword -AsPlainText -Force))
+    [String]$ManagementSwitchName = ('LabBuilder Management {0}' -f $Configuration.labbuilderconfig.name)
     [Boolean]$Complete = $False
     While ((-not $Complete)  -and (((Get-Date) - $StartTime).Seconds) -lt $TimeOut) {
         While (-not ($Session) -or ($Session.State -ne 'Opened')) {
@@ -2998,6 +2998,7 @@ function Wait-LabVMInit {
     [Boolean]$Found = $False
     [System.Management.Automation.Runspaces.PSSession]$Session = $null
     [PSCredential]$AdmininistratorCredential = New-Object System.Management.Automation.PSCredential ('Administrator', (ConvertTo-SecureString $VM.AdministratorPassword -AsPlainText -Force))
+    [String]$ManagementSwitchName = ('LabBuilder Management {0}' -f $Configuration.labbuilderconfig.name)
 
     # Make sure the VM has started
     Wait-LabVMStart -VM $VM
