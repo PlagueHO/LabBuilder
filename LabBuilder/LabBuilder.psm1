@@ -1540,7 +1540,7 @@ $NetworkingDSCConfig += @"
 }
 "@
         [String]$NetworkingDSCFile = Join-Path -Path "$VMPath\$($VM.Name)\LabBuilder Files" -ChildPath 'DSCNetworking.ps1'
-        Set-Content -Path $NetworkingDSCFile -Value $NetworkingDSCConfig | Out-Null
+        $null = Set-Content -Path $NetworkingDSCFile -Value $NetworkingDSCConfig
         . $NetworkingDSCFile
 
         [String]$DSCFile = Join-Path -Path "$VMPath\$($VM.Name)\LabBuilder Files" -ChildPath 'DSC.ps1'
@@ -1559,7 +1559,7 @@ $NetworkingDSCConfig += @"
         } # If
         
         # Save the DSC Content
-        Set-Content -Path $DSCFile -Value $DSCContent -Force | Out-Null
+        $null = Set-Content -Path $DSCFile -Value $DSCContent -Force
 
         # Hook the Networking DSC File into the main DSC File
         . $DSCFile
@@ -1583,35 +1583,35 @@ $NetworkingDSCConfig += @"
         # Write it to a temp file
         [String]$ConfigurationFile = Join-Path -Path "$VMPath\$($VM.Name)\LabBuilder Files" -ChildPath 'DSCConfigData.psd1'
         If (Test-Path -Path $ConfigurationFile) {
-            Remove-Item -Path $ConfigurationFile -Force | Out-Null
+            $null = Remove-Item -Path $ConfigurationFile -Force
         }
         Set-Content -Path $ConfigurationFile -Value $ConfigurationData
             
         # Generate the MOF file from the configuration
-        & "$DSCConfigName" -OutputPath $($ENV:Temp) -ConfigurationData $ConfigurationFile | Out-Null
+        & "$DSCConfigName" -OutputPath $($ENV:Temp) -ConfigurationData $ConfigurationFile
         If (-not (Test-Path -Path $DSCMOFFile)) {
             Throw "A MOF File was not created by the DSC Config File $($VM.DSCCOnfigFile) for VM $($VM.Name)."
         } # If
 
         # Remove the VM Self-Signed Certificate from the Local Machine Store
-        Remove-Item -Path "Cert:LocalMachine\My\$CertificateThumbprint" -Force | Out-Null
+        $null = Remove-Item -Path "Cert:LocalMachine\My\$CertificateThumbprint" -Force
 
         Write-Verbose "DSC MOF File $DSCMOFFile for VM $($VM.Name) was created successfully ..."
 
         # Copy the files to the LabBuilder Files folder
 
-        Copy-Item -Path $DSCMOFFile -Destination "$VMPath\$($VM.Name)\LabBuilder Files\$($VM.ComputerName).mof" -Force | Out-Null
+        $null = Copy-Item -Path $DSCMOFFile -Destination "$VMPath\$($VM.Name)\LabBuilder Files\$($VM.ComputerName).mof" -Force
 
         If (-not $VM.DSCMOFFile) {
             # Remove Temporary files created by DSC
-            Remove-Item -Path $DSCMOFFile -Force | Out-Null
+            $null = Remove-Item -Path $DSCMOFFile -Force
         }
 
         If (Test-Path -Path $DSCMOFMetaFile) {
-            Copy-Item -Path $DSCMOFMetaFile -Destination "$VMPath\$($VM.Name)\LabBuilder Files\$($VM.ComputerName).meta.mof" -Force | Out-Null
+            $null = Copy-Item -Path $DSCMOFMetaFile -Destination "$VMPath\$($VM.Name)\LabBuilder Files\$($VM.ComputerName).meta.mof" -Force
             If (-not $VM.DSCMOFFile) {
                 # Remove Temporary files created by DSC
-                Remove-Item -Path $DSCMOFMetaFile -Force | Out-Null
+                $null = Remove-Item -Path $DSCMOFMetaFile -Force
             }
         } # If
 
@@ -1707,12 +1707,12 @@ Set-DscLocalConfigurationManager -Path `"$($ENV:SystemRoot)\Setup\Scripts\`" -Ve
 Start-DSCConfiguration -Path `"$($ENV:SystemRoot)\Setup\Scripts\`" -Force -Verbose  *>> `"$($ENV:SystemRoot)\Setup\Scripts\DSC.log`"
 
 "@
-    Set-Content -Path "$VMPath\$($VM.Name)\LabBuilder Files\StartDSC.ps1" -Value $DSCStartPs -Force | Out-Null
+    $null = Set-Content -Path "$VMPath\$($VM.Name)\LabBuilder Files\StartDSC.ps1" -Value $DSCStartPs -Force
 
     $DSCStartPsDebug = @"
 Start-DSCConfiguration -Path `"$($ENV:SystemRoot)\Setup\Scripts\`" -Force -Debug -Wait -Verbose
 "@
-    Set-Content -Path "$VMPath\$($VM.Name)\LabBuilder Files\StartDSCDebug.ps1" -Value $DSCStartPsDebug -Force | Out-Null
+    $null = Set-Content -Path "$VMPath\$($VM.Name)\LabBuilder Files\StartDSCDebug.ps1" -Value $DSCStartPsDebug -Force
 
     Return $True
 } # Set-LabDSCStartFile
@@ -1821,12 +1821,24 @@ function Start-LabVMDSC {
             While ((-not $ConfigCopyComplete) -and (((Get-Date) - $StartTime).Seconds) -lt $TimeOut) {
                 Try {
                     Write-Verbose "Copying DSC MOF Files to $($VM.ComputerName) ..."
-                    Copy-Item -Path "$VMPath\$($VM.Name)\LabBuilder Files\$($VM.ComputerName).mof" -Destination c:\Windows\Setup\Scripts -ToSession $Session -Force -ErrorAction Stop | Out-Null
+                    $null = Copy-Item `
+                        -Path "$VMPath\$($VM.Name)\LabBuilder Files\$($VM.ComputerName).mof" `
+                        -Destination c:\Windows\Setup\Scripts `
+                        -ToSession $Session -Force -ErrorAction Stop
                     If (Test-Path -Path "$VMPath\$($VM.Name)\LabBuilder Files\$($VM.ComputerName).meta.mof") {
-                        Copy-Item -Path "$VMPath\$($VM.Name)\LabBuilder Files\$($VM.ComputerName).meta.mof" -Destination c:\Windows\Setup\Scripts -ToSession $Session -Force -ErrorAction Stop | Out-Null
+                        $null = Copy-Item `
+                            -Path "$VMPath\$($VM.Name)\LabBuilder Files\$($VM.ComputerName).meta.mof" `
+                            -Destination c:\Windows\Setup\Scripts `
+                            -ToSession $Session -Force -ErrorAction Stop
                     } # If
-                    Copy-Item -Path "$VMPath\$($VM.Name)\LabBuilder Files\StartDSC.ps1" -Destination c:\Windows\Setup\Scripts -ToSession $Session -Force -ErrorAction Stop | Out-Null
-                    Copy-Item -Path "$VMPath\$($VM.Name)\LabBuilder Files\StartDSCDebug.ps1" -Destination c:\Windows\Setup\Scripts -ToSession $Session -Force -ErrorAction Stop | Out-Null
+                    $null = Copy-Item `
+                        -Path "$VMPath\$($VM.Name)\LabBuilder Files\StartDSC.ps1" `
+                        -Destination c:\Windows\Setup\Scripts `
+                        -ToSession $Session -Force -ErrorAction Stop
+                    $null = Copy-Item `
+                        -Path "$VMPath\$($VM.Name)\LabBuilder Files\StartDSCDebug.ps1" `
+                        -Destination c:\Windows\Setup\Scripts `
+                        -ToSession $Session -Force -ErrorAction Stop
                     $ConfigCopyComplete = $True
                 } Catch {
                     Write-Verbose "Copying DSC MOF Files to $($VM.ComputerName) failed - retrying in 5 seconds ..."
@@ -1847,7 +1859,10 @@ function Start-LabVMDSC {
             Foreach ($ModuleName in $DSCModules) {
                 Try {
                     Write-Verbose "Copying DSC Module $ModuleName Files to $($VM.ComputerName) ..."
-                    Copy-Item -Path "$VMPath\$($VM.Name)\LabBuilder Files\DSC Modules\$ModuleName\" -Destination "$($env:ProgramFiles)\WindowsPowerShell\Modules\" -ToSession $Session -Force -Recurse -ErrorAction Stop | Out-Null
+                    $null = Copy-Item `
+                        -Path "$VMPath\$($VM.Name)\LabBuilder Files\DSC Modules\$ModuleName\" `
+                        -Destination "$($env:ProgramFiles)\WindowsPowerShell\Modules\" `
+                        -ToSession $Session -Force -Recurse -ErrorAction Stop
                 } Catch {
                     Write-Verbose "Copying DSC Module $ModuleName Files to $($VM.ComputerName) failed - retrying in 5 seconds ..."
                     Start-Sleep 5
@@ -2051,17 +2066,21 @@ function Set-LabVMInitializationFiles {
             Invoke-WebRequest -Uri $URL -OutFile $MSUPath
         } # If
         # Once downloaded apply the update
-        Add-WindowsPackage -PackagePath $MSUPath -Path $MountPoint | Out-Null
+        $null = Add-WindowsPackage -PackagePath $MSUPath -Path $MountPoint
     } # Foreach
 
     # Create the scripts folder where setup scripts will be put
-    New-Item -Path "$MountPoint\Windows\Setup\Scripts" -ItemType Directory | Out-Null
+    $null = New-Item -Path "$MountPoint\Windows\Setup\Scripts" -ItemType Directory
 
     # Generate and apply an unattended setup file
     [String]$UnattendFile = Get-LabUnattendFile -Configuration $Configuration -VM $VM
     Write-Verbose "Applying VM $($VM.Name) Unattend File ..."
-    Set-Content -Path "$MountPoint\Windows\Panther\Unattend.xml" -Value $UnattendFile -Force | Out-Null
-    Set-Content -Path "$VMPath\$($VM.Name)\LabBuilder Files\Unattend.xml" -Value $UnattendFile -Force | Out-Null
+    $null = Set-Content `
+        -Path "$MountPoint\Windows\Panther\Unattend.xml" `
+        -Value $UnattendFile -Force
+    $null = Set-Content `
+        -Path "$VMPath\$($VM.Name)\LabBuilder Files\Unattend.xml" `
+        -Value $UnattendFile -Force
     [String]$SetupCompleteCmd = @"
 "@
     [String]$SetupCompletePs = @"
@@ -2102,8 +2121,12 @@ powerShell.exe -ExecutionPolicy Unrestricted -Command `"%SYSTEMROOT%\Setup\Scrip
 @echo SetupComplete.cmd Script Finished... >> %SYSTEMROOT%\Setup\Scripts\SetupComplete.log
 @echo Initial Setup Completed - this file indicates that setup has completed. >> %SYSTEMROOT%\Setup\Scripts\InitialSetupCompleted.txt
 "@
-    Set-Content -Path "$MountPoint\Windows\Setup\Scripts\SetupComplete.cmd" -Value $SetupCompleteCmd -Force | Out-Null	
-    Set-Content -Path "$VMPath\$($VM.Name)\LabBuilder Files\SetupComplete.cmd" -Value $SetupCompleteCmd -Force | Out-Null
+    $null = Set-Content `
+        -Path "$MountPoint\Windows\Setup\Scripts\SetupComplete.cmd" `
+        -Value $SetupCompleteCmd -Force
+    $null = Set-Content `
+        -Path "$VMPath\$($VM.Name)\LabBuilder Files\SetupComplete.cmd" `
+        -Value $SetupCompleteCmd -Force
 
     # Write out the PowerShell Setup Complete file
     Write-Verbose "Applying VM $($VM.Name) Setup Complete PowerShell File ..."
@@ -2113,15 +2136,22 @@ $SetupCompletePs
 Add-Content -Path `"$($ENV:SystemRoot)\Setup\Scripts\SetupComplete.log`" -Value 'SetupComplete.ps1 Script Finished...' -Encoding Ascii
 "@
 
-    Set-Content -Path "$MountPoint\Windows\Setup\Scripts\SetupComplete.ps1" -Value $SetupCompletePs -Force | Out-Null	
-    Set-Content -Path "$VMPath\$($VM.Name)\LabBuilder Files\SetupComplete.ps1" -Value $SetupCompletePs -Force | Out-Null
+    $null = Set-Content `
+        -Path "$MountPoint\Windows\Setup\Scripts\SetupComplete.ps1" `
+        -Value $SetupCompletePs -Force
+    $null = Set-Content `
+        -Path "$VMPath\$($VM.Name)\LabBuilder Files\SetupComplete.ps1" `
+        -Value $SetupCompletePs -Force
 
-    Copy-Item -Path $Script:CertGenPS1Path -Destination "$MountPoint\Windows\Setup\Scripts\$($Script:CertGenPS1Filename)" -Force
+    Copy-Item `
+        -Path $Script:CertGenPS1Path `
+        -Destination "$MountPoint\Windows\Setup\Scripts\$($Script:CertGenPS1Filename)"`
+        -Force
         
     # Dismount the VHD in preparation for boot
     Write-Verbose "Dismounting VM $($VM.Name) Boot Disk VHDx $VMBootDiskPath ..."
-    Dismount-WindowsImage -Path $MountPoint -Save | Out-Null
-    Remove-Item -Path $MountPoint -Recurse -Force | Out-Null
+    $null = Dismount-WindowsImage -Path $MountPoint -Save
+    $null = Remove-Item -Path $MountPoint -Recurse -Force
     Return $True
 } # Set-LabVMInitializationFiles
 ####################################################################################################
@@ -2262,7 +2292,9 @@ function Get-LabVMs {
         # Does the VM have an Unattend file specified?
         [String]$UnattendFile = ''
         If ($VM.UnattendFile) {
-            $UnattendFile = Join-Path -Path $Configuration.labbuilderconfig.settings.fullconfigpath -ChildPath $VM.UnattendFile
+            $UnattendFile = Join-Path `
+                -Path $Configuration.labbuilderconfig.settings.fullconfigpath `
+                -ChildPath $VM.UnattendFile
             If (-not (Test-Path $UnattendFile)) {
                 Throw "The Unattend File $UnattendFile specified in VM $($VM.Name) can not be found."
             } # If
@@ -2271,7 +2303,9 @@ function Get-LabVMs {
         # Does the VM specify a Setup Complete Script?
         [String]$SetupComplete = ''
         If ($VM.SetupComplete) {
-            $SetupComplete = Join-Path -Path $Configuration.labbuilderconfig.settings.fullconfigpath -ChildPath $VM.SetupComplete
+            $SetupComplete = Join-Path `
+                -Path $Configuration.labbuilderconfig.settings.fullconfigpath `
+                -ChildPath $VM.SetupComplete
             If (-not (Test-Path $SetupComplete)) {
                 Throw "The Setup Complete File $SetupComplete specified in VM $($VM.Name) can not be found."
             } # If
@@ -2283,7 +2317,9 @@ function Get-LabVMs {
         # Load the DSC Config File setting and check it
         [String]$DSCConfigFile = ''
         If ($VM.DSC.ConfigFile) {
-            $DSCConfigFile = Join-Path -Path $Configuration.labbuilderconfig.settings.fullconfigpath -ChildPath $VM.DSC.ConfigFile
+            $DSCConfigFile = Join-Path `
+                -Path $Configuration.labbuilderconfig.settings.fullconfigpath `
+                -ChildPath $VM.DSC.ConfigFile
             If (-not (Test-Path $DSCConfigFile)) {
                 Throw "The DSC Config File $DSCConfigFile specified in VM $($VM.Name) can not be found."
             }
