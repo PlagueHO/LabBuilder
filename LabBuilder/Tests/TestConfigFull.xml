@@ -92,7 +92,7 @@
             @{ Name = 'Internet';
                Start = '131.107.0.50';
                End = '131.107.0.250';
-               SubnetMask = '255.0.0.0';
+               SubnetMask = '255.255.0.0';
                AddressFamily = 'IPv4'
             }
           )

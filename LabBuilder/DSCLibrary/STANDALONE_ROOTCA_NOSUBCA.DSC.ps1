@@ -15,7 +15,6 @@ Configuration STANDALONE_ROOTCA_NOSUBCA
 {
     Import-DscResource -ModuleName 'PSDesiredStateConfiguration'
     Import-DscResource -ModuleName xAdcsDeployment
-    Import-DscResource -ModuleName xPSDesiredStateConfiguration
     Node $AllNodes.NodeName {
         # Assemble the Local Admin Credentials
         If ($Node.LocalAdminPassword) {
