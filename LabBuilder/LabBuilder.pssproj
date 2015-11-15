@@ -48,6 +48,7 @@
     <Compile Include="DSCLibrary\MEMBER_REMOTEACCESS.DSC.ps1" />
     <Compile Include="DSCLibrary\MEMBER_DHCP.DSC.ps1" />
     <Compile Include="DSCLibrary\MEMBER_SUBCA.DSC.ps1" />
+    <Compile Include="DSCLibrary\STANDALONE_INTERNET.DSC.ps1" />
     <Compile Include="DSCLibrary\STANDALONE_DHCPDNS.DSC.ps1" />
     <Compile Include="DSCLibrary\STANDALONE_ROOTCA.DSC.ps1" />
     <Compile Include="LabBuilder.psd1" />

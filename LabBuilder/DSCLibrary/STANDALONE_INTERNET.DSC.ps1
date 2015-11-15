@@ -4,6 +4,8 @@ DSC Template Configuration File For use by LabBuilder
 	STANDALONE_INTERNET
 .Desription
 	Builds a Standalone DHCP, DNS and IIS Server to simulate the Internet.
+	See http://blog.superuser.com/2011/05/16/windows-7-network-awareness/
+	for details on how Windows computers detect Internet connectivity.
 .Parameters:    
 #########################################################################################################################################>
 
@@ -13,6 +15,7 @@ Configuration STANDALONE_INTERNET
 	Import-DscResource -ModuleName xPSDesiredStateConfiguration
 	Import-DscResource -ModuleName xDNSServer
 	Import-DscResource -ModuleName xDHCPServer
+	Import-DscResource -ModuleName xWebAdministration
 	Node $AllNodes.NodeName {
 		# Assemble the Local Admin Credentials
 		If ($Node.LocalAdminPassword) {
@@ -37,9 +40,21 @@ Configuration STANDALONE_INTERNET
             Name = "DNS" 
         }
 
+		# Create the default ncsi.txt.
+		File CAPolicy
+		{
+			Ensure = 'Present'
+			DestinationPath = 'c:\inetpub\wwwroot\ncsi.txt'
+			Contents = "Microsoft NCSI"
+			Type = 'File'
+			DependsOn = '[WindowsFeature]WebServerInstall'
+		}
+		
 		# Add the special DNS A records that Windows OS's use
 		# to identify if the internet is available.
 		# Can't be done yet because Resources are too limited.
+
+		# Manually create the DHCP Groups
 
 		# Add the DHCP Scope, Reservation and Options from
 		# the node configuration

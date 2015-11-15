@@ -16,13 +16,15 @@ PathNotFoundError={0} path '{1}' is not found.
 ResourceModuleNameEmptyError=Resource Module Name is missing or empty.
 ModuleNotAvailableError=Error installing Module '{0}' ({1}); {2}.
 SwitchNameIsEmptyError=Switch name is empty.
-UnknownSwitchTypeError=Unknown switch type '{0}' specified for swtich '{1}'.
+UnknownSwitchTypeError=Unknown switch type '{0}' specified for switch '{1}'.
 EmptyTemplateNameError=Template Name is missing or empty.
 EmptyTemplateVHDNameError=VHD Name in Template '{0}' is missing or empty.
 TemplateSourceVHDNotFoundError=The Template Source VHD '{0}' in Template '{1}' could not be found.
 InstallingHyperVComponentsMesage=Installing {0} Hyper-V Components.
 InitializingHyperVComponentsMesage=Initializing Hyper-V Components.
 DownloadingLabResourcesMessage=Downloading Lab Resources.
+CreatingLabManagementSwitchMessage=Creating Lab Management Switch {0} on Vlan {1}.
+UpdatingLabManagementSwitchMessage=Updating Lab Management Switch {0} to Vlan {1}.
 ModuleNotInstalledMessage=Module {0} ({1}) is not installed.
 DownloadingLabResourceWebMessage=Downloading Module {0} ({1}) from '{2}'.
 InstallingLabResourceWebMessage=Installing Module {0} ({1}) to Modules Folder '{2}'.
@@ -45,6 +47,9 @@ DeleteingVirtualSwitchMessage=Deleting {0} Virtual Switch '{1}'.
 [String]$Script:CertGenZipPath = Join-Path -Path $Script:WorkingFolder -ChildPath $Script:CertGenZipFilename
 [String]$Script:CertGenPS1Filename = 'New-SelfSignedCertificateEx.ps1'
 [String]$Script:CertGenPS1Path = Join-Path -Path $Script:WorkingFolder -ChildPath $Script:CertGenPS1Filename
+[Int]$Script:DefaultManagementVLan = 99
+[String]$Script:DefaultMacAddressMinimum = '00155D010600'
+[String]$Script:DefaultMacAddressMaximum = '00155D0106FF'
 ####################################################################################################
 # Helper functions that aren't exported
 ####################################################################################################
@@ -54,15 +59,15 @@ DeleteingVirtualSwitchMessage=Deleting {0} Virtual Switch '{1}'.
 #>
 function Test-Admin()
 {
-	# Get the ID and security principal of the current user account
-	$myWindowsID=[System.Security.Principal.WindowsIdentity]::GetCurrent()
-	$myWindowsPrincipal=new-object System.Security.Principal.WindowsPrincipal($myWindowsID)
+    # Get the ID and security principal of the current user account
+    $myWindowsID=[System.Security.Principal.WindowsIdentity]::GetCurrent()
+    $myWindowsPrincipal=new-object System.Security.Principal.WindowsPrincipal($myWindowsID)
   
-	# Get the security principal for the Administrator role
-	$adminRole=[System.Security.Principal.WindowsBuiltInRole]::Administrator
+    # Get the security principal for the Administrator role
+    $adminRole=[System.Security.Principal.WindowsBuiltInRole]::Administrator
   
-	# Check to see if we are currently running "as Administrator"
-	Return ($myWindowsPrincipal.IsInRole($adminRole))
+    # Check to see if we are currently running "as Administrator"
+    Return ($myWindowsPrincipal.IsInRole($adminRole))
 }
 ####################################################################################################
 <#
@@ -71,11 +76,11 @@ function Test-Admin()
 #>
 function Download-WMF5Installer()
 {
-	[CmdletBinding()]
+    [CmdletBinding()]
     Param ()
 
-	# Only downloads for Win8.1/WS2K12R2
-	If (-not (Test-Path -Path $Script:WMF5InstallerPath))
+    # Only downloads for Win8.1/WS2K12R2
+    If (-not (Test-Path -Path $Script:WMF5InstallerPath))
     {
         try
         {
@@ -97,7 +102,7 @@ function Download-WMF5Installer()
             
             $PSCmdlet.ThrowTerminatingError($errorRecord)
         }
-	}
+    }
 } # Download-WMF5Installer
 ####################################################################################################
 <#
@@ -106,9 +111,9 @@ function Download-WMF5Installer()
 #>
 function Download-CertGenerator()
 {
-	[CmdletBinding()]
+    [CmdletBinding()]
     Param ()
-	If (-not (Test-Path -Path $Script:CertGenZipPath))
+    If (-not (Test-Path -Path $Script:CertGenZipPath))
     {
         try
         {
@@ -130,8 +135,8 @@ function Download-CertGenerator()
 
             $PSCmdlet.ThrowTerminatingError($errorRecord)        
         }
-	} # If
-	If (-not (Test-Path -Path $Script:CertGenPS1Path))
+    } # If
+    If (-not (Test-Path -Path $Script:CertGenPS1Path))
     {
         try	
         {
@@ -153,7 +158,7 @@ function Download-CertGenerator()
 
             $PSCmdlet.ThrowTerminatingError($errorRecord)        
         }
-	} # If
+    } # If
 } # Download-CertGenerator
 ####################################################################################################
 <#
@@ -174,29 +179,29 @@ function Download-CertGenerator()
 #>
 function Get-ModulesInDSCConfig()
 {
-	[CmdletBinding()]
-	[OutputType([String[]])]
-	Param (
-		[Parameter(
-			Mandatory=$True,
-			Position=0)]
-		[ValidateNotNullOrEmpty()]	
-		[String]$DSCConfigFile
-	)
-	[String[]]$Modules = $Null
-	[String]$Content = Get-Content -Path $DSCConfigFile
-	$Regex = "Import\-DscResource\s(?:\-ModuleName\s)?'?`"?([A-Za-z0-9]+)`"?'?"
-	$Matches = [regex]::matches($Content, $Regex, 'IgnoreCase')
-	Foreach ($Match in $Matches)
+    [CmdletBinding()]
+    [OutputType([String[]])]
+    Param (
+        [Parameter(
+            Mandatory=$True,
+            Position=0)]
+        [ValidateNotNullOrEmpty()]	
+        [String]$DSCConfigFile
+    )
+    [String[]]$Modules = $Null
+    [String]$Content = Get-Content -Path $DSCConfigFile
+    $Regex = "Import\-DscResource\s(?:\-ModuleName\s)?'?`"?([A-Za-z0-9]+)`"?'?"
+    $Matches = [regex]::matches($Content, $Regex, 'IgnoreCase')
+    Foreach ($Match in $Matches)
     {
-		If ($Match.Groups[1].Value -ne 'PSDesiredStateConfiguration')
+        If ($Match.Groups[1].Value -ne 'PSDesiredStateConfiguration')
         {
-			$Modules += $Match.Groups[1].Value
-		} # If
-	} # Foreach
-	# Add the xNetworking DSC Resource because it is always used
-	$Modules += 'xNetworking'
-	Return $Modules
+            $Modules += $Match.Groups[1].Value
+        } # If
+    } # Foreach
+    # Add the xNetworking DSC Resource because it is always used
+    $Modules += 'xNetworking'
+    Return $Modules
 } # Get-ModulesInDSCConfig
 ####################################################################################################
 
@@ -207,7 +212,7 @@ function Get-ModulesInDSCConfig()
 .Synopsis
     Loads a Lab Builder Configuration file and returns a Configuration object
 .PARAMETER Path
-    This is the path to the Lab Builder configration file to load.
+    This is the path to the Lab Builder configuration file to load.
 .EXAMPLE
     $MyLab = Get-LabConfiguration -Path c:\MyLab\LabConfig1.xml
     Loads the LabConfig1.xml configuration into variable MyLab
@@ -215,16 +220,16 @@ function Get-ModulesInDSCConfig()
     XML Object containing the Lab Configuration that was loaded.
 #>
 function Get-LabConfiguration {
-	[CmdLetBinding()]
-	[OutputType([XML])]
-	param (
-		[parameter(
+    [CmdLetBinding()]
+    [OutputType([XML])]
+    param (
+        [parameter(
             Mandatory,
-			Position=0)]
-		[ValidateNotNullOrEmpty()]
-		[String]$Path
-	) # Param
-	If (-not (Test-Path -Path $Path))
+            Position=0)]
+        [ValidateNotNullOrEmpty()]
+        [String]$Path
+    ) # Param
+    If (-not (Test-Path -Path $Path))
     {
         $errorId = 'ConfigurationFileNotFoundError'
         $errorCategory = [System.Management.Automation.ErrorCategory]::InvalidArgument
@@ -236,9 +241,9 @@ function Get-LabConfiguration {
             -ArgumentList $exception, $errorId, $errorCategory, $null
 
         $PSCmdlet.ThrowTerminatingError($errorRecord)        
-	} # If
-	$Content = Get-Content -Path $Path -Raw
-	If (-not $Content)
+    } # If
+    $Content = Get-Content -Path $Path -Raw
+    If (-not $Content)
     {
         $errorId = 'ConfigurationFileEmptyError'
         $errorCategory = [System.Management.Automation.ErrorCategory]::InvalidArgument
@@ -250,27 +255,27 @@ function Get-LabConfiguration {
             -ArgumentList $exception, $errorId, $errorCategory, $null
 
         $PSCmdlet.ThrowTerminatingError($errorRecord)        
-	} # If
-	[XML]$Configuration = New-Object -TypeName XML
-	$Configuration.LoadXML($Content)
-	# Figure out the Config path and load it into the XML object (if we can)
-	# This path is used to find any additional configuration files that might
-	# be provided with config
-	[String]$ConfigPath = [System.IO.Path]::GetDirectoryName($Path)
-	[String]$XMLConfigPath = $Configuration.labbuilderconfig.settings.configpath
-	If ($XMLConfigPath) {
-		If ($XMLConfigPath.Substring(0,1) -eq '.')
+    } # If
+    [XML]$Configuration = New-Object -TypeName XML
+    $Configuration.LoadXML($Content)
+    # Figure out the Config path and load it into the XML object (if we can)
+    # This path is used to find any additional configuration files that might
+    # be provided with config
+    [String]$ConfigPath = [System.IO.Path]::GetDirectoryName($Path)
+    [String]$XMLConfigPath = $Configuration.labbuilderconfig.settings.configpath
+    If ($XMLConfigPath) {
+        If ($XMLConfigPath.Substring(0,1) -eq '.')
         {
-			# A relative path was provided in the config path so add the actual path of the XML to it
-			[String]$FullConfigPath = Join-Path -Path $ConfigPath -ChildPath $XMLConfigPath
-		} # If
-	}
+            # A relative path was provided in the config path so add the actual path of the XML to it
+            [String]$FullConfigPath = Join-Path -Path $ConfigPath -ChildPath $XMLConfigPath
+        } # If
+    }
     Else
     {
-		[String]$FullConfigPath = $ConfigPath
-	}
-	$Configuration.labbuilderconfig.settings.setattribute('fullconfigpath',$FullConfigPath)
-	Return $Configuration
+        [String]$FullConfigPath = $ConfigPath
+    }
+    $Configuration.labbuilderconfig.settings.setattribute('fullconfigpath',$FullConfigPath)
+    Return $Configuration
 } # Get-LabConfiguration
 ####################################################################################################
 
@@ -279,7 +284,7 @@ function Get-LabConfiguration {
 .Synopsis
     Tests the Lab Builder configuration passed to ensure it is valid and related files can be found.
 .PARAMETER Configuration
-	Contains the Lab Builder configuration object that was loaded by the Get-LabConfiguration
+    Contains the Lab Builder configuration object that was loaded by the Get-LabConfiguration
     object.
 .EXAMPLE
    $Config = Get-LabConfiguration -Path c:\mylab\config.xml
@@ -289,17 +294,17 @@ function Get-LabConfiguration {
    Returns True if the configuration is valid. Throws an error if invalid.
 #>
 function Test-LabConfiguration {
-	[CmdLetBinding()]
-	[OutputType([Boolean])]
-	param (
-		[Parameter(
+    [CmdLetBinding()]
+    [OutputType([Boolean])]
+    param (
+        [Parameter(
             Mandatory,
-			Position=0)]
-		[ValidateNotNullOrEmpty()]
-		[XML]$Configuration
-	)
+            Position=0)]
+        [ValidateNotNullOrEmpty()]
+        [XML]$Configuration
+    )
 
-	If ((-not $Configuration.labbuilderconfig) `
+    If ((-not $Configuration.labbuilderconfig) `
         -or (-not $Configuration.labbuilderconfig.settings))
     {
         $errorId = 'ConfigurationInvalidError'
@@ -311,11 +316,11 @@ function Test-LabConfiguration {
             -ArgumentList $exception, $errorId, $errorCategory, $null
 
         $PSCmdlet.ThrowTerminatingError($errorRecord)        
-	}
+    }
 
-	# Check folders exist
-	[String]$VMPath = $Configuration.labbuilderconfig.settings.vmpath
-	If (-not $VMPath)
+    # Check folders exist
+    [String]$VMPath = $Configuration.labbuilderconfig.settings.vmpath
+    If (-not $VMPath)
     {
         $errorId = 'ConfigurationMissingElementError'
         $errorCategory = [System.Management.Automation.ErrorCategory]::InvalidArgument
@@ -327,9 +332,9 @@ function Test-LabConfiguration {
             -ArgumentList $exception, $errorId, $errorCategory, $null
 
         $PSCmdlet.ThrowTerminatingError($errorRecord)      
-	}
+    }
 
-	If (-not (Test-Path -Path $VMPath))
+    If (-not (Test-Path -Path $VMPath))
     {
         $errorId = 'PathNotFoundError'
         $errorCategory = [System.Management.Automation.ErrorCategory]::InvalidArgument
@@ -341,10 +346,10 @@ function Test-LabConfiguration {
             -ArgumentList $exception, $errorId, $errorCategory, $null
 
         $PSCmdlet.ThrowTerminatingError($errorRecord)      
-	}
+    }
 
-	[String]$VHDParentPath = $Configuration.labbuilderconfig.settings.vhdparentpath
-	If (-not $VHDParentPath)
+    [String]$VHDParentPath = $Configuration.labbuilderconfig.settings.vhdparentpath
+    If (-not $VHDParentPath)
     {
         $errorId = 'ConfigurationMissingElementError'
         $errorCategory = [System.Management.Automation.ErrorCategory]::InvalidArgument
@@ -356,9 +361,9 @@ function Test-LabConfiguration {
             -ArgumentList $exception, $errorId, $errorCategory, $null
 
         $PSCmdlet.ThrowTerminatingError($errorRecord)      
-	}
+    }
 
-	If (-not (Test-Path -Path $VHDParentPath))
+    If (-not (Test-Path -Path $VHDParentPath))
     {
         $errorId = 'PathNotFoundError'
         $errorCategory = [System.Management.Automation.ErrorCategory]::InvalidArgument
@@ -370,10 +375,10 @@ function Test-LabConfiguration {
             -ArgumentList $exception, $errorId, $errorCategory, $null
 
         $PSCmdlet.ThrowTerminatingError($errorRecord)      
-	}
+    }
 
-	[String]$FullConfigPath = $Configuration.labbuilderconfig.settings.fullconfigpath
-	If (-not (Test-Path -Path $FullConfigPath)) 
+    [String]$FullConfigPath = $Configuration.labbuilderconfig.settings.fullconfigpath
+    If (-not (Test-Path -Path $FullConfigPath)) 
     {
         $errorId = 'PathNotFoundError'
         $errorCategory = [System.Management.Automation.ErrorCategory]::InvalidArgument
@@ -385,7 +390,7 @@ function Test-LabConfiguration {
             -ArgumentList $exception, $errorId, $errorCategory, $null
 
         $PSCmdlet.ThrowTerminatingError($errorRecord)      
-	}
+    }
     Return $true
 } # Test-LabConfiguration
 ####################################################################################################
@@ -401,36 +406,36 @@ function Test-LabConfiguration {
    Installs the appropriate Hyper-V features if they are not currently installed.
 #>
 function Install-LabHyperV {
-	[CmdLetBinding()]
-	Param ()
+    [CmdLetBinding()]
+    Param ()
 
-	# Install Hyper-V Components
-	If ((Get-CimInstance Win32_OperatingSystem).ProductType -eq 1)
+    # Install Hyper-V Components
+    If ((Get-CimInstance Win32_OperatingSystem).ProductType -eq 1)
     {
-		# Desktop OS
-		[Array]$Feature = Get-WindowsOptionalFeature -Online -FeatureName '*Hyper-V*' `
+        # Desktop OS
+        [Array]$Feature = Get-WindowsOptionalFeature -Online -FeatureName '*Hyper-V*' `
             | Where-Object -Property State -Eq 'Disabled'
-		If ($Feature.Count -gt 0 )
+        If ($Feature.Count -gt 0 )
         {
-    	    Write-Verbose -Message ($LocalizedData.InstallingHyperVComponentsMesage `
+            Write-Verbose -Message ($LocalizedData.InstallingHyperVComponentsMesage `
                 -f 'Desktop')
-			$Feature.Foreach( { 
+            $Feature.Foreach( { 
                 Enable-WindowsOptionalFeature -Online -FeatureName $_.FeatureName
             } )
-		}
-	} Else {
-		# Server OS
-		[Array]$Feature = Get-WindowsFeature -Name Hyper-V `
+        }
+    } Else {
+        # Server OS
+        [Array]$Feature = Get-WindowsFeature -Name Hyper-V `
             | Where-Object -Property Installed -EQ $false
-		If ($Feature.Count -gt 0 )
+        If ($Feature.Count -gt 0 )
         {
-    	    Write-Verbose -Message ($LocalizedData.InstallingHyperVComponentsMesage `
+            Write-Verbose -Message ($LocalizedData.InstallingHyperVComponentsMesage `
                 -f 'Desktop')
-			$Feature.Foreach( {
+            $Feature.Foreach( {
                 Install-WindowsFeature -IncludeAllSubFeature -IncludeManagementTools -Name $_.Name
             } )
-		}
-	}
+        }
+    }
 } # Install-LabHyperV
 ####################################################################################################
 
@@ -452,40 +457,69 @@ function Install-LabHyperV {
    None
 #>
 function Initialize-LabConfiguration {
-	[CmdLetBinding()]
-	[OutputType([Boolean])]
-	param (
-		[Parameter(
+    [CmdLetBinding()]
+    [OutputType([Boolean])]
+    param (
+        [Parameter(
             Mandatory,
-			Position=0)]
-		[ValidateNotNullOrEmpty()]
-		[XML]$Configuration
-	)
-	
-	# Install Hyper-V Components
+            Position=0)]
+        [ValidateNotNullOrEmpty()]
+        [XML]$Configuration
+    )
+    
+    # Install Hyper-V Components
     Write-Verbose -Message ($LocalizedData.InitializingHyperVComponentsMesage)
-	
-	[String]$MacAddressMinimum = $Configuration.labbuilderconfig.settings.macaddressminimum
-	If (-not $MacAddressMinimum)
+    
+    [String]$MacAddressMinimum = $Configuration.labbuilderconfig.settings.macaddressminimum
+    If (-not $MacAddressMinimum)
     {
-		$MacAddressMinimum = '00155D010600'
-	}
+        $MacAddressMinimum = $Script:DefaultMacAddressMinimum
+    }
 
-	[String]$MacAddressMaximum = $Configuration.labbuilderconfig.settings.macaddressmaximum
-	If (-not $MacAddressMaximum)
+    [String]$MacAddressMaximum = $Configuration.labbuilderconfig.settings.macaddressmaximum
+    If (-not $MacAddressMaximum)
     {
-		$MacAddressMaximum = '00155D0106FF'
+        $MacAddressMaximum = $Script:DefaultMacAddressMaximum
+    }
+
+    Set-VMHost -MacAddressMinimum $MacAddressMinimum -MacAddressMaximum $MacAddressMaximum
+
+    # Create the LabBuilder Management Network switch and assign VLAN
+    # Used by host to communicate with Lab VMs
+    $ManagementSwitchName = ('LabBuilder Management {0}' -f $Configuration.labbuilderconfig.name)
+    if ($Configuration.labbuilderconfig.switches.ManagementVlan)
+	{
+		[Int32]$ManagementVlan = $Configuration.labbuilderconfig.switches.ManagementVlan
 	}
+	else
+	{
+		[Int32]$ManagementVlan = $Script:DefaultManagementVLan
+	}
+    if ((Get-VMSwitch | Where-Object -Property Name -eq $ManagementSwitchName).Count -eq 0)
+    {
+        $null = New-VMSwitch -Name $ManagementSwitchName -SwitchType Internal
 
-	Set-VMHost -MacAddressMinimum $MacAddressMinimum -MacAddressMaximum $MacAddressMaximum
+        Write-Verbose -Message ($LocalizedData.CreatingLabManagementSwitchMessage `
+            -f $ManagementSwitchName,$ManagementVlan)
+    }
+	# Check the Vlan ID of the adapter on the switch
+    $ExistingManagementAdapter = Get-VMNetworkAdapter -ManagementOS -Name $ManagementSwitchName
+    $ExistingVlan = (Get-VMNetworkAdapterVlan -VMNetworkAdapter $ExistingManagementAdapter).AccessVlanId
+	if ($ExistingVlan -ne $ManagementVlan)
+	{
+        Write-Verbose -Message ($LocalizedData.UpdatingLabManagementSwitchMessage `
+            -f $ManagementSwitchName,$ManagementVlan)
 
-	# Download the New-SelfSignedCertificateEx.ps1 script
-	Download-CertGenerator
+        $ExistingManagementAdapter | Set-VMNetworkAdapterVlan -Access -VlanId $ManagementVlan
+	}
+    
+    # Download the New-SelfSignedCertificateEx.ps1 script
+    Download-CertGenerator
 
-	# Download WMF 5.0 in case any VMs need it	
+    # Download WMF 5.0 in case any VMs need it	
     Download-WMF5Installer
 
-	# Download any other resources required by this lab
+    # Download any other resources required by this lab
     Download-LabResources -Configuration $Configuration	
 
 } # Initialize-LabConfiguration
@@ -505,14 +539,14 @@ function Initialize-LabConfiguration {
    Loads a Lab Builder configuration and downloads any resources required by it.   
 #>
 function Download-LabModule {
-	[CmdLetBinding()]
-	[OutputType([Boolean])]
-	param (
-		[Parameter(
+    [CmdLetBinding()]
+    [OutputType([Boolean])]
+    param (
+        [Parameter(
             Mandatory,
-			Position=0)]
-		[ValidateNotNullOrEmpty()]
-		[String]$Name,
+            Position=0)]
+        [ValidateNotNullOrEmpty()]
+        [String]$Name,
 
         [String]$URL,
 
@@ -521,7 +555,7 @@ function Download-LabModule {
         [String]$RequiredVersion,
 
         [String]$MinimumVersion
-	)
+    )
 
     $InstalledModules = @(Get-Module -ListAvailable)
 
@@ -544,30 +578,30 @@ function Download-LabModule {
         $VersionMessage = 'any version'
     }
 
-	# Is the module installed?
-	If ($InstalledModules.Where($Query).Count -eq 0)
+    # Is the module installed?
+    If ($InstalledModules.Where($Query).Count -eq 0)
     {
-    	Write-Verbose -Message ($LocalizedData.ModuleNotInstalledMessage `
+        Write-Verbose -Message ($LocalizedData.ModuleNotInstalledMessage `
             -f $Name,$VersionMessage)
 
-		# If a URL was specified, download this module via HTTP
+        # If a URL was specified, download this module via HTTP
         if ($URL)
         {
             # The module is not installed - so download it
             # This is usually for downloading modules directly from github
-			$FileName = $URL.Substring($URL.LastIndexOf('/') + 1)
-			$FilePath = Join-Path -Path $Script:WorkingFolder -ChildPath $FileName
+            $FileName = $URL.Substring($URL.LastIndexOf('/') + 1)
+            $FilePath = Join-Path -Path $Script:WorkingFolder -ChildPath $FileName
 
             Write-Verbose -Message ($LocalizedData.DownloadingLabResourceWebMessage `
                 -f $Name,$VersionMessage,$URL)
 
-			Try
+            Try
             {
-				Invoke-WebRequest `
+                Invoke-WebRequest `
                     -Uri $($URL) `
                     -OutFile $FilePath `
                     -ErrorAction Stop
-			}
+            }
             Catch
             {
                 $errorId = 'FileDownloadError'
@@ -580,22 +614,22 @@ function Download-LabModule {
                     -ArgumentList $exception, $errorId, $errorCategory, $null
 
                 $PSCmdlet.ThrowTerminatingError($errorRecord)        
-			} # Try
+            } # Try
 
-			[String]$ModulesFolder = "$($ENV:ProgramFiles)\WindowsPowerShell\Modules\"
+            [String]$ModulesFolder = "$($ENV:ProgramFiles)\WindowsPowerShell\Modules\"
 
             Write-Verbose -Message ($LocalizedData.InstallingLabResourceWebMessage `
                 -f $Name,$VersionMessage,$ModulesFolder)
 
-			# Extract this straight into the modules folder
-			Try
+            # Extract this straight into the modules folder
+            Try
             {
-				Expand-Archive `
+                Expand-Archive `
                     -Path $FilePath `
                     -DestinationPath $ModulesFolder `
                     -Force `
                     -ErrorAction Stop
-			}
+            }
             Catch
             {
                 $errorId = 'FileExtractError'
@@ -608,21 +642,21 @@ function Download-LabModule {
                     -ArgumentList $exception, $errorId, $errorCategory, $null
 
                 $PSCmdlet.ThrowTerminatingError($errorRecord)        
-			} # Try
-			If ($Folder)
+            } # Try
+            If ($Folder)
             {
-				# This zip file contains a folder that is not the name of the module so it must be
-				# renamed. This is usually the case with source downloaded directly from GitHub
-				$ModulePath = Join-Path -Path $ModulesFolder -ChildPath $($Name)
-				If (Test-Path -Path $ModulePath)
+                # This zip file contains a folder that is not the name of the module so it must be
+                # renamed. This is usually the case with source downloaded directly from GitHub
+                $ModulePath = Join-Path -Path $ModulesFolder -ChildPath $($Name)
+                If (Test-Path -Path $ModulePath)
                 {
-					Remove-Item -Path $ModulePath -Recurse -Force
-				}
-				Rename-Item `
+                    Remove-Item -Path $ModulePath -Recurse -Force
+                }
+                Rename-Item `
                     -Path (Join-Path -Path $ModulesFolder -ChildPath $($Folder)) `
-					-NewName $($Name) `
+                    -NewName $($Name) `
                     -Force
-			} # If
+            } # If
 
             Write-Verbose -Message ($LocalizedData.InstalledLabResourceWebMessage `
                 -f $Name,$VersionMessage,$ModulePath)
@@ -663,7 +697,7 @@ function Download-LabModule {
                 $PSCmdlet.ThrowTerminatingError($errorRecord)
             }
         } # If
-	} # If
+    } # If
 }
 ####################################################################################################
 
@@ -681,25 +715,25 @@ function Download-LabModule {
    Loads a Lab Builder configuration and downloads any resources required by it.   
 #>
 function Download-LabResources {
-	[CmdLetBinding()]
-	[OutputType([Boolean])]
-	param (
-		[Parameter(
+    [CmdLetBinding()]
+    [OutputType([Boolean])]
+    param (
+        [Parameter(
             Mandatory,
-			Position=0)]
-		[ValidateNotNullOrEmpty()]
-		[XML]$Configuration
-	)
-	
-	# Downloading Lab Resources
-	Write-Verbose -Message $($LocalizedData.DownloadingLabResourcesMessage)
-	
-	# Download any other resources required by this lab
-	If ($Configuration.labbuilderconfig.resources) 
+            Position=0)]
+        [ValidateNotNullOrEmpty()]
+        [XML]$Configuration
+    )
+    
+    # Downloading Lab Resources
+    Write-Verbose -Message $($LocalizedData.DownloadingLabResourcesMessage)
+    
+    # Download any other resources required by this lab
+    If ($Configuration.labbuilderconfig.resources) 
     {
-		Foreach ($Module in $Configuration.labbuilderconfig.resources.module)
+        Foreach ($Module in $Configuration.labbuilderconfig.resources.module)
         {
-        	if (-not $Module.Name)
+            if (-not $Module.Name)
             {
                 $errorId = 'ResourceModuleNameEmptyError'
                 $errorCategory = [System.Management.Automation.ErrorCategory]::InvalidArgument
@@ -710,7 +744,7 @@ function Download-LabResources {
                     -ArgumentList $exception, $errorId, $errorCategory, $null
 
                 $PSCmdlet.ThrowTerminatingError($errorRecord)
-	        } # If
+            } # If
             $Splat = [PSObject] @{ Name = $Module.Name }
             if ($Module.URL)
             {
@@ -729,8 +763,8 @@ function Download-LabResources {
                 $Splat += [PSObject] @{ MiniumVersion = $Module.MiniumVersion }
             }
             Download-LabModule @Splat
-		} # Foreach
-	} # If
+        } # Foreach
+    } # If
 } # Download-LabResources
 ####################################################################################################
 
@@ -752,48 +786,48 @@ function Download-LabResources {
    Returns an array of switches.
 #>
 function Get-LabSwitches {
-	[OutputType([Array])]
-	[CmdLetBinding()]
-	param (
-		[Parameter(
+    [OutputType([Array])]
+    [CmdLetBinding()]
+    param (
+        [Parameter(
             Mandatory,
-			Position=0)]
-		[ValidateNotNullOrEmpty()]
-		[XML]$Configuration
-	)
+            Position=0)]
+        [ValidateNotNullOrEmpty()]
+        [XML]$Configuration
+    )
 
-	[Array]$Switches = @() 
-	$ConfigSwitches = $Configuration.labbuilderconfig.SelectNodes('switches').Switch
-	Foreach ($ConfigSwitch in $ConfigSwitches) {
-		# It can't be switch because if the name attrib/node is missing the name property on the
-		# XML object defaults to the name of the parent. So we can't easily tell if no name was
+    [Array]$Switches = @() 
+    $ConfigSwitches = $Configuration.labbuilderconfig.SelectNodes('switches').Switch
+    Foreach ($ConfigSwitch in $ConfigSwitches) {
+        # It can't be switch because if the name attrib/node is missing the name property on the
+        # XML object defaults to the name of the parent. So we can't easily tell if no name was
         # specified or if they actually specified 'switch' as the name.
-		If ($ConfigSwitch.Name -eq 'switch') {
-			Throw "The switch name cannot be 'switch' or empty."
-		}
-		If ($ConfigSwitch.Type -notin 'Private','Internal','External') {
-			Throw 'The switch type must be Private, Internal or External.'
-		}
-		# Assemble the list of Adapters if any are specified for this switch (only if an external
+        If ($ConfigSwitch.Name -eq 'switch') {
+            Throw "The switch name cannot be 'switch' or empty."
+        }
+        If ($ConfigSwitch.Type -notin 'Private','Internal','External') {
+            Throw 'The switch type must be Private, Internal or External.'
+        }
+        # Assemble the list of Adapters if any are specified for this switch (only if an external
         # switch)
-		If ($ConfigSwitch.Adapters) {
-			[System.Collections.Hashtable[]]$ConfigAdapters = @()
-			Foreach ($Adapter in $ConfigSwitch.Adapters.Adapter) {
-				$ConfigAdapters += @{ name = $Adapter.Name; macaddress = $Adapter.MacAddress }
-			}
-			If (($ConfigAdapters.Count -gt 0) -and ($ConfigSwitch.Type -ne 'External')) {
-				Throw 'Adapters can only be specified for External type switches.'
-			}
-		} Else {
-			$ConfigAdapters = $null
-		}
-		$Switches += [PSObject]@{
-			name = $ConfigSwitch.Name;
-			type = $ConfigSwitch.Type;
-			vlan = $ConfigSwitch.Vlan;
-			adapters = $ConfigAdapters }
-	}
-	return $Switches
+        If ($ConfigSwitch.Adapters) {
+            [System.Collections.Hashtable[]]$ConfigAdapters = @()
+            Foreach ($Adapter in $ConfigSwitch.Adapters.Adapter) {
+                $ConfigAdapters += @{ name = $Adapter.Name; macaddress = $Adapter.MacAddress }
+            }
+            If (($ConfigAdapters.Count -gt 0) -and ($ConfigSwitch.Type -ne 'External')) {
+                Throw 'Adapters can only be specified for External type switches.'
+            }
+        } Else {
+            $ConfigAdapters = $null
+        }
+        $Switches += [PSObject]@{
+            name = $ConfigSwitch.Name;
+            type = $ConfigSwitch.Type;
+            vlan = $ConfigSwitch.Vlan;
+            adapters = $ConfigAdapters }
+    }
+    return $Switches
 } # Get-LabSwitches
 ####################################################################################################
 
@@ -818,26 +852,26 @@ function Get-LabSwitches {
    None.
 #>
 function Initialize-LabSwitches {
-	[CmdLetBinding()]
-	param (
-		[Parameter(
+    [CmdLetBinding()]
+    param (
+        [Parameter(
             Mandatory,
-			Position=0)]
-		[ValidateNotNullOrEmpty()]
-		[XML]$Configuration,
+            Position=0)]
+        [ValidateNotNullOrEmpty()]
+        [XML]$Configuration,
 
-		[Parameter(
+        [Parameter(
             Mandatory,
-			Position=1)]
-		[ValidateNotNullOrEmpty()]
-		[Array]$Switches
-	)
+            Position=1)]
+        [ValidateNotNullOrEmpty()]
+        [Array]$Switches
+    )
 
-	# Create Hyper-V Switches
-	Foreach ($VMSwitch in $Switches) {
-		If ((Get-VMSwitch | Where-Object -Property Name -eq $($VMSwitch.Name)).Count -eq 0) {
-			[String]$SwitchName = $VMSwitch.Name
-			If (-not $SwitchName) {
+    # Create Hyper-V Switches
+    Foreach ($VMSwitch in $Switches) {
+        If ((Get-VMSwitch | Where-Object -Property Name -eq $($VMSwitch.Name)).Count -eq 0) {
+            [String]$SwitchName = $VMSwitch.Name
+            If (-not $SwitchName) {
                 $errorId = 'UnknownSwitchTypeError'
                 $errorCategory = [System.Management.Automation.ErrorCategory]::InvalidArgument
                 $errorMessage = $($LocalizedData.SwitchNameIsEmptyError)
@@ -847,51 +881,72 @@ function Initialize-LabSwitches {
                     -ArgumentList $exception, $errorId, $errorCategory, $null
 
                 $PSCmdlet.ThrowTerminatingError($errorRecord)
-			}
-			[string]$SwitchType = $VMSwitch.Type
-			Write-Verbose -Message $($LocalizedData.CreatingVirtualSwitchMessage `
+            }
+            [string]$SwitchType = $VMSwitch.Type
+            Write-Verbose -Message $($LocalizedData.CreatingVirtualSwitchMessage `
                 -f $SwitchType,$SwitchName)
-			Switch ($SwitchType) {
-				'External' {
-					$null = New-VMSwitch `
+            Switch ($SwitchType) {
+                'External' {
+                    $null = New-VMSwitch `
                         -Name $SwitchName `
                         -NetAdapterName (`
                             Get-NetAdapter | `
                             Where-Object { $_.Status -eq 'Up' } | `
                             Select-Object -First 1 -ExpandProperty Name `
                             )
-					If ($VMSwitch.Adapters) {
-						Foreach ($Adapter in $VMSwitch.Adapters) {
-							If ($VMSwitch.VLan) {
-								# A default VLAN is assigned to this Switch so assign it to the
+                    If ($VMSwitch.Adapters) {
+                        Foreach ($Adapter in $VMSwitch.Adapters) {
+                            If ($VMSwitch.VLan) {
+                                # A default VLAN is assigned to this Switch so assign it to the
                                 # management adapters
-								$null = Add-VMNetworkAdapter `
+                                $null = Add-VMNetworkAdapter `
                                     -ManagementOS `
                                     -SwitchName $SwitchName `
                                     -Name $($Adapter.Name) `
                                     -StaticMacAddress $($Adapter.MacAddress) `
                                     -Passthru | `
                                     Set-VMNetworkAdapterVlan -Access -VlanId $($Switch.Vlan)
-							} Else { 
-								$null = Add-VMNetworkAdapter `
+                            } Else { 
+                                $null = Add-VMNetworkAdapter `
                                     -ManagementOS `
                                     -SwitchName $SwitchName `
                                     -Name $($Adapter.Name) `
                                     -StaticMacAddress $($Adapter.MacAddress)
-							} # If
-						} # Foreach
-					} # If
-					Break
-				} # 'External'
-				'Private' {
-					$null = New-VMSwitch -Name $SwitchName -SwitchType Private
-					Break
-				} # 'Private'
-				'Internal' {
-					$null = New-VMSwitch -Name $SwitchName -SwitchType Internal
-					Break
-				} # 'Internal'
-				Default {
+                            } # If
+                        } # Foreach
+                    } # If
+                    Break
+                } # 'External'
+                'Private' {
+                    $null = New-VMSwitch -Name $SwitchName -SwitchType Private
+                    Break
+                } # 'Private'
+                'Internal' {
+                    $null = New-VMSwitch -Name $SwitchName -SwitchType Internal
+                    If ($VMSwitch.Adapters) {
+                        Foreach ($Adapter in $VMSwitch.Adapters) {
+                            If ($VMSwitch.VLan) {
+                                # A default VLAN is assigned to this Switch so assign it to the
+                                # management adapters
+                                $null = Add-VMNetworkAdapter `
+                                    -ManagementOS `
+                                    -SwitchName $SwitchName `
+                                    -Name $($Adapter.Name) `
+                                    -StaticMacAddress $($Adapter.MacAddress) `
+                                    -Passthru | `
+                                    Set-VMNetworkAdapterVlan -Access -VlanId $($Switch.Vlan)
+                            } Else { 
+                                $null = Add-VMNetworkAdapter `
+                                    -ManagementOS `
+                                    -SwitchName $SwitchName `
+                                    -Name $($Adapter.Name) `
+                                    -StaticMacAddress $($Adapter.MacAddress)
+                            } # If
+                        } # Foreach
+                    } # If
+                    Break
+                } # 'Internal'
+                Default {
                     $errorId = 'UnknownSwitchTypeError'
                     $errorCategory = [System.Management.Automation.ErrorCategory]::InvalidArgument
                     $errorMessage = $($LocalizedData.UnknownSwitchTypeError `
@@ -902,10 +957,10 @@ function Initialize-LabSwitches {
                         -ArgumentList $exception, $errorId, $errorCategory, $null
 
                     $PSCmdlet.ThrowTerminatingError($errorRecord)
-				}
-			} # Switch
-		} # If
-	} # Foreach       
+                }
+            } # Switch
+        } # If
+    } # Foreach       
 } # Initialize-LabSwitches
 ####################################################################################################
 
@@ -928,26 +983,26 @@ function Initialize-LabSwitches {
 .OUTPUTS
    Returns true if the Lab switches were created correctly.#>
 function Remove-LabSwitches {
-	[CmdLetBinding()]
-	param (
-		[Parameter(
+    [CmdLetBinding()]
+    param (
+        [Parameter(
             Mandatory,
-			Position=0)]
-		[ValidateNotNullOrEmpty()]
-		[XML]$Configuration,
+            Position=0)]
+        [ValidateNotNullOrEmpty()]
+        [XML]$Configuration,
 
-		[Parameter(
+        [Parameter(
             Mandatory,
-			Position=1)]
-		[ValidateNotNullOrEmpty()]
-		[System.Collections.Hashtable[]]$Switches
-	)
+            Position=1)]
+        [ValidateNotNullOrEmpty()]
+        [System.Collections.Hashtable[]]$Switches
+    )
 
-	# Delete Hyper-V Switches
-	Foreach ($Switch in $Switches) {
-		If ((Get-VMSwitch | Where-Object -Property Name -eq $Switch.Name).Count -ne 0) {
-			[String]$SwitchName = $Switch.Name
-			If (-not $SwitchName) {
+    # Delete Hyper-V Switches
+    Foreach ($Switch in $Switches) {
+        If ((Get-VMSwitch | Where-Object -Property Name -eq $Switch.Name).Count -ne 0) {
+            [String]$SwitchName = $Switch.Name
+            If (-not $SwitchName) {
                 $errorId = 'UnknownSwitchTypeError'
                 $errorCategory = [System.Management.Automation.ErrorCategory]::InvalidArgument
                 $errorMessage = $($LocalizedData.SwitchNameIsEmptyError)
@@ -957,29 +1012,34 @@ function Remove-LabSwitches {
                     -ArgumentList $exception, $errorId, $errorCategory, $null
 
                 $PSCmdlet.ThrowTerminatingError($errorRecord)
-			}
-			[string]$SwitchType = $Switch.Type
-			Write-Verbose -Message $($LocalizedData.DeleteingVirtualSwitchMessage `
+            }
+            [string]$SwitchType = $Switch.Type
+            Write-Verbose -Message $($LocalizedData.DeleteingVirtualSwitchMessage `
                 -f $SwitchType,$SwitchName)
-			Switch ($SwitchType) {
-				'External' {
-					If ($Switch.Adapters) {
-						$Switch.Adapters.foreach( {
-							$null = Remove-VMNetworkAdapter -ManagementOS -Name $_.Name
-						} )
-					} # If
-					Remove-VMSwitch -Name $SwitchName
-					Break
-				} # 'External'
-				'Private' {
-					Remove-VMSwitch -Name $SwitchName
-					Break
-				} # 'Private'
-				'Internal' {
-					Remove-VMSwitch -Name $SwitchName
-					Break
-				} # 'Internal'
-				Default {
+            Switch ($SwitchType) {
+                'External' {
+                    If ($Switch.Adapters) {
+                        $Switch.Adapters.foreach( {
+                            $null = Remove-VMNetworkAdapter -ManagementOS -Name $_.Name
+                        } )
+                    } # If
+                    Remove-VMSwitch -Name $SwitchName
+                    Break
+                } # 'External'
+                'Private' {
+                    Remove-VMSwitch -Name $SwitchName
+                    Break
+                } # 'Private'
+                'Internal' {
+                    Remove-VMSwitch -Name $SwitchName
+                    If ($Switch.Adapters) {
+                        $Switch.Adapters.foreach( {
+                            $null = Remove-VMNetworkAdapter -ManagementOS -Name $_.Name
+                        } )
+                    } # If
+                    Break
+                } # 'Internal'
+                Default {
                     $errorId = 'UnknownSwitchTypeError'
                     $errorCategory = [System.Management.Automation.ErrorCategory]::InvalidArgument
                     $errorMessage = $($LocalizedData.UnknownSwitchTypeError `
@@ -990,10 +1050,10 @@ function Remove-LabSwitches {
                         -ArgumentList $exception, $errorId, $errorCategory, $null
 
                     $PSCmdlet.ThrowTerminatingError($errorRecord)
-				}
-			} # Switch
-		} # If
-	} # Foreach        
+                }
+            } # Switch
+        } # If
+    } # Foreach        
 } # Remove-LabSwitches
 ####################################################################################################
 
@@ -1015,43 +1075,43 @@ function Remove-LabSwitches {
    General notes
 #>
 function Get-LabVMTemplates {
-	[OutputType([System.Collections.Hashtable[]])]
-	[CmdLetBinding()]
-	param (
-		[Parameter(
+    [OutputType([System.Collections.Hashtable[]])]
+    [CmdLetBinding()]
+    param (
+        [Parameter(
             Mandatory,
-			Position=0)]
-		[ValidateNotNullOrEmpty()]
-		[XML]$Configuration
-	)
+            Position=0)]
+        [ValidateNotNullOrEmpty()]
+        [XML]$Configuration
+    )
 
-	[System.Collections.Hashtable[]]$VMTemplates = @()
-	[String]$VHDParentPath = $Configuration.labbuilderconfig.SelectNodes('settings').vhdparentpath
+    [System.Collections.Hashtable[]]$VMTemplates = @()
+    [String]$VHDParentPath = $Configuration.labbuilderconfig.SelectNodes('settings').vhdparentpath
 
-	# Get a list of all templates in the Hyper-V system matching the phrase found in the fromvm
+    # Get a list of all templates in the Hyper-V system matching the phrase found in the fromvm
     # config setting
-	[String]$FromVM=$Configuration.labbuilderconfig.SelectNodes('templates').fromvm
-	If ($FromVM) {
-		$Templates = Get-VM -Name $FromVM
-		Foreach ($Template in $Templates) {
-			[String]$VHDFilepath = ($Template | Get-VMHardDiskDrive).Path
-			[String]$VHDFilename = [System.IO.Path]::GetFileName($VHDFilepath)
-			$VMTemplates += @{
-				name = $Template.Name;
-				vhd = $VHDFilename;
-				sourcevhd = $VHDFilepath;
-				templatevhd = "$VHDParentPath\$VHDFilename";
-			}
-		} # Foreach
-	} # If
-	
-	# Read the list of templates from the configuration file
-	$Templates = $Configuration.labbuilderconfig.SelectNodes('templates').template
-	Foreach ($Template in $Templates) {
-		# It can't be template because if the name attrib/node is missing the name property on
+    [String]$FromVM=$Configuration.labbuilderconfig.SelectNodes('templates').fromvm
+    If ($FromVM) {
+        $Templates = Get-VM -Name $FromVM
+        Foreach ($Template in $Templates) {
+            [String]$VHDFilepath = ($Template | Get-VMHardDiskDrive).Path
+            [String]$VHDFilename = [System.IO.Path]::GetFileName($VHDFilepath)
+            $VMTemplates += @{
+                name = $Template.Name;
+                vhd = $VHDFilename;
+                sourcevhd = $VHDFilepath;
+                templatevhd = "$VHDParentPath\$VHDFilename";
+            }
+        } # Foreach
+    } # If
+    
+    # Read the list of templates from the configuration file
+    $Templates = $Configuration.labbuilderconfig.SelectNodes('templates').template
+    Foreach ($Template in $Templates) {
+        # It can't be template because if the name attrib/node is missing the name property on
         # the XML object defaults to the name of the parent. So we can't easily tell if no name
         # was specified or if they actually specified 'template' as the name.
-		If ($Template.Name -eq 'template') {
+        If ($Template.Name -eq 'template') {
             $errorId = 'EmptyTemplateNameError'
             $errorCategory = [System.Management.Automation.ErrorCategory]::InvalidArgument
             $errorMessage = $($LocalizedData.EmptyTemplateNameError)
@@ -1061,10 +1121,10 @@ function Get-LabVMTemplates {
                 -ArgumentList $exception, $errorId, $errorCategory, $null
 
             $PSCmdlet.ThrowTerminatingError($errorRecord)
-		} # If
-		If ($Template.SourceVHD) {
-			# A Source VHD file was specified - does it exist?
-			If (-not (Test-Path -Path $Templates.SourceVHD)) {
+        } # If
+        If ($Template.SourceVHD) {
+            # A Source VHD file was specified - does it exist?
+            If (-not (Test-Path -Path $Templates.SourceVHD)) {
                 $errorId = 'TemplateSourceVHDNotFoundError'
                 $errorCategory = [System.Management.Automation.ErrorCategory]::InvalidArgument
                 $errorMessage = $($LocalizedData.TemplateSourceVHDNotFoundError `
@@ -1075,33 +1135,33 @@ function Get-LabVMTemplates {
                     -ArgumentList $exception, $errorId, $errorCategory, $null
 
                 $PSCmdlet.ThrowTerminatingError($errorRecord)
-			} # If
-		} # If
-		
-		# Get the Template Default Startup Bytes
-		[Int64]$MemortStartupBytes = 0
-		If ($Template.MemoryStartupBytes) {
-			$MemortStartupBytes = (Invoke-Expression $Template.MemoryStartupBytes)
-		} # If
+            } # If
+        } # If
+        
+        # Get the Template Default Startup Bytes
+        [Int64]$MemortStartupBytes = 0
+        If ($Template.MemoryStartupBytes) {
+            $MemortStartupBytes = (Invoke-Expression $Template.MemoryStartupBytes)
+        } # If
 
-		# Get the Template Default Data VHD Size
-		[Int64]$DataVHDSize = 0
-		If ($Template.DataVHDSize) {
-			$DataVHDSize = (Invoke-Expression $Template.DataVHDSize)
-		} # If
-				
-		# Does the template already exist in the list?
-		[Boolean]$Found = $False
-		Foreach ($VMTemplate in $VMTemplates) {
-			If ($VMTemplate.Name -eq $Template.Name) {
-				# The template already exists - so don't add it again, but update the VHD path
+        # Get the Template Default Data VHD Size
+        [Int64]$DataVHDSize = 0
+        If ($Template.DataVHDSize) {
+            $DataVHDSize = (Invoke-Expression $Template.DataVHDSize)
+        } # If
+                
+        # Does the template already exist in the list?
+        [Boolean]$Found = $False
+        Foreach ($VMTemplate in $VMTemplates) {
+            If ($VMTemplate.Name -eq $Template.Name) {
+                # The template already exists - so don't add it again, but update the VHD path
                 # if provided
-				If ($Template.VHD) {
-					$VMTemplate.VHD = $Template.VHD
-					$VMTemplate.TemplateVHD = "$VHDParentPath\$([System.IO.Path]::GetFileName($Template.VHD))"
-				} # If
-				# Check that we do end up with a VHD filename in the template
-				If (-not $VMTemplate.VHD) {
+                If ($Template.VHD) {
+                    $VMTemplate.VHD = $Template.VHD
+                    $VMTemplate.TemplateVHD = "$VHDParentPath\$([System.IO.Path]::GetFileName($Template.VHD))"
+                } # If
+                # Check that we do end up with a VHD filename in the template
+                If (-not $VMTemplate.VHD) {
                     $errorId = 'EmptyTemplateVHDNameError'
                     $errorCategory = [System.Management.Automation.ErrorCategory]::InvalidArgument
                     $errorMessage = $($LocalizedData.EmptyTemplateVHDNameError `
@@ -1112,43 +1172,43 @@ function Get-LabVMTemplates {
                         -ArgumentList $exception, $errorId, $errorCategory, $null
 
                     $PSCmdlet.ThrowTerminatingError($errorRecord)
-				} # If
-				$VMTemplate.SourceVHD = $Templates.SourceVHD
-				$VMTemplate.InstallISO = $Template.InstallISO
-				$VMTemplate.Edition = $Template.Edtion
-				$VMTemplate.AllowCreate = $Template.AllowCreate
-				# Write any template specific default VM attributes
-				If ($MemortStartupBytes) {
-					$VMTemplate.MemoryStartupBytes = $MemortStartupBytes
-				} # If
-				If ($Templates.ProcessorCount) {
-					$VMTemplate.ProcessorCount = $Template.ProcessorCount
-				} # If
-				If ($DataVHDSize) {
-					$VMTemplate.DataVHDSize = $DataVHDSize
-				} # If
-				If ($Templates.AdministratorPassword) {
-					$VMTemplate.AdministratorPassword = $Template.AdministratorPassword
-				} # If
-				If ($Templates.ProductKey) {
-					$VMTemplate.ProductKey = $Template.ProductKey
-				} # If
-				If ($Templates.TimeZone) {
-					$VMTemplate.TimeZone = $Template.TimeZone
-				} # If
-				If ($Templates.OSType) {
-					$VMTemplate.OSType = $Template.OSType
-				} Else {
-					$VMTemplate.OSType = 'Server'
-				}
+                } # If
+                $VMTemplate.SourceVHD = $Templates.SourceVHD
+                $VMTemplate.InstallISO = $Template.InstallISO
+                $VMTemplate.Edition = $Template.Edtion
+                $VMTemplate.AllowCreate = $Template.AllowCreate
+                # Write any template specific default VM attributes
+                If ($MemortStartupBytes) {
+                    $VMTemplate.MemoryStartupBytes = $MemortStartupBytes
+                } # If
+                If ($Templates.ProcessorCount) {
+                    $VMTemplate.ProcessorCount = $Template.ProcessorCount
+                } # If
+                If ($DataVHDSize) {
+                    $VMTemplate.DataVHDSize = $DataVHDSize
+                } # If
+                If ($Templates.AdministratorPassword) {
+                    $VMTemplate.AdministratorPassword = $Template.AdministratorPassword
+                } # If
+                If ($Templates.ProductKey) {
+                    $VMTemplate.ProductKey = $Template.ProductKey
+                } # If
+                If ($Templates.TimeZone) {
+                    $VMTemplate.TimeZone = $Template.TimeZone
+                } # If
+                If ($Templates.OSType) {
+                    $VMTemplate.OSType = $Template.OSType
+                } Else {
+                    $VMTemplate.OSType = 'Server'
+                }
 
-				$Found = $True
-				Break
-			} # If
-		} # Foreach
-		If (-not $Found) {
-			# Check that we do end up with a VHD filename in the template
-			If (-not $Template.VHD) {
+                $Found = $True
+                Break
+            } # If
+        } # Foreach
+        If (-not $Found) {
+            # Check that we do end up with a VHD filename in the template
+            If (-not $Template.VHD) {
                 $errorId = 'EmptyTemplateVHDNameError'
                 $errorCategory = [System.Management.Automation.ErrorCategory]::InvalidArgument
                 $errorMessage = $($LocalizedData.EmptyTemplateVHDNameError `
@@ -1159,28 +1219,28 @@ function Get-LabVMTemplates {
                     -ArgumentList $exception, $errorId, $errorCategory, $null
 
                 $PSCmdlet.ThrowTerminatingError($errorRecord)
-			} # If
+            } # If
 
-			# The template wasn't found in the list of templates so add it
-			$VMTemplates += @{
-				name = $Template.Name;
-				vhd = $Template.VHD;
-				sourcevhd = $Template.SourceVHD;
-				templatevhd = "$VHDParentPath\$([System.IO.Path]::GetFileName($Template.VHD))";
-				installiso = $Template.InstallISO;
-				edition = $Template.Edition;
-				allowcreate = $Template.AllowCreate;
-				memorystartupbytes = $MemoryStartupBytes;
-				processorcount = $Template.ProcessorCount;
-				datavhdsize = $Template.DataVHDSize;
-				administratorpassword = $Template.AdministratorPassword;
-				productkey = $Template.ProductKey;
-				timezone = $Template.TimeZone;
-				ostype = If ($Template.OSType) { $Template.OSType } Else { 'Server' };
-			}
-		} # If
-	} # Foreach
-	Return $VMTemplates
+            # The template wasn't found in the list of templates so add it
+            $VMTemplates += @{
+                name = $Template.Name;
+                vhd = $Template.VHD;
+                sourcevhd = $Template.SourceVHD;
+                templatevhd = "$VHDParentPath\$([System.IO.Path]::GetFileName($Template.VHD))";
+                installiso = $Template.InstallISO;
+                edition = $Template.Edition;
+                allowcreate = $Template.AllowCreate;
+                memorystartupbytes = $MemoryStartupBytes;
+                processorcount = $Template.ProcessorCount;
+                datavhdsize = $Template.DataVHDSize;
+                administratorpassword = $Template.AdministratorPassword;
+                productkey = $Template.ProductKey;
+                timezone = $Template.TimeZone;
+                ostype = If ($Template.OSType) { $Template.OSType } Else { 'Server' };
+            }
+        } # If
+    } # Foreach
+    Return $VMTemplates
 } # Get-LabVMTemplates
 ####################################################################################################
 
@@ -1202,41 +1262,41 @@ function Get-LabVMTemplates {
    General notes
 #>
 function Initialize-LabVMTemplates {
-	[CmdLetBinding()]
-	[OutputType([Boolean])]
-	param (
-		[Parameter(
+    [CmdLetBinding()]
+    [OutputType([Boolean])]
+    param (
+        [Parameter(
             Mandatory,
-			Position=0)]
-		[ValidateNotNullOrEmpty()]
-		[XML]$Configuration,
+            Position=0)]
+        [ValidateNotNullOrEmpty()]
+        [XML]$Configuration,
 
-		[Parameter(
-			Position=1)]
-		[ValidateNotNullOrEmpty()]
-		[System.Collections.Hashtable[]]$VMTemplates = $(Throw 'VMTemplates parameter is missing.')
-	)
-	
-	Foreach ($VMTemplate in $VMTemplates) {
-		If (-not (Test-Path $VMTemplate.TemplateVHD)) {
-			# The template VHD isn't in the VHD Parent folder - so copy it there after optimizing it
-			If (-not (Test-Path $VMTemplate.SourceVHD)) {
-				# The source VHD does not exist - so try and create it from the ISO
-				# This feature is not yet supported so will throw an error
-				Throw "The template source VHD $($VMTemplate.SourceVHD) could not be found and creating it from an ISO is not yet supported."
-			}
-			Write-Verbose "Copying template source VHD $($VMTemplate.sourcevhd) to $($VMTemplate.templatevhd) ..."
-			Copy-Item -Path $VMTemplate.sourcevhd -Destination $VMTemplate.templatevhd
-			Write-Verbose "Optimizing template VHD $($VMTemplate.vhd) ..."
-			Set-ItemProperty -Path $VMTemplate.templatevhd -Name IsReadOnly -Value $False
-			Optimize-VHD -Path $VMTemplate.templatevhd -Mode Full
-			Write-Verbose "Setting template VHD $($VMTemplate.vhd) as readonly ..."
-			Set-ItemProperty -Path $VMTemplate.templatevhd -Name IsReadOnly -Value $True
-		} Else {
-			Write-Verbose "Template VHD file $($VMTemplate.templatevhd) already exists - skipping..."
-		}
-	}
-	Return $True
+        [Parameter(
+            Position=1)]
+        [ValidateNotNullOrEmpty()]
+        [System.Collections.Hashtable[]]$VMTemplates = $(Throw 'VMTemplates parameter is missing.')
+    )
+    
+    Foreach ($VMTemplate in $VMTemplates) {
+        If (-not (Test-Path $VMTemplate.TemplateVHD)) {
+            # The template VHD isn't in the VHD Parent folder - so copy it there after optimizing it
+            If (-not (Test-Path $VMTemplate.SourceVHD)) {
+                # The source VHD does not exist - so try and create it from the ISO
+                # This feature is not yet supported so will throw an error
+                Throw "The template source VHD $($VMTemplate.SourceVHD) could not be found and creating it from an ISO is not yet supported."
+            }
+            Write-Verbose "Copying template source VHD $($VMTemplate.sourcevhd) to $($VMTemplate.templatevhd) ..."
+            Copy-Item -Path $VMTemplate.sourcevhd -Destination $VMTemplate.templatevhd
+            Write-Verbose "Optimizing template VHD $($VMTemplate.vhd) ..."
+            Set-ItemProperty -Path $VMTemplate.templatevhd -Name IsReadOnly -Value $False
+            Optimize-VHD -Path $VMTemplate.templatevhd -Mode Full
+            Write-Verbose "Setting template VHD $($VMTemplate.vhd) as readonly ..."
+            Set-ItemProperty -Path $VMTemplate.templatevhd -Name IsReadOnly -Value $True
+        } Else {
+            Write-Verbose "Template VHD file $($VMTemplate.templatevhd) already exists - skipping..."
+        }
+    }
+    Return $True
 } # Initialize-LabVMTemplates
 ####################################################################################################
 
@@ -1258,29 +1318,29 @@ function Initialize-LabVMTemplates {
    General notes
 #>
 function Remove-LabVMTemplates {
-	[CmdLetBinding()]
-	[OutputType([Boolean])]
-	param (
-		[Parameter(
+    [CmdLetBinding()]
+    [OutputType([Boolean])]
+    param (
+        [Parameter(
             Mandatory,
-			Position=0)]
-		[ValidateNotNullOrEmpty()]
-		[XML]$Configuration,
+            Position=0)]
+        [ValidateNotNullOrEmpty()]
+        [XML]$Configuration,
 
-		[Parameter(
-			Position=1)]
-		[ValidateNotNullOrEmpty()]
-		[System.Collections.Hashtable[]]$VMTemplates
-	)
-	
-	Foreach ($VMTemplate in $VMTemplates) {
-		If (Test-Path $VMTemplate.templatevhd) {
-			Set-ItemProperty -Path $VMTemplate.templatevhd -Name IsReadOnly -Value $False
-			Write-Verbose "Deleting Template VHD $($VMTemplate.templatevhd) ..."
-			Remove-Item -Path $VMTemplate.templatevhd -Confirm:$false -Force
-		}
-	}
-	Return $True
+        [Parameter(
+            Position=1)]
+        [ValidateNotNullOrEmpty()]
+        [System.Collections.Hashtable[]]$VMTemplates
+    )
+    
+    Foreach ($VMTemplate in $VMTemplates) {
+        If (Test-Path $VMTemplate.templatevhd) {
+            Set-ItemProperty -Path $VMTemplate.templatevhd -Name IsReadOnly -Value $False
+            Write-Verbose "Deleting Template VHD $($VMTemplate.templatevhd) ..."
+            Remove-Item -Path $VMTemplate.templatevhd -Confirm:$false -Force
+        }
+    }
+    Return $True
 } # Remove-LabVMTemplates
 ####################################################################################################
 
@@ -1302,258 +1362,262 @@ function Remove-LabVMTemplates {
    General notes
 #>
 function Set-LabDSCMOFFile {
-	[CmdLetBinding()]
-	[OutputType([Boolean])]
-	param (
-		[Parameter(
+    [CmdLetBinding()]
+    [OutputType([Boolean])]
+    param (
+        [Parameter(
             Mandatory,
-			Position=0)]
-		[XML]$Configuration,
+            Position=0)]
+        [XML]$Configuration,
 
-		[Parameter(
+        [Parameter(
             Mandatory,
-			Position=1)]
-		[System.Collections.Hashtable]$VM
-	)
+            Position=1)]
+        [System.Collections.Hashtable]$VM
+    )
 
-	[String]$DSCMOFFile = ''
-	[String]$DSCMOFMetaFile = ''
-	[String]$VMPath = $Configuration.labbuilderconfig.settings.vmpath
+    [String]$DSCMOFFile = ''
+    [String]$DSCMOFMetaFile = ''
+    [String]$VMPath = $Configuration.labbuilderconfig.settings.vmpath
 
-	# Make sure the appropriate folders exist
-	New-Item -Path "$VMPath\$($VM.Name)\LabBuilder Files" -ItemType Directory -Force -ErrorAction SilentlyContinue
-	New-Item -Path "$VMPath\$($VM.Name)\LabBuilder Files\DSC Modules" -ItemType Directory -Force -ErrorAction SilentlyContinue
+    # Make sure the appropriate folders exist
+    New-Item -Path "$VMPath\$($VM.Name)\LabBuilder Files" -ItemType Directory -Force -ErrorAction SilentlyContinue
+    New-Item -Path "$VMPath\$($VM.Name)\LabBuilder Files\DSC Modules" -ItemType Directory -Force -ErrorAction SilentlyContinue
 
-	If ($VM.DSCConfigFile) {
-		# Make sure all the modules required to create the MOF file are installed
-		$InstalledModules = Get-Module -ListAvailable
-		Write-Verbose "Identifying Modules used by DSC Config File $($VM.DSCConfigFile) in VM $($VM.Name) ..."
-		$DSCModules = Get-ModulesInDSCConfig -DSCConfigFile $($VM.DSCConfigFile)
-		Foreach ($ModuleName in $DSCModules) {
-			If (($InstalledModules | Where-Object -Property Name -EQ $ModuleName).Count -eq 0) {
-				# The Module isn't available on this computer, so try and install it
-				Write-Verbose "Searching for Module $ModuleName required by DSC Config File $($VM.DSCConfigFile) in VM $($VM.Name) ..."
-				$NewModule = Find-Module -Name $ModuleName
-				If ($NewModule) {
-					Write-Verbose "Installing Module $ModuleName required by DSC Config File $($VM.DSCConfigFile) in VM $($VM.Name) ..."
-					Try {
-						$NewModule | Install-Module
-					} Catch {
-						Throw "Module $ModuleName required by DSC Config File $($VM.DSCConfigFile) in VM $($VM.Name) could not be downloaded ..."					
-					}
-				} Else {
-					Throw "Module $ModuleName required by DSC Config File $($VM.DSCConfigFile) in VM $($VM.Name) could not be found or downloaded ..."
-				}
-			} # If
-			Write-Verbose "Saving Module $ModuleName required by DSC Config File $($VM.DSCConfigFile) in VM $($VM.Name) to LabBuilder files ..."
-			# Find where the module is actually stored
-			[String]$ModulePath = ''
-			Foreach ($Path in $ENV:PSModulePath.Split(';')) {
-				$ModulePath = Join-Path -Path $Path -ChildPath $ModuleName
-				If (Test-Path -Path $ModulePath) {
-					Break
-				} # If
-			} # Foreach
-			If (-not $ModulePath) {
-				Throw "Module $ModuleName required by DSC Config File $($VM.DSCConfigFile) in VM $($VM.Name) could not be found in the module path."
-			}
-			Copy-Item -Path $ModulePath -Destination "$VMPath\$($VM.Name)\LabBuilder Files\DSC Modules\" -Recurse -Force
-		} # Foreach
+    If ($VM.DSCConfigFile) {
+        # Make sure all the modules required to create the MOF file are installed
+        $InstalledModules = Get-Module -ListAvailable
+        Write-Verbose "Identifying Modules used by DSC Config File $($VM.DSCConfigFile) in VM $($VM.Name) ..."
+        $DSCModules = Get-ModulesInDSCConfig -DSCConfigFile $($VM.DSCConfigFile)
+        Foreach ($ModuleName in $DSCModules) {
+            If (($InstalledModules | Where-Object -Property Name -EQ $ModuleName).Count -eq 0) {
+                # The Module isn't available on this computer, so try and install it
+                Write-Verbose "Searching for Module $ModuleName required by DSC Config File $($VM.DSCConfigFile) in VM $($VM.Name) ..."
+                $NewModule = Find-Module -Name $ModuleName
+                If ($NewModule) {
+                    Write-Verbose "Installing Module $ModuleName required by DSC Config File $($VM.DSCConfigFile) in VM $($VM.Name) ..."
+                    Try {
+                        $NewModule | Install-Module
+                    } Catch {
+                        Throw "Module $ModuleName required by DSC Config File $($VM.DSCConfigFile) in VM $($VM.Name) could not be downloaded ..."					
+                    }
+                } Else {
+                    Throw "Module $ModuleName required by DSC Config File $($VM.DSCConfigFile) in VM $($VM.Name) could not be found or downloaded ..."
+                }
+            } # If
+            Write-Verbose "Saving Module $ModuleName required by DSC Config File $($VM.DSCConfigFile) in VM $($VM.Name) to LabBuilder files ..."
+            # Find where the module is actually stored
+            [String]$ModulePath = ''
+            Foreach ($Path in $ENV:PSModulePath.Split(';')) {
+                $ModulePath = Join-Path -Path $Path -ChildPath $ModuleName
+                If (Test-Path -Path $ModulePath) {
+                    Break
+                } # If
+            } # Foreach
+            If (-not $ModulePath) {
+                Throw "Module $ModuleName required by DSC Config File $($VM.DSCConfigFile) in VM $($VM.Name) could not be found in the module path."
+            }
+            Copy-Item -Path $ModulePath -Destination "$VMPath\$($VM.Name)\LabBuilder Files\DSC Modules\" -Recurse -Force
+        } # Foreach
 
-		# Add the VM Self-Signed Certificate to the Local Machine store and get the Thumbprint	
-		[String]$CertificateFile = "$VMPath\$($VM.Name)\LabBuilder Files\SelfSigned.cer"
-		$Certificate = Import-Certificate -FilePath $CertificateFile -CertStoreLocation 'Cert:LocalMachine\My'
-		[String]$CertificateThumbprint = $Certificate.Thumbprint
+        # Add the VM Self-Signed Certificate to the Local Machine store and get the Thumbprint	
+        if (-not (Test-Path -Path "$VMPath\$($VM.Name)\LabBuilder Files\SelfSigned.cer")) {
+            # The self-signed certificate doesn't exist - create a new one and download it.
+            New-LabVMSelfSignedCert -Configuration $Configuration -VM $VM
+        }
+        [String]$CertificateFile = "$VMPath\$($VM.Name)\LabBuilder Files\SelfSigned.cer"
+        $Certificate = Import-Certificate -FilePath $CertificateFile -CertStoreLocation 'Cert:LocalMachine\My'
+        [String]$CertificateThumbprint = $Certificate.Thumbprint
 
-		# Set the predicted MOF File name
-		$DSCMOFFile = Join-Path -Path $ENV:Temp -ChildPath "$($VM.ComputerName).mof"
-		$DSCMOFMetaFile = ([System.IO.Path]::ChangeExtension($DSCMOFFile,'meta.mof'))
-			
-		# Generate the LCM MOF File
-		Write-Verbose "Creating VM $($VM.Name) DSC LCM MOF File ..."
-		ConfigLCM -OutputPath $($ENV:Temp) -ComputerName $($VM.ComputerName) -Thumbprint $CertificateThumbprint | Out-Null
-		If (-not (Test-Path -Path $DSCMOFMetaFile)) {
-			Throw "A Meta MOF File was not created by the DSC LCM Config for VM $($VM.Name)."
-		} # If
+        # Set the predicted MOF File name
+        $DSCMOFFile = Join-Path -Path $ENV:Temp -ChildPath "$($VM.ComputerName).mof"
+        $DSCMOFMetaFile = ([System.IO.Path]::ChangeExtension($DSCMOFFile,'meta.mof'))
+            
+        # Generate the LCM MOF File
+        Write-Verbose "Creating VM $($VM.Name) DSC LCM MOF File ..."
+        $null = ConfigLCM -OutputPath $($ENV:Temp) -ComputerName $($VM.ComputerName) -Thumbprint $CertificateThumbprint
+        If (-not (Test-Path -Path $DSCMOFMetaFile)) {
+            Throw "A Meta MOF File was not created by the DSC LCM Config for VM $($VM.Name)."
+        } # If
 
-		# A DSC Config File was provided so create a MOF File out of it.
-		Write-Verbose "Creating VM $($VM.Name) DSC MOF File from DSC Config $($VM.DSCConfigFile) ..."
-		
-		# Now create the Networking DSC Config file
-		[String]$NetworkingDSCConfig = @"
+        # A DSC Config File was provided so create a MOF File out of it.
+        Write-Verbose "Creating VM $($VM.Name) DSC MOF File from DSC Config $($VM.DSCConfigFile) ..."
+        
+        # Now create the Networking DSC Config file
+        [String]$NetworkingDSCConfig = @"
 Configuration Networking {
-	Import-DscResource -ModuleName xNetworking
+    Import-DscResource -ModuleName xNetworking
 
 "@
-		[Int]$AdapterCount = 0
-		Foreach ($Adapter in $VM.Adapters) {
-			$AdapterCount++
-			If ($Adapter.IPv4) {
-				If ($Adapter.IPv4.Address) {
+        [Int]$AdapterCount = 0
+        Foreach ($Adapter in $VM.Adapters) {
+            $AdapterCount++
+            If ($Adapter.IPv4) {
+                If ($Adapter.IPv4.Address) {
 $NetworkingDSCConfig += @"
-	xIPAddress IPv4_$AdapterCount {
-		InterfaceAlias = '$($Adapter.Name)'
-		AddressFamily  = 'IPv4'
-		IPAddress      = '$($Adapter.IPv4.Address.Replace(',',"','"))'
-		SubnetMask     = '$($Adapter.IPv4.SubnetMask)'
-	}
+    xIPAddress IPv4_$AdapterCount {
+        InterfaceAlias = '$($Adapter.Name)'
+        AddressFamily  = 'IPv4'
+        IPAddress      = '$($Adapter.IPv4.Address.Replace(',',"','"))'
+        SubnetMask     = '$($Adapter.IPv4.SubnetMask)'
+    }
 
 "@
-					If ($Adapter.IPv4.DefaultGateway) {
+                    If ($Adapter.IPv4.DefaultGateway) {
 $NetworkingDSCConfig += @"
-	xDefaultGatewayAddress IPv4G_$AdapterCount {
-		InterfaceAlias = '$($Adapter.Name)'
-		AddressFamily  = 'IPv4'
-		Address        = '$($Adapter.IPv4.DefaultGateway)'
-	}
+    xDefaultGatewayAddress IPv4G_$AdapterCount {
+        InterfaceAlias = '$($Adapter.Name)'
+        AddressFamily  = 'IPv4'
+        Address        = '$($Adapter.IPv4.DefaultGateway)'
+    }
 
 "@
-					} Else {
+                    } Else {
 $NetworkingDSCConfig += @"
-	xDefaultGatewayAddress IPv4G_$AdapterCount {
-		InterfaceAlias = '$($Adapter.Name)'
-		AddressFamily  = 'IPv4'
-	}
+    xDefaultGatewayAddress IPv4G_$AdapterCount {
+        InterfaceAlias = '$($Adapter.Name)'
+        AddressFamily  = 'IPv4'
+    }
 
 "@
-					} # If
-				} # If
-				If ($Adapter.IPv4.DNSServer -ne $null) {
+                    } # If
+                } # If
+                If ($Adapter.IPv4.DNSServer -ne $null) {
 $NetworkingDSCConfig += @"
-	xDnsServerAddress IPv4D_$AdapterCount {
-		InterfaceAlias = '$($Adapter.Name)'
-		AddressFamily  = 'IPv4'
-		Address        = '$($Adapter.IPv4.DNSServer.Replace(',',"','"))'
-	}
+    xDnsServerAddress IPv4D_$AdapterCount {
+        InterfaceAlias = '$($Adapter.Name)'
+        AddressFamily  = 'IPv4'
+        Address        = '$($Adapter.IPv4.DNSServer.Replace(',',"','"))'
+    }
 
 "@
-				} # If
-			} # If
-			If ($Adapter.IPv6) {
-				If ($Adapter.IPv6.Address) {
+                } # If
+            } # If
+            If ($Adapter.IPv6) {
+                If ($Adapter.IPv6.Address) {
 $NetworkingDSCConfig += @"
-	xIPAddress IPv6_$AdapterCount {
-		InterfaceAlias = '$($Adapter.Name)'
-		AddressFamily  = 'IPv6'
-		IPAddress      = '$($Adapter.IPv6.Address.Replace(',',"','"))'
-		SubnetMask     = '$($Adapter.IPv6.SubnetMask)'
-	}
+    xIPAddress IPv6_$AdapterCount {
+        InterfaceAlias = '$($Adapter.Name)'
+        AddressFamily  = 'IPv6'
+        IPAddress      = '$($Adapter.IPv6.Address.Replace(',',"','"))'
+        SubnetMask     = '$($Adapter.IPv6.SubnetMask)'
+    }
 
 "@
-					If ($Adapter.IPv6.DefaultGateway) {
+                    If ($Adapter.IPv6.DefaultGateway) {
 $NetworkingDSCConfig += @"
-	xDefaultGatewayAddress IPv6G_$AdapterCount {
-		InterfaceAlias = '$($Adapter.Name)'
-		AddressFamily  = 'IPv6'
-		Address        = '$($Adapter.IPv6.DefaultGateway)'
-	}
+    xDefaultGatewayAddress IPv6G_$AdapterCount {
+        InterfaceAlias = '$($Adapter.Name)'
+        AddressFamily  = 'IPv6'
+        Address        = '$($Adapter.IPv6.DefaultGateway)'
+    }
 
 "@
-					} Else {
+                    } Else {
 $NetworkingDSCConfig += @"
-	xDefaultGatewayAddress IPv6G_$AdapterCount {
-		InterfaceAlias = '$($Adapter.Name)'
-		AddressFamily  = 'IPv6'
-	}
+    xDefaultGatewayAddress IPv6G_$AdapterCount {
+        InterfaceAlias = '$($Adapter.Name)'
+        AddressFamily  = 'IPv6'
+    }
 
 "@
-					} # If
-				} # If
-				If ($Adapter.IPv6.DNSServer -ne $null) {
+                    } # If
+                } # If
+                If ($Adapter.IPv6.DNSServer -ne $null) {
 $NetworkingDSCConfig += @"
-	xDnsServerAddress IPv6D_$AdapterCount {
-		InterfaceAlias = '$($Adapter.Name)'
-		AddressFamily  = 'IPv6'
-		Address        = '$($Adapter.IPv6.DNSServer.Replace(',',"','"))'
-	}
+    xDnsServerAddress IPv6D_$AdapterCount {
+        InterfaceAlias = '$($Adapter.Name)'
+        AddressFamily  = 'IPv6'
+        Address        = '$($Adapter.IPv6.DNSServer.Replace(',',"','"))'
+    }
 
 "@
-				} # If
-			} # If
-		} # Endfor
+                } # If
+            } # If
+        } # Endfor
 $NetworkingDSCConfig += @"
 }
 "@
-		[String]$NetworkingDSCFile = Join-Path -Path "$VMPath\$($VM.Name)\LabBuilder Files" -ChildPath 'DSCNetworking.ps1'
-		Set-Content -Path $NetworkingDSCFile -Value $NetworkingDSCConfig | Out-Null
-		. $NetworkingDSCFile
+        [String]$NetworkingDSCFile = Join-Path -Path "$VMPath\$($VM.Name)\LabBuilder Files" -ChildPath 'DSCNetworking.ps1'
+        Set-Content -Path $NetworkingDSCFile -Value $NetworkingDSCConfig | Out-Null
+        . $NetworkingDSCFile
 
-		[String]$DSCFile = Join-Path -Path "$VMPath\$($VM.Name)\LabBuilder Files" -ChildPath 'DSC.ps1'
-		[String]$DSCContent = Get-Content -Path $VM.DSCConfigFile -Raw
-		
-		If (-not ($DSCContent -match 'Networking Network {}')) {
-			# Add the Networking Configuration item to the base DSC Config File
-			# Find the location of the line containing "Node $AllNodes.NodeName {"
-			[String]$Regex = '\s*Node\s.*{.*'
-			$Matches = [regex]::matches($DSCContent, $Regex, 'IgnoreCase')
-			If ($Matches.Count -eq 1) {
-				$DSCContent = $DSCContent.Insert($Matches[0].Index+$Matches[0].Length,"`r`nNetworking Network {}`r`n")
-			} Else {
-				Throw "A single Node element cannot be found in the DSC Config File $($VM.DSCCOnfigFile) for VM $($VM.Name)."
-			} # If
-		} # If
-		
-		# Save the DSC Content
-		Set-Content -Path $DSCFile -Value $DSCContent -Force | Out-Null
+        [String]$DSCFile = Join-Path -Path "$VMPath\$($VM.Name)\LabBuilder Files" -ChildPath 'DSC.ps1'
+        [String]$DSCContent = Get-Content -Path $VM.DSCConfigFile -Raw
+        
+        If (-not ($DSCContent -match 'Networking Network {}')) {
+            # Add the Networking Configuration item to the base DSC Config File
+            # Find the location of the line containing "Node $AllNodes.NodeName {"
+            [String]$Regex = '\s*Node\s.*{.*'
+            $Matches = [regex]::matches($DSCContent, $Regex, 'IgnoreCase')
+            If ($Matches.Count -eq 1) {
+                $DSCContent = $DSCContent.Insert($Matches[0].Index+$Matches[0].Length,"`r`nNetworking Network {}`r`n")
+            } Else {
+                Throw "A single Node element cannot be found in the DSC Config File $($VM.DSCCOnfigFile) for VM $($VM.Name)."
+            } # If
+        } # If
+        
+        # Save the DSC Content
+        Set-Content -Path $DSCFile -Value $DSCContent -Force | Out-Null
 
-		# Hook the Networking DSC File into the main DSC File
-		. $DSCFile
+        # Hook the Networking DSC File into the main DSC File
+        . $DSCFile
 
-		[String]$DSCConfigName = $VM.DSCConfigName
-		
-		# Generate the Configuration Nodes data that always gets passed to the DSC configuration.
-		[String]$ConfigurationData = @"
+        [String]$DSCConfigName = $VM.DSCConfigName
+        
+        # Generate the Configuration Nodes data that always gets passed to the DSC configuration.
+        [String]$ConfigurationData = @"
 @{
-	AllNodes = @(
-		@{
-			NodeName = '$($VM.ComputerName)'
-			CertificateFile = '$CertificateFile'
-			Thumbprint = '$CertificateThumbprint' 
-			LocalAdminPassword = '$($VM.administratorpassword)'
-			$($VM.DSCParameters)
-		}
-	)
+    AllNodes = @(
+        @{
+            NodeName = '$($VM.ComputerName)'
+            CertificateFile = '$CertificateFile'
+            Thumbprint = '$CertificateThumbprint' 
+            LocalAdminPassword = '$($VM.administratorpassword)'
+            $($VM.DSCParameters)
+        }
+    )
 }
 "@
-		# Write it to a temp file
-		[String]$ConfigurationFile = Join-Path -Path "$VMPath\$($VM.Name)\LabBuilder Files" -ChildPath 'DSCConfigData.psd1'
-		If (Test-Path -Path $ConfigurationFile) {
-			Remove-Item -Path $ConfigurationFile -Force | Out-Null
-		}
-		Set-Content -Path $ConfigurationFile -Value $ConfigurationData
-			
-		# Generate the MOF file from the configuration
-		& "$DSCConfigName" -OutputPath $($ENV:Temp) -ConfigurationData $ConfigurationFile | Out-Null
-		If (-not (Test-Path -Path $DSCMOFFile)) {
-			Throw "A MOF File was not created by the DSC Config File $($VM.DSCCOnfigFile) for VM $($VM.Name)."
-		} # If
+        # Write it to a temp file
+        [String]$ConfigurationFile = Join-Path -Path "$VMPath\$($VM.Name)\LabBuilder Files" -ChildPath 'DSCConfigData.psd1'
+        If (Test-Path -Path $ConfigurationFile) {
+            Remove-Item -Path $ConfigurationFile -Force | Out-Null
+        }
+        Set-Content -Path $ConfigurationFile -Value $ConfigurationData
+            
+        # Generate the MOF file from the configuration
+        & "$DSCConfigName" -OutputPath $($ENV:Temp) -ConfigurationData $ConfigurationFile | Out-Null
+        If (-not (Test-Path -Path $DSCMOFFile)) {
+            Throw "A MOF File was not created by the DSC Config File $($VM.DSCCOnfigFile) for VM $($VM.Name)."
+        } # If
 
-		# Remove the VM Self-Signed Certificate from the Local Machine Store
-		Remove-Item -Path "Cert:LocalMachine\My\$CertificateThumbprint" -Force | Out-Null
+        # Remove the VM Self-Signed Certificate from the Local Machine Store
+        Remove-Item -Path "Cert:LocalMachine\My\$CertificateThumbprint" -Force | Out-Null
 
-		Write-Verbose "DSC MOF File $DSCMOFFile for VM $($VM.Name) was created successfully ..."
+        Write-Verbose "DSC MOF File $DSCMOFFile for VM $($VM.Name) was created successfully ..."
 
-		# Copy the files to the LabBuilder Files folder
+        # Copy the files to the LabBuilder Files folder
 
-		Copy-Item -Path $DSCMOFFile -Destination "$VMPath\$($VM.Name)\LabBuilder Files\$($VM.ComputerName).mof" -Force | Out-Null
+        Copy-Item -Path $DSCMOFFile -Destination "$VMPath\$($VM.Name)\LabBuilder Files\$($VM.ComputerName).mof" -Force | Out-Null
 
-		If (-not $VM.DSCMOFFile) {
-			# Remove Temporary files created by DSC
-			Remove-Item -Path $DSCMOFFile -Force | Out-Null
-		}
+        If (-not $VM.DSCMOFFile) {
+            # Remove Temporary files created by DSC
+            Remove-Item -Path $DSCMOFFile -Force | Out-Null
+        }
 
-		If (Test-Path -Path $DSCMOFMetaFile) {
-			Copy-Item -Path $DSCMOFMetaFile -Destination "$VMPath\$($VM.Name)\LabBuilder Files\$($VM.ComputerName).meta.mof" -Force | Out-Null
-			If (-not $VM.DSCMOFFile) {
-				# Remove Temporary files created by DSC
-				Remove-Item -Path $DSCMOFMetaFile -Force | Out-Null
-			}
-		} # If
+        If (Test-Path -Path $DSCMOFMetaFile) {
+            Copy-Item -Path $DSCMOFMetaFile -Destination "$VMPath\$($VM.Name)\LabBuilder Files\$($VM.ComputerName).meta.mof" -Force | Out-Null
+            If (-not $VM.DSCMOFFile) {
+                # Remove Temporary files created by DSC
+                Remove-Item -Path $DSCMOFMetaFile -Force | Out-Null
+            }
+        } # If
 
-		Return $True
-	} Else {
-		Return $False
-	} # If
+        Return $True
+    } Else {
+        Return $False
+    } # If
 } # Set-LabDSCMOFFile
 ####################################################################################################
 
@@ -1575,81 +1639,81 @@ $NetworkingDSCConfig += @"
    General notes
 #>
 function Set-LabDSCStartFile {
-	[CmdLetBinding()]
-	[OutputType([Boolean])]
-	param (
-		[Parameter(
+    [CmdLetBinding()]
+    [OutputType([Boolean])]
+    param (
+        [Parameter(
             Mandatory,
-			Position=0)]
-		[XML]$Configuration,
+            Position=0)]
+        [XML]$Configuration,
 
-		[Parameter(
+        [Parameter(
             Mandatory,
-			Position=1)]
-		[System.Collections.Hashtable]$VM
-	)
+            Position=1)]
+        [System.Collections.Hashtable]$VM
+    )
 
-	[String]$DSCStartPs = ''
-	[String]$VMPath = $Configuration.labbuilderconfig.settings.vmpath
+    [String]$DSCStartPs = ''
+    [String]$VMPath = $Configuration.labbuilderconfig.settings.vmpath
 
-	# Relabel the Network Adapters so that they match what the DSC Networking config will use
-	# This is because unfortunately the Hyper-V Device Naming feature doesn't work.
-	Foreach ($Adapter in $VM.Adapters) {
-		$NetAdapter = Get-VMNetworkAdapter -VMName $($VM.Name) -Name $($Adapter.Name)
-		If (-not $NetAdapter) {
-			Throw "VM Network Adapter $($Adapter.Name) could not be found attached to VM $($VM.Name)."
-		} # If
-		$MacAddress = $NetAdapter.MacAddress
-		If (-not $MacAddress) {
-			Throw "VM Network Adapter $($Adapter.Name) attached to VM ($VM.Name) has a blank MAC Address."
-		} # If
-		$DSCStartPs += @"
+    # Relabel the Network Adapters so that they match what the DSC Networking config will use
+    # This is because unfortunately the Hyper-V Device Naming feature doesn't work.
+    Foreach ($Adapter in $VM.Adapters) {
+        $NetAdapter = Get-VMNetworkAdapter -VMName $($VM.Name) -Name $($Adapter.Name)
+        If (-not $NetAdapter) {
+            Throw "VM Network Adapter $($Adapter.Name) could not be found attached to VM $($VM.Name)."
+        } # If
+        $MacAddress = $NetAdapter.MacAddress
+        If (-not $MacAddress) {
+            Throw "VM Network Adapter $($Adapter.Name) attached to VM ($VM.Name) has a blank MAC Address."
+        } # If
+        $DSCStartPs += @"
 Get-NetAdapter | Where-Object { `$_.MacAddress.Replace('-','') -eq '$MacAddress' } | Rename-NetAdapter -NewName '$($Adapter.Name)'
 
 "@
-	} # Foreach
+    } # Foreach
 
-	# Enable DSC logging (as long as it hasn't been already)
-	If ($VM.DSCLogging) {
-		$DSCStartPs += @"
+    # Enable DSC logging (as long as it hasn't been already)
+    If ($VM.DSCLogging) {
+        $DSCStartPs += @"
 `$Result = & "wevtutil.exe" get-log "Microsoft-Windows-Dsc/Analytic"
 If (-not (`$Result -like '*enabled: true*')) {
-	& "wevtutil.exe" set-log "Microsoft-Windows-Dsc/Analytic" /q:true /e:true
+    & "wevtutil.exe" set-log "Microsoft-Windows-Dsc/Analytic" /q:true /e:true
 }
 `$Result = & "wevtutil.exe" get-log "Microsoft-Windows-Dsc/Debug"
 If (-not (`$Result -like '*enabled: true*')) {
-	& "wevtutil.exe" set-log "Microsoft-Windows-Dsc/Debug" /q:true /e:true
+    & "wevtutil.exe" set-log "Microsoft-Windows-Dsc/Debug" /q:true /e:true
 }
 
 "@
-	} Else {
-		$DSCStartPs += @"
+    } Else {
+        $DSCStartPs += @"
 `$Result = & "wevtutil.exe" get-log "Microsoft-Windows-Dsc/Analytic"
 If (`$Result -like '*enabled: true*') {
-	& "wevtutil.exe" set-log "Microsoft-Windows-Dsc/Analytic" /q:true /e:false
+    & "wevtutil.exe" set-log "Microsoft-Windows-Dsc/Analytic" /q:true /e:false
 }
 `$Result = & "wevtutil.exe" get-log "Microsoft-Windows-Dsc/Debug"
 If (`$Result -like '*enabled: true*') {
-	& "wevtutil.exe" set-log "Microsoft-Windows-Dsc/Debug" /q:true /e:false
+    & "wevtutil.exe" set-log "Microsoft-Windows-Dsc/Debug" /q:true /e:false
 }
 
 "@
-	} # If
+    } # If
 
-	# Start the actual DSC Configuration
-	$DSCStartPs += @"
+    # Start the actual DSC Configuration
+    $DSCStartPs += @"
 Set-DscLocalConfigurationManager -Path `"$($ENV:SystemRoot)\Setup\Scripts\`" -Verbose  *>> `"$($ENV:SystemRoot)\Setup\Scripts\DSC.log`"
 Start-DSCConfiguration -Path `"$($ENV:SystemRoot)\Setup\Scripts\`" -Force -Verbose  *>> `"$($ENV:SystemRoot)\Setup\Scripts\DSC.log`"
 
 "@
-	Set-Content -Path "$VMPath\$($VM.Name)\LabBuilder Files\StartDSC.ps1" -Value $DSCStartPs -Force | Out-Null
+    Set-Content -Path "$VMPath\$($VM.Name)\LabBuilder Files\StartDSC.ps1" -Value $DSCStartPs -Force | Out-Null
 
-	$DSCStartPsDebug = @"
+    $DSCStartPsDebug = @"
 Start-DSCConfiguration -Path `"$($ENV:SystemRoot)\Setup\Scripts\`" -Force -Debug -Wait -Verbose
 "@
-	Set-Content -Path "$VMPath\$($VM.Name)\LabBuilder Files\StartDSCDebug.ps1" -Value $DSCStartPsDebug -Force | Out-Null
+    Set-Content -Path "$VMPath\$($VM.Name)\LabBuilder Files\StartDSCDebug.ps1" -Value $DSCStartPsDebug -Force | Out-Null
 
-	Return $True
+    Return $True
 } # Set-LabDSCStartFile
 ####################################################################################################
 
@@ -1671,24 +1735,24 @@ Start-DSCConfiguration -Path `"$($ENV:SystemRoot)\Setup\Scripts\`" -Force -Debug
    General notes
 #>
 function Initialize-LabVMDSC {
-	[CmdLetBinding()]
-	param (
-		[Parameter(
+    [CmdLetBinding()]
+    param (
+        [Parameter(
             Mandatory,
-			Position=0)]
-		[XML]$Configuration,
+            Position=0)]
+        [XML]$Configuration,
 
-		[Parameter(
+        [Parameter(
             Mandatory,
-			Position=1)]
-		[System.Collections.Hashtable]$VM
-	)
+            Position=1)]
+        [System.Collections.Hashtable]$VM
+    )
 
-	# Are there any DSC Settings to manage?
-	Set-LabDSCMOFFile -Configuration $Configuration -VM $VM
+    # Are there any DSC Settings to manage?
+    Set-LabDSCMOFFile -Configuration $Configuration -VM $VM
 
-	# Generate the DSC Start up Script file
-	Set-LabDSCStartFile -Configuration $Configuration -VM $VM
+    # Generate the DSC Start up Script file
+    Set-LabDSCStartFile -Configuration $Configuration -VM $VM
 } # Initialize-LabVMDSC
 ####################################################################################################
 
@@ -1710,101 +1774,103 @@ function Initialize-LabVMDSC {
    General notes
 #>
 function Start-LabVMDSC {
-	[CmdLetBinding()]
-	param (
-		[Parameter(
+    [CmdLetBinding()]
+    param (
+        [Parameter(
             Mandatory,
-			Position=0)]
-		[XML]$Configuration,
+            Position=0)]
+        [XML]$Configuration,
 
-		[Parameter(
+        [Parameter(
             Mandatory,
-			Position=1)]
-		[System.Collections.Hashtable]$VM,
+            Position=1)]
+        [System.Collections.Hashtable]$VM,
 
-		[Int]$Timeout = 300
-	)
-	[String]$VMPath = $Configuration.labbuilderconfig.settings.vmpath
-	[DateTime]$StartTime = Get-Date
-	[System.Management.Automation.Runspaces.PSSession]$Session = $null
-	[PSCredential]$AdmininistratorCredential = New-Object System.Management.Automation.PSCredential ('Administrator', (ConvertTo-SecureString $VM.AdministratorPassword -AsPlainText -Force))
+        [Int]$Timeout = 300
+    )
+    [String]$VMPath = $Configuration.labbuilderconfig.settings.vmpath
+    [DateTime]$StartTime = Get-Date
+    [System.Management.Automation.Runspaces.PSSession]$Session = $null
+    [PSCredential]$AdmininistratorCredential = New-Object System.Management.Automation.PSCredential ('Administrator', (ConvertTo-SecureString $VM.AdministratorPassword -AsPlainText -Force))
 
-	[Boolean]$Complete = $False
-	[Boolean]$ConfigCopyComplete = $False
-	[Boolean]$ModuleCopyComplete = $False
-	
-	While ((-not $Complete) -and (((Get-Date) - $StartTime).Seconds) -lt $TimeOut) {
-		While (-not ($Session) -or ($Session.State -ne 'Opened')) {
-			# Try and connect to the remote VM for up to $Timeout (5 minutes) seconds.
-			Try {
-				Write-Verbose "Attempting connection to $($VM.ComputerName) ..."
-				[String]$IPAddress = (Get-VMNetworkAdapter -VMName $VM.Name).Where({$_.SwitchName -eq (Get-VMSwitch -SwitchType External).Name}).IPAddresses.Where({$_.Contains('.')})
-				If (-not $IPAddress) {
-					Throw "An externally accessible IPv4 address for $($VM.ComputerName) could not be identified."
-				}
-				$Session = New-PSSession -ComputerName $IPAddress -Credential $AdmininistratorCredential -ErrorAction Stop
-			} Catch {
-				Write-Verbose "Connection to $($VM.ComputerName) failed - retrying in 5 seconds ..."
-				Start-Sleep 5
-			}
-		} # While
+    [Boolean]$Complete = $False
+    [Boolean]$ConfigCopyComplete = $False
+    [Boolean]$ModuleCopyComplete = $False
 
-		If (($Session) -and ($Session.State -eq 'Opened') -and (-not $ConfigCopyComplete)) {
-			# We are connected OK - upload the MOF files
-			While ((-not $ConfigCopyComplete) -and (((Get-Date) - $StartTime).Seconds) -lt $TimeOut) {
-				Try {
-					Write-Verbose "Copying DSC MOF Files to $($VM.ComputerName) ..."
-					Copy-Item -Path "$VMPath\$($VM.Name)\LabBuilder Files\$($VM.ComputerName).mof" -Destination c:\Windows\Setup\Scripts -ToSession $Session -Force -ErrorAction Stop | Out-Null
-					If (Test-Path -Path "$VMPath\$($VM.Name)\LabBuilder Files\$($VM.ComputerName).meta.mof") {
-						Copy-Item -Path "$VMPath\$($VM.Name)\LabBuilder Files\$($VM.ComputerName).meta.mof" -Destination c:\Windows\Setup\Scripts -ToSession $Session -Force -ErrorAction Stop | Out-Null
-					} # If
-					Copy-Item -Path "$VMPath\$($VM.Name)\LabBuilder Files\StartDSC.ps1" -Destination c:\Windows\Setup\Scripts -ToSession $Session -Force -ErrorAction Stop | Out-Null
-					Copy-Item -Path "$VMPath\$($VM.Name)\LabBuilder Files\StartDSCDebug.ps1" -Destination c:\Windows\Setup\Scripts -ToSession $Session -Force -ErrorAction Stop | Out-Null
-					$ConfigCopyComplete = $True
-				} Catch {
-					Write-Verbose "Copying DSC MOF Files to $($VM.ComputerName) failed - retrying in 5 seconds ..."
-					Start-Sleep 5
-				} # Try
-			} # While
-		} # If
+    $ManagementSwitchName = ('LabBuilder Management {0}' -f $Configuration.labbuilderconfig.name)
+    
+    While ((-not $Complete) -and (((Get-Date) - $StartTime).Seconds) -lt $TimeOut) {
+        While (-not ($Session) -or ($Session.State -ne 'Opened')) {
+            # Try and connect to the remote VM for up to $Timeout (5 minutes) seconds.
+            Try {
+                Write-Verbose "Attempting connection to $($VM.ComputerName) ..."
+                [String]$IPAddress = (Get-VMNetworkAdapter -VMName $VM.Name).Where({$_.SwitchName -eq $ManagementSwitchName}).IPAddresses.Where({$_.Contains('.')})
+                If (-not $IPAddress) {
+                    Throw "An IPv4 address for an adapter connected to the $ManagementSwitchName for $($VM.ComputerName) could not be identified."
+                }
+                $Session = New-PSSession -ComputerName $IPAddress -Credential $AdmininistratorCredential -ErrorAction Stop
+            } Catch {
+                Write-Verbose "Connection to $($VM.ComputerName) failed - retrying in 5 seconds ..."
+                Start-Sleep 5
+            }
+        } # While
 
-		# If the copy didn't complete and we're out of time, exit with a failure.
-		If ((-not $ConfigCopyComplete) -and (((Get-Date) - $StartTime).Seconds) -ge $TimeOut) {
-			Remove-PSSession -Session $Session
-			Return $False
-		} # If
+        If (($Session) -and ($Session.State -eq 'Opened') -and (-not $ConfigCopyComplete)) {
+            # We are connected OK - upload the MOF files
+            While ((-not $ConfigCopyComplete) -and (((Get-Date) - $StartTime).Seconds) -lt $TimeOut) {
+                Try {
+                    Write-Verbose "Copying DSC MOF Files to $($VM.ComputerName) ..."
+                    Copy-Item -Path "$VMPath\$($VM.Name)\LabBuilder Files\$($VM.ComputerName).mof" -Destination c:\Windows\Setup\Scripts -ToSession $Session -Force -ErrorAction Stop | Out-Null
+                    If (Test-Path -Path "$VMPath\$($VM.Name)\LabBuilder Files\$($VM.ComputerName).meta.mof") {
+                        Copy-Item -Path "$VMPath\$($VM.Name)\LabBuilder Files\$($VM.ComputerName).meta.mof" -Destination c:\Windows\Setup\Scripts -ToSession $Session -Force -ErrorAction Stop | Out-Null
+                    } # If
+                    Copy-Item -Path "$VMPath\$($VM.Name)\LabBuilder Files\StartDSC.ps1" -Destination c:\Windows\Setup\Scripts -ToSession $Session -Force -ErrorAction Stop | Out-Null
+                    Copy-Item -Path "$VMPath\$($VM.Name)\LabBuilder Files\StartDSCDebug.ps1" -Destination c:\Windows\Setup\Scripts -ToSession $Session -Force -ErrorAction Stop | Out-Null
+                    $ConfigCopyComplete = $True
+                } Catch {
+                    Write-Verbose "Copying DSC MOF Files to $($VM.ComputerName) failed - retrying in 5 seconds ..."
+                    Start-Sleep 5
+                } # Try
+            } # While
+        } # If
 
-		# Now Upload any required modules
-		If (($Session) -and ($Session.State -eq 'Opened') -and (-not $ModuleCopyComplete)) {
-			$DSCModules = Get-ModulesInDSCConfig -DSCConfigFile $($VM.DSCConfigFile)
-			Foreach ($ModuleName in $DSCModules) {
-				Try {
-					Write-Verbose "Copying DSC Module $ModuleName Files to $($VM.ComputerName) ..."
-					Copy-Item -Path "$VMPath\$($VM.Name)\LabBuilder Files\DSC Modules\$ModuleName\" -Destination "$($env:ProgramFiles)\WindowsPowerShell\Modules\" -ToSession $Session -Force -Recurse -ErrorAction Stop | Out-Null
-				} Catch {
-					Write-Verbose "Copying DSC Module $ModuleName Files to $($VM.ComputerName) failed - retrying in 5 seconds ..."
-					Start-Sleep 5
-				} # Try
-			} # Foreach
-			$ModuleCopyComplete = $True
-		} # If
+        # If the copy didn't complete and we're out of time, exit with a failure.
+        If ((-not $ConfigCopyComplete) -and (((Get-Date) - $StartTime).Seconds) -ge $TimeOut) {
+            Remove-PSSession -Session $Session
+            Return $False
+        } # If
 
-		If ((-not $ModuleCopyComplete) -and (((Get-Date) - $StartTime).Seconds) -ge $TimeOut) {
-			# Timed out
-			Remove-PSSession -Session $Session
-			Write-Warning "DSC Initialization of VM $($VM.ComputerName) failed to complete ..."
-			Return $False
-		}
+        # Now Upload any required modules
+        If (($Session) -and ($Session.State -eq 'Opened') -and (-not $ModuleCopyComplete)) {
+            $DSCModules = Get-ModulesInDSCConfig -DSCConfigFile $($VM.DSCConfigFile)
+            Foreach ($ModuleName in $DSCModules) {
+                Try {
+                    Write-Verbose "Copying DSC Module $ModuleName Files to $($VM.ComputerName) ..."
+                    Copy-Item -Path "$VMPath\$($VM.Name)\LabBuilder Files\DSC Modules\$ModuleName\" -Destination "$($env:ProgramFiles)\WindowsPowerShell\Modules\" -ToSession $Session -Force -Recurse -ErrorAction Stop | Out-Null
+                } Catch {
+                    Write-Verbose "Copying DSC Module $ModuleName Files to $($VM.ComputerName) failed - retrying in 5 seconds ..."
+                    Start-Sleep 5
+                } # Try
+            } # Foreach
+            $ModuleCopyComplete = $True
+        } # If
 
-		# Finally, Start DSC up!
-		If (($Session) -and ($Session.State -eq 'Opened') -and ($ConfigCopyComplete) -and ($ModuleCopyComplete)) {
-			Write-Verbose "Starting DSC on VM $($VM.ComputerName) ..."
-			Invoke-Command -Session $Session { c:\windows\setup\scripts\StartDSC.ps1 }
-			$Complete = $True
-		} # If
-	} # While
+        If ((-not $ModuleCopyComplete) -and (((Get-Date) - $StartTime).Seconds) -ge $TimeOut) {
+            # Timed out
+            Remove-PSSession -Session $Session
+            Write-Warning "DSC Initialization of VM $($VM.ComputerName) failed to complete ..."
+            Return $False
+        }
 
-	Return $Complete
+        # Finally, Start DSC up!
+        If (($Session) -and ($Session.State -eq 'Opened') -and ($ConfigCopyComplete) -and ($ModuleCopyComplete)) {
+            Write-Verbose "Starting DSC on VM $($VM.ComputerName) ..."
+            Invoke-Command -Session $Session { c:\windows\setup\scripts\StartDSC.ps1 }
+            $Complete = $True
+        } # If
+    } # While
+
+    Return $Complete
 } # Start-LabVMDSC
 ####################################################################################################
 
@@ -1826,106 +1892,106 @@ function Start-LabVMDSC {
    General notes
 #>
 function Get-LabUnattendFile {
-	[CmdLetBinding()]
-	[OutputType([String])]
-	param (
-		[Parameter(
+    [CmdLetBinding()]
+    [OutputType([String])]
+    param (
+        [Parameter(
             Mandatory,
-			Position=0)]
-		[XML]$Configuration,
+            Position=0)]
+        [XML]$Configuration,
 
-		[Parameter(
+        [Parameter(
             Mandatory,
-			Position=1)]
-		[System.Collections.Hashtable]$VM
-	)
-	If ($VM.UnattendFile) {
-		[String]$UnattendContent = Get-Content -Path $VM.UnattendFile
-	} Else {
-		[String]$DomainName = $Configuration.labbuilderconfig.settings.domainname
-		[String]$Email = $Configuration.labbuilderconfig.settings.email
-		$UnattendContent = [String] @"
+            Position=1)]
+        [System.Collections.Hashtable]$VM
+    )
+    If ($VM.UnattendFile) {
+        [String]$UnattendContent = Get-Content -Path $VM.UnattendFile
+    } Else {
+        [String]$DomainName = $Configuration.labbuilderconfig.settings.domainname
+        [String]$Email = $Configuration.labbuilderconfig.settings.email
+        $UnattendContent = [String] @"
 <?xml version="1.0" encoding="utf-8"?>
 <unattend xmlns="urn:schemas-microsoft-com:unattend">
-	<settings pass="offlineServicing">
-		<component name="Microsoft-Windows-LUA-Settings" processorArchitecture="amd64" publicKeyToken="31bf3856ad364e35" language="neutral" versionScope="nonSxS" xmlns:wcm="http://schemas.microsoft.com/WMIConfig/2002/State" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
-			<EnableLUA>false</EnableLUA>
-		</component>
-	</settings>
-	<settings pass="generalize">
-		<component name="Microsoft-Windows-Security-SPP" processorArchitecture="amd64" publicKeyToken="31bf3856ad364e35" language="neutral" versionScope="nonSxS" xmlns:wcm="http://schemas.microsoft.com/WMIConfig/2002/State" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
-			<SkipRearm>1</SkipRearm>
-		</component>
-	</settings>
-	<settings pass="specialize">
-		<component name="Microsoft-Windows-International-Core" processorArchitecture="amd64" publicKeyToken="31bf3856ad364e35" language="neutral" versionScope="nonSxS" xmlns:wcm="http://schemas.microsoft.com/WMIConfig/2002/State" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
-			<InputLocale>0409:00000409</InputLocale>
-			<SystemLocale>en-US</SystemLocale>
-			<UILanguage>en-US</UILanguage>
-			<UILanguageFallback>en-US</UILanguageFallback>
-			<UserLocale>en-US</UserLocale>
-		</component>
-		<component name="Microsoft-Windows-Security-SPP-UX" processorArchitecture="amd64" publicKeyToken="31bf3856ad364e35" language="neutral" versionScope="nonSxS" xmlns:wcm="http://schemas.microsoft.com/WMIConfig/2002/State" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
-			<SkipAutoActivation>true</SkipAutoActivation>
-		</component>
-		<component name="Microsoft-Windows-SQMApi" processorArchitecture="amd64" publicKeyToken="31bf3856ad364e35" language="neutral" versionScope="nonSxS" xmlns:wcm="http://schemas.microsoft.com/WMIConfig/2002/State" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
-			<CEIPEnabled>0</CEIPEnabled>
-		</component>
-		<component name="Microsoft-Windows-Shell-Setup" processorArchitecture="amd64" publicKeyToken="31bf3856ad364e35" language="neutral" versionScope="nonSxS" xmlns:wcm="http://schemas.microsoft.com/WMIConfig/2002/State" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
-			<ComputerName>$($VM.ComputerName)</ComputerName>
-			<ProductKey>$($VM.ProductKey)</ProductKey>
-		</component>
+    <settings pass="offlineServicing">
+        <component name="Microsoft-Windows-LUA-Settings" processorArchitecture="amd64" publicKeyToken="31bf3856ad364e35" language="neutral" versionScope="nonSxS" xmlns:wcm="http://schemas.microsoft.com/WMIConfig/2002/State" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+            <EnableLUA>false</EnableLUA>
+        </component>
+    </settings>
+    <settings pass="generalize">
+        <component name="Microsoft-Windows-Security-SPP" processorArchitecture="amd64" publicKeyToken="31bf3856ad364e35" language="neutral" versionScope="nonSxS" xmlns:wcm="http://schemas.microsoft.com/WMIConfig/2002/State" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+            <SkipRearm>1</SkipRearm>
+        </component>
+    </settings>
+    <settings pass="specialize">
+        <component name="Microsoft-Windows-International-Core" processorArchitecture="amd64" publicKeyToken="31bf3856ad364e35" language="neutral" versionScope="nonSxS" xmlns:wcm="http://schemas.microsoft.com/WMIConfig/2002/State" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+            <InputLocale>0409:00000409</InputLocale>
+            <SystemLocale>en-US</SystemLocale>
+            <UILanguage>en-US</UILanguage>
+            <UILanguageFallback>en-US</UILanguageFallback>
+            <UserLocale>en-US</UserLocale>
+        </component>
+        <component name="Microsoft-Windows-Security-SPP-UX" processorArchitecture="amd64" publicKeyToken="31bf3856ad364e35" language="neutral" versionScope="nonSxS" xmlns:wcm="http://schemas.microsoft.com/WMIConfig/2002/State" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+            <SkipAutoActivation>true</SkipAutoActivation>
+        </component>
+        <component name="Microsoft-Windows-SQMApi" processorArchitecture="amd64" publicKeyToken="31bf3856ad364e35" language="neutral" versionScope="nonSxS" xmlns:wcm="http://schemas.microsoft.com/WMIConfig/2002/State" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+            <CEIPEnabled>0</CEIPEnabled>
+        </component>
+        <component name="Microsoft-Windows-Shell-Setup" processorArchitecture="amd64" publicKeyToken="31bf3856ad364e35" language="neutral" versionScope="nonSxS" xmlns:wcm="http://schemas.microsoft.com/WMIConfig/2002/State" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+            <ComputerName>$($VM.ComputerName)</ComputerName>
+            <ProductKey>$($VM.ProductKey)</ProductKey>
+        </component>
 
 "@
-		If ($VM.OSType -eq 'Client') {
-			$UnattendContent += @"
-			<component name="Microsoft-Windows-Deployment" processorArchitecture="x86" publicKeyToken="31bf3856ad364e35" language="neutral" versionScope="nonSxS" xmlns:wcm="http://schemas.microsoft.com/WMIConfig/2002/State" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
-				<RunSynchronous>
-					<RunSynchronousCommand wcm:action="add">
-						<Order>1</Order>
-						<Path>net user administrator /active:yes</Path>
-					</RunSynchronousCommand>
-				</RunSynchronous>
-			</component>
+        If ($VM.OSType -eq 'Client') {
+            $UnattendContent += @"
+            <component name="Microsoft-Windows-Deployment" processorArchitecture="x86" publicKeyToken="31bf3856ad364e35" language="neutral" versionScope="nonSxS" xmlns:wcm="http://schemas.microsoft.com/WMIConfig/2002/State" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+                <RunSynchronous>
+                    <RunSynchronousCommand wcm:action="add">
+                        <Order>1</Order>
+                        <Path>net user administrator /active:yes</Path>
+                    </RunSynchronousCommand>
+                </RunSynchronous>
+            </component>
 
 "@
-		} # If
-		$UnattendContent += @"
-	</settings>
-	<settings pass="oobeSystem">
-		<component name="Microsoft-Windows-Shell-Setup" processorArchitecture="amd64" publicKeyToken="31bf3856ad364e35" language="neutral" versionScope="nonSxS" xmlns:wcm="http://schemas.microsoft.com/WMIConfig/2002/State" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
-			<OOBE>
-				<HideEULAPage>true</HideEULAPage>
-				<HideOEMRegistrationScreen>true</HideOEMRegistrationScreen>
-				<HideOnlineAccountScreens>true</HideOnlineAccountScreens>
-				<HideWirelessSetupInOOBE>true</HideWirelessSetupInOOBE>
-				<NetworkLocation>Work</NetworkLocation>
-				<ProtectYourPC>1</ProtectYourPC>
-				<SkipUserOOBE>true</SkipUserOOBE>
-				<SkipMachineOOBE>true</SkipMachineOOBE>
-			</OOBE>
-			<UserAccounts>
-			   <AdministratorPassword>
-				  <Value>$($VM.AdministratorPassword)</Value>
-				  <PlainText>true</PlainText>
-			   </AdministratorPassword>
-			</UserAccounts>
-			<RegisteredOrganization>$($DomainName)</RegisteredOrganization>
-			<RegisteredOwner>$($Email)</RegisteredOwner>
-			<DisableAutoDaylightTimeSet>false</DisableAutoDaylightTimeSet>
-			<TimeZone>$($VM.TimeZone)</TimeZone>
-		</component>
-		<component name="Microsoft-Windows-ehome-reg-inf" processorArchitecture="x86" publicKeyToken="31bf3856ad364e35" language="neutral" versionScope="NonSxS" xmlns:wcm="http://schemas.microsoft.com/WMIConfig/2002/State" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
-			<RestartEnabled>true</RestartEnabled>
-		</component>
-		<component name="Microsoft-Windows-ehome-reg-inf" processorArchitecture="amd64" publicKeyToken="31bf3856ad364e35" language="neutral" versionScope="NonSxS" xmlns:wcm="http://schemas.microsoft.com/WMIConfig/2002/State" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
-			<RestartEnabled>true</RestartEnabled>
-		</component>
-	</settings>
+        } # If
+        $UnattendContent += @"
+    </settings>
+    <settings pass="oobeSystem">
+        <component name="Microsoft-Windows-Shell-Setup" processorArchitecture="amd64" publicKeyToken="31bf3856ad364e35" language="neutral" versionScope="nonSxS" xmlns:wcm="http://schemas.microsoft.com/WMIConfig/2002/State" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+            <OOBE>
+                <HideEULAPage>true</HideEULAPage>
+                <HideOEMRegistrationScreen>true</HideOEMRegistrationScreen>
+                <HideOnlineAccountScreens>true</HideOnlineAccountScreens>
+                <HideWirelessSetupInOOBE>true</HideWirelessSetupInOOBE>
+                <NetworkLocation>Work</NetworkLocation>
+                <ProtectYourPC>1</ProtectYourPC>
+                <SkipUserOOBE>true</SkipUserOOBE>
+                <SkipMachineOOBE>true</SkipMachineOOBE>
+            </OOBE>
+            <UserAccounts>
+               <AdministratorPassword>
+                  <Value>$($VM.AdministratorPassword)</Value>
+                  <PlainText>true</PlainText>
+               </AdministratorPassword>
+            </UserAccounts>
+            <RegisteredOrganization>$($DomainName)</RegisteredOrganization>
+            <RegisteredOwner>$($Email)</RegisteredOwner>
+            <DisableAutoDaylightTimeSet>false</DisableAutoDaylightTimeSet>
+            <TimeZone>$($VM.TimeZone)</TimeZone>
+        </component>
+        <component name="Microsoft-Windows-ehome-reg-inf" processorArchitecture="x86" publicKeyToken="31bf3856ad364e35" language="neutral" versionScope="NonSxS" xmlns:wcm="http://schemas.microsoft.com/WMIConfig/2002/State" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+            <RestartEnabled>true</RestartEnabled>
+        </component>
+        <component name="Microsoft-Windows-ehome-reg-inf" processorArchitecture="amd64" publicKeyToken="31bf3856ad364e35" language="neutral" versionScope="NonSxS" xmlns:wcm="http://schemas.microsoft.com/WMIConfig/2002/State" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+            <RestartEnabled>true</RestartEnabled>
+        </component>
+    </settings>
 </unattend>
 "@
-		}
-	Return $UnattendContent
+        }
+    Return $UnattendContent
 } # Get-LabUnattendFile
 ####################################################################################################
 
@@ -1947,115 +2013,115 @@ function Get-LabUnattendFile {
    General notes
 #>
 function Set-LabVMInitializationFiles {
-	[CmdLetBinding()]
-	[OutputType([Boolean])]
-	param (
-		[Parameter(
+    [CmdLetBinding()]
+    [OutputType([Boolean])]
+    param (
+        [Parameter(
             Mandatory,
-			Position=0)]
-		[XML]$Configuration,
+            Position=0)]
+        [XML]$Configuration,
 
-		[Parameter(
+        [Parameter(
             Mandatory,
-			Position=1)]
-		[System.Collections.Hashtable]$VM,
-		[Parameter(
+            Position=1)]
+        [System.Collections.Hashtable]$VM,
+        [Parameter(
             Mandatory,
-			Position=2)]
-		[String]$VMBootDiskPath
-	)
+            Position=2)]
+        [String]$VMBootDiskPath
+    )
 
-	# Mount the VMs Boot VHD so that files can be loaded into it
-	[String]$MountPoint = Join-Path -Path $ENV:Temp -ChildPath ([System.IO.Path]::GetRandomFileName())
-	Write-Verbose "Mounting VM $($VM.Name) Boot Disk VHDx $VMBootDiskPath ..."
-	New-Item -Path $MountPoint -ItemType Directory | Out-Null
-	Mount-WindowsImage -ImagePath $VMBootDiskPath -Path $MountPoint -Index 1 | Out-Null
+    # Mount the VMs Boot VHD so that files can be loaded into it
+    [String]$MountPoint = Join-Path -Path $ENV:Temp -ChildPath ([System.IO.Path]::GetRandomFileName())
+    Write-Verbose "Mounting VM $($VM.Name) Boot Disk VHDx $VMBootDiskPath ..."
+    New-Item -Path $MountPoint -ItemType Directory | Out-Null
+    Mount-WindowsImage -ImagePath $VMBootDiskPath -Path $MountPoint -Index 1 | Out-Null
 
-	# Copy the WMF 5.0 Installer to the VM in case it is needed
-	# This contains a bug at the moment - waiting for MS to resolve
-	# Write-Verbose "Applying VM $($VM.Name) WMF 5.0 ..."
-	# Add-WindowsPackage -PackagePath $Script:WMF5InstallerPath -Path $MountPoint | Out-Null
+    # Copy the WMF 5.0 Installer to the VM in case it is needed
+    # This contains a bug at the moment - waiting for MS to resolve
+    # Write-Verbose "Applying VM $($VM.Name) WMF 5.0 ..."
+    # Add-WindowsPackage -PackagePath $Script:WMF5InstallerPath -Path $MountPoint | Out-Null
 
-	# Apply any additional MSU Updates
-	Foreach ($URL in $VM.InstallMSU) {
-		$MSUFilename = $URL.Substring($URL.LastIndexOf('/') + 1)
-		$MSUPath = Join-Path -Path $Script:WorkingFolder -ChildPath $MSUFilename
-		If (-not (Test-Path -Path $MSUPath)) {
-			Invoke-WebRequest -Uri $URL -OutFile $MSUPath
-		} # If
-		# Once downloaded apply the update
-		Add-WindowsPackage -PackagePath $MSUPath -Path $MountPoint | Out-Null
-	} # Foreach
+    # Apply any additional MSU Updates
+    Foreach ($URL in $VM.InstallMSU) {
+        $MSUFilename = $URL.Substring($URL.LastIndexOf('/') + 1)
+        $MSUPath = Join-Path -Path $Script:WorkingFolder -ChildPath $MSUFilename
+        If (-not (Test-Path -Path $MSUPath)) {
+            Invoke-WebRequest -Uri $URL -OutFile $MSUPath
+        } # If
+        # Once downloaded apply the update
+        Add-WindowsPackage -PackagePath $MSUPath -Path $MountPoint | Out-Null
+    } # Foreach
 
-	# Create the scripts folder where setup scripts will be put
-	New-Item -Path "$MountPoint\Windows\Setup\Scripts" -ItemType Directory | Out-Null
+    # Create the scripts folder where setup scripts will be put
+    New-Item -Path "$MountPoint\Windows\Setup\Scripts" -ItemType Directory | Out-Null
 
-	# Generate and apply an unattended setup file
-	[String]$UnattendFile = Get-LabUnattendFile -Configuration $Configuration -VM $VM
-	Write-Verbose "Applying VM $($VM.Name) Unattend File ..."
-	Set-Content -Path "$MountPoint\Windows\Panther\Unattend.xml" -Value $UnattendFile -Force | Out-Null
-	Set-Content -Path "$VMPath\$($VM.Name)\LabBuilder Files\Unattend.xml" -Value $UnattendFile -Force | Out-Null
-	[String]$SetupCompleteCmd = @"
+    # Generate and apply an unattended setup file
+    [String]$UnattendFile = Get-LabUnattendFile -Configuration $Configuration -VM $VM
+    Write-Verbose "Applying VM $($VM.Name) Unattend File ..."
+    Set-Content -Path "$MountPoint\Windows\Panther\Unattend.xml" -Value $UnattendFile -Force | Out-Null
+    Set-Content -Path "$VMPath\$($VM.Name)\LabBuilder Files\Unattend.xml" -Value $UnattendFile -Force | Out-Null
+    [String]$SetupCompleteCmd = @"
 "@
-	[String]$SetupCompletePs = @"
+    [String]$SetupCompletePs = @"
 . `"`$(`$ENV:SystemRoot)\Setup\Scripts\New-SelfSignedCertificateEx.ps1`"
-New-SelfsignedCertificateEx -Subject 'CN=$($VM.ComputerName)' -EKU 'Server Authentication', 'Client authentication' ``
-	-KeyUsage 'KeyEncipherment, DigitalSignature' -SAN '$($VM.ComputerName)' -FriendlyName '$($VM.ComputerName) Self-Signed Certificate' ``
-	-Exportable -StoreLocation 'LocalMachine'
+New-SelfsignedCertificateEx -Subject 'CN=$($VM.ComputerName)' -EKU 'Server Authentication', 'Client authentication', 'Document Encryption' ``
+    -KeyUsage 'KeyEncipherment, DigitalSignature' -SAN '$($VM.ComputerName)' -FriendlyName '$($VM.ComputerName) Self-Signed Certificate' ``
+    -Exportable -StoreLocation 'LocalMachine'
 `$Cert = Get-ChildItem -Path cert:\LocalMachine\My | Where-Object { `$_.FriendlyName -eq '$($VM.ComputerName) Self-Signed Certificate' }
 Export-Certificate -Type CERT -Cert `$Cert -FilePath `"`$(`$ENV:SystemRoot)\SelfSigned.cer`"
 Add-Content -Path `"`$(`$ENV:SystemRoot)\Setup\Scripts\SetupComplete.log`" -Value 'Self-signed certificate created and saved to C:\Windows\SelfSigned.cer ...' -Encoding Ascii
 Enable-PSRemoting -SkipNetworkProfileCheck -Force
 Add-Content -Path `"`$(`$ENV:SystemRoot)\Setup\Scripts\SetupComplete.log`" -Value 'Windows Remoting Enabled ...' -Encoding Ascii
 "@
-	If ($VM.SetupComplete) {
-		[String]$SetupComplete = $VM.SetupComplete
-		If (-not (Test-Path -Path $SetupComplete)) {
-			Throw "SetupComplete Script file $SetupComplete could not be found for VM $($VM.Name)."
-		}
-		[String]$Extension = [System.IO.Path]::GetExtension($SetupComplete)
-		Switch ($Extension.ToLower()) {
-			'.ps1' {
-				$SetupCompletePs += Get-Content -Path $SetupComplete
-				Break
-			} # 'ps1'
-			'.cmd' {
-				$SetupCompleteCmd += Get-Content -Path $SetupComplete
-				Break
-			} # 'cmd'
-		} # Switch
-	} # If
+    If ($VM.SetupComplete) {
+        [String]$SetupComplete = $VM.SetupComplete
+        If (-not (Test-Path -Path $SetupComplete)) {
+            Throw "SetupComplete Script file $SetupComplete could not be found for VM $($VM.Name)."
+        }
+        [String]$Extension = [System.IO.Path]::GetExtension($SetupComplete)
+        Switch ($Extension.ToLower()) {
+            '.ps1' {
+                $SetupCompletePs += Get-Content -Path $SetupComplete
+                Break
+            } # 'ps1'
+            '.cmd' {
+                $SetupCompleteCmd += Get-Content -Path $SetupComplete
+                Break
+            } # 'cmd'
+        } # Switch
+    } # If
 
-	# Write out the CMD Setup Complete File
-	Write-Verbose "Applying VM $($VM.Name) Setup Complete CMD File ..."
-	$SetupCompleteCmd = @"
+    # Write out the CMD Setup Complete File
+    Write-Verbose "Applying VM $($VM.Name) Setup Complete CMD File ..."
+    $SetupCompleteCmd = @"
 @echo SetupComplete.cmd Script Started... >> %SYSTEMROOT%\Setup\Scripts\SetupComplete.log
 $SetupCompleteCmd
 powerShell.exe -ExecutionPolicy Unrestricted -Command `"%SYSTEMROOT%\Setup\Scripts\SetupComplete.ps1`"
 @echo SetupComplete.cmd Script Finished... >> %SYSTEMROOT%\Setup\Scripts\SetupComplete.log
 @echo Initial Setup Completed - this file indicates that setup has completed. >> %SYSTEMROOT%\Setup\Scripts\InitialSetupCompleted.txt
 "@
-	Set-Content -Path "$MountPoint\Windows\Setup\Scripts\SetupComplete.cmd" -Value $SetupCompleteCmd -Force | Out-Null	
-	Set-Content -Path "$VMPath\$($VM.Name)\LabBuilder Files\SetupComplete.cmd" -Value $SetupCompleteCmd -Force | Out-Null
+    Set-Content -Path "$MountPoint\Windows\Setup\Scripts\SetupComplete.cmd" -Value $SetupCompleteCmd -Force | Out-Null	
+    Set-Content -Path "$VMPath\$($VM.Name)\LabBuilder Files\SetupComplete.cmd" -Value $SetupCompleteCmd -Force | Out-Null
 
-	# Write out the PowerShell Setup Complete file
-	Write-Verbose "Applying VM $($VM.Name) Setup Complete PowerShell File ..."
-	$SetupCompletePs = @"
+    # Write out the PowerShell Setup Complete file
+    Write-Verbose "Applying VM $($VM.Name) Setup Complete PowerShell File ..."
+    $SetupCompletePs = @"
 Add-Content -Path `"$($ENV:SystemRoot)\Setup\Scripts\SetupComplete.log`" -Value 'SetupComplete.ps1 Script Started...' -Encoding Ascii
 $SetupCompletePs
 Add-Content -Path `"$($ENV:SystemRoot)\Setup\Scripts\SetupComplete.log`" -Value 'SetupComplete.ps1 Script Finished...' -Encoding Ascii
 "@
 
-	Set-Content -Path "$MountPoint\Windows\Setup\Scripts\SetupComplete.ps1" -Value $SetupCompletePs -Force | Out-Null	
-	Set-Content -Path "$VMPath\$($VM.Name)\LabBuilder Files\SetupComplete.ps1" -Value $SetupCompletePs -Force | Out-Null
+    Set-Content -Path "$MountPoint\Windows\Setup\Scripts\SetupComplete.ps1" -Value $SetupCompletePs -Force | Out-Null	
+    Set-Content -Path "$VMPath\$($VM.Name)\LabBuilder Files\SetupComplete.ps1" -Value $SetupCompletePs -Force | Out-Null
 
-	Copy-Item -Path $Script:CertGenPS1Path -Destination "$MountPoint\Windows\Setup\Scripts\$($Script:CertGenPS1Filename)" -Force
-		
-	# Dismount the VHD in preparation for boot
-	Write-Verbose "Dismounting VM $($VM.Name) Boot Disk VHDx $VMBootDiskPath ..."
-	Dismount-WindowsImage -Path $MountPoint -Save | Out-Null
-	Remove-Item -Path $MountPoint -Recurse -Force | Out-Null
-	Return $True
+    Copy-Item -Path $Script:CertGenPS1Path -Destination "$MountPoint\Windows\Setup\Scripts\$($Script:CertGenPS1Filename)" -Force
+        
+    # Dismount the VHD in preparation for boot
+    Write-Verbose "Dismounting VM $($VM.Name) Boot Disk VHDx $VMBootDiskPath ..."
+    Dismount-WindowsImage -Path $MountPoint -Save | Out-Null
+    Remove-Item -Path $MountPoint -Recurse -Force | Out-Null
+    Return $True
 } # Set-LabVMInitializationFiles
 ####################################################################################################
 
@@ -2077,262 +2143,262 @@ Add-Content -Path `"$($ENV:SystemRoot)\Setup\Scripts\SetupComplete.log`" -Value 
    General notes
 #>
 function Get-LabVMs {
-	[OutputType([System.Collections.Hashtable[]])]
-	[CmdLetBinding()]
-	param (
-		[Parameter(
+    [OutputType([System.Collections.Hashtable[]])]
+    [CmdLetBinding()]
+    param (
+        [Parameter(
             Mandatory,
-			Position=0)]
-		[ValidateNotNullOrEmpty()]
-		[XML]$Configuration,
+            Position=0)]
+        [ValidateNotNullOrEmpty()]
+        [XML]$Configuration,
 
-		[Parameter(
+        [Parameter(
             Mandatory,
-			Position=1)]
-		[ValidateNotNullOrEmpty()]
-		[System.Collections.Hashtable[]]$VMTemplates,
+            Position=1)]
+        [ValidateNotNullOrEmpty()]
+        [System.Collections.Hashtable[]]$VMTemplates,
 
-		[Parameter(
+        [Parameter(
             Mandatory,
-			Position=2)]
-		[ValidateNotNullOrEmpty()]
-		[System.Collections.Hashtable[]]$Switches
-	)
+            Position=2)]
+        [ValidateNotNullOrEmpty()]
+        [System.Collections.Hashtable[]]$Switches
+    )
 
-	[System.Collections.Hashtable[]]$LabVMs = @()
-	[String]$VHDParentPath = $Configuration.labbuilderconfig.settings.vhdparentpath
-	$VMs = $Configuration.labbuilderconfig.SelectNodes('vms').vm
+    [System.Collections.Hashtable[]]$LabVMs = @()
+    [String]$VHDParentPath = $Configuration.labbuilderconfig.settings.vhdparentpath
+    $VMs = $Configuration.labbuilderconfig.SelectNodes('vms').vm
 
-	Foreach ($VM in $VMs) {
-		If ($VM.Name -eq 'VM') {
-			throw "The VM name cannot be 'VM' or empty."
-		} # If
-		If (-not $VM.Template) {
-			throw "The template name in VM $($VM.Name) cannot be empty."
-		} # If
+    Foreach ($VM in $VMs) {
+        If ($VM.Name -eq 'VM') {
+            throw "The VM name cannot be 'VM' or empty."
+        } # If
+        If (-not $VM.Template) {
+            throw "The template name in VM $($VM.Name) cannot be empty."
+        } # If
 
-		# Find the template that this VM uses and get the VHD Path
-		[String]$TemplateVHDPath =''
-		[Boolean]$Found = $false
-		Foreach ($VMTemplate in $VMTemplates) {
-			If ($VMTemplate.Name -eq $VM.Template) {
-				$TemplateVHDPath = $VMTemplate.templatevhd
-				$Found = $true
-				Break
-			} # If
-		} # Foreach
-		If (-not $Found) {
-			throw "The template $($VM.Template) specified in VM $($VM.Name) could not be found."
-		} # If
-		# Check the VHD File path in the template is not empty
-		If (-not $TemplateVHDPath) {
-			throw "The template VHD path set in template $($VM.Template) cannot be empty."
-		} # If
+        # Find the template that this VM uses and get the VHD Path
+        [String]$TemplateVHDPath =''
+        [Boolean]$Found = $false
+        Foreach ($VMTemplate in $VMTemplates) {
+            If ($VMTemplate.Name -eq $VM.Template) {
+                $TemplateVHDPath = $VMTemplate.templatevhd
+                $Found = $true
+                Break
+            } # If
+        } # Foreach
+        If (-not $Found) {
+            throw "The template $($VM.Template) specified in VM $($VM.Name) could not be found."
+        } # If
+        # Check the VHD File path in the template is not empty
+        If (-not $TemplateVHDPath) {
+            throw "The template VHD path set in template $($VM.Template) cannot be empty."
+        } # If
 
-		# Assemble the Network adapters that this VM will use
-		[System.Collections.Hashtable[]]$VMAdapters = @()
-		[Int]$AdapterCount = 0
-		Foreach ($VMAdapter in $VM.Adapters.Adapter) {
-			$AdapterCount++
-			If ($VMAdapter.Name -eq 'adapter') {
-				Throw "The Adapter Name in VM $($VM.Name) cannot be 'adapter' or empty."
-			}
-			If (-not $VMAdapter.SwitchName) {
-				Throw "The Switch Name specified in adapter $($VMAdapter.Name) specified in VM ($VM.Name) cannot be empty."
-			}
-			# Check the switch is in the switch list
-			[Boolean]$Found = $False
-			Foreach ($Switch in $Switches) {
-				If ($Switch.Name -eq $VMAdapter.SwitchName) {
-					# The switch is found in the switch list - record the VLAN (if there is one)
-					$Found = $True
-					$SwitchVLan = $Switch.Vlan
-					Break
-				} # If
-			} # Foreach
-			If (-not $Found) {
-				throw "The switch $($VMAdapter.SwitchName) specified in VM ($VM.Name) could not be found in Switches."
-			} # If
-			
-			# Figure out the VLan - If defined in the VM use it, otherwise use the one defined in the Switch, otherwise keep blank.
-			[String]$VLan = $VMAdapter.VLan
-			If (-not $VLan) {
-				$VLan = $SwitchVLan
-			} # If
+        # Assemble the Network adapters that this VM will use
+        [System.Collections.Hashtable[]]$VMAdapters = @()
+        [Int]$AdapterCount = 0
+        Foreach ($VMAdapter in $VM.Adapters.Adapter) {
+            $AdapterCount++
+            If ($VMAdapter.Name -eq 'adapter') {
+                Throw "The Adapter Name in VM $($VM.Name) cannot be 'adapter' or empty."
+            }
+            If (-not $VMAdapter.SwitchName) {
+                Throw "The Switch Name specified in adapter $($VMAdapter.Name) specified in VM ($VM.Name) cannot be empty."
+            }
+            # Check the switch is in the switch list
+            [Boolean]$Found = $False
+            Foreach ($Switch in $Switches) {
+                If ($Switch.Name -eq $VMAdapter.SwitchName) {
+                    # The switch is found in the switch list - record the VLAN (if there is one)
+                    $Found = $True
+                    $SwitchVLan = $Switch.Vlan
+                    Break
+                } # If
+            } # Foreach
+            If (-not $Found) {
+                throw "The switch $($VMAdapter.SwitchName) specified in VM ($VM.Name) could not be found in Switches."
+            } # If
+            
+            # Figure out the VLan - If defined in the VM use it, otherwise use the one defined in the Switch, otherwise keep blank.
+            [String]$VLan = $VMAdapter.VLan
+            If (-not $VLan) {
+                $VLan = $SwitchVLan
+            } # If
 
-			# Have we got any IPv4 settings?
-			[System.Collections.Hashtable]$IPv4 = @{}
-			If ($VMAdapter.IPv4) {
-				$IPv4 = @{
-					Address = $VMAdapter.IPv4.Address;
-					defaultgateway = $VMAdapter.IPv4.DefaultGateway;
-					subnetmask = $VMAdapter.IPv4.SubnetMask;
-					dnsserver = $VMAdapter.IPv4.DNSServer
-				}
-			}
+            # Have we got any IPv4 settings?
+            [System.Collections.Hashtable]$IPv4 = @{}
+            If ($VMAdapter.IPv4) {
+                $IPv4 = @{
+                    Address = $VMAdapter.IPv4.Address;
+                    defaultgateway = $VMAdapter.IPv4.DefaultGateway;
+                    subnetmask = $VMAdapter.IPv4.SubnetMask;
+                    dnsserver = $VMAdapter.IPv4.DNSServer
+                }
+            }
 
-			# Have we got any IPv6 settings?
-			[System.Collections.Hashtable]$IPv6 = @{}
-			If ($VMAdapter.IPv6) {
-				$IPv6 = @{
-					Address = $VMAdapter.IPv6.Address;
-					defaultgateway = $VMAdapter.IPv6.DefaultGateway;
-					subnetmask = $VMAdapter.IPv6.SubnetMask;
-					dnsserver = $VMAdapter.IPv6.DNSServer
-				}
-			}
+            # Have we got any IPv6 settings?
+            [System.Collections.Hashtable]$IPv6 = @{}
+            If ($VMAdapter.IPv6) {
+                $IPv6 = @{
+                    Address = $VMAdapter.IPv6.Address;
+                    defaultgateway = $VMAdapter.IPv6.DefaultGateway;
+                    subnetmask = $VMAdapter.IPv6.SubnetMask;
+                    dnsserver = $VMAdapter.IPv6.DNSServer
+                }
+            }
 
-			$VMAdapters += @{
-				Name = $VMAdapter.Name;
-				SwitchName = $VMAdapter.SwitchName;
-				MACAddress = $VMAdapter.macaddress;
-				VLan = $VLan;
-				IPv4 = $IPv4;
-				IPv6 = $IPv6
-			}
-		} # Foreach
+            $VMAdapters += @{
+                Name = $VMAdapter.Name;
+                SwitchName = $VMAdapter.SwitchName;
+                MACAddress = $VMAdapter.macaddress;
+                VLan = $VLan;
+                IPv4 = $IPv4;
+                IPv6 = $IPv6
+            }
+        } # Foreach
 
-		# Does the VM have an Unattend file specified?
-		[String]$UnattendFile = ''
-		If ($VM.UnattendFile) {
-			$UnattendFile = Join-Path -Path $Configuration.labbuilderconfig.settings.fullconfigpath -ChildPath $VM.UnattendFile
-			If (-not (Test-Path $UnattendFile)) {
-				Throw "The Unattend File $UnattendFile specified in VM $($VM.Name) can not be found."
-			} # If
-		} # If
-		
-		# Does the VM specify a Setup Complete Script?
-		[String]$SetupComplete = ''
-		If ($VM.SetupComplete) {
-			$SetupComplete = Join-Path -Path $Configuration.labbuilderconfig.settings.fullconfigpath -ChildPath $VM.SetupComplete
-			If (-not (Test-Path $SetupComplete)) {
-				Throw "The Setup Complete File $SetupComplete specified in VM $($VM.Name) can not be found."
-			} # If
-			If ([System.IO.Path]::GetExtension($SetupComplete).ToLower() -notin '.ps1','.cmd' ) {
-				Throw "The Setup Complete File $SetupComplete specified in VM $($VM.Name) must be either a PS1 or CMD file."
-			} # If
-		} # If
+        # Does the VM have an Unattend file specified?
+        [String]$UnattendFile = ''
+        If ($VM.UnattendFile) {
+            $UnattendFile = Join-Path -Path $Configuration.labbuilderconfig.settings.fullconfigpath -ChildPath $VM.UnattendFile
+            If (-not (Test-Path $UnattendFile)) {
+                Throw "The Unattend File $UnattendFile specified in VM $($VM.Name) can not be found."
+            } # If
+        } # If
+        
+        # Does the VM specify a Setup Complete Script?
+        [String]$SetupComplete = ''
+        If ($VM.SetupComplete) {
+            $SetupComplete = Join-Path -Path $Configuration.labbuilderconfig.settings.fullconfigpath -ChildPath $VM.SetupComplete
+            If (-not (Test-Path $SetupComplete)) {
+                Throw "The Setup Complete File $SetupComplete specified in VM $($VM.Name) can not be found."
+            } # If
+            If ([System.IO.Path]::GetExtension($SetupComplete).ToLower() -notin '.ps1','.cmd' ) {
+                Throw "The Setup Complete File $SetupComplete specified in VM $($VM.Name) must be either a PS1 or CMD file."
+            } # If
+        } # If
 
-		# Load the DSC Config File setting and check it
-		[String]$DSCConfigFile = ''
-		If ($VM.DSC.ConfigFile) {
-			$DSCConfigFile = Join-Path -Path $Configuration.labbuilderconfig.settings.fullconfigpath -ChildPath $VM.DSC.ConfigFile
-			If (-not (Test-Path $DSCConfigFile)) {
-				Throw "The DSC Config File $DSCConfigFile specified in VM $($VM.Name) can not be found."
-			}
-			If ([System.IO.Path]::GetExtension($DSCConfigFile).ToLower() -ne '.ps1' ) {
-				Throw "The DSC Config File $DSCConfigFile specified in VM $($VM.Name) must be a PS1 file."
-			}
-			If (-not $VM.DSC.ConfigName) {
-				Throw "The DSC Config Name specified in VM $($VM.Name) is empty."
-			}
-		}
-		
-		# Load the DSC Parameters
-		[String]$DSCParameters = ''
-		If ($VM.DSC.Parameters) {
-			$DSCParameters = $VM.DSC.Parameters
-		} # If
+        # Load the DSC Config File setting and check it
+        [String]$DSCConfigFile = ''
+        If ($VM.DSC.ConfigFile) {
+            $DSCConfigFile = Join-Path -Path $Configuration.labbuilderconfig.settings.fullconfigpath -ChildPath $VM.DSC.ConfigFile
+            If (-not (Test-Path $DSCConfigFile)) {
+                Throw "The DSC Config File $DSCConfigFile specified in VM $($VM.Name) can not be found."
+            }
+            If ([System.IO.Path]::GetExtension($DSCConfigFile).ToLower() -ne '.ps1' ) {
+                Throw "The DSC Config File $DSCConfigFile specified in VM $($VM.Name) must be a PS1 file."
+            }
+            If (-not $VM.DSC.ConfigName) {
+                Throw "The DSC Config Name specified in VM $($VM.Name) is empty."
+            }
+        }
+        
+        # Load the DSC Parameters
+        [String]$DSCParameters = ''
+        If ($VM.DSC.Parameters) {
+            $DSCParameters = $VM.DSC.Parameters
+        } # If
 
-		# Load the DSC Parameters
-		[BOolean]$DSCLogging = $False
-		If ($VM.DSC.Logging -eq 'Y') {
-			$DSCLogging = $True
-		} # If
+        # Load the DSC Parameters
+        [BOolean]$DSCLogging = $False
+        If ($VM.DSC.Logging -eq 'Y') {
+            $DSCLogging = $True
+        } # If
 
-		# Get the Memory Startup Bytes (from the template or VM)
-		[Int64]$MemoryStartupBytes = 1GB
-		If ($VMTemplate.memorystartupbytes) {
-			$MemoryStartupBytes = $VMTemplate.memorystartupbytes
-		} # If
-		If ($VM.memorystartupbytes) {
-			$MemoryStartupBytes = (Invoke-Expression $VM.memorystartupbytes)
-		} # If
-		
-		# Get the Memory Startup Bytes (from the template or VM)
-		[Int]$ProcessorCount = 1
-		If ($VMTemplate.processorcount) {
-			$ProcessorCount = $VMTemplate.processorcount
-		} # If
-		If ($VM.processorcount) {
-			$ProcessorCount = (Invoke-Expression $VM.processorcount)
-		} # If
+        # Get the Memory Startup Bytes (from the template or VM)
+        [Int64]$MemoryStartupBytes = 1GB
+        If ($VMTemplate.memorystartupbytes) {
+            $MemoryStartupBytes = $VMTemplate.memorystartupbytes
+        } # If
+        If ($VM.memorystartupbytes) {
+            $MemoryStartupBytes = (Invoke-Expression $VM.memorystartupbytes)
+        } # If
+        
+        # Get the Memory Startup Bytes (from the template or VM)
+        [Int]$ProcessorCount = 1
+        If ($VMTemplate.processorcount) {
+            $ProcessorCount = $VMTemplate.processorcount
+        } # If
+        If ($VM.processorcount) {
+            $ProcessorCount = (Invoke-Expression $VM.processorcount)
+        } # If
 
-		# Get the data VHD Size (from the template or VM)
-		[Int64]$DataVHDSize = 0
-		If ($VMTemplate.datavhdsize) {
-			$DataVHDSize = $VMTemplate.datavhdsize
-		} # If
-		If ($VM.DataVHDSize) {
-			$DataVHDSize = (Invoke-Expression $VM.DataVHDSize)
-		} # If
-		
-		# Get the Administrator password (from the template or VM)
-		[String]$AdministratorPassword = ''
-		If ($VMTemplate.administratorpassword) {
-			$AdministratorPassword = $VMTemplate.administratorpassword
-		} # If
-		If ($VM.administratorpassword) {
-			$AdministratorPassword = $VM.administratorpassword
-		} # If
+        # Get the data VHD Size (from the template or VM)
+        [Int64]$DataVHDSize = 0
+        If ($VMTemplate.datavhdsize) {
+            $DataVHDSize = $VMTemplate.datavhdsize
+        } # If
+        If ($VM.DataVHDSize) {
+            $DataVHDSize = (Invoke-Expression $VM.DataVHDSize)
+        } # If
+        
+        # Get the Administrator password (from the template or VM)
+        [String]$AdministratorPassword = ''
+        If ($VMTemplate.administratorpassword) {
+            $AdministratorPassword = $VMTemplate.administratorpassword
+        } # If
+        If ($VM.administratorpassword) {
+            $AdministratorPassword = $VM.administratorpassword
+        } # If
 
-		# Get the Product Key (from the template or VM)
-		[String]$ProductKey = ''
-		If ($VMTemplate.productkey) {
-			$ProductKey = $VMTemplate.productkey
-		} # If
-		If ($VM.productkey) {
-			$ProductKey = $VM.productkey
-		} # If
+        # Get the Product Key (from the template or VM)
+        [String]$ProductKey = ''
+        If ($VMTemplate.productkey) {
+            $ProductKey = $VMTemplate.productkey
+        } # If
+        If ($VM.productkey) {
+            $ProductKey = $VM.productkey
+        } # If
 
-		# Get the Timezone (from the template or VM)
-		[String]$Timezone = 'Pacific Standard Time'
-		If ($VMTemplate.timezone) {
-			$Timezone = $VMTemplate.timezone
-		} # If
-		If ($VM.timezone) {
-			$Timezone = $VM.timezone
-		} # If
+        # Get the Timezone (from the template or VM)
+        [String]$Timezone = 'Pacific Standard Time'
+        If ($VMTemplate.timezone) {
+            $Timezone = $VMTemplate.timezone
+        } # If
+        If ($VM.timezone) {
+            $Timezone = $VM.timezone
+        } # If
 
-		# Get the OS Type
-		If ($VMTemplate.ostype) {
-			$OSType = $VMTemplate.ostype
-		} Else {
-			$OSType = 'Server'
-		} # If
+        # Get the OS Type
+        If ($VMTemplate.ostype) {
+            $OSType = $VMTemplate.ostype
+        } Else {
+            $OSType = 'Server'
+        } # If
 
-		# Do we have any MSU files that are listed as needing to be applied to the OS before
-		# first boot up?
-		[String[]]$InstallMSU = @()
-		Foreach ($Update in $VM.Install.MSU) {
-			$InstallMSU += $Update.URL
-		} # Foreach
+        # Do we have any MSU files that are listed as needing to be applied to the OS before
+        # first boot up?
+        [String[]]$InstallMSU = @()
+        Foreach ($Update in $VM.Install.MSU) {
+            $InstallMSU += $Update.URL
+        } # Foreach
 
-		$LabVMs += @{
-			Name = $VM.name;
-			ComputerName = $VM.ComputerName;
-			Template = $VM.template;
-			TemplateVHD = $TemplateVHDPath;
-			UseDifferencingDisk = $VM.usedifferencingbootdisk;
-			MemoryStartupBytes = $MemoryStartupBytes;
-			ProcessorCount = $ProcessorCount;
-			AdministratorPassword = $AdministratorPassword;
-			ProductKey = $ProductKey;
-			TimeZone =$Timezone;
-			Adapters = $VMAdapters;
-			DataVHDSize = $DataVHDSize;
-			UnattendFile = $UnattendFile;
-			SetupComplete = $SetupComplete;
-			DSCConfigFile = $DSCConfigFile;
-			DSCConfigName = $VM.DSC.ConfigName;
-			DSCParameters = $DSCParameters;
-			DSCLogging = $DSCLogging;
-			OSType = $OSType;
-			InstallMSU = $InstallMSU;
-		}
-	} # Foreach        
+        $LabVMs += @{
+            Name = $VM.name;
+            ComputerName = $VM.ComputerName;
+            Template = $VM.template;
+            TemplateVHD = $TemplateVHDPath;
+            UseDifferencingDisk = $VM.usedifferencingbootdisk;
+            MemoryStartupBytes = $MemoryStartupBytes;
+            ProcessorCount = $ProcessorCount;
+            AdministratorPassword = $AdministratorPassword;
+            ProductKey = $ProductKey;
+            TimeZone =$Timezone;
+            Adapters = $VMAdapters;
+            DataVHDSize = $DataVHDSize;
+            UnattendFile = $UnattendFile;
+            SetupComplete = $SetupComplete;
+            DSCConfigFile = $DSCConfigFile;
+            DSCConfigName = $VM.DSC.ConfigName;
+            DSCParameters = $DSCParameters;
+            DSCLogging = $DSCLogging;
+            OSType = $OSType;
+            InstallMSU = $InstallMSU;
+        }
+    } # Foreach        
 
-	Return $LabVMs
+    Return $LabVMs
 } # Get-LabVMs
 ####################################################################################################
 
@@ -2354,61 +2420,61 @@ function Get-LabVMs {
    General notes
 #>
 function Get-LabVMSelfSignedCert {
-	[CmdLetBinding()]
-	[OutputType([Boolean])]
-	param (
-		[Parameter(
+    [CmdLetBinding()]
+    [OutputType([Boolean])]
+    param (
+        [Parameter(
             Mandatory,
-			Position=0)]
-		[XML]$Configuration,
+            Position=0)]
+        [XML]$Configuration,
 
-		[Parameter(
+        [Parameter(
             Mandatory,
-			Position=1)]
-		[System.Collections.Hashtable]$VM,
+            Position=1)]
+        [System.Collections.Hashtable]$VM,
 
-		[Int]$Timeout = 300
-	)
-	[String]$VMPath = $Configuration.labbuilderconfig.SelectNodes('settings').vmpath
-	[DateTime]$StartTime = Get-Date
-	[System.Management.Automation.Runspaces.PSSession]$Session = $null
-	[PSCredential]$AdmininistratorCredential = New-Object System.Management.Automation.PSCredential ('Administrator', (ConvertTo-SecureString $VM.AdministratorPassword -AsPlainText -Force))
-	[Boolean]$Complete = $False
-	While ((-not $Complete)  -and (((Get-Date) - $StartTime).Seconds) -lt $TimeOut) {
-		While (-not ($Session) -or ($Session.State -ne 'Opened')) {
-			# Try and connect to the remote VM for up to $Timeout (5 minutes) seconds.
-			Try {
-				Write-Verbose "Connecting to $($VM.ComputerName) ..."
-				[String]$IPAddress = (Get-VMNetworkAdapter -VMName $VM.Name).Where({$_.SwitchName -eq (Get-VMSwitch -SwitchType External).Name}).IPAddresses.Where({$_.Contains('.')})
-				If (-not $IPAddress) {
-					Throw "An externally accessible IPv4 address for $($VM.ComputerName) could not be identified."
-				}
-				$Session = New-PSSession -ComputerName $IPAddress -Credential $AdmininistratorCredential -ErrorAction Stop
-			} Catch {
-				Write-Verbose "Connection to $($VM.ComputerName) failed - retrying in 5 seconds ..."
-				Start-Sleep 5
-			} # Try
-		} # While
+        [Int]$Timeout = 300
+    )
+    [String]$VMPath = $Configuration.labbuilderconfig.SelectNodes('settings').vmpath
+    [DateTime]$StartTime = Get-Date
+    [System.Management.Automation.Runspaces.PSSession]$Session = $null
+    [PSCredential]$AdmininistratorCredential = New-Object System.Management.Automation.PSCredential ('Administrator', (ConvertTo-SecureString $VM.AdministratorPassword -AsPlainText -Force))
+    [Boolean]$Complete = $False
+    While ((-not $Complete)  -and (((Get-Date) - $StartTime).Seconds) -lt $TimeOut) {
+        While (-not ($Session) -or ($Session.State -ne 'Opened')) {
+            # Try and connect to the remote VM for up to $Timeout (5 minutes) seconds.
+            Try {
+                Write-Verbose "Attempting connection to $($VM.ComputerName) ..."
+                [String]$IPAddress = (Get-VMNetworkAdapter -VMName $VM.Name).Where({$_.SwitchName -eq $ManagementSwitchName}).IPAddresses.Where({$_.Contains('.')})
+                If (-not $IPAddress) {
+                    Throw "An IPv4 address for an adapter connected to the $ManagementSwitchName for $($VM.ComputerName) could not be identified."
+                }
+                $Session = New-PSSession -ComputerName $IPAddress -Credential $AdmininistratorCredential -ErrorAction Stop
+            } Catch {
+                Write-Verbose "Connection to $($VM.ComputerName) failed - retrying in 5 seconds ..."
+                Start-Sleep 5
+            } # Try
+        } # While
 
-		If (($Session) -and ($Session.State -eq 'Opened') -and (-not $Complete)) {
-			# We connected OK - download the Certificate file
-			While ((-not $Complete) -and (((Get-Date) - $StartTime).Seconds) -lt $TimeOut) {
-				Try {
-					Copy-Item -Path 'c:\windows\SelfSigned.cer' -Destination "$VMPath\$($VM.Name)\LabBuilder Files\" -FromSession $Session -ErrorAction Stop
-					$Complete = $True
-				} Catch {
-					Write-Verbose "Waiting for Certificate file on $($VM.ComputerName) ..."
-					Start-Sleep 5
-				} # Try
-			} # While
-		} # If
+        If (($Session) -and ($Session.State -eq 'Opened') -and (-not $Complete)) {
+            # We connected OK - download the Certificate file
+            While ((-not $Complete) -and (((Get-Date) - $StartTime).Seconds) -lt $TimeOut) {
+                Try {
+                    Copy-Item -Path 'c:\windows\SelfSigned.cer' -Destination "$VMPath\$($VM.Name)\LabBuilder Files\" -FromSession $Session -ErrorAction Stop
+                    $Complete = $True
+                } Catch {
+                    Write-Verbose "Waiting for Certificate file on $($VM.ComputerName) ..."
+                    Start-Sleep 5
+                } # Try
+            } # While
+        } # If
 
-		# Close the Session if it is opened and the download is complete
-		If (($Session) -and ($Session.State -eq 'Opened') -and ($Complete)) {
-			Remove-PSSession -Session $Session
-		} # If
-	} # While
-	Return $Complete
+        # Close the Session if it is opened and the download is complete
+        If (($Session) -and ($Session.State -eq 'Opened') -and ($Complete)) {
+            Remove-PSSession -Session $Session
+        } # If
+    } # While
+    Return $Complete
 
 } # Get-LabVMSelfSignedCert
 ####################################################################################################
@@ -2430,56 +2496,185 @@ function Get-LabVMSelfSignedCert {
 .NOTES
    General notes
 #>
+
+function New-LabVMSelfSignedCert {
+    [CmdLetBinding()]
+    [OutputType([Boolean])]
+    param (
+        [Parameter(
+            Mandatory,
+            Position=0)]
+        [XML]$Configuration,
+
+        [Parameter(
+            Mandatory,
+            Position=1)]
+        [System.Collections.Hashtable]$VM,
+
+        [Int]$Timeout = 300
+    )
+    [String]$VMPath = $Configuration.labbuilderconfig.SelectNodes('settings').vmpath
+    [DateTime]$StartTime = Get-Date
+    [System.Management.Automation.Runspaces.PSSession]$Session = $null
+    [PSCredential]$AdmininistratorCredential = New-Object System.Management.Automation.PSCredential ('Administrator', (ConvertTo-SecureString $VM.AdministratorPassword -AsPlainText -Force))
+    [Boolean]$Complete = $False
+    While ((-not $Complete)  -and (((Get-Date) - $StartTime).Seconds) -lt $TimeOut) {
+        While (-not ($Session) -or ($Session.State -ne 'Opened')) {
+            # Try and connect to the remote VM for up to $Timeout (5 minutes) seconds.
+            Try {
+                Write-Verbose "Attempting connection to $($VM.ComputerName) ..."
+                [String]$IPAddress = (Get-VMNetworkAdapter -VMName $VM.Name).Where({$_.SwitchName -eq $ManagementSwitchName}).IPAddresses.Where({$_.Contains('.')})
+                If (-not $IPAddress) {
+                    Throw "An IPv4 address for an adapter connected to the $ManagementSwitchName for $($VM.ComputerName) could not be identified."
+                }
+                $Session = New-PSSession -ComputerName $IPAddress -Credential $AdmininistratorCredential -ErrorAction Stop
+            } Catch {
+                Write-Verbose "Connection to $($VM.ComputerName) failed - retrying in 5 seconds ..."
+                Start-Sleep 5
+            } # Try
+        } # While
+
+        [String]$CreateNewSelfSignedCert = @"
+`Get-ChildItem -Path cert:\LocalMachine\My | Where-Object { `$_.FriendlyName -eq '$($VM.ComputerName) Self-Signed Certificate' } | Remove-Item
+. `"`$(`$ENV:SystemRoot)\Setup\Scripts\New-SelfSignedCertificateEx.ps1`"
+New-SelfsignedCertificateEx -Subject 'CN=$($VM.ComputerName)' -EKU 'Server Authentication', 'Client authentication', 'Document Encryption' ``
+    -KeyUsage 'KeyEncipherment, DigitalSignature' -SAN '$($VM.ComputerName)' -FriendlyName '$($VM.ComputerName) Self-Signed Certificate' ``
+    -Exportable -StoreLocation 'LocalMachine'
+`$Cert = Get-ChildItem -Path cert:\LocalMachine\My | Where-Object { `$_.FriendlyName -eq '$($VM.ComputerName) Self-Signed Certificate' }
+Export-Certificate -Type CERT -Cert `$Cert -FilePath `"`$(`$ENV:SystemRoot)\SelfSigned.cer`"
+"@
+        $null = Set-Content `
+            -Path "$VMPath\$($VM.Name)\LabBuilder Files\CreateNewSelfSignedCert.ps1" `
+            -Value $CreateNewSelfSignedCert `
+            -Force
+
+        $Complete = $False
+
+        If (($Session) -and ($Session.State -eq 'Opened') -and (-not $Complete)) {
+            # We connected OK - Upload the script
+            While ((-not $Complete) -and (((Get-Date) - $StartTime).Seconds) -lt $TimeOut) {
+                Try {
+                    Copy-Item `
+                        -Path "$VMPath\$($VM.Name)\LabBuilder Files\CreateNewSelfSignedCert.ps1" `
+                        -Destination 'c:\windows\setup\scripts\CreateNewSelfSignedCert.ps1' `
+                        -FromSession $Session -ErrorAction Stop
+                    $Complete = $True
+                } Catch {
+                    Write-Verbose "Waiting to upload certificate create script file to $($VM.ComputerName) ..."
+                    Start-Sleep 5
+                } # Try
+            } # While
+        } # If
+        
+        $Complete = $False
+
+        If (($Session) -and ($Session.State -eq 'Opened') -and (-not $Complete)) {
+            # Script uploaded, run it
+            While ((-not $Complete) -and (((Get-Date) - $StartTime).Seconds) -lt $TimeOut) {
+                Try {
+                    Invoke-Command -Session $Session -ScriptBlock {
+                        C:\Windows\CreateNewSelfSignedCert.ps1
+                    }
+                    $Complete = $True
+                } Catch {
+                    Write-Verbose "Waiting to upload certificate create script file to $($VM.ComputerName) ..."
+                    Start-Sleep 5
+                } # Try
+            } # While
+        } # If
+
+        $Complete = $False
+
+        If (($Session) -and ($Session.State -eq 'Opened') -and (-not $Complete)) {
+            # Now download the Certificate
+            While ((-not $Complete) -and (((Get-Date) - $StartTime).Seconds) -lt $TimeOut) {
+                Try {
+                    Copy-Item -Path 'c:\windows\SelfSigned.cer' -Destination "$VMPath\$($VM.Name)\LabBuilder Files\" -FromSession $Session -ErrorAction Stop
+                    $Complete = $True
+                } Catch {
+                    Write-Verbose "Waiting for Certificate file on $($VM.ComputerName) ..."
+                    Start-Sleep 5
+                } # Try
+            } # While
+        } # If
+
+        # Close the Session if it is opened and the download is complete
+        If (($Session) -and ($Session.State -eq 'Opened') -and ($Complete)) {
+            Remove-PSSession -Session $Session
+        } # If
+    } # While
+    Return $Complete
+
+} # New-LabVMSelfSignedCert
+####################################################################################################
+
+####################################################################################################
+<#
+.Synopsis
+   Short description
+.DESCRIPTION
+   Long description
+.EXAMPLE
+   Example of how to use this cmdlet
+.EXAMPLE
+   Another example of how to use this cmdlet
+.INPUTS
+   Inputs to this cmdlet (if any)
+.OUTPUTS
+   Output from this cmdlet (if any)
+.NOTES
+   General notes
+#>
 function Start-LabVM {
-	[CmdLetBinding()]
-	[OutputType([Boolean])]
-	param (
-		[Parameter(
+    [CmdLetBinding()]
+    [OutputType([Boolean])]
+    param (
+        [Parameter(
             Mandatory,
-			Position=0)]
-		[ValidateNotNullOrEmpty()]
-		[XML]$Configuration,
+            Position=0)]
+        [ValidateNotNullOrEmpty()]
+        [XML]$Configuration,
 
-		[Parameter(
+        [Parameter(
             Mandatory,
-			Position=1)]
-		[ValidateNotNullOrEmpty()]
-		$VM
-	)
+            Position=1)]
+        [ValidateNotNullOrEmpty()]
+        $VM
+    )
 
-	[String]$VMPath = $Configuration.labbuilderconfig.settings.vmpath
+    [String]$VMPath = $Configuration.labbuilderconfig.settings.vmpath
 
-	# The VM is now ready to be started
-	If ((Get-VM -Name $VM.Name).State -eq 'Off') {
-		Write-Verbose "VM $($VM.Name) is starting ..."
+    # The VM is now ready to be started
+    If ((Get-VM -Name $VM.Name).State -eq 'Off') {
+        Write-Verbose "VM $($VM.Name) is starting ..."
 
-		Start-VM -VMName $VM.Name
-	} # If
+        Start-VM -VMName $VM.Name
+    } # If
 
-	# We only perform this section of VM Initialization (DSC, Cert, etc) with Server OS
-	If ($VM.OSType -eq 'Server') {
-		# Has this VM been initialized before (do we have a cer for it)
-		If (-not (Test-Path "$VMPath\$($VM.Name)\LabBuilder Files\SelfSigned.cer")) {
-			# No, so check it is initialized and download the cert.
-			If (Wait-LabVMInit -VM $VM) {
-				Write-Verbose "Attempting to download certificate for VM $($VM.Name) ..."
-				If (Get-LabVMSelfSignedCert -Configuration $Configuration -VM $VM) {
-					Write-Verbose "Certificate for VM $($VM.Name) was downloaded successfully ..."
-				} Else {
-					Write-Verbose "Certificate for VM $($VM.Name) could not be downloaded ..."
-				} # If
-			} Else {
-				Write-Verbose "Initialization for VM $($VM.Name) did not complete ..."
-			} # If
-		} # If
+    # We only perform this section of VM Initialization (DSC, Cert, etc) with Server OS
+    If ($VM.OSType -eq 'Server') {
+        # Has this VM been initialized before (do we have a cer for it)
+        If (-not (Test-Path "$VMPath\$($VM.Name)\LabBuilder Files\SelfSigned.cer")) {
+            # No, so check it is initialized and download the cert.
+            If (Wait-LabVMInit -VM $VM) {
+                Write-Verbose "Attempting to download certificate for VM $($VM.Name) ..."
+                If (Get-LabVMSelfSignedCert -Configuration $Configuration -VM $VM) {
+                    Write-Verbose "Certificate for VM $($VM.Name) was downloaded successfully ..."
+                } Else {
+                    Write-Verbose "Certificate for VM $($VM.Name) could not be downloaded ..."
+                } # If
+            } Else {
+                Write-Verbose "Initialization for VM $($VM.Name) did not complete ..."
+            } # If
+        } # If
 
-		# Create any DSC Files for the VM
-		Initialize-LabVMDSC -Configuration $Configuration -VM $VM | Out-Null
+        # Create any DSC Files for the VM
+        Initialize-LabVMDSC -Configuration $Configuration -VM $VM | Out-Null
 
-		# Attempt to start DSC on the VM
-		Start-LabVMDSC -Configuration $Configuration -VM $VM | Out-Null
-	} # If
-	Return $True
+        # Attempt to start DSC on the VM
+        Start-LabVMDSC -Configuration $Configuration -VM $VM | Out-Null
+    } # If
+    Return $True
 } # Start-LabVM
 ####################################################################################################
 
@@ -2501,127 +2696,152 @@ function Start-LabVM {
    General notes
 #>
 function Initialize-LabVMs {
-	[CmdLetBinding()]
-	[OutputType([Boolean])]
-	param (
-		[Parameter(
+    [CmdLetBinding()]
+    [OutputType([Boolean])]
+    param (
+        [Parameter(
             Mandatory,
-			Position=0)]
-		[ValidateNotNullOrEmpty()]
-		[XML]$Configuration,
+            Position=0)]
+        [ValidateNotNullOrEmpty()]
+        [XML]$Configuration,
 
-		[Parameter(
+        [Parameter(
             Mandatory,
-			Position=1)]
-		[ValidateNotNullOrEmpty()]
-		[System.Collections.Hashtable[]]$VMs
-	)
-	
-	$CurrentVMs = Get-VM
-	[String]$VMPath = $Configuration.labbuilderconfig.settings.vmpath
+            Position=1)]
+        [ValidateNotNullOrEmpty()]
+        [System.Collections.Hashtable[]]$VMs
+    )
+    
+    $CurrentVMs = Get-VM
+    [String]$VMPath = $Configuration.labbuilderconfig.settings.vmpath
 
-	Foreach ($VM in $VMs) {
-		If (($CurrentVMs | Where-Object -Property Name -eq $VM.Name).Count -eq 0) {
-			Write-Verbose "Creating VM $($VM.Name) ..."
+	# Figure out the name of the LabBuilder control switch
+    $ManagementSwitchName = ('LabBuilder Management {0}' -f $Configuration.labbuilderconfig.name)
+    if ($Configuration.labbuilderconfig.switches.ManagementVlan)
+	{
+		[Int32]$ManagementVlan = $Configuration.labbuilderconfig.switches.ManagementVlan
+	}
+	else
+	{
+		[Int32]$ManagementVlan = $Script:DefaultManagementVLan
+	}
 
-			# Create the paths for the VM
-			If (-not (Test-Path -Path "$VMPath\$($VM.Name)")) {
-				New-Item -Path "$VMPath\$($VM.Name)" -ItemType Directory | Out-Null
-			}
-			If (-not (Test-Path -Path "$VMPath\$($VM.Name)\Virtual Machines")) {
-				New-Item -Path "$VMPath\$($VM.Name)\Virtual Machines" -ItemType Directory | Out-Null
-			}
-			If (-not (Test-Path -Path "$VMPath\$($VM.Name)\Virtual Hard Disks")) {
-				New-Item -Path "$VMPath\$($VM.Name)\Virtual Hard Disks" -ItemType Directory | Out-Null
-			}
-			If (-not (Test-Path -Path "$VMPath\$($VM.Name)\LabBuilder Files")) {
-				New-Item -Path "$VMPath\$($VM.Name)\LabBuilder Files" -ItemType Directory | Out-Null
-			}
-			If (-not (Test-Path -Path "$VMPath\$($VM.Name)\LabBuilder Files\DSC Modules")) {
-				New-Item -Path "$VMPath\$($VM.Name)\LabBuilder Files\DSC Modules" -ItemType Directory | Out-Null
-			}
+    Foreach ($VM in $VMs) {
+        If (($CurrentVMs | Where-Object -Property Name -eq $VM.Name).Count -eq 0) {
+            Write-Verbose "Creating VM $($VM.Name) ..."
 
-			# Create the boot disk
-			$VMBootDiskPath = "$VMPath\$($VM.Name)\Virtual Hard Disks\$($VM.Name) Boot Disk.vhdx"
-			If (-not (Test-Path -Path $VMBootDiskPath)) {
-				If ($VM.UseDifferencingDisk -eq 'Y') {
-					Write-Verbose "VM $($VM.Name) differencing boot disk $VMBootDiskPath being created ..."
-					New-VHD -Differencing -Path $VMBootDiskPath -ParentPath $VM.TemplateVHD | Out-Null
-				} Else {
-					Write-Verbose "VM $($VM.Name) boot disk $VMBootDiskPath being created ..."
-					Copy-Item -Path $VM.TemplateVHD -Destination $VMBootDiskPath | Out-Null
-				}
+            # Create the paths for the VM
+            If (-not (Test-Path -Path "$VMPath\$($VM.Name)")) {
+                $Null = New-Item -Path "$VMPath\$($VM.Name)" -ItemType Directory
+            }
+            If (-not (Test-Path -Path "$VMPath\$($VM.Name)\Virtual Machines")) {
+                $Null = New-Item -Path "$VMPath\$($VM.Name)\Virtual Machines" -ItemType Directory
+            }
+            If (-not (Test-Path -Path "$VMPath\$($VM.Name)\Virtual Hard Disks")) {
+                $Null = New-Item -Path "$VMPath\$($VM.Name)\Virtual Hard Disks" -ItemType Directory
+            }
+            If (-not (Test-Path -Path "$VMPath\$($VM.Name)\LabBuilder Files")) {
+                $Null = New-Item -Path "$VMPath\$($VM.Name)\LabBuilder Files" -ItemType Directory
+            }
+            If (-not (Test-Path -Path "$VMPath\$($VM.Name)\LabBuilder Files\DSC Modules")) {
+                $Null = New-Item -Path "$VMPath\$($VM.Name)\LabBuilder Files\DSC Modules" -ItemType Directory
+            }
 
-				# Because this is a new boot disk assign any required initialization files to it (Unattend.xml etc).
-				Set-LabVMInitializationFiles -Configuration $Configuration -VMBootDiskPath $VMBootDiskPath -VM $VM
-			} Else {
-				Write-Verbose "VM $($VM.Name) boot disk $VMBootDiskPath already exists..."
-			} # If
+            # Create the boot disk
+            $VMBootDiskPath = "$VMPath\$($VM.Name)\Virtual Hard Disks\$($VM.Name) Boot Disk.vhdx"
+            If (-not (Test-Path -Path $VMBootDiskPath)) {
+                If ($VM.UseDifferencingDisk -eq 'Y') {
+                    Write-Verbose "VM $($VM.Name) differencing boot disk $VMBootDiskPath being created ..."
+                    $Null = New-VHD -Differencing -Path $VMBootDiskPath -ParentPath $VM.TemplateVHD
+                } Else {
+                    Write-Verbose "VM $($VM.Name) boot disk $VMBootDiskPath being created ..."
+                    $Null = Copy-Item -Path $VM.TemplateVHD -Destination $VMBootDiskPath
+                }
 
-			New-VM -Name $VM.Name -MemoryStartupBytes $VM.MemoryStartupBytes -Generation 2 -Path $VMPath -VHDPath $VMBootDiskPath | Out-Null
-			# Just get rid of all network adapters bcause New-VM automatically creates one which we don't need
-			Get-VMNetworkAdapter -VMName $VM.Name | Remove-VMNetworkAdapter | Out-Null
+                # Because this is a new boot disk assign any required initialization files to it (Unattend.xml etc).
+                Set-LabVMInitializationFiles -Configuration $Configuration -VMBootDiskPath $VMBootDiskPath -VM $VM
+            } Else {
+                Write-Verbose "VM $($VM.Name) boot disk $VMBootDiskPath already exists..."
+            } # If
+
+            $null = New-VM `
+                -Name $VM.Name `
+                -MemoryStartupBytes $VM.MemoryStartupBytes `
+                -Generation 2 -Path $VMPath `
+                -VHDPath $VMBootDiskPath `
+                -SwitchName $ManagementSwitchName
+            }
+
+        # Set the processor count if different to default and if specified in config file
+        If ($VM.ProcessorCount) {
+            If ($VM.ProcessorCount -ne (Get-VM -Name $VM.Name).ProcessorCount) {
+                Set-VM -Name $VM.Name -ProcessorCount $VM.ProcessorCount
+            } # If
+        } # If
+
+        # Do we need to add a data disk?
+        If ($VM.DataVHDSize -and ($VM.DataVHDSize -gt 0)) {
+            [String]$VMDataDiskPath = "$VMPath\$($VM.Name)\Virtual Hard Disks\$($VM.Name) Data Disk.vhdx"
+            # Does the disk already exist?
+            If (Test-Path -Path $VMDataDiskPath) {
+                Write-Verbose "VM $($VM.Name) data disk $VMDataDiskPath already exists ..."
+                # Does the disk need to shrink or grow?
+                If ((Get-VHD -Path $VMDataDiskPath).Size -lt $VM.DataVHDSize) {
+                    Write-Verbose "VM $($VM.Name) Data Disk $VMDataDiskPath expanding to $($VM.DataVHDSize) ..."
+                    $null = Resize-VHD -Path $VMDataDiskPath -SizeBytes $VM.DataVHDSize
+                } Elseif ((Get-VHD -Path $VMDataDiskPath).Size -gt $VM.DataVHDSize) {
+                    Throw "VM $($VM.Name) Data Disk $VMDataDiskPath cannot be shrunk to $($VM.DataVHDSize) ..."
+                }
+            } Else {
+                # Create a new VHD
+                Write-Verbose "VM $($VM.Name) data disk $VMDataDiskPath is being created ..."
+                $null = New-VHD -Path $VMDataDiskPath -SizeBytes $VM.DataVHDSize -Dynamic
+            } # If
+            # Does the disk already exist in the VM
+            If ((Get-VMHardDiskDrive -VMName $VM.Name | Where-Object -Property Path -EQ $VMDataDiskPath).Count -EQ 0) {
+                Write-Verbose "VM $($VM.Name) data disk $VMDataDiskPath is being added to VM ..."
+                $Null = Add-VMHardDiskDrive -VMName $VM.Name -Path $VMDataDiskPath -ControllerType SCSI -ControllerLocation 1 -ControllerNumber 0
+            } # If
+        } # If
+            
+        # Create/Update the Management Network Adapter
+		if ((Get-VMNetworkAdapter -VMName $VM.Name | Where-Object -Property Name -EQ $ManagementSwitchName).Count -eq 0) {
+			Write-Verbose "VM $($VM.Name) management network adapter $ManagementSwitchName is being added ..."
+			Add-VMNetworkAdapter -VMName $VM.Name -SwitchName $ManagementSwitchName -Name $ManagementSwitchName
 		}
+        $VMNetworkAdapter = Get-VMNetworkAdapter -VMName $VM.Name -Name $ManagementSwitchName
+        $null = $VMNetworkAdapter | Set-VMNetworkAdapterVlan -Access -VlanId $ManagementVlan
+        Write-Verbose "VM $($VM.Name) management network adapter $($VMAdapter.Name) VLAN has been set to $ManagementVlan ..."
 
-		# Set the processor count if different to default and if specified in config file
-		If ($VM.ProcessorCount) {
-			If ($VM.ProcessorCount -ne (Get-VM -Name $VM.Name).ProcessorCount) {
-				Set-VM -Name $VM.Name -ProcessorCount $VM.ProcessorCount
-			} # If
-		} # If
-
-		# Do we need to add a data disk?
-		If ($VM.DataVHDSize -and ($VM.DataVHDSize -gt 0)) {
-			[String]$VMDataDiskPath = "$VMPath\$($VM.Name)\Virtual Hard Disks\$($VM.Name) Data Disk.vhdx"
-			# Does the disk already exist?
-			If (Test-Path -Path $VMDataDiskPath) {
-				Write-Verbose "VM $($VM.Name) data disk $VMDataDiskPath already exists ..."
-				# Does the disk need to shrink or grow?
-				If ((Get-VHD -Path $VMDataDiskPath).Size -lt $VM.DataVHDSize) {
-					Write-Verbose "VM $($VM.Name) Data Disk $VMDataDiskPath expanding to $($VM.DataVHDSize) ..."
-					Resize-VHD -Path $VMDataDiskPath -SizeBytes $VM.DataVHDSize | Out-Null
-				} Elseif ((Get-VHD -Path $VMDataDiskPath).Size -gt $VM.DataVHDSize) {
-					Throw "VM $($VM.Name) Data Disk $VMDataDiskPath cannot be shrunk to $($VM.DataVHDSize) ..."
-				}
-			} Else {
-				# Create a new VHD
-				Write-Verbose "VM $($VM.Name) data disk $VMDataDiskPath is being created ..."
-				New-VHD -Path $VMDataDiskPath -SizeBytes $VM.DataVHDSize -Dynamic | Out-Null
-			} # If
-			# Does the disk already exist in the VM
-			If ((Get-VMHardDiskDrive -VMName $VM.Name | Where-Object -Property Path -EQ $VMDataDiskPath).Count -EQ 0) {
-				Write-Verbose "VM $($VM.Name) data disk $VMDataDiskPath is being added to VM ..."
-				Add-VMHardDiskDrive -VMName $VM.Name -Path $VMDataDiskPath -ControllerType SCSI -ControllerLocation 1 -ControllerNumber 0 | Out-Null
-			} # If
-		} # If
-			
-		# Create any network adapters
+        # Create any network adapters
 		Foreach ($VMAdapter in $VM.Adapters) {
-			If ((Get-VMNetworkAdapter -VMName $VM.Name | Where-Object -Property Name -EQ $VMAdapter.Name).Count -eq 0) {
-				Write-Verbose "VM $($VM.Name) network adapter $($VMAdapter.Name) is being added ..."
-				Add-VMNetworkAdapter -VMName $VM.Name -SwitchName $VMAdapter.SwitchName -Name $VMAdapter.Name
-			} # If
-			$VMNetworkAdapter = Get-VMNetworkAdapter -VMName $VM.Name -Name $VMAdapter.Name
-			$Vlan = $VMAdapter.VLan
-			If ($VLan) {
-				Write-Verbose "VM $($VM.Name) network adapter $($VMAdapter.Name) VLAN is set to $Vlan ..."
-				$VMNetworkAdapter | Set-VMNetworkAdapterVlan -Access -VlanId $Vlan | Out-Null
-			} Else {
-				Write-Verbose "VM $($VM.Name) network adapter $($VMAdapter.Name) VLAN is cleared ..."
-				$VMNetworkAdapter | Set-VMNetworkAdapterVlan -Untagged | Out-Null
-			} # If
-			If ($VMAdapter.MACAddress) {
-				$VMNetworkAdapter | Set-VMNetworkAdapter -StaticMacAddress $VMAdapter.MACAddress | Out-Null
-			} Else {
-				$VMNetworkAdapter | Set-VMNetworkAdapter -DynamicMacAddress | Out-Null
-			} # If
-			# Enable Device Naming (although the feature is buggy at the moment)
-			# $VMNetworkAdapter | Set-VMNetworkAdapter -DeviceNaming On | Out-Null
-		} # Foreach
+            If ((Get-VMNetworkAdapter -VMName $VM.Name | Where-Object -Property Name -EQ $VMAdapter.Name).Count -eq 0) {
+                Write-Verbose "VM $($VM.Name) network adapter $($VMAdapter.Name) is being added ..."
+                Add-VMNetworkAdapter -VMName $VM.Name -SwitchName $VMAdapter.SwitchName -Name $VMAdapter.Name
+            } # If
+            $VMNetworkAdapter = Get-VMNetworkAdapter -VMName $VM.Name -Name $VMAdapter.Name
+            $Vlan = $VMAdapter.VLan
+            If ($VLan) {
+                $null = $VMNetworkAdapter | Set-VMNetworkAdapterVlan -Access -VlanId $Vlan
+                Write-Verbose "VM $($VM.Name) network adapter $($VMAdapter.Name) VLAN has been set to $Vlan ..."
+            } Else {
+                $null = $VMNetworkAdapter | Set-VMNetworkAdapterVlan -Untagged
+                Write-Verbose "VM $($VM.Name) network adapter $($VMAdapter.Name) VLAN has been cleared ..."
+            } # If
+            If ($VMAdapter.MACAddress) {
+                $null = $VMNetworkAdapter | Set-VMNetworkAdapter -StaticMacAddress $VMAdapter.MACAddress
+            } Else {
+                $null = $VMNetworkAdapter | Set-VMNetworkAdapter -DynamicMacAddress
+            } # If
+            # Enable Device Naming
+            if ((Get-Command -Name Set-VMNetworkAdapter).Parameters.ContainsKey('DeviceNaming')) {
+				$null = $VMNetworkAdapter | Set-VMNetworkAdapter -DeviceNaming On
+			}
+        } # Foreach
 
-		Start-LabVM -Configuration $Config -VM $VM | Out-Null
-	} # Foreach
-	Return $True
+        $null = Start-LabVM -Configuration $Config -VM $VM
+    } # Foreach
+    Return $True
 } # Initialize-LabVMs
 ####################################################################################################
 
@@ -2643,53 +2863,53 @@ function Initialize-LabVMs {
    General notes
 #>
 function Remove-LabVMs {
-	[CmdLetBinding()]
-	[OutputType([Boolean])]
-	param (
-		[Parameter(
+    [CmdLetBinding()]
+    [OutputType([Boolean])]
+    param (
+        [Parameter(
             Mandatory,
-			Position=0)]
-		[ValidateNotNullOrEmpty()]
-		[XML]$Configuration,
+            Position=0)]
+        [ValidateNotNullOrEmpty()]
+        [XML]$Configuration,
 
-		[Parameter(
+        [Parameter(
             Mandatory,
-			position=1)]
-		[ValidateNotNullOrEmpty()]
-		[System.Collections.Hashtable[]]$VMs,
+            position=1)]
+        [ValidateNotNullOrEmpty()]
+        [System.Collections.Hashtable[]]$VMs,
 
-		[Switch]$RemoveVHDs
-	)
-	
-	$CurrentVMs = Get-VM
-	[String]$VMPath = $Configuration.labbuilderconfig.settings.vmpath
-	
-	Foreach ($VM in $VMs) {
-		If (($CurrentVMs | Where-Object -Property Name -eq $VM.Name).Count -ne 0) {
-			# If the VM is running we need to shut it down.
-			If ((Get-VM -Name $VM.Name).State -eq 'Running') {
-				Write-Verbose "Stopping VM $($VM.Name) ..."
-				Stop-VM -Name $VM.Name
-				# Wait for it to completely shut down and report that it is off.
-				Wait-LabVMOff -VM $VM | Out-Null
-			}
-			Write-Verbose "Removing VM $($VM.Name) ..."
+        [Switch]$RemoveVHDs
+    )
+    
+    $CurrentVMs = Get-VM
+    [String]$VMPath = $Configuration.labbuilderconfig.settings.vmpath
+    
+    Foreach ($VM in $VMs) {
+        If (($CurrentVMs | Where-Object -Property Name -eq $VM.Name).Count -ne 0) {
+            # If the VM is running we need to shut it down.
+            If ((Get-VM -Name $VM.Name).State -eq 'Running') {
+                Write-Verbose "Stopping VM $($VM.Name) ..."
+                Stop-VM -Name $VM.Name
+                # Wait for it to completely shut down and report that it is off.
+                Wait-LabVMOff -VM $VM | Out-Null
+            }
+            Write-Verbose "Removing VM $($VM.Name) ..."
 
-			# Should we also delete the VHDs from the VM?
-			If ($RemoveVHDs) {
-				Write-Verbose "Deleting VM $($VM.Name) hard drive(s) ..."
-				Get-VMHardDiskDrive -VMName $VM.Name | Select-Object -Property Path | Remove-Item
-			}
-			
-			# Now delete the actual VM
-			Get-VM -Name $VMs.Name | Remove-VM -Confirm:$false
+            # Should we also delete the VHDs from the VM?
+            If ($RemoveVHDs) {
+                Write-Verbose "Deleting VM $($VM.Name) hard drive(s) ..."
+                Get-VMHardDiskDrive -VMName $VM.Name | Select-Object -Property Path | Remove-Item
+            }
+            
+            # Now delete the actual VM
+            Get-VM -Name $VMs.Name | Remove-VM -Confirm:$false
 
-			Write-Verbose "Removed VM $($VM.Name) ..."
-		} Else {
-			Write-Verbose "VM $($VM.Name) is not in Hyper-V ..."
-		}
-	}
-	Return $true
+            Write-Verbose "Removed VM $($VM.Name) ..."
+        } Else {
+            Write-Verbose "VM $($VM.Name) is not in Hyper-V ..."
+        }
+    }
+    Return $true
 }
 ####################################################################################################
 
@@ -2711,61 +2931,61 @@ function Remove-LabVMs {
    General notes
 #>
 function Wait-LabVMInit {
-	[OutputType([Boolean])]
-	[CmdLetBinding()]
-	param (
-		[Parameter(
+    [OutputType([Boolean])]
+    [CmdLetBinding()]
+    param (
+        [Parameter(
             Mandatory,
-			Position=0)]
-		[System.Collections.Hashtable]$VM,
+            Position=0)]
+        [System.Collections.Hashtable]$VM,
 
-		[Int]$Timeout = 300
-	)
+        [Int]$Timeout = 300
+    )
 
-	[DateTime]$StartTime = Get-Date
-	[Boolean]$Found = $False
-	[System.Management.Automation.Runspaces.PSSession]$Session = $null
-	[PSCredential]$AdmininistratorCredential = New-Object System.Management.Automation.PSCredential ('Administrator', (ConvertTo-SecureString $VM.AdministratorPassword -AsPlainText -Force))
+    [DateTime]$StartTime = Get-Date
+    [Boolean]$Found = $False
+    [System.Management.Automation.Runspaces.PSSession]$Session = $null
+    [PSCredential]$AdmininistratorCredential = New-Object System.Management.Automation.PSCredential ('Administrator', (ConvertTo-SecureString $VM.AdministratorPassword -AsPlainText -Force))
 
-	# Make sure the VM has started
-	Wait-LabVMStart -VM $VM
+    # Make sure the VM has started
+    Wait-LabVMStart -VM $VM
 
-	[Boolean]$Complete = $False
-	While ((-not $Complete)  -and (((Get-Date) - $StartTime).Seconds) -lt $TimeOut) {
-		While (-not ($Session) -or ($Session.State -ne 'Opened')) {
-			# Try and connect to the remote VM for up to $Timeout (5 minutes) seconds.
-			Try {
-				Write-Verbose "Connecting to $($VM.ComputerName) ..."
-				[String]$IPAddress = (Get-VMNetworkAdapter -VMName $VM.Name).Where({$_.SwitchName -eq (Get-VMSwitch -SwitchType External).Name}).IPAddresses.Where({$_.Contains('.')})
-				If (-not $IPAddress) {
-					Throw "An externally accessible IPv4 address for $($VM.ComputerName) could not be identified."
-				}
-				$Session = New-PSSession -ComputerName $IPAddress -Credential $AdmininistratorCredential -ErrorAction Stop
-			} Catch {
-				Write-Verbose "Connection to $($VM.ComputerName) failed - retrying in 5 seconds ..."
-				Start-Sleep 5
-			} # Try
-		} # While
+    [Boolean]$Complete = $False
+    While ((-not $Complete)  -and (((Get-Date) - $StartTime).Seconds) -lt $TimeOut) {
+        While (-not ($Session) -or ($Session.State -ne 'Opened')) {
+            # Try and connect to the remote VM for up to $Timeout (5 minutes) seconds.
+            Try {
+                Write-Verbose "Attempting connection to $($VM.ComputerName) ..."
+                [String]$IPAddress = (Get-VMNetworkAdapter -VMName $VM.Name).Where({$_.SwitchName -eq $ManagementSwitchName}).IPAddresses.Where({$_.Contains('.')})
+                If (-not $IPAddress) {
+                    Throw "An IPv4 address for an adapter connected to the $ManagementSwitchName for $($VM.ComputerName) could not be identified."
+                }
+                $Session = New-PSSession -ComputerName $IPAddress -Credential $AdmininistratorCredential -ErrorAction Stop
+            } Catch {
+                Write-Verbose "Connection to $($VM.ComputerName) failed - retrying in 5 seconds ..."
+                Start-Sleep 5
+            } # Try
+        } # While
 
-		If (($Session) -and ($Session.State -eq 'Opened') -and (-not $Complete)) {
-			# We connected OK - check for init file
-			While ((-not $Complete) -and (((Get-Date) - $StartTime).Seconds) -lt $TimeOut) {
-				Try {
-					$Complete = Invoke-Command -Session $Session {Test-Path "$($ENV:SystemRoot)\Setup\Scripts\InitialSetupCompleted.txt" } -ErrorAction Stop
-				} Catch {
-					Write-Verbose "Waiting for Certificate file on $($VM.ComputerName) ..."
-					Start-Sleep 5
-				} # Try
-			} # While
-		} # If
+        If (($Session) -and ($Session.State -eq 'Opened') -and (-not $Complete)) {
+            # We connected OK - check for init file
+            While ((-not $Complete) -and (((Get-Date) - $StartTime).Seconds) -lt $TimeOut) {
+                Try {
+                    $Complete = Invoke-Command -Session $Session {Test-Path "$($ENV:SystemRoot)\Setup\Scripts\InitialSetupCompleted.txt" } -ErrorAction Stop
+                } Catch {
+                    Write-Verbose "Waiting for Certificate file on $($VM.ComputerName) ..."
+                    Start-Sleep 5
+                } # Try
+            } # While
+        } # If
 
-		# Close the Session if it is opened
-		If (($Session) -and ($Session.State -eq 'Opened')) {
-			Remove-PSSession -Session $Session
-		} # If
-	} # While
+        # Close the Session if it is opened
+        If (($Session) -and ($Session.State -eq 'Opened')) {
+            Remove-PSSession -Session $Session
+        } # If
+    } # While
 
-	Return $Complete
+    Return $Complete
 } # Wait-LabVMInit
 ####################################################################################################
 
@@ -2787,22 +3007,22 @@ function Wait-LabVMInit {
    General notes
 #>
 function Wait-LabVMStart {
-	[OutputType([Boolean])]
-	[CmdLetBinding()]
-	param (
-		[Parameter(
+    [OutputType([Boolean])]
+    [CmdLetBinding()]
+    param (
+        [Parameter(
             Mandatory,
-			Position=0)]
-		[System.Collections.Hashtable]$VM
-	)
-	$Heartbeat = Get-VMIntegrationService -VMName $VM.Name -Name Heartbeat
-	while ($Heartbeat.PrimaryStatusDescription -ne 'OK')
-	{
-		$Heartbeat = Get-VMIntegrationService -VMName $VM.Name -Name Heartbeat
-		Start-Sleep 1
-	} # while
+            Position=0)]
+        [System.Collections.Hashtable]$VM
+    )
+    $Heartbeat = Get-VMIntegrationService -VMName $VM.Name -Name Heartbeat
+    while ($Heartbeat.PrimaryStatusDescription -ne 'OK')
+    {
+        $Heartbeat = Get-VMIntegrationService -VMName $VM.Name -Name Heartbeat
+        Start-Sleep 1
+    } # while
 
-	Return $True
+    Return $True
 } # Wait-LabVMStart
 ####################################################################################################
 
@@ -2824,22 +3044,22 @@ function Wait-LabVMStart {
    General notes
 #>
 function Wait-LabVMOff {
-	[OutputType([Boolean])]
-	[CmdLetBinding()]
-	param (
-		[Parameter(
+    [OutputType([Boolean])]
+    [CmdLetBinding()]
+    param (
+        [Parameter(
             Mandatory,
-			Position=0)]
-		[System.Collections.Hashtable]$VM
-	)
-	$RunningVM = Get-VM -Name $VM.Name
-	while ($RunningVM.State -ne 'Off')
-	{
-		$RunningVM = Get-VM -Name $VM.Name
-		Start-Sleep 1
-	} # while
+            Position=0)]
+        [System.Collections.Hashtable]$VM
+    )
+    $RunningVM = Get-VM -Name $VM.Name
+    while ($RunningVM.State -ne 'Off')
+    {
+        $RunningVM = Get-VM -Name $VM.Name
+        Start-Sleep 1
+    } # while
 
-	Return $True
+    Return $True
 } # Wait-LabVMOff
 ####################################################################################################
 
@@ -2861,35 +3081,37 @@ function Wait-LabVMOff {
    General notes
 #>
 Function Install-Lab {
-	[CmdLetBinding()]
-	param (
-		[parameter(
+    [CmdLetBinding()]
+    param (
+        [parameter(
             Mandatory,
-			Position=0)]
-		[String]$Path,
+            Position=0)]
+        [String]$Path,
 
-		[Switch]$CheckEnvironment
-	) # Param
+        [Switch]$CheckEnvironment
+    ) # Param
 
-	[XML]$Config = Get-LabConfiguration -Path $Path
-	
+    [XML]$Config = Get-LabConfiguration -Path $Path
+    
     # Make sure everything is OK to install the lab
-	Test-LabConfiguration -Configuration $Config
-	   
-	If ($CheckEnvironment) {
-		Install-LabHyperV
-	}
+    if (-not (Test-LabConfiguration -Configuration $Config)) {
+        return
+    }
+       
+    If ($CheckEnvironment) {
+        Install-LabHyperV
+    }
 
-	Initialize-LabConfiguration -Configuration $Config
+    Initialize-LabConfiguration -Configuration $Config
 
-	$Switches = Get-LabSwitches -Configuration $Config
-	Initialize-LabSwitches -Configuration $Config -Switches $Switches
+    $Switches = Get-LabSwitches -Configuration $Config
+    Initialize-LabSwitches -Configuration $Config -Switches $Switches
 
-	$VMTemplates = Get-LabVMTemplates -Configuration $Config
-	Initialize-LabVMTemplates -Configuration $Config -VMTemplates $VMTemplates
+    $VMTemplates = Get-LabVMTemplates -Configuration $Config
+    Initialize-LabVMTemplates -Configuration $Config -VMTemplates $VMTemplates
 
-	$VMs = Get-LabVMs -Configuration $Config -VMTemplates $VMTemplates -Switches $Switches
-	Initialize-LabVMs -Configuration $Config -VMs $VMs
+    $VMs = Get-LabVMs -Configuration $Config -VMTemplates $VMTemplates -Switches $Switches
+    Initialize-LabVMs -Configuration $Config -VMs $VMs
 } # Build-Lab
 ####################################################################################################
 
@@ -2911,43 +3133,45 @@ Function Install-Lab {
    General notes
 #>
 Function Uninstall-Lab {
-	[CmdLetBinding()]
-	param (
-		[parameter(
+    [CmdLetBinding()]
+    param (
+        [parameter(
             Mandatory,
-			Position=0)]
-		[String]$Path,
+            Position=0)]
+        [String]$Path,
 
-		[Switch]$RemoveSwitches,
+        [Switch]$RemoveSwitches,
 
-		[Switch]$RemoveTemplates,
+        [Switch]$RemoveTemplates,
 
-		[Switch]$RemoveVHDs
-	) # Param
+        [Switch]$RemoveVHDs
+    ) # Param
 
-	[XML]$Config = Get-LabConfiguration -Path $Path
+    [XML]$Config = Get-LabConfiguration -Path $Path
 
-	# Make sure everything is OK to install the lab
-	Test-LabConfiguration -Configuration $Config
+    # Make sure everything is OK to install the lab
+    if (-not (Test-LabConfiguration -Configuration $Config)) {
+        return
+    }
 
-	$VMTemplates = Get-LabVMTemplates -Configuration $Config
+    $VMTemplates = Get-LabVMTemplates -Configuration $Config
 
-	$Switches = Get-LabSwitches -Configuration $Config
+    $Switches = Get-LabSwitches -Configuration $Config
 
-	$VMs = Get-LabVMs -Configuration $Config -VMTemplates $VMTemplates -Switches $Switches
-	If ($RemoveVHDs) {
-		Remove-LabVMs -Configuration $Config -VMs $VMs -RemoveVHDs | Out-Null
-	} Else {
-		Remove-LabVMs -Configuration $Config -VMs $VMs | Out-Null
-	} # If
+    $VMs = Get-LabVMs -Configuration $Config -VMTemplates $VMTemplates -Switches $Switches
+    If ($RemoveVHDs) {
+        Remove-LabVMs -Configuration $Config -VMs $VMs -RemoveVHDs | Out-Null
+    } Else {
+        Remove-LabVMs -Configuration $Config -VMs $VMs | Out-Null
+    } # If
 
-	If ($RemoveTemplates) {
-		Remove-LabVMTemplates -Configuration $Config -VMTemplates $VMTemplates | Out-Null
-	} # If
+    If ($RemoveTemplates) {
+        Remove-LabVMTemplates -Configuration $Config -VMTemplates $VMTemplates | Out-Null
+    } # If
 
-	If ($RemoveSwitches) {
-		Remove-LabSwitches -Configuration $Config -Switches $Switches | Out-Null
-	} # If
+    If ($RemoveSwitches) {
+        Remove-LabSwitches -Configuration $Config -Switches $Switches | Out-Null
+    } # If
 } # Uninstall-Lab
 ####################################################################################################
 
@@ -2956,35 +3180,35 @@ Function Uninstall-Lab {
 ####################################################################################################
 [DSCLocalConfigurationManager()]
 Configuration ConfigLCM {
-	Param (
-		[String]$ComputerName,
-		[String]$Thumbprint
-	)
-	Node $ComputerName {
-		Settings {
-			RefreshMode = 'Push'
-			ConfigurationMode = 'ApplyAndAutoCorrect'
-			CertificateId = $Thumbprint
-			ConfigurationModeFrequencyMins = 15
-			RefreshFrequencyMins = 30
-			RebootNodeIfNeeded = $True
-			ActionAfterReboot = 'ContinueConfiguration'
-		} 
-	}
+    Param (
+        [String]$ComputerName,
+        [String]$Thumbprint
+    )
+    Node $ComputerName {
+        Settings {
+            RefreshMode = 'Push'
+            ConfigurationMode = 'ApplyAndAutoCorrect'
+            CertificateId = $Thumbprint
+            ConfigurationModeFrequencyMins = 15
+            RefreshFrequencyMins = 30
+            RebootNodeIfNeeded = $True
+            ActionAfterReboot = 'ContinueConfiguration'
+        } 
+    }
 }
 ####################################################################################################
 
 ####################################################################################################
 # Export the Module Cmdlets
 Export-ModuleMember -Function `
-	Get-LabConfiguration,Test-LabConfiguration, `
-	Install-LabHyperV,Initialize-LabConfiguration,Download-LabResources, `
-	Get-LabSwitches,Initialize-LabSwitches,Remove-LabSwitches, `
-	Get-LabVMTemplates,Initialize-LabVMTemplates,Remove-LabVMTemplates, `
-	Get-LabVMs,Initialize-LabVMs,Remove-LabVMs, `
-	Set-LabDSCMOFFile,Set-LabDSCStartFile,Initialize-LabVMDSC, `
-	Get-LabUnattendFile, Set-LabVMInitializationFiles, `
-	Start-LabVM, Wait-LabVMStart, Wait-LabVMOff, Wait-LabVMInit, `
-	Get-LabVMSelfSignedCert, `
-	Install-Lab,Uninstall-Lab
+    Get-LabConfiguration,Test-LabConfiguration, `
+    Install-LabHyperV,Initialize-LabConfiguration,Download-LabResources, `
+    Get-LabSwitches,Initialize-LabSwitches,Remove-LabSwitches, `
+    Get-LabVMTemplates,Initialize-LabVMTemplates,Remove-LabVMTemplates, `
+    Get-LabVMs,Initialize-LabVMs,Remove-LabVMs, `
+    Set-LabDSCMOFFile,Set-LabDSCStartFile,Initialize-LabVMDSC, `
+    Get-LabUnattendFile, Set-LabVMInitializationFiles, `
+    Start-LabVM, Wait-LabVMStart, Wait-LabVMOff, Wait-LabVMInit, `
+    Get-LabVMSelfSignedCert, `
+    Install-Lab,Uninstall-Lab
 ####################################################################################################

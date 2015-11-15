@@ -16,7 +16,7 @@
     <module name="cMicrosoftUpdate" url="https://github.com/fabiendibot/cMicrosoftUpdate/archive/master.zip" folder="cMicrosoftUpdate-master" />   
   </resources>
   
-  <switches>
+  <switches managementvlan="98">
     <switch name="General Purpose External" type="External">
       <adapters>
         <adapter name="Cluster" macaddress="00155D010701" />
@@ -25,7 +25,6 @@
         <adapter name="LM" macaddress="00155D010704" />
       </adapters>
     </switch>
-    <switch name="General Purpose Internal" type="Internal" /> 
     <switch name="Domain Private Site A" type="Private" vlan="2" />
     <switch name="Domain Private Site B" type="Private" vlan="3" />
     <switch name="Domain Private Site C" type="Private" vlan="4" />
@@ -79,10 +78,6 @@
             SubCAs = @('SA_SUBCA')
           </parameters>
       </dsc>
-      <adapters>
-        <adapter name="General Purpose External"
-                 switchname="General Purpose External" />
-      </adapters>
     </vm>
 
     <vm name="LABBUILDER.COM SS_INTERNET"
@@ -95,40 +90,44 @@
         <parameters>
           Scopes = @(
             @{ Name = 'Internet';
-               Start = '131.0.0.50';
-               End = '131.0.0.250';
+               Start = '131.107.0.50';
+               End = '131.107.0.250';
                SubnetMask = '255.0.0.0';
                AddressFamily = 'IPv4'
             }
           )
           Reservations = @(
             @{ Name = 'SA_EDGE1';
-               ScopeID = '131.0.0.50';
+               ScopeID = '131.107.0.0';
                ClientMACAddress = '000000000000';
-               IPAddress = '131.0.0.50';
+               IPAddress = '131.107.0.50';
                AddressFamily = 'IPv4'
             },
             @{ Name = 'SA_EDGE2';
-               ScopeID = '131.0.0.50';
+               ScopeID = '131.0.0.0';
                ClientMACAddress = '000000000001';
-               IPAddress = '131.0.0.51';
+               IPAddress = '131.107.0.51';
+               AddressFamily = 'IPv4'
+            }
+          )
+          ScopeOptions = @(
+            @{ ScopeID = '131.107.0.0';
+               DNServerIPAddress = @('131.107.0.1');
                AddressFamily = 'IPv4'
             }
           )
         </parameters>
       </dsc>
       <adapters>
-        <adapter name="General Purpose External"
-                 switchname="General Purpose External" />
         <adapter name="Internet"
                  switchname="Internet">
-          <ipv4 address="131.0.0.10"
+          <ipv4 address="131.107.0.1"
                 defaultgateway=""
-                subnetmask="0"
-                dnsserver="131.0.0.10"/>
+                subnetmask="8"
+                dnsserver="131.107.0.1"/>
           <ipv6 address="2001:54b9:f782:ae41::10"
                 defaultgateway=""
-                subnetmask="0"
+                subnetmask="64"
                 dnsserver="2001:54b9:f782:ae41::10"/>
         </adapter>
       </adapters>
@@ -146,8 +145,6 @@
         </parameters>
       </dsc>
       <adapters>
-        <adapter name="General Purpose External"
-                 switchname="General Purpose External" />
         <adapter name="Domain Private Site A"
                  switchname="Domain Private Site A">
           <ipv4 address="192.168.128.10"
@@ -175,8 +172,6 @@
         </parameters>
       </dsc>
       <adapters>
-        <adapter name="General Purpose External"
-                 switchname="General Purpose External" />
         <adapter name="Domain Private Site A"
                  switchname="Domain Private Site A">
           <ipv4 address="192.168.128.11"
@@ -204,8 +199,6 @@
         </parameters>
       </dsc>
       <adapters>
-        <adapter name="General Purpose External"
-                 switchname="General Purpose External" />
         <adapter name="Domain Private Site A"
                  switchname="Domain Private Site A">
           <ipv4 address="192.168.128.30"
@@ -328,8 +321,6 @@
         </parameters>
       </dsc>
       <adapters>
-        <adapter name="General Purpose External"
-                 switchname="General Purpose External" />
         <adapter name="Domain Private Site A"
                  switchname="Domain Private Site A">
           <ipv4 address="192.168.128.16"
@@ -372,8 +363,6 @@
         </parameters>
       </dsc>
       <adapters>
-        <adapter name="General Purpose External"
-                 switchname="General Purpose External" />
         <adapter name="Domain Private Site A"
                  switchname="Domain Private Site A">
           <ipv4 address="192.168.128.17"
@@ -401,8 +390,6 @@
         </parameters>
       </dsc>
       <adapters>
-        <adapter name="General Purpose External"
-                 switchname="General Purpose External" />
         <adapter name="Domain Private Site A"
                  switchname="Domain Private Site A">
           <ipv4 address="192.168.128.18"
@@ -430,8 +417,6 @@
         </parameters>
       </dsc>
       <adapters>
-        <adapter name="General Purpose External"
-                 switchname="General Purpose External" />
         <adapter name="Domain Private Site A"
                  switchname="Domain Private Site A">
           <ipv4 address="192.168.128.19"
@@ -445,10 +430,10 @@
         </adapter>
         <adapter name="Internet"
                  switchname="Internet" >
-          <ipv4 address="131.0.0.50"
+          <ipv4 address="131.107.0.50"
                 defaultgateway=""
                 subnetmask="8"
-                dnsserver="131.0.0.10"/>
+                dnsserver="131.107.0.1"/>
         </adapter>
       </adapters>
     </vm>
@@ -466,8 +451,6 @@
         </parameters>
       </dsc>
       <adapters>
-        <adapter name="General Purpose External"
-                 switchname="General Purpose External" />
         <adapter name="Domain Private Site A"
                  switchname="Domain Private Site A">
           <ipv4 address="192.168.128.20"
@@ -481,10 +464,10 @@
         </adapter>
         <adapter name="Internet"
                  switchname="Internet" >
-          <ipv4 address="131.0.0.51"
+          <ipv4 address="131.107.0.51"
                 defaultgateway=""
                 subnetmask="8"
-                dnsserver="131.0.0.10"/>
+                dnsserver="131.107.0.1"/>
         </adapter>
       </adapters>
     </vm>
@@ -503,8 +486,6 @@
         </parameters>
       </dsc>
       <adapters>
-        <adapter name="General Purpose External"
-                 switchname="General Purpose External" />
         <adapter name="Domain Private Site A"
                  switchname="Domain Private Site A">
           <ipv4 address="192.168.128.21"
@@ -533,8 +514,6 @@
         </parameters>
       </dsc>
       <adapters>
-        <adapter name="General Purpose External"
-                 switchname="General Purpose External" />
         <adapter name="Domain Private Site A"
                  switchname="Domain Private Site A">
           <ipv4 address="192.168.128.22"
@@ -571,8 +550,6 @@
         </parameters>
       </dsc>
       <adapters>
-        <adapter name="General Purpose External"
-                 switchname="General Purpose External" />
         <adapter name="Domain Private Site A"
                  switchname="Domain Private Site A">
           <ipv4 address="192.168.128.23"
@@ -602,8 +579,6 @@
         </parameters>
       </dsc>
       <adapters>
-        <adapter name="General Purpose External"
-                 switchname="General Purpose External" />
         <adapter name="Domain Private Site A"
                  switchname="Domain Private Site A">
           <ipv4 address="192.168.128.24"
@@ -632,8 +607,6 @@
         </parameters>
       </dsc>
       <adapters>
-        <adapter name="General Purpose External"
-                 switchname="General Purpose External" />
         <adapter name="Domain Private Site A"
                  switchname="Domain Private Site A">
           <ipv4 address="192.168.128.25"
@@ -653,10 +626,11 @@
       computername="DA_IT01"
       usedifferencingbootdisk="Y">
       <adapters>
-        <adapter name="General Purpose External"
-                 switchname="General Purpose External" />
         <adapter name="Domain Private Site A"
                  switchname="Domain Private Site A" />
+        <adapter name="Internet"
+                 switchname="Internet" >
+        </adapter>
       </adapters>
       <install>
         <msu url="http://download.microsoft.com/download/1/D/8/1D8B5022-5477-4B9A-8104-6A71FF9D98AB/WindowsTH-KB2693643-x64.msu" />
