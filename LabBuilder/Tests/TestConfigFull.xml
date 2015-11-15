@@ -432,7 +432,7 @@
                  switchname="Internet" >
           <ipv4 address="131.107.0.50"
                 defaultgateway=""
-                subnetmask="8"
+                subnetmask="16"
                 dnsserver="131.107.0.1"/>
         </adapter>
       </adapters>
@@ -466,7 +466,7 @@
                  switchname="Internet" >
           <ipv4 address="131.107.0.51"
                 defaultgateway=""
-                subnetmask="8"
+                subnetmask="16"
                 dnsserver="131.107.0.1"/>
         </adapter>
       </adapters>
