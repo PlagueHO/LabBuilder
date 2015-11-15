@@ -1659,6 +1659,21 @@ function Set-LabDSCStartFile {
 
     # Relabel the Network Adapters so that they match what the DSC Networking config will use
     # This is because unfortunately the Hyper-V Device Naming feature doesn't work.
+    # Do the management adapter first
+    $ManagementSwitchName = ('LabBuilder Management {0}' -f $Configuration.labbuilderconfig.name)
+    $NetAdapter = Get-VMNetworkAdapter -VMName $($VM.Name) -Name $ManagementSwitchName
+    If (-not $NetAdapter) {
+        Throw "VM Management Network Adapter $ManagementSwitchName could not be found attached to VM $($VM.Name)."
+    } # If
+    $MacAddress = $NetAdapter.MacAddress
+    If (-not $MacAddress) {
+        Throw "VM Management Network Adapter $ManagementSwitchName attached to VM ($VM.Name) has a blank MAC Address."
+    } # If
+    $DSCStartPs += @"
+Get-NetAdapter | Where-Object { `$_.MacAddress.Replace('-','') -eq '$MacAddress' } | Rename-NetAdapter -NewName '$($Adapter.Name)'
+
+"@
+    # Do the other adapters    
     Foreach ($Adapter in $VM.Adapters) {
         $NetAdapter = Get-VMNetworkAdapter -VMName $($VM.Name) -Name $($Adapter.Name)
         If (-not $NetAdapter) {
