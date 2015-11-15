@@ -2556,8 +2556,8 @@ Export-Certificate -Type CERT -Cert `$Cert -FilePath `"`$(`$ENV:SystemRoot)\Self
                 Try {
                     Copy-Item `
                         -Path "$VMPath\$($VM.Name)\LabBuilder Files\CreateNewSelfSignedCert.ps1" `
-                        -Destination 'c:\windows\setup\scripts\CreateNewSelfSignedCert.ps1' `
-                        -FromSession $Session -ErrorAction Stop
+                        -Destination 'c:\windows\setup\scripts\' `
+                        -ToSession $Session -Force -ErrorAction Stop
                     $Complete = $True
                 } Catch {
                     Write-Verbose "Waiting to upload certificate create script file to $($VM.ComputerName) ..."
@@ -2658,7 +2658,7 @@ function Start-LabVM {
             # No, so check it is initialized and download the cert.
             If (Wait-LabVMInit -VM $VM) {
                 Write-Verbose "Attempting to download certificate for VM $($VM.Name) ..."
-                If (Get-LabVMSelfSignedCert -Configuration $Configuration -VM $VM) {
+                If (New-LabVMSelfSignedCert -Configuration $Configuration -VM $VM) {
                     Write-Verbose "Certificate for VM $($VM.Name) was downloaded successfully ..."
                 } Else {
                     Write-Verbose "Certificate for VM $($VM.Name) could not be downloaded ..."
