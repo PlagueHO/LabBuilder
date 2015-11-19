@@ -37,11 +37,18 @@ Configuration MEMBER_WDS
 			DependsOn = "[WindowsFeature]WDSDeploymentInstall" 
         } 
 
-		WindowsFeature RSATADPowerShell
+		WindowsFeature RSATADPowerShellInstall
         { 
             Ensure = "Present" 
             Name = "RSAT-AD-PowerShell" 
 			DependsOn = "[WindowsFeature]WDSTransportInstall" 
+        } 
+
+		WindowsFeature BitLockerNetworkUnlockInstall
+        { 
+            Ensure = "Present" 
+            Name = "BitLocker-NetworkUnlock" 
+			DependsOn = "[WindowsFeature]RSATADPowerShellInstall" 
         } 
 
         xWaitForADDomain DscDomainWait
@@ -50,7 +57,7 @@ Configuration MEMBER_WDS
             DomainUserCredential = $DomainAdminCredential 
             RetryCount = 100 
             RetryIntervalSec = 10 
-			DependsOn = "[WindowsFeature]RSATADPowerShell" 
+			DependsOn = "[WindowsFeature]BitLockerNetworkUnlockInstall" 
         }
 
 		xComputer JoinDomain 
