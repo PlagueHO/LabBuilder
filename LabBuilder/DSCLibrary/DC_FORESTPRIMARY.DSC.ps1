@@ -23,6 +23,12 @@ Configuration DC_FORESTPRIMARY
             [PSCredential]$DomainAdminCredential = New-Object System.Management.Automation.PSCredential ("Administrator", (ConvertTo-SecureString $Node.DomainAdminPassword -AsPlainText -Force))
         }
 
+        WindowsFeature BackupInstall
+        { 
+            Ensure = "Present" 
+            Name = "Windows-Server-Backup" 
+        } 
+
         WindowsFeature DNSInstall 
         { 
             Ensure = "Present" 
@@ -40,7 +46,7 @@ Configuration DC_FORESTPRIMARY
         {
             Ensure = "Present"
             Name = "RSAT-AD-PowerShell"
-            DependsOn = "[WindowsFeature]ADDSInstall" 
+            DependsOn = "[WindowsFeature]ADDSInstall"
         }
 
         xADDomain PrimaryDC 

@@ -22,18 +22,31 @@ Configuration DC_SECONDARY
 			[PSCredential]$DomainAdminCredential = New-Object System.Management.Automation.PSCredential ("$($Node.DomainName)\Administrator", (ConvertTo-SecureString $Node.DomainAdminPassword -AsPlainText -Force))
 		}
 
-		WindowsFeature DNSInstall 
+        WindowsFeature BackupInstall
+        { 
+            Ensure = "Present" 
+            Name = "Windows-Server-Backup" 
+        } 
+
+        WindowsFeature DNSInstall 
         { 
             Ensure = "Present" 
             Name = "DNS" 
         } 
 
-		WindowsFeature ADDSInstall 
+        WindowsFeature ADDSInstall 
         { 
             Ensure = "Present" 
             Name = "AD-Domain-Services" 
-			DependsOn = "[WindowsFeature]DNSInstall" 
+            DependsOn = "[WindowsFeature]DNSInstall" 
         } 
+        
+        WindowsFeature RSAT-AD-PowerShellInstall
+        {
+            Ensure = "Present"
+            Name = "RSAT-AD-PowerShell"
+            DependsOn = "[WindowsFeature]ADDSInstall"
+        }
 
         xWaitForADDomain DscDomainWait
         {
