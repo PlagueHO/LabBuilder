@@ -14,7 +14,7 @@
   <switches />
 
   <templates fromvm="pester template *">
-    <template name="No VHD"
+    <template name="Bad VHD"
               vhd="Windows Server 2012 R2 Datacenter Full.vhdx"
               sourcevhd="This File Doesnt Exist.vhdx"
               installiso="Tests\DummyISO\9600.16384.130821-1623_x64fre_Server_EN-US_IRM_SSS_DV5.iso"

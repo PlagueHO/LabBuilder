@@ -19,7 +19,7 @@ SwitchNameIsEmptyError=Switch name is empty.
 UnknownSwitchTypeError=Unknown switch type '{0}' specified for switch '{1}'.
 AdapterSpecifiedError=Adapter specified on '{0}' swtich '{1}'.
 EmptyTemplateNameError=Template Name is missing or empty.
-EmptyTemplateVHDNameError=VHD Name in Template '{0}' is missing or empty.
+EmptyTemplateVHDError=VHD in Template '{0}' is empty.
 TemplateSourceVHDNotFoundError=The Template Source VHD '{0}' in Template '{1}' could not be found.
 InstallingHyperVComponentsMesage=Installing {0} Hyper-V Components.
 InitializingHyperVComponentsMesage=Initializing Hyper-V Components.
@@ -1162,7 +1162,7 @@ function Get-LabVMTemplates {
 
     [System.Collections.Hashtable[]]$VMTemplates = @()
     [String]$VHDParentPath = $Configuration.labbuilderconfig.SelectNodes('settings').vhdparentpath
-
+    
     # Get a list of all templates in the Hyper-V system matching the phrase found in the fromvm
     # config setting
     [String]$FromVM=$Configuration.labbuilderconfig.SelectNodes('templates').fromvm
@@ -1174,10 +1174,10 @@ function Get-LabVMTemplates {
             [String]$VHDFilepath = ($Template | Get-VMHardDiskDrive).Path
             [String]$VHDFilename = [System.IO.Path]::GetFileName($VHDFilepath)
             $VMTemplates += @{
-                name = $Template.Name;
-                vhd = $VHDFilename;
-                sourcevhd = $VHDFilepath;
-                templatevhd = "$VHDParentPath\$VHDFilename";
+                name = $Template.Name
+                vhd = $VHDFilename
+                sourcevhd = $VHDFilepath
+                templatevhd = "$VHDParentPath\$VHDFilename"
             }
         } # Foreach
     } # If
@@ -1249,10 +1249,10 @@ function Get-LabVMTemplates {
                 # Check that we do end up with a VHD filename in the template
                 If (-not $VMTemplate.VHD)
                 {
-                    $errorId = 'EmptyTemplateVHDNameError'
+                    $errorId = 'EmptyTemplateVHDError'
                     $errorCategory = [System.Management.Automation.ErrorCategory]::InvalidArgument
-                    $errorMessage = $($LocalizedData.EmptyTemplateVHDNameError `
-                        -f $VMTemplate.VHD)
+                    $errorMessage = $($LocalizedData.EmptyTemplateVHDError `
+                        -f $VMTemplate.Name)
                     $exception = New-Object -TypeName System.InvalidOperationException `
                         -ArgumentList $errorMessage
                     $errorRecord = New-Object -TypeName System.Management.Automation.ErrorRecord `

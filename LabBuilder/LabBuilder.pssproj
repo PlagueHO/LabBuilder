@@ -36,6 +36,10 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="Artifacts\Switches.json" />
+    <Compile Include="Artifacts\UnattendFile.xml" />
+    <Compile Include="Artifacts\VMs.json" />
+    <Compile Include="Artifacts\VMTemplates.json" />
     <Compile Include="DSCLibrary\RODC_SECONDARY.DSC.ps1" />
     <Compile Include="DSCLibrary\MEMBER_DHCPNPAS.DSC.ps1" />
     <Compile Include="DSCLibrary\MEMBER_DHCPDNS.DSC.ps1" />
@@ -53,6 +57,10 @@
     <Compile Include="DSCLibrary\STANDALONE_ROOTCA.DSC.ps1" />
     <Compile Include="LabBuilder.psd1" />
     <Compile Include="LabBuilder.psm1" />
+    <Compile Include="Samples\Sample_DCandDHCPOnly.xml" />
+    <Compile Include="Samples\Sample_FullDomain.xml" />
+    <Compile Include="Samples\Sample_Simple.xml" />
+    <Compile Include="Tests\Test_FullDomain.ps1" />
     <Compile Include="Tests\Unit\LabBuilder.tests.ps1" />
     <Compile Include="README.md" />
     <Compile Include="DSCLibrary\STANDALONE_DEFAULT.DSC.ps1" />
@@ -61,14 +69,11 @@
     <Compile Include="DSCLibrary\STANDALONE_ROOTCA_NOSUBCA.DSC.ps1" />
     <Compile Include="Tests\PesterTestConfig\PesterTest.DSC.ps1" />
     <Compile Include="Tests\PesterTestConfig\PesterTestConfig.OK.xml" />
-    <Compile Include="Tests\TestConfigDCandDHCPOnly.ps1" />
-    <Compile Include="Tests\TestConfigSimple.ps1" />
-    <Compile Include="Tests\TestConfigFull.ps1" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="DSCLibrary\" />
     <Folder Include="Artifacts\" />
-    <Folder Include="TestHelpers\" />
+    <Folder Include="Samples\" />
     <Folder Include="Tests\" />
     <Folder Include="Tests\Unit\" />
     <Folder Include="Tests\PesterTestConfig\" />
@@ -97,9 +102,6 @@
     <Content Include="Tests\PesterTestConfig\PesterTestConfig.SwitchFail.BadType.xml" />
     <Content Include="Tests\PesterTestConfig\PesterTestConfig.SwitchFail.NoType.xml" />
     <Content Include="Tests\PesterTestConfig\PesterTestConfig.SwitchFail.NoName.xml" />
-    <Content Include="Tests\TestConfigDCandDHCPOnly.xml" />
-    <Content Include="Tests\TestConfigSimple.xml" />
-    <Content Include="Tests\TestConfigFull.xml" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <Target Name="Build" />

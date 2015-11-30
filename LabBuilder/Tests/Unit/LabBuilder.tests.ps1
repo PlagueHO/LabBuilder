@@ -749,7 +749,7 @@ Describe 'Get-LabSwitches' {
             $errorRecord = New-Object -TypeName System.Management.Automation.ErrorRecord `
                 -ArgumentList $exception, $errorId, $errorCategory, $null
 
-			{ Get-LabSwitches -Configuration (Get-LabConfiguration -Path "$Global:TestConfigPath\PesterTestConfig.SwitchFail.NoName.xml") } | Should Throw
+			{ Get-LabSwitches -Configuration (Get-LabConfiguration -Path "$Global:TestConfigPath\PesterTestConfig.SwitchFail.NoName.xml") } | Should Throw $errorRecord
 		}
 	}
 	Context 'Configuration passed with switch missing Switch Type.' {
@@ -763,7 +763,7 @@ Describe 'Get-LabSwitches' {
             $errorRecord = New-Object -TypeName System.Management.Automation.ErrorRecord `
                 -ArgumentList $exception, $errorId, $errorCategory, $null
 
-			{ Get-LabSwitches -Configuration (Get-LabConfiguration -Path "$Global:TestConfigPath\PesterTestConfig.SwitchFail.NoType.xml") } | Should Throw
+			{ Get-LabSwitches -Configuration (Get-LabConfiguration -Path "$Global:TestConfigPath\PesterTestConfig.SwitchFail.NoType.xml") } | Should Throw $errorRecord
 		}
 	}
 	Context 'Configuration passed with switch invalid Switch Type.' {
@@ -777,7 +777,7 @@ Describe 'Get-LabSwitches' {
             $errorRecord = New-Object -TypeName System.Management.Automation.ErrorRecord `
                 -ArgumentList $exception, $errorId, $errorCategory, $null
 
-			{ Get-LabSwitches -Configuration (Get-LabConfiguration -Path "$Global:TestConfigPath\PesterTestConfig.SwitchFail.BadType.xml") } | Should Throw
+			{ Get-LabSwitches -Configuration (Get-LabConfiguration -Path "$Global:TestConfigPath\PesterTestConfig.SwitchFail.BadType.xml") } | Should Throw $errorRecord
 		}
 	}
 	Context 'Configuration passed with switch containing adapters but is not External type.' {
@@ -791,7 +791,7 @@ Describe 'Get-LabSwitches' {
             $errorRecord = New-Object -TypeName System.Management.Automation.ErrorRecord `
                 -ArgumentList $exception, $errorId, $errorCategory, $null
 
-			{ Get-LabSwitches -Configuration (Get-LabConfiguration -Path "$Global:TestConfigPath\PesterTestConfig.SwitchFail.AdaptersSet.xml") } | Should Throw
+			{ Get-LabSwitches -Configuration (Get-LabConfiguration -Path "$Global:TestConfigPath\PesterTestConfig.SwitchFail.AdaptersSet.xml") } | Should Throw $errorRecord
 		}
 	}
 	Context 'Valid configuration is passed' {
@@ -945,26 +945,55 @@ Describe 'Get-LabVMTemplates' {
 	Mock Get-VM
 	
 	Context 'Configuration passed with template missing Template Name.' {
-		It 'Fails' {
-			{ Get-LabVMTemplates -Configuration (Get-LabConfiguration -Path "$Global:TestConfigPath\PesterTestConfig.TemplateFail.NoName.xml") } | Should Throw
+		It 'Throws a EmptyTemplateNameError Exception' {
+            $errorId = 'EmptyTemplateNameError'
+            $errorCategory = [System.Management.Automation.ErrorCategory]::InvalidArgument
+            $errorMessage = $($LocalizedData.EmptyTemplateNameError)
+            $exception = New-Object -TypeName System.InvalidOperationException `
+                -ArgumentList $errorMessage
+            $errorRecord = New-Object -TypeName System.Management.Automation.ErrorRecord `
+                -ArgumentList $exception, $errorId, $errorCategory, $null
+
+			{ Get-LabVMTemplates -Configuration (Get-LabConfiguration -Path "$Global:TestConfigPath\PesterTestConfig.TemplateFail.NoName.xml") } | Should Throw $errorRecord
 		}
 	}
 	Context 'Configuration passed with template missing VHD Path.' {
-		It 'Fails' {
-			{ Get-LabVMTemplates -Configuration (Get-LabConfiguration -Path "$Global:TestConfigPath\PesterTestConfig.TemplateFail.NoVHD.xml") } | Should Throw
+		It 'Throws a EmptyTemplateVHDError Exception' {
+            $errorId = 'EmptyTemplateVHDError'
+            $errorCategory = [System.Management.Automation.ErrorCategory]::InvalidArgument
+            $errorMessage = $($LocalizedData.EmptyTemplateVHDError `
+				-f 'No VHD')
+            $exception = New-Object -TypeName System.InvalidOperationException `
+                -ArgumentList $errorMessage
+            $errorRecord = New-Object -TypeName System.Management.Automation.ErrorRecord `
+                -ArgumentList $exception, $errorId, $errorCategory, $null
+
+			{ Get-LabVMTemplates -Configuration (Get-LabConfiguration -Path "$Global:TestConfigPath\PesterTestConfig.TemplateFail.NoVHD.xml") } | Should Throw $errorRecord
 		}
 	}
 	Context 'Configuration passed with template with Source VHD set to non-existent file.' {
-		It 'Fails' {
-			{ Get-LabVMTemplates -Configuration (Get-LabConfiguration -Path "$Global:TestConfigPath\PesterTestConfig.TemplateFail.BadSourceVHD.xml") } | Should Throw
+		It 'Throws a TemplateSourceVHDNotFoundError Exception' {
+            $errorId = 'TemplateSourceVHDNotFoundError'
+            $errorCategory = [System.Management.Automation.ErrorCategory]::InvalidArgument
+            $errorMessage = $($LocalizedData.TemplateSourceVHDNotFoundError `
+				-f 'This File Doesnt Exist.vhdx','Bad VHD')
+            $exception = New-Object -TypeName System.InvalidOperationException `
+                -ArgumentList $errorMessage
+            $errorRecord = New-Object -TypeName System.Management.Automation.ErrorRecord `
+                -ArgumentList $exception, $errorId, $errorCategory, $null
+
+			{ Get-LabVMTemplates -Configuration (Get-LabConfiguration -Path "$Global:TestConfigPath\PesterTestConfig.TemplateFail.BadSourceVHD.xml") } | Should Throw $errorRecord
 		}
 	}
-	Context 'Valid configuration is passed' {
-		$Config = Get-LabConfiguration -Path $Global:TestConfigOKPath
-		[Array]$Templates = Get-LabVMTemplates -Configuration $Config 
+	
+	$Config = Get-LabConfiguration -Path $Global:TestConfigOKPath
 
+	Mock Get-VM
+		
+	Context 'Valid configuration is passed but no templates found' {
 		Set-Content -Path "$($Global:ArtifactPath)\VMTemplates.json" -Value ($Templates | ConvertTo-Json -Depth 2) -Encoding UTF8 -NoNewLine
 		It 'Returns Template Object that matches Expected Object' {
+			[Array]$Templates = Get-LabVMTemplates -Configuration $Config 
 			$ExpectedTemplates = Get-Content -Path "$Global:TestConfigPath\ExpectedTemplates.json" -Raw
 			[String]::Compare(($Templates | ConvertTo-Json -Depth 2),$ExpectedTemplates,$true) | Should Be 0
 		}
@@ -972,6 +1001,26 @@ Describe 'Get-LabVMTemplates' {
 			Assert-MockCalled Get-VM -Exactly 1
 		}
 	}
+
+	Mock Get-VM -MockWith { @( 
+			@{ name = 'Pester Windows Server 2012 R2 Datacenter Full' }
+			@{ name = 'Pester Windows Server 2012 R2 Datacenter Core' } 
+			@{ name = 'Pester Windows 10 Enterprise' } 
+		) }
+	Mock Get-VMHardDiskDrive
+
+	Context 'Valid configuration is passed but templates are found' {
+		Set-Content -Path "$($Global:ArtifactPath)\VMTemplates.json" -Value ($Templates | ConvertTo-Json -Depth 2) -Encoding UTF8 -NoNewLine
+		It 'Returns Template Object that matches Expected Object' {
+			[Array]$Templates = Get-LabVMTemplates -Configuration $Config 
+			$ExpectedTemplates = Get-Content -Path "$Global:TestConfigPath\ExpectedTemplates.json" -Raw
+			[String]::Compare(($Templates | ConvertTo-Json -Depth 2),$ExpectedTemplates,$true) | Should Be 0
+		}
+		It 'Calls Mocked commands' {
+			Assert-MockCalled Get-VM -Exactly 1
+		}
+	}
+
 }
 ####################################################################################################
 

@@ -54,9 +54,9 @@
   </templates>
 
   <vms>   
-    <vm name="LABBUILDER.COM SS_DEFAULT"
+    <vm name="LABBUILDER.COM SS-DEFAULT"
         template="Template Windows Server 2012 R2 Datacenter FULL"
-        computername="SS_DEFAULT"
+        computername="SS-DEFAULT"
         usedifferencingbootdisk="Y">
       <dsc configname="STANDALONE_DEFAULT"
            configfile="STANDALONE_DEFAULT.DSC.ps1">

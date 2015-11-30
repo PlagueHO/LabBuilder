@@ -33,7 +33,7 @@
     <switch name="Pester Test Internal" type="Internal" />
   </switches>
 
-  <templates fromvm="pester template *">
+  <templates fromvm="Pester *">
     <template name="Pester Windows Server 2012 R2 Datacenter Full"
               vhd="Windows Server 2012 R2 Datacenter Full.vhdx"
               sourcevhd=".\Tests\PesterTestConfig\Windows Server 2012 R2 Datacenter Full.vhdx"
