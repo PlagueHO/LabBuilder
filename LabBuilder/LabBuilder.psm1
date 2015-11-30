@@ -17,6 +17,7 @@ ResourceModuleNameEmptyError=Resource Module Name is missing or empty.
 ModuleNotAvailableError=Error installing Module '{0}' ({1}); {2}.
 SwitchNameIsEmptyError=Switch name is empty.
 UnknownSwitchTypeError=Unknown switch type '{0}' specified for switch '{1}'.
+AdapterSpecifiedError=Adapter specified on '{0}' swtich '{1}'.
 EmptyTemplateNameError=Template Name is missing or empty.
 EmptyTemplateVHDNameError=VHD Name in Template '{0}' is missing or empty.
 TemplateSourceVHDNotFoundError=The Template Source VHD '{0}' in Template '{1}' could not be found.
@@ -181,7 +182,8 @@ function Get-ModulesInDSCConfig()
 {
     [CmdletBinding()]
     [OutputType([String[]])]
-    Param (
+    Param
+    (
         [Parameter(
             Mandatory=$True,
             Position=0)]
@@ -222,7 +224,8 @@ function Get-ModulesInDSCConfig()
 function Get-LabConfiguration {
     [CmdLetBinding()]
     [OutputType([XML])]
-    param (
+    param
+    (
         [parameter(
             Mandatory,
             Position=0)]
@@ -296,7 +299,8 @@ function Get-LabConfiguration {
 function Test-LabConfiguration {
     [CmdLetBinding()]
     [OutputType([Boolean])]
-    param (
+    param
+    (
         [Parameter(
             Mandatory,
             Position=0)]
@@ -423,7 +427,9 @@ function Install-LabHyperV {
                 Enable-WindowsOptionalFeature -Online -FeatureName $_.FeatureName
             } )
         }
-    } Else {
+    }
+    Else
+    {
         # Server OS
         [Array]$Feature = Get-WindowsFeature -Name Hyper-V `
             | Where-Object -Property Installed -EQ $false
@@ -459,7 +465,8 @@ function Install-LabHyperV {
 function Initialize-LabConfiguration {
     [CmdLetBinding()]
     [OutputType([Boolean])]
-    param (
+    param
+    (
         [Parameter(
             Mandatory,
             Position=0)]
@@ -541,7 +548,8 @@ function Initialize-LabConfiguration {
 function Download-LabModule {
     [CmdLetBinding()]
     [OutputType([Boolean])]
-    param (
+    param
+    (
         [Parameter(
             Mandatory,
             Position=0)]
@@ -717,7 +725,8 @@ function Download-LabModule {
 function Download-LabResources {
     [CmdLetBinding()]
     [OutputType([Boolean])]
-    param (
+    param
+    (
         [Parameter(
             Mandatory,
             Position=0)]
@@ -788,7 +797,8 @@ function Download-LabResources {
 function Get-LabSwitches {
     [OutputType([Array])]
     [CmdLetBinding()]
-    param (
+    param
+    (
         [Parameter(
             Mandatory,
             Position=0)]
@@ -798,27 +808,61 @@ function Get-LabSwitches {
 
     [Array]$Switches = @() 
     $ConfigSwitches = $Configuration.labbuilderconfig.SelectNodes('switches').Switch
-    Foreach ($ConfigSwitch in $ConfigSwitches) {
+    Foreach ($ConfigSwitch in $ConfigSwitches)
+    {
         # It can't be switch because if the name attrib/node is missing the name property on the
         # XML object defaults to the name of the parent. So we can't easily tell if no name was
         # specified or if they actually specified 'switch' as the name.
-        If ($ConfigSwitch.Name -eq 'switch') {
-            Throw "The switch name cannot be 'switch' or empty."
+        If ($ConfigSwitch.Name -eq 'switch')
+        {
+            $errorId = 'SwitchNameIsEmptyError'
+            $errorCategory = [System.Management.Automation.ErrorCategory]::InvalidArgument
+            $errorMessage = $($LocalizedData.SwitchNameIsEmptyError)
+            $exception = New-Object -TypeName System.InvalidOperationException `
+                -ArgumentList $errorMessage
+            $errorRecord = New-Object -TypeName System.Management.Automation.ErrorRecord `
+                -ArgumentList $exception, $errorId, $errorCategory, $null
+
+            $PSCmdlet.ThrowTerminatingError($errorRecord)
         }
-        If ($ConfigSwitch.Type -notin 'Private','Internal','External') {
-            Throw 'The switch type must be Private, Internal or External.'
+        If ($ConfigSwitch.Type -notin 'Private','Internal','External')
+        {
+            $errorId = 'UnknownSwitchTypeError'
+            $errorCategory = [System.Management.Automation.ErrorCategory]::InvalidArgument
+            $errorMessage = $($LocalizedData.UnknownSwitchTypeError `
+                -f $ConfigSwitch.Type,$ConfigSwitch.Name)
+            $exception = New-Object -TypeName System.InvalidOperationException `
+                -ArgumentList $errorMessage
+            $errorRecord = New-Object -TypeName System.Management.Automation.ErrorRecord `
+                -ArgumentList $exception, $errorId, $errorCategory, $null
+
+            $PSCmdlet.ThrowTerminatingError($errorRecord)
         }
         # Assemble the list of Adapters if any are specified for this switch (only if an external
         # switch)
-        If ($ConfigSwitch.Adapters) {
+        If ($ConfigSwitch.Adapters)
+        {
             [System.Collections.Hashtable[]]$ConfigAdapters = @()
-            Foreach ($Adapter in $ConfigSwitch.Adapters.Adapter) {
+            Foreach ($Adapter in $ConfigSwitch.Adapters.Adapter)
+            {
                 $ConfigAdapters += @{ name = $Adapter.Name; macaddress = $Adapter.MacAddress }
             }
-            If (($ConfigAdapters.Count -gt 0) -and ($ConfigSwitch.Type -ne 'External')) {
-                Throw 'Adapters can only be specified for External type switches.'
+            If (($ConfigAdapters.Count -gt 0) -and ($ConfigSwitch.Type -ne 'External'))
+            {
+                $errorId = 'AdapterSpecifiedError'
+                $errorCategory = [System.Management.Automation.ErrorCategory]::InvalidArgument
+                $errorMessage = $($LocalizedData.AdapterSpecifiedError `
+                    -f $ConfigSwitch.Type,$ConfigSwitch.Name)
+                $exception = New-Object -TypeName System.InvalidOperationException `
+                    -ArgumentList $errorMessage
+                $errorRecord = New-Object -TypeName System.Management.Automation.ErrorRecord `
+                    -ArgumentList $exception, $errorId, $errorCategory, $null
+    
+                $PSCmdlet.ThrowTerminatingError($errorRecord)
             }
-        } Else {
+        }
+        Else
+        {
             $ConfigAdapters = $null
         }
         $Switches += [PSObject]@{
@@ -853,7 +897,8 @@ function Get-LabSwitches {
 #>
 function Initialize-LabSwitches {
     [CmdLetBinding()]
-    param (
+    param
+    (
         [Parameter(
             Mandatory,
             Position=0)]
@@ -868,11 +913,14 @@ function Initialize-LabSwitches {
     )
 
     # Create Hyper-V Switches
-    Foreach ($VMSwitch in $Switches) {
-        If ((Get-VMSwitch | Where-Object -Property Name -eq $($VMSwitch.Name)).Count -eq 0) {
+    Foreach ($VMSwitch in $Switches)
+    {
+        If ((Get-VMSwitch | Where-Object -Property Name -eq $($VMSwitch.Name)).Count -eq 0)
+        {
             [String]$SwitchName = $VMSwitch.Name
-            If (-not $SwitchName) {
-                $errorId = 'UnknownSwitchTypeError'
+            If (-not $SwitchName)
+            {
+                $errorId = 'SwitchNameIsEmptyError'
                 $errorCategory = [System.Management.Automation.ErrorCategory]::InvalidArgument
                 $errorMessage = $($LocalizedData.SwitchNameIsEmptyError)
                 $exception = New-Object -TypeName System.InvalidOperationException `
@@ -885,8 +933,10 @@ function Initialize-LabSwitches {
             [string]$SwitchType = $VMSwitch.Type
             Write-Verbose -Message $($LocalizedData.CreatingVirtualSwitchMessage `
                 -f $SwitchType,$SwitchName)
-            Switch ($SwitchType) {
-                'External' {
+            Switch ($SwitchType)
+            {
+                'External'
+                {
                     $null = New-VMSwitch `
                         -Name $SwitchName `
                         -NetAdapterName (`
@@ -894,9 +944,12 @@ function Initialize-LabSwitches {
                             Where-Object { $_.Status -eq 'Up' } | `
                             Select-Object -First 1 -ExpandProperty Name `
                             )
-                    If ($VMSwitch.Adapters) {
-                        Foreach ($Adapter in $VMSwitch.Adapters) {
-                            If ($VMSwitch.VLan) {
+                    If ($VMSwitch.Adapters)
+                    {
+                        Foreach ($Adapter in $VMSwitch.Adapters)
+                        {
+                            If ($VMSwitch.VLan)
+                            {
                                 # A default VLAN is assigned to this Switch so assign it to the
                                 # management adapters
                                 $null = Add-VMNetworkAdapter `
@@ -906,7 +959,9 @@ function Initialize-LabSwitches {
                                     -StaticMacAddress $($Adapter.MacAddress) `
                                     -Passthru | `
                                     Set-VMNetworkAdapterVlan -Access -VlanId $($Switch.Vlan)
-                            } Else { 
+                            }
+                            Else
+                            { 
                                 $null = Add-VMNetworkAdapter `
                                     -ManagementOS `
                                     -SwitchName $SwitchName `
@@ -917,15 +972,20 @@ function Initialize-LabSwitches {
                     } # If
                     Break
                 } # 'External'
-                'Private' {
+                'Private'
+                {
                     $null = New-VMSwitch -Name $SwitchName -SwitchType Private
                     Break
                 } # 'Private'
-                'Internal' {
+                'Internal'
+                {
                     $null = New-VMSwitch -Name $SwitchName -SwitchType Internal
-                    If ($VMSwitch.Adapters) {
-                        Foreach ($Adapter in $VMSwitch.Adapters) {
-                            If ($VMSwitch.VLan) {
+                    If ($VMSwitch.Adapters)
+                    {
+                        Foreach ($Adapter in $VMSwitch.Adapters)
+                        {
+                            If ($VMSwitch.VLan)
+                            {
                                 # A default VLAN is assigned to this Switch so assign it to the
                                 # management adapters
                                 $null = Add-VMNetworkAdapter `
@@ -935,7 +995,9 @@ function Initialize-LabSwitches {
                                     -StaticMacAddress $($Adapter.MacAddress) `
                                     -Passthru | `
                                     Set-VMNetworkAdapterVlan -Access -VlanId $($Switch.Vlan)
-                            } Else { 
+                            }
+                            Else
+                            { 
                                 $null = Add-VMNetworkAdapter `
                                     -ManagementOS `
                                     -SwitchName $SwitchName `
@@ -946,7 +1008,8 @@ function Initialize-LabSwitches {
                     } # If
                     Break
                 } # 'Internal'
-                Default {
+                Default
+                {
                     $errorId = 'UnknownSwitchTypeError'
                     $errorCategory = [System.Management.Automation.ErrorCategory]::InvalidArgument
                     $errorMessage = $($LocalizedData.UnknownSwitchTypeError `
@@ -984,7 +1047,8 @@ function Initialize-LabSwitches {
    Returns true if the Lab switches were created correctly.#>
 function Remove-LabSwitches {
     [CmdLetBinding()]
-    param (
+    param
+    (
         [Parameter(
             Mandatory,
             Position=0)]
@@ -999,10 +1063,13 @@ function Remove-LabSwitches {
     )
 
     # Delete Hyper-V Switches
-    Foreach ($Switch in $Switches) {
-        If ((Get-VMSwitch | Where-Object -Property Name -eq $Switch.Name).Count -ne 0) {
+    Foreach ($Switch in $Switches)
+    {
+        If ((Get-VMSwitch | Where-Object -Property Name -eq $Switch.Name).Count -ne 0)
+        {
             [String]$SwitchName = $Switch.Name
-            If (-not $SwitchName) {
+            If (-not $SwitchName)
+            {
                 $errorId = 'UnknownSwitchTypeError'
                 $errorCategory = [System.Management.Automation.ErrorCategory]::InvalidArgument
                 $errorMessage = $($LocalizedData.SwitchNameIsEmptyError)
@@ -1016,9 +1083,12 @@ function Remove-LabSwitches {
             [string]$SwitchType = $Switch.Type
             Write-Verbose -Message $($LocalizedData.DeleteingVirtualSwitchMessage `
                 -f $SwitchType,$SwitchName)
-            Switch ($SwitchType) {
-                'External' {
-                    If ($Switch.Adapters) {
+            Switch ($SwitchType)
+            {
+                'External'
+                {
+                    If ($Switch.Adapters)
+                    {
                         $Switch.Adapters.foreach( {
                             $null = Remove-VMNetworkAdapter -ManagementOS -Name $_.Name
                         } )
@@ -1026,20 +1096,24 @@ function Remove-LabSwitches {
                     Remove-VMSwitch -Name $SwitchName
                     Break
                 } # 'External'
-                'Private' {
+                'Private'
+                {
                     Remove-VMSwitch -Name $SwitchName
                     Break
                 } # 'Private'
-                'Internal' {
+                'Internal'
+                {
                     Remove-VMSwitch -Name $SwitchName
-                    If ($Switch.Adapters) {
+                    If ($Switch.Adapters)
+                    {
                         $Switch.Adapters.foreach( {
                             $null = Remove-VMNetworkAdapter -ManagementOS -Name $_.Name
                         } )
                     } # If
                     Break
                 } # 'Internal'
-                Default {
+                Default
+                {
                     $errorId = 'UnknownSwitchTypeError'
                     $errorCategory = [System.Management.Automation.ErrorCategory]::InvalidArgument
                     $errorMessage = $($LocalizedData.UnknownSwitchTypeError `
@@ -1060,24 +1134,25 @@ function Remove-LabSwitches {
 ####################################################################################################
 <#
 .Synopsis
-   Short description
+   Gets an Array of VM Templates for a Lab configuration.
 .DESCRIPTION
-   Long description
+   Takes a provided Lab Configuration file and returns the list of Virtul Machine template machines
+   that will be used to create the Virtual Machines in this lab. This list is usually passed to
+   Initialize-LabVMTemplates.
+.PARAMETER Configuration
+   Contains the Lab Builder configuration object that was loaded by the Get-LabConfiguration object.
 .EXAMPLE
-   Example of how to use this cmdlet
-.EXAMPLE
-   Another example of how to use this cmdlet
-.INPUTS
-   Inputs to this cmdlet (if any)
+   $Config = Get-LabConfiguration -Path c:\mylab\config.xml
+   $Switches = Get-LabVMTemplates -Configuration $Config
+   Loads a Lab Builder configuration and pulls the array of VMTemplates from it.
 .OUTPUTS
-   Output from this cmdlet (if any)
-.NOTES
-   General notes
+   Returns an array of VM Templates.
 #>
 function Get-LabVMTemplates {
     [OutputType([System.Collections.Hashtable[]])]
     [CmdLetBinding()]
-    param (
+    param
+    (
         [Parameter(
             Mandatory,
             Position=0)]
@@ -1091,9 +1166,11 @@ function Get-LabVMTemplates {
     # Get a list of all templates in the Hyper-V system matching the phrase found in the fromvm
     # config setting
     [String]$FromVM=$Configuration.labbuilderconfig.SelectNodes('templates').fromvm
-    If ($FromVM) {
+    If ($FromVM)
+    {
         $Templates = Get-VM -Name $FromVM
-        Foreach ($Template in $Templates) {
+        Foreach ($Template in $Templates)
+        {
             [String]$VHDFilepath = ($Template | Get-VMHardDiskDrive).Path
             [String]$VHDFilename = [System.IO.Path]::GetFileName($VHDFilepath)
             $VMTemplates += @{
@@ -1107,11 +1184,13 @@ function Get-LabVMTemplates {
     
     # Read the list of templates from the configuration file
     $Templates = $Configuration.labbuilderconfig.SelectNodes('templates').template
-    Foreach ($Template in $Templates) {
+    Foreach ($Template in $Templates)
+    {
         # It can't be template because if the name attrib/node is missing the name property on
         # the XML object defaults to the name of the parent. So we can't easily tell if no name
         # was specified or if they actually specified 'template' as the name.
-        If ($Template.Name -eq 'template') {
+        If ($Template.Name -eq 'template')
+        {
             $errorId = 'EmptyTemplateNameError'
             $errorCategory = [System.Management.Automation.ErrorCategory]::InvalidArgument
             $errorMessage = $($LocalizedData.EmptyTemplateNameError)
@@ -1122,9 +1201,11 @@ function Get-LabVMTemplates {
 
             $PSCmdlet.ThrowTerminatingError($errorRecord)
         } # If
-        If ($Template.SourceVHD) {
+        If ($Template.SourceVHD)
+        {
             # A Source VHD file was specified - does it exist?
-            If (-not (Test-Path -Path $Templates.SourceVHD)) {
+            If (-not (Test-Path -Path $Templates.SourceVHD))
+            {
                 $errorId = 'TemplateSourceVHDNotFoundError'
                 $errorCategory = [System.Management.Automation.ErrorCategory]::InvalidArgument
                 $errorMessage = $($LocalizedData.TemplateSourceVHDNotFoundError `
@@ -1140,28 +1221,34 @@ function Get-LabVMTemplates {
         
         # Get the Template Default Startup Bytes
         [Int64]$MemortStartupBytes = 0
-        If ($Template.MemoryStartupBytes) {
+        If ($Template.MemoryStartupBytes)
+        {
             $MemortStartupBytes = (Invoke-Expression $Template.MemoryStartupBytes)
         } # If
 
         # Get the Template Default Data VHD Size
         [Int64]$DataVHDSize = 0
-        If ($Template.DataVHDSize) {
+        If ($Template.DataVHDSize)
+        {
             $DataVHDSize = (Invoke-Expression $Template.DataVHDSize)
         } # If
                 
         # Does the template already exist in the list?
         [Boolean]$Found = $False
-        Foreach ($VMTemplate in $VMTemplates) {
-            If ($VMTemplate.Name -eq $Template.Name) {
+        Foreach ($VMTemplate in $VMTemplates)
+        {
+            If ($VMTemplate.Name -eq $Template.Name)
+            {
                 # The template already exists - so don't add it again, but update the VHD path
                 # if provided
-                If ($Template.VHD) {
+                If ($Template.VHD)
+                {
                     $VMTemplate.VHD = $Template.VHD
                     $VMTemplate.TemplateVHD = "$VHDParentPath\$([System.IO.Path]::GetFileName($Template.VHD))"
                 } # If
                 # Check that we do end up with a VHD filename in the template
-                If (-not $VMTemplate.VHD) {
+                If (-not $VMTemplate.VHD)
+                {
                     $errorId = 'EmptyTemplateVHDNameError'
                     $errorCategory = [System.Management.Automation.ErrorCategory]::InvalidArgument
                     $errorMessage = $($LocalizedData.EmptyTemplateVHDNameError `
@@ -1178,27 +1265,36 @@ function Get-LabVMTemplates {
                 $VMTemplate.Edition = $Template.Edtion
                 $VMTemplate.AllowCreate = $Template.AllowCreate
                 # Write any template specific default VM attributes
-                If ($MemortStartupBytes) {
+                If ($MemortStartupBytes)
+                {
                     $VMTemplate.MemoryStartupBytes = $MemortStartupBytes
                 } # If
-                If ($Templates.ProcessorCount) {
+                If ($Templates.ProcessorCount)
+                {
                     $VMTemplate.ProcessorCount = $Template.ProcessorCount
                 } # If
-                If ($DataVHDSize) {
+                If ($DataVHDSize)
+                {
                     $VMTemplate.DataVHDSize = $DataVHDSize
                 } # If
-                If ($Templates.AdministratorPassword) {
+                If ($Templates.AdministratorPassword)
+                {
                     $VMTemplate.AdministratorPassword = $Template.AdministratorPassword
                 } # If
-                If ($Templates.ProductKey) {
+                If ($Templates.ProductKey)
+                {
                     $VMTemplate.ProductKey = $Template.ProductKey
                 } # If
-                If ($Templates.TimeZone) {
+                If ($Templates.TimeZone)
+                {
                     $VMTemplate.TimeZone = $Template.TimeZone
                 } # If
-                If ($Templates.OSType) {
+                If ($Templates.OSType)
+                {
                     $VMTemplate.OSType = $Template.OSType
-                } Else {
+                }
+                Else
+                {
                     $VMTemplate.OSType = 'Server'
                 }
 
@@ -1206,9 +1302,11 @@ function Get-LabVMTemplates {
                 Break
             } # If
         } # Foreach
-        If (-not $Found) {
+        If (-not $Found)
+        {
             # Check that we do end up with a VHD filename in the template
-            If (-not $Template.VHD) {
+            If (-not $Template.VHD)
+            {
                 $errorId = 'EmptyTemplateVHDNameError'
                 $errorCategory = [System.Management.Automation.ErrorCategory]::InvalidArgument
                 $errorMessage = $($LocalizedData.EmptyTemplateVHDNameError `

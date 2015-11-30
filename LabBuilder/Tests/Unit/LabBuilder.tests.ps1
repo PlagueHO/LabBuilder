@@ -740,22 +740,57 @@ Describe 'Download-LabResources' {
 ####################################################################################################
 Describe 'Get-LabSwitches' {
 	Context 'Configuration passed with switch missing Switch Name.' {
-		It 'Fails' {
+		It 'Throws a SwitchNameIsEmptyError Exception' {
+			$errorId = 'SwitchNameIsEmptyError'
+            $errorCategory = [System.Management.Automation.ErrorCategory]::InvalidArgument
+            $errorMessage = $($LocalizedData.SwitchNameIsEmptyError)
+            $exception = New-Object -TypeName System.InvalidOperationException `
+                -ArgumentList $errorMessage
+            $errorRecord = New-Object -TypeName System.Management.Automation.ErrorRecord `
+                -ArgumentList $exception, $errorId, $errorCategory, $null
+
 			{ Get-LabSwitches -Configuration (Get-LabConfiguration -Path "$Global:TestConfigPath\PesterTestConfig.SwitchFail.NoName.xml") } | Should Throw
 		}
 	}
 	Context 'Configuration passed with switch missing Switch Type.' {
-		It 'Fails' {
+		It 'Throws a UnknownSwitchTypeError Exception' {
+			$errorId = 'UnknownSwitchTypeError'
+            $errorCategory = [System.Management.Automation.ErrorCategory]::InvalidArgument
+            $errorMessage = $($LocalizedData.UnknownSwitchTypeError) `
+                -f '','Pester Switch Fail'
+            $exception = New-Object -TypeName System.InvalidOperationException `
+                -ArgumentList $errorMessage
+            $errorRecord = New-Object -TypeName System.Management.Automation.ErrorRecord `
+                -ArgumentList $exception, $errorId, $errorCategory, $null
+
 			{ Get-LabSwitches -Configuration (Get-LabConfiguration -Path "$Global:TestConfigPath\PesterTestConfig.SwitchFail.NoType.xml") } | Should Throw
 		}
 	}
 	Context 'Configuration passed with switch invalid Switch Type.' {
-		It 'Fails' {
+		It 'Throws a UnknownSwitchTypeError Exception' {
+			$errorId = 'UnknownSwitchTypeError'
+            $errorCategory = [System.Management.Automation.ErrorCategory]::InvalidArgument
+            $errorMessage = $($LocalizedData.UnknownSwitchTypeError) `
+                -f 'BadType','Pester Switch Fail'
+            $exception = New-Object -TypeName System.InvalidOperationException `
+                -ArgumentList $errorMessage
+            $errorRecord = New-Object -TypeName System.Management.Automation.ErrorRecord `
+                -ArgumentList $exception, $errorId, $errorCategory, $null
+
 			{ Get-LabSwitches -Configuration (Get-LabConfiguration -Path "$Global:TestConfigPath\PesterTestConfig.SwitchFail.BadType.xml") } | Should Throw
 		}
 	}
 	Context 'Configuration passed with switch containing adapters but is not External type.' {
-		It 'Fails' {
+		It 'Throws a AdapterSpecifiedError Exception' {
+			$errorId = 'AdapterSpecifiedError'
+            $errorCategory = [System.Management.Automation.ErrorCategory]::InvalidArgument
+            $errorMessage = $($LocalizedData.AdapterSpecifiedError) `
+                -f 'Private','Pester Switch Fail'
+            $exception = New-Object -TypeName System.InvalidOperationException `
+                -ArgumentList $errorMessage
+            $errorRecord = New-Object -TypeName System.Management.Automation.ErrorRecord `
+                -ArgumentList $exception, $errorId, $errorCategory, $null
+
 			{ Get-LabSwitches -Configuration (Get-LabConfiguration -Path "$Global:TestConfigPath\PesterTestConfig.SwitchFail.AdaptersSet.xml") } | Should Throw
 		}
 	}
@@ -908,7 +943,7 @@ Describe 'Remove-LabSwitches' {
 Describe 'Get-LabVMTemplates' {
 
 	Mock Get-VM
-
+	
 	Context 'Configuration passed with template missing Template Name.' {
 		It 'Fails' {
 			{ Get-LabVMTemplates -Configuration (Get-LabConfiguration -Path "$Global:TestConfigPath\PesterTestConfig.TemplateFail.NoName.xml") } | Should Throw
@@ -927,6 +962,7 @@ Describe 'Get-LabVMTemplates' {
 	Context 'Valid configuration is passed' {
 		$Config = Get-LabConfiguration -Path $Global:TestConfigOKPath
 		[Array]$Templates = Get-LabVMTemplates -Configuration $Config 
+
 		Set-Content -Path "$($Global:ArtifactPath)\VMTemplates.json" -Value ($Templates | ConvertTo-Json -Depth 2) -Encoding UTF8 -NoNewLine
 		It 'Returns Template Object that matches Expected Object' {
 			$ExpectedTemplates = Get-Content -Path "$Global:TestConfigPath\ExpectedTemplates.json" -Raw
