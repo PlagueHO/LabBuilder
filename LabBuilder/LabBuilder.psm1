@@ -216,7 +216,7 @@ function Get-ModulesInDSCConfig()
 # Main CmdLets
 ####################################################################################################
 <#
-.Synopsis
+.SYNOPSIS
     Loads a Lab Builder Configuration file and returns a Configuration object
 .PARAMETER Path
     This is the path to the Lab Builder configuration file to load.
@@ -289,7 +289,7 @@ function Get-LabConfiguration {
 
 ####################################################################################################
 <#
-.Synopsis
+.SYNOPSIS
     Tests the Lab Builder configuration passed to ensure it is valid and related files can be found.
 .PARAMETER Configuration
     Contains the Lab Builder configuration object that was loaded by the Get-LabConfiguration
@@ -1485,7 +1485,7 @@ function Remove-LabVMTemplates {
 
 ####################################################################################################
 <#
-.Synopsis
+.SYNOPSIS
    Short description
 .DESCRIPTION
    Long description
@@ -1497,8 +1497,6 @@ function Remove-LabVMTemplates {
    Inputs to this cmdlet (if any)
 .OUTPUTS
    Output from this cmdlet (if any)
-.NOTES
-   General notes
 #>
 function Set-LabDSCMOFFile {
     [CmdLetBinding()]
@@ -1763,7 +1761,7 @@ $NetworkingDSCConfig += @"
 
 ####################################################################################################
 <#
-.Synopsis
+.SYNOPSIS
    Short description
 .DESCRIPTION
    Long description
@@ -1874,7 +1872,7 @@ Start-DSCConfiguration -Path `"$($ENV:SystemRoot)\Setup\Scripts\`" -Force -Debug
 
 ####################################################################################################
 <#
-.Synopsis
+.SYNOPSIS
    Short description
 .DESCRIPTION
    Long description
@@ -1913,7 +1911,7 @@ function Initialize-LabVMDSC {
 
 ####################################################################################################
 <#
-.Synopsis
+.SYNOPSIS
    Short description
 .DESCRIPTION
    Long description
@@ -2044,7 +2042,7 @@ function Start-LabVMDSC {
 
 ####################################################################################################
 <#
-.Synopsis
+.SYNOPSIS
    Short description
 .DESCRIPTION
    Long description
@@ -2165,7 +2163,7 @@ function Get-LabUnattendFile {
 
 ####################################################################################################
 <#
-.Synopsis
+.SYNOPSIS
    Short description
 .DESCRIPTION
    Long description
@@ -2310,7 +2308,7 @@ Add-Content -Path `"$($ENV:SystemRoot)\Setup\Scripts\SetupComplete.log`" -Value 
 
 ####################################################################################################
 <#
-.Synopsis
+.SYNOPSIS
    Short description
 .DESCRIPTION
    Long description
@@ -2593,7 +2591,7 @@ function Get-LabVMs {
 
 ####################################################################################################
 <#
-.Synopsis
+.SYNOPSIS
    Short description
 .DESCRIPTION
    Long description
@@ -2671,7 +2669,7 @@ function Get-LabVMSelfSignedCert {
 
 ####################################################################################################
 <#
-.Synopsis
+.SYNOPSIS
    Short description
 .DESCRIPTION
    Long description
@@ -2801,7 +2799,7 @@ Export-Certificate -Type CERT -Cert `$Cert -FilePath `"`$(`$ENV:SystemRoot)\Self
 
 ####################################################################################################
 <#
-.Synopsis
+.SYNOPSIS
    Short description
 .DESCRIPTION
    Long description
@@ -2871,7 +2869,7 @@ function Start-LabVM {
 
 ####################################################################################################
 <#
-.Synopsis
+.SYNOPSIS
    Short description
 .DESCRIPTION
    Long description
@@ -3038,7 +3036,7 @@ function Initialize-LabVMs {
 
 ####################################################################################################
 <#
-.Synopsis
+.SYNOPSIS
    Short description
 .DESCRIPTION
    Long description
@@ -3106,7 +3104,7 @@ function Remove-LabVMs {
 
 ####################################################################################################
 <#
-.Synopsis
+.SYNOPSIS
    Short description
 .DESCRIPTION
    Long description
@@ -3183,7 +3181,7 @@ function Wait-LabVMInit {
 
 ####################################################################################################
 <#
-.Synopsis
+.SYNOPSIS
    Short description
 .DESCRIPTION
    Long description
@@ -3220,7 +3218,7 @@ function Wait-LabVMStart {
 
 ####################################################################################################
 <#
-.Synopsis
+.SYNOPSIS
    Short description
 .DESCRIPTION
    Long description
@@ -3257,7 +3255,7 @@ function Wait-LabVMOff {
 
 ####################################################################################################
 <#
-.Synopsis
+.SYNOPSIS
    Short description
 .DESCRIPTION
    Long description
@@ -3309,7 +3307,7 @@ Function Install-Lab {
 
 ####################################################################################################
 <#
-.Synopsis
+.SYNOPSIS
    Short description
 .DESCRIPTION
    Long description
