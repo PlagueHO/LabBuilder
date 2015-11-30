@@ -1168,10 +1168,10 @@ function Get-LabVMTemplates {
     [String]$FromVM=$Configuration.labbuilderconfig.SelectNodes('templates').fromvm
     If ($FromVM)
     {
-        $Templates = Get-VM -Name $FromVM
+        $Templates = @(Get-VM -Name $FromVM)
         Foreach ($Template in $Templates)
         {
-            [String]$VHDFilepath = ($Template | Get-VMHardDiskDrive).Path
+            [String]$VHDFilepath = (Get-VMHardDiskDrive -VMName $Template.Name).Path
             [String]$VHDFilename = [System.IO.Path]::GetFileName($VHDFilepath)
             $VMTemplates += @{
                 name = $Template.Name
@@ -1204,12 +1204,12 @@ function Get-LabVMTemplates {
         If ($Template.SourceVHD)
         {
             # A Source VHD file was specified - does it exist?
-            If (-not (Test-Path -Path $Templates.SourceVHD))
+            If (-not (Test-Path -Path $Template.SourceVHD))
             {
                 $errorId = 'TemplateSourceVHDNotFoundError'
                 $errorCategory = [System.Management.Automation.ErrorCategory]::InvalidArgument
                 $errorMessage = $($LocalizedData.TemplateSourceVHDNotFoundError `
-                    -f $Template.Name,$VMTemplate.VHD)
+                    -f $Template.Name,$Template.SourceVHD)
                 $exception = New-Object -TypeName System.InvalidOperationException `
                     -ArgumentList $errorMessage
                 $errorRecord = New-Object -TypeName System.Management.Automation.ErrorRecord `
@@ -1260,7 +1260,7 @@ function Get-LabVMTemplates {
 
                     $PSCmdlet.ThrowTerminatingError($errorRecord)
                 } # If
-                $VMTemplate.SourceVHD = $Templates.SourceVHD
+                $VMTemplate.SourceVHD = $Template.SourceVHD
                 $VMTemplate.InstallISO = $Template.InstallISO
                 $VMTemplate.Edition = $Template.Edtion
                 $VMTemplate.AllowCreate = $Template.AllowCreate
@@ -1307,10 +1307,10 @@ function Get-LabVMTemplates {
             # Check that we do end up with a VHD filename in the template
             If (-not $Template.VHD)
             {
-                $errorId = 'EmptyTemplateVHDNameError'
+                $errorId = 'EmptyTemplateVHDError'
                 $errorCategory = [System.Management.Automation.ErrorCategory]::InvalidArgument
-                $errorMessage = $($LocalizedData.EmptyTemplateVHDNameError `
-                    -f $VMTemplate.VHD)
+                $errorMessage = $($LocalizedData.EmptyTemplateVHDError `
+                    -f $Template.Name)
                 $exception = New-Object -TypeName System.InvalidOperationException `
                     -ArgumentList $errorMessage
                 $errorRecord = New-Object -TypeName System.Management.Automation.ErrorRecord `

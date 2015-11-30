@@ -797,7 +797,7 @@ Describe 'Get-LabSwitches' {
 	Context 'Valid configuration is passed' {
 		$Config = Get-LabConfiguration -Path $Global:TestConfigOKPath
 		[Array]$Switches = Get-LabSwitches -Configuration $Config
-		Set-Content -Path "$($Global:ArtifactPath)\Switches.json" -Value ($Switches | ConvertTo-Json -Depth 4) -Encoding UTF8 -NoNewLine
+		Set-Content -Path "$($Global:ArtifactPath)\ExpectedSwitches.json" -Value ($Switches | ConvertTo-Json -Depth 4) -Encoding UTF8 -NoNewLine
 		
 		It 'Returns Switches Object that matches Expected Object' {
 			$ExpectedSwitches = Get-Content -Path "$Global:TestConfigPath\ExpectedSwitches.json" -Raw
@@ -957,7 +957,7 @@ Describe 'Get-LabVMTemplates' {
 			{ Get-LabVMTemplates -Configuration (Get-LabConfiguration -Path "$Global:TestConfigPath\PesterTestConfig.TemplateFail.NoName.xml") } | Should Throw $errorRecord
 		}
 	}
-	Context 'Configuration passed with template missing VHD Path.' {
+	Context 'Configuration passed with template VHD empty.' {
 		It 'Throws a EmptyTemplateVHDError Exception' {
             $errorId = 'EmptyTemplateVHDError'
             $errorCategory = [System.Management.Automation.ErrorCategory]::InvalidArgument
@@ -976,7 +976,7 @@ Describe 'Get-LabVMTemplates' {
             $errorId = 'TemplateSourceVHDNotFoundError'
             $errorCategory = [System.Management.Automation.ErrorCategory]::InvalidArgument
             $errorMessage = $($LocalizedData.TemplateSourceVHDNotFoundError `
-				-f 'This File Doesnt Exist.vhdx','Bad VHD')
+				-f 'Bad VHD','This File Doesnt Exist.vhdx')
             $exception = New-Object -TypeName System.InvalidOperationException `
                 -ArgumentList $errorMessage
             $errorRecord = New-Object -TypeName System.Management.Automation.ErrorRecord `
@@ -991,9 +991,9 @@ Describe 'Get-LabVMTemplates' {
 	Mock Get-VM
 		
 	Context 'Valid configuration is passed but no templates found' {
-		Set-Content -Path "$($Global:ArtifactPath)\VMTemplates.json" -Value ($Templates | ConvertTo-Json -Depth 2) -Encoding UTF8 -NoNewLine
 		It 'Returns Template Object that matches Expected Object' {
 			[Array]$Templates = Get-LabVMTemplates -Configuration $Config 
+			Set-Content -Path "$($Global:ArtifactPath)\ExpectedTemplates.json" -Value ($Templates | ConvertTo-Json -Depth 2) -Encoding UTF8 -NoNewLine
 			$ExpectedTemplates = Get-Content -Path "$Global:TestConfigPath\ExpectedTemplates.json" -Raw
 			[String]::Compare(($Templates | ConvertTo-Json -Depth 2),$ExpectedTemplates,$true) | Should Be 0
 		}
@@ -1007,17 +1007,23 @@ Describe 'Get-LabVMTemplates' {
 			@{ name = 'Pester Windows Server 2012 R2 Datacenter Core' } 
 			@{ name = 'Pester Windows 10 Enterprise' } 
 		) }
-	Mock Get-VMHardDiskDrive
+	Mock Get-VMHardDiskDrive -ParameterFilter { $VMName -eq 'Pester Windows Server 2012 R2 Datacenter Full' } `
+		-MockWith { @{ path = 'Pester Windows Server 2012 R2 Datacenter Full.vhdx' } }
+	Mock Get-VMHardDiskDrive -ParameterFilter { $VMName -eq 'Pester Windows Server 2012 R2 Datacenter Core' } `
+		-MockWith { @{ path = 'Pester Windows Server 2012 R2 Datacenter Core.vhdx' } }
+	Mock Get-VMHardDiskDrive -ParameterFilter { $VMName -eq 'Pester Windows 10 Enterprise' } `
+		-MockWith { @{ path = 'Pester Windows 10 Enterprise.vhdx' } }
 
 	Context 'Valid configuration is passed but templates are found' {
-		Set-Content -Path "$($Global:ArtifactPath)\VMTemplates.json" -Value ($Templates | ConvertTo-Json -Depth 2) -Encoding UTF8 -NoNewLine
 		It 'Returns Template Object that matches Expected Object' {
 			[Array]$Templates = Get-LabVMTemplates -Configuration $Config 
-			$ExpectedTemplates = Get-Content -Path "$Global:TestConfigPath\ExpectedTemplates.json" -Raw
+			Set-Content -Path "$($Global:ArtifactPath)\ExpectedTemplates.FromVM.json" -Value ($Templates | ConvertTo-Json -Depth 2) -Encoding UTF8 -NoNewLine
+			$ExpectedTemplates = Get-Content -Path "$Global:TestConfigPath\ExpectedTemplates.FromVM.json" -Raw
 			[String]::Compare(($Templates | ConvertTo-Json -Depth 2),$ExpectedTemplates,$true) | Should Be 0
 		}
 		It 'Calls Mocked commands' {
 			Assert-MockCalled Get-VM -Exactly 1
+			Assert-MockCalled Get-VMHardDiskDrive -Exactly 3
 		}
 	}
 

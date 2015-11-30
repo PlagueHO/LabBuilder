@@ -36,10 +36,11 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Include="Artifacts\Switches.json" />
+    <Compile Include="Artifacts\ExpectedSwitches.json" />
+    <Compile Include="Artifacts\ExpectedTemplates.FromVM.json" />
+    <Compile Include="Artifacts\ExpectedTemplates.json" />
     <Compile Include="Artifacts\UnattendFile.xml" />
     <Compile Include="Artifacts\VMs.json" />
-    <Compile Include="Artifacts\VMTemplates.json" />
     <Compile Include="DSCLibrary\RODC_SECONDARY.DSC.ps1" />
     <Compile Include="DSCLibrary\MEMBER_DHCPNPAS.DSC.ps1" />
     <Compile Include="DSCLibrary\MEMBER_DHCPDNS.DSC.ps1" />
@@ -60,6 +61,10 @@
     <Compile Include="Samples\Sample_DCandDHCPOnly.xml" />
     <Compile Include="Samples\Sample_FullDomain.xml" />
     <Compile Include="Samples\Sample_Simple.xml" />
+    <Compile Include="Tests\PesterTestConfig\ExpectedTemplates.FromVM.json" />
+    <Compile Include="Tests\PesterTestConfig\Windows 10 Enterprise.vhdx" />
+    <Compile Include="Tests\PesterTestConfig\Windows Server 2012 R2 Datacenter Core.vhdx" />
+    <Compile Include="Tests\PesterTestConfig\Windows Server 2012 R2 Datacenter Full.vhdx" />
     <Compile Include="Tests\Test_FullDomain.ps1" />
     <Compile Include="Tests\Unit\LabBuilder.tests.ps1" />
     <Compile Include="README.md" />
