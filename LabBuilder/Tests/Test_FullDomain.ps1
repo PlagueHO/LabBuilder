@@ -1,5 +1,5 @@
 ﻿[String]$Script:ModulePath = "$PSScriptRoot\..\LabBuilder.psd1"
-[String]$Script:ConfigPath = "$PSScriptRoot\$([System.IO.Path]::ChangeExtension((split-path $PSCommandPath -Leaf),'xml'))"
+[String]$Script:ConfigPath = "$PSScriptRoot\..\Samples\Sample_FullDomain.xml"
 ##########################################################################################################################################
 Function Test-StartLabVM {
     Param (
@@ -29,7 +29,7 @@ Function Test-LabBuilderLoadModule {
 } # Function Test-LabBuilderLoadModule
 ##########################################################################################################################################
 Test-LabBuilderLoadModule
-# Test-LabBuilderInstall
-Test-StartLabVM -StartVMs 'SA_DHCP1'
+Test-LabBuilderInstall
+# Test-StartLabVM -StartVMs 'SA_DHCP1'
 # Sleep 30 # Wait 30 seconds for everything to finish building
 # Test-LabBuilderUninstall
