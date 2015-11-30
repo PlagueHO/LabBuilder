@@ -957,6 +957,7 @@ Describe 'Get-LabVMTemplates' {
 			{ Get-LabVMTemplates -Configuration (Get-LabConfiguration -Path "$Global:TestConfigPath\PesterTestConfig.TemplateFail.NoName.xml") } | Should Throw $errorRecord
 		}
 	}
+
 	Context 'Configuration passed with template VHD empty.' {
 		It 'Throws a EmptyTemplateVHDError Exception' {
             $errorId = 'EmptyTemplateVHDError'
@@ -971,6 +972,7 @@ Describe 'Get-LabVMTemplates' {
 			{ Get-LabVMTemplates -Configuration (Get-LabConfiguration -Path "$Global:TestConfigPath\PesterTestConfig.TemplateFail.NoVHD.xml") } | Should Throw $errorRecord
 		}
 	}
+
 	Context 'Configuration passed with template with Source VHD set to non-existent file.' {
 		It 'Throws a TemplateSourceVHDNotFoundError Exception' {
             $errorId = 'TemplateSourceVHDNotFoundError'
@@ -1032,68 +1034,71 @@ Describe 'Get-LabVMTemplates' {
 
 ####################################################################################################
 Describe 'Initialize-LabVMTemplates' {
-	#region Mocks
-	Mock Get-VM
-	Mock Optimize-VHD
+
+	$Config = Get-LabConfiguration -Path $Global:TestConfigOKPath
+
+	Mock Copy-Item
 	Mock Set-ItemProperty -ParameterFilter { ($Name -eq 'IsReadOnly') -and ($Value -eq $True) }
 	Mock Set-ItemProperty -ParameterFilter { ($Name -eq 'IsReadOnly') -and ($Value -eq $False) }
-	#endregion
+	Mock Test-Path -ParameterFilter { $Path -eq 'This File Doesnt Exist.vhdx' } -MockWith { $false }
+	Mock Optimize-VHD
 
-	Context 'Valid configuration is passed' {	
-		$Config = Get-LabConfiguration -Path $Global:TestConfigOKPath
-		New-Item -Path $Config.labbuilderconfig.settings.vmpath -ItemType Directory -Force -ErrorAction SilentlyContinue
-		New-Item -Path $Config.labbuilderconfig.settings.vhdparentpath -ItemType Directory -Force -ErrorAction SilentlyContinue
+	Context 'Template Template Array with non-existent VHD source file' {
+		[array]$Templates = @( @{
+			name = 'Bad VHD'
+			templatevhd = 'This File Doesnt Exist.vhdx' 
+			sourcevhd = 'This File Doesnt Exist.vhdx'
+		} )
+
+		It 'Throws a TemplateSourceVHDNotFoundError Exception' {
+            $errorId = 'TemplateSourceVHDNotFoundError'
+            $errorCategory = [System.Management.Automation.ErrorCategory]::InvalidArgument
+            $errorMessage = $($LocalizedData.TemplateSourceVHDNotFoundError `
+				-f 'Bad VHD','This File Doesnt Exist.vhdx')
+            $exception = New-Object -TypeName System.InvalidOperationException `
+                -ArgumentList $errorMessage
+            $errorRecord = New-Object -TypeName System.Management.Automation.ErrorRecord `
+                -ArgumentList $exception, $errorId, $errorCategory, $null
+
+			{ Initialize-LabVMTemplates -Configuration $Config -VMTemplates $Templates } | Should Throw $errorRecord
+		}
+	}
+
+	Context 'Valid Template Array is passed' {	
 		[array]$Templates = Get-LabVMTemplates -Configuration $Config
 
-		It 'Returns True' {
-			Initialize-LabVMTemplates -Configuration $Config -VMTemplates $Templates | Should Be $True
-		}
-		It 'Creates file C:\Pester Lab\Virtual Hard Disk Templates\Windows Server 2012 R2 Datacenter Full.vhdx' {
-			Test-Path 'C:\Pester Lab\Virtual Hard Disk Templates\Windows Server 2012 R2 Datacenter Full.vhdx' | Should Be $True
-		}
-		It 'Creates file C:\Pester Lab\Virtual Hard Disk Templates\Windows Server 2012 R2 Datacenter Core.vhdx' {
-			Test-Path 'C:\Pester Lab\Virtual Hard Disk Templates\Windows Server 2012 R2 Datacenter Core.vhdx' | Should Be $True
-		}
-		It 'Creates file C:\Pester Lab\Virtual Hard Disk Templates\Windows 10 Enterprise.vhdx' {
-			Test-Path 'C:\Pester Lab\Virtual Hard Disk Templates\Windows 10 Enterprise.vhdx' | Should Be $True
+		It 'Does not throw an Exception' {
+			{ Initialize-LabVMTemplates -Configuration $Config -VMTemplates $Templates } | Should Not Throw
 		}
 		It 'Calls Mocked commands' {
-			Assert-MockCalled Optimize-VHD -Exactly 3
+			Assert-MockCalled Copy-Item -Exactly 3
 			Assert-MockCalled Set-ItemProperty -Exactly 3 -ParameterFilter { ($Name -eq 'IsReadOnly') -and ($Value -eq $True) }
 			Assert-MockCalled Set-ItemProperty -Exactly 3 -ParameterFilter { ($Name -eq 'IsReadOnly') -and ($Value -eq $False) }
+			Assert-MockCalled Optimize-VHD -Exactly 3
 		}
-
-		Remove-Item -Path $Config.labbuilderconfig.settings.vmpath -Recurse -Force -ErrorAction SilentlyContinue
-		Remove-Item -Path $Config.labbuilderconfig.settings.vhdparentpath -Recurse -Force -ErrorAction SilentlyContinue
 	}
 }
 ####################################################################################################
 
 ####################################################################################################
 Describe 'Remove-LabVMTemplates' {
-	#region Mocks
-	Mock Get-VM
+
+	$Config = Get-LabConfiguration -Path $Global:TestConfigOKPath
+
 	Mock Set-ItemProperty -ParameterFilter { ($Name -eq 'IsReadOnly') -and ($Value -eq $False) }
 	Mock Remove-Item
 	Mock Test-Path -MockWith { $True }
-	#endregion
 
 	Context 'Valid configuration is passed' {	
-		$Config = Get-LabConfiguration -Path $Global:TestConfigOKPath
 		[Array]$Templates = Get-LabVMTemplates -Configuration $Config
-		New-Item -Path $Config.labbuilderconfig.settings.vmpath -ItemType Directory -Force -ErrorAction SilentlyContinue
-		New-Item -Path $Config.labbuilderconfig.settings.vhdparentpath -ItemType Directory -Force -ErrorAction SilentlyContinue
 		
-		It 'Returns True' {
-			Remove-LabVMTemplates -Configuration $Config -VMTemplates $Templates | Should Be $True
+		It 'Does not throw an Exception' {
+			{ Remove-LabVMTemplates -Configuration $Config -VMTemplates $Templates } | Should Not Throw
 		}
 		It 'Calls Mocked commands' {
 			Assert-MockCalled Set-ItemProperty -Exactly 3 -ParameterFilter { ($Name -eq 'IsReadOnly') -and ($Value -eq $False) }
 			Assert-MockCalled Remove-Item -Exactly 3
 		}
-
-		Remove-Item -Path $Config.labbuilderconfig.settings.vmpath -Recurse -Force -ErrorAction SilentlyContinue
-		Remove-Item -Path $Config.labbuilderconfig.settings.vhdparentpath -Recurse -Force -ErrorAction SilentlyContinue
 	}
 }
 ####################################################################################################

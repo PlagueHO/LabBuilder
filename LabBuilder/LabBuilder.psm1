@@ -32,6 +32,11 @@ InstallingLabResourceWebMessage=Installing Module {0} ({1}) to Modules Folder '{
 InstalledLabResourceWebMessage=Installed Module {0} ({1}) to '{2}'.
 CreatingVirtualSwitchMessage=Creating {0} Virtual Switch '{1}'.
 DeleteingVirtualSwitchMessage=Deleting {0} Virtual Switch '{1}'.
+CopyingTemplateSourceVHDMessage=Copying template source VHD '{0}' to '{1}'.
+OptimizingTemplateVHDMessage=Optimizing template VHD '{0}'.
+SettingTemplateVHDReadonlyMessage=Setting template VHD '{0}' as readonly.
+SkippingTemplateVHDFileMessage=Skipping template VHD file '{0}' because it already exists.
+DeletingTemplateVHDMessage=Deleting Template VHD '{0}'.
 '@
 }
 
@@ -55,7 +60,7 @@ DeleteingVirtualSwitchMessage=Deleting {0} Virtual Switch '{1}'.
 # Helper functions that aren't exported
 ####################################################################################################
 <#
-.Synopsis
+.SYNOPSIS
    Returns True if running as Administrator
 #>
 function Test-Admin()
@@ -72,7 +77,7 @@ function Test-Admin()
 }
 ####################################################################################################
 <#
-.Synopsis
+.SYNOPSIS
    Download the latest Windows Management Framework 5.0 Installer to the Working Folder
 #>
 function Download-WMF5Installer()
@@ -107,7 +112,7 @@ function Download-WMF5Installer()
 } # Download-WMF5Installer
 ####################################################################################################
 <#
-.Synopsis
+.SYNOPSIS
    Download the Certificate Generator script from TechNet Script Center to the Working Folder
 #>
 function Download-CertGenerator()
@@ -163,7 +168,7 @@ function Download-CertGenerator()
 } # Download-CertGenerator
 ####################################################################################################
 <#
-.Synopsis
+.SYNOPSIS
     Get a list of all Resources imported in a DSC Config
 .DESCRIPTION
     Uses RegEx to pull a list of Resources that are imported in a DSC Configuration using the
@@ -401,13 +406,15 @@ function Test-LabConfiguration {
 
 ####################################################################################################
 <#
-.Synopsis
+.SYNOPSIS
    Ensures the Hyper-V features are installed onto the system.
 .DESCRIPTION
    If the Hyper-V features are not installed onto this system they will be installed.
 .EXAMPLE
    Install-LabHyperV
    Installs the appropriate Hyper-V features if they are not currently installed.
+.OUTPUTS
+   None
 #>
 function Install-LabHyperV {
     [CmdLetBinding()]
@@ -447,7 +454,7 @@ function Install-LabHyperV {
 
 ####################################################################################################
 <#
-.Synopsis
+.SYNOPSIS
    Initializes the system from information provided in the Lab Configuration object provided.
 .DESCRIPTION
    This function should be run after loading a Lab Configuration file. It will ensure any required
@@ -460,11 +467,10 @@ function Install-LabHyperV {
    Initialize-LabConfiguration -Configuration $Config
    Loads a Lab Builder configuration and applies the base system settings.
 .OUTPUTS
-   None
+   None.
 #>
 function Initialize-LabConfiguration {
     [CmdLetBinding()]
-    [OutputType([Boolean])]
     param
     (
         [Parameter(
@@ -534,7 +540,7 @@ function Initialize-LabConfiguration {
 
 ####################################################################################################
 <#
-.Synopsis
+.SYNOPSIS
    Downloads any resources required by the configuration.
 .DESCRIPTION
    It will ensure any required modules and files are downloaded.
@@ -544,10 +550,11 @@ function Initialize-LabConfiguration {
    $Config = Get-LabConfiguration -Path c:\mylab\config.xml
    Download-LabResources -Configuration $Config
    Loads a Lab Builder configuration and downloads any resources required by it.   
+.OUTPUTS
+   None.
 #>
 function Download-LabModule {
     [CmdLetBinding()]
-    [OutputType([Boolean])]
     param
     (
         [Parameter(
@@ -711,7 +718,7 @@ function Download-LabModule {
 
 ####################################################################################################
 <#
-.Synopsis
+.SYNOPSIS
    Downloads any resources required by the configuration.
 .DESCRIPTION
    It will ensure any required modules and files are downloaded.
@@ -721,10 +728,11 @@ function Download-LabModule {
    $Config = Get-LabConfiguration -Path c:\mylab\config.xml
    Download-LabResources -Configuration $Config
    Loads a Lab Builder configuration and downloads any resources required by it.   
+.OUTPUTS
+   None.
 #>
 function Download-LabResources {
     [CmdLetBinding()]
-    [OutputType([Boolean])]
     param
     (
         [Parameter(
@@ -779,7 +787,7 @@ function Download-LabResources {
 
 ####################################################################################################
 <#
-.Synopsis
+.SYNOPSIS
    Gets an array of switches from a Lab Configuration file.
 .DESCRIPTION
    Takes a provided Lab Configuration file and returns the list of switches required for this Lab.
@@ -877,7 +885,7 @@ function Get-LabSwitches {
 
 ####################################################################################################
 <#
-.Synopsis
+.SYNOPSIS
    Creates Hyper-V Virtual Switches from a provided array.
 .DESCRIPTION
    Takes an array of switches that were pulled from a Lab Configuration object by calling
@@ -1029,7 +1037,7 @@ function Initialize-LabSwitches {
 
 ####################################################################################################
 <#
-.Synopsis
+.SYNOPSIS
    Removes all Hyper-V Virtual Switches provided.
 .DESCRIPTION
    This cmdlet is used to remove any Hyper-V Virtual Switches that were created by
@@ -1044,7 +1052,8 @@ function Initialize-LabSwitches {
    Remove-LabSwitches -Configuration $Config -Switches $Switches
    Removes any Hyper-V switches in the configured in the Lab c:\mylab\config.xml
 .OUTPUTS
-   Returns true if the Lab switches were created correctly.#>
+   None.
+#>
 function Remove-LabSwitches {
     [CmdLetBinding()]
     param
@@ -1133,7 +1142,7 @@ function Remove-LabSwitches {
 
 ####################################################################################################
 <#
-.Synopsis
+.SYNOPSIS
    Gets an Array of VM Templates for a Lab configuration.
 .DESCRIPTION
    Takes a provided Lab Configuration file and returns the list of Virtul Machine template machines
@@ -1344,25 +1353,30 @@ function Get-LabVMTemplates {
 
 ####################################################################################################
 <#
-.Synopsis
-   Short description
+.SYNOPSIS
+   Initializes the Virtual Machine templates used by a Lab from a provided array.
 .DESCRIPTION
-   Long description
+   Takes an array of Virtual Machine templates that were configured in the Lab Configuration
+   file. The Virtual Machine templates are used to create the Virtual Machines specified in
+   a Lab Configuration. The Virtual Machine template VHD files are copied to a folder where
+   they will be copied to create new Virtual Machines or as parent difference disks for new
+   Virtual Machines.
+.PARAMETER Configuration
+   Contains the Lab Builder configuration object that was loaded by the Get-LabConfiguration object.
+.PARAMETER VMTemplates
+   The array of VM Templates pulled from the Lab Configuration file using Get-LabVMTemplates
 .EXAMPLE
-   Example of how to use this cmdlet
-.EXAMPLE
-   Another example of how to use this cmdlet
-.INPUTS
-   Inputs to this cmdlet (if any)
+   $Config = Get-LabConfiguration -Path c:\mylab\config.xml
+   $VMTemplates = Get-LabVMTemplates -Configuration $Config
+   Initialize-LabVMTemplates -Configuration $Config -VMTemplates $VMTemplates
+   Initializes the Virtual Machine templates in the configured in the Lab c:\mylab\config.xml
 .OUTPUTS
-   Output from this cmdlet (if any)
-.NOTES
-   General notes
+   None.
 #>
 function Initialize-LabVMTemplates {
     [CmdLetBinding()]
-    [OutputType([Boolean])]
-    param (
+    param
+    (
         [Parameter(
             Mandatory,
             Position=0)]
@@ -1370,54 +1384,80 @@ function Initialize-LabVMTemplates {
         [XML]$Configuration,
 
         [Parameter(
+            Mandatory,
             Position=1)]
         [ValidateNotNullOrEmpty()]
-        [System.Collections.Hashtable[]]$VMTemplates = $(Throw 'VMTemplates parameter is missing.')
+        [System.Collections.Hashtable[]]$VMTemplates
     )
     
-    Foreach ($VMTemplate in $VMTemplates) {
-        If (-not (Test-Path $VMTemplate.TemplateVHD)) {
+    Foreach ($VMTemplate in $VMTemplates)
+    {
+        If (-not (Test-Path $VMTemplate.templatevhd))
+        {
             # The template VHD isn't in the VHD Parent folder - so copy it there after optimizing it
-            If (-not (Test-Path $VMTemplate.SourceVHD)) {
+            If (-not (Test-Path $VMTemplate.sourcevhd))
+            {
                 # The source VHD does not exist - so try and create it from the ISO
                 # This feature is not yet supported so will throw an error
-                Throw "The template source VHD $($VMTemplate.SourceVHD) could not be found and creating it from an ISO is not yet supported."
+                $errorId = 'TemplateSourceVHDNotFoundError'
+                $errorCategory = [System.Management.Automation.ErrorCategory]::InvalidArgument
+                $errorMessage = $($LocalizedData.TemplateSourceVHDNotFoundError `
+                    -f $VMTemplate.name,$VMTemplate.sourcevhd)
+                $exception = New-Object -TypeName System.InvalidOperationException `
+                    -ArgumentList $errorMessage
+                $errorRecord = New-Object -TypeName System.Management.Automation.ErrorRecord `
+                    -ArgumentList $exception, $errorId, $errorCategory, $null
+
+                $PSCmdlet.ThrowTerminatingError($errorRecord)
             }
-            Write-Verbose "Copying template source VHD $($VMTemplate.sourcevhd) to $($VMTemplate.templatevhd) ..."
+            Write-Verbose -Message $($LocalizedData.CopyingTemplateSourceVHDMessage `
+                -f $VMTemplate.sourcevhd,$VMTemplate.templatevhd)
             Copy-Item -Path $VMTemplate.sourcevhd -Destination $VMTemplate.templatevhd
-            Write-Verbose "Optimizing template VHD $($VMTemplate.vhd) ..."
+            Write-Verbose -Message $($LocalizedData.OptimizingTemplateVHDMessage `
+                -f $VMTemplate.templatevhd)
             Set-ItemProperty -Path $VMTemplate.templatevhd -Name IsReadOnly -Value $False
             Optimize-VHD -Path $VMTemplate.templatevhd -Mode Full
-            Write-Verbose "Setting template VHD $($VMTemplate.vhd) as readonly ..."
+            Write-Verbose -Message $($LocalizedData.SettingTemplateVHDReadonlyMessage `
+                -f $VMTemplate.templatevhd)
             Set-ItemProperty -Path $VMTemplate.templatevhd -Name IsReadOnly -Value $True
-        } Else {
-            Write-Verbose "Template VHD file $($VMTemplate.templatevhd) already exists - skipping..."
+        }
+        Else
+        {
+            Write-Verbose -Message $($LocalizedData.SkippingTemplateVHDFileMessage `
+                -f $VMTemplate.templatevhd)
         }
     }
-    Return $True
 } # Initialize-LabVMTemplates
 ####################################################################################################
 
 ####################################################################################################
 <#
-.Synopsis
-   Short description
+.SYNOPSIS
+   Removes all Lab Virtual Machine Template VHDs.
 .DESCRIPTION
-   Long description
+   This cmdlet is used to remove any Virtual Machine Template VHDs that were copied when
+   creating this Lab.
+   
+   This function should never be run unless the Lab has no Differencing Disks using these
+   Template VHDs or the Lab is being completely removed. Removing these Template VHDs if
+   Lab Virtual Machines are using these templates as differencing disk parents will cause
+   the Lab Virtual Hard Drives to become corrupt.
+.PARAMETER Configuration
+   Contains the Lab Builder configuration object that was loaded by the Get-LabConfiguration
+   object.
+.PARAMETER $VMTemplates
+   The array of Virtual Machine Templates pulled from the Lab Configuration file using
+   Get-LabVMTemplates
 .EXAMPLE
-   Example of how to use this cmdlet
-.EXAMPLE
-   Another example of how to use this cmdlet
-.INPUTS
-   Inputs to this cmdlet (if any)
+   $Config = Get-LabConfiguration -Path c:\mylab\config.xml
+   $VMTemplates = Get-LabVMTemplates -Configuration $Config
+   Remove-LabVMTemplates -Configuration $Config -VMTemplates $VMTemplates
+   Removes any Virtual Machine template VHDs configured in the Lab c:\mylab\config.xml
 .OUTPUTS
-   Output from this cmdlet (if any)
-.NOTES
-   General notes
+   None.
 #>
 function Remove-LabVMTemplates {
     [CmdLetBinding()]
-    [OutputType([Boolean])]
     param (
         [Parameter(
             Mandatory,
@@ -1426,6 +1466,7 @@ function Remove-LabVMTemplates {
         [XML]$Configuration,
 
         [Parameter(
+            Mandatory,
             Position=1)]
         [ValidateNotNullOrEmpty()]
         [System.Collections.Hashtable[]]$VMTemplates
@@ -1434,11 +1475,11 @@ function Remove-LabVMTemplates {
     Foreach ($VMTemplate in $VMTemplates) {
         If (Test-Path $VMTemplate.templatevhd) {
             Set-ItemProperty -Path $VMTemplate.templatevhd -Name IsReadOnly -Value $False
-            Write-Verbose "Deleting Template VHD $($VMTemplate.templatevhd) ..."
+            Write-Verbose -Message $($LocalizedData.DeletingTemplateVHDMessage `
+                -f $VMTemplate.templatevhd)
             Remove-Item -Path $VMTemplate.templatevhd -Confirm:$false -Force
         }
     }
-    Return $True
 } # Remove-LabVMTemplates
 ####################################################################################################
 
