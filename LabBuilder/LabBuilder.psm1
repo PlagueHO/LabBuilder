@@ -37,6 +37,10 @@ OptimizingTemplateVHDMessage=Optimizing template VHD '{0}'.
 SettingTemplateVHDReadonlyMessage=Setting template VHD '{0}' as readonly.
 SkippingTemplateVHDFileMessage=Skipping template VHD file '{0}' because it already exists.
 DeletingTemplateVHDMessage=Deleting Template VHD '{0}'.
+DSCConfigIdentifyModulesMessage=Identifying Modules used by DSC Config File '{0}' in VM '{1}'.
+DSCConfigSearchingForModuleMessage=Searching for Module '{2}' required by DSC Config File '{0}' in VM '{1}'.
+DSCConfigInstallingModuleMessage=Installing Module '{2}' required by DSC Config File '{0}' in VM '{1}'.
+DSCConfigSavingModuleMessage=Saving Module '{2}' required by DSC Config File '{0}' in VM '{1}' to LabBuilder files.
 '@
 }
 
@@ -1486,9 +1490,18 @@ function Remove-LabVMTemplates {
 ####################################################################################################
 <#
 .SYNOPSIS
-   Short description
+   This function prepares all the files and modules necessary for a VM to be configured using
+   Desired State Configuration (DSC).
 .DESCRIPTION
-   Long description
+   This funcion performs the following tasks in preparation for starting Desired State
+   Configuration on a Virtual Machine:
+     1. Ensures the folder structure for the Virtual Machine DSC files is available.
+     2. Gets a list of all Modules required by the DSC configuration to be applied.
+     3. Download and Install any missing DSC modules required for the DSC configuration.
+     4. Copy all modules required for the DSC configuration to the VM folder.
+     5. Cause a self-signed cetficiate to be created and downloaded on the Lab VM.
+     6. Create a Networking DSC configuration file and ensure the DSC config file calss it.
+     7. Create the MOF file from the config and an LCM config.
 .EXAMPLE
    Example of how to use this cmdlet
 .EXAMPLE
@@ -1496,12 +1509,12 @@ function Remove-LabVMTemplates {
 .INPUTS
    Inputs to this cmdlet (if any)
 .OUTPUTS
-   Output from this cmdlet (if any)
+   None.
 #>
 function Set-LabDSCMOFFile {
     [CmdLetBinding()]
-    [OutputType([Boolean])]
-    param (
+    param
+    (
         [Parameter(
             Mandatory,
             Position=0)]
@@ -1518,80 +1531,133 @@ function Set-LabDSCMOFFile {
     [String]$VMPath = $Configuration.labbuilderconfig.settings.vmpath
 
     # Make sure the appropriate folders exist
-    New-Item -Path "$VMPath\$($VM.Name)\LabBuilder Files" -ItemType Directory -Force -ErrorAction SilentlyContinue
-    New-Item -Path "$VMPath\$($VM.Name)\LabBuilder Files\DSC Modules" -ItemType Directory -Force -ErrorAction SilentlyContinue
+    Create-LabVMPath -VMPath $VMRootPath
+    
+    # Load path variables
+    [String]$VMRootPath = Join-Path `
+        -Path $VMPath `
+        -ChildPath $VM.Name
+    [String]$VMLabBuilderFiles = Join-Path `
+        -Path $VMRootPath `
+        -ChildPath 'LabBuilder Files'
 
-    If ($VM.DSCConfigFile) {
-        # Make sure all the modules required to create the MOF file are installed
-        $InstalledModules = Get-Module -ListAvailable
-        Write-Verbose "Identifying Modules used by DSC Config File $($VM.DSCConfigFile) in VM $($VM.Name) ..."
-        $DSCModules = Get-ModulesInDSCConfig -DSCConfigFile $($VM.DSCConfigFile)
-        Foreach ($ModuleName in $DSCModules) {
-            If (($InstalledModules | Where-Object -Property Name -EQ $ModuleName).Count -eq 0) {
-                # The Module isn't available on this computer, so try and install it
-                Write-Verbose "Searching for Module $ModuleName required by DSC Config File $($VM.DSCConfigFile) in VM $($VM.Name) ..."
-                $NewModule = Find-Module -Name $ModuleName
-                If ($NewModule) {
-                    Write-Verbose "Installing Module $ModuleName required by DSC Config File $($VM.DSCConfigFile) in VM $($VM.Name) ..."
-                    Try {
-                        $NewModule | Install-Module
-                    } Catch {
-                        Throw "Module $ModuleName required by DSC Config File $($VM.DSCConfigFile) in VM $($VM.Name) could not be downloaded ..."					
-                    }
-                } Else {
-                    Throw "Module $ModuleName required by DSC Config File $($VM.DSCConfigFile) in VM $($VM.Name) could not be found or downloaded ..."
+    If (-not $VM.DSCConfigFile)
+    {
+        # This VM doesn't have a DSC Configuration
+        return
+    }
+
+    # Make sure all the modules required to create the MOF file are installed
+    $InstalledModules = Get-Module -ListAvailable
+    Write-Verbose -Message $($LocalizedData.DSCConfigIdentifyModulesMessage `
+        -f $VM.DSCConfigFile,$VM.Name)
+
+    $DSCModules = Get-ModulesInDSCConfig -DSCConfigFile $($VM.DSCConfigFile)
+    Foreach ($ModuleName in $DSCModules)
+    {
+        If (($InstalledModules | Where-Object -Property Name -EQ $ModuleName).Count -eq 0)
+        {
+            # The Module isn't available on this computer, so try and install it
+            Write-Verbose -Message $($LocalizedData.DSCConfigSearchingForModuleMessage `
+                -f $VM.DSCConfigFile,$VM.Name,$ModuleName)
+
+            $NewModule = Find-Module -Name $ModuleName
+            If ($NewModule)
+            {
+                Write-Verbose -Message $($LocalizedData.DSCConfigInstallingModuleMessage `
+                    -f $VM.DSCConfigFile,$VM.Name,$ModuleName)
+
+                Try
+                {
+                    $NewModule | Install-Module
                 }
-            } # If
-            Write-Verbose "Saving Module $ModuleName required by DSC Config File $($VM.DSCConfigFile) in VM $($VM.Name) to LabBuilder files ..."
-            # Find where the module is actually stored
-            [String]$ModulePath = ''
-            Foreach ($Path in $ENV:PSModulePath.Split(';')) {
-                $ModulePath = Join-Path -Path $Path -ChildPath $ModuleName
-                If (Test-Path -Path $ModulePath) {
-                    Break
-                } # If
-            } # Foreach
-            If (-not $ModulePath) {
-                Throw "Module $ModuleName required by DSC Config File $($VM.DSCConfigFile) in VM $($VM.Name) could not be found in the module path."
+                Catch
+                {
+                    Throw "Module $ModuleName required by DSC Config File $($VM.DSCConfigFile) in VM $($VM.Name) could not be downloaded ..."					
+                }
             }
-            Copy-Item -Path $ModulePath -Destination "$VMPath\$($VM.Name)\LabBuilder Files\DSC Modules\" -Recurse -Force
-        } # Foreach
-
-        if (-not (New-LabVMSelfSignedCert -Configuration $Configuration -VM $VM)) {
-            Throw "The self-signed certificate for VM $($VM.Name) could not be created and downloaded."
-        }
-        # Remove any old self-signed certifcates for this VM
-        Get-ChildItem -Path cert:\LocalMachine\My | Where-Object { $_.FriendlyName -eq "$($VM.ComputerName) Self-Signed Certificate" } | Remove-Item
-        # Add the VM Self-Signed Certificate to the Local Machine store and get the Thumbprint	
-        [String]$CertificateFile = "$VMPath\$($VM.Name)\LabBuilder Files\SelfSigned.cer"
-        $Certificate = Import-Certificate -FilePath $CertificateFile -CertStoreLocation 'Cert:LocalMachine\My'
-        [String]$CertificateThumbprint = $Certificate.Thumbprint
-
-        # Set the predicted MOF File name
-        $DSCMOFFile = Join-Path -Path $ENV:Temp -ChildPath "$($VM.ComputerName).mof"
-        $DSCMOFMetaFile = ([System.IO.Path]::ChangeExtension($DSCMOFFile,'meta.mof'))
-            
-        # Generate the LCM MOF File
-        Write-Verbose "Creating VM $($VM.Name) DSC LCM MOF File ..."
-        $null = ConfigLCM -OutputPath $($ENV:Temp) -ComputerName $($VM.ComputerName) -Thumbprint $CertificateThumbprint
-        If (-not (Test-Path -Path $DSCMOFMetaFile)) {
-            Throw "A Meta MOF File was not created by the DSC LCM Config for VM $($VM.Name)."
+            Else
+            {
+                Throw "Module $ModuleName required by DSC Config File $($VM.DSCConfigFile) in VM $($VM.Name) could not be found or downloaded ..."
+            }
         } # If
 
-        # A DSC Config File was provided so create a MOF File out of it.
-        Write-Verbose "Creating VM $($VM.Name) DSC MOF File from DSC Config $($VM.DSCConfigFile) ..."
+        Write-Verbose -Message $($LocalizedData.DSCConfigSavingModuleMessage `
+            -f $VM.DSCConfigFile,$VM.Name,$ModuleName)
+
+        # Find where the module is actually stored
+        [String]$ModulePath = ''
+        Foreach ($Path in $ENV:PSModulePath.Split(';'))
+        {
+            $ModulePath = Join-Path `
+                -Path $Path `
+                -ChildPath $ModuleName
+            If (Test-Path -Path $ModulePath)
+            {
+                Break
+            } # If
+        } # Foreach
+        If (-not $ModulePath)
+        {
+            Throw "Module $ModuleName required by DSC Config File $($VM.DSCConfigFile) in VM $($VM.Name) could not be found in the module path."
+        }
+        Copy-Item `
+            -Path $ModulePath `
+            -Destination (Join-Path -Path $VMLabBuilderFiles -ChildPath 'DSC Modules\') `
+            -Recurse -Force
+    } # Foreach
+
+    if (-not (New-LabVMSelfSignedCert -Configuration $Configuration -VM $VM))
+    {
+        Throw "The self-signed certificate for VM $($VM.Name) could not be created and downloaded."
+    }
+    
+    # Remove any old self-signed certifcates for this VM
+    Get-ChildItem -Path cert:\LocalMachine\My | Where-Object { $_.FriendlyName -eq "$($VM.ComputerName) Self-Signed Certificate" } | Remove-Item
+    
+    # Add the VM Self-Signed Certificate to the Local Machine store and get the Thumbprint	
+    [String]$CertificateFile = Join-Path `
+        -Path $VMRootPath `
+        -ChildPath (Join-Path -Path $VMLabBuilderFiles -ChildPath 'SelfSigned.cer')
+    $Certificate = Import-Certificate `
+        -FilePath $CertificateFile `
+        -CertStoreLocation 'Cert:LocalMachine\My'
+    [String]$CertificateThumbprint = $Certificate.Thumbprint
+
+    # Set the predicted MOF File name
+    $DSCMOFFile = Join-Path `
+        -Path $ENV:Temp `
+        -ChildPath "$($VM.ComputerName).mof"
+    $DSCMOFMetaFile = ([System.IO.Path]::ChangeExtension($DSCMOFFile,'meta.mof'))
         
-        # Now create the Networking DSC Config file
-        [String]$NetworkingDSCConfig = @"
+    # Generate the LCM MOF File
+    Write-Verbose "Creating VM $($VM.Name) DSC LCM MOF File ..."
+    $null = ConfigLCM `
+        -OutputPath $($ENV:Temp) `
+        -ComputerName $($VM.ComputerName) `
+        -Thumbprint $CertificateThumbprint
+    If (-not (Test-Path -Path $DSCMOFMetaFile))
+    {
+        Throw "A Meta MOF File was not created by the DSC LCM Config for VM $($VM.Name)."
+    } # If
+
+    # A DSC Config File was provided so create a MOF File out of it.
+    Write-Verbose "Creating VM $($VM.Name) DSC MOF File from DSC Config $($VM.DSCConfigFile) ..."
+    
+    # Now create the Networking DSC Config file
+    [String]$NetworkingDSCConfig = @"
 Configuration Networking {
     Import-DscResource -ModuleName xNetworking
 
 "@
-        [Int]$AdapterCount = 0
-        Foreach ($Adapter in $VM.Adapters) {
-            $AdapterCount++
-            If ($Adapter.IPv4) {
-                If ($Adapter.IPv4.Address) {
+    [Int]$AdapterCount = 0
+    Foreach ($Adapter in $VM.Adapters)
+    {
+        $AdapterCount++
+        If ($Adapter.IPv4)
+        {
+            If ($Adapter.IPv4.Address)
+            {
 $NetworkingDSCConfig += @"
     xIPAddress IPv4_$AdapterCount {
         InterfaceAlias = '$($Adapter.Name)'
@@ -1601,7 +1667,8 @@ $NetworkingDSCConfig += @"
     }
 
 "@
-                    If ($Adapter.IPv4.DefaultGateway) {
+                If ($Adapter.IPv4.DefaultGateway)
+                {
 $NetworkingDSCConfig += @"
     xDefaultGatewayAddress IPv4G_$AdapterCount {
         InterfaceAlias = '$($Adapter.Name)'
@@ -1610,7 +1677,9 @@ $NetworkingDSCConfig += @"
     }
 
 "@
-                    } Else {
+                }
+                Else
+                {
 $NetworkingDSCConfig += @"
     xDefaultGatewayAddress IPv4G_$AdapterCount {
         InterfaceAlias = '$($Adapter.Name)'
@@ -1618,9 +1687,10 @@ $NetworkingDSCConfig += @"
     }
 
 "@
-                    } # If
                 } # If
-                If ($Adapter.IPv4.DNSServer -ne $null) {
+            } # If
+            If ($Adapter.IPv4.DNSServer -ne $null)
+            {
 $NetworkingDSCConfig += @"
     xDnsServerAddress IPv4D_$AdapterCount {
         InterfaceAlias = '$($Adapter.Name)'
@@ -1629,10 +1699,12 @@ $NetworkingDSCConfig += @"
     }
 
 "@
-                } # If
             } # If
-            If ($Adapter.IPv6) {
-                If ($Adapter.IPv6.Address) {
+        } # If
+        If ($Adapter.IPv6)
+        {
+            If ($Adapter.IPv6.Address)
+            {
 $NetworkingDSCConfig += @"
     xIPAddress IPv6_$AdapterCount {
         InterfaceAlias = '$($Adapter.Name)'
@@ -1642,7 +1714,8 @@ $NetworkingDSCConfig += @"
     }
 
 "@
-                    If ($Adapter.IPv6.DefaultGateway) {
+                If ($Adapter.IPv6.DefaultGateway)
+                {
 $NetworkingDSCConfig += @"
     xDefaultGatewayAddress IPv6G_$AdapterCount {
         InterfaceAlias = '$($Adapter.Name)'
@@ -1651,7 +1724,9 @@ $NetworkingDSCConfig += @"
     }
 
 "@
-                    } Else {
+                }
+                Else
+                {
 $NetworkingDSCConfig += @"
     xDefaultGatewayAddress IPv6G_$AdapterCount {
         InterfaceAlias = '$($Adapter.Name)'
@@ -1659,9 +1734,10 @@ $NetworkingDSCConfig += @"
     }
 
 "@
-                    } # If
                 } # If
-                If ($Adapter.IPv6.DNSServer -ne $null) {
+            } # If
+            If ($Adapter.IPv6.DNSServer -ne $null)
+            {
 $NetworkingDSCConfig += @"
     xDnsServerAddress IPv6D_$AdapterCount {
         InterfaceAlias = '$($Adapter.Name)'
@@ -1670,41 +1746,56 @@ $NetworkingDSCConfig += @"
     }
 
 "@
-                } # If
             } # If
-        } # Endfor
+        } # If
+    } # Endfor
 $NetworkingDSCConfig += @"
 }
 "@
-        [String]$NetworkingDSCFile = Join-Path -Path "$VMPath\$($VM.Name)\LabBuilder Files" -ChildPath 'DSCNetworking.ps1'
-        $null = Set-Content -Path $NetworkingDSCFile -Value $NetworkingDSCConfig
-        . $NetworkingDSCFile
+    [String]$NetworkingDSCFile = Join-Path `
+        -Path $VMLabBuilderFiles `
+        -ChildPath 'DSCNetworking.ps1'
+    $null = Set-Content `
+        -Path $NetworkingDSCFile `
+        -Value $NetworkingDSCConfig
+    . $NetworkingDSCFile
 
-        [String]$DSCFile = Join-Path -Path "$VMPath\$($VM.Name)\LabBuilder Files" -ChildPath 'DSC.ps1'
-        [String]$DSCContent = Get-Content -Path $VM.DSCConfigFile -Raw
-        
-        If (-not ($DSCContent -match 'Networking Network {}')) {
-            # Add the Networking Configuration item to the base DSC Config File
-            # Find the location of the line containing "Node $AllNodes.NodeName {"
-            [String]$Regex = '\s*Node\s.*{.*'
-            $Matches = [regex]::matches($DSCContent, $Regex, 'IgnoreCase')
-            If ($Matches.Count -eq 1) {
-                $DSCContent = $DSCContent.Insert($Matches[0].Index+$Matches[0].Length,"`r`nNetworking Network {}`r`n")
-            } Else {
-                Throw "A single Node element cannot be found in the DSC Config File $($VM.DSCCOnfigFile) for VM $($VM.Name)."
-            } # If
+    [String]$DSCFile = Join-Path `
+        -Path $VMLabBuilderFiles `
+        -ChildPath 'DSC.ps1'
+    [String]$DSCContent = Get-Content `
+        -Path $VM.DSCConfigFile `
+        -Raw
+    
+    If (-not ($DSCContent -match 'Networking Network {}'))
+    {
+        # Add the Networking Configuration item to the base DSC Config File
+        # Find the location of the line containing "Node $AllNodes.NodeName {"
+        [String]$Regex = '\s*Node\s.*{.*'
+        $Matches = [regex]::matches($DSCContent, $Regex, 'IgnoreCase')
+        If ($Matches.Count -eq 1)
+        {
+            $DSCContent = $DSCContent.Insert($Matches[0].Index+$Matches[0].Length,"`r`nNetworking Network {}`r`n")
+        }
+        Else
+        {
+            Throw "A single Node element cannot be found in the DSC Config File $($VM.DSCCOnfigFile) for VM $($VM.Name)."
         } # If
-        
-        # Save the DSC Content
-        $null = Set-Content -Path $DSCFile -Value $DSCContent -Force
+    } # If
+    
+    # Save the DSC Content
+    $null = Set-Content `
+        -Path $DSCFile `
+        -Value $DSCContent `
+        -Force
 
-        # Hook the Networking DSC File into the main DSC File
-        . $DSCFile
+    # Hook the Networking DSC File into the main DSC File
+    . $DSCFile
 
-        [String]$DSCConfigName = $VM.DSCConfigName
-        
-        # Generate the Configuration Nodes data that always gets passed to the DSC configuration.
-        [String]$ConfigurationData = @"
+    [String]$DSCConfigName = $VM.DSCConfigName
+    
+    # Generate the Configuration Nodes data that always gets passed to the DSC configuration.
+    [String]$ConfigurationData = @"
 @{
     AllNodes = @(
         @{
@@ -1717,44 +1808,59 @@ $NetworkingDSCConfig += @"
     )
 }
 "@
-        # Write it to a temp file
-        [String]$ConfigurationFile = Join-Path -Path "$VMPath\$($VM.Name)\LabBuilder Files" -ChildPath 'DSCConfigData.psd1'
-        If (Test-Path -Path $ConfigurationFile) {
-            $null = Remove-Item -Path $ConfigurationFile -Force
-        }
-        Set-Content -Path $ConfigurationFile -Value $ConfigurationData
-            
-        # Generate the MOF file from the configuration
-        & "$DSCConfigName" -OutputPath $($ENV:Temp) -ConfigurationData $ConfigurationFile
-        If (-not (Test-Path -Path $DSCMOFFile)) {
-            Throw "A MOF File was not created by the DSC Config File $($VM.DSCCOnfigFile) for VM $($VM.Name)."
-        } # If
+    # Write it to a temp file
+    [String]$ConfigurationFile = Join-Path `
+        -Path $VMLabBuilderFiles `
+        -ChildPath 'DSCConfigData.psd1'
+    If (Test-Path -Path $ConfigurationFile)
+    {
+        $null = Remove-Item `
+            -Path $ConfigurationFile `
+            -Force
+    }
+    Set-Content -Path $ConfigurationFile -Value $ConfigurationData
+        
+    # Generate the MOF file from the configuration
+    & "$DSCConfigName" -OutputPath $($ENV:Temp) -ConfigurationData $ConfigurationFile
+    If (-not (Test-Path -Path $DSCMOFFile))
+    {
+        Throw "A MOF File was not created by the DSC Config File $($VM.DSCCOnfigFile) for VM $($VM.Name)."
+    } # If
 
-        # Remove the VM Self-Signed Certificate from the Local Machine Store
-        $null = Remove-Item -Path "Cert:LocalMachine\My\$CertificateThumbprint" -Force
+    # Remove the VM Self-Signed Certificate from the Local Machine Store
+    $null = Remove-Item `
+        -Path "Cert:LocalMachine\My\$CertificateThumbprint" `
+        -Force
 
-        Write-Verbose "DSC MOF File $DSCMOFFile for VM $($VM.Name) was created successfully ..."
+    Write-Verbose "DSC MOF File $DSCMOFFile for VM $($VM.Name) was created successfully ..."
 
-        # Copy the files to the LabBuilder Files folder
+    # Copy the files to the LabBuilder Files folder
+    $null = Copy-Item `
+        -Path $DSCMOFFile `
+        -Destination (Join-Path -Path $VMLabBuilderFiles -ChildPath "$($VM.ComputerName).mof") `
+        -Force
 
-        $null = Copy-Item -Path $DSCMOFFile -Destination "$VMPath\$($VM.Name)\LabBuilder Files\$($VM.ComputerName).mof" -Force
+    If (-not $VM.DSCMOFFile)
+    {
+        # Remove Temporary files created by DSC
+        $null = Remove-Item `
+            -Path $DSCMOFFile `
+            -Force
+    }
 
-        If (-not $VM.DSCMOFFile) {
+    If (Test-Path -Path $DSCMOFMetaFile)
+    {
+        $null = Copy-Item `
+            -Path $DSCMOFMetaFile `
+            -Destination (Join-Path -Path $VMLabBuilderFiles -ChildPath "$($VM.ComputerName).meta.mof") `
+            -Force
+        If (-not $VM.DSCMOFFile)
+        {
             # Remove Temporary files created by DSC
-            $null = Remove-Item -Path $DSCMOFFile -Force
+            $null = Remove-Item `
+                -Path $DSCMOFMetaFile `
+                -Force
         }
-
-        If (Test-Path -Path $DSCMOFMetaFile) {
-            $null = Copy-Item -Path $DSCMOFMetaFile -Destination "$VMPath\$($VM.Name)\LabBuilder Files\$($VM.ComputerName).meta.mof" -Force
-            If (-not $VM.DSCMOFFile) {
-                # Remove Temporary files created by DSC
-                $null = Remove-Item -Path $DSCMOFMetaFile -Force
-            }
-        } # If
-
-        Return $True
-    } Else {
-        Return $False
     } # If
 } # Set-LabDSCMOFFile
 ####################################################################################################
@@ -2200,8 +2306,8 @@ function Set-LabVMInitializationFiles {
     # Mount the VMs Boot VHD so that files can be loaded into it
     [String]$MountPoint = Join-Path -Path $ENV:Temp -ChildPath ([System.IO.Path]::GetRandomFileName())
     Write-Verbose "Mounting VM $($VM.Name) Boot Disk VHDx $VMBootDiskPath ..."
-    New-Item -Path $MountPoint -ItemType Directory | Out-Null
-    Mount-WindowsImage -ImagePath $VMBootDiskPath -Path $MountPoint -Index 1 | Out-Null
+    $null = New-Item -Path $MountPoint -ItemType Directory
+    $null = Mount-WindowsImage -ImagePath $VMBootDiskPath -Path $MountPoint -Index 1 | Out-Null
 
     # Copy the WMF 5.0 Installer to the VM in case it is needed
     # This contains a bug at the moment - waiting for MS to resolve
@@ -2870,6 +2976,48 @@ function Start-LabVM {
 ####################################################################################################
 <#
 .SYNOPSIS
+   Creates the folder structure that will contain a Lab Virtual Machine. 
+.DESCRIPTION
+   Creates a standard Hyper-V Virtual Machine folder structure as well as additional folders
+   for containing configuration files for DSC.
+.EXAMPLE
+   Create-LabVMPath -VMPath 'c:\VMs\Lab\Virtual Machine 1'
+   The command will create the Virtual Machine structure for a Lab VM in the folder:
+   'c:\VMs\Lab\Virtual Machine 1'
+.OUTPUTS
+   None.
+#>
+function Create-LabVMPath {
+    [CmdLetBinding()]
+    param (
+        [Parameter(
+            Mandatory,
+            Position=0)]
+        [ValidateNotNullOrEmpty()]
+        [String] $VMPath
+    )
+
+    If (-not (Test-Path -Path $VMPath)) {
+        $Null = New-Item -Path $VMPath -ItemType Directory
+    }
+    If (-not (Test-Path -Path "$VMPath\Virtual Machines")) {
+        $Null = New-Item -Path "$VMPath\Virtual Machines" -ItemType Directory
+    }
+    If (-not (Test-Path -Path "$VMPath\Virtual Hard Disks")) {
+        $Null = New-Item -Path "$VMPath\Virtual Hard Disks" -ItemType Directory
+    }
+    If (-not (Test-Path -Path "$VMPath\LabBuilder Files")) {
+        $Null = New-Item -Path "$VMPath\LabBuilder Files" -ItemType Directory
+    }
+    If (-not (Test-Path -Path "$VMPath\LabBuilder Files\DSC Modules")) {
+        $Null = New-Item -Path "$VMPath\LabBuilder Files\DSC Modules" -ItemType Directory
+    }
+}
+####################################################################################################
+
+####################################################################################################
+<#
+.SYNOPSIS
    Short description
 .DESCRIPTION
    Long description
@@ -2919,22 +3067,8 @@ function Initialize-LabVMs {
         If (($CurrentVMs | Where-Object -Property Name -eq $VM.Name).Count -eq 0) {
             Write-Verbose "Creating VM $($VM.Name) ..."
 
-            # Create the paths for the VM
-            If (-not (Test-Path -Path "$VMPath\$($VM.Name)")) {
-                $Null = New-Item -Path "$VMPath\$($VM.Name)" -ItemType Directory
-            }
-            If (-not (Test-Path -Path "$VMPath\$($VM.Name)\Virtual Machines")) {
-                $Null = New-Item -Path "$VMPath\$($VM.Name)\Virtual Machines" -ItemType Directory
-            }
-            If (-not (Test-Path -Path "$VMPath\$($VM.Name)\Virtual Hard Disks")) {
-                $Null = New-Item -Path "$VMPath\$($VM.Name)\Virtual Hard Disks" -ItemType Directory
-            }
-            If (-not (Test-Path -Path "$VMPath\$($VM.Name)\LabBuilder Files")) {
-                $Null = New-Item -Path "$VMPath\$($VM.Name)\LabBuilder Files" -ItemType Directory
-            }
-            If (-not (Test-Path -Path "$VMPath\$($VM.Name)\LabBuilder Files\DSC Modules")) {
-                $Null = New-Item -Path "$VMPath\$($VM.Name)\LabBuilder Files\DSC Modules" -ItemType Directory
-            }
+            # Make sure the appropriate folders exist
+            Create-LabVMPath -VMPath "$VMPath\$($VM.Name)"
 
             # Create the boot disk
             $VMBootDiskPath = "$VMPath\$($VM.Name)\Virtual Hard Disks\$($VM.Name) Boot Disk.vhdx"

@@ -1105,9 +1105,7 @@ Describe 'Remove-LabVMTemplates' {
 
 ####################################################################################################
 Describe 'Set-LabDSCMOFFile' {
-	Remove-Item -Path 'C:\Pester Lab\PESTER01\LabBuilder Files' -Recurse -Force -ErrorAction SilentlyContinue
 
-	#region Mocks
 	Mock Get-VM
 	Mock Import-Certificate -MockWith {
 		[PSCustomObject]@{
@@ -1116,7 +1114,6 @@ Describe 'Set-LabDSCMOFFile' {
 	} # Mock
 	Mock Remove-Item -ParameterFilter {$path -eq 'Cert:LocalMachine\My\1234567890ABCDEF'}
 	Mock Set-VMHost
-	#endregion
 
 	Context 'Valid Parameters Passed' {
 		$Config = Get-LabConfiguration -Path $Global:TestConfigOKPath
@@ -1140,8 +1137,6 @@ Describe 'Set-LabDSCMOFFile' {
 			Test-Path -Path 'C:\Pester Lab\PESTER01\LabBuilder Files\DSCNetworking.ps1' | Should Be $True
 		}
 	}
- 
-	#Remove-Item -Path "C:\Pester Lab\PESTER01\LabBuilder Files" -Recurse -Force -ErrorAction SilentlyContinue
 }
 ####################################################################################################
 
