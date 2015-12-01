@@ -22,9 +22,9 @@ This had the following advantages:
 The use of this module is fairly simple from a process standpoint - the bulk of the work for a Lab goes into the creation of the XML that defines the Lab environment - as well as any DSC config scripts that are used by the Lab.
 
 A Lab consists of the following items:
-1. A configuration XML file that defines the Virtual Machines, Switches, the DSC config files and anything else related to how the Lab is set up.
-2. One or more VHDs containing Syspreped Windows images used by the Lab. Usually just a VHD of a Syspreped Windows Server 2012 R2 (or other) OS is fine. But you may use multiple template VHDs for different OS's or configurations (e.g. I have one for Windows Server 2012 R2 full install and one for Windows Server 2012 R2 Core install).
-3. Any DSC configuration files that will be used to configure the Lab VMs after the OS initial start up has completed. I have provided many basic and more complex ones with this project.
+- A configuration XML file that defines the Virtual Machines, Switches, the DSC config files and anything else related to how the Lab is set up.
+- One or more VHDs containing Syspreped Windows images used by the Lab. Usually just a VHD of a Syspreped Windows Server 2012 R2 (or other) OS is fine. But you may use multiple template VHDs for different OS's or configurations (e.g. I have one for Windows Server 2012 R2 full install and one for Windows Server 2012 R2 Core install).
+- Any DSC configuration files that will be used to configure the Lab VMs after the OS initial start up has completed. I have provided many basic and more complex ones with this project.
 
 Once these files are available the process of setting up the Lab is simple. Just run the following commands in an Administrative PowerShell window:
 ```powershell
@@ -43,5 +43,5 @@ Install-Lab -Path 'c:\Lab01\Config.xml'
 ## Example Usage
 
 ## Links
-**GitHub Repository:** https://github.com/PlagueHO/LabBuilder/
-**Blog:** https://dscottraynsford.wordpress.com/
+- [GitHub Repository](https://github.com/PlagueHO/LabBuilder/)
+- [Blog](https://dscottraynsford.wordpress.com/)
