@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 
-<labbuilderconfig name="TestConfigDCandDHCPOnly"
+<labbuilderconfig name=SampleConfig_DCandDHCPOnly"
                   version="1.0">
-  <description>Simple Test Lab Configuration DC and DHCP Only</description>
+  <description>Sample Lab Configuration DC and DHCP Only</description>
 
   <settings domainname="LABBUILDER.COM"
             email="daniel@LABBUILDER.COM"

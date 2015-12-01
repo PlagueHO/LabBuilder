@@ -1,5 +1,5 @@
 ﻿[String]$Script:ModulePath = "$PSScriptRoot\..\LabBuilder.psd1"
-[String]$Script:ConfigPath = "$PSScriptRoot\..\Samples\Sample_FullDomain.xml"
+[String]$Script:ConfigPath = "$PSScriptRoot\..\Samples\Sample_DomainComplete.xml"
 ##########################################################################################################################################
 Function Test-StartLabVM {
     Param (

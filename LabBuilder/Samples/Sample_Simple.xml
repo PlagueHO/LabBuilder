@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 
-<labbuilderconfig name="TestConfigSimple"
+<labbuilderconfig name="SampleConfig_Simple"
                   version="1.0">
-  <description>Simple Test Lab Configuration Simple</description>
+  <description>Sample Test Lab Configuration Simple</description>
 
   <settings domainname="LABBUILDER.COM"
             email="daniel@LABBUILDER.COM"
