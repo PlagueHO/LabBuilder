@@ -21,6 +21,12 @@ AdapterSpecifiedError=Adapter specified on '{0}' swtich '{1}'.
 EmptyTemplateNameError=Template Name is missing or empty.
 EmptyTemplateVHDError=VHD in Template '{0}' is empty.
 TemplateSourceVHDNotFoundError=The Template Source VHD '{0}' in Template '{1}' could not be found.
+DSCModuleDownloadError=Module '{2}' required by DSC Config File '{0}' in VM '{1}' could not be found or downloaded.					
+DSCModuleNotFoundError=Module '{2}' required by DSC Config File '{0}' in VM '{1}' could not be found in the module path.
+CertificateCreateError=The self-signed certificate for VM '{0}' could not be created and downloaded.
+DSCConfigMetaMOFCreateError=A Meta MOF File was not created by the DSC LCM Config for VM '{0}'.
+DSCConfigMoreThanOneNodeError=A single Node element cannot be found in the DSC Config File '{0}' in VM '{1}'.
+DSCConfigMOFCreateError=A MOF File was not created by the DSC Config File '{0}' in VM '{1}'.
 InstallingHyperVComponentsMesage=Installing {0} Hyper-V Components.
 InitializingHyperVComponentsMesage=Initializing Hyper-V Components.
 DownloadingLabResourcesMessage=Downloading Lab Resources.
@@ -41,6 +47,9 @@ DSCConfigIdentifyModulesMessage=Identifying Modules used by DSC Config File '{0}
 DSCConfigSearchingForModuleMessage=Searching for Module '{2}' required by DSC Config File '{0}' in VM '{1}'.
 DSCConfigInstallingModuleMessage=Installing Module '{2}' required by DSC Config File '{0}' in VM '{1}'.
 DSCConfigSavingModuleMessage=Saving Module '{2}' required by DSC Config File '{0}' in VM '{1}' to LabBuilder files.
+DSCConfigCreatingLCMMOFMessage=Creating DSC LCM Conifg file '{0}' in VM '{1}'.
+DSCConfigCreatingMOFMessage=Creating DSC Conifg file '{0}' in VM '{1}'.
+DSCConfigMOFCreatedMessage=DSC MOF File '{0}' for VM '{1}'. was created successfully.
 '@
 }
 
@@ -1449,7 +1458,7 @@ function Initialize-LabVMTemplates {
 .PARAMETER Configuration
    Contains the Lab Builder configuration object that was loaded by the Get-LabConfiguration
    object.
-.PARAMETER $VMTemplates
+.PARAMETER VMTemplates
    The array of Virtual Machine Templates pulled from the Lab Configuration file using
    Get-LabVMTemplates
 .EXAMPLE
@@ -1502,12 +1511,16 @@ function Remove-LabVMTemplates {
      5. Cause a self-signed cetficiate to be created and downloaded on the Lab VM.
      6. Create a Networking DSC configuration file and ensure the DSC config file calss it.
      7. Create the MOF file from the config and an LCM config.
+.PARAMETER Configuration
+   Contains the Lab Builder configuration object that was loaded by the Get-LabConfiguration
+   object.
+.PARAMETER VM
+   A Virtual Machine object pulled from the Lab Configuration file using Get-LabVM
 .EXAMPLE
-   Example of how to use this cmdlet
-.EXAMPLE
-   Another example of how to use this cmdlet
-.INPUTS
-   Inputs to this cmdlet (if any)
+   $Config = Get-LabConfiguration -Path c:\mylab\config.xml
+   $VMs = Get-LabVM -Configuration $Config
+   Set-LabDSCMOFFile -Configuration $Config -VM $VMs[0]
+   Prepare the first VM in the Lab c:\mylab\config.xml for DSC configuration.
 .OUTPUTS
    None.
 #>
@@ -1573,12 +1586,30 @@ function Set-LabDSCMOFFile {
                 }
                 Catch
                 {
-                    Throw "Module $ModuleName required by DSC Config File $($VM.DSCConfigFile) in VM $($VM.Name) could not be downloaded ..."					
+                    $errorId = 'DSCModuleDownloadError'
+                    $errorCategory = [System.Management.Automation.ErrorCategory]::InvalidArgument
+                    $errorMessage = $($LocalizedData.DSCModuleDownloadError `
+                        -f $VM.DSCConfigFile,$VM.Name,$ModuleName)
+                    $exception = New-Object -TypeName System.InvalidOperationException `
+                        -ArgumentList $errorMessage
+                    $errorRecord = New-Object -TypeName System.Management.Automation.ErrorRecord `
+                        -ArgumentList $exception, $errorId, $errorCategory, $null
+    
+                    $PSCmdlet.ThrowTerminatingError($errorRecord)
                 }
             }
             Else
             {
-                Throw "Module $ModuleName required by DSC Config File $($VM.DSCConfigFile) in VM $($VM.Name) could not be found or downloaded ..."
+                $errorId = 'DSCModuleDownloadError'
+                $errorCategory = [System.Management.Automation.ErrorCategory]::InvalidArgument
+                $errorMessage = $($LocalizedData.DSCModuleDownloadError `
+                    -f $VM.DSCConfigFile,$VM.Name,$ModuleName)
+                $exception = New-Object -TypeName System.InvalidOperationException `
+                    -ArgumentList $errorMessage
+                $errorRecord = New-Object -TypeName System.Management.Automation.ErrorRecord `
+                    -ArgumentList $exception, $errorId, $errorCategory, $null
+
+                $PSCmdlet.ThrowTerminatingError($errorRecord)
             }
         } # If
 
@@ -1599,7 +1630,16 @@ function Set-LabDSCMOFFile {
         } # Foreach
         If (-not $ModulePath)
         {
-            Throw "Module $ModuleName required by DSC Config File $($VM.DSCConfigFile) in VM $($VM.Name) could not be found in the module path."
+            $errorId = 'DSCModuleNotFoundError'
+            $errorCategory = [System.Management.Automation.ErrorCategory]::InvalidArgument
+            $errorMessage = $($LocalizedData.DSCModuleNotFoundError `
+                -f $VM.DSCConfigFile,$VM.Name,$ModuleName)
+            $exception = New-Object -TypeName System.InvalidOperationException `
+                -ArgumentList $errorMessage
+            $errorRecord = New-Object -TypeName System.Management.Automation.ErrorRecord `
+                -ArgumentList $exception, $errorId, $errorCategory, $null
+
+            $PSCmdlet.ThrowTerminatingError($errorRecord)
         }
         Copy-Item `
             -Path $ModulePath `
@@ -1609,11 +1649,22 @@ function Set-LabDSCMOFFile {
 
     if (-not (New-LabVMSelfSignedCert -Configuration $Configuration -VM $VM))
     {
-        Throw "The self-signed certificate for VM $($VM.Name) could not be created and downloaded."
+        $errorId = 'CertificateCreateError'
+        $errorCategory = [System.Management.Automation.ErrorCategory]::InvalidArgument
+        $errorMessage = $($LocalizedData.CertificateCreateError `
+            -f $VM.Name)
+        $exception = New-Object -TypeName System.InvalidOperationException `
+            -ArgumentList $errorMessage
+        $errorRecord = New-Object -TypeName System.Management.Automation.ErrorRecord `
+            -ArgumentList $exception, $errorId, $errorCategory, $null
+
+        $PSCmdlet.ThrowTerminatingError($errorRecord)
     }
     
     # Remove any old self-signed certifcates for this VM
-    Get-ChildItem -Path cert:\LocalMachine\My | Where-Object { $_.FriendlyName -eq "$($VM.ComputerName) Self-Signed Certificate" } | Remove-Item
+    Get-ChildItem -Path cert:\LocalMachine\My `
+        | Where-Object { $_.FriendlyName -eq "$($VM.ComputerName) Self-Signed Certificate" } `
+        | Remove-Item
     
     # Add the VM Self-Signed Certificate to the Local Machine store and get the Thumbprint	
     [String]$CertificateFile = Join-Path `
@@ -1631,127 +1682,34 @@ function Set-LabDSCMOFFile {
     $DSCMOFMetaFile = ([System.IO.Path]::ChangeExtension($DSCMOFFile,'meta.mof'))
         
     # Generate the LCM MOF File
-    Write-Verbose "Creating VM $($VM.Name) DSC LCM MOF File ..."
+    Write-Verbose -Message $($LocalizedData.DSCConfigCreatingLCMMOFMessage `
+        -f $DSCMOFMetaFile,$VM.Name)
+
     $null = ConfigLCM `
         -OutputPath $($ENV:Temp) `
         -ComputerName $($VM.ComputerName) `
         -Thumbprint $CertificateThumbprint
     If (-not (Test-Path -Path $DSCMOFMetaFile))
     {
-        Throw "A Meta MOF File was not created by the DSC LCM Config for VM $($VM.Name)."
+        $errorId = 'DSCConfigMetaMOFCreateError'
+        $errorCategory = [System.Management.Automation.ErrorCategory]::InvalidArgument
+        $errorMessage = $($LocalizedData.DSCConfigMetaMOFCreateError `
+            -f $VM.Name)
+        $exception = New-Object -TypeName System.InvalidOperationException `
+            -ArgumentList $errorMessage
+        $errorRecord = New-Object -TypeName System.Management.Automation.ErrorRecord `
+            -ArgumentList $exception, $errorId, $errorCategory, $null
+
+        $PSCmdlet.ThrowTerminatingError($errorRecord)
     } # If
 
     # A DSC Config File was provided so create a MOF File out of it.
-    Write-Verbose "Creating VM $($VM.Name) DSC MOF File from DSC Config $($VM.DSCConfigFile) ..."
+    Write-Verbose -Message $($LocalizedData.DSCConfigCreatingMOFMessage `
+        -f $VM.DSCConfigFile,$VM.Name)
     
     # Now create the Networking DSC Config file
-    [String]$NetworkingDSCConfig = @"
-Configuration Networking {
-    Import-DscResource -ModuleName xNetworking
-
-"@
-    [Int]$AdapterCount = 0
-    Foreach ($Adapter in $VM.Adapters)
-    {
-        $AdapterCount++
-        If ($Adapter.IPv4)
-        {
-            If ($Adapter.IPv4.Address)
-            {
-$NetworkingDSCConfig += @"
-    xIPAddress IPv4_$AdapterCount {
-        InterfaceAlias = '$($Adapter.Name)'
-        AddressFamily  = 'IPv4'
-        IPAddress      = '$($Adapter.IPv4.Address.Replace(',',"','"))'
-        SubnetMask     = '$($Adapter.IPv4.SubnetMask)'
-    }
-
-"@
-                If ($Adapter.IPv4.DefaultGateway)
-                {
-$NetworkingDSCConfig += @"
-    xDefaultGatewayAddress IPv4G_$AdapterCount {
-        InterfaceAlias = '$($Adapter.Name)'
-        AddressFamily  = 'IPv4'
-        Address        = '$($Adapter.IPv4.DefaultGateway)'
-    }
-
-"@
-                }
-                Else
-                {
-$NetworkingDSCConfig += @"
-    xDefaultGatewayAddress IPv4G_$AdapterCount {
-        InterfaceAlias = '$($Adapter.Name)'
-        AddressFamily  = 'IPv4'
-    }
-
-"@
-                } # If
-            } # If
-            If ($Adapter.IPv4.DNSServer -ne $null)
-            {
-$NetworkingDSCConfig += @"
-    xDnsServerAddress IPv4D_$AdapterCount {
-        InterfaceAlias = '$($Adapter.Name)'
-        AddressFamily  = 'IPv4'
-        Address        = '$($Adapter.IPv4.DNSServer.Replace(',',"','"))'
-    }
-
-"@
-            } # If
-        } # If
-        If ($Adapter.IPv6)
-        {
-            If ($Adapter.IPv6.Address)
-            {
-$NetworkingDSCConfig += @"
-    xIPAddress IPv6_$AdapterCount {
-        InterfaceAlias = '$($Adapter.Name)'
-        AddressFamily  = 'IPv6'
-        IPAddress      = '$($Adapter.IPv6.Address.Replace(',',"','"))'
-        SubnetMask     = '$($Adapter.IPv6.SubnetMask)'
-    }
-
-"@
-                If ($Adapter.IPv6.DefaultGateway)
-                {
-$NetworkingDSCConfig += @"
-    xDefaultGatewayAddress IPv6G_$AdapterCount {
-        InterfaceAlias = '$($Adapter.Name)'
-        AddressFamily  = 'IPv6'
-        Address        = '$($Adapter.IPv6.DefaultGateway)'
-    }
-
-"@
-                }
-                Else
-                {
-$NetworkingDSCConfig += @"
-    xDefaultGatewayAddress IPv6G_$AdapterCount {
-        InterfaceAlias = '$($Adapter.Name)'
-        AddressFamily  = 'IPv6'
-    }
-
-"@
-                } # If
-            } # If
-            If ($Adapter.IPv6.DNSServer -ne $null)
-            {
-$NetworkingDSCConfig += @"
-    xDnsServerAddress IPv6D_$AdapterCount {
-        InterfaceAlias = '$($Adapter.Name)'
-        AddressFamily  = 'IPv6'
-        Address        = '$($Adapter.IPv6.DNSServer.Replace(',',"','"))'
-    }
-
-"@
-            } # If
-        } # If
-    } # Endfor
-$NetworkingDSCConfig += @"
-}
-"@
+    [String]$NetworkingDSCConfig = Get-LabNetworkingDSCFile `
+        -Configuration $Configuration -VM $VM
     [String]$NetworkingDSCFile = Join-Path `
         -Path $VMLabBuilderFiles `
         -ChildPath 'DSCNetworking.ps1'
@@ -1779,7 +1737,16 @@ $NetworkingDSCConfig += @"
         }
         Else
         {
-            Throw "A single Node element cannot be found in the DSC Config File $($VM.DSCCOnfigFile) for VM $($VM.Name)."
+            $errorId = 'DSCConfigMoreThanOneNodeError'
+            $errorCategory = [System.Management.Automation.ErrorCategory]::InvalidArgument
+            $errorMessage = $($LocalizedData.DSCConfigMoreThanOneNodeError `
+                -f $VM.DSCConfigFile,$VM.Name)
+            $exception = New-Object -TypeName System.InvalidOperationException `
+                -ArgumentList $errorMessage
+            $errorRecord = New-Object -TypeName System.Management.Automation.ErrorRecord `
+                -ArgumentList $exception, $errorId, $errorCategory, $null
+    
+            $PSCmdlet.ThrowTerminatingError($errorRecord)
         } # If
     } # If
     
@@ -1824,7 +1791,16 @@ $NetworkingDSCConfig += @"
     & "$DSCConfigName" -OutputPath $($ENV:Temp) -ConfigurationData $ConfigurationFile
     If (-not (Test-Path -Path $DSCMOFFile))
     {
-        Throw "A MOF File was not created by the DSC Config File $($VM.DSCCOnfigFile) for VM $($VM.Name)."
+        $errorId = 'DSCConfigMOFCreateError'
+        $errorCategory = [System.Management.Automation.ErrorCategory]::InvalidArgument
+        $errorMessage = $($LocalizedData.DSCConfigMOFCreateError `
+            -f $VM.DSCConfigFile,$VM.Name)
+        $exception = New-Object -TypeName System.InvalidOperationException `
+            -ArgumentList $errorMessage
+        $errorRecord = New-Object -TypeName System.Management.Automation.ErrorRecord `
+            -ArgumentList $exception, $errorId, $errorCategory, $null
+
+        $PSCmdlet.ThrowTerminatingError($errorRecord)
     } # If
 
     # Remove the VM Self-Signed Certificate from the Local Machine Store
@@ -1832,7 +1808,8 @@ $NetworkingDSCConfig += @"
         -Path "Cert:LocalMachine\My\$CertificateThumbprint" `
         -Force
 
-    Write-Verbose "DSC MOF File $DSCMOFFile for VM $($VM.Name) was created successfully ..."
+    Write-Verbose -Message $($LocalizedData.DSCConfigMOFCreatedMessage `
+        -f $VM.DSCConfigFile,$VM.Name)
 
     # Copy the files to the LabBuilder Files folder
     $null = Copy-Item `
@@ -2265,6 +2242,151 @@ function Get-LabUnattendFile {
         }
     Return $UnattendContent
 } # Get-LabUnattendFile
+####################################################################################################
+
+####################################################################################################
+<#
+.SYNOPSIS
+   Assemble the content of the Networking DSC config file.
+.DESCRIPTION
+   This function creates the content that will be written to the Networking DSC Config file
+   from the networking details stored in the VM object. 
+.EXAMPLE
+   $Config = Get-LabConfiguration -Path c:\mylab\config.xml
+   $VMs = Get-LabVM -Configuration $Config
+   $NetworkingDSC = Get-LabNetworkingDSCFile -Configuration $Config -VM $VMs[0]
+   Return the Networking DSC for the first VM in the Lab c:\mylab\config.xml for DSC configuration.
+.PARAMETER Configuration
+   Contains the Lab Builder configuration object that was loaded by the Get-LabConfiguration
+   object.
+.PARAMETER VM
+   A Virtual Machine object pulled from the Lab Configuration file using Get-LabVM
+.OUTPUTS
+   A string containing the DSC Networking config.
+#>
+function Get-LabNetworkingDSCFile {
+    [CmdLetBinding()]
+    [OutputType([String])]
+    param (
+        [Parameter(
+            Mandatory,
+            Position=0)]
+        [XML]$Configuration,
+
+        [Parameter(
+            Mandatory,
+            Position=1)]
+        [System.Collections.Hashtable]$VM
+    )
+    [String]$NetworkingDSCConfig = @"
+Configuration Networking {
+    Import-DscResource -ModuleName xNetworking
+
+"@
+    [Int]$AdapterCount = 0
+    Foreach ($Adapter in $VM.Adapters)
+    {
+        $AdapterCount++
+        If ($Adapter.IPv4)
+        {
+            If ($Adapter.IPv4.Address)
+            {
+$NetworkingDSCConfig += @"
+    xIPAddress IPv4_$AdapterCount {
+        InterfaceAlias = '$($Adapter.Name)'
+        AddressFamily  = 'IPv4'
+        IPAddress      = '$($Adapter.IPv4.Address.Replace(',',"','"))'
+        SubnetMask     = '$($Adapter.IPv4.SubnetMask)'
+    }
+
+"@
+                If ($Adapter.IPv4.DefaultGateway)
+                {
+$NetworkingDSCConfig += @"
+    xDefaultGatewayAddress IPv4G_$AdapterCount {
+        InterfaceAlias = '$($Adapter.Name)'
+        AddressFamily  = 'IPv4'
+        Address        = '$($Adapter.IPv4.DefaultGateway)'
+    }
+
+"@
+                }
+                Else
+                {
+$NetworkingDSCConfig += @"
+    xDefaultGatewayAddress IPv4G_$AdapterCount {
+        InterfaceAlias = '$($Adapter.Name)'
+        AddressFamily  = 'IPv4'
+    }
+
+"@
+                } # If
+            } # If
+            If ($Adapter.IPv4.DNSServer -ne $null)
+            {
+$NetworkingDSCConfig += @"
+    xDnsServerAddress IPv4D_$AdapterCount {
+        InterfaceAlias = '$($Adapter.Name)'
+        AddressFamily  = 'IPv4'
+        Address        = '$($Adapter.IPv4.DNSServer.Replace(',',"','"))'
+    }
+
+"@
+            } # If
+        } # If
+        If ($Adapter.IPv6)
+        {
+            If ($Adapter.IPv6.Address)
+            {
+$NetworkingDSCConfig += @"
+    xIPAddress IPv6_$AdapterCount {
+        InterfaceAlias = '$($Adapter.Name)'
+        AddressFamily  = 'IPv6'
+        IPAddress      = '$($Adapter.IPv6.Address.Replace(',',"','"))'
+        SubnetMask     = '$($Adapter.IPv6.SubnetMask)'
+    }
+
+"@
+                If ($Adapter.IPv6.DefaultGateway)
+                {
+$NetworkingDSCConfig += @"
+    xDefaultGatewayAddress IPv6G_$AdapterCount {
+        InterfaceAlias = '$($Adapter.Name)'
+        AddressFamily  = 'IPv6'
+        Address        = '$($Adapter.IPv6.DefaultGateway)'
+    }
+
+"@
+                }
+                Else
+                {
+$NetworkingDSCConfig += @"
+    xDefaultGatewayAddress IPv6G_$AdapterCount {
+        InterfaceAlias = '$($Adapter.Name)'
+        AddressFamily  = 'IPv6'
+    }
+
+"@
+                } # If
+            } # If
+            If ($Adapter.IPv6.DNSServer -ne $null)
+            {
+$NetworkingDSCConfig += @"
+    xDnsServerAddress IPv6D_$AdapterCount {
+        InterfaceAlias = '$($Adapter.Name)'
+        AddressFamily  = 'IPv6'
+        Address        = '$($Adapter.IPv6.DNSServer.Replace(',',"','"))'
+    }
+
+"@
+            } # If
+        } # If
+    } # Endfor
+$NetworkingDSCConfig += @"
+}
+"@
+    Return $NetworkingDSCConfig
+} # Get-LabNetworkingDSCFile
 ####################################################################################################
 
 ####################################################################################################
