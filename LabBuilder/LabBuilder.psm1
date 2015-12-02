@@ -47,8 +47,8 @@ DSCConfigIdentifyModulesMessage=Identifying Modules used by DSC Config File '{0}
 DSCConfigSearchingForModuleMessage=Searching for Module '{2}' required by DSC Config File '{0}' in VM '{1}'.
 DSCConfigInstallingModuleMessage=Installing Module '{2}' required by DSC Config File '{0}' in VM '{1}'.
 DSCConfigSavingModuleMessage=Saving Module '{2}' required by DSC Config File '{0}' in VM '{1}' to LabBuilder files.
-DSCConfigCreatingLCMMOFMessage=Creating DSC LCM Conifg file '{0}' in VM '{1}'.
-DSCConfigCreatingMOFMessage=Creating DSC Conifg file '{0}' in VM '{1}'.
+DSCConfigCreatingLCMMOFMessage=Creating DSC LCM Config file '{0}' in VM '{1}'.
+DSCConfigCreatingMOFMessage=Creating DSC Config file '{0}' in VM '{1}'.
 DSCConfigMOFCreatedMessage=DSC MOF File '{0}' for VM '{1}'. was created successfully.
 '@
 }
@@ -69,6 +69,11 @@ DSCConfigMOFCreatedMessage=DSC MOF File '{0}' for VM '{1}'. was created successf
 [Int]$Script:DefaultManagementVLan = 99
 [String]$Script:DefaultMacAddressMinimum = '00155D010600'
 [String]$Script:DefaultMacAddressMaximum = '00155D0106FF'
+[Int]$Script:SelfSignedCertKeyLength = 2048
+[String]$Script:SelfSignedCertProviderName = 'Microsoft Enhanced Cryptographic Provider v1.0' # 'Microsoft Software Key Storage Provider'
+[String]$Script:SelfSignedCertAlgorithmName = 'RSA' # 'ECDH_P256' Or 'ECDH_P384' Or 'ECDH_P521'
+[String]$Script:SelfSignedCertSignatureAlgorithm = 'SHA1' # 'SHA256'
+
 ####################################################################################################
 # Helper functions that aren't exported
 ####################################################################################################
@@ -2435,9 +2440,10 @@ New-SelfsignedCertificateEx ``
     -FriendlyName '$($VM.ComputerName) Self-Signed Certificate' ``
     -Exportable ``
     -StoreLocation 'LocalMachine' ``
-    -KeyLength 2048 ``
-    -SignatureAlgorithm SHA256 ``
-    -ProviderName 'Microsoft Software Key Storage Provider'
+    -KeyLength $($Script:SelfSignedCertKeyLength) ``
+    -ProviderName '$($Script:SelfSignedCertProviderName)' ``
+    -AlgorithmName '$($Script:SelfSignedCertAlgorithmName)' ``
+    -SignatureAlgorithm '$($Script:SelfSignedCertSignatureAlgorithm)'
 `$Cert = Get-ChildItem -Path cert:\LocalMachine\My | Where-Object { `$_.FriendlyName -eq '$($VM.ComputerName) Self-Signed Certificate' }
 Export-Certificate -Type CERT -Cert `$Cert -FilePath `"`$(`$ENV:SystemRoot)\SelfSigned.cer`"
 "@

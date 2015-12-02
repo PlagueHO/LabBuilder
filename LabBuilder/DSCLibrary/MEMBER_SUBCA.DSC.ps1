@@ -23,7 +23,6 @@ Configuration MEMBER_SUBCA
 	Import-DscResource -ModuleName xAdcsDeployment
 	Import-DscResource -ModuleName xPSDesiredStateConfiguration
 	Import-DscResource -ModuleName xNetworking
-	Import-DscResource -ModuleName xRemoteFile
 	Node $AllNodes.NodeName {
 		# Assemble the Local Admin Credentials
 		If ($Node.LocalAdminPassword) {

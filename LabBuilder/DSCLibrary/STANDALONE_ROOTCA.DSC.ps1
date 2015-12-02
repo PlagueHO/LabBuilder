@@ -16,7 +16,7 @@ Configuration STANDALONE_ROOTCA
 {
     Import-DscResource -ModuleName 'PSDesiredStateConfiguration'
     Import-DscResource -ModuleName xAdcsDeployment
-    Import-DscResource -ModuleName xRemoteFile
+	Import-DscResource -ModuleName xPSDesiredStateConfiguration
     Node $AllNodes.NodeName {
         # Assemble the Local Admin Credentials
         If ($Node.LocalAdminPassword) {
