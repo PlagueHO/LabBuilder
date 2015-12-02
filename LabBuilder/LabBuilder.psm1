@@ -1542,14 +1542,14 @@ function Set-LabDSCMOFFile {
     [String]$DSCMOFFile = ''
     [String]$DSCMOFMetaFile = ''
     [String]$VMPath = $Configuration.labbuilderconfig.settings.vmpath
-
-    # Make sure the appropriate folders exist
-    Create-LabVMPath -VMPath $VMRootPath
-    
+  
     # Load path variables
     [String]$VMRootPath = Join-Path `
         -Path $VMPath `
         -ChildPath $VM.Name
+    # Make sure the appropriate folders exist
+    Create-LabVMPath -VMPath $VMRootPath
+    
     [String]$VMLabBuilderFiles = Join-Path `
         -Path $VMRootPath `
         -ChildPath 'LabBuilder Files'
@@ -1668,8 +1668,8 @@ function Set-LabDSCMOFFile {
     
     # Add the VM Self-Signed Certificate to the Local Machine store and get the Thumbprint	
     [String]$CertificateFile = Join-Path `
-        -Path $VMRootPath `
-        -ChildPath (Join-Path -Path $VMLabBuilderFiles -ChildPath 'SelfSigned.cer')
+        -Path $VMLabBuilderFiles `
+        -ChildPath 'SelfSigned.cer'
     $Certificate = Import-Certificate `
         -FilePath $CertificateFile `
         -CertStoreLocation 'Cert:LocalMachine\My'
@@ -2392,6 +2392,62 @@ $NetworkingDSCConfig += @"
 ####################################################################################################
 <#
 .SYNOPSIS
+   Assemble the the PowerShell commands required to create a self-signed certificate.
+.DESCRIPTION
+   This function creates the content that can be written into a PS1 file to create a self-signed
+   certificate.
+.EXAMPLE
+   $Config = Get-LabConfiguration -Path c:\mylab\config.xml
+   $VMs = Get-LabVM -Configuration $Config
+   $NetworkingDSC = Get-LabCreateCertificatePs -Configuration $Config -VM $VMs[0]
+   Return the Create Self-Signed Certificate script for the first VM in the
+   Lab c:\mylab\config.xml for DSC configuration.
+.PARAMETER Configuration
+   Contains the Lab Builder configuration object that was loaded by the Get-LabConfiguration
+   object.
+.PARAMETER VM
+   A Virtual Machine object pulled from the Lab Configuration file using Get-LabVM
+.OUTPUTS
+   A string containing the Create Self-Signed Certificate PowerShell code.
+#>
+function Get-LabCreateCertificatePs {
+    [CmdLetBinding()]
+    [OutputType([String])]
+    param (
+        [Parameter(
+            Mandatory,
+            Position=0)]
+        [XML]$Configuration,
+
+        [Parameter(
+            Mandatory,
+            Position=1)]
+        [System.Collections.Hashtable]$VM
+    )
+    [String]$CreateCertificatePs = @"
+`Get-ChildItem -Path cert:\LocalMachine\My | Where-Object { `$_.FriendlyName -eq '$($VM.ComputerName) Self-Signed Certificate' } | Remove-Item
+. `"`$(`$ENV:SystemRoot)\Setup\Scripts\New-SelfSignedCertificateEx.ps1`"
+New-SelfsignedCertificateEx ``
+    -Subject 'CN=$($VM.ComputerName)' ``
+    -EKU 'Server Authentication', 'Client authentication', 'Document Encryption' ``
+    -KeyUsage 'KeyEncipherment, DigitalSignature' ``
+    -SAN '$($VM.ComputerName)' ``
+    -FriendlyName '$($VM.ComputerName) Self-Signed Certificate' ``
+    -Exportable ``
+    -StoreLocation 'LocalMachine' ``
+    -KeyLength 2048 ``
+    -SignatureAlgorithm SHA256 ``
+    -ProviderName 'Microsoft Software Key Storage Provider'
+`$Cert = Get-ChildItem -Path cert:\LocalMachine\My | Where-Object { `$_.FriendlyName -eq '$($VM.ComputerName) Self-Signed Certificate' }
+Export-Certificate -Type CERT -Cert `$Cert -FilePath `"`$(`$ENV:SystemRoot)\SelfSigned.cer`"
+"@
+    Return $CreateCertificatePs
+} # Get-LabCreateCertificatePs
+####################################################################################################
+
+####################################################################################################
+<#
+.SYNOPSIS
    Short description
 .DESCRIPTION
    Long description
@@ -2459,15 +2515,11 @@ function Set-LabVMInitializationFiles {
     $null = Set-Content `
         -Path "$VMPath\$($VM.Name)\LabBuilder Files\Unattend.xml" `
         -Value $UnattendFile -Force
-    [String]$SetupCompleteCmd = @"
-"@
+    [String]$SetupCompleteCmd = ''
+    [String]$CreateSelfSignedCert = Get-LabCreateCertificatePs -Configuration $Configuration -VM $VM
     [String]$SetupCompletePs = @"
-. `"`$(`$ENV:SystemRoot)\Setup\Scripts\New-SelfSignedCertificateEx.ps1`"
-New-SelfsignedCertificateEx -Subject 'CN=$($VM.ComputerName)' -EKU 'Server Authentication', 'Client authentication', 'Document Encryption' ``
-    -KeyUsage 'KeyEncipherment, DigitalSignature' -SAN '$($VM.ComputerName)' -FriendlyName '$($VM.ComputerName) Self-Signed Certificate' ``
-    -Exportable -StoreLocation 'LocalMachine'
-`$Cert = Get-ChildItem -Path cert:\LocalMachine\My | Where-Object { `$_.FriendlyName -eq '$($VM.ComputerName) Self-Signed Certificate' }
-Export-Certificate -Type CERT -Cert `$Cert -FilePath `"`$(`$ENV:SystemRoot)\SelfSigned.cer`"
+Add-Content -Path "C:\WINDOWS\Setup\Scripts\SetupComplete.log" -Value 'SetupComplete.ps1 Script Started...' -Encoding Ascii
+$CreateSelfSignedCert
 Add-Content -Path `"`$(`$ENV:SystemRoot)\Setup\Scripts\SetupComplete.log`" -Value 'Self-signed certificate created and saved to C:\Windows\SelfSigned.cer ...' -Encoding Ascii
 Enable-PSRemoting -SkipNetworkProfileCheck -Force
 Add-Content -Path `"`$(`$ENV:SystemRoot)\Setup\Scripts\SetupComplete.log`" -Value 'Windows Remoting Enabled ...' -Encoding Ascii
@@ -2951,15 +3003,7 @@ function New-LabVMSelfSignedCert {
             } # Try
         } # While
 
-        [String]$CreateNewSelfSignedCert = @"
-`Get-ChildItem -Path cert:\LocalMachine\My | Where-Object { `$_.FriendlyName -eq '$($VM.ComputerName) Self-Signed Certificate' } | Remove-Item
-. `"`$(`$ENV:SystemRoot)\Setup\Scripts\New-SelfSignedCertificateEx.ps1`"
-New-SelfsignedCertificateEx -Subject 'CN=$($VM.ComputerName)' -EKU 'Server Authentication', 'Client authentication', 'Document Encryption' ``
-    -KeyUsage 'KeyEncipherment, DigitalSignature' -SAN '$($VM.ComputerName)' -FriendlyName '$($VM.ComputerName) Self-Signed Certificate' ``
-    -Exportable -StoreLocation 'LocalMachine'
-`$Cert = Get-ChildItem -Path cert:\LocalMachine\My | Where-Object { `$_.FriendlyName -eq '$($VM.ComputerName) Self-Signed Certificate' }
-Export-Certificate -Type CERT -Cert `$Cert -FilePath `"`$(`$ENV:SystemRoot)\SelfSigned.cer`"
-"@
+        [String]$CreateNewSelfSignedCert = Get-LabCreateCertificatePs -Configuration $Configuration -VM $VM
         $null = Set-Content `
             -Path "$VMPath\$($VM.Name)\LabBuilder Files\CreateNewSelfSignedCert.ps1" `
             -Value $CreateNewSelfSignedCert `
