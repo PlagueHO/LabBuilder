@@ -1950,6 +1950,7 @@ Start-DSCConfiguration -Path `"$($ENV:SystemRoot)\Setup\Scripts\`" -Force -Verbo
     $null = Set-Content -Path "$VMPath\$($VM.Name)\LabBuilder Files\StartDSC.ps1" -Value $DSCStartPs -Force
 
     $DSCStartPsDebug = @"
+Set-DscLocalConfigurationManager -Path `"$($ENV:SystemRoot)\Setup\Scripts\`" -Verbose
 Start-DSCConfiguration -Path `"$($ENV:SystemRoot)\Setup\Scripts\`" -Force -Debug -Wait -Verbose
 "@
     $null = Set-Content -Path "$VMPath\$($VM.Name)\LabBuilder Files\StartDSCDebug.ps1" -Value $DSCStartPsDebug -Force
@@ -2440,10 +2441,11 @@ New-SelfsignedCertificateEx ``
     -FriendlyName '$($VM.ComputerName) Self-Signed Certificate' ``
     -Exportable ``
     -StoreLocation 'LocalMachine' ``
+    -StoreName 'My' ``
     -KeyLength $($Script:SelfSignedCertKeyLength) ``
     -ProviderName '$($Script:SelfSignedCertProviderName)' ``
-    -AlgorithmName '$($Script:SelfSignedCertAlgorithmName)' ``
-    -SignatureAlgorithm '$($Script:SelfSignedCertSignatureAlgorithm)'
+    -AlgorithmName $($Script:SelfSignedCertAlgorithmName) ``
+    -SignatureAlgorithm $($Script:SelfSignedCertSignatureAlgorithm)
 `$Cert = Get-ChildItem -Path cert:\LocalMachine\My | Where-Object { `$_.FriendlyName -eq '$($VM.ComputerName) Self-Signed Certificate' }
 Export-Certificate -Type CERT -Cert `$Cert -FilePath `"`$(`$ENV:SystemRoot)\SelfSigned.cer`"
 "@
