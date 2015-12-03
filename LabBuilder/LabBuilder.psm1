@@ -70,9 +70,11 @@ DSCConfigMOFCreatedMessage=DSC MOF File '{0}' for VM '{1}'. was created successf
 [String]$Script:DefaultMacAddressMinimum = '00155D010600'
 [String]$Script:DefaultMacAddressMaximum = '00155D0106FF'
 [Int]$Script:SelfSignedCertKeyLength = 2048
-[String]$Script:SelfSignedCertProviderName = 'Microsoft Enhanced Cryptographic Provider v1.0' # 'Microsoft Software Key Storage Provider'
+[String]$Script:SelfSignedCertProviderName = 'Microsoft Software Key Storage Provider' # 'Microsoft Enhanced Cryptographic Provider v1.0'
 [String]$Script:SelfSignedCertAlgorithmName = 'RSA' # 'ECDH_P256' Or 'ECDH_P384' Or 'ECDH_P521'
-[String]$Script:SelfSignedCertSignatureAlgorithm = 'SHA1' # 'SHA256'
+[String]$Script:SelfSignedCertSignatureAlgorithm = 'SHA256' # 'SHA1'
+[String]$Script:DSCEncryptionCert = 'DSCEncryption.cer'
+[String]$Script:DSCCertificateFriendlyName = 'DSC Credential Encryption'
 
 ####################################################################################################
 # Helper functions that aren't exported
@@ -1668,13 +1670,13 @@ function Set-LabDSCMOFFile {
     
     # Remove any old self-signed certifcates for this VM
     Get-ChildItem -Path cert:\LocalMachine\My `
-        | Where-Object { $_.FriendlyName -eq "$($VM.ComputerName) Self-Signed Certificate" } `
+        | Where-Object { $_.FriendlyName -eq $Script:DSCCertificateFriendlyName } `
         | Remove-Item
     
     # Add the VM Self-Signed Certificate to the Local Machine store and get the Thumbprint	
     [String]$CertificateFile = Join-Path `
         -Path $VMLabBuilderFiles `
-        -ChildPath 'SelfSigned.cer'
+        -ChildPath $Script:DSCEncryptionCert
     $Certificate = Import-Certificate `
         -FilePath $CertificateFile `
         -CertStoreLocation 'Cert:LocalMachine\My'
@@ -2405,7 +2407,7 @@ $NetworkingDSCConfig += @"
 .EXAMPLE
    $Config = Get-LabConfiguration -Path c:\mylab\config.xml
    $VMs = Get-LabVM -Configuration $Config
-   $NetworkingDSC = Get-LabCreateCertificatePs -Configuration $Config -VM $VMs[0]
+   $NetworkingDSC = Get-LabGetCertificatePs -Configuration $Config -VM $VMs[0]
    Return the Create Self-Signed Certificate script for the first VM in the
    Lab c:\mylab\config.xml for DSC configuration.
 .PARAMETER Configuration
@@ -2415,42 +2417,58 @@ $NetworkingDSCConfig += @"
    A Virtual Machine object pulled from the Lab Configuration file using Get-LabVM
 .OUTPUTS
    A string containing the Create Self-Signed Certificate PowerShell code.
+.TODO
+   Add support for using an existing certificate if one exists.
 #>
-function Get-LabCreateCertificatePs {
+function Get-LabGetCertificatePs {
     [CmdLetBinding()]
     [OutputType([String])]
     param (
         [Parameter(
             Mandatory,
             Position=0)]
-        [XML]$Configuration,
+        [XML] $Configuration,
 
         [Parameter(
             Mandatory,
             Position=1)]
-        [System.Collections.Hashtable]$VM
+        [System.Collections.Hashtable] $VM
     )
     [String]$CreateCertificatePs = @"
-`Get-ChildItem -Path cert:\LocalMachine\My | Where-Object { `$_.FriendlyName -eq '$($VM.ComputerName) Self-Signed Certificate' } | Remove-Item
-. `"`$(`$ENV:SystemRoot)\Setup\Scripts\New-SelfSignedCertificateEx.ps1`"
-New-SelfsignedCertificateEx ``
-    -Subject 'CN=$($VM.ComputerName)' ``
-    -EKU 'Server Authentication', 'Client authentication', 'Document Encryption' ``
-    -KeyUsage 'KeyEncipherment, DigitalSignature' ``
-    -SAN '$($VM.ComputerName)' ``
-    -FriendlyName '$($VM.ComputerName) Self-Signed Certificate' ``
-    -Exportable ``
-    -StoreLocation 'LocalMachine' ``
-    -StoreName 'My' ``
-    -KeyLength $($Script:SelfSignedCertKeyLength) ``
-    -ProviderName '$($Script:SelfSignedCertProviderName)' ``
-    -AlgorithmName $($Script:SelfSignedCertAlgorithmName) ``
-    -SignatureAlgorithm $($Script:SelfSignedCertSignatureAlgorithm)
-`$Cert = Get-ChildItem -Path cert:\LocalMachine\My | Where-Object { `$_.FriendlyName -eq '$($VM.ComputerName) Self-Signed Certificate' }
-Export-Certificate -Type CERT -Cert `$Cert -FilePath `"`$(`$ENV:SystemRoot)\SelfSigned.cer`"
+`$CertificateFriendlyName = '$($Script:DSCCertificateFriendlyName)'
+`$Cert = Get-ChildItem -Path cert:\LocalMachine\My ``
+    | Where-Object { `$_.FriendlyName -eq `$CertificateFriendlyName } ``
+    | Select-Object -First 1
+if (-not `$Cert)
+{
+    . `"`$(`$ENV:SystemRoot)\Setup\Scripts\New-SelfSignedCertificateEx.ps1`"
+    New-SelfsignedCertificateEx ``
+        -Subject 'CN=$($VM.ComputerName)' ``
+        -EKU 'Document Encryption','Server Authentication','Client Authentication' ``
+        -KeyUsage 'DigitalSignature, KeyEncipherment, DataEncipherment' ``
+        -SAN '$($VM.ComputerName)' ``
+        -FriendlyName `$CertificateFriendlyName ``
+        -Exportable ``
+        -StoreLocation 'LocalMachine' ``
+        -StoreName 'My' ``
+        -KeyLength $($Script:SelfSignedCertKeyLength) ``
+        -ProviderName '$($Script:SelfSignedCertProviderName)' ``
+        -AlgorithmName $($Script:SelfSignedCertAlgorithmName) ``
+        -SignatureAlgorithm $($Script:SelfSignedCertSignatureAlgorithm)
+    # There is a slight delay before new cert shows up in Cert:
+    # So wait for it to show.
+    While (-not `$Cert) {
+        `$Cert = Get-ChildItem -Path cert:\LocalMachine\My `
+            | Where-Object { $_.FriendlyName -eq `$CertificateFriendlyName }
+    }
+}
+Export-Certificate ``
+    -Type CERT ``
+    -Cert `$Cert ``
+    -FilePath `"`$(`$ENV:SystemRoot)\$Script:DSCEncryptionCert`"
 "@
     Return $CreateCertificatePs
-} # Get-LabCreateCertificatePs
+} # Get-LabGetCertificatePs
 ####################################################################################################
 
 ####################################################################################################
@@ -2524,11 +2542,11 @@ function Set-LabVMInitializationFiles {
         -Path "$VMPath\$($VM.Name)\LabBuilder Files\Unattend.xml" `
         -Value $UnattendFile -Force
     [String]$SetupCompleteCmd = ''
-    [String]$CreateSelfSignedCert = Get-LabCreateCertificatePs -Configuration $Configuration -VM $VM
+    [String]$GetCertPs = Get-LabGetCertificatePs -Configuration $Configuration -VM $VM
     [String]$SetupCompletePs = @"
 Add-Content -Path "C:\WINDOWS\Setup\Scripts\SetupComplete.log" -Value 'SetupComplete.ps1 Script Started...' -Encoding Ascii
-$CreateSelfSignedCert
-Add-Content -Path `"`$(`$ENV:SystemRoot)\Setup\Scripts\SetupComplete.log`" -Value 'Self-signed certificate created and saved to C:\Windows\SelfSigned.cer ...' -Encoding Ascii
+$GetCertPs
+Add-Content -Path `"`$(`$ENV:SystemRoot)\Setup\Scripts\SetupComplete.log`" -Value 'Self-signed certificate created and saved to C:\Windows\$Script:DSCEncryptionCert ...' -Encoding Ascii
 Enable-PSRemoting -SkipNetworkProfileCheck -Force
 Add-Content -Path `"`$(`$ENV:SystemRoot)\Setup\Scripts\SetupComplete.log`" -Value 'Windows Remoting Enabled ...' -Encoding Ascii
 "@
@@ -2936,7 +2954,7 @@ function Get-LabVMSelfSignedCert {
             # We connected OK - download the Certificate file
             While ((-not $Complete) -and (((Get-Date) - $StartTime).Seconds) -lt $TimeOut) {
                 Try {
-                    Copy-Item -Path 'c:\windows\SelfSigned.cer' -Destination "$VMPath\$($VM.Name)\LabBuilder Files\" -FromSession $Session -ErrorAction Stop
+                    Copy-Item -Path "c:\windows\$Script:DSCEncryptionCert" -Destination "$VMPath\$($VM.Name)\LabBuilder Files\" -FromSession $Session -ErrorAction Stop
                     $Complete = $True
                 } Catch {
                     Write-Verbose "Waiting for Certificate file on $($VM.ComputerName) ..."
@@ -3011,10 +3029,10 @@ function New-LabVMSelfSignedCert {
             } # Try
         } # While
 
-        [String]$CreateNewSelfSignedCert = Get-LabCreateCertificatePs -Configuration $Configuration -VM $VM
+        [String]$GetCertPs = Get-LabGetCertificatePs -Configuration $Configuration -VM $VM
         $null = Set-Content `
-            -Path "$VMPath\$($VM.Name)\LabBuilder Files\CreateNewSelfSignedCert.ps1" `
-            -Value $CreateNewSelfSignedCert `
+            -Path "$VMPath\$($VM.Name)\LabBuilder Files\GetDSCEncryptionCert.ps1" `
+            -Value $GetCertPs `
             -Force
 
         $Complete = $False
@@ -3024,7 +3042,7 @@ function New-LabVMSelfSignedCert {
             While ((-not $Complete) -and (((Get-Date) - $StartTime).Seconds) -lt $TimeOut) {
                 Try {
                     Copy-Item `
-                        -Path "$VMPath\$($VM.Name)\LabBuilder Files\CreateNewSelfSignedCert.ps1" `
+                        -Path "$VMPath\$($VM.Name)\LabBuilder Files\GetDSCEncryptionCert.ps1" `
                         -Destination 'c:\windows\setup\scripts\' `
                         -ToSession $Session -Force -ErrorAction Stop
                     $Complete = $True
@@ -3042,7 +3060,7 @@ function New-LabVMSelfSignedCert {
             While ((-not $Complete) -and (((Get-Date) - $StartTime).Seconds) -lt $TimeOut) {
                 Try {
                     Invoke-Command -Session $Session -ScriptBlock {
-                        C:\Windows\Setup\Scripts\CreateNewSelfSignedCert.ps1
+                        C:\Windows\Setup\Scripts\GetDSCEncryptionCert.ps1
                     }
                     $Complete = $True
                 } Catch {
@@ -3058,7 +3076,7 @@ function New-LabVMSelfSignedCert {
             # Now download the Certificate
             While ((-not $Complete) -and (((Get-Date) - $StartTime).Seconds) -lt $TimeOut) {
                 Try {
-                    Copy-Item -Path 'c:\windows\SelfSigned.cer' -Destination "$VMPath\$($VM.Name)\LabBuilder Files\" -FromSession $Session -ErrorAction Stop
+                    Copy-Item -Path "c:\windows\$Script:DSCEncryptionCert" -Destination "$VMPath\$($VM.Name)\LabBuilder Files\" -FromSession $Session -ErrorAction Stop
                     $Complete = $True
                 } Catch {
                     Write-Verbose "Waiting for Certificate file on $($VM.ComputerName) ..."
@@ -3123,7 +3141,7 @@ function Start-LabVM {
     # We only perform this section of VM Initialization (DSC, Cert, etc) with Server OS
     If ($VM.OSType -eq 'Server') {
         # Has this VM been initialized before (do we have a cer for it)
-        If (-not (Test-Path "$VMPath\$($VM.Name)\LabBuilder Files\SelfSigned.cer")) {
+        If (-not (Test-Path "$VMPath\$($VM.Name)\LabBuilder Files\$Script:DSCEncryptionCert")) {
             # No, so check it is initialized and download the cert.
             If (Wait-LabVMInit -VM $VM) {
                 Write-Verbose "Attempting to download certificate for VM $($VM.Name) ..."
