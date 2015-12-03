@@ -2457,9 +2457,10 @@ if (-not `$Cert)
         -SignatureAlgorithm $($Script:SelfSignedCertSignatureAlgorithm)
     # There is a slight delay before new cert shows up in Cert:
     # So wait for it to show.
-    While (-not `$Cert) {
-        `$Cert = Get-ChildItem -Path cert:\LocalMachine\My `
-            | Where-Object { $_.FriendlyName -eq `$CertificateFriendlyName }
+    While (-not `$Cert)
+    {
+        `$Cert = Get-ChildItem -Path cert:\LocalMachine\My ``
+            | Where-Object { `$_.FriendlyName -eq `$CertificateFriendlyName }
     }
 }
 Export-Certificate ``
