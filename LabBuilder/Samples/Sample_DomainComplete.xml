@@ -56,9 +56,9 @@
   </templates>
 
   <vms>
-    <vm name="LABBUILDER.COM SS_ROOTCA"
+    <vm name="LABBUILDER.COM SS-ROOTCA"
         template="Template Windows Server 2012 R2 Datacenter CORE"
-        computername="SS_ROOTCA"
+        computername="SS-ROOTCA"
         usedifferencingbootdisk="Y">
       <dsc configname="STANDALONE_ROOTCA"
            configfile="STANDALONE_ROOTCA.DSC.ps1"
@@ -75,14 +75,14 @@
             ValidityPeriodUnits = 10
             ValidityPeriod = 'Years'
             AuditFilter = 127
-            SubCAs = @('SA_SUBCA')
+            SubCAs = @('SA-SUBCA')
           </parameters>
       </dsc>
     </vm>
 
-    <vm name="LABBUILDER.COM SS_INTERNET"
+    <vm name="LABBUILDER.COM SS-INTERNET"
         template="Template Windows Server 2012 R2 Datacenter Full"
-        computername="SS_INTERNET"
+        computername="SS-INTERNET"
         usedifferencingbootdisk="Y">
       <dsc configname="STANDALONE_INTERNET"
            configfile="STANDALONE_INTERNET.DSC.ps1"
@@ -97,13 +97,13 @@
             }
           )
           Reservations = @(
-            @{ Name = 'SA_EDGE1';
+            @{ Name = 'SA-EDGE1';
                ScopeID = '131.107.0.0';
                ClientMACAddress = '000000000000';
                IPAddress = '131.107.0.50';
                AddressFamily = 'IPv4'
             },
-            @{ Name = 'SA_EDGE2';
+            @{ Name = 'SA-EDGE2';
                ScopeID = '131.107.0.0';
                ClientMACAddress = '000000000001';
                IPAddress = '131.107.0.51';
@@ -133,9 +133,9 @@
       </adapters>
     </vm>
 
-    <vm name="LABBUILDER.COM SA_DC1"
+    <vm name="LABBUILDER.COM SA-DC1"
         template="Template Windows Server 2012 R2 Datacenter CORE"
-        computername="SA_DC1"
+        computername="SA-DC1"
         usedifferencingbootdisk="Y">
       <dsc configname="DC_FORESTPRIMARY"
            configfile="DC_FORESTPRIMARY.DSC.ps1">
@@ -159,9 +159,9 @@
       </adapters>
     </vm>
 
-    <vm name="LABBUILDER.COM SA_DC2"
+    <vm name="LABBUILDER.COM SA-DC2"
         template="Template Windows Server 2012 R2 Datacenter CORE"
-        computername="SA_DC2"
+        computername="SA-DC2"
         usedifferencingbootdisk="Y">
       <dsc configname="DC_SECONDARY"
            configfile="DC_SECONDARY.DSC.ps1">
@@ -186,9 +186,9 @@
       </adapters>
     </vm>
 
-    <vm name="LABBUILDER.COM SA_RODC1"
+    <vm name="LABBUILDER.COM SA-RODC1"
     template="Template Windows Server 2012 R2 Datacenter CORE"
-    computername="SA_RODC1"
+    computername="SA-RODC1"
     usedifferencingbootdisk="Y">
       <dsc configname="RODC_SECONDARY"
            configfile="RODC_SECONDARY.DSC.ps1">
@@ -213,9 +213,9 @@
       </adapters>
     </vm>
 
-    <vm name="LABBUILDER.COM SA_DHCP1"
+    <vm name="LABBUILDER.COM SA-DHCP1"
         template="Template Windows Server 2012 R2 Datacenter CORE"
-        computername="SA_DHCP1"
+        computername="SA-DHCP1"
         usedifferencingbootdisk="Y">
       <dsc configname="MEMBER_DHCP"
            configfile="MEMBER_DHCP.DSC.ps1">
@@ -232,79 +232,79 @@
               }
             )
           Reservations = @(
-              @{ Name = 'SA_DC1';
+              @{ Name = 'SA-DC1';
                  ScopeID = '192.168.128.0';
                  ClientMACAddress = '000000000000';
                  IPAddress = '192.168.128.10';
                  AddressFamily = 'IPv4'
               },
-              @{ Name = 'SA_DC2';
+              @{ Name = 'SA-DC2';
                  ScopeID = '192.168.128.0';
                  ClientMACAddress = '000000000001';
                  IPAddress = '192.168.128.11';
                  AddressFamily = 'IPv4'
               },
-              @{ Name = 'SA_RODC1';
+              @{ Name = 'SA-RODC1';
                  ScopeID = '192.168.128.0';
                  ClientMACAddress = '000000000001';
                  IPAddress = '192.168.128.30';
                  AddressFamily = 'IPv4'
               },
-              @{ Name = 'SA_DHCP1';
+              @{ Name = 'SA-DHCP1';
                  ScopeID = '192.168.128.0';
                  ClientMACAddress = '000000000002';
                  IPAddress = '192.168.128.16';
                  AddressFamily = 'IPv4'
               },
-              @{ Name = 'SA_DHCP2';
+              @{ Name = 'SA-DHCP2';
                  ScopeID = '192.168.128.0';
                  ClientMACAddress = '000000000003';
                  IPAddress = '192.168.128.17';
                  AddressFamily = 'IPv4'
               },
-              @{ Name = 'SA_NPS';
+              @{ Name = 'SA-NPS';
                  ScopeID = '192.168.128.0';
                  ClientMACAddress = '000000000004';
                  IPAddress = '192.168.128.18';
                  AddressFamily = 'IPv4'
               },
-              @{ Name = 'SA_EDGE1';
+              @{ Name = 'SA-EDGE1';
                  ScopeID = '192.168.128.0';
                  ClientMACAddress = '000000000005';
                  IPAddress = '192.168.128.19';
                  AddressFamily = 'IPv4'
               },
-              @{ Name = 'SA_EDGE2';
+              @{ Name = 'SA-EDGE2';
                  ScopeID = '192.168.128.0';
                  ClientMACAddress = '000000000006';
                  IPAddress = '192.168.128.20';
                  AddressFamily = 'IPv4'
               },
-              @{ Name = 'SA_WDS';
+              @{ Name = 'SA-WDS';
                  ScopeID = '192.168.128.0';
                  ClientMACAddress = '000000000007';
                  IPAddress = '192.168.128.21';
                  AddressFamily = 'IPv4'
               },
-              @{ Name = 'SA_WSUS';
+              @{ Name = 'SA-WSUS';
                  ScopeID = '192.168.128.0';
                  ClientMACAddress = '000000000008';
                  IPAddress = '192.168.128.22';
                  AddressFamily = 'IPv4'
               },
-              @{ Name = 'SA_SUBCA';
+              @{ Name = 'SA-SUBCA';
                  ScopeID = '192.168.128.0';
                  ClientMACAddress = '000000000009';
                  IPAddress = '192.168.128.23';
                  AddressFamily = 'IPv4'
               },
-              @{ Name = 'SA_FS1';
+              @{ Name = 'SA-FS1';
                  ScopeID = '192.168.128.0';
                  ClientMACAddress = '00000000000A';
                  IPAddress = '192.168.128.24';
                  AddressFamily = 'IPv4'
               },
-              @{ Name = 'SA_FS2';
+              @{ Name = 'SA-FS2';
                  ScopeID = '192.168.128.0';
                  ClientMACAddress = '00000000000B';
                  IPAddress = '192.168.128.25';
@@ -335,9 +335,9 @@
       </adapters>
     </vm>
 
-    <vm name="LABBUILDER.COM SA_DHCP2"
+    <vm name="LABBUILDER.COM SA-DHCP2"
       template="Template Windows Server 2012 R2 Datacenter CORE"
-      computername="SA_DHCP2"
+      computername="SA-DHCP2"
       usedifferencingbootdisk="Y">
       <dsc configname="MEMBER_DHCP"
            configfile="MEMBER_DHCP.DSC.ps1">
@@ -377,9 +377,9 @@
       </adapters>
     </vm>
 
-    <vm name="LABBUILDER.COM SA_NPS"
+    <vm name="LABBUILDER.COM SA-NPS"
       template="Template Windows Server 2012 R2 Datacenter Full"
-      computername="SA_NPS"
+      computername="SA-NPS"
       usedifferencingbootdisk="Y">
       <dsc configname="MEMBER_NPS_DFSTEST"
            configfile="MEMBER_NPS_DFSTEST.DSC.ps1">
@@ -404,9 +404,9 @@
       </adapters>
     </vm>
 
-    <vm name="LABBUILDER.COM SA_EDGE1"
+    <vm name="LABBUILDER.COM SA-EDGE1"
       template="Template Windows Server 2012 R2 Datacenter CORE"
-      computername="SA_EDGE1"
+      computername="SA-EDGE1"
       usedifferencingbootdisk="Y">
       <dsc configname="MEMBER_REMOTEACCESS"
            configfile="MEMBER_REMOTEACCESS.DSC.ps1">
@@ -438,9 +438,9 @@
       </adapters>
     </vm>
 
-    <vm name="LABBUILDER.COM SA_EDGE2"
+    <vm name="LABBUILDER.COM SA-EDGE2"
       template="Template Windows Server 2012 R2 Datacenter CORE"
-      computername="SA_EDGE2"
+      computername="SA-EDGE2"
       usedifferencingbootdisk="Y">
       <dsc configname="MEMBER_REMOTEACCESS"
            configfile="MEMBER_REMOTEACCESS.DSC.ps1">
@@ -472,9 +472,9 @@
       </adapters>
     </vm>
 
-    <vm name="LABBUILDER.COM SA_WDS"
+    <vm name="LABBUILDER.COM SA-WDS"
       template="Template Windows Server 2012 R2 Datacenter Full"
-      computername="SA_WDS"
+      computername="SA-WDS"
       usedifferencingbootdisk="Y"
       datavhdsize="10GB" >
       <dsc configname="MEMBER_WDS"
@@ -500,9 +500,9 @@
       </adapters>
     </vm>
 
-    <vm name="LABBUILDER.COM SA_WSUS"
+    <vm name="LABBUILDER.COM SA-WSUS"
       template="Template Windows Server 2012 R2 Datacenter CORE"
-      computername="SA_WSUS"
+      computername="SA-WSUS"
       usedifferencingbootdisk="Y" 
       datavhdsize="10GB" >
       <dsc configname="MEMBER_WSUS"
@@ -528,9 +528,9 @@
       </adapters>
     </vm>
 
-    <vm name="LABBUILDER.COM SA_SUBCA"
+    <vm name="LABBUILDER.COM SA-SUBCA"
       template="Template Windows Server 2012 R2 Datacenter CORE"
-      computername="SA_SUBCA"
+      computername="SA-SUBCA"
       usedifferencingbootdisk="Y">
       <dsc configname="MEMBER_SUBCA"
            configfile="MEMBER_SUBCA.DSC.ps1"
@@ -564,9 +564,9 @@
       </adapters>
     </vm>
 
-    <vm name="LABBUILDER.COM SA_FS1"
+    <vm name="LABBUILDER.COM SA-FS1"
         template="Template Windows Server 2012 R2 Datacenter CORE"
-        computername="SA_FS1"
+        computername="SA-FS1"
         usedifferencingbootdisk="Y"
         datavhdsize="10GB" >
       <dsc configname="MEMBER_FILESERVER"
@@ -593,9 +593,9 @@
       </adapters>
     </vm>
 
-    <vm name="LABBUILDER.COM SA_FS2"
+    <vm name="LABBUILDER.COM SA-FS2"
         template="Template Windows Server 2012 R2 Datacenter CORE"
-        computername="SA_FS2"
+        computername="SA-FS2"
         usedifferencingbootdisk="Y" 
         datavhdsize="10GB" >
       <dsc configname="MEMBER_FILESERVER"
@@ -621,9 +621,9 @@
       </adapters>
     </vm>
 
-    <vm name="LABBUILDER.COM DA_IT01"
+    <vm name="LABBUILDER.COM DA-IT01"
       template="Template Windows 10 Enterprise"
-      computername="DA_IT01"
+      computername="DA-IT01"
       usedifferencingbootdisk="Y">
       <adapters>
         <adapter name="Domain Private Site A"

@@ -1,84 +1,151 @@
 <#########################################################################################################################################
 DSC Template Configuration File For use by LabBuilder
 .Title
-    STANDALONE_ROOTCA
+	MEMBER_ROOTCA
 .Desription
-    Builds a Standalone Root CA and creates Issuing CA certificates for Sub CAs.
+	Builds an Enterprise Root CA.
 .Parameters:    
-            CACommonName = "LABBUILDER.COM Root CA"
-            CADistinguishedNameSuffix = "DC=LABBUILDER,DC=COM"
-            CRLPublicationURLs = "1:C:\Windows\system32\CertSrv\CertEnroll\%3%8%9.crl\n10:ldap:///CN=%7%8,CN=%2,CN=CDP,CN=Public Key Services,CN=Services,%6%10\n2:http://pki.labbuilder.com/CertEnroll/%3%8%9.crl"
-            CACertPublicationURLs = "1:C:\Windows\system32\CertSrv\CertEnroll\%1_%3%4.crt\n2:ldap:///CN=%7,CN=AIA,CN=Public Key Services,CN=Services,%6%11\n2:http://pki.labbuilder.com/CertEnroll/%1_%3%4.crt"
-            CRLPeriodUnits = 52
-            CRLPeriod = 'Weeks'
-            CRLOverlapUnits = 12
-            CRLOverlapPeriod = 'Hours'
-            ValidityPeriodUnits = 10
-            ValidityPeriod = 'Years'
-            AuditFilter = 127
-            SubCAs = @('SA_SUBCA')
+		  DomainName = "LABBUILDER.COM"
+		  DomainAdminPassword = "P@ssword!1"
+		  PSDscAllowDomainUser = $True
+		  CACommonName = "LABBUILDER.COM Root CA"
+		  CADistinguishedNameSuffix = "DC=LABBUILDER,DC=COM"
+		  CRLPublicationURLs = "65:C:\Windows\system32\CertSrv\CertEnroll\%3%8%9.crl\n79:ldap:///CN=%7%8,CN=%2,CN=CDP,CN=Public Key Services,CN=Services,%6%10\n6:http://pki.labbuilder.com/CertEnroll/%3%8%9.crl"
+		  CACertPublicationURLs = "1:C:\Windows\system32\CertSrv\CertEnroll\%1_%3%4.crt\n2:ldap:///CN=%7,CN=AIA,CN=Public Key Services,CN=Services,%6%11\n2:http://pki.labbuilder.com/CertEnroll/%1_%3%4.crt"
+          CRLPeriodUnits = 52
+          CRLPeriod = 'Weeks'
+          CRLOverlapUnits = 12
+          CRLOverlapPeriod = 'Hours'
+          ValidityPeriodUnits = 10
+          ValidityPeriod = 'Years'
+          AuditFilter = 127
 #########################################################################################################################################>
-
-Configuration STANDALONE_ROOTCA
+Configuration MEMBER_ROOTCA
 {
-    Import-DscResource -ModuleName 'PSDesiredStateConfiguration'
-    Import-DscResource -ModuleName xAdcsDeployment
+	Import-DscResource -ModuleName 'PSDesiredStateConfiguration'
+	Import-DscResource -ModuleName xActiveDirectory
+	Import-DscResource -ModuleName xComputerManagement
+	Import-DscResource -ModuleName xAdcsDeployment
 	Import-DscResource -ModuleName xPSDesiredStateConfiguration
-    Node $AllNodes.NodeName {
-        # Assemble the Local Admin Credentials
-        If ($Node.LocalAdminPassword) {
-            [PSCredential]$LocalAdminCredential = New-Object System.Management.Automation.PSCredential ("Administrator", (ConvertTo-SecureString $Node.LocalAdminPassword -AsPlainText -Force))
-        }
+	Import-DscResource -ModuleName xNetworking
+	Node $AllNodes.NodeName {
+		# Assemble the Local Admin Credentials
+		If ($Node.LocalAdminPassword) {
+			[PSCredential]$LocalAdminCredential = New-Object System.Management.Automation.PSCredential ("Administrator", (ConvertTo-SecureString $Node.LocalAdminPassword -AsPlainText -Force))
+		}
+		If ($Node.DomainAdminPassword) {
+			[PSCredential]$DomainAdminCredential = New-Object System.Management.Automation.PSCredential ("$($Node.DomainName)\Administrator", (ConvertTo-SecureString $Node.DomainAdminPassword -AsPlainText -Force))
+		}
 
-        # Install the ADCS Certificate Authority
-        WindowsFeature ADCSCA {
-            Name = 'ADCS-Cert-Authority'
-            Ensure = 'Present'
-        }
-        
-        # Install ADCS Web Enrollment - only required because it creates the CertEnroll virtual folder
-        # Which we use to pass certificates to the Issuing/Sub CAs       
-        WindowsFeature ADCSWebEnrollment
-        {
-            Ensure = 'Present'
-            Name = 'ADCS-Web-Enrollment'
-            DependsOn = '[WindowsFeature]ADCSCA'
-        }
+		# Install the RSAT PowerShell Module which is required by the xWaitForResource
+		WindowsFeature RSATADPowerShell
+		{ 
+			Ensure = "Present" 
+			Name = "RSAT-AD-PowerShell" 
+		} 
 
-        # Create the CAPolicy.inf file which defines basic properties about the ROOT CA certificate
-        File CAPolicy
-        {
-            Ensure = 'Present'
-            DestinationPath = 'C:\Windows\CAPolicy.inf'
+		# Install the CA Service
+		WindowsFeature ADCSCA {
+			Name = 'ADCS-Cert-Authority'
+			Ensure = 'Present'
+			DependsOn = "[WindowsFeature]RSATADPowerShell" 
+		}
+
+		# Install the Web Enrollment Service
+		WindowsFeature WebEnrollmentCA {
+			Name = 'ADCS-Web-Enrollment'
+			Ensure = 'Present'
+			DependsOn = "[WindowsFeature]ADCSCA"
+		}
+
+		if ($Node.InstallOnlineResponder) {
+			# Install the Online Responder Service
+			WindowsFeature OnlineResponderCA {
+				Name = 'ADCS-Online-Cert'
+				Ensure = 'Present'
+				DependsOn = "[WindowsFeature]WebEnrollmentCA"
+			}
+		}
+
+		if ($Node.InstallEnrollmentWebService) {
+			# Install the Enrollment Web Service/Enrollment Policy Web Service
+			WindowsFeature EnrollmentWebSvc {
+				Name = 'ADCS-Enroll-Web-Svc'
+				Ensure = 'Present'
+				DependsOn = "[WindowsFeature]WebEnrollmentCA"
+			}
+
+			WindowsFeature EnrollmentWebPol {
+				Name = 'ADCS-Enroll-Web-Pol'
+				Ensure = 'Present'
+				DependsOn = "[WindowsFeature]WebEnrollmentCA"
+			}
+		}
+
+		# Wait for the Domain to be available so we can join it.
+		xWaitForADDomain DscDomainWait
+		{
+			DomainName = $Node.DomainName
+			DomainUserCredential = $DomainAdminCredential 
+			RetryCount = 100 
+			RetryIntervalSec = 10 
+			DependsOn = "[WindowsFeature]WebEnrollmentCA" 
+		}
+
+		# Join this Server to the Domain so that it can be an Enterprise CA.
+		xComputer JoinDomain 
+		{ 
+			Name          = $Node.NodeName
+			DomainName    = $Node.DomainName
+			Credential    = $DomainAdminCredential 
+			DependsOn = "[xWaitForADDomain]DscDomainWait" 
+		} 
+			
+		# Create the CAPolicy.inf file that sets basic parameters for certificate issuance for this CA.
+		File CAPolicy
+		{
+			Ensure = 'Present'
+			DestinationPath = 'C:\Windows\CAPolicy.inf'
             Contents = "[Version]`r`n Signature= `"$Windows NT$`"`r`n[Certsrv_Server]`r`n DiscreteSignatureAlgorithm=1`r`n HashAlgorithm=RSASHA256`r`n RenewalKeyLength=4096`r`n RenewalValidityPeriod=Years`r`n RenewalValidityPeriodUnits=20`r`n CRLDeltaPeriod=Days`r`n CRLDeltaPeriodUnits=0`r`n[CRLDistributionPoint]`r`n[AuthorityInformationAccess]`r`n"
-            Type = 'File'
-            DependsOn = '[WindowsFeature]ADCSWebEnrollment'
-        }
-        
-        # Configure the CA as Standalone Root CA
-        xADCSCertificationAuthority ConfigCA
-        {
-            Ensure = 'Present'
-            Credential = $LocalAdminCredential
-            CAType = 'StandaloneRootCA'
-            CACommonName = $Node.CACommonName
-            CADistinguishedNameSuffix = $Node.CADistinguishedNameSuffix
-            ValidityPeriod = 'Years'
-            ValidityPeriodUnits = 20
-            CryptoProviderName = 'RSA#Microsoft Software Key Storage Provider'
-            HashAlgorithmName = 'SHA256'
-            KeyLength = 4096
-            DependsOn = '[File]CAPolicy'
-        }
+			Type = 'File'
+			DependsOn = '[xComputer]JoinDomain'
+		}
 
-        # Configure the ADCS Web Enrollment
-        xADCSWebEnrollment ConfigWebEnrollment {
-            Ensure = 'Present'
-            Name = 'ConfigWebEnrollment'
-            Credential = $LocalAdminCredential
-            DependsOn = '[xADCSCertificationAuthority]ConfigCA'
-        }
+		# Make a CertEnroll folder to put the Root CA certificate into.
+		# The CA Web Enrollment server would also create this but we need it now.
+		File CertEnrollFolder
+		{
+			Ensure = 'Present'
+			DestinationPath = 'C:\Windows\System32\CertSrv\CertEnroll'
+			Type = 'Directory'
+			DependsOn = '[File]CAPolicy'
+		}
 
+		# Configure the Root CA which will create the Certificate REQ file that Root CA will use
+		# to issue a certificate for this Sub CA.
+		xADCSCertificationAuthority ConfigCA
+		{
+			Ensure = 'Present'
+			Credential = $DomainAdminCredential
+			CAType = 'EnterpriseRootCA'
+			CACommonName = $Node.CACommonName
+			CADistinguishedNameSuffix = $Node.CADistinguishedNameSuffix
+			OverwriteExistingCAinDS  = $True
+			CryptoProviderName = 'RSA#Microsoft Software Key Storage Provider'
+			HashAlgorithmName = 'SHA256'
+			KeyLength = 4096
+			DependsOn = '[File]CertEnrollFolder'
+		}
+		
+		# Configure the Web Enrollment Feature
+		xADCSWebEnrollment ConfigWebEnrollment {
+			Ensure = 'Present'
+			Name = 'ConfigWebEnrollment'
+			Credential = $LocalAdminCredential
+			DependsOn = '[xADCSCertificationAuthority]ConfigCA'
+		}
+
+		# Perform final configuration of the CA which will cause the CA service to startup
         # Set the advanced CA properties
         Script ADCSAdvConfig
         {
@@ -164,91 +231,37 @@ Configuration STANDALONE_ROOTCA
             }
             DependsOn = '[xADCSWebEnrollment]ConfigWebEnrollment'
         }
-        
-        # Generate Issuing certificates for any SubCAs
-        Foreach ($SubCA in $Node.SubCAs) {
-            
-            # Wait for SubCA to generate REQ
-            WaitForAny "WaitForSubCA_$SubCA"
-            {
-                ResourceName = '[xADCSCertificationAuthority]ConfigCA'
-                NodeName = $SubCA
-                RetryIntervalSec = 30
-                RetryCount = 30
-                DependsOn = '[Script]ADCSAdvConfig'
-            }
+		
+		if ($Node.InstallOnlineResponder) {
+			# Configure the Online Responder Feature
+			xADCSOnlineResponder ConfigOnlineResponder {
+				Ensure = 'Present'
+				Name = 'ConfigOnlineResponder'
+				Credential = $LocalAdminCredential
+				DependsOn = '[Script]ADCSAdvConfig'
+			}
 
-            # Download the REQ from the SubCA
-            xRemoteFile "DownloadSubCA_$SubCA"
-            {
-                DestinationPath = "C:\Windows\System32\CertSrv\CertEnroll\$SubCA.req"
-                Uri = "http://$SubCA/CertEnroll/$SubCA.req"
-                DependsOn = "[WaitForAny]WaitForSubCA_$SubCA"
-            }
+			# Enable Online Responder FireWall rules so we can remote manage Online Responder
+			xFirewall OnlineResponderFirewall1
+			{
+				Name = "Microsoft-Windows-OnlineRevocationServices-OcspSvc-DCOM-In"
+				Enabled = "True"
+				DependsOn = "[xADCSOnlineResponder]ConfigOnlineResponder" 
+			}
 
-            # Generate the Issuing Certificate from the REQ
-            Script "IssueCert_$SubCA"
-            {
-                SetScript = {
-                    Write-Verbose "Submitting C:\Windows\System32\CertSrv\CertEnroll\$Using:SubCA.req to $($Using:Node.CACommonName)"
-                    [String]$RequestResult = & "$($ENV:SystemRoot)\System32\Certreq.exe" -Config ".\$($Using:Node.CACommonName)" -Submit "C:\Windows\System32\CertSrv\CertEnroll\$Using:SubCA.req"
-                    $Matches = [Regex]::Match($RequestResult, 'RequestId:\s([0-9]*)')
-                    If ($Matches.Groups.Count -lt 2) {
-                        Write-Verbose "Error getting Request ID from SubCA certificate submission."
-                        Throw "Error getting Request ID from SubCA certificate submission."
-                    }
-                    [int]$RequestId = $Matches.Groups[1].Value
-                    Write-Verbose "Issuing $RequestId in $($Using:Node.CACommonName)"
-                    [String]$SubmitResult = & "$($ENV:SystemRoot)\System32\CertUtil.exe" -Resubmit $RequestId
-                    If ($SubmitResult -notlike 'Certificate issued.*') {
-                        Write-Verbose "Unexpected result issuing SubCA request."
-                        Throw "Unexpected result issuing SubCA request."
-                    }
-                    Write-Verbose "Retrieving C:\Windows\System32\CertSrv\CertEnroll\$Using:SubCA.req from $($Using:Node.CACommonName)"
-                    [String]$RetrieveResult = & "$($ENV:SystemRoot)\System32\Certreq.exe" -Config ".\$($Using:Node.CACommonName)" -Retrieve $RequestId "C:\Windows\System32\CertSrv\CertEnroll\$Using:SubCA.crt"
-                }
-                GetScript = {
-                    Return @{
-                        'Generated' = (Test-Path -Path "C:\Windows\System32\CertSrv\CertEnroll\$Using:SubCA.crt");
-                    }
-                }
-                TestScript = { 
-                    If (-not (Test-Path -Path "C:\Windows\System32\CertSrv\CertEnroll\$Using:SubCA.crt")) {
-                        # SubCA Cert is not yet created
-                        Return $False
-                    }
-                    # SubCA Cert has been created
-                    Return $True
-                }
-                DependsOn = "[xRemoteFile]DownloadSubCA_$SubCA"
-            }
+			xFirewall OnlineResponderirewall2
+			{
+				Name = "Microsoft-Windows-CertificateServices-OcspSvc-RPC-TCP-In"
+				Enabled = "True"
+				DependsOn = "[xADCSOnlineResponder]ConfigOnlineResponder" 
+			}
 
-            # Wait for SubCA to install the CA Certificate
-            WaitForAny "WaitForComplete_$SubCA"
-            {
-                ResourceName = '[Script]InstallSubCACert'
-                NodeName = $SubCA
-                RetryIntervalSec = 30
-                RetryCount = 30
-                DependsOn = "[Script]IssueCert_$SubCA"
-            }
-
-            # Shutdown the Root CA - it is no longer needed because it has issued all SubCAs
-            Script ShutdownRootCA
-            {
-                SetScript = {
-                    Stop-Computer
-                }
-                GetScript = {
-                    Return @{
-                    }
-                }
-                TestScript = { 
-                    # SubCA Cert is not yet created
-                    Return $False
-                }
-                DependsOn = "[WaitForAny]WaitForComplete_$SubCA"
-            }
-        }
-    }
+			xFirewall OnlineResponderFirewall3
+			{
+				Name = "Microsoft-Windows-OnlineRevocationServices-OcspSvc-TCP-Out"
+				Enabled = "True"
+				DependsOn = "[xADCSOnlineResponder]ConfigOnlineResponder" 
+			}
+		}
+	}
 }
