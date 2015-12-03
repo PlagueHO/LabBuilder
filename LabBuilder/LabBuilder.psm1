@@ -1554,9 +1554,11 @@ function Set-LabDSCMOFFile {
     [String]$VMRootPath = Join-Path `
         -Path $VMPath `
         -ChildPath $VM.Name
+    
     # Make sure the appropriate folders exist
     Create-LabVMPath -VMPath $VMRootPath
     
+    # Get Path to LabBuilder files
     [String]$VMLabBuilderFiles = Join-Path `
         -Path $VMRootPath `
         -ChildPath 'LabBuilder Files'
@@ -1635,7 +1637,7 @@ function Set-LabDSCMOFFile {
                 Break
             } # If
         } # Foreach
-        If (-not $ModulePath)
+        If (-not (Test-Path -Path $ModulePath))
         {
             $errorId = 'DSCModuleNotFoundError'
             $errorCategory = [System.Management.Automation.ErrorCategory]::InvalidArgument
@@ -1724,7 +1726,6 @@ function Set-LabDSCMOFFile {
         -Path $NetworkingDSCFile `
         -Value $NetworkingDSCConfig
     . $NetworkingDSCFile
-
     [String]$DSCFile = Join-Path `
         -Path $VMLabBuilderFiles `
         -ChildPath 'DSC.ps1'

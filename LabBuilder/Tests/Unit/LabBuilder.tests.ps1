@@ -1107,52 +1107,154 @@ Describe 'Remove-LabVMTemplates' {
 Describe 'Set-LabDSCMOFFile' {
 
 	Mock Get-VM
+
+	$Config = Get-LabConfiguration -Path $Global:TestConfigOKPath
+	[Array]$Switches = Get-LabSwitches -Configuration $Config
+	[Array]$Templates = Get-LabVMTemplates -Configuration $Config
+	[Array]$VMs = Get-LabVMs -Configuration $Config -VMTemplates $Templates -Switches $Switches
+	
+	Mock Create-LabVMPath
+	Mock Get-Module
+	Mock Get-ModulesInDSCConfig -MockWith { @('TestModule') }
+
+	Context 'Valid Parameters Passed; Empty DSC Config' {
+		$VM = $VMS[0].Clone()
+		$VM.DSCConfigFile = ''
+		It 'Does not throw an Exception' {
+			{ Set-LabDSCMOFFile -Configuration $Config -VM $VM } | Should Not Throw
+		}
+		It 'Calls Mocked commands' {
+			Assert-MockCalled Create-LabVMPath -Exactly 1
+			Assert-MockCalled Get-Module -Exactly 0
+		}
+	}
+
+	Mock Find-Module
+	
+	Context 'Valid Parameters Passed; DSC Module Not Found' {
+		$VM = $VMS[0].Clone()
+		$errorId = 'DSCModuleDownloadError'
+		$errorCategory = [System.Management.Automation.ErrorCategory]::InvalidArgument
+		$errorMessage = $($LocalizedData.DSCModuleDownloadError `
+			-f $VM.DSCConfigFile,$VM.Name,'TestModule')
+		$exception = New-Object -TypeName System.InvalidOperationException `
+			-ArgumentList $errorMessage
+		$errorRecord = New-Object -TypeName System.Management.Automation.ErrorRecord `
+			-ArgumentList $exception, $errorId, $errorCategory, $null
+
+		It 'Throws a DSCModuleDownloadError Exception' {
+			{ Set-LabDSCMOFFile -Configuration $Config -VM $VM } | Should Throw $errorRecord
+		}
+		It 'Calls Mocked commands' {
+			Assert-MockCalled Create-LabVMPath -Exactly 1
+			Assert-MockCalled Get-Module -Exactly 1
+			Assert-MockCalled Get-ModulesInDSCConfig -Exactly 1
+			Assert-MockCalled Find-Module -Exactly 1
+		}
+	}
+
+	Mock Find-Module -MockWith { @{ name = 'TestModule' } }
+	Mock Install-Module -MockWith { Throw }
+	
+	Context 'Valid Parameters Passed; DSC Module Download Error' {
+		$VM = $VMS[0].Clone()
+		$errorId = 'DSCModuleDownloadError'
+		$errorCategory = [System.Management.Automation.ErrorCategory]::InvalidArgument
+		$errorMessage = $($LocalizedData.DSCModuleDownloadError `
+			-f $VM.DSCConfigFile,$VM.Name,'TestModule')
+		$exception = New-Object -TypeName System.InvalidOperationException `
+			-ArgumentList $errorMessage
+		$errorRecord = New-Object -TypeName System.Management.Automation.ErrorRecord `
+			-ArgumentList $exception, $errorId, $errorCategory, $null
+
+		It 'Throws a DSCModuleDownloadError Exception' {
+			{ Set-LabDSCMOFFile -Configuration $Config -VM $VM } | Should Throw $errorRecord
+		}
+		It 'Calls Mocked commands' {
+			Assert-MockCalled Create-LabVMPath -Exactly 1
+			Assert-MockCalled Get-Module -Exactly 1
+			Assert-MockCalled Get-ModulesInDSCConfig -Exactly 1
+			Assert-MockCalled Find-Module -Exactly 1
+		}
+	}
+
+	Mock Install-Module -MockWith { }
+	Mock Test-Path -MockWith { $false }
+	
+	Context 'Valid Parameters Passed; DSC Module Not Found in Path' {
+		$VM = $VMS[0].Clone()
+		$errorId = 'DSCModuleNotFoundError'
+		$errorCategory = [System.Management.Automation.ErrorCategory]::InvalidArgument
+		$errorMessage = $($LocalizedData.DSCModuleNotFoundError `
+			-f $VM.DSCConfigFile,$VM.Name,'TestModule')
+		$exception = New-Object -TypeName System.InvalidOperationException `
+			-ArgumentList $errorMessage
+		$errorRecord = New-Object -TypeName System.Management.Automation.ErrorRecord `
+			-ArgumentList $exception, $errorId, $errorCategory, $null
+
+		It 'Throws a DSCModuleNotFoundError Exception' {
+			{ Set-LabDSCMOFFile -Configuration $Config -VM $VM } | Should Throw $errorRecord
+		}
+		It 'Calls Mocked commands' {
+			Assert-MockCalled Create-LabVMPath -Exactly 1
+			Assert-MockCalled Get-Module -Exactly 1
+			Assert-MockCalled Get-ModulesInDSCConfig -Exactly 1
+			Assert-MockCalled Find-Module -Exactly 1
+			Assert-MockCalled Install-Module -Exactly 1
+		}
+	}
+
+	Mock Test-Path -MockWith { $true }
+	Mock Copy-Item
+	Mock New-LabVMSelfSignedCert -MockWith { $false }
+	
+	Context 'Valid Parameters Passed; DSC Module Found in Path' {
+		$VM = $VMS[0].Clone()
+        $errorId = 'CertificateCreateError'
+        $errorCategory = [System.Management.Automation.ErrorCategory]::InvalidArgument
+        $errorMessage = $($LocalizedData.CertificateCreateError `
+            -f $VM.Name)
+        $exception = New-Object -TypeName System.InvalidOperationException `
+            -ArgumentList $errorMessage
+        $errorRecord = New-Object -TypeName System.Management.Automation.ErrorRecord `
+            -ArgumentList $exception, $errorId, $errorCategory, $null
+
+		It 'Throws a CertificateCreateError Exception' {
+			{ Set-LabDSCMOFFile -Configuration $Config -VM $VM } | Should Throw $errorRecord
+		}
+		It 'Calls Mocked commands' {
+			Assert-MockCalled Create-LabVMPath -Exactly 1
+			Assert-MockCalled Get-Module -Exactly 1
+			Assert-MockCalled Get-ModulesInDSCConfig -Exactly 1
+			Assert-MockCalled Find-Module -Exactly 1
+			Assert-MockCalled Install-Module -Exactly 1
+			Assert-MockCalled Copy-Item -Exactly 1
+			Assert-MockCalled New-LabVMSelfSignedCert -Exactly 1
+		}
+	}
+
 	Mock Import-Certificate -MockWith {
 		[PSCustomObject]@{
 			Thumbprint = '1234567890ABCDEF'
 		}
-	} # Mock
-	Mock Remove-Item -ParameterFilter {$path -eq 'Cert:LocalMachine\My\1234567890ABCDEF'}
-	Mock Set-VMHost
-
-	Context 'Valid Parameters Passed' {
-		$Config = Get-LabConfiguration -Path $Global:TestConfigOKPath
-		Initialize-LabConfiguration -Configuration $Config
-		[Array]$Switches = Get-LabSwitches -Configuration $Config
-		[Array]$Templates = Get-LabVMTemplates -Configuration $Config
-		[Array]$VMs = Get-LabVMs -Configuration $Config -VMTemplates $Templates -Switches $Switches
-		$Result = Set-LabDSCMOFFile -Configuration $Config -VM $VMs[0]
-		It 'Returns True' {
-			$Result | Should Be $True
-		}
-		It 'Calls Mocked commands' {
-			Assert-MockCalled Import-Certificate -Exactly 1
-			Assert-MockCalled Remove-Item -Exactly 1
-		}
-		It 'Appropriate Lab Builder Files Should be produced' {
-			Test-Path -Path 'C:\Pester Lab\PESTER01\LabBuilder Files\Pester01.mof' | Should Be $True
-			Test-Path -Path 'C:\Pester Lab\PESTER01\LabBuilder Files\Pester01.meta.mof' | Should Be $True
-			Test-Path -Path 'C:\Pester Lab\PESTER01\LabBuilder Files\DSC.ps1' | Should Be $True
-			Test-Path -Path 'C:\Pester Lab\PESTER01\LabBuilder Files\DSCConfigData.psd1' | Should Be $True
-			Test-Path -Path 'C:\Pester Lab\PESTER01\LabBuilder Files\DSCNetworking.ps1' | Should Be $True
-		}
 	}
+	Mock Remove-Item -ParameterFilter { $path -eq 'Cert:LocalMachine\My\1234567890ABCDEF' }
+
 }
 ####################################################################################################
 
 ####################################################################################################
 Describe 'Set-LabDSCStartFile' {
-	#region Mocks
+	$Config = Get-LabConfiguration -Path $Global:TestConfigOKPath
+	[Array]$Switches = Get-LabSwitches -Configuration $Config
+	[Array]$Templates = Get-LabVMTemplates -Configuration $Config
+	[Array]$VMs = Get-LabVMs -Configuration $Config -VMTemplates $Templates -Switches $Switches
+
 	Mock Get-VM
 	Mock Get-VMNetworkAdapter -MockWith { [PSObject]@{ Name = 'Dummy'; MacAddress = '00-11-22-33-44-55'; } }
 	Mock Set-Content
-	#endregion
 
 	Context 'Valid Parameters Passed' {
-		$Config = Get-LabConfiguration -Path $Global:TestConfigOKPath
-		[Array]$Switches = Get-LabSwitches -Configuration $Config
-		[Array]$Templates = Get-LabVMTemplates -Configuration $Config
-		[Array]$VMs = Get-LabVMs -Configuration $Config -VMTemplates $Templates -Switches $Switches
 		[String]$DSCStartFile = Set-LabDSCStartFile -Configuration $Config -VM $VMs[0]
 		It 'Returns Expected File Content' {
 			$DSCStartFile | Should Be $True
