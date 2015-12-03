@@ -1206,7 +1206,7 @@ Describe 'Set-LabDSCMOFFile' {
 
 	Mock Test-Path -MockWith { $true }
 	Mock Copy-Item
-	Mock New-LabVMSelfSignedCert -MockWith { $false }
+	Mock New-LabVMSelfSignedCert
 	
 	Context 'Valid Parameters Passed; DSC Module Found in Path' {
 		$VM = $VMS[0].Clone()
@@ -1232,6 +1232,8 @@ Describe 'Set-LabDSCMOFFile' {
 			Assert-MockCalled New-LabVMSelfSignedCert -Exactly 1
 		}
 	}
+
+	Mock New-LabVMSelfSignedCert -MockWith { }
 
 	Mock Import-Certificate -MockWith {
 		[PSCustomObject]@{

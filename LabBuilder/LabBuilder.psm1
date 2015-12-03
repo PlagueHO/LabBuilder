@@ -1656,7 +1656,7 @@ function Set-LabDSCMOFFile {
             -Recurse -Force
     } # Foreach
 
-    if (-not (New-LabVMSelfSignedCert -Configuration $Configuration -VM $VM))
+    if (-not (Get-LabVMCertificate -Configuration $Configuration -VM $VM))
     {
         $errorId = 'CertificateCreateError'
         $errorCategory = [System.Management.Automation.ErrorCategory]::InvalidArgument
@@ -2978,24 +2978,19 @@ function Get-LabVMSelfSignedCert {
 ####################################################################################################
 <#
 .SYNOPSIS
-   Short description
+   Download a credential encryption certificate from a running VM.
 .DESCRIPTION
-   Long description
+   This function uses remoting to download a credential encryption certificate
+   from a running VM for use in encrypting DSC credentials. It will be saved
+   as a .CER file in the LabBuilder files folder of the VM.
 .EXAMPLE
-   Example of how to use this cmdlet
-.EXAMPLE
-   Another example of how to use this cmdlet
-.INPUTS
-   Inputs to this cmdlet (if any)
+   Get-LabVMCertificate -Configuration $Configuraion -VM $VM[0]
 .OUTPUTS
-   Output from this cmdlet (if any)
-.NOTES
-   General notes
+   The path to the certificate file that was downloaded.
 #>
-
-function New-LabVMSelfSignedCert {
+function Get-LabVMCertificate {
     [CmdLetBinding()]
-    [OutputType([Boolean])]
+    [OutputType([System.IO.FileInfo])]
     param (
         [Parameter(
             Mandatory,
@@ -3009,12 +3004,24 @@ function New-LabVMSelfSignedCert {
 
         [Int]$Timeout = 300
     )
-    [String]$VMPath = $Configuration.labbuilderconfig.SelectNodes('settings').vmpath
     [DateTime]$StartTime = Get-Date
+    [String]$VMPath = $Configuration.labbuilderconfig.SelectNodes('settings').vmpath
     [System.Management.Automation.Runspaces.PSSession]$Session = $null
     [PSCredential]$AdmininistratorCredential = New-Object System.Management.Automation.PSCredential ('Administrator', (ConvertTo-SecureString $VM.AdministratorPassword -AsPlainText -Force))
     [String]$ManagementSwitchName = ('LabBuilder Management {0}' -f $Configuration.labbuilderconfig.name)
+
+    # Load path variables
+    [String]$VMRootPath = Join-Path `
+        -Path $VMPath `
+        -ChildPath $VM.Name
+
+    # Get Path to LabBuilder files
+    [String]$VMLabBuilderFiles = Join-Path `
+        -Path $VMRootPath `
+        -ChildPath 'LabBuilder Files'
+
     [Boolean]$Complete = $False
+
     While ((-not $Complete)  -and (((Get-Date) - $StartTime).Seconds) -lt $TimeOut) {
         While (-not ($Session) -or ($Session.State -ne 'Opened')) {
             # Try and connect to the remote VM for up to $Timeout (5 minutes) seconds.
@@ -3033,7 +3040,7 @@ function New-LabVMSelfSignedCert {
 
         [String]$GetCertPs = Get-LabGetCertificatePs -Configuration $Configuration -VM $VM
         $null = Set-Content `
-            -Path "$VMPath\$($VM.Name)\LabBuilder Files\GetDSCEncryptionCert.ps1" `
+            -Path "$VMLabBuilderFiles\GetDSCEncryptionCert.ps1" `
             -Value $GetCertPs `
             -Force
 
@@ -3044,7 +3051,7 @@ function New-LabVMSelfSignedCert {
             While ((-not $Complete) -and (((Get-Date) - $StartTime).Seconds) -lt $TimeOut) {
                 Try {
                     Copy-Item `
-                        -Path "$VMPath\$($VM.Name)\LabBuilder Files\GetDSCEncryptionCert.ps1" `
+                        -Path "$VMLabBuilderFiles\GetDSCEncryptionCert.ps1" `
                         -Destination 'c:\windows\setup\scripts\' `
                         -ToSession $Session -Force -ErrorAction Stop
                     $Complete = $True
@@ -3078,7 +3085,11 @@ function New-LabVMSelfSignedCert {
             # Now download the Certificate
             While ((-not $Complete) -and (((Get-Date) - $StartTime).Seconds) -lt $TimeOut) {
                 Try {
-                    Copy-Item -Path "c:\windows\$Script:DSCEncryptionCert" -Destination "$VMPath\$($VM.Name)\LabBuilder Files\" -FromSession $Session -ErrorAction Stop
+                    $null = Copy-Item `
+                        -Path "c:\windows\$($Script:DSCEncryptionCert)" `
+                        -Destination "$VMLabBuilderFiles" `
+                        -FromSession $Session `
+                        -ErrorAction Stop
                     $Complete = $True
                 } Catch {
                     Write-Verbose "Waiting for Certificate file on $($VM.ComputerName) ..."
@@ -3092,9 +3103,12 @@ function New-LabVMSelfSignedCert {
             Remove-PSSession -Session $Session
         } # If
     } # While
-    Return $Complete
 
-} # New-LabVMSelfSignedCert
+    if ($Complete)
+    {
+        return (Get-Item -Path "$VMLabBuilderFiles\$($Script:DSCEncryptionCert)")
+    }
+} # Get-LabVMCertificate
 ####################################################################################################
 
 ####################################################################################################
