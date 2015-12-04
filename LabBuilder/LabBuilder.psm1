@@ -1904,13 +1904,13 @@ function Set-LabVMDSCStartFile {
     # Relabel the Network Adapters so that they match what the DSC Networking config will use
     # This is because unfortunately the Hyper-V Device Naming feature doesn't work.
     [String] $ManagementSwitchName = ('LabBuilder Management {0}' -f $Configuration.labbuilderconfig.name)
-    $Adapters = ($VM.Adapters).Name
+    $Adapters = @(($VM.Adapters).Name)
     $Adapters += @($ManagementSwitchName)
 
     # Do the other adapters    
     Foreach ($Adapter in $Adapters)
     {
-        $NetAdapter = Get-VMNetworkAdapter -VMName $($VM.Name) -Name $($Adapter)
+        $NetAdapter = Get-VMNetworkAdapter -VMName $($VM.Name) -Name $Adapter
         If (-not $NetAdapter)
         {
             $errorId = 'NetworkAdapterNotFoundError'
@@ -3355,7 +3355,7 @@ function Initialize-LabVMs {
 		}
         $VMNetworkAdapter = Get-VMNetworkAdapter -VMName $VM.Name -Name $ManagementSwitchName
         $null = $VMNetworkAdapter | Set-VMNetworkAdapterVlan -Access -VlanId $ManagementVlan
-        Write-Verbose "VM $($VM.Name) management network adapter $($VMAdapter.Name) VLAN has been set to $ManagementVlan ..."
+        Write-Verbose "VM $($VM.Name) management network adapter $ManagementSwitchName VLAN has been set to $ManagementVlan ..."
 
         # Create any network adapters
 		Foreach ($VMAdapter in $VM.Adapters) {
