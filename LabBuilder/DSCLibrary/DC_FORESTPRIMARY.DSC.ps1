@@ -11,7 +11,7 @@ DSC Template Configuration File For use by LabBuilder
 
 Configuration DC_FORESTPRIMARY
 {
-    Import-DscResource -ModuleName 'PSDesiredStateConfiguration'
+    Import-DscResource -ModuleName 'PSDesiredStateConfiguration' -ModuleVersion 1.1
     Import-DscResource -ModuleName xActiveDirectory
     Import-DscResource -ModuleName xDNSServer
     Node $AllNodes.NodeName {

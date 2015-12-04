@@ -21,7 +21,7 @@ DSC Template Configuration File For use by LabBuilder
 
 Configuration STANDALONE_ROOTCA
 {
-    Import-DscResource -ModuleName 'PSDesiredStateConfiguration'
+    Import-DscResource -ModuleName 'PSDesiredStateConfiguration' -ModuleVersion 1.1
     Import-DscResource -ModuleName xAdcsDeployment
 	Import-DscResource -ModuleName xPSDesiredStateConfiguration
     Node $AllNodes.NodeName {

@@ -11,7 +11,7 @@ DSC Template Configuration File For use by LabBuilder
 
 Configuration STANDALONE_INTERNET
 {
-	Import-DscResource -ModuleName 'PSDesiredStateConfiguration'
+	Import-DscResource -ModuleName 'PSDesiredStateConfiguration' -ModuleVersion 1.1
 	Import-DscResource -ModuleName xDNSServer
 	Import-DscResource -ModuleName xDHCPServer
 	Import-DscResource -ModuleName xWebAdministration

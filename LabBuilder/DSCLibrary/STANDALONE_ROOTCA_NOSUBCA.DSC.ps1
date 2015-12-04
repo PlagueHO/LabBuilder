@@ -13,7 +13,7 @@ DSC Template Configuration File For use by LabBuilder
 
 Configuration STANDALONE_ROOTCA_NOSUBCA
 {
-    Import-DscResource -ModuleName 'PSDesiredStateConfiguration'
+    Import-DscResource -ModuleName 'PSDesiredStateConfiguration' -ModuleVersion 1.1
     Import-DscResource -ModuleName xAdcsDeployment
     Node $AllNodes.NodeName {
         # Assemble the Local Admin Credentials

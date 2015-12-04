@@ -13,7 +13,7 @@ DSC Template Configuration File For use by LabBuilder
 
 Configuration MEMBER_NPS
 {
-	Import-DscResource -ModuleName 'PSDesiredStateConfiguration'
+	Import-DscResource -ModuleName 'PSDesiredStateConfiguration' -ModuleVersion 1.1
 	Import-DscResource -ModuleName xActiveDirectory
 	Import-DscResource -ModuleName xComputerManagement
 	Node $AllNodes.NodeName {

@@ -13,7 +13,7 @@ DSC Template Configuration File For use by LabBuilder
 
 Configuration RODC_SECONDARY
 {
-	Import-DscResource -ModuleName 'PSDesiredStateConfiguration'
+	Import-DscResource -ModuleName 'PSDesiredStateConfiguration' -ModuleVersion 1.1
 	Import-DscResource -ModuleName xActiveDirectory 
 	Node $AllNodes.NodeName {
 		# Assemble the Local Admin Credentials

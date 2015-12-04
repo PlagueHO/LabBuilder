@@ -365,9 +365,6 @@
       <adapters>
         <adapter name="Domain Private Site A"
                  switchname="Domain Private Site A" />
-        <adapter name="Internet"
-                 switchname="Internet" >
-        </adapter>
       </adapters>
       <install>
         <msu url="http://download.microsoft.com/download/1/D/8/1D8B5022-5477-4B9A-8104-6A71FF9D98AB/WindowsTH-KB2693643-x64.msu" />

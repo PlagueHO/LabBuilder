@@ -9,7 +9,7 @@ DSC Template Configuration File For use by LabBuilder
 
 Configuration STANDALONE_DHCPDNS
 {
-	Import-DscResource -ModuleName 'PSDesiredStateConfiguration'
+	Import-DscResource -ModuleName 'PSDesiredStateConfiguration' -ModuleVersion 1.1
 	Import-DscResource -ModuleName xDNSServer
 	Import-DscResource -ModuleName xDHCPServer
 	Node $AllNodes.NodeName {
