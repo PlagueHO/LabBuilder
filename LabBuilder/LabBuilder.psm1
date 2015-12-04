@@ -1289,7 +1289,10 @@ function Get-LabVMTemplates {
 
                     $PSCmdlet.ThrowTerminatingError($errorRecord)
                 } # If
-                $VMTemplate.SourceVHD = $Template.SourceVHD
+                If ($Template.SourceVHD)
+                {
+                    $VMTemplate.SourceVHD = $Template.SourceVHD
+                }
                 $VMTemplate.InstallISO = $Template.InstallISO
                 $VMTemplate.Edition = $Template.Edtion
                 $VMTemplate.AllowCreate = $Template.AllowCreate
@@ -2492,7 +2495,6 @@ Export-Certificate ``
 #>
 function Set-LabVMInitializationFiles {
     [CmdLetBinding()]
-    [OutputType([Boolean])]
     param (
         [Parameter(
             Mandatory,
@@ -2610,7 +2612,6 @@ Add-Content -Path `"$($ENV:SystemRoot)\Setup\Scripts\SetupComplete.log`" -Value 
     Write-Verbose "Dismounting VM $($VM.Name) Boot Disk VHDx $VMBootDiskPath ..."
     $null = Dismount-WindowsImage -Path $MountPoint -Save
     $null = Remove-Item -Path $MountPoint -Recurse -Force
-    Return $True
 } # Set-LabVMInitializationFiles
 ####################################################################################################
 
@@ -2984,7 +2985,9 @@ function Get-LabVMSelfSignedCert {
    from a running VM for use in encrypting DSC credentials. It will be saved
    as a .CER file in the LabBuilder files folder of the VM.
 .EXAMPLE
-   Get-LabVMCertificate -Configuration $Configuraion -VM $VM[0]
+   $Config = Get-LabConfiguration -Path c:\mylab\config.xml
+   $VMs = Get-LabVM -Configuration $Config
+   Get-LabVMCertificate -Configuration $Configuration -VM $VM[0]
 .OUTPUTS
    The path to the certificate file that was downloaded.
 #>
@@ -3299,9 +3302,10 @@ function Initialize-LabVMs {
                 -Name $VM.Name `
                 -MemoryStartupBytes $VM.MemoryStartupBytes `
                 -Generation 2 -Path $VMPath `
-                -VHDPath $VMBootDiskPath `
-                -SwitchName $ManagementSwitchName
-            }
+                -VHDPath $VMBootDiskPath
+            # Remove the default network adapter created with the VM because we don't need it
+            Remove-VMNetworkAdapter -VMName $VM.Name -Name 'Network Adapter'
+        }
 
         # Set the processor count if different to default and if specified in config file
         If ($VM.ProcessorCount) {
