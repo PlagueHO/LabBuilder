@@ -27,6 +27,8 @@ CertificateCreateError=The self-signed certificate for VM '{0}' could not be cre
 DSCConfigMetaMOFCreateError=A Meta MOF File was not created by the DSC LCM Config for VM '{0}'.
 DSCConfigMoreThanOneNodeError=A single Node element cannot be found in the DSC Config File '{0}' in VM '{1}'.
 DSCConfigMOFCreateError=A MOF File was not created by the DSC Config File '{0}' in VM '{1}'.
+NetworkAdapterNotFoundError=VM Network Adapter '{0}' could not be found attached to VM '{1}'.
+NetworkAdapterBlankMacError=VM Network Adapter '{0}' attached to VM '{1}' has a blank MAC Address.
 InstallingHyperVComponentsMesage=Installing {0} Hyper-V Components.
 InitializingHyperVComponentsMesage=Initializing Hyper-V Components.
 DownloadingLabResourcesMessage=Downloading Lab Resources.
@@ -1529,12 +1531,12 @@ function Remove-LabVMTemplates {
 .EXAMPLE
    $Config = Get-LabConfiguration -Path c:\mylab\config.xml
    $VMs = Get-LabVM -Configuration $Config
-   Set-LabDSCMOFFile -Configuration $Config -VM $VMs[0]
+   Set-LabVMDSCMOFFile -Configuration $Config -VM $VMs[0]
    Prepare the first VM in the Lab c:\mylab\config.xml for DSC configuration.
 .OUTPUTS
    None.
 #>
-function Set-LabDSCMOFFile {
+function Set-LabVMDSCMOFFile {
     [CmdLetBinding()]
     param
     (
@@ -1850,30 +1852,41 @@ function Set-LabDSCMOFFile {
                 -Force
         }
     } # If
-} # Set-LabDSCMOFFile
+} # Set-LabVMDSCMOFFile
 ####################################################################################################
 
 ####################################################################################################
 <#
 .SYNOPSIS
-   Short description
+   This function prepares the PowerShell scripts used for starting up DSC on a VM.
 .DESCRIPTION
-   Long description
+   Two PowerShell scripts will be created by this function in the LabBuilder Files
+   folder of the VM:
+     1. StartDSC.ps1 - the script that is called automatically to start up DSC.
+     2. StartDSCDebug.ps1 - a debug script that will start up DSC in debug mode.
+   These scripts will contain code to perform the following operations:
+     1. Configure the names of the Network Adapters so that they will match the 
+        names in the DSC Configuration files.
+     2. Enable/Disable DSC Event Logging.
+     3. Apply Configuration to the Local Configuration Manager.
+     4. Start DSC.
+.PARAMETER Configuration
+   Contains the Lab Builder configuration object that was loaded by the Get-LabConfiguration
+   object.
+.PARAMETER VM
+   A Virtual Machine object pulled from the Lab Configuration file using Get-LabVM
 .EXAMPLE
-   Example of how to use this cmdlet
-.EXAMPLE
-   Another example of how to use this cmdlet
-.INPUTS
-   Inputs to this cmdlet (if any)
+   $Config = Get-LabConfiguration -Path c:\mylab\config.xml
+   $VMs = Get-LabVM -Configuration $Config
+   Set-LabVMDSCMOFFile -Configuration $Config -VM $VMs[0]
+   Prepare the first VM in the Lab c:\mylab\config.xml for DSC start up.
 .OUTPUTS
-   Output from this cmdlet (if any)
-.NOTES
-   General notes
+   None.
 #>
-function Set-LabDSCStartFile {
+function Set-LabVMDSCStartFile {
     [CmdLetBinding()]
-    [OutputType([Boolean])]
-    param (
+    param
+    (
         [Parameter(
             Mandatory,
             Position=0)]
@@ -1890,62 +1903,60 @@ function Set-LabDSCStartFile {
 
     # Relabel the Network Adapters so that they match what the DSC Networking config will use
     # This is because unfortunately the Hyper-V Device Naming feature doesn't work.
-    # Do the management adapter first
-    $ManagementSwitchName = ('LabBuilder Management {0}' -f $Configuration.labbuilderconfig.name)
-    $NetAdapter = Get-VMNetworkAdapter -VMName $($VM.Name) -Name $ManagementSwitchName
-    If (-not $NetAdapter) {
-        Throw "VM Management Network Adapter $ManagementSwitchName could not be found attached to VM $($VM.Name)."
-    } # If
-    $MacAddress = $NetAdapter.MacAddress
-    If (-not $MacAddress) {
-        Throw "VM Management Network Adapter $ManagementSwitchName attached to VM ($VM.Name) has a blank MAC Address."
-    } # If
-    $DSCStartPs += @"
-Get-NetAdapter | Where-Object { `$_.MacAddress.Replace('-','') -eq '$MacAddress' } | Rename-NetAdapter -NewName '$ManagementSwitchName'
+    [String] $ManagementSwitchName = ('LabBuilder Management {0}' -f $Configuration.labbuilderconfig.name)
+    $Adapters = ($VM.Adapters).Name
+    $Adapters += @($ManagementSwitchName)
 
-"@
     # Do the other adapters    
-    Foreach ($Adapter in $VM.Adapters) {
-        $NetAdapter = Get-VMNetworkAdapter -VMName $($VM.Name) -Name $($Adapter.Name)
-        If (-not $NetAdapter) {
-            Throw "VM Network Adapter $($Adapter.Name) could not be found attached to VM $($VM.Name)."
+    Foreach ($Adapter in $Adapters)
+    {
+        $NetAdapter = Get-VMNetworkAdapter -VMName $($VM.Name) -Name $($Adapter)
+        If (-not $NetAdapter)
+        {
+            $errorId = 'NetworkAdapterNotFoundError'
+            $errorCategory = [System.Management.Automation.ErrorCategory]::InvalidArgument
+            $errorMessage = $($LocalizedData.NetworkAdapterNotFoundError `
+                -f $Adapter,$VM.Name)
+            $exception = New-Object -TypeName System.InvalidOperationException `
+                -ArgumentList $errorMessage
+            $errorRecord = New-Object -TypeName System.Management.Automation.ErrorRecord `
+                -ArgumentList $exception, $errorId, $errorCategory, $null
+    
+            $PSCmdlet.ThrowTerminatingError($errorRecord)
         } # If
         $MacAddress = $NetAdapter.MacAddress
-        If (-not $MacAddress) {
-            Throw "VM Network Adapter $($Adapter.Name) attached to VM ($VM.Name) has a blank MAC Address."
+        If (-not $MacAddress)
+        {
+            $errorId = 'NetworkAdapterBlankMacError'
+            $errorCategory = [System.Management.Automation.ErrorCategory]::InvalidArgument
+            $errorMessage = $($LocalizedData.NetworkAdapterBlankMacError `
+                -f $Adapter,$VM.Name)
+            $exception = New-Object -TypeName System.InvalidOperationException `
+                -ArgumentList $errorMessage
+            $errorRecord = New-Object -TypeName System.Management.Automation.ErrorRecord `
+                -ArgumentList $exception, $errorId, $errorCategory, $null
+    
+            $PSCmdlet.ThrowTerminatingError($errorRecord)
         } # If
         $DSCStartPs += @"
-Get-NetAdapter | Where-Object { `$_.MacAddress.Replace('-','') -eq '$MacAddress' } | Rename-NetAdapter -NewName '$($Adapter.Name)'
+Get-NetAdapter | Where-Object { `$_.MacAddress.Replace('-','') -eq '$MacAddress' } | Rename-NetAdapter -NewName '$($Adapter)'
 
 "@
     } # Foreach
 
     # Enable DSC logging (as long as it hasn't been already)
-    If ($VM.DSCLogging) {
-        $DSCStartPs += @"
+    [String] $Logging = ($VM.DSCLogging).ToString() 
+    $DSCStartPs += @"
 `$Result = & "wevtutil.exe" get-log "Microsoft-Windows-Dsc/Analytic"
 If (-not (`$Result -like '*enabled: true*')) {
-    & "wevtutil.exe" set-log "Microsoft-Windows-Dsc/Analytic" /q:true /e:true
+    & "wevtutil.exe" set-log "Microsoft-Windows-Dsc/Analytic" /q:true /e:$Logging
 }
 `$Result = & "wevtutil.exe" get-log "Microsoft-Windows-Dsc/Debug"
 If (-not (`$Result -like '*enabled: true*')) {
-    & "wevtutil.exe" set-log "Microsoft-Windows-Dsc/Debug" /q:true /e:true
+    & "wevtutil.exe" set-log "Microsoft-Windows-Dsc/Debug" /q:true /e:$Logging
 }
 
 "@
-    } Else {
-        $DSCStartPs += @"
-`$Result = & "wevtutil.exe" get-log "Microsoft-Windows-Dsc/Analytic"
-If (`$Result -like '*enabled: true*') {
-    & "wevtutil.exe" set-log "Microsoft-Windows-Dsc/Analytic" /q:true /e:false
-}
-`$Result = & "wevtutil.exe" get-log "Microsoft-Windows-Dsc/Debug"
-If (`$Result -like '*enabled: true*') {
-    & "wevtutil.exe" set-log "Microsoft-Windows-Dsc/Debug" /q:true /e:false
-}
-
-"@
-    } # If
 
     # Start the actual DSC Configuration
     $DSCStartPs += @"
@@ -1960,9 +1971,7 @@ Set-DscLocalConfigurationManager -Path `"$($ENV:SystemRoot)\Setup\Scripts\`" -Ve
 Start-DSCConfiguration -Path `"$($ENV:SystemRoot)\Setup\Scripts\`" -Force -Debug -Wait -Verbose
 "@
     $null = Set-Content -Path "$VMPath\$($VM.Name)\LabBuilder Files\StartDSCDebug.ps1" -Value $DSCStartPsDebug -Force
-
-    Return $True
-} # Set-LabDSCStartFile
+} # Set-LabVMDSCStartFile
 ####################################################################################################
 
 ####################################################################################################
@@ -1997,10 +2006,10 @@ function Initialize-LabVMDSC {
     )
 
     # Are there any DSC Settings to manage?
-    Set-LabDSCMOFFile -Configuration $Configuration -VM $VM
+    Set-LabVMDSCMOFFile -Configuration $Configuration -VM $VM
 
     # Generate the DSC Start up Script file
-    Set-LabDSCStartFile -Configuration $Configuration -VM $VM
+    Set-LabVMDSCStartFile -Configuration $Configuration -VM $VM
 } # Initialize-LabVMDSC
 ####################################################################################################
 
@@ -3742,7 +3751,7 @@ Export-ModuleMember -Function `
     Get-LabSwitches,Initialize-LabSwitches,Remove-LabSwitches, `
     Get-LabVMTemplates,Initialize-LabVMTemplates,Remove-LabVMTemplates, `
     Get-LabVMs,Initialize-LabVMs,Remove-LabVMs, `
-    Set-LabDSCMOFFile,Set-LabDSCStartFile,Initialize-LabVMDSC, `
+    Set-LabVMDSCMOFFile,Set-LabVMDSCStartFile,Initialize-LabVMDSC, `
     Get-LabUnattendFile, Set-LabVMInitializationFiles, `
     Start-LabVM, Wait-LabVMStart, Wait-LabVMOff, Wait-LabVMInit, `
     Get-LabVMSelfSignedCert, `
