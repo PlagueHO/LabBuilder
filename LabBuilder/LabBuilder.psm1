@@ -72,7 +72,8 @@ DSCConfigMOFCreatedMessage=DSC MOF File '{0}' for VM '{1}'. was created successf
 [String]$Script:DefaultMacAddressMinimum = '00155D010600'
 [String]$Script:DefaultMacAddressMaximum = '00155D0106FF'
 [Int]$Script:SelfSignedCertKeyLength = 2048
-[String]$Script:SelfSignedCertProviderName = 'Microsoft Software Key Storage Provider' # 'Microsoft Enhanced Cryptographic Provider v1.0'
+# Warning - using KSP causes the Private Key to not be accessible to PS.
+[String]$Script:SelfSignedCertProviderName = 'Microsoft Enhanced Cryptographic Provider v1.0' # 'Microsoft Software Key Storage Provider'
 [String]$Script:SelfSignedCertAlgorithmName = 'RSA' # 'ECDH_P256' Or 'ECDH_P384' Or 'ECDH_P521'
 [String]$Script:SelfSignedCertSignatureAlgorithm = 'SHA256' # 'SHA1'
 [String]$Script:DSCEncryptionCert = 'DSCEncryption.cer'
@@ -1907,7 +1908,6 @@ function Set-LabVMDSCStartFile {
     $Adapters = @(($VM.Adapters).Name)
     $Adapters += @($ManagementSwitchName)
 
-    # Do the other adapters    
     Foreach ($Adapter in $Adapters)
     {
         $NetAdapter = Get-VMNetworkAdapter -VMName $($VM.Name) -Name $Adapter
@@ -1977,19 +1977,30 @@ Start-DSCConfiguration -Path `"$($ENV:SystemRoot)\Setup\Scripts\`" -Force -Debug
 ####################################################################################################
 <#
 .SYNOPSIS
-   Short description
+   This function prepares all files require to configure a VM using Desired State
+   Configuration (DSC).
 .DESCRIPTION
-   Long description
+   Calling this function will cause the LabBuilder folder to be populated/updated
+   with all files required to configure a Virtual Machine with DSC.
+   This includes:
+     1. Required DSC Resouce Modules.
+     2. DSC Credential Encryption certificate.
+     3. DSC Configuration files.
+     4. DSC MOF Files for general config and for LCM config.
+     5. Start up scripts.
+.PARAMETER Configuration
+   Contains the Lab Builder configuration object that was loaded by the Get-LabConfiguration
+   object.
+.PARAMETER VM
+   A Virtual Machine object pulled from the Lab Configuration file using Get-LabVM
 .EXAMPLE
-   Example of how to use this cmdlet
-.EXAMPLE
-   Another example of how to use this cmdlet
-.INPUTS
-   Inputs to this cmdlet (if any)
+   $Config = Get-LabConfiguration -Path c:\mylab\config.xml
+   $VMs = Get-LabVM -Configuration $Config
+   Initialize-LabVMDSC -Configuration $Config -VM $VMs[0]
+   Prepares all files required to start up Desired State Configuration for the
+   first VM in the Lab c:\mylab\config.xml for DSC start up.
 .OUTPUTS
-   Output from this cmdlet (if any)
-.NOTES
-   General notes
+   None.
 #>
 function Initialize-LabVMDSC {
     [CmdLetBinding()]

@@ -1117,7 +1117,7 @@ Describe 'Set-LabVMDSCMOFFile' {
 	Mock Get-Module
 	Mock Get-ModulesInDSCConfig -MockWith { @('TestModule') }
 
-	Context 'Valid Parameters Passed; Empty DSC Config' {
+	Context 'Empty DSC Config' {
 		$VM = $VMS[0].Clone()
 		$VM.DSCConfigFile = ''
 		It 'Does not throw an Exception' {
@@ -1131,7 +1131,7 @@ Describe 'Set-LabVMDSCMOFFile' {
 
 	Mock Find-Module
 	
-	Context 'Valid Parameters Passed; DSC Module Not Found' {
+	Context 'DSC Module Not Found' {
 		$VM = $VMS[0].Clone()
 		$errorId = 'DSCModuleDownloadError'
 		$errorCategory = [System.Management.Automation.ErrorCategory]::InvalidArgument
@@ -1156,7 +1156,7 @@ Describe 'Set-LabVMDSCMOFFile' {
 	Mock Find-Module -MockWith { @{ name = 'TestModule' } }
 	Mock Install-Module -MockWith { Throw }
 	
-	Context 'Valid Parameters Passed; DSC Module Download Error' {
+	Context 'DSC Module Download Error' {
 		$VM = $VMS[0].Clone()
 		$errorId = 'DSCModuleDownloadError'
 		$errorCategory = [System.Management.Automation.ErrorCategory]::InvalidArgument
@@ -1183,7 +1183,7 @@ Describe 'Set-LabVMDSCMOFFile' {
 		-ParameterFilter { $Path -like '*TestModule' } `
 		-MockWith { $false }
 	
-	Context 'Valid Parameters Passed; DSC Module Not Found in Path' {
+	Context 'DSC Module Not Found in Path' {
 		$VM = $VMS[0].Clone()
 		$errorId = 'DSCModuleNotFoundError'
 		$errorCategory = [System.Management.Automation.ErrorCategory]::InvalidArgument
@@ -1212,7 +1212,7 @@ Describe 'Set-LabVMDSCMOFFile' {
 	Mock Copy-Item
 	Mock Get-LabVMCertificate
 	
-	Context 'Valid Parameters Passed; Certificate Create Failed' {
+	Context 'Certificate Create Failed' {
 		$VM = $VMS[0].Clone()
         $errorId = 'CertificateCreateError'
         $errorCategory = [System.Management.Automation.ErrorCategory]::InvalidArgument
@@ -1248,7 +1248,7 @@ Describe 'Set-LabVMDSCMOFFile' {
 	Mock Remove-Item
     Mock ConfigLCM
 	
-	Context 'Valid Parameters Passed; Meta MOF Create Failed' {
+	Context 'Meta MOF Create Failed' {
 		$VM = $VMS[0].Clone()
         $errorId = 'DSCConfigMetaMOFCreateError'
         $errorCategory = [System.Management.Automation.ErrorCategory]::InvalidArgument
@@ -1291,17 +1291,89 @@ Describe 'Set-LabVMDSCStartFile' {
 	[Array]$Templates = Get-LabVMTemplates -Configuration $Config
 	[Array]$VMs = Get-LabVMs -Configuration $Config -VMTemplates $Templates -Switches $Switches
 
-	Mock Get-VMNetworkAdapter -MockWith { [PSObject]@{ Name = 'Dummy'; MacAddress = '00-11-22-33-44-55'; } }
-	Mock Set-Content
+	Mock Get-VMNetworkAdapter
 
-	Context 'Valid Parameters Passed' {
-		[String]$DSCStartFile = Set-LabVMDSCStartFile -Configuration $Config -VM $VMs[0]
-		It 'Returns Expected File Content' {
-			$DSCStartFile | Should Be $True
+	Context 'Network Adapter does not Exist' {
+		$VM = $VMS[0].Clone()
+		$VM.Adapters[0].Name = 'DoesNotExist'
+		$errorId = 'NetworkAdapterNotFoundError'
+		$errorCategory = [System.Management.Automation.ErrorCategory]::InvalidArgument
+		$errorMessage = $($LocalizedData.NetworkAdapterNotFoundError `
+			-f 'DoesNotExist',$VM.Name)
+		$exception = New-Object -TypeName System.InvalidOperationException `
+			-ArgumentList $errorMessage
+		$errorRecord = New-Object -TypeName System.Management.Automation.ErrorRecord `
+			-ArgumentList $exception, $errorId, $errorCategory, $null
+
+		It 'Throws a NetworkAdapterNotFoundError Exception' {
+			{ Set-LabVMDSCStartFile -Configuration $Config -VM $VM } | Should Throw $errorRecord
 		}
 		It 'Calls Mocked commands' {
-			Assert-MockCalled Get-VMNetworkAdapter -Exactly 4
-			Assert-MockCalled Set-Content -Exactly 1
+			Assert-MockCalled Get-VMNetworkAdapter -Exactly 1
+		}
+	}
+
+	Mock Get-VMNetworkAdapter -MockWith { @{ Name = 'Exists'; MacAddress = '' }}
+
+	Context 'Network Adapter has blank MAC Address' {
+		$VM = $VMS[0].Clone()
+		$VM.Adapters[0].Name = 'Exists'
+		$errorId = 'NetworkAdapterBlankMacError'
+		$errorCategory = [System.Management.Automation.ErrorCategory]::InvalidArgument
+		$errorMessage = $($LocalizedData.NetworkAdapterBlankMacError `
+			-f 'Exists',$VM.Name)
+		$exception = New-Object -TypeName System.InvalidOperationException `
+			-ArgumentList $errorMessage
+		$errorRecord = New-Object -TypeName System.Management.Automation.ErrorRecord `
+			-ArgumentList $exception, $errorId, $errorCategory, $null
+
+		It 'Throws a NetworkAdapterBlankMacError Exception' {
+			{ Set-LabVMDSCStartFile -Configuration $Config -VM $VM } | Should Throw $errorRecord
+		}
+		It 'Calls Mocked commands' {
+			Assert-MockCalled Get-VMNetworkAdapter -Exactly 1
+		}
+	}
+
+	Mock Get-VMNetworkAdapter -MockWith { @{ Name = 'Exists'; MacAddress = '111111111111' }}
+	Mock Set-Content
+	
+	Context 'Valid Configuration Passed' {
+		$VM = $VMS[0].Clone()
+		
+		It 'Does Not Throw Exception' {
+			{ Set-LabVMDSCStartFile -Configuration $Config -VM $VM } | Should Not Throw
+		}
+		It 'Calls Mocked commands' {
+			Assert-MockCalled Get-VMNetworkAdapter -Exactly ($VM.Adapters.Count+1)
+			Assert-MockCalled Set-Content -Exactly 2
+		}
+	}
+}
+####################################################################################################
+
+####################################################################################################
+Describe 'Initialize-LabVMDSC' {
+
+	Mock Get-VM
+
+	$Config = Get-LabConfiguration -Path $Global:TestConfigOKPath
+	[Array]$Switches = Get-LabSwitches -Configuration $Config
+	[Array]$Templates = Get-LabVMTemplates -Configuration $Config
+	[Array]$VMs = Get-LabVMs -Configuration $Config -VMTemplates $Templates -Switches $Switches
+
+	Mock Set-LabVMDSCMOFFile
+	Mock Set-LabVMDSCStartFile
+
+	Context 'Valid Configuration Passed' {
+		$VM = $VMS[0].Clone()
+		
+		It 'Does Not Throw Exception' {
+			{ Initialize-LabVMDSC -Configuration $Config -VM $VM } | Should Not Throw
+		}
+		It 'Calls Mocked commands' {
+			Assert-MockCalled Set-LabVMDSCMOFFile -Exactly 1
+			Assert-MockCalled Set-LabVMDSCStartFile -Exactly 1
 		}
 	}
 }
