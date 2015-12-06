@@ -30,6 +30,7 @@ DSCConfigMOFCreateError=A MOF File was not created by the DSC Config File '{0}' 
 NetworkAdapterNotFoundError=VM Network Adapter '{0}' could not be found attached to VM '{1}'.
 NetworkAdapterBlankMacError=VM Network Adapter '{0}' attached to VM '{1}' has a blank MAC Address.
 ManagmentIPAddressError=An IPv4 address for the network adapter connected to the {0} for VM '{1}' could not be identified.
+DSCInitializationError=An error occurred initializing DSC for VM '{0}'.
 InstallingHyperVComponentsMesage=Installing {0} Hyper-V Components.
 InitializingHyperVComponentsMesage=Initializing Hyper-V Components.
 DownloadingLabResourcesMessage=Downloading Lab Resources.
@@ -2214,7 +2215,17 @@ function Start-LabVMDSC {
         If ((-not $ModuleCopyComplete) -and (((Get-Date) - $StartTime).Seconds) -ge $TimeOut) {
             # Timed out
             Remove-PSSession -Session $Session
-            Throw "DSC Initialization of VM $($VM.ComputerName) failed to complete."
+
+            $errorId = 'DSCInitializationError'
+            $errorCategory = [System.Management.Automation.ErrorCategory]::InvalidArgument
+            $errorMessage = $($LocalizedData.DSCInitializationError `
+                -f $VM.Name)
+            $exception = New-Object -TypeName System.InvalidOperationException `
+                -ArgumentList $errorMessage
+            $errorRecord = New-Object -TypeName System.Management.Automation.ErrorRecord `
+                -ArgumentList $exception, $errorId, $errorCategory, $null
+    
+            $PSCmdlet.ThrowTerminatingError($errorRecord)
         }
 
         # Finally, Start DSC up!
@@ -2232,19 +2243,24 @@ function Start-LabVMDSC {
 ####################################################################################################
 <#
 .SYNOPSIS
-   Short description
+   Assembles the content of a Unattend XML file that should be used to initialize
+   Windows on the specified VM.
 .DESCRIPTION
-   Long description
+   This function will return the content of a standard Windows Unattend XML file
+   that can be written to an VHD containing a copy of Windows that is still in
+   OOBE mode.
+.PARAMETER Configuration
+   Contains the Lab Builder configuration object that was loaded by the Get-LabConfiguration
+   object.
+.PARAMETER VM
+   A Virtual Machine object pulled from the Lab Configuration file using Get-LabVM
 .EXAMPLE
-   Example of how to use this cmdlet
-.EXAMPLE
-   Another example of how to use this cmdlet
-.INPUTS
-   Inputs to this cmdlet (if any)
+   $Config = Get-LabConfiguration -Path c:\mylab\config.xml
+   $VMs = Get-LabVM -Configuration $Config
+   Get-LabUnattendFile -Configuration $Config -VM $VMs[0]
+   Returns the content of the Unattend File for the first VM in the Lab c:\mylab\config.xml.
 .OUTPUTS
-   Output from this cmdlet (if any)
-.NOTES
-   General notes
+   The content of the Unattend File for the VM.
 #>
 function Get-LabUnattendFile {
     [CmdLetBinding()]
@@ -3949,13 +3965,10 @@ Configuration ConfigLCM {
 # Export the Module Cmdlets
 Export-ModuleMember -Function `
     Get-LabConfiguration,Test-LabConfiguration, `
-    Install-LabHyperV,Initialize-LabConfiguration,Download-LabResources, `
+    Install-LabHyperV,Initialize-LabConfiguration, `
     Get-LabSwitches,Initialize-LabSwitches,Remove-LabSwitches, `
     Get-LabVMTemplates,Initialize-LabVMTemplates,Remove-LabVMTemplates, `
     Get-LabVMs,Initialize-LabVMs,Remove-LabVMs, `
-    Set-LabVMDSCMOFFile,Set-LabVMDSCStartFile,Initialize-LabVMDSC, `
-    Get-LabUnattendFile, Set-LabVMInitializationFiles, `
     Start-LabVM, Wait-LabVMStart, Wait-LabVMOff, Wait-LabVMInit, `
-    Get-LabVMSelfSignedCert, `
     Install-Lab,Uninstall-Lab
 ####################################################################################################
