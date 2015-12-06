@@ -44,6 +44,13 @@ Configuration STANDALONE_ROOTCA
             Name = 'ADCS-Web-Enrollment'
             DependsOn = '[WindowsFeature]ADCSCA'
         }
+        
+        WindowsFeature InstallWebMgmtService
+		{ 
+			Ensure = "Present" 
+			Name = "Web-Mgmt-Service" 
+            DependsOn = '[WindowsFeature]ADCSWebEnrollment'
+		}
 
         # Create the CAPolicy.inf file which defines basic properties about the ROOT CA certificate
         File CAPolicy
@@ -52,7 +59,7 @@ Configuration STANDALONE_ROOTCA
             DestinationPath = 'C:\Windows\CAPolicy.inf'
             Contents = "[Version]`r`n Signature= `"$Windows NT$`"`r`n[Certsrv_Server]`r`n DiscreteSignatureAlgorithm=1`r`n HashAlgorithm=RSASHA256`r`n RenewalKeyLength=4096`r`n RenewalValidityPeriod=Years`r`n RenewalValidityPeriodUnits=20`r`n CRLDeltaPeriod=Days`r`n CRLDeltaPeriodUnits=0`r`n[CRLDistributionPoint]`r`n[AuthorityInformationAccess]`r`n"
             Type = 'File'
-            DependsOn = '[WindowsFeature]ADCSWebEnrollment'
+            DependsOn = '[WindowsFeature]ADCSCA'
         }
         
         # Configure the CA as Standalone Root CA

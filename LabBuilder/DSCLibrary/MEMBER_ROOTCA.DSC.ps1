@@ -48,14 +48,20 @@ Configuration MEMBER_ROOTCA
 		WindowsFeature ADCSCA {
 			Name = 'ADCS-Cert-Authority'
 			Ensure = 'Present'
-			DependsOn = "[WindowsFeature]RSATADPowerShell" 
 		}
 
 		# Install the Web Enrollment Service
-		WindowsFeature WebEnrollmentCA {
+		WindowsFeature ADCSWebEnrollment {
 			Name = 'ADCS-Web-Enrollment'
 			Ensure = 'Present'
 			DependsOn = "[WindowsFeature]ADCSCA"
+		}
+
+        WindowsFeature InstallWebMgmtService
+		{ 
+			Ensure = "Present" 
+			Name = "Web-Mgmt-Service" 
+            DependsOn = '[WindowsFeature]ADCSWebEnrollment'
 		}
 
 		if ($Node.InstallOnlineResponder) {
@@ -63,7 +69,7 @@ Configuration MEMBER_ROOTCA
 			WindowsFeature OnlineResponderCA {
 				Name = 'ADCS-Online-Cert'
 				Ensure = 'Present'
-				DependsOn = "[WindowsFeature]WebEnrollmentCA"
+				DependsOn = "[WindowsFeature]ADCSCA"
 			}
 		}
 
@@ -72,13 +78,13 @@ Configuration MEMBER_ROOTCA
 			WindowsFeature EnrollmentWebSvc {
 				Name = 'ADCS-Enroll-Web-Svc'
 				Ensure = 'Present'
-				DependsOn = "[WindowsFeature]WebEnrollmentCA"
+				DependsOn = "[WindowsFeature]ADCSCA"
 			}
 
 			WindowsFeature EnrollmentWebPol {
 				Name = 'ADCS-Enroll-Web-Pol'
 				Ensure = 'Present'
-				DependsOn = "[WindowsFeature]WebEnrollmentCA"
+				DependsOn = "[WindowsFeature]ADCSCA"
 			}
 		}
 
@@ -89,7 +95,7 @@ Configuration MEMBER_ROOTCA
 			DomainUserCredential = $DomainAdminCredential 
 			RetryCount = 100 
 			RetryIntervalSec = 10 
-			DependsOn = "[WindowsFeature]WebEnrollmentCA" 
+			DependsOn = "[WindowsFeature]RSATADPowerShell" 
 		}
 
 		# Join this Server to the Domain so that it can be an Enterprise CA.

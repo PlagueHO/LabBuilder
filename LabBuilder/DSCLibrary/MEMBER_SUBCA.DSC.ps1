@@ -43,7 +43,6 @@ Configuration MEMBER_SUBCA
 		WindowsFeature ADCSCA {
 			Name = 'ADCS-Cert-Authority'
 			Ensure = 'Present'
-			DependsOn = "[WindowsFeature]RSATADPowerShell" 
 		}
 
 		# Install the Web Enrollment Service
@@ -53,12 +52,19 @@ Configuration MEMBER_SUBCA
 			DependsOn = "[WindowsFeature]ADCSCA"
 		}
 
+        WindowsFeature InstallWebMgmtService
+		{ 
+			Ensure = "Present" 
+			Name = "Web-Mgmt-Service" 
+            DependsOn = '[WindowsFeature]ADCSWebEnrollment'
+		}
+
 		if ($Node.InstallOnlineResponder) {
 			# Install the Online Responder Service
 			WindowsFeature OnlineResponderCA {
 				Name = 'ADCS-Online-Cert'
 				Ensure = 'Present'
-				DependsOn = "[WindowsFeature]WebEnrollmentCA"
+				DependsOn = "[WindowsFeature]ADCSCA"
 			}
 		}
 
@@ -67,7 +73,7 @@ Configuration MEMBER_SUBCA
 			WindowsFeature EnrollmentWebSvc {
 				Name = 'ADCS-Enroll-Web-Svc'
 				Ensure = 'Present'
-				DependsOn = "[WindowsFeature]WebEnrollmentCA"
+				DependsOn = "[WindowsFeature]ADCSCA"
 			}
 
 			WindowsFeature EnrollmentWebPol {
