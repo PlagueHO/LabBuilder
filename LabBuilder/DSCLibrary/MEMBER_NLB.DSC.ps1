@@ -37,6 +37,12 @@ Configuration MEMBER_NLB
 			Name = "Web-Server" 
 		}
 
+		WindowsFeature InstallWebMgmtService
+		{ 
+			Ensure = "Present" 
+			Name = "Web-Mgmt-Service" 
+		}
+
 		WindowsFeature InstallNLB
 		{ 
 			Ensure = "Present" 

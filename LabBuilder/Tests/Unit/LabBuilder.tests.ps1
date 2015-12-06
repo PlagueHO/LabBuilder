@@ -1380,6 +1380,19 @@ Describe 'Initialize-LabVMDSC' {
 ####################################################################################################
 
 ####################################################################################################
+Describe 'Start-LabVMDSC' {
+
+	Mock Get-VM
+
+	$Config = Get-LabConfiguration -Path $Global:TestConfigOKPath
+	[Array]$Switches = Get-LabSwitches -Configuration $Config
+	[Array]$Templates = Get-LabVMTemplates -Configuration $Config
+	[Array]$VMs = Get-LabVMs -Configuration $Config -VMTemplates $Templates -Switches $Switches
+
+}
+####################################################################################################
+
+####################################################################################################
 Describe 'Get-LabUnattendFile' {
 
 	Mock Get-VM

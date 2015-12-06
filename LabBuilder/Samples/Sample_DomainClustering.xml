@@ -21,7 +21,6 @@
     </switch>
     <switch name="Domain Private Site A" type="Private" vlan="2" />
     <switch name="Domain Private Heartbeat" type="Private" vlan="3" />
-    <switch name="Internet" type="Private" vlan="9" />
   </switches>
 
   <templates fromvm="template *">
@@ -150,6 +149,18 @@
                  ClientMACAddress = '00000000000A';
                  IPAddress = '192.168.128.24';
                  AddressFamily = 'IPv4'
+              },
+              @{ Name = 'SA-NLB1';
+                 ScopeID = '192.168.128.0';
+                 ClientMACAddress = '00000000000B';
+                 IPAddress = '192.168.128.25';
+                 AddressFamily = 'IPv4'
+              },
+              @{ Name = 'SA-NLB2';
+                 ScopeID = '192.168.128.0';
+                 ClientMACAddress = '00000000000C';
+                 IPAddress = '192.168.128.26';
+                 AddressFamily = 'IPv4'
               }
             )
           ScopeOptions = @(
@@ -200,13 +211,8 @@
                 subnetmask="64"
                 dnsserver="fd53:ccc5:895a:bc00::a,fd53:ccc5:895a:bc00::b"/>
         </adapter>
-        <adapter name="Internet"
-                 switchname="Internet" >
-          <ipv4 address="131.107.0.50"
-                defaultgateway=""
-                subnetmask="16"
-                dnsserver="131.107.0.1"/>
-        </adapter>
+        <adapter name="General Purpose External"
+                 switchname="General Purpose External" />
       </adapters>
     </vm>
 
