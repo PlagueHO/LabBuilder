@@ -250,7 +250,7 @@ function Get-ModulesInDSCConfig()
 function New-Credential()
 {
     [CmdletBinding()]
-    [OutputType([String[]])]
+    [OutputType([PSCredential])]
     Param
     (
         [Parameter(
@@ -268,6 +268,7 @@ function New-Credential()
     [PSCredential] $Credential = New-Object `
         -TypeName System.Management.Automation.PSCredential `
         -ArgumentList ($Username, (ConvertTo-SecureString $Password -AsPlainText -Force))
+    return $Credential
 } # New-Credential
 ####################################################################################################
 
@@ -1837,7 +1838,7 @@ function Set-LabVMDSCMOFFile {
     Set-Content -Path $ConfigurationFile -Value $ConfigurationData
         
     # Generate the MOF file from the configuration
-    & "$DSCConfigName" -OutputPath $($ENV:Temp) -ConfigurationData $ConfigurationFile
+    $null = & "$DSCConfigName" -OutputPath $($ENV:Temp) -ConfigurationData $ConfigurationFile
     If (-not (Test-Path -Path $DSCMOFFile))
     {
         $errorId = 'DSCConfigMOFCreateError'
@@ -3372,7 +3373,6 @@ function Get-LabVMFilesPath {
 #>
 function Start-LabVM {
     [CmdLetBinding()]
-    [OutputType([Boolean])]
     param (
         [Parameter(
             Mandatory,
@@ -3419,7 +3419,6 @@ function Start-LabVM {
         # Attempt to start DSC on the VM
         Start-LabVMDSC -Configuration $Configuration -VM $VM
     } # If
-    Return $True
 } # Start-LabVM
 ####################################################################################################
 
@@ -3484,7 +3483,6 @@ function Create-LabVMPath {
 #>
 function Initialize-LabVMs {
     [CmdLetBinding()]
-    [OutputType([Boolean])]
     param (
         [Parameter(
             Mandatory,
@@ -3613,9 +3611,8 @@ function Initialize-LabVMs {
 			}
         } # Foreach
 
-        $null = Start-LabVM -Configuration $Config -VM $VM
+        Start-LabVM -Configuration $Config -VM $VM
     } # Foreach
-    Return $True
 } # Initialize-LabVMs
 ####################################################################################################
 
