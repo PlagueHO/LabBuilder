@@ -59,6 +59,10 @@ ConnectingFailedMessage=Connection to '{0}' failed, retrying in {1} seconds.
 CopyingFilesToComputerMessage=Copying {1} Files to '{0}'.
 CopyingFilesToComputerFailedMessage=Copying {1} Files to '{0}' failed, retrying in {2} seconds.
 StartingDSCMessage=Starting DSC on VM '{0}'.
+MountingVMBootDiskMessage=Mounting VM '{0}' Boot Disk VHDx '{1}'.
+DownloadingVMBootDiskFileMessage=Downloading VM '{0}' {1} file '{2}'.
+ApplyingVMBootDiskFileMessage=Applying VM '{0}' {1} file '{2}'.
+DismountingVMBootDiskMessage=Dismounting VM '{0}' Boot Disk VHDx '{1}'.
 '@
 }
 
@@ -1521,7 +1525,8 @@ function Initialize-LabVMTemplates {
 #>
 function Remove-LabVMTemplates {
     [CmdLetBinding()]
-    param (
+    param
+    (
         [Parameter(
             Mandatory,
             Position=0)]
@@ -1535,8 +1540,10 @@ function Remove-LabVMTemplates {
         [System.Collections.Hashtable[]] $VMTemplates
     )
     
-    Foreach ($VMTemplate in $VMTemplates) {
-        If (Test-Path $VMTemplate.templatevhd) {
+    Foreach ($VMTemplate in $VMTemplates)
+    {
+        If (Test-Path $VMTemplate.templatevhd)
+        {
             Set-ItemProperty -Path $VMTemplate.templatevhd -Name IsReadOnly -Value $False
             Write-Verbose -Message $($LocalizedData.DeletingTemplateVHDMessage `
                 -f $VMTemplate.templatevhd)
@@ -2131,10 +2138,13 @@ function Start-LabVMDSC {
         -Configuration $Configuration `
         -VM $VM
     
-    While ((-not $Complete) -and (((Get-Date) - $StartTime).Seconds) -lt $TimeOut) {
-        While (-not ($Session) -or ($Session.State -ne 'Opened')) {
+    While ((-not $Complete) -and (((Get-Date) - $StartTime).Seconds) -lt $TimeOut)
+    {
+        While (-not ($Session) -or ($Session.State -ne 'Opened'))
+        {
             # Try and connect to the remote VM for up to $Timeout (5 minutes) seconds.
-            Try {
+            Try
+            {
                 Write-Verbose -Message $($LocalizedData.ConnectingMessage `
                     -f $VM.ComputerName)
 
@@ -2142,7 +2152,9 @@ function Start-LabVMDSC {
                     -ComputerName $IPAddress `
                     -Credential $AdmininistratorCredential `
                     -ErrorAction Stop
-            } Catch {
+            }
+            Catch
+            {
                 Write-Verbose -Message $($LocalizedData.ConnectingFailedMessage `
                     -f $VM.ComputerName,$Script:RetryConnectSeconds)
 
@@ -2150,10 +2162,13 @@ function Start-LabVMDSC {
             }
         } # While
 
-        If (($Session) -and ($Session.State -eq 'Opened') -and (-not $ConfigCopyComplete)) {
+        If (($Session) -and ($Session.State -eq 'Opened') -and (-not $ConfigCopyComplete))
+        {
             # We are connected OK - upload the DSC files
-            While ((-not $ConfigCopyComplete) -and (((Get-Date) - $StartTime).Seconds) -lt $TimeOut) {
-                Try {
+            While ((-not $ConfigCopyComplete) -and (((Get-Date) - $StartTime).Seconds) -lt $TimeOut)
+            {
+                Try
+                {
                     Write-Verbose -Message $($LocalizedData.CopyingFilesToComputerMessage `
                         -f $VM.ComputerName,'DSC')
 
@@ -2161,7 +2176,8 @@ function Start-LabVMDSC {
                         -Path (Join-Path -Path $VMLabBuilderFiles -ChildPath "$($VM.ComputerName).mof") `
                         -Destination c:\Windows\Setup\Scripts `
                         -ToSession $Session -Force -ErrorAction Stop
-                    If (Test-Path -Path "$VMPath\$($VM.Name)\LabBuilder Files\$($VM.ComputerName).meta.mof") {
+                    If (Test-Path -Path "$VMPath\$($VM.Name)\LabBuilder Files\$($VM.ComputerName).meta.mof")
+                    {
                         $null = Copy-Item `
                             -Path (Join-Path -Path $VMLabBuilderFiles -ChildPath "$($VM.ComputerName).meta.mof") `
                             -Destination c:\Windows\Setup\Scripts `
@@ -2176,7 +2192,9 @@ function Start-LabVMDSC {
                         -Destination c:\Windows\Setup\Scripts `
                         -ToSession $Session -Force -ErrorAction Stop
                     $ConfigCopyComplete = $True
-                } Catch {
+                }
+                Catch
+                {
                     Write-Verbose -Message $($LocalizedData.CopyingFilesToComputerFailedMessage `
                         -f $VM.ComputerName,'DSC',$Script:RetryConnectSeconds)
 
@@ -2186,16 +2204,20 @@ function Start-LabVMDSC {
         } # If
 
         # If the copy didn't complete and we're out of time, exit with a failure.
-        If ((-not $ConfigCopyComplete) -and (((Get-Date) - $StartTime).Seconds) -ge $TimeOut) {
+        If ((-not $ConfigCopyComplete) -and (((Get-Date) - $StartTime).Seconds) -ge $TimeOut)
+        {
             Remove-PSSession -Session $Session
             Return $False
         } # If
 
         # Now Upload any required modules
-        If (($Session) -and ($Session.State -eq 'Opened') -and (-not $ModuleCopyComplete)) {
+        If (($Session) -and ($Session.State -eq 'Opened') -and (-not $ModuleCopyComplete))
+        {
             $DSCModules = Get-ModulesInDSCConfig -DSCConfigFile $($VM.DSCConfigFile)
-            Foreach ($ModuleName in $DSCModules) {
-                Try {
+            Foreach ($ModuleName in $DSCModules)
+            {
+                Try
+                {
                     Write-Verbose -Message $($LocalizedData.CopyingFilesToComputerMessage `
                         -f $VM.ComputerName,"DSC Module $ModuleName")
 
@@ -2203,7 +2225,9 @@ function Start-LabVMDSC {
                         -Path (Join-Path -Path $VMLabBuilderFiles -ChildPath "DSC Modules\$ModuleName\") `
                         -Destination "$($env:ProgramFiles)\WindowsPowerShell\Modules\" `
                         -ToSession $Session -Force -Recurse -ErrorAction Stop
-                } Catch {
+                }
+                Catch
+                {
                     Write-Verbose -Message $($LocalizedData.CopyingFilesToComputerFailedMessage `
                         -f $VM.ComputerName,"DSC Module $ModuleName",$Script:RetryConnectSeconds)
 
@@ -2213,7 +2237,8 @@ function Start-LabVMDSC {
             $ModuleCopyComplete = $True
         } # If
 
-        If ((-not $ModuleCopyComplete) -and (((Get-Date) - $StartTime).Seconds) -ge $TimeOut) {
+        If ((-not $ModuleCopyComplete) -and (((Get-Date) - $StartTime).Seconds) -ge $TimeOut)
+        {
             # Timed out
             Remove-PSSession -Session $Session
 
@@ -2230,7 +2255,8 @@ function Start-LabVMDSC {
         }
 
         # Finally, Start DSC up!
-        If (($Session) -and ($Session.State -eq 'Opened') -and ($ConfigCopyComplete) -and ($ModuleCopyComplete)) {
+        If (($Session) -and ($Session.State -eq 'Opened') -and ($ConfigCopyComplete) -and ($ModuleCopyComplete))
+        {
             Write-Verbose -Message $($LocalizedData.StartingDSCMessage `
                 -f $VM.ComputerName)
 
@@ -2266,7 +2292,8 @@ function Start-LabVMDSC {
 function Get-LabUnattendFile {
     [CmdLetBinding()]
     [OutputType([String])]
-    param (
+    param
+    (
         [Parameter(
             Mandatory,
             Position=0)]
@@ -2277,9 +2304,12 @@ function Get-LabUnattendFile {
             Position=1)]
         [System.Collections.Hashtable] $VM
     )
-    If ($VM.UnattendFile) {
+    If ($VM.UnattendFile)
+    {
         [String] $UnattendContent = Get-Content -Path $VM.UnattendFile
-    } Else {
+    }
+    Else
+    {
         [String] $DomainName = $Configuration.labbuilderconfig.settings.domainname
         [String] $Email = $Configuration.labbuilderconfig.settings.email
         $UnattendContent = [String] @"
@@ -2315,7 +2345,8 @@ function Get-LabUnattendFile {
         </component>
 
 "@
-        If ($VM.OSType -eq 'Client') {
+        If ($VM.OSType -eq 'Client')
+        {
             $UnattendContent += @"
             <component name="Microsoft-Windows-Deployment" processorArchitecture="x86" publicKeyToken="31bf3856ad364e35" language="neutral" versionScope="nonSxS" xmlns:wcm="http://schemas.microsoft.com/WMIConfig/2002/State" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
                 <RunSynchronous>
@@ -2362,7 +2393,7 @@ function Get-LabUnattendFile {
     </settings>
 </unattend>
 "@
-        }
+    }
     Return $UnattendContent
 } # Get-LabUnattendFile
 ####################################################################################################
@@ -2390,7 +2421,8 @@ function Get-LabUnattendFile {
 function Get-LabNetworkingDSCFile {
     [CmdLetBinding()]
     [OutputType([String])]
-    param (
+    param
+    (
         [Parameter(
             Mandatory,
             Position=0)]
@@ -2538,7 +2570,8 @@ $NetworkingDSCConfig += @"
 function Get-LabGetCertificatePs {
     [CmdLetBinding()]
     [OutputType([String])]
-    param (
+    param
+    (
         [Parameter(
             Mandatory,
             Position=0)]
@@ -2590,19 +2623,26 @@ Export-Certificate ``
 ####################################################################################################
 <#
 .SYNOPSIS
-   Short description
+   Prepares the the files for initializing a new VM.
 .DESCRIPTION
-   Long description
+   This function creates the following files in the LabBuilder Files for the a VM in preparation
+   for them to be applied to the VM VHD before it is booted up for the first time:
+     1. Unattend.xml - a Windows Unattend.xml file.
+     2. SetupComplete.cmd - the command file that gets run after the Windows OOBE is complete.
+     3. SetupComplete.ps1 - this PowerShell script file that is run at the the end of the
+                            SetupComplete.cmd.
+.PARAMETER Configuration
+   Contains the Lab Builder configuration object that was loaded by the Get-LabConfiguration
+   object.
+.PARAMETER VM
+   A Virtual Machine object pulled from the Lab Configuration file using Get-LabVM
 .EXAMPLE
-   Example of how to use this cmdlet
-.EXAMPLE
-   Another example of how to use this cmdlet
-.INPUTS
-   Inputs to this cmdlet (if any)
+   $Config = Get-LabConfiguration -Path c:\mylab\config.xml
+   $VMs = Get-LabVM -Configuration $Config
+   Set-LabVMInitializationFiles -Configuration $Config -VM $VMs[0]
+   Prepare the first VM in the Lab c:\mylab\config.xml for initial boot.
 .OUTPUTS
-   Output from this cmdlet (if any)
-.NOTES
-   General notes
+   None.
 #>
 function Set-LabVMInitializationFiles {
     [CmdLetBinding()]
@@ -2615,68 +2655,47 @@ function Set-LabVMInitializationFiles {
         [Parameter(
             Mandatory,
             Position=1)]
-        [System.Collections.Hashtable] $VM,
-        [Parameter(
-            Mandatory,
-            Position=2)]
-        [String] $VMBootDiskPath
+        [System.Collections.Hashtable] $VM
     )
 
-    # Mount the VMs Boot VHD so that files can be loaded into it
-    [String] $MountPoint = Join-Path -Path $ENV:Temp -ChildPath ([System.IO.Path]::GetRandomFileName())
-    Write-Verbose "Mounting VM $($VM.Name) Boot Disk VHDx $VMBootDiskPath ..."
-    $null = New-Item -Path $MountPoint -ItemType Directory
-    $null = Mount-WindowsImage -ImagePath $VMBootDiskPath -Path $MountPoint -Index 1 | Out-Null
-
-    # Copy the WMF 5.0 Installer to the VM in case it is needed
-    # This contains a bug at the moment - waiting for MS to resolve
-    # Write-Verbose "Applying VM $($VM.Name) WMF 5.0 ..."
-    # Add-WindowsPackage -PackagePath $Script:WMF5InstallerPath -Path $MountPoint | Out-Null
-
-    # Apply any additional MSU Updates
-    Foreach ($URL in $VM.InstallMSU) {
-        $MSUFilename = $URL.Substring($URL.LastIndexOf('/') + 1)
-        $MSUPath = Join-Path -Path $Script:WorkingFolder -ChildPath $MSUFilename
-        If (-not (Test-Path -Path $MSUPath)) {
-            Invoke-WebRequest -Uri $URL -OutFile $MSUPath
-        } # If
-        # Once downloaded apply the update
-        $null = Add-WindowsPackage -PackagePath $MSUPath -Path $MountPoint
-    } # Foreach
-
-    # Create the scripts folder where setup scripts will be put
-    $null = New-Item -Path "$MountPoint\Windows\Setup\Scripts" -ItemType Directory
-
-    # Generate and apply an unattended setup file
-    [String] $UnattendFile = Get-LabUnattendFile -Configuration $Configuration -VM $VM
-    Write-Verbose "Applying VM $($VM.Name) Unattend File ..."
+    # Get Path to LabBuilder files
+    [String] $VMLabBuilderFiles = Get-LabVMFilesPath `
+        -Configuration $Configuration `
+        -VM $VM
+    
+    # Generate an unattended setup file
+    [String] $UnattendFile = Get-LabUnattendFile -Configuration $Configuration -VM $VM       
     $null = Set-Content `
-        -Path "$MountPoint\Windows\Panther\Unattend.xml" `
+        -Path (Join-Path -Path $VMLabBuilderFiles -ChildPath 'Unattend.xml') `
         -Value $UnattendFile -Force
-    $null = Set-Content `
-        -Path "$VMPath\$($VM.Name)\LabBuilder Files\Unattend.xml" `
-        -Value $UnattendFile -Force
-    [String] $SetupCompleteCmd = ''
+
+    # Assemble the SetupComplete.* scripts.
     [String] $GetCertPs = Get-LabGetCertificatePs -Configuration $Configuration -VM $VM
+    [String] $SetupCompleteCmd = ''
     [String] $SetupCompletePs = @"
 Add-Content -Path "C:\WINDOWS\Setup\Scripts\SetupComplete.log" -Value 'SetupComplete.ps1 Script Started...' -Encoding Ascii
 $GetCertPs
-Add-Content -Path `"`$(`$ENV:SystemRoot)\Setup\Scripts\SetupComplete.log`" -Value 'Self-signed certificate created and saved to C:\Windows\$Script:DSCEncryptionCert ...' -Encoding Ascii
+Add-Content -Path `"`$(`$ENV:SystemRoot)\Setup\Scripts\SetupComplete.log`" -Value 'Certificate identified and saved to C:\Windows\$Script:DSCEncryptionCert ...' -Encoding Ascii
 Enable-PSRemoting -SkipNetworkProfileCheck -Force
 Add-Content -Path `"`$(`$ENV:SystemRoot)\Setup\Scripts\SetupComplete.log`" -Value 'Windows Remoting Enabled ...' -Encoding Ascii
 "@
-    If ($VM.SetupComplete) {
+    If ($VM.SetupComplete)
+    {
         [String] $SetupComplete = $VM.SetupComplete
-        If (-not (Test-Path -Path $SetupComplete)) {
+        If (-not (Test-Path -Path $SetupComplete))
+        {
             Throw "SetupComplete Script file $SetupComplete could not be found for VM $($VM.Name)."
         }
         [String] $Extension = [System.IO.Path]::GetExtension($SetupComplete)
-        Switch ($Extension.ToLower()) {
-            '.ps1' {
+        Switch ($Extension.ToLower())
+        {
+            '.ps1'
+            {
                 $SetupCompletePs += Get-Content -Path $SetupComplete
                 Break
             } # 'ps1'
-            '.cmd' {
+            '.cmd'
+            {
                 $SetupCompleteCmd += Get-Content -Path $SetupComplete
                 Break
             } # 'cmd'
@@ -2684,7 +2703,6 @@ Add-Content -Path `"`$(`$ENV:SystemRoot)\Setup\Scripts\SetupComplete.log`" -Valu
     } # If
 
     # Write out the CMD Setup Complete File
-    Write-Verbose "Applying VM $($VM.Name) Setup Complete CMD File ..."
     $SetupCompleteCmd = @"
 @echo SetupComplete.cmd Script Started... >> %SYSTEMROOT%\Setup\Scripts\SetupComplete.log
 $SetupCompleteCmd
@@ -2693,37 +2711,152 @@ powerShell.exe -ExecutionPolicy Unrestricted -Command `"%SYSTEMROOT%\Setup\Scrip
 @echo Initial Setup Completed - this file indicates that setup has completed. >> %SYSTEMROOT%\Setup\Scripts\InitialSetupCompleted.txt
 "@
     $null = Set-Content `
-        -Path "$MountPoint\Windows\Setup\Scripts\SetupComplete.cmd" `
-        -Value $SetupCompleteCmd -Force
-    $null = Set-Content `
-        -Path "$VMPath\$($VM.Name)\LabBuilder Files\SetupComplete.cmd" `
+        -Path (Join-Path -Path $VMLabBuilderFiles -ChildPath 'SetupComplete.cmd') `
         -Value $SetupCompleteCmd -Force
 
     # Write out the PowerShell Setup Complete file
-    Write-Verbose "Applying VM $($VM.Name) Setup Complete PowerShell File ..."
     $SetupCompletePs = @"
 Add-Content -Path `"$($ENV:SystemRoot)\Setup\Scripts\SetupComplete.log`" -Value 'SetupComplete.ps1 Script Started...' -Encoding Ascii
 $SetupCompletePs
 Add-Content -Path `"$($ENV:SystemRoot)\Setup\Scripts\SetupComplete.log`" -Value 'SetupComplete.ps1 Script Finished...' -Encoding Ascii
 "@
-
     $null = Set-Content `
-        -Path "$MountPoint\Windows\Setup\Scripts\SetupComplete.ps1" `
-        -Value $SetupCompletePs -Force
-    $null = Set-Content `
-        -Path "$VMPath\$($VM.Name)\LabBuilder Files\SetupComplete.ps1" `
+        -Path (Join-Path -Path $VMLabBuilderFiles -ChildPath 'SetupComplete.ps1') `
         -Value $SetupCompletePs -Force
 
-    Copy-Item `
+} # Set-LabVMInitializationFiles
+####################################################################################################
+
+####################################################################################################
+<#
+.SYNOPSIS
+   Initialized a VM VHD for first boot by applying any required files to the image.
+.DESCRIPTION
+   This function mounts a VM boot VHD image and applies the following files from the
+   LabBuilder Files folder to it:
+     1. Unattend.xml - a Windows Unattend.xml file.
+     2. SetupComplete.cmd - the command file that gets run after the Windows OOBE is complete.
+     3. SetupComplete.ps1 - this PowerShell script file that is run at the the end of the
+                            SetupComplete.cmd.
+   The files should have already been prepared by the Set-LabVMInitializationFiles function.
+   The VM VHD image should contain an installed copy of Windows still in OOBE mode.
+   
+   This function also applies downloads and applies and optional MSU update files from
+   a web site if specified in the VM declaration in the configuration.
+ 
+.PARAMETER Configuration
+   Contains the Lab Builder configuration object that was loaded by the Get-LabConfiguration
+   object.
+.PARAMETER VM
+   A Virtual Machine object pulled from the Lab Configuration file using Get-LabVM
+.EXAMPLE
+   $Config = Get-LabConfiguration -Path c:\mylab\config.xml
+   $VMs = Get-LabVM -Configuration $Config
+   Initialize-LabVMImage `
+       -Configuration $Config `
+       -VM $VMs[0] `
+       -VMBootDiskPath $BootVHD[0]
+   Prepare the boot VHD in for the first VM in the Lab c:\mylab\config.xml for initial boot.
+.OUTPUTS
+   None.
+#>
+
+function Initialize-LabVMImage {
+    [CmdLetBinding()]
+    param (
+        [Parameter(
+            Mandatory,
+            Position=0)]
+        [XML] $Configuration,
+
+        [Parameter(
+            Mandatory,
+            Position=1)]
+        [System.Collections.Hashtable] $VM,
+
+        [Parameter(
+            Mandatory,
+            Position=2)]
+        [String] $VMBootDiskPath
+    )
+
+    # Get Path to LabBuilder files
+    [String] $VMLabBuilderFiles = Get-LabVMFilesPath `
+        -Configuration $Configuration `
+        -VM $VM
+
+    # Mount the VMs Boot VHD so that files can be loaded into it
+    Write-Verbose -Message $($LocalizedData.MountingVMBootDiskMessage `
+        -f $VM.Name,$VMBootDiskPath)
+    [String] $MountPoint = Join-Path -Path $ENV:Temp -ChildPath ([System.IO.Path]::GetRandomFileName())
+    $null = New-Item -Path $MountPoint -ItemType Directory
+    $null = Mount-WindowsImage -ImagePath $VMBootDiskPath -Path $MountPoint -Index 1
+
+    # Copy the WMF 5.0 Installer to the VM in case it is needed
+    # This contains a bug at the moment - waiting for MS to resolve
+    # Write-Verbose "Applying VM $($VM.Name) WMF 5.0 ..."
+    # $null = Add-WindowsPackage -PackagePath $Script:WMF5InstallerPath -Path $MountPoint
+
+    # Apply any additional MSU Updates
+    Foreach ($URL in $VM.InstallMSU)
+    {
+        $MSUFilename = $URL.Substring($URL.LastIndexOf('/') + 1)
+        $MSUPath = Join-Path -Path $Script:WorkingFolder -ChildPath $MSUFilename
+        If (-not (Test-Path -Path $MSUPath))
+        {
+            Write-Verbose -Message $($LocalizedData.DownloadingVMBootDiskFileMessage `
+                -f $VM.Name,'MSU',$URL)
+            Invoke-WebRequest -Uri $URL -OutFile $MSUPath
+        } # If
+
+        # Once downloaded apply the update
+        Write-Verbose -Message $($LocalizedData.ApplyingVMBootDiskFileMessage `
+            -f $VM.Name,'MSU',$URL)
+        $null = Add-WindowsPackage -PackagePath $MSUPath -Path $MountPoint
+    } # Foreach
+
+    # Create the scripts folder where setup scripts will be put
+    $null = New-Item -Path "$MountPoint\Windows\Setup\Scripts" -ItemType Directory
+
+    # Apply an unattended setup file
+    Write-Verbose -Message $($LocalizedData.ApplyingVMBootDiskFileMessage `
+        -f $VM.Name,'Unattend','Unattend.xml')
+    $null = Copy-Item `
+        -Path (Join-Path -Path $VMLabBuilderFiles -ChildPath 'Unattend.xml') `
+        -Destination "$MountPoint\Windows\Panther\Unattend.xml" `
+        -Force
+
+    # Apply the CMD Setup Complete File
+    Write-Verbose -Message $($LocalizedData.ApplyingVMBootDiskFileMessage `
+        -f $VM.Name,'Setup Complete CMD','SetupComplete.cmd')
+    $null = Copy-Item `
+        -Path (Join-Path -Path $VMLabBuilderFiles -ChildPath 'SetupComplete.cmd') `
+        -Destination "$MountPoint\Windows\Setup\Scripts\SetupComplete.cmd" `
+        -Force
+
+    # Apply the PowerShell Setup Complete file
+    Write-Verbose -Message $($LocalizedData.ApplyingVMBootDiskFileMessage `
+        -f $VM.Name,'Setup Complete PowerShell','SetupComplete.ps1')
+    $null = Copy-Item `
+        -Path (Join-Path -Path $VMLabBuilderFiles -ChildPath 'SetupComplete.ps1') `
+        -Destination "$MountPoint\Windows\Setup\Scripts\SetupComplete.ps1" `
+        -Force
+
+
+    # Apply the Certificate Generator script
+    Write-Verbose -Message $($LocalizedData.ApplyingVMBootDiskFileMessage `
+        -f $VM.Name,'Certificate Create Script',$Script:CertGenPS1Filename)
+    $null = Copy-Item `
         -Path $Script:CertGenPS1Path `
         -Destination "$MountPoint\Windows\Setup\Scripts\$($Script:CertGenPS1Filename)"`
         -Force
         
     # Dismount the VHD in preparation for boot
-    Write-Verbose "Dismounting VM $($VM.Name) Boot Disk VHDx $VMBootDiskPath ..."
+    Write-Verbose -Message $($LocalizedData.DismountingVMBootDiskMessage `
+        -f $VM.Name,$VMBootDiskPath)
     $null = Dismount-WindowsImage -Path $MountPoint -Save
     $null = Remove-Item -Path $MountPoint -Recurse -Force
-} # Set-LabVMInitializationFiles
+} # Initialize-LabVMImage
 ####################################################################################################
 
 ####################################################################################################
@@ -3529,8 +3662,17 @@ function Initialize-LabVMs {
                     $Null = Copy-Item -Path $VM.TemplateVHD -Destination $VMBootDiskPath
                 }
 
-                # Because this is a new boot disk assign any required initialization files to it (Unattend.xml etc).
-                Set-LabVMInitializationFiles -Configuration $Configuration -VMBootDiskPath $VMBootDiskPath -VM $VM
+                # Create all the required initialization files for this VM
+                Set-LabVMInitializationFiles `
+                    -Configuration $Configuration `
+                    -VM $VM
+
+                # Because this is a new boot disk apply any required initialization
+                Initialize-LabVMImage `
+                    -Configuration $Configuration `
+                    -VM $VM `
+                    -VMBootDiskPath $VMBootDiskPath
+
             } Else {
                 Write-Verbose "VM $($VM.Name) boot disk $VMBootDiskPath already exists..."
             } # If
