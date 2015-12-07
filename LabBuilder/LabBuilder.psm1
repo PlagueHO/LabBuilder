@@ -1029,6 +1029,7 @@ function Initialize-LabSwitches {
                                     -SwitchName $SwitchName `
                                     -Name $($Adapter.Name) `
                                     -StaticMacAddress $($Adapter.MacAddress) `
+                                    
                                     -Passthru | `
                                     Set-VMNetworkAdapterVlan -Access -VlanId $($Switch.Vlan)
                             }
@@ -2959,7 +2960,11 @@ function Get-LabVMs {
             If (-not $VLan) {
                 $VLan = $SwitchVLan
             } # If
-
+            
+            [Boolean] $MACAddressSpoofing = $false
+            if ($VMAdapter.macaddressspoofing -eq 'Y') {
+                $MACAddressSpoofing = $true
+            }
             # Have we got any IPv4 settings?
             [System.Collections.Hashtable] $IPv4 = @{}
             If ($VMAdapter.IPv4) {
@@ -2986,6 +2991,7 @@ function Get-LabVMs {
                 Name = $VMAdapter.Name;
                 SwitchName = $VMAdapter.SwitchName;
                 MACAddress = $VMAdapter.macaddress;
+                MACAddressSpoofing = $MACAddressSpoofing;
                 VLan = $VLan;
                 IPv4 = $IPv4;
                 IPv6 = $IPv6
@@ -3728,31 +3734,44 @@ function Initialize-LabVMs {
         Write-Verbose "VM $($VM.Name) management network adapter $ManagementSwitchName VLAN has been set to $ManagementVlan ..."
 
         # Create any network adapters
-		Foreach ($VMAdapter in $VM.Adapters) {
-            If ((Get-VMNetworkAdapter -VMName $VM.Name | Where-Object -Property Name -EQ $VMAdapter.Name).Count -eq 0) {
+		Foreach ($VMAdapter in $VM.Adapters)
+        {
+            if ((Get-VMNetworkAdapter -VMName $VM.Name | Where-Object -Property Name -EQ $VMAdapter.Name).Count -eq 0)
+            {
                 Write-Verbose "VM $($VM.Name) network adapter $($VMAdapter.Name) is being added ..."
                 Add-VMNetworkAdapter -VMName $VM.Name -SwitchName $VMAdapter.SwitchName -Name $VMAdapter.Name
             } # If
+            $Splat = @{}
             $VMNetworkAdapter = Get-VMNetworkAdapter -VMName $VM.Name -Name $VMAdapter.Name
             $Vlan = $VMAdapter.VLan
-            If ($VLan) {
-                $null = $VMNetworkAdapter | Set-VMNetworkAdapterVlan -Access -VlanId $Vlan
+            if ($VLan) {
+                $splat += @{ Access = $true; VlanId = $vlan }
                 Write-Verbose "VM $($VM.Name) network adapter $($VMAdapter.Name) VLAN has been set to $Vlan ..."
-            } Else {
-                $null = $VMNetworkAdapter | Set-VMNetworkAdapterVlan -Untagged
+            }
+            else
+            {
+                $splat += @{ Untagged = $true }
                 Write-Verbose "VM $($VM.Name) network adapter $($VMAdapter.Name) VLAN has been cleared ..."
             } # If
-            If ($VMAdapter.MACAddress) {
-                $null = $VMNetworkAdapter | Set-VMNetworkAdapter -StaticMacAddress $VMAdapter.MACAddress
-            } Else {
-                $null = $VMNetworkAdapter | Set-VMNetworkAdapter -DynamicMacAddress
+            if ($VMAdapter.MACAddress) {
+                $splat += @{ StaticMacAddress = $VMAdapter.MACAddress }
+            }
+            else
+            {
+                $splat += @{ DynamicMacAddress = $true }
             } # If
             # Enable Device Naming
             if ((Get-Command -Name Set-VMNetworkAdapter).Parameters.ContainsKey('DeviceNaming')) {
-				$null = $VMNetworkAdapter | Set-VMNetworkAdapter -DeviceNaming On
+                $splat += @{ DeviceNaming = 'On' }
 			}
+            if ($VMAdapter.MACAddressSpoofing -ne $VMNetworkAdapter.MACAddressSpoofing) {
+                $splat += @{ MacAddressSpoofing = if ($VMAdapter.MACAddressSpoofing) {'On'} else {'Off'} }
+            }                
+            if ($Splat.Count -gt 0)
+            {
+                $null = $VMNetworkAdapter | Set-VMNetworkAdapter $Splat
+            }
         } # Foreach
-
         Start-LabVM -Configuration $Config -VM $VM
     } # Foreach
 } # Initialize-LabVMs

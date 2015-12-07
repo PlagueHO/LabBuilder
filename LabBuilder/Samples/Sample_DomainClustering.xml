@@ -20,7 +20,6 @@
       </adapters>
     </switch>
     <switch name="Domain Private Site A" type="Private" vlan="2" />
-    <switch name="Domain Private Heartbeat" type="Private" vlan="3" />
   </switches>
 
   <templates fromvm="template *">
@@ -156,10 +155,22 @@
                  IPAddress = '192.168.128.25';
                  AddressFamily = 'IPv4'
               },
+              @{ Name = 'SA-NLB1-CLS';
+                 ScopeID = '192.168.128.0';
+                 ClientMACAddress = '00000000000D';
+                 IPAddress = '192.168.128.35';
+                 AddressFamily = 'IPv4'
+              },
               @{ Name = 'SA-NLB2';
                  ScopeID = '192.168.128.0';
                  ClientMACAddress = '00000000000C';
                  IPAddress = '192.168.128.26';
+                 AddressFamily = 'IPv4'
+              },
+              @{ Name = 'SA-NLB2-CLS';
+                 ScopeID = '192.168.128.0';
+                 ClientMACAddress = '00000000000E';
+                 IPAddress = '192.168.128.36';
                  AddressFamily = 'IPv4'
               }
             )
@@ -311,16 +322,17 @@
                 subnetmask="64"
                 dnsserver="fd53:ccc5:895a:bc00::a,fd53:ccc5:895a:bc00::b"/>
         </adapter>
-        <adapter name="Domain Private Heartbeat"
-                 switchname="Domain Private Heartbeat">
-          <ipv4 address="192.168.129.1"
-                defaultgateway=""
+        <adapter name="Domain Private Site A Cluster"
+                 switchname="Domain Private Site A"
+                 macaddressspoofing="Y">
+          <ipv4 address="192.168.128.35"
+                defaultgateway="192.168.128.19"
                 subnetmask="24"
-                dnsserver=""/>
-          <ipv6 address="fd53:ccc5:895a:bc01::1"
-                defaultgateway=""
+                dnsserver="192.168.128.10,192.168.128.11"/>
+          <ipv6 address="fd53:ccc5:895a:bc00::35"
+                defaultgateway="fd53:ccc5:895a:bc00::13"
                 subnetmask="64"
-                dnsserver=""/>
+                dnsserver="fd53:ccc5:895a:bc00::a,fd53:ccc5:895a:bc00::b"/>
         </adapter>
       </adapters>
     </vm>
@@ -350,16 +362,17 @@
                 subnetmask="64"
                 dnsserver="fd53:ccc5:895a:bc00::a,fd53:ccc5:895a:bc00::b"/>
         </adapter>
-        <adapter name="Domain Private Heartbeat"
-                 switchname="Domain Private Heartbeat">
-          <ipv4 address="192.168.129.2"
-                defaultgateway=""
+        <adapter name="Domain Private Site A Cluster"
+                 switchname="Domain Private Site A"
+                 macaddressspoofing="Y">
+          <ipv4 address="192.168.128.36"
+                defaultgateway="192.168.128.19"
                 subnetmask="24"
-                dnsserver=""/>
-          <ipv6 address="fd53:ccc5:895a:bc01::2"
-                defaultgateway=""
+                dnsserver="192.168.128.10,192.168.128.11"/>
+          <ipv6 address="fd53:ccc5:895a:bc00::36"
+                defaultgateway="fd53:ccc5:895a:bc00::13"
                 subnetmask="64"
-                dnsserver=""/>
+                dnsserver="fd53:ccc5:895a:bc00::a,fd53:ccc5:895a:bc00::b"/>
         </adapter>
       </adapters>
     </vm>
