@@ -324,7 +324,7 @@
         </adapter>
         <adapter name="Domain Private Site A Cluster"
                  switchname="Domain Private Site A"
-                 macaddressspoofing="Y">
+                 macaddressspoofing="On">
           <ipv4 address="192.168.128.35"
                 defaultgateway="192.168.128.19"
                 subnetmask="24"
@@ -364,7 +364,7 @@
         </adapter>
         <adapter name="Domain Private Site A Cluster"
                  switchname="Domain Private Site A"
-                 macaddressspoofing="Y">
+                 macaddressspoofing="On">
           <ipv4 address="192.168.128.36"
                 defaultgateway="192.168.128.19"
                 subnetmask="24"

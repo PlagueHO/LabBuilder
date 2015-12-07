@@ -2961,10 +2961,11 @@ function Get-LabVMs {
                 $VLan = $SwitchVLan
             } # If
             
-            [Boolean] $MACAddressSpoofing = $false
-            if ($VMAdapter.macaddressspoofing -eq 'Y') {
-                $MACAddressSpoofing = $true
+            [String] $MACAddressSpoofing = 'Off'
+            if ($VMAdapter.macaddressspoofing -eq 'On') {
+                $MACAddressSpoofing = 'On'
             }
+            
             # Have we got any IPv4 settings?
             [System.Collections.Hashtable] $IPv4 = @{}
             If ($VMAdapter.IPv4) {
@@ -3734,44 +3735,34 @@ function Initialize-LabVMs {
         Write-Verbose "VM $($VM.Name) management network adapter $ManagementSwitchName VLAN has been set to $ManagementVlan ..."
 
         # Create any network adapters
-		Foreach ($VMAdapter in $VM.Adapters)
-        {
-            if ((Get-VMNetworkAdapter -VMName $VM.Name | Where-Object -Property Name -EQ $VMAdapter.Name).Count -eq 0)
-            {
+		Foreach ($VMAdapter in $VM.Adapters) {
+            If ((Get-VMNetworkAdapter -VMName $VM.Name | Where-Object -Property Name -EQ $VMAdapter.Name).Count -eq 0) {
                 Write-Verbose "VM $($VM.Name) network adapter $($VMAdapter.Name) is being added ..."
                 Add-VMNetworkAdapter -VMName $VM.Name -SwitchName $VMAdapter.SwitchName -Name $VMAdapter.Name
             } # If
-            $Splat = @{}
             $VMNetworkAdapter = Get-VMNetworkAdapter -VMName $VM.Name -Name $VMAdapter.Name
             $Vlan = $VMAdapter.VLan
-            if ($VLan) {
-                $splat += @{ Access = $true; VlanId = $vlan }
+            If ($VLan) {
+                $null = $VMNetworkAdapter | Set-VMNetworkAdapterVlan -Access -VlanId $Vlan
                 Write-Verbose "VM $($VM.Name) network adapter $($VMAdapter.Name) VLAN has been set to $Vlan ..."
-            }
-            else
-            {
-                $splat += @{ Untagged = $true }
+            } Else {
+                $null = $VMNetworkAdapter | Set-VMNetworkAdapterVlan -Untagged
                 Write-Verbose "VM $($VM.Name) network adapter $($VMAdapter.Name) VLAN has been cleared ..."
             } # If
-            if ($VMAdapter.MACAddress) {
-                $splat += @{ StaticMacAddress = $VMAdapter.MACAddress }
-            }
-            else
-            {
-                $splat += @{ DynamicMacAddress = $true }
+            If ($VMAdapter.MACAddress) {
+                $null = $VMNetworkAdapter | Set-VMNetworkAdapter -StaticMacAddress $VMAdapter.MACAddress
+            } Else {
+                $null = $VMNetworkAdapter | Set-VMNetworkAdapter -DynamicMacAddress
             } # If
             # Enable Device Naming
             if ((Get-Command -Name Set-VMNetworkAdapter).Parameters.ContainsKey('DeviceNaming')) {
-                $splat += @{ DeviceNaming = 'On' }
+				$null = $VMNetworkAdapter | Set-VMNetworkAdapter -DeviceNaming On
 			}
             if ($VMAdapter.MACAddressSpoofing -ne $VMNetworkAdapter.MACAddressSpoofing) {
-                $splat += @{ MacAddressSpoofing = if ($VMAdapter.MACAddressSpoofing) {'On'} else {'Off'} }
+                $null = $VMNetworkAdapter | Set-VMNetworkAdapter -MacAddressSpoofing $VMAdapter.MACAddressSpoofing
             }                
-            if ($Splat.Count -gt 0)
-            {
-                $null = $VMNetworkAdapter | Set-VMNetworkAdapter $Splat
-            }
         } # Foreach
+
         Start-LabVM -Configuration $Config -VM $VM
     } # Foreach
 } # Initialize-LabVMs
