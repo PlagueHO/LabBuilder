@@ -853,6 +853,28 @@ Describe 'Initialize-LabSwitches' {
 		}
 	}
 
+	Context 'Valid configuration NAT with blank NAT Subnet Address' {	
+    	$Switches[0].Type = 'NAT'
+		It 'Throws a NatSubnetAddressEmptyError Exception' {
+            $errorId = 'NatSubnetAddressEmptyError'
+            $errorCategory = [System.Management.Automation.ErrorCategory]::InvalidArgument
+            $errorMessage = $($LocalizedData.NatSubnetAddressEmptyError `
+                -f $Switches[0].Name)
+            $exception = New-Object -TypeName System.InvalidOperationException `
+                -ArgumentList $errorMessage
+            $errorRecord = New-Object -TypeName System.Management.Automation.ErrorRecord `
+                -ArgumentList $exception, $errorId, $errorCategory, $null
+
+            { Initialize-LabSwitches -Configuration $Config -Switches $Switches } | Should Throw $errorRecord
+		}
+		It 'Calls Mocked commands' {
+			Assert-MockCalled Get-VMSwitch -Exactly 1
+			Assert-MockCalled New-VMSwitch -Exactly 0
+			Assert-MockCalled Add-VMNetworkAdapter -Exactly 0
+			Assert-MockCalled Set-VMNetworkAdapterVlan -Exactly 0
+		}
+	}
+
 	Context 'Valid configuration with blank switch name passed' {	
     	$Switches[0].Type = 'External'
         $Switches[0].Name = ''

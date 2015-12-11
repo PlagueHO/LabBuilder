@@ -1,7 +1,5 @@
 ﻿[
     {
-        "vlan":  null,
-        "name":  "Pester Test External",
         "adapters":  [
                          {
                              "name":  "Cluster",
@@ -20,30 +18,37 @@
                              "macaddress":  "00155D010704"
                          }
                      ],
+        "vlan":  null,
+        "name":  "Pester Test External",
+        "natsubnetaddress":  null,
         "type":  "External"
     },
     {
+        "adapters":  null,
         "vlan":  "2",
         "name":  "Pester Test Private Vlan",
-        "adapters":  null,
+        "natsubnetaddress":  null,
         "type":  "Private"
     },
     {
+        "adapters":  null,
         "vlan":  null,
         "name":  "Pester Test Private",
-        "adapters":  null,
+        "natsubnetaddress":  null,
         "type":  "Private"
     },
     {
+        "adapters":  null,
         "vlan":  "3",
         "name":  "Pester Test Internal Vlan",
-        "adapters":  null,
+        "natsubnetaddress":  null,
         "type":  "Internal"
     },
     {
+        "adapters":  null,
         "vlan":  null,
         "name":  "Pester Test Internal",
-        "adapters":  null,
+        "natsubnetaddress":  null,
         "type":  "Internal"
     }
 ]

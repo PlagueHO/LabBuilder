@@ -17,7 +17,8 @@ ResourceModuleNameEmptyError=Resource Module Name is missing or empty.
 ModuleNotAvailableError=Error installing Module '{0}' ({1}); {2}.
 SwitchNameIsEmptyError=Switch name is empty.
 UnknownSwitchTypeError=Unknown switch type '{0}' specified for switch '{1}'.
-AdapterSpecifiedError=Adapter specified on '{0}' swtich '{1}'.
+AdapterSpecifiedError=Adapter specified on '{0}' switch '{1}'.
+NatSubnetAddressEmptyError=Switch NAT Subnet Address is empty '{0}'.
 EmptyTemplateNameError=Template Name is missing or empty.
 EmptyTemplateVHDError=VHD in Template '{0}' is empty.
 TemplateSourceVHDNotFoundError=The Template Source VHD '{0}' in Template '{1}' could not be found.
@@ -565,13 +566,13 @@ function Initialize-LabConfiguration {
     # Used by host to communicate with Lab VMs
     $ManagementSwitchName = ('LabBuilder Management {0}' -f $Configuration.labbuilderconfig.name)
     if ($Configuration.labbuilderconfig.switches.ManagementVlan)
-	{
-		[Int32] $ManagementVlan = $Configuration.labbuilderconfig.switches.ManagementVlan
-	}
-	else
-	{
-		[Int32] $ManagementVlan = $Script:DefaultManagementVLan
-	}
+    {
+        [Int32] $ManagementVlan = $Configuration.labbuilderconfig.switches.ManagementVlan
+    }
+    else
+    {
+        [Int32] $ManagementVlan = $Script:DefaultManagementVLan
+    }
     if ((Get-VMSwitch | Where-Object -Property Name -eq $ManagementSwitchName).Count -eq 0)
     {
         $null = New-VMSwitch -Name $ManagementSwitchName -SwitchType Internal
@@ -579,16 +580,16 @@ function Initialize-LabConfiguration {
         Write-Verbose -Message ($LocalizedData.CreatingLabManagementSwitchMessage `
             -f $ManagementSwitchName,$ManagementVlan)
     }
-	# Check the Vlan ID of the adapter on the switch
+    # Check the Vlan ID of the adapter on the switch
     $ExistingManagementAdapter = Get-VMNetworkAdapter -ManagementOS -Name $ManagementSwitchName
     $ExistingVlan = (Get-VMNetworkAdapterVlan -VMNetworkAdapter $ExistingManagementAdapter).AccessVlanId
-	if ($ExistingVlan -ne $ManagementVlan)
-	{
+    if ($ExistingVlan -ne $ManagementVlan)
+    {
         Write-Verbose -Message ($LocalizedData.UpdatingLabManagementSwitchMessage `
             -f $ManagementSwitchName,$ManagementVlan)
 
         $ExistingManagementAdapter | Set-VMNetworkAdapterVlan -Access -VlanId $ManagementVlan
-	}
+    }
     
     # Download the New-SelfSignedCertificateEx.ps1 script
     Download-CertGenerator
@@ -897,7 +898,7 @@ function Get-LabSwitches {
 
             $PSCmdlet.ThrowTerminatingError($errorRecord)
         }
-        If ($ConfigSwitch.Type -notin 'Private','Internal','External')
+        If ($ConfigSwitch.Type -notin 'Private','Internal','External','NAT')
         {
             $errorId = 'UnknownSwitchTypeError'
             $errorCategory = [System.Management.Automation.ErrorCategory]::InvalidArgument
@@ -941,6 +942,7 @@ function Get-LabSwitches {
             name = $ConfigSwitch.Name;
             type = $ConfigSwitch.Type;
             vlan = $ConfigSwitch.Vlan;
+            natsubnetaddress = $ConfigSwitch.NatSubnetAddress;
             adapters = $ConfigAdapters }
     }
     return $Switches
@@ -1081,6 +1083,25 @@ function Initialize-LabSwitches {
                     } # If
                     Break
                 } # 'Internal'
+                'NAT'
+                {
+                    $NatSubnetAddress = $VMSwitch.NatSubnetAddress
+                    if (-not $NatSubnetAddress) {
+                        $errorId = 'NatSubnetAddressEmptyError'
+                        $errorCategory = [System.Management.Automation.ErrorCategory]::InvalidArgument
+                        $errorMessage = $($LocalizedData.NatSubnetAddressEmptyError `
+                            -f $SwitchName)
+                        $exception = New-Object -TypeName System.InvalidOperationException `
+                            -ArgumentList $errorMessage
+                        $errorRecord = New-Object -TypeName System.Management.Automation.ErrorRecord `
+                            -ArgumentList $exception, $errorId, $errorCategory, $null
+
+                        $PSCmdlet.ThrowTerminatingError($errorRecord)
+                    }
+                    $null = New-VMSwitch -Name $SwitchName -SwitchType NAT -NATSubnetAddress $NatSubnetAddress
+                    $null = New-NetNat -Name $SwitchName -InternalIPInterfaceAddressPrefix $NatSubnetAddress
+                    Break
+                } # 'NAT'
                 Default
                 {
                     $errorId = 'UnknownSwitchTypeError'
@@ -1186,6 +1207,13 @@ function Remove-LabSwitches {
                     } # If
                     Break
                 } # 'Internal'
+                'NAT'
+                {
+                    Remove-NetNAT -Name $SwitchName
+                    Remove-VMSwitch -Name $SwitchName
+                    Break
+                } # 'Internal'
+
                 Default
                 {
                     $errorId = 'UnknownSwitchTypeError'
@@ -3640,16 +3668,16 @@ function Initialize-LabVMs {
     $CurrentVMs = Get-VM
     [String] $VMPath = $Configuration.labbuilderconfig.settings.vmpath
 
-	# Figure out the name of the LabBuilder control switch
+    # Figure out the name of the LabBuilder control switch
     $ManagementSwitchName = ('LabBuilder Management {0}' -f $Configuration.labbuilderconfig.name)
     if ($Configuration.labbuilderconfig.switches.ManagementVlan)
-	{
-		[Int32] $ManagementVlan = $Configuration.labbuilderconfig.switches.ManagementVlan
-	}
-	else
-	{
-		[Int32] $ManagementVlan = $Script:DefaultManagementVLan
-	}
+    {
+        [Int32] $ManagementVlan = $Configuration.labbuilderconfig.switches.ManagementVlan
+    }
+    else
+    {
+        [Int32] $ManagementVlan = $Script:DefaultManagementVLan
+    }
 
     Foreach ($VM in $VMs) {
         If (($CurrentVMs | Where-Object -Property Name -eq $VM.Name).Count -eq 0) {
@@ -3726,16 +3754,16 @@ function Initialize-LabVMs {
         } # If
             
         # Create/Update the Management Network Adapter
-		if ((Get-VMNetworkAdapter -VMName $VM.Name | Where-Object -Property Name -EQ $ManagementSwitchName).Count -eq 0) {
-			Write-Verbose "VM $($VM.Name) management network adapter $ManagementSwitchName is being added ..."
-			Add-VMNetworkAdapter -VMName $VM.Name -SwitchName $ManagementSwitchName -Name $ManagementSwitchName
-		}
+        if ((Get-VMNetworkAdapter -VMName $VM.Name | Where-Object -Property Name -EQ $ManagementSwitchName).Count -eq 0) {
+            Write-Verbose "VM $($VM.Name) management network adapter $ManagementSwitchName is being added ..."
+            Add-VMNetworkAdapter -VMName $VM.Name -SwitchName $ManagementSwitchName -Name $ManagementSwitchName
+        }
         $VMNetworkAdapter = Get-VMNetworkAdapter -VMName $VM.Name -Name $ManagementSwitchName
         $null = $VMNetworkAdapter | Set-VMNetworkAdapterVlan -Access -VlanId $ManagementVlan
         Write-Verbose "VM $($VM.Name) management network adapter $ManagementSwitchName VLAN has been set to $ManagementVlan ..."
 
         # Create any network adapters
-		Foreach ($VMAdapter in $VM.Adapters) {
+        Foreach ($VMAdapter in $VM.Adapters) {
             If ((Get-VMNetworkAdapter -VMName $VM.Name | Where-Object -Property Name -EQ $VMAdapter.Name).Count -eq 0) {
                 Write-Verbose "VM $($VM.Name) network adapter $($VMAdapter.Name) is being added ..."
                 Add-VMNetworkAdapter -VMName $VM.Name -SwitchName $VMAdapter.SwitchName -Name $VMAdapter.Name
@@ -3756,8 +3784,8 @@ function Initialize-LabVMs {
             } # If
             # Enable Device Naming
             if ((Get-Command -Name Set-VMNetworkAdapter).Parameters.ContainsKey('DeviceNaming')) {
-				$null = $VMNetworkAdapter | Set-VMNetworkAdapter -DeviceNaming On
-			}
+                $null = $VMNetworkAdapter | Set-VMNetworkAdapter -DeviceNaming On
+            }
             if ($VMAdapter.MACAddressSpoofing -ne $VMNetworkAdapter.MACAddressSpoofing) {
                 $null = $VMNetworkAdapter | Set-VMNetworkAdapter -MacAddressSpoofing $VMAdapter.MACAddressSpoofing
             }                

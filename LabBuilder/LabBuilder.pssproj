@@ -65,9 +65,7 @@
     <Compile Include="Tests\PesterTestConfig\Windows 10 Enterprise.vhdx" />
     <Compile Include="Tests\PesterTestConfig\Windows Server 2012 R2 Datacenter Core.vhdx" />
     <Compile Include="Tests\PesterTestConfig\Windows Server 2012 R2 Datacenter Full.vhdx" />
-    <Compile Include="Tests\Test_FullDomain.ps1" />
     <Compile Include="Tests\Unit\LabBuilder.tests.ps1" />
-    <Compile Include="README.md" />
     <Compile Include="DSCLibrary\STANDALONE_DEFAULT.DSC.ps1" />
     <Compile Include="DSCLibrary\DC_FORESTPRIMARY.DSC.ps1" />
     <Compile Include="DSCLibrary\DC_SECONDARY.DSC.ps1" />
