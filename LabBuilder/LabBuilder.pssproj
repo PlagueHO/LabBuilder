@@ -59,7 +59,8 @@
     <Compile Include="LabBuilder.psd1" />
     <Compile Include="LabBuilder.psm1" />
     <Compile Include="Samples\Sample_DCandDHCPOnly.xml" />
-    <Compile Include="Samples\Sample_FullDomain.xml" />
+    <Compile Include="Samples\Sample_DomainClustering.xml" />
+    <Compile Include="Samples\Sample_DomainComplete.xml" />
     <Compile Include="Samples\Sample_Simple.xml" />
     <Compile Include="Tests\PesterTestConfig\ExpectedTemplates.FromVM.json" />
     <Compile Include="Tests\PesterTestConfig\Windows 10 Enterprise.vhdx" />
