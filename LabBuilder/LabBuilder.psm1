@@ -3597,6 +3597,8 @@ function Start-LabVM {
 .DESCRIPTION
    Creates a standard Hyper-V Virtual Machine folder structure as well as additional folders
    for containing configuration files for DSC.
+.PARAMATER vmpath
+   The path to the folder where the Virtual Machine files are stored.
 .EXAMPLE
    Create-LabVMPath -VMPath 'c:\VMs\Lab\Virtual Machine 1'
    The command will create the Virtual Machine structure for a Lab VM in the folder:
