@@ -339,7 +339,8 @@ function Get-LabConfiguration {
     If ($XMLConfigPath) {
         If ($XMLConfigPath.Substring(0,1) -eq '.')
         {
-            # A relative path was provided in the config path so add the actual path of the XML to it
+            # A relative path was provided in the config path so add the actual path of the
+            # XML to it
             [String] $FullConfigPath = Join-Path -Path $ConfigPath -ChildPath $XMLConfigPath
         } # If
     }
@@ -1099,8 +1100,13 @@ function Initialize-LabSwitches {
 
                         $PSCmdlet.ThrowTerminatingError($errorRecord)
                     }
-                    $null = New-VMSwitch -Name $SwitchName -SwitchType NAT -NATSubnetAddress $NatSubnetAddress
-                    $null = New-NetNat -Name $SwitchName -InternalIPInterfaceAddressPrefix $NatSubnetAddress
+                    $null = New-VMSwitch `
+                        -Name $SwitchName `
+                        -SwitchType NAT `
+                        -NATSubnetAddress $NatSubnetAddress
+                    $null = New-NetNat `
+                        -Name $SwitchName `
+                        -InternalIPInterfaceAddressPrefix $NatSubnetAddress
                     Break
                 } # 'NAT'
                 Default
@@ -1347,7 +1353,8 @@ function Get-LabVMTemplates {
                 If ($Template.VHD)
                 {
                     $VMTemplate.VHD = $Template.VHD
-                    $VMTemplate.TemplateVHD = "$VHDParentPath\$([System.IO.Path]::GetFileName($Template.VHD))"
+                    $VMTemplate.TemplateVHD = `
+                        "$VHDParentPath\$([System.IO.Path]::GetFileName($Template.VHD))"
                 } # If
                 # Check that we do end up with a VHD filename in the template
                 If (-not $VMTemplate.VHD)
@@ -1820,7 +1827,8 @@ function Set-LabVMDSCMOFFile {
         $Matches = [regex]::matches($DSCContent, $Regex, 'IgnoreCase')
         If ($Matches.Count -eq 1)
         {
-            $DSCContent = $DSCContent.Insert($Matches[0].Index+$Matches[0].Length,"`r`nNetworking Network {}`r`n")
+            $DSCContent = $DSCContent.`
+                Insert($Matches[0].Index+$Matches[0].Length,"`r`nNetworking Network {}`r`n")
         }
         Else
         {
@@ -1901,7 +1909,9 @@ function Set-LabVMDSCMOFFile {
     # Copy the files to the LabBuilder Files folder
     $null = Copy-Item `
         -Path $DSCMOFFile `
-        -Destination (Join-Path -Path $VMLabBuilderFiles -ChildPath "$($VM.ComputerName).mof") `
+        -Destination (Join-Path `
+            -Path $VMLabBuilderFiles `
+            -ChildPath "$($VM.ComputerName).mof") `
         -Force
 
     If (-not $VM.DSCMOFFile)
@@ -1916,7 +1926,9 @@ function Set-LabVMDSCMOFFile {
     {
         $null = Copy-Item `
             -Path $DSCMOFMetaFile `
-            -Destination (Join-Path -Path $VMLabBuilderFiles -ChildPath "$($VM.ComputerName).meta.mof") `
+            -Destination (Join-Path `
+                -Path $VMLabBuilderFiles `
+                -ChildPath "$($VM.ComputerName).meta.mof") `
             -Force
         If (-not $VM.DSCMOFFile)
         {
@@ -1981,7 +1993,8 @@ function Set-LabVMDSCStartFile {
         
     # Relabel the Network Adapters so that they match what the DSC Networking config will use
     # This is because unfortunately the Hyper-V Device Naming feature doesn't work.
-    [String] $ManagementSwitchName = ('LabBuilder Management {0}' -f $Configuration.labbuilderconfig.name)
+    [String] $ManagementSwitchName = `
+        ('LabBuilder Management {0}' -f $Configuration.labbuilderconfig.name)
     $Adapters = @(($VM.Adapters).Name)
     $Adapters += @($ManagementSwitchName)
 
@@ -2016,7 +2029,9 @@ function Set-LabVMDSCStartFile {
             $PSCmdlet.ThrowTerminatingError($errorRecord)
         } # If
         $DSCStartPs += @"
-Get-NetAdapter | Where-Object { `$_.MacAddress.Replace('-','') -eq '$MacAddress' } | Rename-NetAdapter -NewName '$($Adapter)'
+Get-NetAdapter ``
+    | Where-Object { `$_.MacAddress.Replace('-','') -eq '$MacAddress' } ``
+    | Rename-NetAdapter -NewName '$($Adapter)'
 
 "@
     } # Foreach
@@ -2037,8 +2052,13 @@ If (-not (`$Result -like '*enabled: true*')) {
 
     # Start the actual DSC Configuration
     $DSCStartPs += @"
-Set-DscLocalConfigurationManager -Path `"$($ENV:SystemRoot)\Setup\Scripts\`" -Verbose  *>> `"$($ENV:SystemRoot)\Setup\Scripts\DSC.log`"
-Start-DSCConfiguration -Path `"$($ENV:SystemRoot)\Setup\Scripts\`" -Force -Verbose  *>> `"$($ENV:SystemRoot)\Setup\Scripts\DSC.log`"
+Set-DscLocalConfigurationManager ``
+    -Path `"$($ENV:SystemRoot)\Setup\Scripts\`" ``
+    -Verbose  *>> `"$($ENV:SystemRoot)\Setup\Scripts\DSC.log`"
+Start-DSCConfiguration ``
+    -Path `"$($ENV:SystemRoot)\Setup\Scripts\`" ``
+    -Force ``
+    -Verbose  *>> `"$($ENV:SystemRoot)\Setup\Scripts\DSC.log`"
 
 "@
     $null = Set-Content `
@@ -2046,8 +2066,13 @@ Start-DSCConfiguration -Path `"$($ENV:SystemRoot)\Setup\Scripts\`" -Force -Verbo
         -Value $DSCStartPs -Force
 
     $DSCStartPsDebug = @"
-Set-DscLocalConfigurationManager -Path `"$($ENV:SystemRoot)\Setup\Scripts\`" -Verbose
-Start-DSCConfiguration -Path `"$($ENV:SystemRoot)\Setup\Scripts\`" -Force -Debug -Wait -Verbose
+Set-DscLocalConfigurationManager ``
+    -Path `"$($ENV:SystemRoot)\Setup\Scripts\`" ``
+    -Verbose
+Start-DSCConfiguration ``
+    -Path `"$($ENV:SystemRoot)\Setup\Scripts\`" ``
+    -Force -Debug -Wait ``
+    -Verbose
 "@
     $null = Set-Content `
         -Path (Join-Path -Path $VMLabBuilderFiles -ChildPath 'StartDSCDebug.ps1') `
@@ -2205,22 +2230,31 @@ function Start-LabVMDSC {
                         -f $VM.ComputerName,'DSC')
 
                     $null = Copy-Item `
-                        -Path (Join-Path -Path $VMLabBuilderFiles -ChildPath "$($VM.ComputerName).mof") `
+                        -Path (Join-Path `
+                            -Path $VMLabBuilderFiles `
+                            -ChildPath "$($VM.ComputerName).mof") `
                         -Destination c:\Windows\Setup\Scripts `
                         -ToSession $Session -Force -ErrorAction Stop
-                    If (Test-Path -Path "$VMPath\$($VM.Name)\LabBuilder Files\$($VM.ComputerName).meta.mof")
+                    If (Test-Path `
+                        -Path "$VMPath\$($VM.Name)\LabBuilder Files\$($VM.ComputerName).meta.mof")
                     {
                         $null = Copy-Item `
-                            -Path (Join-Path -Path $VMLabBuilderFiles -ChildPath "$($VM.ComputerName).meta.mof") `
+                            -Path (Join-Path `
+                                -Path $VMLabBuilderFiles `
+                                -ChildPath "$($VM.ComputerName).meta.mof") `
                             -Destination c:\Windows\Setup\Scripts `
                             -ToSession $Session -Force -ErrorAction Stop
                     } # If
                     $null = Copy-Item `
-                        -Path (Join-Path -Path $VMLabBuilderFiles -ChildPath 'StartDSC.ps1') `
+                        -Path (Join-Path `
+                            -Path $VMLabBuilderFiles `
+                            -ChildPath 'StartDSC.ps1') `
                         -Destination c:\Windows\Setup\Scripts `
                         -ToSession $Session -Force -ErrorAction Stop
                     $null = Copy-Item `
-                        -Path (Join-Path -Path $VMLabBuilderFiles -ChildPath 'StartDSCDebug.ps1') `
+                        -Path (Join-Path `
+                            -Path $VMLabBuilderFiles `
+                            -ChildPath 'StartDSCDebug.ps1') `
                         -Destination c:\Windows\Setup\Scripts `
                         -ToSession $Session -Force -ErrorAction Stop
                     $ConfigCopyComplete = $True
@@ -2254,7 +2288,9 @@ function Start-LabVMDSC {
                         -f $VM.ComputerName,"DSC Module $ModuleName")
 
                     $null = Copy-Item `
-                        -Path (Join-Path -Path $VMLabBuilderFiles -ChildPath "DSC Modules\$ModuleName\") `
+                        -Path (Join-Path `
+                            -Path $VMLabBuilderFiles `
+                            -ChildPath "DSC Modules\$ModuleName\") `
                         -Destination "$($env:ProgramFiles)\WindowsPowerShell\Modules\" `
                         -ToSession $Session -Force -Recurse -ErrorAction Stop
                 }
@@ -2287,7 +2323,8 @@ function Start-LabVMDSC {
         }
 
         # Finally, Start DSC up!
-        If (($Session) -and ($Session.State -eq 'Opened') -and ($ConfigCopyComplete) -and ($ModuleCopyComplete))
+        If (($Session) -and ($Session.State -eq 'Opened') `
+            -and ($ConfigCopyComplete) -and ($ModuleCopyComplete))
         {
             Write-Verbose -Message $($LocalizedData.StartingDSCMessage `
                 -f $VM.ComputerName)
@@ -2705,11 +2742,20 @@ function Set-LabVMInitializationFiles {
     [String] $GetCertPs = Get-LabGetCertificatePs -Configuration $Configuration -VM $VM
     [String] $SetupCompleteCmd = ''
     [String] $SetupCompletePs = @"
-Add-Content -Path "C:\WINDOWS\Setup\Scripts\SetupComplete.log" -Value 'SetupComplete.ps1 Script Started...' -Encoding Ascii
+Add-Content ``
+    -Path "C:\WINDOWS\Setup\Scripts\SetupComplete.log" ``
+    -Value 'SetupComplete.ps1 Script Started...' ``
+    -Encoding Ascii
 $GetCertPs
-Add-Content -Path `"`$(`$ENV:SystemRoot)\Setup\Scripts\SetupComplete.log`" -Value 'Certificate identified and saved to C:\Windows\$Script:DSCEncryptionCert ...' -Encoding Ascii
+Add-Content ``
+    -Path `"`$(`$ENV:SystemRoot)\Setup\Scripts\SetupComplete.log`" ``
+    -Value 'Certificate identified and saved to C:\Windows\$Script:DSCEncryptionCert ...' ``
+    -Encoding Ascii
 Enable-PSRemoting -SkipNetworkProfileCheck -Force
-Add-Content -Path `"`$(`$ENV:SystemRoot)\Setup\Scripts\SetupComplete.log`" -Value 'Windows Remoting Enabled ...' -Encoding Ascii
+Add-Content ``
+    -Path `"`$(`$ENV:SystemRoot)\Setup\Scripts\SetupComplete.log`" ``
+    -Value 'Windows Remoting Enabled ...' ``
+    -Encoding Ascii
 "@
     If ($VM.SetupComplete)
     {
@@ -2748,9 +2794,15 @@ powerShell.exe -ExecutionPolicy Unrestricted -Command `"%SYSTEMROOT%\Setup\Scrip
 
     # Write out the PowerShell Setup Complete file
     $SetupCompletePs = @"
-Add-Content -Path `"$($ENV:SystemRoot)\Setup\Scripts\SetupComplete.log`" -Value 'SetupComplete.ps1 Script Started...' -Encoding Ascii
+Add-Content ``
+    -Path `"$($ENV:SystemRoot)\Setup\Scripts\SetupComplete.log`" ``
+    -Value 'SetupComplete.ps1 Script Started...' ``
+    -Encoding Ascii
 $SetupCompletePs
-Add-Content -Path `"$($ENV:SystemRoot)\Setup\Scripts\SetupComplete.log`" -Value 'SetupComplete.ps1 Script Finished...' -Encoding Ascii
+Add-Content ``
+    -Path `"$($ENV:SystemRoot)\Setup\Scripts\SetupComplete.log`" ``
+    -Value 'SetupComplete.ps1 Script Finished...' ``
+    -Encoding Ascii
 "@
     $null = Set-Content `
         -Path (Join-Path -Path $VMLabBuilderFiles -ChildPath 'SetupComplete.ps1') `
@@ -2819,7 +2871,9 @@ function Initialize-LabVMImage {
     # Mount the VMs Boot VHD so that files can be loaded into it
     Write-Verbose -Message $($LocalizedData.MountingVMBootDiskMessage `
         -f $VM.Name,$VMBootDiskPath)
-    [String] $MountPoint = Join-Path -Path $ENV:Temp -ChildPath ([System.IO.Path]::GetRandomFileName())
+    [String] $MountPoint = Join-Path `
+        -Path $ENV:Temp `
+        -ChildPath ([System.IO.Path]::GetRandomFileName())
     $null = New-Item -Path $MountPoint -ItemType Directory
     $null = Mount-WindowsImage -ImagePath $VMBootDiskPath -Path $MountPoint -Index 1
 
@@ -3233,7 +3287,10 @@ function Get-LabVMSelfSignedCert {
                     -Configuration $Configuration `
                     -VM $VM
 
-                $Session = New-PSSession -ComputerName $IPAddress -Credential $AdmininistratorCredential -ErrorAction Stop
+                $Session = New-PSSession `
+                    -ComputerName $IPAddress `
+                    -Credential $AdmininistratorCredential `
+                    -ErrorAction Stop
             } Catch {
                 Write-Verbose "Connection to $($VM.ComputerName) failed - retrying in 5 seconds ..."
                 Start-Sleep -Seconds $Script:RetryConnectSeconds
@@ -3244,7 +3301,11 @@ function Get-LabVMSelfSignedCert {
             # We connected OK - download the Certificate file
             While ((-not $Complete) -and (((Get-Date) - $StartTime).Seconds) -lt $TimeOut) {
                 Try {
-                    Copy-Item -Path "c:\windows\$Script:DSCEncryptionCert" -Destination "$VMPath\$($VM.Name)\LabBuilder Files\" -FromSession $Session -ErrorAction Stop
+                    $null = Copy-Item `
+                        -Path "c:\windows\$Script:DSCEncryptionCert" `
+                        -Destination "$VMPath\$($VM.Name)\LabBuilder Files\" `
+                        -FromSession $Session `
+                        -ErrorAction Stop
                     $Complete = $True
                 } Catch {
                     Write-Verbose "Waiting for Certificate file on $($VM.ComputerName) ..."
