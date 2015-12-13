@@ -2772,7 +2772,6 @@ Add-Content -Path `"$($ENV:SystemRoot)\Setup\Scripts\SetupComplete.log`" -Value 
    
    This function also applies downloads and applies and optional MSU update files from
    a web site if specified in the VM declaration in the configuration.
- 
 .PARAMETER Configuration
    Contains the Lab Builder configuration object that was loaded by the Get-LabConfiguration
    object.
@@ -3266,6 +3265,11 @@ function Get-LabVMSelfSignedCert {
    This function uses remoting to download a credential encryption certificate
    from a running VM for use in encrypting DSC credentials. It will be saved
    as a .CER file in the LabBuilder files folder of the VM.
+.PARAMETER Configuration
+   Contains the Lab Builder configuration object that was loaded by the Get-LabConfiguration
+   object.
+.PARAMETER VM
+   A Virtual Machine object pulled from the Lab Configuration file using Get-LabVM
 .EXAMPLE
    $Config = Get-LabConfiguration -Path c:\mylab\config.xml
    $VMs = Get-LabVM -Configuration $Config
@@ -3406,6 +3410,11 @@ function Get-LabVMCertificate {
    This function will return the IPv4 address assigned to the network adapter that
    is connected to the Management switch for the specified VM. The VM must be
    running, otherwise an error will be thrown.
+.PARAMETER Configuration
+   Contains the Lab Builder configuration object that was loaded by the Get-LabConfiguration
+   object.
+.PARAMETER VM
+   A Virtual Machine object pulled from the Lab Configuration file using Get-LabVM
 .EXAMPLE
    $Config = Get-LabConfiguration -Path c:\mylab\config.xml
    $VMs = Get-LabVM -Configuration $Config
@@ -3455,6 +3464,11 @@ function Get-LabVMManagementIPAddress {
 .DESCRIPTION
    This function will return the path where all files can be found
    for the specified VM.
+.PARAMETER Configuration
+   Contains the Lab Builder configuration object that was loaded by the Get-LabConfiguration
+   object.
+.PARAMETER VM
+   A Virtual Machine object pulled from the Lab Configuration file using Get-LabVM
 .EXAMPLE
    $Config = Get-LabConfiguration -Path c:\mylab\config.xml
    $VMs = Get-LabVM -Configuration $Config
@@ -3491,6 +3505,11 @@ function Get-LabVMRootPath {
 .DESCRIPTION
    This function will return the path that LabBuilder specific files can be found
    for the specified VM.
+.PARAMETER Configuration
+   Contains the Lab Builder configuration object that was loaded by the Get-LabConfiguration
+   object.
+.PARAMETER VM
+   A Virtual Machine object pulled from the Lab Configuration file using Get-LabVM
 .EXAMPLE
    $Config = Get-LabConfiguration -Path c:\mylab\config.xml
    $VMs = Get-LabVM -Configuration $Config
