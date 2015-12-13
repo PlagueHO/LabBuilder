@@ -66,11 +66,10 @@ FormatsToProcess = @()
 # NestedModules = @()
 
 # Functions to export from this module
-FunctionsToExport = 
-               'Get-LabConfiguration Test-LabConfiguration Initialize-LabConfiguration Initialize-LabSwitches Remove-LabSwitches Initialize-LabVMTemplates Remove-LabVMTemplates Initialize-LabVMs Remove-LabVMs Wait-LabVMInit Wait-LabVMStart Wait-LabVMOff Uninstall-Lab'
+# FunctionsToExport = @()
 
 # Cmdlets to export from this module
-CmdletsToExport = @()
+# CmdletsToExport = @()
 
 # Variables to export from this module
 VariablesToExport = @()
