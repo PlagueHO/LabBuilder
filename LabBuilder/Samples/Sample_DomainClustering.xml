@@ -284,7 +284,7 @@
         template="Template Windows Server 2012 R2 Datacenter CORE"
         computername="SA-FS1"
         usedifferencingbootdisk="Y"
-        datavhdsize="10GB" >
+        datavhdsize="40GB" >
       <dsc configname="MEMBER_FILESERVER"
            configfile="MEMBER_FILESERVER.DSC.ps1"
            logging="Y">
@@ -445,6 +445,34 @@
       </adapters>
     </vm>
     
+    <vm name="LABBUILDER.COM SA-FOC3"
+        template="Template Windows Server 2012 R2 Datacenter CORE"
+        computername="SA-FOC3"
+        usedifferencingbootdisk="Y" >
+      <dsc configname="MEMBER_FAILOVERCLUSTER"
+           configfile="MEMBER_FAILOVERCLUSTER.DSC.ps1"
+           logging="Y">
+        <parameters>
+          DomainName = "LABBUILDER.COM"
+          DomainAdminPassword = "P@ssword!1"
+          PSDscAllowDomainUser = $True
+        </parameters>
+      </dsc>
+      <adapters>
+        <adapter name="Domain Private Site A"
+                 switchname="Domain Private Site A">
+          <ipv4 address="192.168.128.30"
+                defaultgateway="192.168.128.19"
+                subnetmask="24"
+                dnsserver="192.168.128.10,192.168.128.11"/>
+          <ipv6 address="fd53:ccc5:895a:bc00::3a"
+                defaultgateway="fd53:ccc5:895a:bc00::13"
+                subnetmask="64"
+                dnsserver="fd53:ccc5:895a:bc00::a,fd53:ccc5:895a:bc00::b"/>
+        </adapter>
+      </adapters>
+    </vm>
+
     <vm name="LABBUILDER.COM DA-IT01"
       template="Template Windows 10 Enterprise"
       computername="DA-IT01"
