@@ -564,7 +564,8 @@ function Initialize-LabConfiguration {
 
     # Create the LabBuilder Management Network switch and assign VLAN
     # Used by host to communicate with Lab VMs
-    $ManagementSwitchName = ('LabBuilder Management {0}' -f $Configuration.labbuilderconfig.name)
+    [String] $ManagementSwitchName = ('LabBuilder Management {0}' `
+        -f $Configuration.labbuilderconfig.name)
     if ($Configuration.labbuilderconfig.switches.ManagementVlan)
     {
         [Int32] $ManagementVlan = $Configuration.labbuilderconfig.switches.ManagementVlan

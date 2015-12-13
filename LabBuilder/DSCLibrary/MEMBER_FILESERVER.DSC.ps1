@@ -80,7 +80,6 @@ Configuration MEMBER_FILESERVER
 			DependsOn = "[WindowsFeature]StorageServicesInstall" 
 		}
 
-FS-iSCSITarget-Server
 		WindowsFeature RSATADPowerShell
 		{ 
 			Ensure = "Present" 
