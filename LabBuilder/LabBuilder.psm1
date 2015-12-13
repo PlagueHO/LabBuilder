@@ -2163,11 +2163,6 @@ function Start-LabVMDSC {
         -Configuration $Configuration `
         -VM $VM
 
-    # Get the Management IP Address of the VM
-    [String] $IPAddress = Get-LabVMManagementIPAddress `
-        -Configuration $Configuration `
-        -VM $VM
-    
     While ((-not $Complete) -and (((Get-Date) - $StartTime).Seconds) -lt $TimeOut)
     {
         While (-not ($Session) -or ($Session.State -ne 'Opened'))
@@ -2177,6 +2172,13 @@ function Start-LabVMDSC {
             {
                 Write-Verbose -Message $($LocalizedData.ConnectingMessage `
                     -f $VM.ComputerName)
+
+                # Get the Management IP Address of the VM
+                # We repeat this because the IP Address will only be assiged 
+                # once the VM is fully booted.
+                $IPAddress = Get-LabVMManagementIPAddress `
+                    -Configuration $Configuration `
+                    -VM $VM
 
                 $Session = New-PSSession `
                     -ComputerName $IPAddress `
@@ -3218,16 +3220,19 @@ function Get-LabVMSelfSignedCert {
         -Password $VM.AdministratorPassword
     [Boolean] $Complete = $False
 
-    # Get the Management IP Address of the VM
-    [String] $IPAddress = Get-LabVMManagementIPAddress `
-        -Configuration $Configuration `
-        -VM $VM
-
     While ((-not $Complete)  -and (((Get-Date) - $StartTime).Seconds) -lt $TimeOut) {
         While (-not ($Session) -or ($Session.State -ne 'Opened')) {
             # Try and connect to the remote VM for up to $Timeout (5 minutes) seconds.
             Try {
                 Write-Verbose "Attempting connection to $($VM.ComputerName) ..."
+
+                # Get the Management IP Address of the VM
+                # We repeat this because the IP Address will only be assiged 
+                # once the VM is fully booted.
+                $IPAddress = Get-LabVMManagementIPAddress `
+                    -Configuration $Configuration `
+                    -VM $VM
+
                 $Session = New-PSSession -ComputerName $IPAddress -Credential $AdmininistratorCredential -ErrorAction Stop
             } Catch {
                 Write-Verbose "Connection to $($VM.ComputerName) failed - retrying in 5 seconds ..."
@@ -3301,11 +3306,6 @@ function Get-LabVMCertificate {
         -Username 'Administrator' `
         -Password $VM.AdministratorPassword
 
-    # Get the Management IP Address of the VM
-    [String] $IPAddress = Get-LabVMManagementIPAddress `
-        -Configuration $Configuration `
-        -VM $VM
-
     # Load path variables
     [String] $VMRootPath = Join-Path `
         -Path $VMPath `
@@ -3323,7 +3323,18 @@ function Get-LabVMCertificate {
             # Try and connect to the remote VM for up to $Timeout (5 minutes) seconds.
             Try {
                 Write-Verbose "Attempting connection to $($VM.ComputerName) ..."
-                $Session = New-PSSession -ComputerName $IPAddress -Credential $AdmininistratorCredential -ErrorAction Stop
+
+                # Get the Management IP Address of the VM
+                # We repeat this because the IP Address will only be assiged 
+                # once the VM is fully booted.
+                $IPAddress = Get-LabVMManagementIPAddress `
+                    -Configuration $Configuration `
+                    -VM $VM
+
+                $Session = New-PSSession `
+                    -ComputerName $IPAddress `
+                    -Credential $AdmininistratorCredential `
+                    -ErrorAction Stop
             } Catch {
                 Write-Verbose "Connection to $($VM.ComputerName) failed - retrying in 5 seconds ..."
                 Start-Sleep -Seconds $Script:RetryConnectSeconds
@@ -3922,11 +3933,6 @@ function Wait-LabVMInit {
         -Username 'Administrator' `
         -Password $VM.AdministratorPassword
 
-    # Get the Management IP Address of the VM
-    [String] $IPAddress = Get-LabVMManagementIPAddress `
-        -Configuration $Configuration `
-        -VM $VM
-
     # Make sure the VM has started
     Wait-LabVMStart -VM $VM
 
@@ -3936,7 +3942,18 @@ function Wait-LabVMInit {
             # Try and connect to the remote VM for up to $Timeout (5 minutes) seconds.
             Try {
                 Write-Verbose "Attempting connection to $($VM.ComputerName) ..."
-                $Session = New-PSSession -ComputerName $IPAddress -Credential $AdmininistratorCredential -ErrorAction Stop
+
+                # Get the Management IP Address of the VM
+                # We repeat this because the IP Address will only be assiged 
+                # once the VM is fully booted.
+                $IPAddress = Get-LabVMManagementIPAddress `
+                    -Configuration $Configuration `
+                    -VM $VM
+
+                $Session = New-PSSession `
+                    -ComputerName $IPAddress `
+                    -Credential $AdmininistratorCredential `
+                    -ErrorAction Stop
             } Catch {
                 Write-Verbose "Connection to $($VM.ComputerName) failed - retrying in 5 seconds ..."
                 Start-Sleep -Seconds $Script:RetryConnectSeconds
