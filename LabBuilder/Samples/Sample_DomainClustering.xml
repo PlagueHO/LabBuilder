@@ -172,6 +172,18 @@
                  ClientMACAddress = '00000000000E';
                  IPAddress = '192.168.128.36';
                  AddressFamily = 'IPv4'
+              },
+              @{ Name = 'SA-CLS1';
+                 ScopeID = '192.168.128.0';
+                 ClientMACAddress = '00000000000F';
+                 IPAddress = '192.168.128.28';
+                 AddressFamily = 'IPv4'
+              },
+              @{ Name = 'SA-CLS2';
+                 ScopeID = '192.168.128.0';
+                 ClientMACAddress = '000000000010';
+                 IPAddress = '192.168.128.29';
+                 AddressFamily = 'IPv4'
               }
             )
           ScopeOptions = @(
@@ -377,6 +389,62 @@
       </adapters>
     </vm>
 
+    <vm name="LABBUILDER.COM SA-FOC1"
+        template="Template Windows Server 2012 R2 Datacenter CORE"
+        computername="SA-FOC1"
+        usedifferencingbootdisk="Y" >
+      <dsc configname="MEMBER_FAILOVERCLUSTER"
+           configfile="MEMBER_FAILOVERCLUSTER.DSC.ps1"
+           logging="Y">
+        <parameters>
+          DomainName = "LABBUILDER.COM"
+          DomainAdminPassword = "P@ssword!1"
+          PSDscAllowDomainUser = $True
+        </parameters>
+      </dsc>
+      <adapters>
+        <adapter name="Domain Private Site A"
+                 switchname="Domain Private Site A">
+          <ipv4 address="192.168.128.28"
+                defaultgateway="192.168.128.19"
+                subnetmask="24"
+                dnsserver="192.168.128.10,192.168.128.11"/>
+          <ipv6 address="fd53:ccc5:895a:bc00::28"
+                defaultgateway="fd53:ccc5:895a:bc00::13"
+                subnetmask="64"
+                dnsserver="fd53:ccc5:895a:bc00::a,fd53:ccc5:895a:bc00::b"/>
+        </adapter>
+      </adapters>
+    </vm>
+
+    <vm name="LABBUILDER.COM SA-FOC2"
+        template="Template Windows Server 2012 R2 Datacenter CORE"
+        computername="SA-FOC2"
+        usedifferencingbootdisk="Y" >
+      <dsc configname="MEMBER_FAILOVERCLUSTER"
+           configfile="MEMBER_FAILOVERCLUSTER.DSC.ps1"
+           logging="Y">
+        <parameters>
+          DomainName = "LABBUILDER.COM"
+          DomainAdminPassword = "P@ssword!1"
+          PSDscAllowDomainUser = $True
+        </parameters>
+      </dsc>
+      <adapters>
+        <adapter name="Domain Private Site A"
+                 switchname="Domain Private Site A">
+          <ipv4 address="192.168.128.29"
+                defaultgateway="192.168.128.19"
+                subnetmask="24"
+                dnsserver="192.168.128.10,192.168.128.11"/>
+          <ipv6 address="fd53:ccc5:895a:bc00::29"
+                defaultgateway="fd53:ccc5:895a:bc00::13"
+                subnetmask="64"
+                dnsserver="fd53:ccc5:895a:bc00::a,fd53:ccc5:895a:bc00::b"/>
+        </adapter>
+      </adapters>
+    </vm>
+    
     <vm name="LABBUILDER.COM DA-IT01"
       template="Template Windows 10 Enterprise"
       computername="DA-IT01"

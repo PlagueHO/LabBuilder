@@ -73,11 +73,19 @@ Configuration MEMBER_FILESERVER
 			DependsOn = "[WindowsFeature]FSSyncShareInstall" 
 		}
 
+		WindowsFeature ISCSITargetServerInstall 
+		{ 
+			Ensure = "Present" 
+			Name = "FS-iSCSITarget-Server" 
+			DependsOn = "[WindowsFeature]StorageServicesInstall" 
+		}
+
+FS-iSCSITarget-Server
 		WindowsFeature RSATADPowerShell
 		{ 
 			Ensure = "Present" 
 			Name = "RSAT-AD-PowerShell" 
-			DependsOn = "[WindowsFeature]StorageServicesInstall"
+			DependsOn = "[WindowsFeature]ISCSITargetServerInstall"
 		} 
 
 		xWaitForADDomain DscDomainWait
