@@ -70,9 +70,9 @@ DismountingVMBootDiskMessage=Dismounting VM '{0}' Boot Disk VHDx '{1}'.
 ####################################################################################################
 # Module Variables
 ####################################################################################################
-# This is the URL to the WMF Production Preview
+# This is the URL to the WMF 5.0 RTM
 [String] $Script:WorkingFolder = $ENV:Temp
-[String] $Script:WMF5DownloadURL = 'http://download.microsoft.com/download/3/F/D/3FD04B49-26F9-4D9A-8C34-4533B9D5B020/Win8.1AndW2K12R2-KB3066437-x64.msu'
+[String] $Script:WMF5DownloadURL = 'https://download.microsoft.com/download/2/C/6/2C6E1B4A-EBE5-48A6-B225-2D2058A9CEFB/W2K12R2-KB3094174-x64.msu'
 [String] $Script:WMF5InstallerFilename = ($Script:WMF5DownloadURL).Substring(($Script:WMF5DownloadURL).LastIndexOf('/') + 1)
 [String] $Script:WMF5InstallerPath = Join-Path -Path $Script:WorkingFolder -ChildPath $Script:WMF5InstallerFilename
 [String] $Script:CertGenDownloadURL = 'https://gallery.technet.microsoft.com/scriptcenter/Self-signed-certificate-5920a7c6/file/101251/1/New-SelfSignedCertificateEx.zip'
@@ -2878,9 +2878,8 @@ function Initialize-LabVMImage {
     $null = Mount-WindowsImage -ImagePath $VMBootDiskPath -Path $MountPoint -Index 1
 
     # Copy the WMF 5.0 Installer to the VM in case it is needed
-    # This contains a bug at the moment - waiting for MS to resolve
-    # Write-Verbose "Applying VM $($VM.Name) WMF 5.0 ..."
-    # $null = Add-WindowsPackage -PackagePath $Script:WMF5InstallerPath -Path $MountPoint
+    Write-Verbose "Applying VM $($VM.Name) WMF 5.0 ..."
+    $null = Add-WindowsPackage -PackagePath $Script:WMF5InstallerPath -Path $MountPoint
 
     # Apply any additional MSU Updates
     Foreach ($URL in $VM.InstallMSU)
