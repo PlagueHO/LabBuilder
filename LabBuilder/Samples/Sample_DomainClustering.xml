@@ -325,13 +325,9 @@
         <adapter name="Domain Private Site A iSCSI"
                  switchname="Domain Private Site A iSCSI">
           <ipv4 address="192.168.129.24"
-                defaultgateway=""
-                subnetmask="24"
-                dnsserver=""/>
+                subnetmask="24" />
           <ipv6 address="fd53:ccc5:895a:bc01::18"
-                defaultgateway=""
-                subnetmask="64"
-                dnsserver=""/>
+                subnetmask="64" />
         </adapter>
       </adapters>
     </vm>
@@ -444,13 +440,9 @@
         <adapter name="Domain Private Site A iSCSI"
                  switchname="Domain Private Site A iSCSI">
           <ipv4 address="192.168.129.28"
-                defaultgateway=""
-                subnetmask="24"
-                dnsserver=""/>
+                subnetmask="24" />
           <ipv6 address="fd53:ccc5:895a:bc01::28"
-                defaultgateway=""
-                subnetmask="64"
-                dnsserver=""/>
+                subnetmask="64" />
         </adapter>
       </adapters>
     </vm>
@@ -483,13 +475,9 @@
         <adapter name="Domain Private Site A iSCSI"
                  switchname="Domain Private Site A iSCSI">
           <ipv4 address="192.168.129.29"
-                defaultgateway=""
-                subnetmask="24"
-                dnsserver=""/>
+                subnetmask="24" />
           <ipv6 address="fd53:ccc5:895a:bc01::29"
-                defaultgateway=""
-                subnetmask="64"
-                dnsserver=""/>
+                subnetmask="64" />
         </adapter>
       </adapters>
     </vm>
@@ -522,13 +510,9 @@
         <adapter name="Domain Private Site A iSCSI"
                  switchname="Domain Private Site A iSCSI">
           <ipv4 address="192.168.129.30"
-                defaultgateway=""
-                subnetmask="24"
-                dnsserver=""/>
+                subnetmask="24" />
           <ipv6 address="fd53:ccc5:895a:bc01::30"
-                defaultgateway=""
-                subnetmask="64"
-                dnsserver=""/>
+                subnetmask="64" />
         </adapter>
       </adapters>
     </vm>
