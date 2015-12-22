@@ -11,6 +11,8 @@
             configpath=".\..\DSCLibrary\" />
 
   <resources>
+    <module name="xADCSDeployment" url="https://github.com/PlagueHO/xAdcsDeployment/archive/dev.zip" folder="xAdcsDeployment-dev" />
+    <module name="xNetworking" url="https://github.com/PlagueHO/xNetworking/archive/dev.zip" folder="xNetworking-dev" />
     <module name="ciSCSI" url="https://github.com/PlagueHO/ciSCSI/archive/dev.zip" folder="ciSCSI-dev" />
   </resources>
 

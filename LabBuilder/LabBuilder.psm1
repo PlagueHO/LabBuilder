@@ -2545,6 +2545,18 @@ $NetworkingDSCConfig += @"
 
 "@
                 } # If
+            }
+            Else
+            {
+$NetworkingDSCConfig += @"
+    xDhcpClient IPv4DHCP_$AdapterCount {
+        InterfaceAlias = '$($Adapter.Name)'
+        AddressFamily  = 'IPv4'
+        State          = 'Enabled'
+    }
+
+"@
+
             } # If
             If ($Adapter.IPv4.DNSServer -ne $null)
             {
@@ -2592,6 +2604,18 @@ $NetworkingDSCConfig += @"
 
 "@
                 } # If
+            }
+            Else
+            {
+$NetworkingDSCConfig += @"
+    xDhcpClient IPv6DHCP_$AdapterCount {
+        InterfaceAlias = '$($Adapter.Name)'
+        AddressFamily  = 'IPv6'
+        State          = 'Enabled'
+    }
+
+"@
+
             } # If
             If ($Adapter.IPv6.DNSServer -ne $null)
             {

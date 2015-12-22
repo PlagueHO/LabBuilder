@@ -67,6 +67,8 @@
     <Compile Include="Tests\PesterTestConfig\Windows 10 Enterprise.vhdx" />
     <Compile Include="Tests\PesterTestConfig\Windows Server 2012 R2 Datacenter Core.vhdx" />
     <Compile Include="Tests\PesterTestConfig\Windows Server 2012 R2 Datacenter Full.vhdx" />
+    <Compile Include="Tests\Test_DomainClustering.ps1" />
+    <Compile Include="Tests\Test_DomainComplete.ps1" />
     <Compile Include="Tests\Unit\LabBuilder.tests.ps1" />
     <Compile Include="DSCLibrary\STANDALONE_DEFAULT.DSC.ps1" />
     <Compile Include="DSCLibrary\DC_FORESTPRIMARY.DSC.ps1" />
