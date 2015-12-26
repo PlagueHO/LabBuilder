@@ -37,6 +37,12 @@ Configuration MEMBER_FAILOVERCLUSTER
 			Name = "Failover-Clustering" 
 		} 
 
+		WindowsFeature FailoverClusteringPSInstall
+		{ 
+			Ensure = "Present" 
+			Name = "RSAT-Clustering-PowerShell" 
+		} 
+
 		WindowsFeature InstallWebServer
 		{ 
 			Ensure = "Present" 

@@ -41,7 +41,10 @@
     <Compile Include="Artifacts\ExpectedTemplates.json" />
     <Compile Include="Artifacts\UnattendFile.xml" />
     <Compile Include="Artifacts\VMs.json" />
+    <Compile Include="DSCLibrary\MEMBER_FAILOVERCLUSTER.DSC.ps1" />
     <Compile Include="DSCLibrary\MEMBER_FILESERVER_ISCSI.DSC.ps1" />
+    <Compile Include="DSCLibrary\MEMBER_NLB.DSC.ps1" />
+    <Compile Include="DSCLibrary\MEMBER_ROOTCA.DSC.ps1" />
     <Compile Include="DSCLibrary\RODC_SECONDARY.DSC.ps1" />
     <Compile Include="DSCLibrary\MEMBER_DHCPNPAS.DSC.ps1" />
     <Compile Include="DSCLibrary\MEMBER_DHCPDNS.DSC.ps1" />

@@ -415,7 +415,7 @@
     </vm>
 
     <vm name="LABBUILDER.COM SA-FOC1"
-        template="Template Windows Server 2012 R2 Datacenter CORE"
+        template="Template Windows Server 2012 R2 Datacenter FULL"
         computername="SA-FOC1"
         usedifferencingbootdisk="Y" >
       <dsc configname="MEMBER_FAILOVERCLUSTER"
@@ -450,7 +450,7 @@
     </vm>
 
     <vm name="LABBUILDER.COM SA-FOC2"
-        template="Template Windows Server 2012 R2 Datacenter CORE"
+        template="Template Windows Server 2012 R2 Datacenter FULL"
         computername="SA-FOC2"
         usedifferencingbootdisk="Y" >
       <dsc configname="MEMBER_FAILOVERCLUSTER"
