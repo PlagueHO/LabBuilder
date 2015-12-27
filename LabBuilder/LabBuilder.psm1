@@ -2902,8 +2902,8 @@ function Initialize-LabVMImage {
     $null = Mount-WindowsImage -ImagePath $VMBootDiskPath -Path $MountPoint -Index 1
 
     # Copy the WMF 5.0 Installer to the VM in case it is needed
-    Write-Verbose "Applying VM $($VM.Name) WMF 5.0 ..."
-    $null = Add-WindowsPackage -PackagePath $Script:WMF5InstallerPath -Path $MountPoint
+    # Write-Verbose "Applying VM $($VM.Name) WMF 5.0 ..."
+    # $null = Add-WindowsPackage -PackagePath $Script:WMF5InstallerPath -Path $MountPoint
 
     # Apply any additional MSU Updates
     Foreach ($URL in $VM.InstallMSU)
