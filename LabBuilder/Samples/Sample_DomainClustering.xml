@@ -305,10 +305,29 @@
           DomainName = "LABBUILDER.COM"
           DomainAdminPassword = "P@ssword!1"
           PSDscAllowDomainUser = $True
+          TargetName = 'sa-foc-target'
+          VirtualDisks =  @(
+              @{ Path = 'D:\iSCSIVirtualDisks\sa-foc-witness.vhdx';
+                  DiskType = 'Dynamic';
+                  SizeBytes = 500MB;
+              },
+              @{ Path = 'D:\iSCSIVirtualDisks\sa-foc-disk1.vhdx';
+                  DiskType = 'Dynamic';
+                  SizeBytes = 10GB;
+              },
+              @{ Path = 'D:\iSCSIVirtualDisks\sa-foc-disk2.vhdx';
+                  DiskType = 'Dynamic';
+                  SizeBytes = 10GB;
+              },
+              @{ Path = 'D:\iSCSIVirtualDisks\sa-foc-disk3.vhdx';
+                  DiskType = 'Dynamic';
+                  SizeBytes = 10GB;
+              }
+          )
           ClusterInitiatorIds = @(
-            'Iqn:iqn.1991-05.com.microsoft:sa-foc1.labbuilder.com'
-            'Iqn:iqn.1991-05.com.microsoft:sa-foc2.labbuilder.com'
-            'Iqn:iqn.1991-05.com.microsoft:sa-foc3.labbuilder.com'
+              'Iqn:iqn.1991-05.com.microsoft:sa-foc1.labbuilder.com'
+              'Iqn:iqn.1991-05.com.microsoft:sa-foc2.labbuilder.com'
+              'Iqn:iqn.1991-05.com.microsoft:sa-foc3.labbuilder.com'
           )
         </parameters>
       </dsc>
