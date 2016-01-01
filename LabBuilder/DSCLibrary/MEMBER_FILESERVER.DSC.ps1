@@ -110,7 +110,6 @@ Configuration MEMBER_FILESERVER
 			Name = "FSRM-WMI-ASYNC-In-TCP"
 			Ensure = 'Present'
 			Enabled = 'True'
-			DependsOn = "[xComputer]JoinDomain" 
 		}
 
 		xFirewall FSRMFirewall2
@@ -118,7 +117,6 @@ Configuration MEMBER_FILESERVER
 			Name = "FSRM-WMI-WINMGMT-In-TCP"
 			Ensure = 'Present'
 			Enabled = 'True' 
-			DependsOn = "[xComputer]JoinDomain" 
 		}
 
 		xFirewall FSRMFirewall3
@@ -126,7 +124,6 @@ Configuration MEMBER_FILESERVER
 			Name = "FSRM-RemoteRegistry-In (RPC)"
 			Ensure = 'Present'
 			Enabled = 'True' 
-			DependsOn = "[xComputer]JoinDomain" 
 		}
 		
 		xFirewall FSRMFirewall4
@@ -134,7 +131,6 @@ Configuration MEMBER_FILESERVER
 			Name = "FSRM-Task-Scheduler-In (RPC)"
 			Ensure = 'Present'
 			Enabled = 'True' 
-			DependsOn = "[xComputer]JoinDomain" 
 		}
 
 		xFirewall FSRMFirewall5
@@ -142,7 +138,6 @@ Configuration MEMBER_FILESERVER
 			Name = "FSRM-SrmReports-In (RPC)"
 			Ensure = 'Present'
 			Enabled = 'True' 
-			DependsOn = "[xComputer]JoinDomain" 
 		}
 
 		xFirewall FSRMFirewall6
@@ -150,7 +145,6 @@ Configuration MEMBER_FILESERVER
 			Name = "FSRM-RpcSs-In (RPC-EPMAP)"
 			Ensure = 'Present'
 			Enabled = 'True' 
-			DependsOn = "[xComputer]JoinDomain" 
 		}
 		
 		xFirewall FSRMFirewall7
@@ -158,7 +152,6 @@ Configuration MEMBER_FILESERVER
 			Name = "FSRM-System-In (TCP-445)"
 			Ensure = 'Present'
 			Enabled = 'True' 
-			DependsOn = "[xComputer]JoinDomain" 
 		}
 		
 		xFirewall FSRMFirewall8
@@ -166,7 +159,6 @@ Configuration MEMBER_FILESERVER
 			Name = "FSRM-SrmSvc-In (RPC)"
 			Ensure = 'Present'
 			Enabled = 'True'
-			DependsOn = "[xComputer]JoinDomain" 
 		}
 
 		xWaitforDisk Disk2
@@ -174,7 +166,7 @@ Configuration MEMBER_FILESERVER
 			DiskNumber = 1
 			RetryIntervalSec = 60
 			RetryCount = 60
-			DependsOn = "[xComputer]JoinDomain" 
+			DependsOn = "[xComputer]JoinDomain"
 		}
 		
 		xDisk DVolume
