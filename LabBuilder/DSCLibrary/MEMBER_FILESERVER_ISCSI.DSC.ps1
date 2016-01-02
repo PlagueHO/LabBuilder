@@ -210,13 +210,12 @@ Configuration MEMBER_FILESERVER_ISCSI
 			DependsOn = '[xDisk]DVolume'
 		}
 
-		[String[]] $DependsOn = @()
+		$DependsOn = '[File]VirtualDisksFolder'
 		[Int] $Count = 0
-		foreach ($VirtualDisk in $Node.VirtualDisk)
+		foreach ($VirtualDisk in $Node.VirtualDisks)
 		{
 			$Count++ 
 			$Name = "$($Node.TargetName)_Disk_$Count"
-			$DependsOn += @( "[ciSCSIVirtualDisk]$Name" )
 			ciSCSIVirtualDisk $Name
 			{
 				Ensure = 'Present'
@@ -224,11 +223,12 @@ Configuration MEMBER_FILESERVER_ISCSI
 				DiskType = $VirtualDisk.DiskType
 				SizeBytes = $VirtualDisk.SizeBytes
 				Description = $VirtualDisk.Description
-				DependsOn = '[File]VirtualDisksFolder'
+				DependsOn = $DependsOn
 			}
+			$DependsOn = "[ciSCSIVirtualDisk]$Name"
 		}
 
-		ciSCSIServerTarget ClusterTarget01
+		ciSCSIServerTarget ClusterServerTarget
 		{
 			Ensure = 'Present'
 			TargetName = $Node.TargetName
