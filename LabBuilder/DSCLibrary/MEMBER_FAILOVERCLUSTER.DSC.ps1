@@ -3,11 +3,12 @@ DSC Template Configuration File For use by LabBuilder
 .Title
 	MEMBER_FAILOVERCLUSTER
 .Desription
-	Builds a Network failover clustering node.
+	Builds a Network failover clustering node. It also starts the iSCSI Initiator and connects
+	to any specified iSCSI Targets.
 .Parameters:    
-		  DomainName = "LABBUILDER.COM"
-		  DomainAdminPassword = "P@ssword!1"
-		  PSDscAllowDomainUser = $True
+	DomainName = "LABBUILDER.COM"
+	DomainAdminPassword = "P@ssword!1"
+	PSDscAllowDomainUser = $True
 #########################################################################################################################################>
 Configuration MEMBER_FAILOVERCLUSTER
 {
@@ -15,6 +16,7 @@ Configuration MEMBER_FAILOVERCLUSTER
 	Import-DscResource -ModuleName xActiveDirectory
 	Import-DscResource -ModuleName xComputerManagement
 	Import-DscResource -ModuleName xPSDesiredStateConfiguration
+	Import-DscResource -ModuleName ciSCSI
 	Node $AllNodes.NodeName {
 		# Assemble the Local Admin Credentials
 		If ($Node.LocalAdminPassword) {
