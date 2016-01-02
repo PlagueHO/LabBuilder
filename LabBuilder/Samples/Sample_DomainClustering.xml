@@ -444,6 +444,9 @@
           DomainName = "LABBUILDER.COM"
           DomainAdminPassword = "P@ssword!1"
           PSDscAllowDomainUser = $True
+          ServerTargetName = 'sa-foc-target'
+          TargetPortalAddress = '192.168.129.24'
+          InitiatorPortalAddress = '192.168.129.28'
         </parameters>
       </dsc>
       <adapters>
@@ -479,6 +482,9 @@
           DomainName = "LABBUILDER.COM"
           DomainAdminPassword = "P@ssword!1"
           PSDscAllowDomainUser = $True
+          ServerTargetName = 'sa-foc-target'
+          TargetPortalAddress = '192.168.129.24'
+          InitiatorPortalAddress = '192.168.129.29'
         </parameters>
       </dsc>
       <adapters>
@@ -514,6 +520,9 @@
           DomainName = "LABBUILDER.COM"
           DomainAdminPassword = "P@ssword!1"
           PSDscAllowDomainUser = $True
+          ServerTargetName = 'sa-foc-target'
+          TargetPortalAddress = '192.168.129.24'
+          InitiatorPortalAddress = '192.168.129.30'
         </parameters>
       </dsc>
       <adapters>

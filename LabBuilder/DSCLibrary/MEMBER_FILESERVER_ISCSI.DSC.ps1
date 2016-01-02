@@ -236,6 +236,5 @@ Configuration MEMBER_FILESERVER_ISCSI
 			Paths = $Node.VirtualDisks.Path
 			DependsOn = $DependsOn
 		}
-
 	}
 }

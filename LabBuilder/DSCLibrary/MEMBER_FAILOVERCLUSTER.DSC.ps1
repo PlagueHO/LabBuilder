@@ -9,6 +9,9 @@ DSC Template Configuration File For use by LabBuilder
 	DomainName = "LABBUILDER.COM"
 	DomainAdminPassword = "P@ssword!1"
 	PSDscAllowDomainUser = $True
+	ServerTargetName = 'sa-foc-target'
+	TargetPortalAddress = '192.168.129.24'
+	InitiatorPortalAddress = '192.168.129.28'
 #########################################################################################################################################>
 Configuration MEMBER_FAILOVERCLUSTER
 {
@@ -74,6 +77,47 @@ Configuration MEMBER_FAILOVERCLUSTER
 			DomainName    = $Node.DomainName
 			Credential    = $DomainAdminCredential 
 			DependsOn = "[xWaitForADDomain]DscDomainWait" 
-		} 			
+		}
+		
+		if ($Node.ServerTargetName)
+		{
+			# Ensure the iSCSI Initiator service is running
+			Service iSCSIService 
+			{ 
+				Name = 'MSiSCSI'
+				StartupType = 'Automatic'
+				State = 'Running'
+			}
+
+			# Wait for the iSCSI Server Target to become available
+			WaitForAny WaitForiSCSIServerTarget
+			{
+				ResourceName = "[ciSCSIServerTarget]ClusterServerTarget"
+				NodeName = $Node.ServerTargetName
+				RetryIntervalSec = 30
+				RetryCount = 30
+				DependsOn = "[xComputer]JoinDomain"
+			}
+
+			# Configure the Target Portal
+			ciSCSITargetPortal iSCSITargetPortal
+			{
+				Ensure = 'Present'
+				TargetPortalAddress = $Node.TargetPortalAddress
+				InitiatorPortalAddress = $Node.InitiatorPortalAddress
+				DependsOn = "[WindowsFeature]iSCSIService","[WaitForAny]WaitForiSCSIServerTarget" 
+			} # End of ciSCSITargetPortal Resource
+
+			# Connect the Target
+			ciSCSITarget iSCSITarget
+			{
+				Ensure = 'Present'
+				NodeAddress = "iqn.1991-05.com.microsoft:$($Node.ServerTargetName)"
+				TargetPortalAddress = $Node.TargetPortalAddress
+				InitiatorPortalAddress = $Node.InitiatorPortalAddress
+				IsPersistent = $true 
+				DependsOn = "[ciSCSITargetPortal]iSCSITargetPortal" 
+			} # End of ciSCSITarget Resource
+		}	
 	}
 }
