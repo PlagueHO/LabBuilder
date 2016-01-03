@@ -1,123 +1,114 @@
 <#########################################################################################################################################
 DSC Template Configuration File For use by LabBuilder
 .Title
-	MEMBER_FAILOVERCLUSTER
+    MEMBER_FAILOVERCLUSTER
 .Desription
-	Builds a Network failover clustering node. It also starts the iSCSI Initiator and connects
-	to any specified iSCSI Targets.
+    Builds a Network failover clustering node. It also starts the iSCSI Initiator and connects
+    to any specified iSCSI Targets.
 .Parameters:    
-	DomainName = "LABBUILDER.COM"
-	DomainAdminPassword = "P@ssword!1"
-	PSDscAllowDomainUser = $True
-	ServerTargetName = 'sa-foc-target'
-	TargetPortalAddress = '192.168.129.24'
-	InitiatorPortalAddress = '192.168.129.28'
+    DomainName = "LABBUILDER.COM"
+    DomainAdminPassword = "P@ssword!1"
+    PSDscAllowDomainUser = $True
+    ServerTargetName = 'sa-foc-target'
+    TargetPortalAddress = '192.168.129.24'
+    InitiatorPortalAddress = '192.168.129.28'
 #########################################################################################################################################>
 Configuration MEMBER_FAILOVERCLUSTER
 {
-	Import-DscResource -ModuleName 'PSDesiredStateConfiguration' -ModuleVersion 1.1
-	Import-DscResource -ModuleName xActiveDirectory
-	Import-DscResource -ModuleName xComputerManagement
-	Import-DscResource -ModuleName xPSDesiredStateConfiguration
-	Import-DscResource -ModuleName ciSCSI
-	Node $AllNodes.NodeName {
-		# Assemble the Local Admin Credentials
-		If ($Node.LocalAdminPassword) {
-			[PSCredential]$LocalAdminCredential = New-Object System.Management.Automation.PSCredential ("Administrator", (ConvertTo-SecureString $Node.LocalAdminPassword -AsPlainText -Force))
-		}
-		If ($Node.DomainAdminPassword) {
-			[PSCredential]$DomainAdminCredential = New-Object System.Management.Automation.PSCredential ("$($Node.DomainName)\Administrator", (ConvertTo-SecureString $Node.DomainAdminPassword -AsPlainText -Force))
-		}
+    Import-DscResource -ModuleName 'PSDesiredStateConfiguration' -ModuleVersion 1.1
+    Import-DscResource -ModuleName xActiveDirectory
+    Import-DscResource -ModuleName xComputerManagement
+    Import-DscResource -ModuleName xPSDesiredStateConfiguration
+    Import-DscResource -ModuleName ciSCSI
+    Node $AllNodes.NodeName {
+        # Assemble the Local Admin Credentials
+        If ($Node.LocalAdminPassword) {
+            [PSCredential]$LocalAdminCredential = New-Object System.Management.Automation.PSCredential ("Administrator", (ConvertTo-SecureString $Node.LocalAdminPassword -AsPlainText -Force))
+        }
+        If ($Node.DomainAdminPassword) {
+            [PSCredential]$DomainAdminCredential = New-Object System.Management.Automation.PSCredential ("$($Node.DomainName)\Administrator", (ConvertTo-SecureString $Node.DomainAdminPassword -AsPlainText -Force))
+        }
 
-		# Install the RSAT PowerShell Module which is required by the xWaitForResource
-		WindowsFeature RSATADPowerShell
-		{ 
-			Ensure = "Present" 
-			Name = "RSAT-AD-PowerShell" 
-		} 
+        # Install the RSAT PowerShell Module which is required by the xWaitForResource
+        WindowsFeature RSATADPowerShell
+        { 
+            Ensure = "Present" 
+            Name = "RSAT-AD-PowerShell" 
+        } 
 
-		WindowsFeature FailoverClusteringInstall
-		{ 
-			Ensure = "Present" 
-			Name = "Failover-Clustering" 
-		} 
+        WindowsFeature FailoverClusteringInstall
+        { 
+            Ensure = "Present" 
+            Name = "Failover-Clustering" 
+        } 
 
-		WindowsFeature FailoverClusteringPSInstall
-		{ 
-			Ensure = "Present" 
-			Name = "RSAT-Clustering-PowerShell" 
-		} 
+        WindowsFeature FailoverClusteringPSInstall
+        { 
+            Ensure = "Present" 
+            Name = "RSAT-Clustering-PowerShell" 
+        } 
 
-		WindowsFeature InstallWebServer
-		{ 
-			Ensure = "Present" 
-			Name = "Web-Server" 
-		}
+        WindowsFeature InstallWebServer
+        { 
+            Ensure = "Present" 
+            Name = "Web-Server" 
+        }
 
-		WindowsFeature InstallWebMgmtService
-		{ 
-			Ensure = "Present" 
-			Name = "Web-Mgmt-Service" 
-		}
+        WindowsFeature InstallWebMgmtService
+        { 
+            Ensure = "Present" 
+            Name = "Web-Mgmt-Service" 
+        }
 
-		# Wait for the Domain to be available so we can join it.
-		xWaitForADDomain DscDomainWait
-		{
-			DomainName = $Node.DomainName
-			DomainUserCredential = $DomainAdminCredential 
-			RetryCount = 100 
-			RetryIntervalSec = 10 
-			DependsOn = "[WindowsFeature]RSATADPowerShell" 
-		}
+        # Wait for the Domain to be available so we can join it.
+        xWaitForADDomain DscDomainWait
+        {
+            DomainName = $Node.DomainName
+            DomainUserCredential = $DomainAdminCredential 
+            RetryCount = 100 
+            RetryIntervalSec = 10 
+            DependsOn = "[WindowsFeature]RSATADPowerShell" 
+        }
 
-		# Join this Server to the Domain so that it can be an Enterprise CA.
-		xComputer JoinDomain 
-		{ 
-			Name          = $Node.NodeName
-			DomainName    = $Node.DomainName
-			Credential    = $DomainAdminCredential 
-			DependsOn = "[xWaitForADDomain]DscDomainWait" 
-		}
-		
-		if ($Node.ServerTargetName)
-		{
-			# Ensure the iSCSI Initiator service is running
-			Service iSCSIService 
-			{ 
-				Name = 'MSiSCSI'
-				StartupType = 'Automatic'
-				State = 'Running'
-			}
+        # Join this Server to the Domain so that it can be an Enterprise CA.
+        xComputer JoinDomain 
+        { 
+            Name          = $Node.NodeName
+            DomainName    = $Node.DomainName
+            Credential    = $DomainAdminCredential 
+            DependsOn = "[xWaitForADDomain]DscDomainWait" 
+        }
+        
+        if ($Node.ServerTargetName)
+        {
+            # Ensure the iSCSI Initiator service is running
+            Service iSCSIService 
+            { 
+                Name = 'MSiSCSI'
+                StartupType = 'Automatic'
+                State = 'Running'
+            }
 
-			# Wait for the iSCSI Server Target to become available
-			WaitForAny WaitForiSCSIServerTarget
-			{
-				ResourceName = "[ciSCSIServerTarget]ClusterServerTarget"
-				NodeName = $Node.ServerTargetName
-				RetryIntervalSec = 30
-				RetryCount = 30
-				DependsOn = "[xComputer]JoinDomain"
-			}
+            # Wait for the iSCSI Server Target to become available
+            WaitForAny WaitForiSCSIServerTarget
+            {
+                ResourceName = "[ciSCSIServerTarget]ClusterServerTarget"
+                NodeName = $Node.ServerTargetName
+                RetryIntervalSec = 30
+                RetryCount = 30
+                DependsOn = "[Service]iSCSIService"
+            }
 
-			# Configure the Target Portal
-			ciSCSITargetPortal iSCSITargetPortal
-			{
-				Ensure = 'Present'
-				TargetPortalAddress = $Node.TargetPortalAddress
-				InitiatorPortalAddress = $Node.InitiatorPortalAddress
-				DependsOn = "[WindowsFeature]iSCSIService","[WaitForAny]WaitForiSCSIServerTarget" 
-			} # End of ciSCSITargetPortal Resource
-
-			# Connect the Target
-			ciSCSITarget iSCSITarget
-			{
-				Ensure = 'Present'
-				NodeAddress = "iqn.1991-05.com.microsoft:$($Node.ServerTargetName)"
-				TargetPortalAddress = $Node.TargetPortalAddress
-				InitiatorPortalAddress = $Node.InitiatorPortalAddress
-				IsPersistent = $true 
-				DependsOn = "[ciSCSITargetPortal]iSCSITargetPortal" 
-			} # End of ciSCSITarget Resource
-		}	
-	}
+            # Connect the Initiator
+            ciSCSIInitiator iSCSIInitiator
+            {
+                Ensure = 'Present'
+                NodeAddress = "iqn.1991-05.com.microsoft:$($Node.ServerTargetName)"
+                TargetPortalAddress = $Node.TargetPortalAddress
+                InitiatorPortalAddress = $Node.InitiatorPortalAddress
+                IsPersistent = $true 
+                DependsOn = "[WaitForAny]WaitForiSCSIServerTarget" 
+            } # End of ciSCSITarget Resource
+        }	
+    }
 }
