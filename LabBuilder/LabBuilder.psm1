@@ -1382,9 +1382,17 @@ function Get-LabVMTemplates {
                 {
                     $VMTemplate.MemoryStartupBytes = $MemortStartupBytes
                 } # If
+                If ($Templates.DynamicMemoryEnabled)
+                {
+                    $VMTemplate.DynamicMemoryEnabled = ! ($Templates.DynamicMemoryEnabled -eq 'N')
+                }
                 If ($Templates.ProcessorCount)
                 {
                     $VMTemplate.ProcessorCount = $Template.ProcessorCount
+                } # If
+                If ($Templates.ExposeVirtualizationExtensions)
+                {
+                    $VMTemplate.ExposeVirtualizationExtensions = ($Templates.DynamicMemoryEnabled -eq 'Y')                
                 } # If
                 If ($DataVHDSize)
                 {
@@ -1442,7 +1450,9 @@ function Get-LabVMTemplates {
                 edition = $Template.Edition;
                 allowcreate = $Template.AllowCreate;
                 memorystartupbytes = $MemoryStartupBytes;
+                dynamicmemoryenabled = $Template.DynamicMemoryEnabled;
                 processorcount = $Template.ProcessorCount;
+                exposevirtualizationextensions = $Template.ExposeVirtualizationExtensions
                 datavhdsize = $Template.DataVHDSize;
                 administratorpassword = $Template.AdministratorPassword;
                 productkey = $Template.ProductKey;
@@ -3150,24 +3160,39 @@ function Get-LabVMs {
         
         # Load the DSC Parameters
         [String] $DSCParameters = ''
-        If ($VM.DSC.Parameters) {
+        If ($VM.DSC.Parameters)
+        {
             $DSCParameters = $VM.DSC.Parameters
         } # If
 
         # Load the DSC Parameters
-        [BOolean] $DSCLogging = $False
-        If ($VM.DSC.Logging -eq 'Y') {
+        [Boolean] $DSCLogging = $False
+        If ($VM.DSC.Logging -eq 'Y')
+        {
             $DSCLogging = $True
         } # If
 
         # Get the Memory Startup Bytes (from the template or VM)
         [Int64] $MemoryStartupBytes = 1GB
-        If ($VMTemplate.memorystartupbytes) {
+        If ($VMTemplate.memorystartupbytes)
+        {
             $MemoryStartupBytes = $VMTemplate.memorystartupbytes
         } # If
-        If ($VM.memorystartupbytes) {
+        If ($VM.memorystartupbytes)
+        {
             $MemoryStartupBytes = (Invoke-Expression $VM.memorystartupbytes)
         } # If
+
+        # Get the Dynamic Memory Enabled flag
+        [Boolean] $DynamicMemoryEnabled = $true
+        If ($VMTemplate.DynamicMemoryEnabled)
+        {
+            $DynamicMemoryEnabled = $VMTemplate.DynamicMemoryEnabled
+        }
+        If ($VM.DynamicMemoryEnabled)
+        {
+            $DynamicMemoryEnabled = ! ($VM.DynamicMemoryEnabled -eq 'N')
+        } # If        
         
         # Get the Memory Startup Bytes (from the template or VM)
         [Int] $ProcessorCount = 1
@@ -3177,6 +3202,17 @@ function Get-LabVMs {
         If ($VM.processorcount) {
             $ProcessorCount = (Invoke-Expression $VM.processorcount)
         } # If
+
+        # Get the Expose Virtualization Extensions flag
+        [Boolean] $ExposeVirtualizationExtensions = $false
+        If ($VMTemplate.ExposeVirtualizationExtensions)
+        {
+            $ExposeVirtualizationExtensions = $VMTemplate.ExposeVirtualizationExtensions
+        }
+        If ($VM.ExposeVirtualizationExtensions)
+        {
+            $ExposeVirtualizationExtensions = ($VM.ExposeVirtualizationExtensions -eq 'Y')
+        } # If        
 
         # Get the data VHD Size (from the template or VM)
         [Int64] $DataVHDSize = 0
@@ -3235,7 +3271,9 @@ function Get-LabVMs {
             TemplateVHD = $TemplateVHDPath;
             UseDifferencingDisk = $VM.usedifferencingbootdisk;
             MemoryStartupBytes = $MemoryStartupBytes;
+            DynamicMemoryEnabled = $DynamicMemoryEnabled;
             ProcessorCount = $ProcessorCount;
+            ExposeVirtualizationExtensions = $ExposeVirtualizationExtensions;
             AdministratorPassword = $AdministratorPassword;
             ProductKey = $ProductKey;
             TimeZone =$Timezone;

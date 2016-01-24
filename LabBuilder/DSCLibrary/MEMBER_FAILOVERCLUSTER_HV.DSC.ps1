@@ -1,25 +1,21 @@
 <#########################################################################################################################################
 DSC Template Configuration File For use by LabBuilder
 .Title
-    MEMBER_FAILOVERCLUSTER
+    MEMBER_FAILOVERCLUSTER_HV
 .Desription
-    Builds a Network failover clustering node. It also starts the iSCSI Initiator and connects
+    Builds a Network failover clustering node Hyper-V. It also starts the iSCSI Initiator and connects
     to any specified iSCSI Targets.
 .Parameters:    
     DomainName = "LABBUILDER.COM"
     DomainAdminPassword = "P@ssword!1"
     PSDscAllowDomainUser = $True
-    ServerTargetName = 'sa-foc-target'
-    TargetPortalAddress = '192.168.129.24'
-    InitiatorPortalAddress = '192.168.129.28'
 #########################################################################################################################################>
-Configuration MEMBER_FAILOVERCLUSTER
+Configuration MEMBER_FAILOVERCLUSTER_HV
 {
     Import-DscResource -ModuleName 'PSDesiredStateConfiguration' -ModuleVersion 1.1
     Import-DscResource -ModuleName xActiveDirectory
     Import-DscResource -ModuleName xComputerManagement
     Import-DscResource -ModuleName xPSDesiredStateConfiguration
-    Import-DscResource -ModuleName ciSCSI
     Node $AllNodes.NodeName {
         # Assemble the Local Admin Credentials
         If ($Node.LocalAdminPassword) {
@@ -48,16 +44,10 @@ Configuration MEMBER_FAILOVERCLUSTER
             Name = "RSAT-Clustering-PowerShell" 
         } 
 
-        WindowsFeature InstallWebServer
+        WindowsFeature InstallHyperV
         { 
             Ensure = "Present" 
-            Name = "Web-Server" 
-        }
-
-        WindowsFeature InstallWebMgmtService
-        { 
-            Ensure = "Present" 
-            Name = "Web-Mgmt-Service" 
+            Name = "Hyper-V" 
         }
 
         # Wait for the Domain to be available so we can join it.
@@ -77,38 +67,6 @@ Configuration MEMBER_FAILOVERCLUSTER
             DomainName    = $Node.DomainName
             Credential    = $DomainAdminCredential 
             DependsOn = "[xWaitForADDomain]DscDomainWait" 
-        }
-        
-        if ($Node.ServerTargetName)
-        {
-            # Ensure the iSCSI Initiator service is running
-            Service iSCSIService 
-            { 
-                Name = 'MSiSCSI'
-                StartupType = 'Automatic'
-                State = 'Running'
-            }
-
-            # Wait for the iSCSI Server Target to become available
-            WaitForAny WaitForiSCSIServerTarget
-            {
-                ResourceName = "[ciSCSIServerTarget]ClusterServerTarget"
-                NodeName = $Node.ServerTargetName
-                RetryIntervalSec = 30
-                RetryCount = 30
-                DependsOn = "[Service]iSCSIService"
-            }
-
-            # Connect the Initiator
-            ciSCSIInitiator iSCSIInitiator
-            {
-                Ensure = 'Present'
-                NodeAddress = "iqn.1991-05.com.microsoft:$($Node.ServerTargetName)"
-                TargetPortalAddress = $Node.TargetPortalAddress
-                InitiatorPortalAddress = $Node.InitiatorPortalAddress
-                IsPersistent = $true 
-                DependsOn = "[WaitForAny]WaitForiSCSIServerTarget" 
-            } # End of ciSCSITarget Resource
-        }	
+        }        
     }
 }
