@@ -12,7 +12,7 @@
         "productkey":  "AAAAA-AAAAA-AAAAA-AAAAA-AAAAA",
         "edition":  "Windows Server 2012 R2 SERVERDATACENTER",
         "vhd":  "Windows Server 2012 R2 Datacenter Full.vhdx",
-        "dynamicmemoryenabled":  true,
+        "dynamicmemoryenabled":  "Y",
         "sourcevhd":  ".\\Tests\\PesterTestConfig\\Windows Server 2012 R2 Datacenter Full.vhdx",
         "allowcreate":  "Y",
         "timezone":  "Pacific Standard Time"
@@ -26,11 +26,11 @@
         "name":  "Pester Windows Server 2012 R2 Datacenter Core",
         "administratorpassword":  "None",
         "installiso":  ".\\Tests\\PesterTestConfig\\9600.16384.130821-1623_x64fre_Server_EN-US_IRM_SSS_DV5.iso",
-        "exposevirtualizationextensions":  true,
+        "exposevirtualizationextensions":  "Y",
         "productkey":  "BBBBB-BBBBB-BBBBB-BBBBB-BBBBB",
         "edition":  "Windows Server 2012 R2 SERVERDATACENTERCORE",
         "vhd":  "Windows Server 2012 R2 Datacenter Core.vhdx",
-        "dynamicmemoryenabled":  false,
+        "dynamicmemoryenabled":  "N",
         "sourcevhd":  ".\\Tests\\PesterTestConfig\\Windows Server 2012 R2 Datacenter Full.vhdx",
         "allowcreate":  "Y",
         "timezone":  "Pacific Standard Time"
@@ -48,7 +48,7 @@
         "productkey":  "CCCCC-CCCCC-CCCCC-CCCCC-CCCCC",
         "edition":  "Windows 10 Enterprise",
         "vhd":  "Windows 10 Enterprise.vhdx",
-        "dynamicmemoryenabled":  null,
+        "dynamicmemoryenabled":  "Y",
         "sourcevhd":  ".\\Tests\\PesterTestConfig\\Windows 10 Enterprise.vhdx",
         "allowcreate":  "Y",
         "timezone":  "Pacific Standard Time"

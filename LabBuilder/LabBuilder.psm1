@@ -1333,8 +1333,8 @@ function Get-LabVMTemplates {
         if ($Template.MemoryStartupBytes)
         {
             $MemoryStartupBytes = (Invoke-Expression $Template.MemoryStartupBytes)
-        } # If
-
+        } # if
+        
         # Get the Template Default Data VHD Size
         [Int64] $DataVHDSize = 0
         if ($Template.DataVHDSize)
@@ -1384,33 +1384,33 @@ function Get-LabVMTemplates {
                 } # If
                 if ($Template.DynamicMemoryEnabled)
                 {
-                    $VMTemplate.DynamicMemoryEnabled = ($Template.DynamicMemoryEnabled -ne 'N')
+                    $VMTemplate.DynamicMemoryEnabled = $Template.DynamicMemoryEnabled
                 }
-                if ($Templates.ProcessorCount)
+                if ($Template.ProcessorCount)
                 {
                     $VMTemplate.ProcessorCount = $Template.ProcessorCount
                 } # If
-                if ($Templates.ExposeVirtualizationExtensions)
+                if ($Template.ExposeVirtualizationExtensions)
                 {
-                    $VMTemplate.ExposeVirtualizationExtensions = ($Template.ExposeVirtualizationExtensions -eq 'Y')
+                    $VMTemplate.ExposeVirtualizationExtensions = $Template.ExposeVirtualizationExtensions
                 }
                 if ($DataVHDSize)
                 {
                     $VMTemplate.DataVHDSize = $DataVHDSize
                 } # If
-                if ($Templates.AdministratorPassword)
+                if ($Template.AdministratorPassword)
                 {
                     $VMTemplate.AdministratorPassword = $Template.AdministratorPassword
                 } # If
-                if ($Templates.ProductKey)
+                if ($Template.ProductKey)
                 {
                     $VMTemplate.ProductKey = $Template.ProductKey
                 } # If
-                if ($Templates.TimeZone)
+                if ($Template.TimeZone)
                 {
                     $VMTemplate.TimeZone = $Template.TimeZone
                 } # If
-                if ($Templates.OSType)
+                if ($Template.OSType)
                 {
                     $VMTemplate.OSType = $Template.OSType
                 }
@@ -1452,16 +1452,16 @@ function Get-LabVMTemplates {
                 memorystartupbytes = $MemoryStartupBytes;
                 dynamicmemoryenabled = if ($Template.DynamicMemoryEnabled)
                     {
-                        ($Template.DynamicMemoryEnabled -ne 'N')
+                        $Template.DynamicMemoryEnabled
                     }
                     else
                     {
-                        $null
+                        'Y'
                     };
                 processorcount = $Template.ProcessorCount;
                 exposevirtualizationextensions = if ($Template.ExposeVirtualizationExtensions)
                     {
-                        ($Template.ExposeVirtualizationExtensions -eq 'Y')
+                        $Template.ExposeVirtualizationExtensions
                     }
                     else
                     {
@@ -3205,14 +3205,14 @@ function Get-LabVMs {
         } # If
 
         # Get the Dynamic Memory Enabled flag
-        [Boolean] $DynamicMemoryEnabled = $true
+        [String] $DynamicMemoryEnabled = ''
         if ($VMTemplate.DynamicMemoryEnabled)
         {
             $DynamicMemoryEnabled = $VMTemplate.DynamicMemoryEnabled
         }
         if ($VM.DynamicMemoryEnabled)
         {
-            $DynamicMemoryEnabled = ($VM.DynamicMemoryEnabled -ne 'N')
+            $DynamicMemoryEnabled = $VM.DynamicMemoryEnabled
         } # If        
         
         # Get the Memory Startup Bytes (from the template or VM)
@@ -3225,14 +3225,14 @@ function Get-LabVMs {
         } # If
 
         # Get the Expose Virtualization Extensions flag
-        [Boolean] $ExposeVirtualizationExtensions = $null
+        [String] $ExposeVirtualizationExtensions = ''
         if ($VMTemplate.ExposeVirtualizationExtensions)
         {
             $ExposeVirtualizationExtensions = $VMTemplate.ExposeVirtualizationExtensions
         }
         if ($VM.ExposeVirtualizationExtensions)
         {
-            $ExposeVirtualizationExtensions = ($VM.ExposeVirtualizationExtensions -eq 'Y')
+            $ExposeVirtualizationExtensions = $VM.ExposeVirtualizationExtensions
         } # If        
 
         # Get the data VHD Size (from the template or VM)

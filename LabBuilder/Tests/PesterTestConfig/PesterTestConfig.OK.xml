@@ -81,6 +81,7 @@
         computername="PESTER01"
         memorystartupbytes="2GB"
         dynamicmemoryenabled="N"
+        exposevirtualizationextensions="Y"
         usedifferencingbootdisk="Y"
         datavhdsize="10GB"
         administratorpassword="Something"
