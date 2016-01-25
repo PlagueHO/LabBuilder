@@ -3936,11 +3936,12 @@ function Initialize-LabVMs {
         # Enable/Disable Dynamic Memory
         if ($VM.DynamicMemoryEnabled)
         {
-            if ($VM.DynamicMemoryEnabled -ne (Get-VMMemory -VMName $VM.Name).DynamicMemoryEnabled)
+            [Boolean] $DynamicMemoryEnabled = ($VM.DynamicMemoryEnabled -ne 'N')
+            if ($DynamicMemoryEnabled -ne (Get-VMMemory -VMName $VM.Name).DynamicMemoryEnabled)
             {
                 Set-VMMemory `
                     -VMName $VM.Name `
-                    -DynamicMemoryEnabled:$VM.DynamicMemoryEnabled
+                    -DynamicMemoryEnabled:$DynamicMemoryEnabled
             } # If
         } # If
 
@@ -3948,11 +3949,12 @@ function Initialize-LabVMs {
         # Virtual Processor. Only supported in certain builds on Windows 10/Server 2016 TP4.
         if ($VM.ExposeVirtualizationExtensions)
         {
-            if ($VM.ExposeVirtualizationExtensions -ne (Get-VMProcessor -VMName $VM.Name).ExposeVirtualizationExtensions)
+            [Boolean] $ExposeVirtualizationExtensions = ($VM.ExposeVirtualizationExtensions -eq 'Y') 
+            if ($ExposeVirtualizationExtensions -ne (Get-VMProcessor -VMName $VM.Name).ExposeVirtualizationExtensions)
             {
                 Set-VMProcessor `
                     -VMName $VM.Name `
-                    -ExposeVirtualizationExtensions:$VM.ExposeVirtualizationExtensions                
+                    -ExposeVirtualizationExtensions:$ExposeVirtualizationExtensions                
             }   
         }
 
