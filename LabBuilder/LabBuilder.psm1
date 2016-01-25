@@ -1652,7 +1652,7 @@ function Set-LabVMDSCMOFFile {
         -VM $VM
 
     # Make sure the appropriate folders exist
-    Create-LabVMPath -VMPath $VMRootPath
+    Initialize-LabVMPath -VMPath $VMRootPath
     
     # Get Path to LabBuilder files
     [String] $VMLabBuilderFiles = Get-LabVMFilesPath `
@@ -3694,7 +3694,8 @@ function Get-LabVMFilesPath {
 #>
 function Start-LabVM {
     [CmdLetBinding()]
-    param (
+    param
+    (
         [Parameter(
             Mandatory,
             Position=0)]
@@ -3711,25 +3712,34 @@ function Start-LabVM {
     [String] $VMPath = $Configuration.labbuilderconfig.settings.vmpath
 
     # The VM is now ready to be started
-    If ((Get-VM -Name $VM.Name).State -eq 'Off') {
+    if ((Get-VM -Name $VM.Name).State -eq 'Off')
+    {
         Write-Verbose "VM $($VM.Name) is starting ..."
 
         Start-VM -VMName $VM.Name
     } # If
 
     # We only perform this section of VM Initialization (DSC, Cert, etc) with Server OS
-    If ($VM.OSType -eq 'Server') {
+    if ($VM.OSType -eq 'Server')
+    {
         # Has this VM been initialized before (do we have a cer for it)
-        If (-not (Test-Path "$VMPath\$($VM.Name)\LabBuilder Files\$Script:DSCEncryptionCert")) {
+        if (-not (Test-Path "$VMPath\$($VM.Name)\LabBuilder Files\$Script:DSCEncryptionCert"))
+        {
             # No, so check it is initialized and download the cert.
-            If (Wait-LabVMInit -VM $VM) {
+            if (Wait-LabVMInit -VM $VM)
+            {
                 Write-Verbose "Attempting to download certificate for VM $($VM.Name) ..."
-                If (Get-LabVMSelfSignedCert -Configuration $Configuration -VM $VM) {
+                if (Get-LabVMSelfSignedCert -Configuration $Configuration -VM $VM)
+                {
                     Write-Verbose "Certificate for VM $($VM.Name) was downloaded successfully ..."
-                } Else {
+                }
+                else
+                {
                     Write-Verbose "Certificate for VM $($VM.Name) could not be downloaded ..."
                 } # If
-            } Else {
+            }
+            else
+            {
                 Write-Verbose "Initialization for VM $($VM.Name) did not complete ..."
             } # If
         } # If
@@ -3753,15 +3763,16 @@ function Start-LabVM {
 .PARAMATER vmpath
    The path to the folder where the Virtual Machine files are stored.
 .EXAMPLE
-   Create-LabVMPath -VMPath 'c:\VMs\Lab\Virtual Machine 1'
+   Initialize-LabVMPath -VMPath 'c:\VMs\Lab\Virtual Machine 1'
    The command will create the Virtual Machine structure for a Lab VM in the folder:
    'c:\VMs\Lab\Virtual Machine 1'
 .OUTPUTS
    None.
 #>
-function Create-LabVMPath {
+function Initialize-LabVMPath {
     [CmdLetBinding()]
-    param (
+    param
+    (
         [Parameter(
             Mandatory,
             Position=0)]
@@ -3769,19 +3780,24 @@ function Create-LabVMPath {
         [String] $VMPath
     )
 
-    If (-not (Test-Path -Path $VMPath)) {
+    if (-not (Test-Path -Path $VMPath))
+    {
         $Null = New-Item -Path $VMPath -ItemType Directory
     }
-    If (-not (Test-Path -Path "$VMPath\Virtual Machines")) {
+    if (-not (Test-Path -Path "$VMPath\Virtual Machines"))
+    {
         $Null = New-Item -Path "$VMPath\Virtual Machines" -ItemType Directory
     }
-    If (-not (Test-Path -Path "$VMPath\Virtual Hard Disks")) {
+    if (-not (Test-Path -Path "$VMPath\Virtual Hard Disks"))
+    {
         $Null = New-Item -Path "$VMPath\Virtual Hard Disks" -ItemType Directory
     }
-    If (-not (Test-Path -Path "$VMPath\LabBuilder Files")) {
+    if (-not (Test-Path -Path "$VMPath\LabBuilder Files"))
+    {
         $Null = New-Item -Path "$VMPath\LabBuilder Files" -ItemType Directory
     }
-    If (-not (Test-Path -Path "$VMPath\LabBuilder Files\DSC Modules")) {
+    if (-not (Test-Path -Path "$VMPath\LabBuilder Files\DSC Modules"))
+    {
         $Null = New-Item -Path "$VMPath\LabBuilder Files\DSC Modules" -ItemType Directory
     }
 }
@@ -3806,7 +3822,8 @@ function Create-LabVMPath {
 #>
 function Initialize-LabVMs {
     [CmdLetBinding()]
-    param (
+    param
+    (
         [Parameter(
             Mandatory,
             Position=0)]
@@ -3841,7 +3858,7 @@ function Initialize-LabVMs {
             Write-Verbose "Creating VM $($VM.Name) ..."
 
             # Make sure the appropriate folders exist
-            Create-LabVMPath -VMPath "$VMPath\$($VM.Name)"
+            Initialize-LabVMPath -VMPath "$VMPath\$($VM.Name)"
 
             # Create the boot disk
             $VMBootDiskPath = "$VMPath\$($VM.Name)\Virtual Hard Disks\$($VM.Name) Boot Disk.vhdx"
@@ -3928,6 +3945,7 @@ function Initialize-LabVMs {
                 Write-Verbose "VM $($VM.Name) data disk $VMDataDiskPath is being created ..."
                 $null = New-VHD -Path $VMDataDiskPath -SizeBytes $VM.DataVHDSize -Dynamic
             } # If
+
             # Does the disk already exist in the VM
             if ((Get-VMHardDiskDrive -VMName $VM.Name | Where-Object -Property Path -EQ $VMDataDiskPath).Count -EQ 0)
             {
@@ -3954,6 +3972,7 @@ function Initialize-LabVMs {
                 Write-Verbose "VM $($VM.Name) network adapter $($VMAdapter.Name) is being added ..."
                 Add-VMNetworkAdapter -VMName $VM.Name -SwitchName $VMAdapter.SwitchName -Name $VMAdapter.Name
             } # If
+
             $VMNetworkAdapter = Get-VMNetworkAdapter -VMName $VM.Name -Name $VMAdapter.Name
             $Vlan = $VMAdapter.VLan
             if ($VLan)
@@ -3966,6 +3985,7 @@ function Initialize-LabVMs {
                 $null = $VMNetworkAdapter | Set-VMNetworkAdapterVlan -Untagged
                 Write-Verbose "VM $($VM.Name) network adapter $($VMAdapter.Name) VLAN has been cleared ..."
             } # If
+
             if ($VMAdapter.MACAddress)
             {
                 $null = $VMNetworkAdapter | Set-VMNetworkAdapter -StaticMacAddress $VMAdapter.MACAddress
@@ -3974,6 +3994,7 @@ function Initialize-LabVMs {
             {
                 $null = $VMNetworkAdapter | Set-VMNetworkAdapter -DynamicMacAddress
             } # If
+
             # Enable Device Naming
             if ((Get-Command -Name Set-VMNetworkAdapter).Parameters.ContainsKey('DeviceNaming'))
             {
@@ -4010,7 +4031,8 @@ function Initialize-LabVMs {
 function Remove-LabVMs {
     [CmdLetBinding()]
     [OutputType([Boolean])]
-    param (
+    param
+    (
         [Parameter(
             Mandatory,
             Position=0)]
@@ -4029,10 +4051,13 @@ function Remove-LabVMs {
     $CurrentVMs = Get-VM
     [String] $VMPath = $Configuration.labbuilderconfig.settings.vmpath
     
-    Foreach ($VM in $VMs) {
-        If (($CurrentVMs | Where-Object -Property Name -eq $VM.Name).Count -ne 0) {
+    foreach ($VM in $VMs)
+    {
+        if (($CurrentVMs | Where-Object -Property Name -eq $VM.Name).Count -ne 0)
+        {
             # If the VM is running we need to shut it down.
-            If ((Get-VM -Name $VM.Name).State -eq 'Running') {
+            if ((Get-VM -Name $VM.Name).State -eq 'Running')
+            {
                 Write-Verbose "Stopping VM $($VM.Name) ..."
                 Stop-VM -Name $VM.Name
                 # Wait for it to completely shut down and report that it is off.
@@ -4041,7 +4066,8 @@ function Remove-LabVMs {
             Write-Verbose "Removing VM $($VM.Name) ..."
 
             # Should we also delete the VHDs from the VM?
-            If ($RemoveVHDs) {
+            if ($RemoveVHDs)
+            {
                 Write-Verbose "Deleting VM $($VM.Name) hard drive(s) ..."
                 Get-VMHardDiskDrive -VMName $VM.Name | Select-Object -Property Path | Remove-Item
             }
@@ -4050,7 +4076,9 @@ function Remove-LabVMs {
             Get-VM -Name $VMs.Name | Remove-VM -Confirm:$false
 
             Write-Verbose "Removed VM $($VM.Name) ..."
-        } Else {
+        }
+        else
+        {
             Write-Verbose "VM $($VM.Name) is not in Hyper-V ..."
         }
     }
@@ -4078,7 +4106,8 @@ function Remove-LabVMs {
 function Wait-LabVMInit {
     [OutputType([Boolean])]
     [CmdLetBinding()]
-    param (
+    param
+    (
         [Parameter(
             Mandatory,
             Position=0)]
@@ -4098,10 +4127,13 @@ function Wait-LabVMInit {
     Wait-LabVMStart -VM $VM
 
     [Boolean] $Complete = $False
-    While ((-not $Complete)  -and (((Get-Date) - $StartTime).Seconds) -lt $TimeOut) {
-        While (-not ($Session) -or ($Session.State -ne 'Opened')) {
+    while ((-not $Complete)  -and (((Get-Date) - $StartTime).Seconds) -lt $TimeOut)
+    {
+        while (-not ($Session) -or ($Session.State -ne 'Opened'))
+        {
             # Try and connect to the remote VM for up to $Timeout (5 minutes) seconds.
-            Try {
+            try
+            {
                 Write-Verbose "Attempting connection to $($VM.ComputerName) ..."
 
                 # Get the Management IP Address of the VM
@@ -4115,18 +4147,25 @@ function Wait-LabVMInit {
                     -ComputerName $IPAddress `
                     -Credential $AdmininistratorCredential `
                     -ErrorAction Stop
-            } Catch {
+            }
+            catch
+            {
                 Write-Verbose "Connection to $($VM.ComputerName) failed - retrying in 5 seconds ..."
                 Start-Sleep -Seconds $Script:RetryConnectSeconds
             } # Try
         } # While
 
-        If (($Session) -and ($Session.State -eq 'Opened') -and (-not $Complete)) {
+        if (($Session) -and ($Session.State -eq 'Opened') -and (-not $Complete))
+        {
             # We connected OK - check for init file
-            While ((-not $Complete) -and (((Get-Date) - $StartTime).Seconds) -lt $TimeOut) {
-                Try {
+            while ((-not $Complete) -and (((Get-Date) - $StartTime).Seconds) -lt $TimeOut)
+            {
+                try
+                {
                     $Complete = Invoke-Command -Session $Session {Test-Path "$($ENV:SystemRoot)\Setup\Scripts\InitialSetupCompleted.txt" } -ErrorAction Stop
-                } Catch {
+                }
+                catch
+                {
                     Write-Verbose "Waiting for Certificate file on $($VM.ComputerName) ..."
                     Start-Sleep -Seconds $Script:RetryConnectSeconds
                 } # Try
@@ -4134,7 +4173,8 @@ function Wait-LabVMInit {
         } # If
 
         # Close the Session if it is opened
-        If (($Session) -and ($Session.State -eq 'Opened')) {
+        if (($Session) -and ($Session.State -eq 'Opened'))
+        {
             Remove-PSSession -Session $Session
         } # If
     } # While
@@ -4158,7 +4198,8 @@ function Wait-LabVMInit {
 #>
 function Wait-LabVMStart {
     [CmdLetBinding()]
-    param (
+    param
+    (
         [Parameter(
             Mandatory,
             Position=0)]
@@ -4188,7 +4229,8 @@ function Wait-LabVMStart {
 #>
 function Wait-LabVMOff {
     [CmdLetBinding()]
-    param (
+    param
+    (
         [Parameter(
             Mandatory,
             Position=0)]
@@ -4222,7 +4264,8 @@ function Wait-LabVMOff {
 #>
 Function Install-Lab {
     [CmdLetBinding()]
-    param (
+    param
+    (
         [parameter(
             Mandatory,
             Position=0)]
@@ -4234,11 +4277,13 @@ Function Install-Lab {
     [XML] $Config = Get-LabConfiguration -Path $Path
     
     # Make sure everything is OK to install the lab
-    if (-not (Test-LabConfiguration -Configuration $Config)) {
+    if (-not (Test-LabConfiguration -Configuration $Config))
+    {
         return
     }
        
-    If ($CheckEnvironment) {
+    if ($CheckEnvironment)
+    {
         Install-LabHyperV
     }
 
@@ -4274,7 +4319,8 @@ Function Install-Lab {
 #>
 Function Uninstall-Lab {
     [CmdLetBinding()]
-    param (
+    param
+    (
         [parameter(
             Mandatory,
             Position=0)]
@@ -4290,7 +4336,8 @@ Function Uninstall-Lab {
     [XML] $Config = Get-LabConfiguration -Path $Path
 
     # Make sure everything is OK to install the lab
-    if (-not (Test-LabConfiguration -Configuration $Config)) {
+    if (-not (Test-LabConfiguration -Configuration $Config))
+    {
         return
     }
 
@@ -4299,18 +4346,23 @@ Function Uninstall-Lab {
     $Switches = Get-LabSwitches -Configuration $Config
 
     $VMs = Get-LabVMs -Configuration $Config -VMTemplates $VMTemplates -Switches $Switches
-    If ($RemoveVHDs) {
-        Remove-LabVMs -Configuration $Config -VMs $VMs -RemoveVHDs | Out-Null
-    } Else {
-        Remove-LabVMs -Configuration $Config -VMs $VMs | Out-Null
+    if ($RemoveVHDs)
+    {
+        $null = Remove-LabVMs -Configuration $Config -VMs $VMs -RemoveVHDs
+    }
+    else
+    {
+        $null = Remove-LabVMs -Configuration $Config -VMs $VMs
     } # If
 
-    If ($RemoveTemplates) {
-        Remove-LabVMTemplates -Configuration $Config -VMTemplates $VMTemplates | Out-Null
+    if ($RemoveTemplates)
+    {
+        $null = Remove-LabVMTemplates -Configuration $Config -VMTemplates $VMTemplates
     } # If
 
-    If ($RemoveSwitches) {
-        Remove-LabSwitches -Configuration $Config -Switches $Switches | Out-Null
+    if ($RemoveSwitches)
+    {
+        $null = Remove-LabSwitches -Configuration $Config -Switches $Switches
     } # If
 } # Uninstall-Lab
 ####################################################################################################
@@ -4341,11 +4393,23 @@ Configuration ConfigLCM {
 ####################################################################################################
 # Export the Module Cmdlets
 Export-ModuleMember -Function `
-    Get-LabConfiguration,Test-LabConfiguration, `
-    Install-LabHyperV,Initialize-LabConfiguration, `
-    Get-LabSwitches,Initialize-LabSwitches,Remove-LabSwitches, `
-    Get-LabVMTemplates,Initialize-LabVMTemplates,Remove-LabVMTemplates, `
-    Get-LabVMs,Initialize-LabVMs,Remove-LabVMs, `
-    Start-LabVM, Wait-LabVMStart, Wait-LabVMOff, Wait-LabVMInit, `
-    Install-Lab,Uninstall-Lab
+    Get-LabConfiguration, `
+    Test-LabConfiguration, `
+    Install-LabHyperV, `
+    Initialize-LabConfiguration, `
+    Get-LabSwitches, `
+    Initialize-LabSwitches, `
+    Remove-LabSwitches, `
+    Get-LabVMTemplates, `
+    Initialize-LabVMTemplates, `
+    Remove-LabVMTemplates, `
+    Get-LabVMs, `
+    Initialize-LabVMs, `
+    Remove-LabVMs, `
+    Start-LabVM, `
+    Wait-LabVMStart, `
+    Wait-LabVMOff, `
+    Wait-LabVMInit, `
+    Install-Lab, `
+    Uninstall-Lab
 ####################################################################################################
