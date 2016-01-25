@@ -586,6 +586,7 @@
         template="Template Windows Server 2012 R2 Datacenter CORE"
         computername="SA-FOHV1"
         memorystartupbytes="4GB"
+        dynamicmemoryenabled="N"
         enablevirtualizationextensions="Y"
         usedifferencingbootdisk="Y" >
       <dsc configname="MEMBER_FAILOVERCLUSTER_HV"
@@ -631,6 +632,7 @@
         template="Template Windows Server 2012 R2 Datacenter CORE"
         computername="SA-FOHV2"
         memorystartupbytes="4GB"
+        dynamicmemoryenabled="N"
         enablevirtualizationextensions="Y"
         usedifferencingbootdisk="Y" >
       <dsc configname="MEMBER_FAILOVERCLUSTER_HV"

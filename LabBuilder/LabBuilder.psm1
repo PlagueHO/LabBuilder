@@ -1392,7 +1392,7 @@ function Get-LabVMTemplates {
                 } # If
                 If ($Templates.ExposeVirtualizationExtensions)
                 {
-                    $VMTemplate.ExposeVirtualizationExtensions = ($Templates.DynamicMemoryEnabled -eq 'Y')                
+                    $VMTemplate.ExposeVirtualizationExtensions = ($Templates.ExposeVirtualizationExtensions -eq 'Y')                
                 } # If
                 If ($DataVHDSize)
                 {
@@ -3204,7 +3204,7 @@ function Get-LabVMs {
         } # If
 
         # Get the Expose Virtualization Extensions flag
-        [Boolean] $ExposeVirtualizationExtensions = $false
+        [Boolean] $ExposeVirtualizationExtensions = $null
         If ($VMTemplate.ExposeVirtualizationExtensions)
         {
             $ExposeVirtualizationExtensions = $VMTemplate.ExposeVirtualizationExtensions
@@ -3834,8 +3834,10 @@ function Initialize-LabVMs {
         [Int32] $ManagementVlan = $Script:DefaultManagementVLan
     }
 
-    Foreach ($VM in $VMs) {
-        If (($CurrentVMs | Where-Object -Property Name -eq $VM.Name).Count -eq 0) {
+    foreach ($VM in $VMs)
+    {
+        If (($CurrentVMs | Where-Object -Property Name -eq $VM.Name).Count -eq 0)
+        {
             Write-Verbose "Creating VM $($VM.Name) ..."
 
             # Make sure the appropriate folders exist
@@ -3843,11 +3845,15 @@ function Initialize-LabVMs {
 
             # Create the boot disk
             $VMBootDiskPath = "$VMPath\$($VM.Name)\Virtual Hard Disks\$($VM.Name) Boot Disk.vhdx"
-            If (-not (Test-Path -Path $VMBootDiskPath)) {
-                If ($VM.UseDifferencingDisk -eq 'Y') {
+            if (-not (Test-Path -Path $VMBootDiskPath))
+            {
+                if ($VM.UseDifferencingDisk -eq 'Y')
+                {
                     Write-Verbose "VM $($VM.Name) differencing boot disk $VMBootDiskPath being created ..."
                     $Null = New-VHD -Differencing -Path $VMBootDiskPath -ParentPath $VM.TemplateVHD
-                } Else {
+                }
+                else
+                {
                     Write-Verbose "VM $($VM.Name) boot disk $VMBootDiskPath being created ..."
                     $Null = Copy-Item -Path $VM.TemplateVHD -Destination $VMBootDiskPath
                 }
@@ -3863,7 +3869,9 @@ function Initialize-LabVMs {
                     -VM $VM `
                     -VMBootDiskPath $VMBootDiskPath
 
-            } Else {
+            }
+            else
+            {
                 Write-Verbose "VM $($VM.Name) boot disk $VMBootDiskPath already exists..."
             } # If
 
@@ -3877,39 +3885,60 @@ function Initialize-LabVMs {
         }
 
         # Set the processor count if different to default and if specified in config file
-        If ($VM.ProcessorCount) {
-            If ($VM.ProcessorCount -ne (Get-VM -Name $VM.Name).ProcessorCount) {
+        if ($VM.ProcessorCount)
+        {
+            if ($VM.ProcessorCount -ne (Get-VM -Name $VM.Name).ProcessorCount)
+            {
                 Set-VM -Name $VM.Name -ProcessorCount $VM.ProcessorCount
             } # If
         } # If
+        
+        # If the ExposeVirtualizationExtensions is configured then try and set this on 
+        # Virtual Processor. Only supported in certain builds on Windows 10/Server 2016 TP4.
+        if ($VM.ExposeVirtualizationExtensions)
+        {
+            if ($VM.ExposeVirtualizationExtensions -ne (Get-VMProcessor -VMName $VM.Name).ExposeVirtualizationExtensions)
+            {
+                Set-VMProcessor -VmName $VM.Name -ExposeVirtualizationExtensions:$VM.ExposeVirtualizationExtensions                
+            }   
+        }
 
         # Do we need to add a data disk?
-        If ($VM.DataVHDSize -and ($VM.DataVHDSize -gt 0)) {
+        if ($VM.DataVHDSize -and ($VM.DataVHDSize -gt 0))
+        {
             [String] $VMDataDiskPath = "$VMPath\$($VM.Name)\Virtual Hard Disks\$($VM.Name) Data Disk.vhdx"
             # Does the disk already exist?
-            If (Test-Path -Path $VMDataDiskPath) {
+            if (Test-Path -Path $VMDataDiskPath)
+            {
                 Write-Verbose "VM $($VM.Name) data disk $VMDataDiskPath already exists ..."
                 # Does the disk need to shrink or grow?
-                If ((Get-VHD -Path $VMDataDiskPath).Size -lt $VM.DataVHDSize) {
+                if ((Get-VHD -Path $VMDataDiskPath).Size -lt $VM.DataVHDSize)
+                {
                     Write-Verbose "VM $($VM.Name) Data Disk $VMDataDiskPath expanding to $($VM.DataVHDSize) ..."
                     $null = Resize-VHD -Path $VMDataDiskPath -SizeBytes $VM.DataVHDSize
-                } Elseif ((Get-VHD -Path $VMDataDiskPath).Size -gt $VM.DataVHDSize) {
+                }
+                elseif ((Get-VHD -Path $VMDataDiskPath).Size -gt $VM.DataVHDSize)
+                {
                     Throw "VM $($VM.Name) Data Disk $VMDataDiskPath cannot be shrunk to $($VM.DataVHDSize) ..."
                 }
-            } Else {
+            }
+            else
+            {
                 # Create a new VHD
                 Write-Verbose "VM $($VM.Name) data disk $VMDataDiskPath is being created ..."
                 $null = New-VHD -Path $VMDataDiskPath -SizeBytes $VM.DataVHDSize -Dynamic
             } # If
             # Does the disk already exist in the VM
-            If ((Get-VMHardDiskDrive -VMName $VM.Name | Where-Object -Property Path -EQ $VMDataDiskPath).Count -EQ 0) {
+            if ((Get-VMHardDiskDrive -VMName $VM.Name | Where-Object -Property Path -EQ $VMDataDiskPath).Count -EQ 0)
+            {
                 Write-Verbose "VM $($VM.Name) data disk $VMDataDiskPath is being added to VM ..."
                 $Null = Add-VMHardDiskDrive -VMName $VM.Name -Path $VMDataDiskPath -ControllerType SCSI -ControllerLocation 1 -ControllerNumber 0
             } # If
         } # If
             
         # Create/Update the Management Network Adapter
-        if ((Get-VMNetworkAdapter -VMName $VM.Name | Where-Object -Property Name -EQ $ManagementSwitchName).Count -eq 0) {
+        if ((Get-VMNetworkAdapter -VMName $VM.Name | Where-Object -Property Name -EQ $ManagementSwitchName).Count -eq 0)
+        {
             Write-Verbose "VM $($VM.Name) management network adapter $ManagementSwitchName is being added ..."
             Add-VMNetworkAdapter -VMName $VM.Name -SwitchName $ManagementSwitchName -Name $ManagementSwitchName
         }
@@ -3918,30 +3947,40 @@ function Initialize-LabVMs {
         Write-Verbose "VM $($VM.Name) management network adapter $ManagementSwitchName VLAN has been set to $ManagementVlan ..."
 
         # Create any network adapters
-        Foreach ($VMAdapter in $VM.Adapters) {
-            If ((Get-VMNetworkAdapter -VMName $VM.Name | Where-Object -Property Name -EQ $VMAdapter.Name).Count -eq 0) {
+        foreach ($VMAdapter in $VM.Adapters)
+        {
+            if ((Get-VMNetworkAdapter -VMName $VM.Name | Where-Object -Property Name -EQ $VMAdapter.Name).Count -eq 0)
+            {
                 Write-Verbose "VM $($VM.Name) network adapter $($VMAdapter.Name) is being added ..."
                 Add-VMNetworkAdapter -VMName $VM.Name -SwitchName $VMAdapter.SwitchName -Name $VMAdapter.Name
             } # If
             $VMNetworkAdapter = Get-VMNetworkAdapter -VMName $VM.Name -Name $VMAdapter.Name
             $Vlan = $VMAdapter.VLan
-            If ($VLan) {
+            if ($VLan)
+            {
                 $null = $VMNetworkAdapter | Set-VMNetworkAdapterVlan -Access -VlanId $Vlan
                 Write-Verbose "VM $($VM.Name) network adapter $($VMAdapter.Name) VLAN has been set to $Vlan ..."
-            } Else {
+            }
+            else
+            {
                 $null = $VMNetworkAdapter | Set-VMNetworkAdapterVlan -Untagged
                 Write-Verbose "VM $($VM.Name) network adapter $($VMAdapter.Name) VLAN has been cleared ..."
             } # If
-            If ($VMAdapter.MACAddress) {
+            if ($VMAdapter.MACAddress)
+            {
                 $null = $VMNetworkAdapter | Set-VMNetworkAdapter -StaticMacAddress $VMAdapter.MACAddress
-            } Else {
+            }
+            else
+            {
                 $null = $VMNetworkAdapter | Set-VMNetworkAdapter -DynamicMacAddress
             } # If
             # Enable Device Naming
-            if ((Get-Command -Name Set-VMNetworkAdapter).Parameters.ContainsKey('DeviceNaming')) {
+            if ((Get-Command -Name Set-VMNetworkAdapter).Parameters.ContainsKey('DeviceNaming'))
+            {
                 $null = $VMNetworkAdapter | Set-VMNetworkAdapter -DeviceNaming On
             }
-            if ($VMAdapter.MACAddressSpoofing -ne $VMNetworkAdapter.MACAddressSpoofing) {
+            if ($VMAdapter.MACAddressSpoofing -ne $VMNetworkAdapter.MACAddressSpoofing)
+            {
                 $null = $VMNetworkAdapter | Set-VMNetworkAdapter -MacAddressSpoofing $VMAdapter.MACAddressSpoofing
             }                
         } # Foreach
