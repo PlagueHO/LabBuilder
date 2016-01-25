@@ -3913,9 +3913,9 @@ function Initialize-LabVMs {
         # Enable/Disable Dynamic Memory
         if ($VM.DynamicMemoryEnabled)
         {
-            if ($VM.DynamicMemoryEnabled -ne (Get-VMMemory -Name $VM.Name).DynamicMemoryEnabled)
+            if ($VM.DynamicMemoryEnabled -ne (Get-VMMemory -VmName $VM.Name).DynamicMemoryEnabled)
             {
-                Set-VMMemory -Name $VM.Name -DynamicMemoryEnabled:$VM.DynamicMemoryEnabled
+                Set-VMMemory -VmName $VM.Name -DynamicMemoryEnabled:$VM.DynamicMemoryEnabled
             } # If
         } # If
 
