@@ -587,7 +587,7 @@
         computername="SA-FOHV1"
         memorystartupbytes="4GB"
         dynamicmemoryenabled="N"
-        enablevirtualizationextensions="Y"
+        exposevirtualizationextensions="Y"
         usedifferencingbootdisk="Y" >
       <dsc configname="MEMBER_FAILOVERCLUSTER_HV"
            configfile="MEMBER_FAILOVERCLUSTER_HV.DSC.ps1"
@@ -633,7 +633,7 @@
         computername="SA-FOHV2"
         memorystartupbytes="4GB"
         dynamicmemoryenabled="N"
-        enablevirtualizationextensions="Y"
+        exposevirtualizationextensions="Y"
         usedifferencingbootdisk="Y" >
       <dsc configname="MEMBER_FAILOVERCLUSTER_HV"
            configfile="MEMBER_FAILOVERCLUSTER_HV.DSC.ps1"
