@@ -3910,6 +3910,15 @@ function Initialize-LabVMs {
             } # If
         } # If
         
+        # Enable/Disable Dynamic Memory
+        if ($VM.DynamicMemoryEnabled)
+        {
+            if ($VM.DynamicMemoryEnabled -ne (Get-VMMemory -Name $VM.Name).DynamicMemoryEnabled)
+            {
+                Set-VMMemory -Name $VM.Name -DynamicMemoryEnabled:$VM.DynamicMemoryEnabled
+            } # If
+        } # If
+
         # If the ExposeVirtualizationExtensions is configured then try and set this on 
         # Virtual Processor. Only supported in certain builds on Windows 10/Server 2016 TP4.
         if ($VM.ExposeVirtualizationExtensions)
