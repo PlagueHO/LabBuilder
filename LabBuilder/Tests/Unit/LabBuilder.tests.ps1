@@ -1038,7 +1038,7 @@ Describe 'Get-LabVMTemplates' {
     Mock Get-VMHardDiskDrive -ParameterFilter { $VMName -eq 'Pester Windows 10 Enterprise' } `
         -MockWith { @{ path = 'Pester Windows 10 Enterprise.vhdx' } }
 
-    Context 'Valid configuration is passed but templates are found' {
+    Context 'Valid configuration is passed and templates are found' {
         It 'Returns Template Object that matches Expected Object' {
             [Array]$Templates = Get-LabVMTemplates -Configuration $Config 
             Set-Content -Path "$($Global:ArtifactPath)\ExpectedTemplates.FromVM.json" -Value ($Templates | ConvertTo-Json -Depth 2) -Encoding UTF8 -NoNewLine
