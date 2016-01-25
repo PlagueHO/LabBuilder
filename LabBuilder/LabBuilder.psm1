@@ -1281,7 +1281,6 @@ function Get-LabVMTemplates {
         foreach ($Template in $Templates)
         {
             [String] $VHDFilepath = (Get-VMHardDiskDrive -VMName $Template.Name).Path
-            [Boolean]
             [String] $VHDFilename = [System.IO.Path]::GetFileName($VHDFilepath)
             $VMTemplates += @{
                 name = $Template.Name
@@ -1385,7 +1384,7 @@ function Get-LabVMTemplates {
                 } # If
                 if ($Template.DynamicMemoryEnabled)
                 {
-                    $VMTemplate.DynamicMemoryEnabled = ! ($Template.DynamicMemoryEnabled -eq 'N')
+                    $VMTemplate.DynamicMemoryEnabled = ($Template.DynamicMemoryEnabled -ne 'N')
                 }
                 if ($Templates.ProcessorCount)
                 {
@@ -1451,14 +1450,35 @@ function Get-LabVMTemplates {
                 edition = $Template.Edition;
                 allowcreate = $Template.AllowCreate;
                 memorystartupbytes = $MemoryStartupBytes;
-                dynamicmemoryenabled = ! ($Template.DynamicMemoryEnabled -eq 'N');
+                dynamicmemoryenabled = if ($Template.DynamicMemoryEnabled)
+                    {
+                        ($Template.DynamicMemoryEnabled -ne 'N')
+                    }
+                    else
+                    {
+                        $null
+                    };
                 processorcount = $Template.ProcessorCount;
-                exposevirtualizationextensions = ($Template.ExposeVirtualizationExtensions -eq 'Y');
+                exposevirtualizationextensions = if ($Template.ExposeVirtualizationExtensions)
+                    {
+                        ($Template.ExposeVirtualizationExtensions -eq 'Y')
+                    }
+                    else
+                    {
+                        $null
+                    };
                 datavhdsize = $Template.DataVHDSize;
                 administratorpassword = $Template.AdministratorPassword;
                 productkey = $Template.ProductKey;
                 timezone = $Template.TimeZone;
-                ostype = if ($Template.OSType) { $Template.OSType } Else { 'Server' };
+                ostype = if ($Template.OSType)
+                    {
+                        $Template.OSType
+                    }
+                    else
+                    {
+                        'Server'
+                    };
             }
         } # If
     } # Foreach
@@ -3192,7 +3212,7 @@ function Get-LabVMs {
         }
         if ($VM.DynamicMemoryEnabled)
         {
-            $DynamicMemoryEnabled = ! ($VM.DynamicMemoryEnabled -eq 'N')
+            $DynamicMemoryEnabled = ($VM.DynamicMemoryEnabled -ne 'N')
         } # If        
         
         # Get the Memory Startup Bytes (from the template or VM)
@@ -4326,8 +4346,7 @@ Function Install-Lab {
         -Switches $Switches
     Initialize-LabVMs `
         -Configuration $Config `
-        -VMs $VMs `
-        @PSBoundParameters
+        -VMs $VMs 
 } # Build-Lab
 ####################################################################################################
 
