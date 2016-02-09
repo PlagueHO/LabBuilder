@@ -64,6 +64,7 @@ MountingVMBootDiskMessage=Mounting VM '{0}' Boot Disk VHDx '{1}'.
 DownloadingVMBootDiskFileMessage=Downloading VM '{0}' {1} file '{2}'.
 ApplyingVMBootDiskFileMessage=Applying VM '{0}' {1} file '{2}'.
 DismountingVMBootDiskMessage=Dismounting VM '{0}' Boot Disk VHDx '{1}'.
+AddingIPAddressToTrustedHostsMessage=Adding IP Address '{1}' to WS-Man Trusted Hosts to allow remoting to '{0}'.
 '@
 }
 
@@ -4243,21 +4244,38 @@ function Connect-LabVM {
     while (($Session -eq $null) -and (((Get-Date) - $StartTime).Seconds) -lt $ConnectTimeout)
     {
         try
-        {
-            Write-Verbose -Message $($LocalizedData.ConnectingMessage `
-                -f $VM.ComputerName)
-                
+        {                
             # Get the Management IP Address of the VM
             # We repeat this because the IP Address will only be assiged 
             # once the VM is fully booted.
             $IPAddress = Get-LabVMManagementIPAddress `
                 -Configuration $Configuration `
                 -VM $VM
+            
+            if ($IPAddress)
+            {
+                # Add the IP Address to trusted hosts if not already in it
+                # This could be avoided if able to use SSL or if PS Direct is used.
+                $TrustedHosts = Get-Item -Path WSMAN::localhost\Client\TrustedHosts
+                if (($TrustedHosts -like "*$IPAddress*"))
+                {
+                    Set-Item `
+                        -Path WSMAN::localhost\Client\TrustedHosts `
+                        -Value "$TrustedHosts,$IPAddress" `
+                        -Force
+                    Write-Verbose -Message $($LocalizedData.AddingIPAddressToTrustedHostsMessage `
+                        -f $VM.ComputerName,$IPAddress)
+                }
+         
+                Write-Verbose -Message $($LocalizedData.ConnectingMessage `
+                    -f $VM.ComputerName)
 
-            $Session = New-PSSession `
-                -ComputerName $IPAddress `
-                -Credential $AdmininistratorCredential `
-                -ErrorAction Stop
+                # TODO: Convert to PS Direct once supported for this cmdlet.
+                $Session = New-PSSession `
+                    -ComputerName $IPAddress `
+                    -Credential $AdmininistratorCredential `
+                    -ErrorAction Stop
+            }
         }
         catch
         {
