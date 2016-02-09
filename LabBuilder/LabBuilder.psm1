@@ -234,7 +234,7 @@ function Get-ModulesInDSCConfig()
     )
     [String[]] $Modules = $Null
     [String] $Content = Get-Content -Path $DSCConfigFile
-    $Regex = "Import\-DscResource\s(?:\-ModuleName\s)?'?`"?([A-Za-z0-9]+)`"?'?"
+    $Regex = "Import\-DscResource\s(?:\-ModuleName\s)?'?`"?([A-Za-z0-9._-]+)`"?'?"
     $Matches = [regex]::matches($Content, $Regex, 'IgnoreCase')
     foreach ($Match in $Matches)
     {

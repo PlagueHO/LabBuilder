@@ -11,8 +11,6 @@
             configpath=".\..\DSCLibrary\" />
 
   <resources>
-    <module name="xADCSDeployment" url="https://github.com/PlagueHO/xAdcsDeployment/archive/dev.zip" folder="xAdcsDeployment-dev" />
-    <module name="cMicrosoftUpdate" url="https://github.com/fabiendibot/cMicrosoftUpdate/archive/master.zip" folder="cMicrosoftUpdate-master" />   
   </resources>
   
   <switches managementvlan="98">
