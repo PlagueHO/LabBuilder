@@ -65,6 +65,7 @@ DownloadingVMBootDiskFileMessage=Downloading VM '{0}' {1} file '{2}'.
 ApplyingVMBootDiskFileMessage=Applying VM '{0}' {1} file '{2}'.
 DismountingVMBootDiskMessage=Dismounting VM '{0}' Boot Disk VHDx '{1}'.
 AddingIPAddressToTrustedHostsMessage=Adding IP Address '{1}' to WS-Man Trusted Hosts to allow remoting to '{0}'.
+WaitingForIPAddressAssignedMessage=Waiting for valid IP Address to be assigned to '{0}'.
 '@
 }
 
@@ -4275,6 +4276,11 @@ function Connect-LabVM {
                     -ComputerName $IPAddress `
                     -Credential $AdmininistratorCredential `
                     -ErrorAction Stop
+            }
+            else
+            {
+                Write-Verbose -Message $($LocalizedData.WaitingForIPAddressAssignedMessage `
+                    -f $VM.ComputerName)                
             }
         }
         catch
