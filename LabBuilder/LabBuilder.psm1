@@ -2208,7 +2208,7 @@ function Start-LabVMDSC {
     [DateTime] $StartTime = Get-Date
     [System.Management.Automation.Runspaces.PSSession] $Session = $null
     [PSCredential] $AdmininistratorCredential = New-Credential `
-        -Username 'Administrator' `
+        -Username "$($VM.ComputerName)\Administrator" `
         -Password $VM.AdministratorPassword
     [Boolean] $Complete = $False
     [Boolean] $ConfigCopyComplete = $False
@@ -3352,7 +3352,7 @@ function Get-LabVMSelfSignedCert {
     [DateTime] $StartTime = Get-Date
     [System.Management.Automation.Runspaces.PSSession] $Session = $null
     [PSCredential] $AdmininistratorCredential = New-Credential `
-        -Username 'Administrator' `
+        -Username "$($VM.ComputerName)\Administrator" `
         -Password $VM.AdministratorPassword
     [Boolean] $Complete = $False
 
@@ -3446,7 +3446,7 @@ function Get-LabVMCertificate {
     [String] $VMPath = $Configuration.labbuilderconfig.SelectNodes('settings').vmpath
     [System.Management.Automation.Runspaces.PSSession] $Session = $null
     [PSCredential] $AdmininistratorCredential = New-Credential `
-        -Username 'Administrator' `
+        -Username "$($VM.ComputerName)\Administrator" `
         -Password $VM.AdministratorPassword
 
     # Load path variables
@@ -4160,7 +4160,7 @@ function Wait-LabVMInit {
     [Boolean] $Found = $False
     [System.Management.Automation.Runspaces.PSSession] $Session = $null
     [PSCredential] $AdmininistratorCredential = New-Credential `
-        -Username 'Administrator' `
+        -Username "$($VM.ComputerName)\Administrator" `
         -Password $VM.AdministratorPassword
 
     # Make sure the VM has started
@@ -4202,7 +4202,9 @@ function Wait-LabVMInit {
             {
                 try
                 {
-                    $Complete = Invoke-Command -Session $Session {Test-Path "$($ENV:SystemRoot)\Setup\Scripts\InitialSetupCompleted.txt" } -ErrorAction Stop
+                    $Complete = Invoke-Command -Session $Session {
+                        Test-Path "$($ENV:SystemRoot)\Setup\Scripts\InitialSetupCompleted.txt"
+                    } -ErrorAction Stop
                 }
                 catch
                 {
