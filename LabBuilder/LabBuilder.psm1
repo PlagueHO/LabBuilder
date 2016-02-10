@@ -766,7 +766,7 @@ function Download-LabModule {
             }
         } # If
     } # If
-}
+} # Download-LabModule
 ####################################################################################################
 
 ####################################################################################################
@@ -794,9 +794,15 @@ function Download-LabResources {
         [ValidateNotNullOrEmpty()]
         [XML] $Configuration
     )
-    
+        
     # Downloading Lab Resources
     Write-Verbose -Message $($LocalizedData.DownloadingLabResourcesMessage)
+
+    # Bootstrap Nuget
+    $null = Get-PackageProvider -Name NuGet -ForceBootstrap -Force
+    
+    # Make sure PSGallery is trusted
+    Set-PSRepository -Name PSGallery -InstallationPolicy Trusted    
     
     # Download any other resources required by this lab
     if ($Configuration.labbuilderconfig.resources) 
