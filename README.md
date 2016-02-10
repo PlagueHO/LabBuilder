@@ -1,6 +1,8 @@
 LabBuilder
 ==========
 
+[![Join the chat at https://gitter.im/PlagueHO/LabBuilder](https://badges.gitter.im/PlagueHO/LabBuilder.svg)](https://gitter.im/PlagueHO/LabBuilder?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+
 Summary
 -------
 This module will build a multiple machine Hyper-V Lab environment from an XML configuration file and other installation scripts.
