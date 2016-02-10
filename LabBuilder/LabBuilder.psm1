@@ -32,6 +32,9 @@ NetworkAdapterNotFoundError=VM Network Adapter '{0}' could not be found attached
 NetworkAdapterBlankMacError=VM Network Adapter '{0}' attached to VM '{1}' has a blank MAC Address.
 ManagmentIPAddressError=An IPv4 address for the network adapter connected to the {0} for VM '{1}' could not be identified.
 DSCInitializationError=An error occurred initializing DSC for VM '{0}'.
+RemotingConnectionError=An error occurred connecting to VM '{0}' using PowerShell Remoting.
+CertificateDownloadError=An error occurred downloading the certificate for VM '{0}'.
+InitialSetupCompleteError=The Initial Setup for VM '{0}' did not complete before the timeout occurred.
 InstallingHyperVComponentsMesage=Installing {0} Hyper-V Components.
 InitializingHyperVComponentsMesage=Initializing Hyper-V Components.
 DownloadingLabResourcesMessage=Downloading Lab Resources.
@@ -57,6 +60,7 @@ DSCConfigCreatingMOFMessage=Creating DSC Config file '{0}' in VM '{1}'.
 DSCConfigMOFCreatedMessage=DSC MOF File '{0}' for VM '{1}'. was created successfully.
 ConnectingMessage=Connecting to '{0}'.
 ConnectingFailedMessage=Connection to '{0}' failed ({2}), retrying in {1} seconds.
+ConnectingAccessDeniedMessage=Access Denied connecting to '{0}', the connection will not be retried.
 CopyingFilesToComputerMessage=Copying {1} Files to '{0}'.
 CopyingFilesToComputerFailedMessage=Copying {1} Files to '{0}' failed, retrying in {2} seconds.
 StartingDSCMessage=Starting DSC on VM '{0}'.
@@ -65,7 +69,9 @@ DownloadingVMBootDiskFileMessage=Downloading VM '{0}' {1} file '{2}'.
 ApplyingVMBootDiskFileMessage=Applying VM '{0}' {1} file '{2}'.
 DismountingVMBootDiskMessage=Dismounting VM '{0}' Boot Disk VHDx '{1}'.
 AddingIPAddressToTrustedHostsMessage=Adding IP Address '{1}' to WS-Man Trusted Hosts to allow remoting to '{0}'.
-WaitingForIPAddressAssignedMessage=Waiting for valid IP Address to be assigned to '{0}', retrying in {1} seconds.
+WaitingForIPAddressAssignedMessage=Waiting for valid IP Address to be assigned to VM '{0}', retrying in {1} seconds.
+WaitingForInitialSetupCompleteMessage=Waiting for Initial Setup to be complete on VM '{0}', retrying in {1} seconds.
+InitialSetupIsAlreadyCompleteMessaage=Initial Setup on VM '{0}' has already been completed.
 '@
 }
 
@@ -1675,7 +1681,8 @@ function Set-LabVMDSCMOFFile {
         -VM $VM
 
     # Make sure the appropriate folders exist
-    Initialize-LabVMPath -VMPath $VMRootPath
+    Initialize-LabVMPath `
+        -VMPath $VMRootPath
     
     # Get Path to LabBuilder files
     [String] $VMLabBuilderFiles = Get-LabVMFilesPath `
@@ -1775,7 +1782,7 @@ function Set-LabVMDSCMOFFile {
             -Recurse -Force
     } # Foreach
 
-    if (-not (Get-LabVMCertificate -Configuration $Configuration -VM $VM))
+    if (-not (New-LabVMSelfSignedCert -Configuration $Configuration -VM $VM))
     {
         $errorId = 'CertificateCreateError'
         $errorCategory = [System.Management.Automation.ErrorCategory]::InvalidArgument
@@ -2184,6 +2191,7 @@ function Initialize-LabVMDSC {
 .PARAMETER Timeout
    The maximum amount of time that this function can take to perform DSC start-up.
    If the timeout is reached before the process is complete an error will be thrown.
+   The timeout defaults to 300 seconds.   
 .EXAMPLE
    $Config = Get-LabConfiguration -Path c:\mylab\config.xml
    $VMs = Get-LabVM -Configuration $Config
@@ -2218,18 +2226,41 @@ function Start-LabVMDSC {
         -Configuration $Configuration `
         -VM $VM
 
-    While ((-not $Complete) -and (((Get-Date) - $StartTime).TotalSeconds) -lt $TimeOut)
+    While ((-not $Complete) `
+        -and (((Get-Date) - $StartTime).TotalSeconds) -lt $TimeOut)
     {
         # Connect to the VM
-        While ((($Session -eq $null) -or ($Session.State -ne 'Opened')) -and ((((Get-Date) - $StartTime).TotalSeconds) -lt $TimeOut))
-        {
-            $Session = Connect-LabVM -VM $VM
-        } # While
+        $Session = Connect-LabVM -VM $VM -ErrorAction Continue
         
-        if (($Session) -and ($Session.State -eq 'Opened') -and (-not $ConfigCopyComplete))
+        # Failed to connnect to the VM
+        if (! $Session)
         {
-            # We are connected OK - upload the DSC files
-            While ((-not $ConfigCopyComplete) -and (((Get-Date) - $StartTime).TotalSeconds) -lt $TimeOut)
+            $errorId = 'DSCInitializationError'
+            $errorCategory = [System.Management.Automation.ErrorCategory]::OperationTimeout
+            $errorMessage = $($LocalizedData.DSCInitializationError `
+                -f $VM.Name)
+            $exception = New-Object -TypeName System.Exception `
+                -ArgumentList $errorMessage
+            $errorRecord = New-Object -TypeName System.Management.Automation.ErrorRecord `
+                -ArgumentList $exception, $errorId, $errorCategory, $null
+    
+            $PSCmdlet.ThrowTerminatingError($errorRecord)            
+        }
+        
+        if (($Session) `
+            -and ($Session.State -eq 'Opened') `
+            -and (-not $ConfigCopyComplete))
+        {
+            $CopyParameters = @{
+                Destination = 'c:\Windows\Setup\Scripts'
+                ToSession = $Session
+                Force = $True
+                ErrorAction = 'Stop'
+            }
+
+            # Connection has been made OK, upload the DSC files
+            While ((-not $ConfigCopyComplete) `
+                -and (((Get-Date) - $StartTime).TotalSeconds) -lt $TimeOut)
             {
                 Try
                 {
@@ -2237,33 +2268,29 @@ function Start-LabVMDSC {
                         -f $VM.ComputerName,'DSC')
 
                     $null = Copy-Item `
+                        @CopyParameters `
                         -Path (Join-Path `
                             -Path $VMLabBuilderFiles `
-                            -ChildPath "$($VM.ComputerName).mof") `
-                        -Destination c:\Windows\Setup\Scripts `
-                        -ToSession $Session -Force -ErrorAction Stop
+                            -ChildPath "$($VM.ComputerName).mof")
                     if (Test-Path `
-                        -Path "$VMPath\$($VM.Name)\LabBuilder Files\$($VM.ComputerName).meta.mof")
+                        -Path "$VMLabBuilderFiles\$($VM.ComputerName).meta.mof")
                     {
                         $null = Copy-Item `
+                            @CopyParameters `
                             -Path (Join-Path `
                                 -Path $VMLabBuilderFiles `
-                                -ChildPath "$($VM.ComputerName).meta.mof") `
-                            -Destination c:\Windows\Setup\Scripts `
-                            -ToSession $Session -Force -ErrorAction Stop
+                                -ChildPath "$($VM.ComputerName).meta.mof")
                     } # If
                     $null = Copy-Item `
+                        @CopyParameters `
                         -Path (Join-Path `
                             -Path $VMLabBuilderFiles `
-                            -ChildPath 'StartDSC.ps1') `
-                        -Destination c:\Windows\Setup\Scripts `
-                        -ToSession $Session -Force -ErrorAction Stop
+                            -ChildPath 'StartDSC.ps1')
                     $null = Copy-Item `
+                        @CopyParameters `
                         -Path (Join-Path `
                             -Path $VMLabBuilderFiles `
-                            -ChildPath 'StartDSCDebug.ps1') `
-                        -Destination c:\Windows\Setup\Scripts `
-                        -ToSession $Session -Force -ErrorAction Stop
+                            -ChildPath 'StartDSCDebug.ps1')
                     $ConfigCopyComplete = $True
                 }
                 Catch
@@ -2277,7 +2304,8 @@ function Start-LabVMDSC {
         } # If
 
         # If the copy didn't complete and we're out of time throw an exception
-        if ((-not $ConfigCopyComplete) -and (((Get-Date) - $StartTime).TotalSeconds) -ge $TimeOut)
+        if ((-not $ConfigCopyComplete) `
+            -and (((Get-Date) - $StartTime).TotalSeconds) -ge $TimeOut)
         {
             if ($Session)
             {
@@ -2285,10 +2313,10 @@ function Start-LabVMDSC {
             }
 
             $errorId = 'DSCInitializationError'
-            $errorCategory = [System.Management.Automation.ErrorCategory]::InvalidArgument
+            $errorCategory = [System.Management.Automation.ErrorCategory]::OperationTimeout
             $errorMessage = $($LocalizedData.DSCInitializationError `
                 -f $VM.Name)
-            $exception = New-Object -TypeName System.InvalidOperationException `
+            $exception = New-Object -TypeName System.Exception `
                 -ArgumentList $errorMessage
             $errorRecord = New-Object -TypeName System.Management.Automation.ErrorRecord `
                 -ArgumentList $exception, $errorId, $errorCategory, $null
@@ -2296,13 +2324,15 @@ function Start-LabVMDSC {
             $PSCmdlet.ThrowTerminatingError($errorRecord)
         } # If
 
-        # Now Upload any required modules
-        if (($Session) -and ($Session.State -eq 'Opened') -and (-not $ModuleCopyComplete))
+        # Upload any required modules to the VM
+        if (($Session) `
+            -and ($Session.State -eq 'Opened') `
+            -and (-not $ModuleCopyComplete))
         {
             $DSCModules = Get-ModulesInDSCConfig -DSCConfigFile $($VM.DSCConfigFile)
             foreach ($ModuleName in $DSCModules)
             {
-                Try
+                try
                 {
                     Write-Verbose -Message $($LocalizedData.CopyingFilesToComputerMessage `
                         -f $VM.ComputerName,"DSC Module $ModuleName")
@@ -2312,9 +2342,12 @@ function Start-LabVMDSC {
                             -Path $VMLabBuilderFiles `
                             -ChildPath "DSC Modules\$ModuleName\") `
                         -Destination "$($env:ProgramFiles)\WindowsPowerShell\Modules\" `
-                        -ToSession $Session -Force -Recurse -ErrorAction Stop
+                        -ToSession $Session `
+                        -Force `
+                        -Recurse `
+                        -ErrorAction Stop
                 }
-                Catch
+                catch
                 {
                     Write-Verbose -Message $($LocalizedData.CopyingFilesToComputerFailedMessage `
                         -f $VM.ComputerName,"DSC Module $ModuleName",$Script:RetryConnectSeconds)
@@ -2325,19 +2358,20 @@ function Start-LabVMDSC {
             $ModuleCopyComplete = $True
         } # If
 
-        if ((-not $ModuleCopyComplete) -and (((Get-Date) - $StartTime).TotalSeconds) -ge $TimeOut)
+        # If the copy didn't complete and we're out of time throw an exception
+        if ((-not $ModuleCopyComplete) `
+            -and (((Get-Date) - $StartTime).TotalSeconds) -ge $TimeOut)
         {
-            # Timed out
             if ($Session)
             {
                 Remove-PSSession -Session $Session
             }
 
             $errorId = 'DSCInitializationError'
-            $errorCategory = [System.Management.Automation.ErrorCategory]::InvalidArgument
+            $errorCategory = [System.Management.Automation.ErrorCategory]::OperationTimeout
             $errorMessage = $($LocalizedData.DSCInitializationError `
                 -f $VM.Name)
-            $exception = New-Object -TypeName System.InvalidOperationException `
+            $exception = New-Object -TypeName System.Exception `
                 -ArgumentList $errorMessage
             $errorRecord = New-Object -TypeName System.Management.Automation.ErrorRecord `
                 -ArgumentList $exception, $errorId, $errorCategory, $null
@@ -2346,8 +2380,10 @@ function Start-LabVMDSC {
         }
 
         # Finally, Start DSC up!
-        if (($Session) -and ($Session.State -eq 'Opened') `
-            -and ($ConfigCopyComplete) -and ($ModuleCopyComplete))
+        if (($Session) `
+            -and ($Session.State -eq 'Opened') `
+            -and ($ConfigCopyComplete) `
+            -and ($ModuleCopyComplete))
         {
             Write-Verbose -Message $($LocalizedData.StartingDSCMessage `
                 -f $VM.ComputerName)
@@ -3310,24 +3346,36 @@ function Get-LabVMs {
 ####################################################################################################
 <#
 .SYNOPSIS
-   Short description
+   Download the existing self-signed certificate from a running VM.
 .DESCRIPTION
-   Long description
+   This function uses PS Remoting to connect to a running VM and download the an existing
+   Self-Signed certificate file that was written to the c:\windows folder of the guest operating
+   system by the SetupComplete.ps1 script on the. The certificate will be downloaded to the VM's
+   Labbuilder files folder.
+.PARAMETER Configuration
+   Contains the Lab Builder configuration object that was loaded by the Get-LabConfiguration
+   object.
+.PARAMETER VM
+   A Virtual Machine object pulled from the Lab Configuration file using Get-LabVM
+.PARAMETER Timeout
+   The maximum amount of time that this function can take to download the certificate.
+   If the timeout is reached before the process is complete an error will be thrown.
+   The timeout defaults to 300 seconds.
 .EXAMPLE
-   Example of how to use this cmdlet
-.EXAMPLE
-   Another example of how to use this cmdlet
-.INPUTS
-   Inputs to this cmdlet (if any)
+   $Config = Get-LabConfiguration -Path c:\mylab\config.xml
+   $VMs = Get-LabVM -Configuration $Config
+   Get-LabVMSelfSignedCert -Configuration $Config -VM $VMs[0]
+   Downloads the existing Self-signed certificate for the VM to the Labbuilder files folder of the
+   VM.
 .OUTPUTS
-   Output from this cmdlet (if any)
-.NOTES
-   General notes
+   The path to the certificate file that was downloaded.
 #>
-function Get-LabVMSelfSignedCert {
+function Get-LabVMSelfSignedCert
+{
     [CmdLetBinding()]
     [OutputType([Boolean])]
-    param (
+    param
+    (
         [Parameter(
             Mandatory,
             Position=0)]
@@ -3344,80 +3392,6 @@ function Get-LabVMSelfSignedCert {
     [DateTime] $StartTime = Get-Date
     [System.Management.Automation.Runspaces.PSSession] $Session = $null
     [Boolean] $Complete = $False
-
-    While ((-not $Complete)  -and (((Get-Date) - $StartTime).TotalSeconds) -lt $TimeOut) {
-        # Connect to the VM
-        While ((($Session -eq $null) -or ($Session.State -ne 'Opened')) -and ((((Get-Date) - $StartTime).TotalSeconds) -lt $TimeOut))
-        {
-            $Session = Connect-LabVM -VM $VM
-        } # While
-
-        if (($Session) -and ($Session.State -eq 'Opened') -and (-not $Complete)) {
-            # We connected OK - download the Certificate file
-            While ((-not $Complete) -and (((Get-Date) - $StartTime).TotalSeconds) -lt $TimeOut) {
-                Try {
-                    $null = Copy-Item `
-                        -Path "c:\windows\$Script:DSCEncryptionCert" `
-                        -Destination "$VMPath\$($VM.Name)\LabBuilder Files\" `
-                        -FromSession $Session `
-                        -ErrorAction Stop
-                    $Complete = $True
-                } Catch {
-                    Write-Verbose "Waiting for Certificate file on $($VM.ComputerName) ..."
-                    Start-Sleep -Seconds $Script:RetryConnectSeconds
-                } # Try
-            } # While
-        } # If
-
-        # Close the Session if it is opened and the download is complete
-        if (($Session) -and ($Session.State -eq 'Opened') -and ($Complete)) {
-            Remove-PSSession -Session $Session
-        } # If
-    } # While
-    Return $Complete
-
-} # Get-LabVMSelfSignedCert
-####################################################################################################
-
-####################################################################################################
-<#
-.SYNOPSIS
-   Download a credential encryption certificate from a running VM.
-.DESCRIPTION
-   This function uses remoting to download a credential encryption certificate
-   from a running VM for use in encrypting DSC credentials. It will be saved
-   as a .CER file in the LabBuilder files folder of the VM.
-.PARAMETER Configuration
-   Contains the Lab Builder configuration object that was loaded by the Get-LabConfiguration
-   object.
-.PARAMETER VM
-   A Virtual Machine object pulled from the Lab Configuration file using Get-LabVM
-.EXAMPLE
-   $Config = Get-LabConfiguration -Path c:\mylab\config.xml
-   $VMs = Get-LabVM -Configuration $Config
-   Get-LabVMCertificate -Configuration $Configuration -VM $VM[0]
-.OUTPUTS
-   The path to the certificate file that was downloaded.
-#>
-function Get-LabVMCertificate {
-    [CmdLetBinding()]
-    [OutputType([System.IO.FileInfo])]
-    param (
-        [Parameter(
-            Mandatory,
-            Position=0)]
-        [XML] $Configuration,
-
-        [Parameter(
-            Mandatory,
-            Position=1)]
-        [System.Collections.Hashtable] $VM,
-
-        [Int] $Timeout = 300
-    )
-    [DateTime] $StartTime = Get-Date
-    [String] $VMPath = $Configuration.labbuilderconfig.SelectNodes('settings').vmpath
-    [System.Management.Automation.Runspaces.PSSession] $Session = $null
 
     # Load path variables
     [String] $VMRootPath = Join-Path `
@@ -3429,33 +3403,197 @@ function Get-LabVMCertificate {
         -Path $VMRootPath `
         -ChildPath 'LabBuilder Files'
 
+
+    while ((-not $Complete) `
+        -and (((Get-Date) - $StartTime).TotalSeconds) -lt $TimeOut)
+    {
+        $Session = Connect-LabVM -VM $VM -ErrorAction Continue
+        
+        # Failed to connnect to the VM
+        if (! $Session)
+        {
+            $errorId = 'CertificateDownloadError'
+            $errorCategory = [System.Management.Automation.ErrorCategory]::OperationTimeout
+            $errorMessage = $($LocalizedData.CertificateDownloadError `
+                -f $VM.Name)
+            $exception = New-Object -TypeName System.Exception `
+                -ArgumentList $errorMessage
+            $errorRecord = New-Object -TypeName System.Management.Automation.ErrorRecord `
+                -ArgumentList $exception, $errorId, $errorCategory, $null
+    
+            $PSCmdlet.ThrowTerminatingError($errorRecord)
+        }
+
+        if (($Session) `
+            -and ($Session.State -eq 'Opened') `
+            -and (-not $Complete))
+        {
+            # We connected OK - download the Certificate file
+            while ((-not $Complete) `
+                -and (((Get-Date) - $StartTime).TotalSeconds) -lt $TimeOut)
+            {
+                try
+                {
+                    $null = Copy-Item `
+                        -Path "c:\windows\$Script:DSCEncryptionCert" `
+                        -Destination $VMLabBuilderFiles `
+                        -FromSession $Session `
+                        -ErrorAction Stop
+                    $Complete = $True
+                }
+                catch
+                {
+                    Write-Verbose "Waiting for Certificate file on $($VM.ComputerName) ..."
+                    Start-Sleep -Seconds $Script:RetryConnectSeconds
+                } # Try
+            } # While
+        } # If
+
+        # If the copy didn't complete and we're out of time throw an exception
+        if ((-not $Complete) `
+            -and (((Get-Date) - $StartTime).TotalSeconds) -ge $TimeOut)
+        {
+            if ($Session)
+            {
+                Remove-PSSession -Session $Session
+            }
+
+            $errorId = 'CertificateDownloadError'
+            $errorCategory = [System.Management.Automation.ErrorCategory]::OperationTimeout
+            $errorMessage = $($LocalizedData.CertificateDownloadError `
+                -f $VM.Name)
+            $exception = New-Object -TypeName System.Exception `
+                -ArgumentList $errorMessage
+            $errorRecord = New-Object -TypeName System.Management.Automation.ErrorRecord `
+                -ArgumentList $exception, $errorId, $errorCategory, $null
+    
+            $PSCmdlet.ThrowTerminatingError($errorRecord)
+        }
+
+        # Close the Session if it is opened and the download is complete
+        if (($Session) `
+            -and ($Session.State -eq 'Opened') `
+            -and ($Complete))
+        {
+            Remove-PSSession -Session $Session
+        } # If
+    } # While
+    return (Get-Item -Path "$VMLabBuilderFiles\$($Script:DSCEncryptionCert)")        
+} # Get-LabVMSelfSignedCert
+####################################################################################################
+
+####################################################################################################
+<#
+.SYNOPSIS
+   Generate and download a new credential encryption certificate from a running VM.
+.DESCRIPTION
+   This function uses PS Remoting to connect to a running VM and upload the GetDSCEncryptionCert.ps1
+   script and then run it. This wil create a new self-signed certificate that is written to the
+   c:\windows folder of the guest operating system. The certificate will be downloaded to the VM's
+   Labbuilder files folder.
+.PARAMETER Configuration
+   Contains the Lab Builder configuration object that was loaded by the Get-LabConfiguration
+   object.
+.PARAMETER VM
+   A Virtual Machine object pulled from the Lab Configuration file using Get-LabVM
+.PARAMETER Timeout
+   The maximum amount of time that this function can take to download the certificate.
+   If the timeout is reached before the process is complete an error will be thrown.
+   The timeout defaults to 300 seconds.
+.EXAMPLE
+   $Config = Get-LabConfiguration -Path c:\mylab\config.xml
+   $VMs = Get-LabVM -Configuration $Config
+   New-LabVMSelfSignedCert -Configuration $Config -VM $VMs[0]
+   Causes a new self-signed certificate on the VM and download it to the Labbuilder files folder
+   of th VM.
+.OUTPUTS
+   The path to the certificate file that was downloaded.
+#>
+function New-LabVMSelfSignedCert
+{
+    [CmdLetBinding()]
+    [OutputType([System.IO.FileInfo])]
+    param
+    (
+        [Parameter(
+            Mandatory,
+            Position=0)]
+        [XML] $Configuration,
+
+        [Parameter(
+            Mandatory,
+            Position=1)]
+        [System.Collections.Hashtable] $VM,
+
+        [Int] $Timeout = 300
+    )
+    [DateTime] $StartTime = Get-Date
+    [String] $VMPath = $Configuration.labbuilderconfig.SelectNodes('settings').vmpath
+    [System.Management.Automation.Runspaces.PSSession] $Session = $null
     [Boolean] $Complete = $False
 
-    While ((-not $Complete)  -and (((Get-Date) - $StartTime).TotalSeconds) -lt $TimeOut) {
-        # Connect to the VM
-        While ((($Session -eq $null) -or ($Session.State -ne 'Opened')) -and ((((Get-Date) - $StartTime).TotalSeconds) -lt $TimeOut))
-        {
-            $Session = Connect-LabVM -VM $VM
-        } # While
+    # Load path variables
+    [String] $VMRootPath = Join-Path `
+        -Path $VMPath `
+        -ChildPath $VM.Name
 
-        [String] $GetCertPs = Get-LabGetCertificatePs -Configuration $Configuration -VM $VM
-        $null = Set-Content `
-            -Path "$VMLabBuilderFiles\GetDSCEncryptionCert.ps1" `
-            -Value $GetCertPs `
-            -Force
+    # Get Path to LabBuilder files
+    [String] $VMLabBuilderFiles = Join-Path `
+        -Path $VMRootPath `
+        -ChildPath 'LabBuilder Files'
+
+    # Ensure the certificate generation script has been created
+    [String] $GetCertPs = Get-LabGetCertificatePs `
+        -Configuration $Configuration `
+        -VM $VM
+        
+    $null = Set-Content `
+        -Path "$VMLabBuilderFiles\GetDSCEncryptionCert.ps1" `
+        -Value $GetCertPs `
+        -Force
+
+    while ((-not $Complete) `
+        -and (((Get-Date) - $StartTime).TotalSeconds) -lt $TimeOut)
+    {
+        $Session = Connect-LabVM -VM $VM -ErrorAction Continue
+
+        # Failed to connnect to the VM
+        if (! $Session)
+        {
+            $errorId = 'CertificateDownloadError'
+            $errorCategory = [System.Management.Automation.ErrorCategory]::OperationTimeout
+            $errorMessage = $($LocalizedData.CertificateDownloadError `
+                -f $VM.Name)
+            $exception = New-Object -TypeName System.Exception `
+                -ArgumentList $errorMessage
+            $errorRecord = New-Object -TypeName System.Management.Automation.ErrorRecord `
+                -ArgumentList $exception, $errorId, $errorCategory, $null
+    
+            $PSCmdlet.ThrowTerminatingError($errorRecord)
+        }
 
         $Complete = $False
 
-        if (($Session) -and ($Session.State -eq 'Opened') -and (-not $Complete)) {
+        if (($Session) `
+            -and ($Session.State -eq 'Opened') `
+            -and (-not $Complete))
+        {
             # We connected OK - Upload the script
-            While ((-not $Complete) -and (((Get-Date) - $StartTime).TotalSeconds) -lt $TimeOut) {
-                Try {
+            while ((-not $Complete) `
+                -and (((Get-Date) - $StartTime).TotalSeconds) -lt $TimeOut)
+            {
+                try
+                {
                     Copy-Item `
                         -Path "$VMLabBuilderFiles\GetDSCEncryptionCert.ps1" `
                         -Destination 'c:\windows\setup\scripts\' `
-                        -ToSession $Session -Force -ErrorAction Stop
+                        -ToSession $Session `
+                        -Force `
+                        -ErrorAction Stop
                     $Complete = $True
-                } Catch {
+                }
+                catch
+                {
                     Write-Verbose "Waiting to upload certificate create script file to $($VM.ComputerName) ..."
                     Start-Sleep -Seconds $Script:RetryConnectSeconds
                 } # Try
@@ -3464,15 +3602,23 @@ function Get-LabVMCertificate {
         
         $Complete = $False
 
-        if (($Session) -and ($Session.State -eq 'Opened') -and (-not $Complete)) {
+        if (($Session) `
+            -and ($Session.State -eq 'Opened') `
+            -and (-not $Complete))
+        {
             # Script uploaded, run it
-            While ((-not $Complete) -and (((Get-Date) - $StartTime).TotalSeconds) -lt $TimeOut) {
-                Try {
+            while ((-not $Complete) `
+                -and (((Get-Date) - $StartTime).TotalSeconds) -lt $TimeOut)
+            {
+                try
+                {
                     Invoke-Command -Session $Session -ScriptBlock {
                         C:\Windows\Setup\Scripts\GetDSCEncryptionCert.ps1
                     }
                     $Complete = $True
-                } Catch {
+                }
+                catch
+                {
                     Write-Verbose "Waiting to upload certificate create script file to $($VM.ComputerName) ..."
                     Start-Sleep -Seconds $Script:RetryConnectSeconds
                 } # Try
@@ -3481,34 +3627,61 @@ function Get-LabVMCertificate {
 
         $Complete = $False
 
-        if (($Session) -and ($Session.State -eq 'Opened') -and (-not $Complete)) {
+        if (($Session) `
+            -and ($Session.State -eq 'Opened') `
+            -and (-not $Complete))
+        {
             # Now download the Certificate
-            While ((-not $Complete) -and (((Get-Date) - $StartTime).TotalSeconds) -lt $TimeOut) {
-                Try {
+            while ((-not $Complete) `
+                -and (((Get-Date) - $StartTime).TotalSeconds) -lt $TimeOut)
+            {
+                try {
                     $null = Copy-Item `
                         -Path "c:\windows\$($Script:DSCEncryptionCert)" `
-                        -Destination "$VMLabBuilderFiles" `
+                        -Destination $VMLabBuilderFiles `
                         -FromSession $Session `
                         -ErrorAction Stop
                     $Complete = $True
-                } Catch {
+                }
+                catch
+                {
                     Write-Verbose "Waiting for Certificate file on $($VM.ComputerName) ..."
                     Start-Sleep -Seconds $Script:RetryConnectSeconds
                 } # Try
             } # While
         } # If
 
+        # If the process didn't complete and we're out of time throw an exception
+        if ((-not $Complete) `
+            -and (((Get-Date) - $StartTime).TotalSeconds) -ge $TimeOut)
+        {
+            if ($Session)
+            {
+                Remove-PSSession -Session $Session
+            }
+
+            $errorId = 'CertificateDownloadError'
+            $errorCategory = [System.Management.Automation.ErrorCategory]::OperationTimeout
+            $errorMessage = $($LocalizedData.CertificateDownloadError `
+                -f $VM.Name)
+            $exception = New-Object -TypeName System.Exception `
+                -ArgumentList $errorMessage
+            $errorRecord = New-Object -TypeName System.Management.Automation.ErrorRecord `
+                -ArgumentList $exception, $errorId, $errorCategory, $null
+    
+            $PSCmdlet.ThrowTerminatingError($errorRecord)
+        }
+
         # Close the Session if it is opened and the download is complete
-        if (($Session) -and ($Session.State -eq 'Opened') -and ($Complete)) {
+        if (($Session) `
+            -and ($Session.State -eq 'Opened') `
+            -and ($Complete))
+        {
             Remove-PSSession -Session $Session
         } # If
     } # While
-
-    if ($Complete)
-    {
-        return (Get-Item -Path "$VMLabBuilderFiles\$($Script:DSCEncryptionCert)")
-    }
-} # Get-LabVMCertificate
+    return (Get-Item -Path "$VMLabBuilderFiles\$($Script:DSCEncryptionCert)")
+} # New-LabVMSelfSignedCert
 ####################################################################################################
 
 ####################################################################################################
@@ -3701,7 +3874,7 @@ function Start-LabVM {
         if (-not (Test-Path "$VMPath\$($VM.Name)\LabBuilder Files\$Script:DSCEncryptionCert"))
         {
             # No, so check it is initialized and download the cert.
-            if (Wait-LabVMInit -VM $VM)
+            if (Wait-LabVMInit -VM $VM -ErrorAction Continue)
             {
                 Write-Verbose "Attempting to download certificate for VM $($VM.Name) ..."
                 if (Get-LabVMSelfSignedCert -Configuration $Configuration -VM $VM)
@@ -3716,14 +3889,19 @@ function Start-LabVM {
             else
             {
                 Write-Verbose "Initialization for VM $($VM.Name) did not complete ..."
+                return            
             } # If
         } # If
 
         # Create any DSC Files for the VM
-        Initialize-LabVMDSC -Configuration $Configuration -VM $VM
+        Initialize-LabVMDSC `
+            -Configuration $Configuration `
+            -VM $VM
 
         # Attempt to start DSC on the VM
-        Start-LabVMDSC -Configuration $Configuration -VM $VM
+        Start-LabVMDSC `
+            -Configuration $Configuration `
+            -VM $VM
     } # If
 } # Start-LabVM
 ####################################################################################################
@@ -4083,23 +4261,34 @@ function Remove-LabVMs {
 ####################################################################################################
 <#
 .SYNOPSIS
-   Short description
+   Waits for a VM to complete setup.
 .DESCRIPTION
-   Long description
+   When a VM starts up for the first time various scripts are run that prepare the Virtual Machine
+   to be managed as part of a Lab. This function will wait for these scripts to complete.
+   It determines if the setup has been completed by using PowerShell remoting to connect to the
+   VM and downloading the c:\windows\Setup\Scripts\InitialSetupCompleted.txt file. If this file
+   does not exist then the initial setup has not been completed.
+   
+   The cmdlet will wait for a maximum of 300 seconds for this process to be completed.
+.PARAMETER VM
+   A Virtual Machine object pulled from the Lab Configuration file using Get-LabVM
+.PARAMETER Timeout
+   The maximum amount of time that this function will wait for the setup to complete.
+   If the timeout is reached before the process is complete an error will be thrown.
+   The timeout defaults to 300 seconds.
 .EXAMPLE
-   Example of how to use this cmdlet
-.EXAMPLE
-   Another example of how to use this cmdlet
-.INPUTS
-   Inputs to this cmdlet (if any)
+   $Config = Get-LabConfiguration -Path c:\mylab\config.xml
+   $VMs = Get-LabVM -Configuration $Config
+   Wait-LabVMInit -VM $VMs[0]
+   Waits for the initial setup to complete on the first VM in the config.xml.
 .OUTPUTS
-   Output from this cmdlet (if any)
-.NOTES
-   General notes
+   The path to the local copy of the Initial Setup complete file in the Labbuilder files folder
+   for this VM.
 #>
-function Wait-LabVMInit {
-    [OutputType([Boolean])]
+function Wait-LabVMInit
+{
     [CmdLetBinding()]
+    [OutputType([String])]
     param
     (
         [Parameter(
@@ -4113,46 +4302,107 @@ function Wait-LabVMInit {
     [DateTime] $StartTime = Get-Date
     [Boolean] $Found = $False
     [System.Management.Automation.Runspaces.PSSession] $Session = $null
+    [Boolean] $Complete = $False
+
+    # Load path variables
+    [String] $VMRootPath = Join-Path `
+        -Path $VMPath `
+        -ChildPath $VM.Name
+
+    # Get Path to LabBuilder files
+    [String] $VMLabBuilderFiles = Join-Path `
+        -Path $VMRootPath `
+        -ChildPath 'LabBuilder Files'
 
     # Make sure the VM has started
     Wait-LabVMStart -VM $VM
-
-    [Boolean] $Complete = $False
-    while ((-not $Complete)  -and (((Get-Date) - $StartTime).TotalSeconds) -lt $TimeOut)
+    
+    [String] $InitialSetupCompletePath = Join-Path -Path $VMLabBuilderFiles -ChildPath 'InitialSetupCompleted.txt'
+    # Check the initial setup on this VM hasn't already completed
+    if (Test-Path -Path $InitialSetupCompletePath)
+    {
+        Write-Verbose -Message $($LocalizedData.InitialSetupIsAlreadyCompleteMessaage `
+            -f $VM.Name)
+        return $InitialSetupCompletePath 
+    }
+    
+    while ((-not $Complete) `
+        -and (((Get-Date) - $StartTime).TotalSeconds) -lt $TimeOut)
     {
         # Connect to the VM
-        While ((($Session -eq $null) -or ($Session.State -ne 'Opened')) -and ((((Get-Date) - $StartTime).TotalSeconds) -lt $TimeOut))
-        {
-            $Session = Connect-LabVM -VM $VM
-        } # While
+        $Session = Connect-LabVM -VM $VM -ErrorAction Continue
 
-        if (($Session) -and ($Session.State -eq 'Opened') -and (-not $Complete))
+        # Failed to connnect to the VM
+        if (! $Session)
         {
-            # We connected OK - check for init file
-            while ((-not $Complete) -and (((Get-Date) - $StartTime).TotalSeconds) -lt $TimeOut)
+            $errorId = 'InitialSetupCompleteError'
+            $errorCategory = [System.Management.Automation.ErrorCategory]::OperationTimeout
+            $errorMessage = $($LocalizedData.InitialSetupCompleteError `
+                -f $VM.Name)
+            $exception = New-Object -TypeName System.Exception `
+                -ArgumentList $errorMessage
+            $errorRecord = New-Object -TypeName System.Management.Automation.ErrorRecord `
+                -ArgumentList $exception, $errorId, $errorCategory, $null
+    
+            $PSCmdlet.ThrowTerminatingError($errorRecord)
+        }
+
+        if (($Session) `
+            -and ($Session.State -eq 'Opened') `
+            -and (-not $Complete))
+        {
+            # We connected OK - Download the script
+            while ((-not $Complete) `
+                -and (((Get-Date) - $StartTime).TotalSeconds) -lt $TimeOut)
             {
                 try
                 {
-                    $Complete = Invoke-Command -Session $Session {
-                        Test-Path "$($ENV:SystemRoot)\Setup\Scripts\InitialSetupCompleted.txt"
-                    } -ErrorAction Stop
+                    $null = Copy-Item `
+                        -Path "c:\windows\Setup\Scripts\InitialSetupCompleted.txt" `
+                        -Destination $VMLabBuilderFiles `
+                        -FromSession $Session `
+                        -Force `
+                        -ErrorAction Stop
+                    $Complete = $True
                 }
                 catch
                 {
-                    Write-Verbose "Waiting for Certificate file on $($VM.ComputerName) ..."
+                    Write-Verbose -Message $($LocalizedData.WaitingForInitialSetupCompleteMessage `
+                        -f $VM.Name,$Script:RetryConnectSeconds)                                
                     Start-Sleep -Seconds $Script:RetryConnectSeconds
                 } # Try
             } # While
         } # If
 
+        # If the process didn't complete and we're out of time throw an exception
+        if ((-not $Complete) `
+            -and (((Get-Date) - $StartTime).TotalSeconds) -ge $TimeOut)
+        {
+            if ($Session)
+            {
+                Remove-PSSession -Session $Session
+            }
+
+            $errorId = 'InitialSetupCompleteError'
+            $errorCategory = [System.Management.Automation.ErrorCategory]::OperationTimeout
+            $errorMessage = $($LocalizedData.InitialSetupCompleteError `
+                -f $VM.Name)
+            $exception = New-Object -TypeName System.Exception `
+                -ArgumentList $errorMessage
+            $errorRecord = New-Object -TypeName System.Management.Automation.ErrorRecord `
+                -ArgumentList $exception, $errorId, $errorCategory, $null
+    
+            $PSCmdlet.ThrowTerminatingError($errorRecord)
+        }
+
         # Close the Session if it is opened
-        if (($Session) -and ($Session.State -eq 'Opened'))
+        if (($Session) `
+            -and ($Session.State -eq 'Opened'))
         {
             Remove-PSSession -Session $Session
         } # If
     } # While
-
-    Return $Complete
+    return $InitialSetupCompletePath
 } # Wait-LabVMInit
 ####################################################################################################
 
@@ -4227,7 +4477,11 @@ function Wait-LabVMOff {
    if the connection was successful.
    
    If the connection fails, it will be retried until the ConnectTimeout is reached. If the
-   ConnectTimeout is reached and a connection has not been established then $null is returned. 
+   ConnectTimeout is reached and a connection has not been established then a ConnectionError 
+   exception will be thrown.
+   
+   If the connection is attempted but an Access Denied error occurs a ConnectionError exception
+   will be thrown immediately and the connection will not be retried. 
 .EXAMPLE
    $Config = Get-LabConfiguration -Path c:\mylab\config.xml
    $VMs = Get-LabVM -Configuration $Config
@@ -4258,7 +4512,11 @@ function Connect-LabVM {
     [PSCredential] $AdmininistratorCredential = New-Credential `
         -Username '.\Administrator' `
         -Password $VM.AdministratorPassword
-    while (($Session -eq $null) -and (((Get-Date) - $StartTime).TotalSeconds) -lt $ConnectTimeout)
+    [Boolean] $FatalException = $False
+    
+    while (($Session -eq $null) `
+        -and (((Get-Date) - $StartTime).TotalSeconds) -lt $ConnectTimeout `
+        -and ! $FatalException)
     {
         try
         {                
@@ -4279,7 +4537,7 @@ function Connect-LabVM {
                     -Value "$TrustedHosts,$IPAddress" `
                     -Force
                 Write-Verbose -Message $($LocalizedData.AddingIPAddressToTrustedHostsMessage `
-                    -f $VM.ComputerName,$IPAddress)
+                    -f $VM.Name,$IPAddress)
             }
         
             Write-Verbose -Message $($LocalizedData.ConnectingMessage `
@@ -4293,20 +4551,45 @@ function Connect-LabVM {
         }
         catch
         {
-            if (-not $IPAddress)
+            if ($_.Exception.ErrorCode -eq 5)
             {
-                Write-Verbose -Message $($LocalizedData.WaitingForIPAddressAssignedMessage `
-                    -f $VM.ComputerName,$Script:RetryConnectSeconds)                                
+                Write-Verbose -Message $($LocalizedData.ConnectingAccessDeniedMessage `
+                    -f $VM.Name)
+                $FatalException = $True
             }
             else
             {
-                Write-Verbose -Message $($LocalizedData.ConnectingFailedMessage `
-                    -f $VM.ComputerName,$Script:RetryConnectSeconds,$_.Exception.Message)
+                if (-not $IPAddress)
+                {
+                    Write-Verbose -Message $($LocalizedData.WaitingForIPAddressAssignedMessage `
+                        -f $VM.Name,$Script:RetryConnectSeconds)                                
+                }
+                else
+                {
+                    Write-Verbose -Message $($LocalizedData.ConnectingFailedMessage `
+                        -f $VM.Name,$Script:RetryConnectSeconds,$_.Exception.Message)
+                }
+                Start-Sleep -Seconds $Script:RetryConnectSeconds
             }
-            Start-Sleep -Seconds $Script:RetryConnectSeconds
         } # Try
     } # While
+    
+    # If a fatal exception occured or the connection just couldn't be established
+    # then throw an exception so it can be caught by the calling code.
+    if ($FatalException -or ($Session -eq $null))
+    {
+        # The connection failed so throw an error
+        $errorId = 'RemotingConnectionError'
+        $errorCategory = [System.Management.Automation.ErrorCategory]::ConnectionError
+        $errorMessage = $($LocalizedData.RemotingConnectionError `
+            -f $VM.Name)
+        $exception = New-Object -TypeName System.Exception `
+            -ArgumentList $errorMessage
+        $errorRecord = New-Object -TypeName System.Management.Automation.ErrorRecord `
+            -ArgumentList $exception, $errorId, $errorCategory, $null
 
+        $PSCmdlet.ThrowTerminatingError($errorRecord)        
+    }
     Return $Session
 } # Connect-LabVM
 ####################################################################################################
