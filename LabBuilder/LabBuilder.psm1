@@ -142,16 +142,13 @@ function Download-WMF5Installer()
         }
         catch
         {
-            $errorId = 'FileDownloadError'
-            $errorCategory = [System.Management.Automation.ErrorCategory]::InvalidOperation
-            $errorMessage = $($LocalizedData.FileDownloadError) `
-                -f 'WMF 5.0 Installer',$Script:WMF5DownloadURL,$_.Exception.Message
-            $exception = New-Object -TypeName System.InvalidOperationException `
-                -ArgumentList $errorMessage
-            $errorRecord = New-Object -TypeName System.Management.Automation.ErrorRecord `
-                -ArgumentList $exception, $errorId, $errorCategory, $null
-            
-            $PSCmdlet.ThrowTerminatingError($errorRecord)
+            $ExceptionParameters = @{
+                errorId = 'FileDownloadError'
+                errorCategory = 'InvalidOperation'
+                errorMessage = $($LocalizedData.FileDownloadError `
+                    -f 'WMF 5.0 Installer',$Script:WMF5DownloadURL,$_.Exception.Message)
+            }
+            New-LabException @ExceptionParameters
         }
     }
 } # Download-WMF5Installer
@@ -175,16 +172,13 @@ function Download-CertGenerator()
         }
         catch
         {
-            $errorId = 'FileDownloadError'
-            $errorCategory = [System.Management.Automation.ErrorCategory]::InvalidOperation
-            $errorMessage = $($LocalizedData.FileDownloadError) `
-                -f 'Certificate Generator',$Script:CertGenDownloadURL,$_.Exception.Message
-            $exception = New-Object -TypeName System.InvalidOperationException `
-                -ArgumentList $errorMessage
-            $errorRecord = New-Object -TypeName System.Management.Automation.ErrorRecord `
-                -ArgumentList $exception, $errorId, $errorCategory, $null
-
-            $PSCmdlet.ThrowTerminatingError($errorRecord)        
+            $ExceptionParameters = @{
+                errorId = 'FileDownloadError'
+                errorCategory = 'InvalidOperation'
+                errorMessage = $($LocalizedData.FileDownloadError `
+                    -f 'Certificate Generator',$Script:CertGenDownloadURL,$_.Exception.Message)
+            }
+            New-LabException @ExceptionParameters
         }
     } # If
     if (-not (Test-Path -Path $Script:CertGenPS1Path))
@@ -198,16 +192,13 @@ function Download-CertGenerator()
         }
         catch
         {
-            $errorId = 'FileExtractError'
-            $errorCategory = [System.Management.Automation.ErrorCategory]::InvalidOperation
-            $errorMessage = $($LocalizedData.FileExtractError) `
-                -f 'Certificate Generator',$_.Exception.Message
-            $exception = New-Object -TypeName System.InvalidOperationException `
-                -ArgumentList $errorMessage
-            $errorRecord = New-Object -TypeName System.Management.Automation.ErrorRecord `
-                -ArgumentList $exception, $errorId, $errorCategory, $null
-
-            $PSCmdlet.ThrowTerminatingError($errorRecord)        
+            $ExceptionParameters = @{
+                errorId = 'FileExtractError'
+                errorCategory = 'InvalidOperation'
+                errorMessage = $($LocalizedData.FileExtractError `
+                    -f 'Certificate Generator',$_.Exception.Message)
+            }
+            New-LabException @ExceptionParameters
         }
     } # If
 } # Download-CertGenerator
@@ -312,30 +303,24 @@ function Get-LabConfiguration {
     ) # Param
     if (-not (Test-Path -Path $Path))
     {
-        $errorId = 'ConfigurationFileNotFoundError'
-        $errorCategory = [System.Management.Automation.ErrorCategory]::InvalidArgument
-        $errorMessage = $($LocalizedData.ConfigurationFileNotFoundError) `
-            -f $Path
-        $exception = New-Object -TypeName System.InvalidOperationException `
-            -ArgumentList $errorMessage
-        $errorRecord = New-Object -TypeName System.Management.Automation.ErrorRecord `
-            -ArgumentList $exception, $errorId, $errorCategory, $null
-
-        $PSCmdlet.ThrowTerminatingError($errorRecord)        
+        $ExceptionParameters = @{
+            errorId = 'ConfigurationFileNotFoundError'
+            errorCategory = 'InvalidArgument'
+            errorMessage = $($LocalizedData.ConfigurationFileNotFoundError `
+                -f $Path)
+        }
+        New-LabException @ExceptionParameters
     } # If
     $Content = Get-Content -Path $Path -Raw
     if (-not $Content)
     {
-        $errorId = 'ConfigurationFileEmptyError'
-        $errorCategory = [System.Management.Automation.ErrorCategory]::InvalidArgument
-        $errorMessage = $($LocalizedData.ConfigurationFileEmptyError) `
-            -f $Path
-        $exception = New-Object -TypeName System.InvalidOperationException `
-            -ArgumentList $errorMessage
-        $errorRecord = New-Object -TypeName System.Management.Automation.ErrorRecord `
-            -ArgumentList $exception, $errorId, $errorCategory, $null
-
-        $PSCmdlet.ThrowTerminatingError($errorRecord)        
+        $ExceptionParameters = @{
+            errorId = 'ConfigurationFileEmptyError'
+            errorCategory = 'InvalidArgument'
+            errorMessage = $($LocalizedData.ConfigurationFileEmptyError `
+                -f $Path)
+        }
+        New-LabException @ExceptionParameters
     } # If
     [XML] $Configuration = New-Object -TypeName XML
     $Configuration.LoadXML($Content)
@@ -390,89 +375,71 @@ function Test-LabConfiguration {
     if ((-not $Configuration.labbuilderconfig) `
         -or (-not $Configuration.labbuilderconfig.settings))
     {
-        $errorId = 'ConfigurationInvalidError'
-        $errorCategory = [System.Management.Automation.ErrorCategory]::InvalidArgument
-        $errorMessage = $($LocalizedData.ConfigurationInvalidError)
-        $exception = New-Object -TypeName System.InvalidOperationException `
-            -ArgumentList $errorMessage
-        $errorRecord = New-Object -TypeName System.Management.Automation.ErrorRecord `
-            -ArgumentList $exception, $errorId, $errorCategory, $null
-
-        $PSCmdlet.ThrowTerminatingError($errorRecord)        
+        $ExceptionParameters = @{
+            errorId = 'ConfigurationInvalidError'
+            errorCategory = 'InvalidArgument'
+            errorMessage = $($LocalizedData.ConfigurationInvalidError)
+        }
+        New-LabException @ExceptionParameters
     }
 
     # Check folders exist
     [String] $VMPath = $Configuration.labbuilderconfig.settings.vmpath
     if (-not $VMPath)
     {
-        $errorId = 'ConfigurationMissingElementError'
-        $errorCategory = [System.Management.Automation.ErrorCategory]::InvalidArgument
-        $errorMessage = $($LocalizedData.ConfigurationMissingElementError) `
-            -f '<settings>\<vmpath>'
-        $exception = New-Object -TypeName System.InvalidOperationException `
-            -ArgumentList $errorMessage
-        $errorRecord = New-Object -TypeName System.Management.Automation.ErrorRecord `
-            -ArgumentList $exception, $errorId, $errorCategory, $null
-
-        $PSCmdlet.ThrowTerminatingError($errorRecord)      
+        $ExceptionParameters = @{
+            errorId = 'ConfigurationMissingElementError'
+            errorCategory = 'InvalidArgument'
+            errorMessage = $($LocalizedData.ConfigurationMissingElementError `
+                -f '<settings>\<vmpath>')
+        }
+        New-LabException @ExceptionParameters
     }
 
     if (-not (Test-Path -Path $VMPath))
     {
-        $errorId = 'PathNotFoundError'
-        $errorCategory = [System.Management.Automation.ErrorCategory]::InvalidArgument
-        $errorMessage = $($LocalizedData.PathNotFoundError) `
-            -f '<settings>\<vmpath>',$VMPath
-        $exception = New-Object -TypeName System.InvalidOperationException `
-            -ArgumentList $errorMessage
-        $errorRecord = New-Object -TypeName System.Management.Automation.ErrorRecord `
-            -ArgumentList $exception, $errorId, $errorCategory, $null
-
-        $PSCmdlet.ThrowTerminatingError($errorRecord)      
+        $ExceptionParameters = @{
+            errorId = 'PathNotFoundError'
+            errorCategory = 'InvalidArgument'
+            errorMessage = $($LocalizedData.PathNotFoundError `
+                -f '<settings>\<vmpath>',$VMPath)
+        }
+        New-LabException @ExceptionParameters
     }
 
     [String] $VHDParentPath = $Configuration.labbuilderconfig.settings.vhdparentpath
     if (-not $VHDParentPath)
     {
-        $errorId = 'ConfigurationMissingElementError'
-        $errorCategory = [System.Management.Automation.ErrorCategory]::InvalidArgument
-        $errorMessage = $($LocalizedData.ConfigurationMissingElementError) `
-            -f '<settings>\<vhdparentpath>'
-        $exception = New-Object -TypeName System.InvalidOperationException `
-            -ArgumentList $errorMessage
-        $errorRecord = New-Object -TypeName System.Management.Automation.ErrorRecord `
-            -ArgumentList $exception, $errorId, $errorCategory, $null
-
-        $PSCmdlet.ThrowTerminatingError($errorRecord)      
+        $ExceptionParameters = @{
+            errorId = 'ConfigurationMissingElementError'
+            errorCategory = 'InvalidArgument'
+            errorMessage = $($LocalizedData.ConfigurationMissingElementError `
+                -f '<settings>\<vhdparentpath>')
+        }
+        New-LabException @ExceptionParameters
     }
 
     if (-not (Test-Path -Path $VHDParentPath))
     {
-        $errorId = 'PathNotFoundError'
-        $errorCategory = [System.Management.Automation.ErrorCategory]::InvalidArgument
-        $errorMessage = $($LocalizedData.PathNotFoundError) `
-            -f '<settings>\<vhdparentpath>',$VHDParentPath
-        $exception = New-Object -TypeName System.InvalidOperationException `
-            -ArgumentList $errorMessage
-        $errorRecord = New-Object -TypeName System.Management.Automation.ErrorRecord `
-            -ArgumentList $exception, $errorId, $errorCategory, $null
-
-        $PSCmdlet.ThrowTerminatingError($errorRecord)      
+        $ExceptionParameters = @{
+            errorId = 'PathNotFoundError'
+            errorCategory = 'InvalidArgument'
+            errorMessage = $($LocalizedData.PathNotFoundError `
+                -f '<settings>\<vhdparentpath>',$VHDParentPath)
+        }
+        New-LabException @ExceptionParameters
     }
 
     [String] $FullConfigPath = $Configuration.labbuilderconfig.settings.fullconfigpath
     if (-not (Test-Path -Path $FullConfigPath)) 
     {
-        $errorId = 'PathNotFoundError'
-        $errorCategory = [System.Management.Automation.ErrorCategory]::InvalidArgument
-        $errorMessage = $($LocalizedData.PathNotFoundError) `
-            -f '<settings>\<fullconfigpath>',$FullConfigPath
-        $exception = New-Object -TypeName System.InvalidOperationException `
-            -ArgumentList $errorMessage
-        $errorRecord = New-Object -TypeName System.Management.Automation.ErrorRecord `
-            -ArgumentList $exception, $errorId, $errorCategory, $null
-
-        $PSCmdlet.ThrowTerminatingError($errorRecord)      
+        $ExceptionParameters = @{
+            errorId = 'PathNotFoundError'
+            errorCategory = 'InvalidArgument'
+            errorMessage = $($LocalizedData.PathNotFoundError `
+                -f '<settings>\<fullconfigpath>',$FullConfigPath)
+        }
+        New-LabException @ExceptionParameters
     }
     Return $true
 } # Test-LabConfiguration
@@ -694,16 +661,13 @@ function Download-LabModule {
             }
             Catch
             {
-                $errorId = 'FileDownloadError'
-                $errorCategory = [System.Management.Automation.ErrorCategory]::InvalidOperation
-                $errorMessage = $($LocalizedData.FileDownloadError) `
-                    -f "Module Resource ${Name}",$URL,$_.Exception.Message
-                $exception = New-Object -TypeName System.InvalidOperationException `
-                    -ArgumentList $errorMessage
-                $errorRecord = New-Object -TypeName System.Management.Automation.ErrorRecord `
-                    -ArgumentList $exception, $errorId, $errorCategory, $null
-
-                $PSCmdlet.ThrowTerminatingError($errorRecord)        
+                $ExceptionParameters = @{
+                    errorId = 'FileDownloadError'
+                    errorCategory = 'InvalidOperation'
+                    errorMessage = $($LocalizedData.FileDownloadError `
+                        -f "Module Resource ${Name}",$URL,$_.Exception.Message)
+                }
+                New-LabException @ExceptionParameters
             } # Try
 
             [String] $ModulesFolder = "$($ENV:ProgramFiles)\WindowsPowerShell\Modules\"
@@ -722,16 +686,13 @@ function Download-LabModule {
             }
             Catch
             {
-                $errorId = 'FileExtractError'
-                $errorCategory = [System.Management.Automation.ErrorCategory]::InvalidArgument
-                $errorMessage = $($LocalizedData.FileExtractError) `
-                    -f "Module Resource ${Name}",$_.Exception.Message
-                $exception = New-Object -TypeName System.InvalidOperationException `
-                    -ArgumentList $errorMessage
-                $errorRecord = New-Object -TypeName System.Management.Automation.ErrorRecord `
-                    -ArgumentList $exception, $errorId, $errorCategory, $null
-
-                $PSCmdlet.ThrowTerminatingError($errorRecord)        
+                $ExceptionParameters = @{
+                    errorId = 'FileExtractError'
+                    errorCategory = 'InvalidArgument'
+                    errorMessage = $($LocalizedData.FileExtractError `
+                    -f "Module Resource ${Name}",$_.Exception.Message)
+                }
+                New-LabException @ExceptionParameters
             } # Try
             if ($Folder)
             {
@@ -775,16 +736,13 @@ function Download-LabModule {
             }
             catch
             {
-                $errorId = 'ModuleNotAvailableError'
-                $errorCategory = [System.Management.Automation.ErrorCategory]::InvalidArgument
-                $errorMessage = $($LocalizedData.ModuleNotAvailableError) `
-                    -f $Name,$VersionMessage,$_.Exception.Message
-                $exception = New-Object -TypeName System.InvalidOperationException `
-                    -ArgumentList $errorMessage
-                $errorRecord = New-Object -TypeName System.Management.Automation.ErrorRecord `
-                    -ArgumentList $exception, $errorId, $errorCategory, $null
-
-                $PSCmdlet.ThrowTerminatingError($errorRecord)
+                $ExceptionParameters = @{
+                    errorId = 'ModuleNotAvailableError'
+                    errorCategory = 'InvalidArgument'
+                    errorMessage = $($LocalizedData.ModuleNotAvailableError `
+                        -f $Name,$VersionMessage,$_.Exception.Message)
+                }
+                New-LabException @ExceptionParameters
             }
         } # If
     } # If
@@ -827,15 +785,12 @@ function Download-LabResources {
         {
             if (-not $Module.Name)
             {
-                $errorId = 'ResourceModuleNameEmptyError'
-                $errorCategory = [System.Management.Automation.ErrorCategory]::InvalidArgument
-                $errorMessage = $($LocalizedData.ResourceModuleNameEmptyError)
-                $exception = New-Object -TypeName System.InvalidOperationException `
-                    -ArgumentList $errorMessage
-                $errorRecord = New-Object -TypeName System.Management.Automation.ErrorRecord `
-                    -ArgumentList $exception, $errorId, $errorCategory, $null
-
-                $PSCmdlet.ThrowTerminatingError($errorRecord)
+                $ExceptionParameters = @{
+                    errorId = 'ResourceModuleNameEmptyError'
+                    errorCategory = 'InvalidArgument'
+                    errorMessage = $($LocalizedData.ResourceModuleNameEmptyError)
+                }
+                New-LabException @ExceptionParameters
             } # If
             $Splat = [PSObject] @{ Name = $Module.Name }
             if ($Module.URL)
@@ -898,28 +853,22 @@ function Get-LabSwitches {
         # specified or if they actually specified 'switch' as the name.
         if ($ConfigSwitch.Name -eq 'switch')
         {
-            $errorId = 'SwitchNameIsEmptyError'
-            $errorCategory = [System.Management.Automation.ErrorCategory]::InvalidArgument
-            $errorMessage = $($LocalizedData.SwitchNameIsEmptyError)
-            $exception = New-Object -TypeName System.InvalidOperationException `
-                -ArgumentList $errorMessage
-            $errorRecord = New-Object -TypeName System.Management.Automation.ErrorRecord `
-                -ArgumentList $exception, $errorId, $errorCategory, $null
-
-            $PSCmdlet.ThrowTerminatingError($errorRecord)
+            $ExceptionParameters = @{
+                errorId = 'SwitchNameIsEmptyError'
+                errorCategory = 'InvalidArgument'
+                errorMessage = $($LocalizedData.SwitchNameIsEmptyError)
+            }
+            New-LabException @ExceptionParameters
         }
         if ($ConfigSwitch.Type -notin 'Private','Internal','External','NAT')
         {
-            $errorId = 'UnknownSwitchTypeError'
-            $errorCategory = [System.Management.Automation.ErrorCategory]::InvalidArgument
-            $errorMessage = $($LocalizedData.UnknownSwitchTypeError `
-                -f $ConfigSwitch.Type,$ConfigSwitch.Name)
-            $exception = New-Object -TypeName System.InvalidOperationException `
-                -ArgumentList $errorMessage
-            $errorRecord = New-Object -TypeName System.Management.Automation.ErrorRecord `
-                -ArgumentList $exception, $errorId, $errorCategory, $null
-
-            $PSCmdlet.ThrowTerminatingError($errorRecord)
+            $ExceptionParameters = @{
+                errorId = 'UnknownSwitchTypeError'
+                errorCategory = 'InvalidArgument'
+                errorMessage = $($LocalizedData.UnknownSwitchTypeError `
+                    -f $ConfigSwitch.Type,$ConfigSwitch.Name)
+            }
+            New-LabException @ExceptionParameters
         }
         # Assemble the list of Adapters if any are specified for this switch (only if an external
         # switch)
@@ -932,16 +881,13 @@ function Get-LabSwitches {
             }
             if (($ConfigAdapters.Count -gt 0) -and ($ConfigSwitch.Type -ne 'External'))
             {
-                $errorId = 'AdapterSpecifiedError'
-                $errorCategory = [System.Management.Automation.ErrorCategory]::InvalidArgument
-                $errorMessage = $($LocalizedData.AdapterSpecifiedError `
-                    -f $ConfigSwitch.Type,$ConfigSwitch.Name)
-                $exception = New-Object -TypeName System.InvalidOperationException `
-                    -ArgumentList $errorMessage
-                $errorRecord = New-Object -TypeName System.Management.Automation.ErrorRecord `
-                    -ArgumentList $exception, $errorId, $errorCategory, $null
-    
-                $PSCmdlet.ThrowTerminatingError($errorRecord)
+                $ExceptionParameters = @{
+                    errorId = 'AdapterSpecifiedError'
+                    errorCategory = 'InvalidArgument'
+                    errorMessage = $($LocalizedData.AdapterSpecifiedError `
+                        -f $ConfigSwitch.Type,$ConfigSwitch.Name)
+                }
+                New-LabException @ExceptionParameters
             }
         }
         Else
@@ -1004,15 +950,12 @@ function Initialize-LabSwitches {
             [String] $SwitchName = $VMSwitch.Name
             if (-not $SwitchName)
             {
-                $errorId = 'SwitchNameIsEmptyError'
-                $errorCategory = [System.Management.Automation.ErrorCategory]::InvalidArgument
-                $errorMessage = $($LocalizedData.SwitchNameIsEmptyError)
-                $exception = New-Object -TypeName System.InvalidOperationException `
-                    -ArgumentList $errorMessage
-                $errorRecord = New-Object -TypeName System.Management.Automation.ErrorRecord `
-                    -ArgumentList $exception, $errorId, $errorCategory, $null
-
-                $PSCmdlet.ThrowTerminatingError($errorRecord)
+                $ExceptionParameters = @{
+                    errorId = 'SwitchNameIsEmptyError'
+                    errorCategory = 'InvalidArgument'
+                    errorMessage = $($LocalizedData.SwitchNameIsEmptyError)
+                }
+                New-LabException @ExceptionParameters
             }
             [string] $SwitchType = $VMSwitch.Type
             Write-Verbose -Message $($LocalizedData.CreatingVirtualSwitchMessage `
@@ -1097,16 +1040,13 @@ function Initialize-LabSwitches {
                 {
                     $NatSubnetAddress = $VMSwitch.NatSubnetAddress
                     if (-not $NatSubnetAddress) {
-                        $errorId = 'NatSubnetAddressEmptyError'
-                        $errorCategory = [System.Management.Automation.ErrorCategory]::InvalidArgument
-                        $errorMessage = $($LocalizedData.NatSubnetAddressEmptyError `
-                            -f $SwitchName)
-                        $exception = New-Object -TypeName System.InvalidOperationException `
-                            -ArgumentList $errorMessage
-                        $errorRecord = New-Object -TypeName System.Management.Automation.ErrorRecord `
-                            -ArgumentList $exception, $errorId, $errorCategory, $null
-
-                        $PSCmdlet.ThrowTerminatingError($errorRecord)
+                        $ExceptionParameters = @{
+                            errorId = 'NatSubnetAddressEmptyError'
+                            errorCategory = 'InvalidArgument'
+                            errorMessage = $($LocalizedData.NatSubnetAddressEmptyError `
+                                -f $SwitchName)
+                        }
+                        New-LabException @ExceptionParameters
                     }
                     $null = New-VMSwitch `
                         -Name $SwitchName `
@@ -1119,16 +1059,13 @@ function Initialize-LabSwitches {
                 } # 'NAT'
                 Default
                 {
-                    $errorId = 'UnknownSwitchTypeError'
-                    $errorCategory = [System.Management.Automation.ErrorCategory]::InvalidArgument
-                    $errorMessage = $($LocalizedData.UnknownSwitchTypeError `
-                        -f $SwitchType,$SwitchName)
-                    $exception = New-Object -TypeName System.InvalidOperationException `
-                        -ArgumentList $errorMessage
-                    $errorRecord = New-Object -TypeName System.Management.Automation.ErrorRecord `
-                        -ArgumentList $exception, $errorId, $errorCategory, $null
-
-                    $PSCmdlet.ThrowTerminatingError($errorRecord)
+                    $ExceptionParameters = @{
+                        errorId = 'UnknownSwitchTypeError'
+                        errorCategory = 'InvalidArgument'
+                        errorMessage = $($LocalizedData.UnknownSwitchTypeError `
+                            -f $SwitchType,$SwitchName)
+                    }
+                    New-LabException @ExceptionParameters
                 }
             } # Switch
         } # If
@@ -1180,15 +1117,12 @@ function Remove-LabSwitches {
             [String] $SwitchName = $Switch.Name
             if (-not $SwitchName)
             {
-                $errorId = 'UnknownSwitchTypeError'
-                $errorCategory = [System.Management.Automation.ErrorCategory]::InvalidArgument
-                $errorMessage = $($LocalizedData.SwitchNameIsEmptyError)
-                $exception = New-Object -TypeName System.InvalidOperationException `
-                    -ArgumentList $errorMessage
-                $errorRecord = New-Object -TypeName System.Management.Automation.ErrorRecord `
-                    -ArgumentList $exception, $errorId, $errorCategory, $null
-
-                $PSCmdlet.ThrowTerminatingError($errorRecord)
+                $ExceptionParameters = @{
+                    errorId = 'SwitchNameIsEmptyError'
+                    errorCategory = 'InvalidArgument'
+                    errorMessage = $($LocalizedData.SwitchNameIsEmptyError)
+                }
+                New-LabException @ExceptionParameters
             }
             [string] $SwitchType = $Switch.Type
             Write-Verbose -Message $($LocalizedData.DeleteingVirtualSwitchMessage `
@@ -1231,16 +1165,13 @@ function Remove-LabSwitches {
 
                 Default
                 {
-                    $errorId = 'UnknownSwitchTypeError'
-                    $errorCategory = [System.Management.Automation.ErrorCategory]::InvalidArgument
-                    $errorMessage = $($LocalizedData.UnknownSwitchTypeError `
-                        -f $SwitchType,$SwitchName)
-                    $exception = New-Object -TypeName System.InvalidOperationException `
-                        -ArgumentList $errorMessage
-                    $errorRecord = New-Object -TypeName System.Management.Automation.ErrorRecord `
-                        -ArgumentList $exception, $errorId, $errorCategory, $null
-
-                    $PSCmdlet.ThrowTerminatingError($errorRecord)
+                    $ExceptionParameters = @{
+                        errorId = 'UnknownSwitchTypeError'
+                        errorCategory = 'InvalidArgument'
+                        errorMessage = $($LocalizedData.UnknownSwitchTypeError `
+                            -f $SwitchType,$SwitchName)
+                    }
+                    New-LabException @ExceptionParameters
                 }
             } # Switch
         } # If
@@ -1308,31 +1239,25 @@ function Get-LabVMTemplates {
         # was specified or if they actually specified 'template' as the name.
         if ($Template.Name -eq 'template')
         {
-            $errorId = 'EmptyTemplateNameError'
-            $errorCategory = [System.Management.Automation.ErrorCategory]::InvalidArgument
-            $errorMessage = $($LocalizedData.EmptyTemplateNameError)
-            $exception = New-Object -TypeName System.InvalidOperationException `
-                -ArgumentList $errorMessage
-            $errorRecord = New-Object -TypeName System.Management.Automation.ErrorRecord `
-                -ArgumentList $exception, $errorId, $errorCategory, $null
-
-            $PSCmdlet.ThrowTerminatingError($errorRecord)
+            $ExceptionParameters = @{
+                errorId = 'EmptyTemplateNameError'
+                errorCategory = 'InvalidArgument'
+                errorMessage = $($LocalizedData.EmptyTemplateNameError)
+            }
+            New-LabException @ExceptionParameters
         } # If
         if ($Template.SourceVHD)
         {
             # A Source VHD file was specified - does it exist?
             if (-not (Test-Path -Path $Template.SourceVHD))
             {
-                $errorId = 'TemplateSourceVHDNotFoundError'
-                $errorCategory = [System.Management.Automation.ErrorCategory]::InvalidArgument
-                $errorMessage = $($LocalizedData.TemplateSourceVHDNotFoundError `
-                    -f $Template.Name,$Template.SourceVHD)
-                $exception = New-Object -TypeName System.InvalidOperationException `
-                    -ArgumentList $errorMessage
-                $errorRecord = New-Object -TypeName System.Management.Automation.ErrorRecord `
-                    -ArgumentList $exception, $errorId, $errorCategory, $null
-
-                $PSCmdlet.ThrowTerminatingError($errorRecord)
+                $ExceptionParameters = @{
+                    errorId = 'TemplateSourceVHDNotFoundError'
+                    errorCategory = 'InvalidArgument'
+                    errorMessage = $($LocalizedData.TemplateSourceVHDNotFoundError `
+                        -f $Template.Name,$Template.SourceVHD)
+                }
+                New-LabException @ExceptionParameters
             } # If
         } # If
         
@@ -1367,16 +1292,13 @@ function Get-LabVMTemplates {
                 # Check that we do end up with a VHD filename in the template
                 if (-not $VMTemplate.VHD)
                 {
-                    $errorId = 'EmptyTemplateVHDError'
-                    $errorCategory = [System.Management.Automation.ErrorCategory]::InvalidArgument
-                    $errorMessage = $($LocalizedData.EmptyTemplateVHDError `
-                        -f $VMTemplate.Name)
-                    $exception = New-Object -TypeName System.InvalidOperationException `
-                        -ArgumentList $errorMessage
-                    $errorRecord = New-Object -TypeName System.Management.Automation.ErrorRecord `
-                        -ArgumentList $exception, $errorId, $errorCategory, $null
-
-                    $PSCmdlet.ThrowTerminatingError($errorRecord)
+                    $ExceptionParameters = @{
+                        errorId = 'EmptyTemplateVHDError'
+                        errorCategory = 'InvalidArgument'
+                        errorMessage = $($LocalizedData.EmptyTemplateVHDError `
+                            -f $VMTemplate.Name)
+                    }
+                    New-LabException @ExceptionParameters
                 } # If
                 if ($Template.SourceVHD)
                 {
@@ -1436,16 +1358,13 @@ function Get-LabVMTemplates {
             # Check that we do end up with a VHD filename in the template
             if (-not $Template.VHD)
             {
-                $errorId = 'EmptyTemplateVHDError'
-                $errorCategory = [System.Management.Automation.ErrorCategory]::InvalidArgument
-                $errorMessage = $($LocalizedData.EmptyTemplateVHDError `
-                    -f $Template.Name)
-                $exception = New-Object -TypeName System.InvalidOperationException `
-                    -ArgumentList $errorMessage
-                $errorRecord = New-Object -TypeName System.Management.Automation.ErrorRecord `
-                    -ArgumentList $exception, $errorId, $errorCategory, $null
-
-                $PSCmdlet.ThrowTerminatingError($errorRecord)
+                $ExceptionParameters = @{
+                    errorId = 'EmptyTemplateVHDError'
+                    errorCategory = 'InvalidArgument'
+                    errorMessage = $($LocalizedData.EmptyTemplateVHDError `
+                        -f $VMTemplate.Name)
+                }
+                New-LabException @ExceptionParameters
             } # If
 
             # The template wasn't found in the list of templates so add it
@@ -1542,16 +1461,13 @@ function Initialize-LabVMTemplates {
             {
                 # The source VHD does not exist - so try and create it from the ISO
                 # This feature is not yet supported so will throw an error
-                $errorId = 'TemplateSourceVHDNotFoundError'
-                $errorCategory = [System.Management.Automation.ErrorCategory]::InvalidArgument
-                $errorMessage = $($LocalizedData.TemplateSourceVHDNotFoundError `
-                    -f $VMTemplate.name,$VMTemplate.sourcevhd)
-                $exception = New-Object -TypeName System.InvalidOperationException `
-                    -ArgumentList $errorMessage
-                $errorRecord = New-Object -TypeName System.Management.Automation.ErrorRecord `
-                    -ArgumentList $exception, $errorId, $errorCategory, $null
-
-                $PSCmdlet.ThrowTerminatingError($errorRecord)
+                $ExceptionParameters = @{
+                    errorId = 'TemplateSourceVHDNotFoundError'
+                    errorCategory = 'InvalidArgument'
+                    errorMessage = $($LocalizedData.TemplateSourceVHDNotFoundError `
+                        -f $VMTemplate.name,$VMTemplate.sourcevhd)
+                }
+                New-LabException @ExceptionParameters
             }
             Write-Verbose -Message $($LocalizedData.CopyingTemplateSourceVHDMessage `
                 -f $VMTemplate.sourcevhd,$VMTemplate.templatevhd)
@@ -1721,30 +1637,24 @@ function Set-LabVMDSCMOFFile {
                 }
                 Catch
                 {
-                    $errorId = 'DSCModuleDownloadError'
-                    $errorCategory = [System.Management.Automation.ErrorCategory]::InvalidArgument
-                    $errorMessage = $($LocalizedData.DSCModuleDownloadError `
-                        -f $VM.DSCConfigFile,$VM.Name,$ModuleName)
-                    $exception = New-Object -TypeName System.InvalidOperationException `
-                        -ArgumentList $errorMessage
-                    $errorRecord = New-Object -TypeName System.Management.Automation.ErrorRecord `
-                        -ArgumentList $exception, $errorId, $errorCategory, $null
-    
-                    $PSCmdlet.ThrowTerminatingError($errorRecord)
+                    $ExceptionParameters = @{
+                        errorId = 'DSCModuleDownloadError'
+                        errorCategory = 'InvalidArgument'
+                        errorMessage = $($LocalizedData.DSCModuleDownloadError `
+                            -f $VM.DSCConfigFile,$VM.Name,$ModuleName)
+                    }
+                    New-LabException @ExceptionParameters
                 }
             }
             Else
             {
-                $errorId = 'DSCModuleDownloadError'
-                $errorCategory = [System.Management.Automation.ErrorCategory]::InvalidArgument
-                $errorMessage = $($LocalizedData.DSCModuleDownloadError `
-                    -f $VM.DSCConfigFile,$VM.Name,$ModuleName)
-                $exception = New-Object -TypeName System.InvalidOperationException `
-                    -ArgumentList $errorMessage
-                $errorRecord = New-Object -TypeName System.Management.Automation.ErrorRecord `
-                    -ArgumentList $exception, $errorId, $errorCategory, $null
-
-                $PSCmdlet.ThrowTerminatingError($errorRecord)
+                $ExceptionParameters = @{
+                    errorId = 'DSCModuleDownloadError'
+                    errorCategory = 'InvalidArgument'
+                    errorMessage = $($LocalizedData.DSCModuleDownloadError `
+                        -f $VM.DSCConfigFile,$VM.Name,$ModuleName)
+                }
+                New-LabException @ExceptionParameters
             }
         } # If
 
@@ -1765,16 +1675,13 @@ function Set-LabVMDSCMOFFile {
         } # Foreach
         if (-not (Test-Path -Path $ModulePath))
         {
-            $errorId = 'DSCModuleNotFoundError'
-            $errorCategory = [System.Management.Automation.ErrorCategory]::InvalidArgument
-            $errorMessage = $($LocalizedData.DSCModuleNotFoundError `
-                -f $VM.DSCConfigFile,$VM.Name,$ModuleName)
-            $exception = New-Object -TypeName System.InvalidOperationException `
-                -ArgumentList $errorMessage
-            $errorRecord = New-Object -TypeName System.Management.Automation.ErrorRecord `
-                -ArgumentList $exception, $errorId, $errorCategory, $null
-
-            $PSCmdlet.ThrowTerminatingError($errorRecord)
+            $ExceptionParameters = @{
+                errorId = 'DSCModuleNotFoundError'
+                errorCategory = 'InvalidArgument'
+                errorMessage = $($LocalizedData.DSCModuleNotFoundError `
+                    -f $VM.DSCConfigFile,$VM.Name,$ModuleName)
+            }
+            New-LabException @ExceptionParameters
         }
         Copy-Item `
             -Path $ModulePath `
@@ -1784,16 +1691,13 @@ function Set-LabVMDSCMOFFile {
 
     if (-not (New-LabVMSelfSignedCert -Configuration $Configuration -VM $VM))
     {
-        $errorId = 'CertificateCreateError'
-        $errorCategory = [System.Management.Automation.ErrorCategory]::InvalidArgument
-        $errorMessage = $($LocalizedData.CertificateCreateError `
-            -f $VM.Name)
-        $exception = New-Object -TypeName System.InvalidOperationException `
-            -ArgumentList $errorMessage
-        $errorRecord = New-Object -TypeName System.Management.Automation.ErrorRecord `
-            -ArgumentList $exception, $errorId, $errorCategory, $null
-
-        $PSCmdlet.ThrowTerminatingError($errorRecord)
+        $ExceptionParameters = @{
+            errorId = 'CertificateCreateError'
+            errorCategory = 'InvalidArgument'
+            errorMessage = $($LocalizedData.CertificateCreateError `
+                -f $VM.Name)
+        }
+        New-LabException @ExceptionParameters
     }
     
     # Remove any old self-signed certifcates for this VM
@@ -1826,16 +1730,13 @@ function Set-LabVMDSCMOFFile {
         -Thumbprint $CertificateThumbprint
     if (-not (Test-Path -Path $DSCMOFMetaFile))
     {
-        $errorId = 'DSCConfigMetaMOFCreateError'
-        $errorCategory = [System.Management.Automation.ErrorCategory]::InvalidArgument
-        $errorMessage = $($LocalizedData.DSCConfigMetaMOFCreateError `
-            -f $VM.Name)
-        $exception = New-Object -TypeName System.InvalidOperationException `
-            -ArgumentList $errorMessage
-        $errorRecord = New-Object -TypeName System.Management.Automation.ErrorRecord `
-            -ArgumentList $exception, $errorId, $errorCategory, $null
-
-        $PSCmdlet.ThrowTerminatingError($errorRecord)
+        $ExceptionParameters = @{
+            errorId = 'DSCConfigMetaMOFCreateError'
+            errorCategory = 'InvalidArgument'
+            errorMessage = $($LocalizedData.DSCConfigMetaMOFCreateError `
+                -f $VM.Name)
+        }
+        New-LabException @ExceptionParameters
     } # If
 
     # A DSC Config File was provided so create a MOF File out of it.
@@ -1872,16 +1773,13 @@ function Set-LabVMDSCMOFFile {
         }
         Else
         {
-            $errorId = 'DSCConfigMoreThanOneNodeError'
-            $errorCategory = [System.Management.Automation.ErrorCategory]::InvalidArgument
-            $errorMessage = $($LocalizedData.DSCConfigMoreThanOneNodeError `
-                -f $VM.DSCConfigFile,$VM.Name)
-            $exception = New-Object -TypeName System.InvalidOperationException `
-                -ArgumentList $errorMessage
-            $errorRecord = New-Object -TypeName System.Management.Automation.ErrorRecord `
-                -ArgumentList $exception, $errorId, $errorCategory, $null
-    
-            $PSCmdlet.ThrowTerminatingError($errorRecord)
+            $ExceptionParameters = @{
+                errorId = 'DSCConfigMoreThanOneNodeError'
+                errorCategory = 'InvalidArgument'
+                errorMessage = $($LocalizedData.DSCConfigMoreThanOneNodeError `
+                    -f $VM.DSCConfigFile,$VM.Name)
+            }
+            New-LabException @ExceptionParameters
         } # If
     } # If
     
@@ -1926,16 +1824,13 @@ function Set-LabVMDSCMOFFile {
     $null = & "$DSCConfigName" -OutputPath $($ENV:Temp) -ConfigurationData $ConfigurationFile
     if (-not (Test-Path -Path $DSCMOFFile))
     {
-        $errorId = 'DSCConfigMOFCreateError'
-        $errorCategory = [System.Management.Automation.ErrorCategory]::InvalidArgument
-        $errorMessage = $($LocalizedData.DSCConfigMOFCreateError `
-            -f $VM.DSCConfigFile,$VM.Name)
-        $exception = New-Object -TypeName System.InvalidOperationException `
-            -ArgumentList $errorMessage
-        $errorRecord = New-Object -TypeName System.Management.Automation.ErrorRecord `
-            -ArgumentList $exception, $errorId, $errorCategory, $null
-
-        $PSCmdlet.ThrowTerminatingError($errorRecord)
+        $ExceptionParameters = @{
+            errorId = 'DSCConfigMOFCreateError'
+            errorCategory = 'InvalidArgument'
+            errorMessage = $($LocalizedData.DSCConfigMOFCreateError `
+                -f $VM.DSCConfigFile,$VM.Name)
+        }
+        New-LabException @ExceptionParameters
     } # If
 
     # Remove the VM Self-Signed Certificate from the Local Machine Store
@@ -2043,30 +1938,24 @@ function Set-LabVMDSCStartFile {
         $NetAdapter = Get-VMNetworkAdapter -VMName $($VM.Name) -Name $Adapter
         if (-not $NetAdapter)
         {
-            $errorId = 'NetworkAdapterNotFoundError'
-            $errorCategory = [System.Management.Automation.ErrorCategory]::InvalidArgument
-            $errorMessage = $($LocalizedData.NetworkAdapterNotFoundError `
-                -f $Adapter,$VM.Name)
-            $exception = New-Object -TypeName System.InvalidOperationException `
-                -ArgumentList $errorMessage
-            $errorRecord = New-Object -TypeName System.Management.Automation.ErrorRecord `
-                -ArgumentList $exception, $errorId, $errorCategory, $null
-    
-            $PSCmdlet.ThrowTerminatingError($errorRecord)
+            $ExceptionParameters = @{
+                errorId = 'NetworkAdapterNotFoundError'
+                errorCategory = 'InvalidArgument'
+                errorMessage = $($LocalizedData.NetworkAdapterNotFoundError `
+                    -f $Adapter,$VM.Name)
+            }
+            New-LabException @ExceptionParameters
         } # If
         $MacAddress = $NetAdapter.MacAddress
         if (-not $MacAddress)
         {
-            $errorId = 'NetworkAdapterBlankMacError'
-            $errorCategory = [System.Management.Automation.ErrorCategory]::InvalidArgument
-            $errorMessage = $($LocalizedData.NetworkAdapterBlankMacError `
-                -f $Adapter,$VM.Name)
-            $exception = New-Object -TypeName System.InvalidOperationException `
-                -ArgumentList $errorMessage
-            $errorRecord = New-Object -TypeName System.Management.Automation.ErrorRecord `
-                -ArgumentList $exception, $errorId, $errorCategory, $null
-    
-            $PSCmdlet.ThrowTerminatingError($errorRecord)
+            $ExceptionParameters = @{
+                errorId = 'NetworkAdapterBlankMacError'
+                errorCategory = 'InvalidArgument'
+                errorMessage = $($LocalizedData.NetworkAdapterBlankMacError `
+                    -f $Adapter,$VM.Name)
+            }
+            New-LabException @ExceptionParameters
         } # If
         $DSCStartPs += @"
 Get-NetAdapter ``
@@ -2235,16 +2124,13 @@ function Start-LabVMDSC {
         # Failed to connnect to the VM
         if (! $Session)
         {
-            $errorId = 'DSCInitializationError'
-            $errorCategory = [System.Management.Automation.ErrorCategory]::OperationTimeout
-            $errorMessage = $($LocalizedData.DSCInitializationError `
-                -f $VM.Name)
-            $exception = New-Object -TypeName System.Exception `
-                -ArgumentList $errorMessage
-            $errorRecord = New-Object -TypeName System.Management.Automation.ErrorRecord `
-                -ArgumentList $exception, $errorId, $errorCategory, $null
-    
-            $PSCmdlet.ThrowTerminatingError($errorRecord)            
+            $ExceptionParameters = @{
+                errorId = 'DSCInitializationError'
+                errorCategory = 'OperationTimeout'
+                errorMessage = $($LocalizedData.DSCInitializationError `
+                    -f $VM.Name)
+            }
+            New-LabException @ExceptionParameters            
         }
         
         if (($Session) `
@@ -2312,16 +2198,13 @@ function Start-LabVMDSC {
                 Remove-PSSession -Session $Session
             }
 
-            $errorId = 'DSCInitializationError'
-            $errorCategory = [System.Management.Automation.ErrorCategory]::OperationTimeout
-            $errorMessage = $($LocalizedData.DSCInitializationError `
-                -f $VM.Name)
-            $exception = New-Object -TypeName System.Exception `
-                -ArgumentList $errorMessage
-            $errorRecord = New-Object -TypeName System.Management.Automation.ErrorRecord `
-                -ArgumentList $exception, $errorId, $errorCategory, $null
-    
-            $PSCmdlet.ThrowTerminatingError($errorRecord)
+            $ExceptionParameters = @{
+                errorId = 'DSCInitializationError'
+                errorCategory = 'OperationTimeout'
+                errorMessage = $($LocalizedData.DSCInitializationError `
+                    -f $VM.Name)
+            }
+            New-LabException @ExceptionParameters
         } # If
 
         # Upload any required modules to the VM
@@ -2367,16 +2250,13 @@ function Start-LabVMDSC {
                 Remove-PSSession -Session $Session
             }
 
-            $errorId = 'DSCInitializationError'
-            $errorCategory = [System.Management.Automation.ErrorCategory]::OperationTimeout
-            $errorMessage = $($LocalizedData.DSCInitializationError `
-                -f $VM.Name)
-            $exception = New-Object -TypeName System.Exception `
-                -ArgumentList $errorMessage
-            $errorRecord = New-Object -TypeName System.Management.Automation.ErrorRecord `
-                -ArgumentList $exception, $errorId, $errorCategory, $null
-    
-            $PSCmdlet.ThrowTerminatingError($errorRecord)
+            $ExceptionParameters = @{
+                errorId = 'DSCInitializationError'
+                errorCategory = 'OperationTimeout'
+                errorMessage = $($LocalizedData.DSCInitializationError `
+                    -f $VM.Name)
+            }
+            New-LabException @ExceptionParameters
         }
 
         # Finally, Start DSC up!
@@ -3412,16 +3292,13 @@ function Get-LabVMSelfSignedCert
         # Failed to connnect to the VM
         if (! $Session)
         {
-            $errorId = 'CertificateDownloadError'
-            $errorCategory = [System.Management.Automation.ErrorCategory]::OperationTimeout
-            $errorMessage = $($LocalizedData.CertificateDownloadError `
-                -f $VM.Name)
-            $exception = New-Object -TypeName System.Exception `
-                -ArgumentList $errorMessage
-            $errorRecord = New-Object -TypeName System.Management.Automation.ErrorRecord `
-                -ArgumentList $exception, $errorId, $errorCategory, $null
-    
-            $PSCmdlet.ThrowTerminatingError($errorRecord)
+            $ExceptionParameters = @{
+                errorId = 'CertificateDownloadError'
+                errorCategory = 'OperationTimeout'
+                errorMessage = $($LocalizedData.CertificateDownloadError `
+                    -f $VM.Name)
+            }
+            New-LabException @ExceptionParameters
         }
 
         if (($Session) `
@@ -3458,16 +3335,13 @@ function Get-LabVMSelfSignedCert
                 Remove-PSSession -Session $Session
             }
 
-            $errorId = 'CertificateDownloadError'
-            $errorCategory = [System.Management.Automation.ErrorCategory]::OperationTimeout
-            $errorMessage = $($LocalizedData.CertificateDownloadError `
-                -f $VM.Name)
-            $exception = New-Object -TypeName System.Exception `
-                -ArgumentList $errorMessage
-            $errorRecord = New-Object -TypeName System.Management.Automation.ErrorRecord `
-                -ArgumentList $exception, $errorId, $errorCategory, $null
-    
-            $PSCmdlet.ThrowTerminatingError($errorRecord)
+            $ExceptionParameters = @{
+                errorId = 'CertificateDownloadError'
+                errorCategory = 'OperationTimeout'
+                errorMessage = $($LocalizedData.CertificateDownloadError `
+                    -f $VM.Name)
+            }
+            New-LabException @ExceptionParameters
         }
 
         # Close the Session if it is opened and the download is complete
@@ -3560,16 +3434,13 @@ function New-LabVMSelfSignedCert
         # Failed to connnect to the VM
         if (! $Session)
         {
-            $errorId = 'CertificateDownloadError'
-            $errorCategory = [System.Management.Automation.ErrorCategory]::OperationTimeout
-            $errorMessage = $($LocalizedData.CertificateDownloadError `
-                -f $VM.Name)
-            $exception = New-Object -TypeName System.Exception `
-                -ArgumentList $errorMessage
-            $errorRecord = New-Object -TypeName System.Management.Automation.ErrorRecord `
-                -ArgumentList $exception, $errorId, $errorCategory, $null
-    
-            $PSCmdlet.ThrowTerminatingError($errorRecord)
+            $ExceptionParameters = @{
+                errorId = 'CertificateDownloadError'
+                errorCategory = 'OperationTimeout'
+                errorMessage = $($LocalizedData.CertificateDownloadError `
+                    -f $VM.Name)
+            }
+            New-LabException @ExceptionParameters
         }
 
         $Complete = $False
@@ -3660,16 +3531,13 @@ function New-LabVMSelfSignedCert
                 Remove-PSSession -Session $Session
             }
 
-            $errorId = 'CertificateDownloadError'
-            $errorCategory = [System.Management.Automation.ErrorCategory]::OperationTimeout
-            $errorMessage = $($LocalizedData.CertificateDownloadError `
-                -f $VM.Name)
-            $exception = New-Object -TypeName System.Exception `
-                -ArgumentList $errorMessage
-            $errorRecord = New-Object -TypeName System.Management.Automation.ErrorRecord `
-                -ArgumentList $exception, $errorId, $errorCategory, $null
-    
-            $PSCmdlet.ThrowTerminatingError($errorRecord)
+            $ExceptionParameters = @{
+                errorId = 'CertificateDownloadError'
+                errorCategory = 'OperationTimeout'
+                errorMessage = $($LocalizedData.CertificateDownloadError `
+                    -f $VM.Name)
+            }
+            New-LabException @ExceptionParameters
         }
 
         # Close the Session if it is opened and the download is complete
@@ -3724,16 +3592,13 @@ function Get-LabVMManagementIPAddress {
         Where({$_.SwitchName -eq $ManagementSwitchName}).`
         IPAddresses.Where({$_.Contains('.')})
     if (-not $IPAddress) {
-        $errorId = 'ManagmentIPAddressError'
-        $errorCategory = [System.Management.Automation.ErrorCategory]::InvalidArgument
-        $errorMessage = $($LocalizedData.ManagmentIPAddressError `
-            -f $ManagementSwitchName,$VM.Name)
-        $exception = New-Object -TypeName System.InvalidOperationException `
-            -ArgumentList $errorMessage
-        $errorRecord = New-Object -TypeName System.Management.Automation.ErrorRecord `
-            -ArgumentList $exception, $errorId, $errorCategory, $null
-
-        $PSCmdlet.ThrowTerminatingError($errorRecord)
+        $ExceptionParameters = @{
+            errorId = 'ManagmentIPAddressError'
+            errorCategory = 'InvalidArgument'
+            errorMessage = $($LocalizedData.ManagmentIPAddressError `
+                -f $ManagementSwitchName,$VM.Name)
+        }
+        New-LabException @ExceptionParameters
     }
     return $IPAddress
 } # Get-LabVMManagementIPAddress
@@ -4335,16 +4200,13 @@ function Wait-LabVMInit
         # Failed to connnect to the VM
         if (! $Session)
         {
-            $errorId = 'InitialSetupCompleteError'
-            $errorCategory = [System.Management.Automation.ErrorCategory]::OperationTimeout
-            $errorMessage = $($LocalizedData.InitialSetupCompleteError `
-                -f $VM.Name)
-            $exception = New-Object -TypeName System.Exception `
-                -ArgumentList $errorMessage
-            $errorRecord = New-Object -TypeName System.Management.Automation.ErrorRecord `
-                -ArgumentList $exception, $errorId, $errorCategory, $null
-    
-            $PSCmdlet.ThrowTerminatingError($errorRecord)
+            $ExceptionParameters = @{
+                errorId = 'InitialSetupCompleteError'
+                errorCategory = 'OperationTimeout'
+                errorMessage = $($LocalizedData.InitialSetupCompleteError `
+                    -f $VM.Name)
+            }
+            New-LabException @ExceptionParameters
         }
 
         if (($Session) `
@@ -4383,16 +4245,13 @@ function Wait-LabVMInit
                 Remove-PSSession -Session $Session
             }
 
-            $errorId = 'InitialSetupCompleteError'
-            $errorCategory = [System.Management.Automation.ErrorCategory]::OperationTimeout
-            $errorMessage = $($LocalizedData.InitialSetupCompleteError `
-                -f $VM.Name)
-            $exception = New-Object -TypeName System.Exception `
-                -ArgumentList $errorMessage
-            $errorRecord = New-Object -TypeName System.Management.Automation.ErrorRecord `
-                -ArgumentList $exception, $errorId, $errorCategory, $null
-    
-            $PSCmdlet.ThrowTerminatingError($errorRecord)
+            $ExceptionParameters = @{
+                errorId = 'InitialSetupCompleteError'
+                errorCategory = 'OperationTimeout'
+                errorMessage = $($LocalizedData.InitialSetupCompleteError `
+                    -f $VM.Name)
+            }
+            New-LabException @ExceptionParameters
         }
 
         # Close the Session if it is opened
@@ -4494,7 +4353,8 @@ function Wait-LabVMOff {
 .OUTPUTS
    The PSSession object of the remote connect or null if the connection failed.
 #>
-function Connect-LabVM {
+function Connect-LabVM
+{
     [OutputType([System.Management.Automation.Runspaces.PSSession])]
     [CmdLetBinding()]
     param
@@ -4579,19 +4439,79 @@ function Connect-LabVM {
     if ($FatalException -or ($Session -eq $null))
     {
         # The connection failed so throw an error
-        $errorId = 'RemotingConnectionError'
-        $errorCategory = [System.Management.Automation.ErrorCategory]::ConnectionError
-        $errorMessage = $($LocalizedData.RemotingConnectionError `
-            -f $VM.Name)
-        $exception = New-Object -TypeName System.Exception `
-            -ArgumentList $errorMessage
-        $errorRecord = New-Object -TypeName System.Management.Automation.ErrorRecord `
-            -ArgumentList $exception, $errorId, $errorCategory, $null
-
-        $PSCmdlet.ThrowTerminatingError($errorRecord)        
+        $ExceptionParameters = @{
+            errorId = 'RemotingConnectionError'
+            errorCategory = 'ConnectionError'
+            errorMessage = $($LocalizedData.RemotingConnectionError `
+                -f $VM.Name)
+        }
+        New-LabException @ExceptionParameters
     }
     Return $Session
 } # Connect-LabVM
+####################################################################################################
+
+####################################################################################################
+<#
+.SYNOPSIS
+   Throws a custom exception.
+.DESCRIPTION
+   This cmdlet throw a terminating or non-terminating exception. 
+.EXAMPLE
+    $ExceptionParameters = @{
+        errorId = 'ConnectionFailure'
+        errorCategory = 'ConnectionError'
+        errorMessage = 'Could not connect'
+    }
+    New-LabException @ExceptionParameters
+    Throw a ConnectionError exception with the message 'Could not connect'.
+.PARAMETER errorId
+   The Id of the exception.
+.PARAMETER errorCategory
+   The category of the exception. It must be a valid [System.Management.Automation.ErrorCategory]
+   value.
+.PARAMETER errorMessage
+   The exception message.
+.PARAMETER terminate
+   THis switch will cause the exception to terminate the cmdlet.
+.OUTPUTS
+   None
+#>
+
+function New-LabException
+{
+    [CmdLetBinding()]
+    param
+    (
+        [Parameter(Mandatory)]
+        [String] $errorId,
+
+        [Parameter(Mandatory)]
+        [System.Management.Automation.ErrorCategory] $errorCategory,
+
+        [Parameter(Mandatory)]
+        [String] $errorMessage,
+        
+        [Switch]
+        $terminate
+    )
+
+    $exception = New-Object -TypeName System.Exception `
+        -ArgumentList $errorMessage
+    $errorRecord = New-Object -TypeName System.Management.Automation.ErrorRecord `
+        -ArgumentList $exception, $errorId, $errorCategory, $null
+
+    if ($Terminate)
+    {
+        # This is a terminating exception.
+        throw $errorRecord
+    }
+    else
+    {
+        # Note: Although this method is called ThrowTerminatingError, it doesn't terminate.
+        $PSCmdlet.ThrowTerminatingError($errorRecord)
+    }
+}
 ####################################################################################################
 
 ####################################################################################################
