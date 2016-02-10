@@ -56,7 +56,7 @@ DSCConfigCreatingLCMMOFMessage=Creating DSC LCM Config file '{0}' in VM '{1}'.
 DSCConfigCreatingMOFMessage=Creating DSC Config file '{0}' in VM '{1}'.
 DSCConfigMOFCreatedMessage=DSC MOF File '{0}' for VM '{1}'. was created successfully.
 ConnectingMessage=Connecting to '{0}'.
-ConnectingFailedMessage=Connection to '{0}' failed, retrying in {1} seconds.
+ConnectingFailedMessage=Connection to '{0}' failed ({2}), retrying in {1} seconds.
 CopyingFilesToComputerMessage=Copying {1} Files to '{0}'.
 CopyingFilesToComputerFailedMessage=Copying {1} Files to '{0}' failed, retrying in {2} seconds.
 StartingDSCMessage=Starting DSC on VM '{0}'.
@@ -64,6 +64,8 @@ MountingVMBootDiskMessage=Mounting VM '{0}' Boot Disk VHDx '{1}'.
 DownloadingVMBootDiskFileMessage=Downloading VM '{0}' {1} file '{2}'.
 ApplyingVMBootDiskFileMessage=Applying VM '{0}' {1} file '{2}'.
 DismountingVMBootDiskMessage=Dismounting VM '{0}' Boot Disk VHDx '{1}'.
+AddingIPAddressToTrustedHostsMessage=Adding IP Address '{1}' to WS-Man Trusted Hosts to allow remoting to '{0}'.
+WaitingForIPAddressAssignedMessage=Waiting for valid IP Address to be assigned to '{0}', retrying in {1} seconds.
 '@
 }
 
@@ -2207,9 +2209,6 @@ function Start-LabVMDSC {
     )
     [DateTime] $StartTime = Get-Date
     [System.Management.Automation.Runspaces.PSSession] $Session = $null
-    [PSCredential] $AdmininistratorCredential = New-Credential `
-        -Username "$($VM.ComputerName)\Administrator" `
-        -Password $VM.AdministratorPassword
     [Boolean] $Complete = $False
     [Boolean] $ConfigCopyComplete = $False
     [Boolean] $ModuleCopyComplete = $False
@@ -2221,35 +2220,12 @@ function Start-LabVMDSC {
 
     While ((-not $Complete) -and (((Get-Date) - $StartTime).Seconds) -lt $TimeOut)
     {
-        While (-not ($Session) -or ($Session.State -ne 'Opened'))
+        # Connect to the VM
+        While ((($Session -eq $null) -or ($Session.State -ne 'Opened')) -and ((((Get-Date) - $StartTime).Seconds) -lt $TimeOut))
         {
-            # Try and connect to the remote VM for up to $Timeout (5 minutes) seconds.
-            Try
-            {
-                Write-Verbose -Message $($LocalizedData.ConnectingMessage `
-                    -f $VM.ComputerName)
-
-                # Get the Management IP Address of the VM
-                # We repeat this because the IP Address will only be assiged 
-                # once the VM is fully booted.
-                $IPAddress = Get-LabVMManagementIPAddress `
-                    -Configuration $Configuration `
-                    -VM $VM
-
-                $Session = New-PSSession `
-                    -ComputerName $IPAddress `
-                    -Credential $AdmininistratorCredential `
-                    -ErrorAction Stop
-            }
-            Catch
-            {
-                Write-Verbose -Message $($LocalizedData.ConnectingFailedMessage `
-                    -f $VM.ComputerName,$Script:RetryConnectSeconds)
-
-                Start-Sleep -Seconds $Script:RetryConnectSeconds
-            }
+            $Session = Connect-LabVM -VM $VM
         } # While
-
+        
         if (($Session) -and ($Session.State -eq 'Opened') -and (-not $ConfigCopyComplete))
         {
             # We are connected OK - upload the DSC files
@@ -3351,32 +3327,13 @@ function Get-LabVMSelfSignedCert {
     [String] $VMPath = $Configuration.labbuilderconfig.SelectNodes('settings').vmpath
     [DateTime] $StartTime = Get-Date
     [System.Management.Automation.Runspaces.PSSession] $Session = $null
-    [PSCredential] $AdmininistratorCredential = New-Credential `
-        -Username "$($VM.ComputerName)\Administrator" `
-        -Password $VM.AdministratorPassword
     [Boolean] $Complete = $False
 
     While ((-not $Complete)  -and (((Get-Date) - $StartTime).Seconds) -lt $TimeOut) {
-        While (-not ($Session) -or ($Session.State -ne 'Opened')) {
-            # Try and connect to the remote VM for up to $Timeout (5 minutes) seconds.
-            Try {
-                Write-Verbose "Attempting connection to $($VM.ComputerName) ..."
-
-                # Get the Management IP Address of the VM
-                # We repeat this because the IP Address will only be assiged 
-                # once the VM is fully booted.
-                $IPAddress = Get-LabVMManagementIPAddress `
-                    -Configuration $Configuration `
-                    -VM $VM
-
-                $Session = New-PSSession `
-                    -ComputerName $IPAddress `
-                    -Credential $AdmininistratorCredential `
-                    -ErrorAction Stop
-            } Catch {
-                Write-Verbose "Connection to $($VM.ComputerName) failed - retrying in 5 seconds ..."
-                Start-Sleep -Seconds $Script:RetryConnectSeconds
-            } # Try
+        # Connect to the VM
+        While ((($Session -eq $null) -or ($Session.State -ne 'Opened')) -and ((((Get-Date) - $StartTime).Seconds) -lt $TimeOut))
+        {
+            $Session = Connect-LabVM -VM $VM
         } # While
 
         if (($Session) -and ($Session.State -eq 'Opened') -and (-not $Complete)) {
@@ -3445,9 +3402,6 @@ function Get-LabVMCertificate {
     [DateTime] $StartTime = Get-Date
     [String] $VMPath = $Configuration.labbuilderconfig.SelectNodes('settings').vmpath
     [System.Management.Automation.Runspaces.PSSession] $Session = $null
-    [PSCredential] $AdmininistratorCredential = New-Credential `
-        -Username "$($VM.ComputerName)\Administrator" `
-        -Password $VM.AdministratorPassword
 
     # Load path variables
     [String] $VMRootPath = Join-Path `
@@ -3462,26 +3416,10 @@ function Get-LabVMCertificate {
     [Boolean] $Complete = $False
 
     While ((-not $Complete)  -and (((Get-Date) - $StartTime).Seconds) -lt $TimeOut) {
-        While (-not ($Session) -or ($Session.State -ne 'Opened')) {
-            # Try and connect to the remote VM for up to $Timeout (5 minutes) seconds.
-            Try {
-                Write-Verbose "Attempting connection to $($VM.ComputerName) ..."
-
-                # Get the Management IP Address of the VM
-                # We repeat this because the IP Address will only be assiged 
-                # once the VM is fully booted.
-                $IPAddress = Get-LabVMManagementIPAddress `
-                    -Configuration $Configuration `
-                    -VM $VM
-
-                $Session = New-PSSession `
-                    -ComputerName $IPAddress `
-                    -Credential $AdmininistratorCredential `
-                    -ErrorAction Stop
-            } Catch {
-                Write-Verbose "Connection to $($VM.ComputerName) failed - retrying in 5 seconds ..."
-                Start-Sleep -Seconds $Script:RetryConnectSeconds
-            } # Try
+        # Connect to the VM
+        While ((($Session -eq $null) -or ($Session.State -ne 'Opened')) -and ((((Get-Date) - $StartTime).Seconds) -lt $TimeOut))
+        {
+            $Session = Connect-LabVM -VM $VM
         } # While
 
         [String] $GetCertPs = Get-LabGetCertificatePs -Configuration $Configuration -VM $VM
@@ -4159,9 +4097,6 @@ function Wait-LabVMInit {
     [DateTime] $StartTime = Get-Date
     [Boolean] $Found = $False
     [System.Management.Automation.Runspaces.PSSession] $Session = $null
-    [PSCredential] $AdmininistratorCredential = New-Credential `
-        -Username "$($VM.ComputerName)\Administrator" `
-        -Password $VM.AdministratorPassword
 
     # Make sure the VM has started
     Wait-LabVMStart -VM $VM
@@ -4169,30 +4104,10 @@ function Wait-LabVMInit {
     [Boolean] $Complete = $False
     while ((-not $Complete)  -and (((Get-Date) - $StartTime).Seconds) -lt $TimeOut)
     {
-        while (-not ($Session) -or ($Session.State -ne 'Opened'))
+        # Connect to the VM
+        While ((($Session -eq $null) -or ($Session.State -ne 'Opened')) -and ((((Get-Date) - $StartTime).Seconds) -lt $TimeOut))
         {
-            # Try and connect to the remote VM for up to $Timeout (5 minutes) seconds.
-            try
-            {
-                Write-Verbose "Attempting connection to $($VM.ComputerName) ..."
-
-                # Get the Management IP Address of the VM
-                # We repeat this because the IP Address will only be assiged 
-                # once the VM is fully booted.
-                $IPAddress = Get-LabVMManagementIPAddress `
-                    -Configuration $Configuration `
-                    -VM $VM
-
-                $Session = New-PSSession `
-                    -ComputerName $IPAddress `
-                    -Credential $AdmininistratorCredential `
-                    -ErrorAction Stop
-            }
-            catch
-            {
-                Write-Verbose "Connection to $($VM.ComputerName) failed - retrying in 5 seconds ..."
-                Start-Sleep -Seconds $Script:RetryConnectSeconds
-            } # Try
+            $Session = Connect-LabVM -VM $VM
         } # While
 
         if (($Session) -and ($Session.State -eq 'Opened') -and (-not $Complete))
@@ -4285,6 +4200,99 @@ function Wait-LabVMOff {
         Start-Sleep -Seconds $Script:RetryHeartbeatSeconds
     } # while
 } # Wait-LabVMOff
+####################################################################################################
+
+####################################################################################################
+<#
+.SYNOPSIS
+   Connects to a running VM.
+.DESCRIPTION
+   This cmdlet will connect to a running VM using PSRemoting. A PSSession object will be returned
+   if the connection was successful.
+   
+   If the connection fails, it will be retried until the ConnectTimeout is reached. If the
+   ConnectTimeout is reached and a connection has not been established then $null is returned. 
+.EXAMPLE
+   $Config = Get-LabConfiguration -Path c:\mylab\config.xml
+   $VMs = Get-LabVM -Configuration $Config
+   $Session = Connect-LabVM -VM $VMs[0]
+   Connect to the first VM in the Lab c:\mylab\config.xml for DSC configuration.
+.PARAMETER VM
+   The VM Object referring to the VM to connect to.
+.PARAMETER ConnectTimeout
+   The number of seconds the connection will attempt to be established for. Defaults to 300 seconds.
+.OUTPUTS
+   The PSSession object of the remote connect or null if the connection failed.
+#>
+function Connect-LabVM {
+    [OutputType([System.Management.Automation.Runspaces.PSSession])]
+    [CmdLetBinding()]
+    param
+    (
+        [Parameter(
+            Mandatory,
+            Position=0)]
+        [System.Collections.Hashtable] $VM,
+        
+        [Int] $ConnectTimeout = 300
+    )
+
+    [DateTime] $StartTime = Get-Date
+    [System.Management.Automation.Runspaces.PSSession] $Session = $null
+    [PSCredential] $AdmininistratorCredential = New-Credential `
+        -Username '.\Administrator' `
+        -Password $VM.AdministratorPassword
+    while (($Session -eq $null) -and (((Get-Date) - $StartTime).TotalSeconds) -lt $ConnectTimeout)
+    {
+        try
+        {                
+            # Get the Management IP Address of the VM
+            # We repeat this because the IP Address will only be assiged 
+            # once the VM is fully booted.
+            $IPAddress = Get-LabVMManagementIPAddress `
+                -Configuration $Configuration `
+                -VM $VM
+            
+            # Add the IP Address to trusted hosts if not already in it
+            # This could be avoided if able to use SSL or if PS Direct is used.
+            $TrustedHosts = (Get-Item -Path WSMAN::localhost\Client\TrustedHosts).Value
+            if (($TrustedHosts -notlike "*$IPAddress*"))
+            {
+                Set-Item `
+                    -Path WSMAN::localhost\Client\TrustedHosts `
+                    -Value "$TrustedHosts,$IPAddress" `
+                    -Force
+                Write-Verbose -Message $($LocalizedData.AddingIPAddressToTrustedHostsMessage `
+                    -f $VM.ComputerName,$IPAddress)
+            }
+        
+            Write-Verbose -Message $($LocalizedData.ConnectingMessage `
+                -f $VM.ComputerName)
+
+            # TODO: Convert to PS Direct once supported for this cmdlet.
+            $Session = New-PSSession `
+                -ComputerName $IPAddress `
+                -Credential $AdmininistratorCredential `
+                -ErrorAction Stop
+        }
+        catch
+        {
+            if (-not $IPAddress)
+            {
+                Write-Verbose -Message $($LocalizedData.WaitingForIPAddressAssignedMessage `
+                    -f $VM.ComputerName,$Script:RetryConnectSeconds)                                
+            }
+            else
+            {
+                Write-Verbose -Message $($LocalizedData.ConnectingFailedMessage `
+                    -f $VM.ComputerName,$Script:RetryConnectSeconds,$_.Exception.Message)
+            }
+            Start-Sleep -Seconds $Script:RetryConnectSeconds
+        } # Try
+    } # While
+
+    Return $Session
+} # Connect-LabVM
 ####################################################################################################
 
 ####################################################################################################
