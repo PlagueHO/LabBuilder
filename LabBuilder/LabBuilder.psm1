@@ -63,15 +63,35 @@ ConnectingFailedMessage=Connection to '{0}' failed ({2}), retrying in {1} second
 ConnectingAccessDeniedMessage=Access Denied connecting to '{0}', the connection will not be retried.
 CopyingFilesToComputerMessage=Copying {1} Files to '{0}'.
 CopyingFilesToComputerFailedMessage=Copying {1} Files to '{0}' failed, retrying in {2} seconds.
+CreatingVMMessage=Creating VM '{0}'.
+CreatingVMDiskMessage=Creating {2} disk {1} for VM '{0}'.
+VMDiskAlreadyExistsMessage={2} disk {1} for VM '{0}' already exists.
+ExpandingVMDiskMessage=Expanding {2} disk {1} for VM '{0}' to {3}.
+AddingVMDiskMessage=Adding {2} disk {1} to VM '{0}'.
+DeletingVMAllDisksMessage=Deleting all disks from VM '{0}'.
+AddingVMNetworkAdapterMessage=Adding {2} network adapter {1} to VM '{0}'.
+SettingVMNetworkAdapterVlanMessage=Setting VLAN on {2} network adapter {1} in VM '{0}' to {3}.
+ClearingVMNetworkAdapterVlanMessage=Clearing VLAN on {2} network adapter {1} in VM '{0}'.
+StartingVMMessage=Starting VM '{0}'.
+StoppingVMMessage=Stopping VM '{0}'.
+RemovingVMMessage=Removing VM '{0}'.
+RemovedVMMessage=Removed VM '{0}'.
 StartingDSCMessage=Starting DSC on VM '{0}'.
-MountingVMBootDiskMessage=Mounting VM '{0}' Boot Disk VHDx '{1}'.
+WriteMountingVMBootDiskMessage=Mounting VM '{0}' Boot Disk VHDx '{1}'.
 DownloadingVMBootDiskFileMessage=Downloading VM '{0}' {1} file '{2}'.
-ApplyingVMBootDiskFileMessage=Applying VM '{0}' {1} file '{2}'.
+ApplyingVMBootDiskFileMessage=Applying {1} file '{2}' to VM '{0}'.
 DismountingVMBootDiskMessage=Dismounting VM '{0}' Boot Disk VHDx '{1}'.
 AddingIPAddressToTrustedHostsMessage=Adding IP Address '{1}' to WS-Man Trusted Hosts to allow remoting to '{0}'.
 WaitingForIPAddressAssignedMessage=Waiting for valid IP Address to be assigned to VM '{0}', retrying in {1} seconds.
 WaitingForInitialSetupCompleteMessage=Waiting for Initial Setup to be complete on VM '{0}', retrying in {1} seconds.
+WaitingForCertificateMessage=Waiting for Certificate file on VM '{0}', retrying in {1} seconds.
+FailedToUploadCertificateCreateScriptMessage=Failed to upload certificate create script to VM '{0}', retrying in {1} seconds.
+FailedToDownloadCertificateMessage=Failed to download certificate from VM '{0}', retrying in {1} seconds.
+FailedToExecuteCertificateCreateScriptMessage=Failed to execute certificate create script to VM '{0}', retrying in {1} seconds.
 InitialSetupIsAlreadyCompleteMessaage=Initial Setup on VM '{0}' has already been completed.
+CertificateDownloadStartedMessage=Certificate download from VM '{0}' started.
+CertificateDownloadCompleteMessage=Certificate download from VM '{0}' complete.
+VMNotFoundMessage=VM '{0}' was not found in Hyper-V server.
 '@
 }
 
@@ -2131,6 +2151,7 @@ function Start-LabVMDSC {
                     -f $VM.Name)
             }
             New-LabException @ExceptionParameters            
+            return
         }
         
         if (($Session) `
@@ -2841,7 +2862,8 @@ function Initialize-LabVMImage {
     $null = Mount-WindowsImage -ImagePath $VMBootDiskPath -Path $MountPoint -Index 1
 
     # Copy the WMF 5.0 Installer to the VM in case it is needed
-    # Write-Verbose "Applying VM $($VM.Name) WMF 5.0 ..."
+    # Write-Verbose -Message $($LocalizedData.ApplyingVMBootDiskFileMessage `
+    #    -f $VM.Name,'MSU','WMF 5.0')
     # $null = Add-WindowsPackage -PackagePath $Script:WMF5InstallerPath -Path $MountPoint
 
     # Apply any additional MSU Updates
@@ -3299,6 +3321,7 @@ function Get-LabVMSelfSignedCert
                     -f $VM.Name)
             }
             New-LabException @ExceptionParameters
+            return
         }
 
         if (($Session) `
@@ -3320,7 +3343,9 @@ function Get-LabVMSelfSignedCert
                 }
                 catch
                 {
-                    Write-Verbose "Waiting for Certificate file on $($VM.ComputerName) ..."
+                    Write-Verbose -Message $($LocalizedData.WaitingForCertificateMessage `
+                        -f $VM.Name,$Script:RetryConnectSeconds)
+                        
                     Start-Sleep -Seconds $Script:RetryConnectSeconds
                 } # Try
             } # While
@@ -3441,6 +3466,7 @@ function New-LabVMSelfSignedCert
                     -f $VM.Name)
             }
             New-LabException @ExceptionParameters
+            return
         }
 
         $Complete = $False
@@ -3465,7 +3491,9 @@ function New-LabVMSelfSignedCert
                 }
                 catch
                 {
-                    Write-Verbose "Waiting to upload certificate create script file to $($VM.ComputerName) ..."
+                    Write-Verbose -Message $($LocalizedData.FailedToUploadCertificateCreateScriptMessage `
+                        -f $VM.Name,$Script:RetryConnectSeconds)
+
                     Start-Sleep -Seconds $Script:RetryConnectSeconds
                 } # Try
             } # While
@@ -3490,7 +3518,9 @@ function New-LabVMSelfSignedCert
                 }
                 catch
                 {
-                    Write-Verbose "Waiting to upload certificate create script file to $($VM.ComputerName) ..."
+                    Write-Verbose -Message $($LocalizedData.FailedToExecuteCertificateCreateScriptMessage `
+                        -f $VM.Name,$Script:RetryConnectSeconds)
+
                     Start-Sleep -Seconds $Script:RetryConnectSeconds
                 } # Try
             } # While
@@ -3516,7 +3546,9 @@ function New-LabVMSelfSignedCert
                 }
                 catch
                 {
-                    Write-Verbose "Waiting for Certificate file on $($VM.ComputerName) ..."
+                    Write-Verbose -Message $($LocalizedData.FailedToDownloadCertificateMessage `
+                        -f $VM.Name,$Script:RetryConnectSeconds)
+
                     Start-Sleep -Seconds $Script:RetryConnectSeconds
                 } # Try
             } # While
@@ -3727,7 +3759,8 @@ function Start-LabVM {
     # The VM is now ready to be started
     if ((Get-VM -Name $VM.Name).State -eq 'Off')
     {
-        Write-Verbose "VM $($VM.Name) is starting ..."
+        Write-Verbose -Message $($LocalizedData.StartingVMMessage `
+            -f $VM.Name)
 
         Start-VM -VMName $VM.Name
     } # If
@@ -3741,20 +3774,22 @@ function Start-LabVM {
             # No, so check it is initialized and download the cert.
             if (Wait-LabVMInit -VM $VM -ErrorAction Continue)
             {
-                Write-Verbose "Attempting to download certificate for VM $($VM.Name) ..."
+                Write-Verbose -Message $($LocalizedData.CertificateDownloadStartedMessage `
+                    -f $VM.Name)
+                    
                 if (Get-LabVMSelfSignedCert -Configuration $Configuration -VM $VM)
                 {
-                    Write-Verbose "Certificate for VM $($VM.Name) was downloaded successfully ..."
+                    Write-Verbose -Message $($LocalizedData.CertificateDownloadCompleteMessage `
+                        -f $VM.Name)
                 }
                 else
                 {
-                    Write-Verbose "Certificate for VM $($VM.Name) could not be downloaded ..."
+                    Throw "Certificate for VM $($VM.Name) could not be downloaded ..."
                 } # If
             }
             else
             {
-                Write-Verbose "Initialization for VM $($VM.Name) did not complete ..."
-                return            
+                Throw "Initialization for VM $($VM.Name) did not complete ..."
             } # If
         } # If
 
@@ -3858,6 +3893,16 @@ function Initialize-LabVMs {
     $CurrentVMs = Get-VM
     [String] $VMPath = $Configuration.labbuilderconfig.settings.vmpath
 
+    # Load path variables
+    [String] $VMRootPath = Join-Path `
+        -Path $VMPath `
+        -ChildPath $VM.Name
+
+    # Get Path to LabBuilder files
+    [String] $VMLabBuilderFiles = Join-Path `
+        -Path $VMRootPath `
+        -ChildPath 'LabBuilder Files'
+
     # Figure out the name of the LabBuilder control switch
     $ManagementSwitchName = ('LabBuilder Management {0}' -f $Configuration.labbuilderconfig.name)
     if ($Configuration.labbuilderconfig.switches.ManagementVlan)
@@ -3873,24 +3918,32 @@ function Initialize-LabVMs {
     {
         if (($CurrentVMs | Where-Object -Property Name -eq $VM.Name).Count -eq 0)
         {
-            Write-Verbose "Creating VM $($VM.Name) ..."
+            Write-Verbose -Message $($LocalizedData.CreatingVMMessage `
+                -f $VM.Name)
 
             # Make sure the appropriate folders exist
-            Initialize-LabVMPath -VMPath "$VMPath\$($VM.Name)"
+            Initialize-LabVMPath `
+                -VMPath $VMRootPath
 
             # Create the boot disk
-            $VMBootDiskPath = "$VMPath\$($VM.Name)\Virtual Hard Disks\$($VM.Name) Boot Disk.vhdx"
+            $VMBootDiskPath = "$VMRootPath\Virtual Hard Disks\$($VM.Name) Boot Disk.vhdx"
             if (-not (Test-Path -Path $VMBootDiskPath))
             {
                 if ($VM.UseDifferencingDisk -eq 'Y')
                 {
-                    Write-Verbose "VM $($VM.Name) differencing boot disk $VMBootDiskPath being created ..."
+                    Write-Verbose -Message $($LocalizedData.CreatingVMDiskMessage `
+                        -f $VM.Name,$VMBootDiskPath,'Differencing Boot')
+
                     $Null = New-VHD -Differencing -Path $VMBootDiskPath -ParentPath $VM.TemplateVHD
                 }
                 else
                 {
-                    Write-Verbose "VM $($VM.Name) boot disk $VMBootDiskPath being created ..."
-                    $Null = Copy-Item -Path $VM.TemplateVHD -Destination $VMBootDiskPath
+                    Write-Verbose -Message $($LocalizedData.CreatingVMDiskMessage `
+                        -f $VM.Name,$VMBootDiskPath,'Boot')
+
+                    $Null = Copy-Item `
+                        -Path $VM.TemplateVHD `
+                        -Destination $VMBootDiskPath
                 }
 
                 # Create all the required initialization files for this VM
@@ -3907,7 +3960,8 @@ function Initialize-LabVMs {
             }
             else
             {
-                Write-Verbose "VM $($VM.Name) boot disk $VMBootDiskPath already exists..."
+                Write-Verbose -Message $($LocalizedData.VMDiskAlreadyExistsMessage `
+                    -f $VM.Name,$VMBootDiskPath,'Boot')
             } # If
 
             $null = New-VM `
@@ -3916,7 +3970,9 @@ function Initialize-LabVMs {
                 -Generation 2 -Path $VMPath `
                 -VHDPath $VMBootDiskPath
             # Remove the default network adapter created with the VM because we don't need it
-            Remove-VMNetworkAdapter -VMName $VM.Name -Name 'Network Adapter'
+            Remove-VMNetworkAdapter `
+                -VMName $VM.Name `
+                -Name 'Network Adapter'
         }
 
         # Set the processor count if different to default and if specified in config file
@@ -3958,16 +4014,22 @@ function Initialize-LabVMs {
         # Do we need to add a data disk?
         if ($VM.DataVHDSize -and ($VM.DataVHDSize -gt 0))
         {
-            [String] $VMDataDiskPath = "$VMPath\$($VM.Name)\Virtual Hard Disks\$($VM.Name) Data Disk.vhdx"
+            [String] $VMDataDiskPath = "$VMRootPath\Virtual Hard Disks\$($VM.Name) Data Disk.vhdx"
             # Does the disk already exist?
             if (Test-Path -Path $VMDataDiskPath)
             {
-                Write-Verbose "VM $($VM.Name) data disk $VMDataDiskPath already exists ..."
+                Write-Verbose -Message $($LocalizedData.VMDiskAlreadyExistsMessage `
+                    -f $VM.Name,$VMDataDiskPath,'Data')
+
                 # Does the disk need to shrink or grow?
                 if ((Get-VHD -Path $VMDataDiskPath).Size -lt $VM.DataVHDSize)
                 {
-                    Write-Verbose "VM $($VM.Name) Data Disk $VMDataDiskPath expanding to $($VM.DataVHDSize) ..."
-                    $null = Resize-VHD -Path $VMDataDiskPath -SizeBytes $VM.DataVHDSize
+                    Write-Verbose -Message $($LocalizedData.ExpandingVMDiskMessage `
+                        -f $VM.Name,$VMDataDiskPath,'Data',$VM.DataVHDSize)
+
+                    $null = Resize-VHD `
+                        -Path $VMDataDiskPath `
+                        -SizeBytes $VM.DataVHDSize
                 }
                 elseif ((Get-VHD -Path $VMDataDiskPath).Size -gt $VM.DataVHDSize)
                 {
@@ -3977,35 +4039,58 @@ function Initialize-LabVMs {
             else
             {
                 # Create a new VHD
-                Write-Verbose "VM $($VM.Name) data disk $VMDataDiskPath is being created ..."
-                $null = New-VHD -Path $VMDataDiskPath -SizeBytes $VM.DataVHDSize -Dynamic
+                Write-Verbose -Message $($LocalizedData.CreatingVMDiskMessage `
+                    -f $VM.Name,$VMDataDiskPath,'Data')
+
+                $null = New-VHD `
+                    -Path $VMDataDiskPath `
+                    -SizeBytes $VM.DataVHDSize `
+                    -Dynamic
             } # If
 
             # Does the disk already exist in the VM
             if ((Get-VMHardDiskDrive -VMName $VM.Name | Where-Object -Property Path -EQ $VMDataDiskPath).Count -EQ 0)
             {
-                Write-Verbose "VM $($VM.Name) data disk $VMDataDiskPath is being added to VM ..."
-                $Null = Add-VMHardDiskDrive -VMName $VM.Name -Path $VMDataDiskPath -ControllerType SCSI -ControllerLocation 1 -ControllerNumber 0
+                Write-Verbose -Message $($LocalizedData.AddingVMDiskMessage `
+                    -f $VM.Name,$VMDataDiskPath,'Data')
+
+                $Null = Add-VMHardDiskDrive `
+                    -VMName $VM.Name `
+                    -Path $VMDataDiskPath `
+                    -ControllerType SCSI `
+                    -ControllerLocation 1 `
+                    -ControllerNumber 0
             } # If
         } # If
             
         # Create/Update the Management Network Adapter
         if ((Get-VMNetworkAdapter -VMName $VM.Name | Where-Object -Property Name -EQ $ManagementSwitchName).Count -eq 0)
         {
-            Write-Verbose "VM $($VM.Name) management network adapter $ManagementSwitchName is being added ..."
+            Write-Verbose -Message $($LocalizedData.AddingVMNetworkAdapterMessage `
+                -f $VM.Name,$ManagementSwitchName,'Management')
+
             Add-VMNetworkAdapter -VMName $VM.Name -SwitchName $ManagementSwitchName -Name $ManagementSwitchName
         }
-        $VMNetworkAdapter = Get-VMNetworkAdapter -VMName $VM.Name -Name $ManagementSwitchName
+        $VMNetworkAdapter = Get-VMNetworkAdapter `
+            -VMName $VM.Name `
+            -Name $ManagementSwitchName
         $null = $VMNetworkAdapter | Set-VMNetworkAdapterVlan -Access -VlanId $ManagementVlan
-        Write-Verbose "VM $($VM.Name) management network adapter $ManagementSwitchName VLAN has been set to $ManagementVlan ..."
+
+        Write-Verbose -Message $($LocalizedData.SettingVMNetworkAdapterVlanMessage `
+            -f $VM.Name,$ManagementSwitchName,'Management',$ManagementVlan)
 
         # Create any network adapters
         foreach ($VMAdapter in $VM.Adapters)
         {
             if ((Get-VMNetworkAdapter -VMName $VM.Name | Where-Object -Property Name -EQ $VMAdapter.Name).Count -eq 0)
             {
-                Write-Verbose "VM $($VM.Name) network adapter $($VMAdapter.Name) is being added ..."
-                Add-VMNetworkAdapter -VMName $VM.Name -SwitchName $VMAdapter.SwitchName -Name $VMAdapter.Name
+                Write-Verbose -Message $($LocalizedData.WaitingForCertificateMessage `
+                    -f $VM.Name,$Script:RetryConnectSeconds)
+
+                Add-VMNetworkAdapter `
+                    -VMName $VM.Name `
+                    -SwitchName $VMAdapter.SwitchName `
+                    -Name $VMAdapter.Name
             } # If
 
             $VMNetworkAdapter = Get-VMNetworkAdapter -VMName $VM.Name -Name $VMAdapter.Name
@@ -4013,12 +4098,16 @@ function Initialize-LabVMs {
             if ($VLan)
             {
                 $null = $VMNetworkAdapter | Set-VMNetworkAdapterVlan -Access -VlanId $Vlan
-                Write-Verbose "VM $($VM.Name) network adapter $($VMAdapter.Name) VLAN has been set to $Vlan ..."
+
+                Write-Verbose -Message $($LocalizedData.SettingVMNetworkAdapterVlanMessage `
+                    -f $VM.Name,$VMAdapter.Name,'',$Vlan)
             }
             else
             {
                 $null = $VMNetworkAdapter | Set-VMNetworkAdapterVlan -Untagged
-                Write-Verbose "VM $($VM.Name) network adapter $($VMAdapter.Name) VLAN has been cleared ..."
+
+                Write-Verbose -Message $($LocalizedData.ClearingVMNetworkAdapterVlanMessage `
+                    -f $VM.Name,$VMAdapter.Name,'')
             } # If
 
             if ($VMAdapter.MACAddress)
@@ -4095,28 +4184,36 @@ function Remove-LabVMs {
             # If the VM is running we need to shut it down.
             if ((Get-VM -Name $VM.Name).State -eq 'Running')
             {
-                Write-Verbose "Stopping VM $($VM.Name) ..."
+                Write-Verbose -Message $($LocalizedData.StoppingVMMessage `
+                    -f $VM.Name)
+
                 Stop-VM -Name $VM.Name
                 # Wait for it to completely shut down and report that it is off.
                 Wait-LabVMOff -VM $VM | Out-Null
             }
-            Write-Verbose "Removing VM $($VM.Name) ..."
+
+            Write-Verbose -Message $($LocalizedData.RemovingVMMessage `
+                -f $VM.Name)
 
             # Should we also delete the VHDs from the VM?
             if ($RemoveVHDs)
             {
-                Write-Verbose "Deleting VM $($VM.Name) hard drive(s) ..."
+                Write-Verbose -Message $($LocalizedData.DeletingVMAllDisksMessage `
+                    -f $VM.Name)
+
                 Get-VMHardDiskDrive -VMName $VM.Name | Select-Object -Property Path | Remove-Item
             }
             
             # Now delete the actual VM
             Get-VM -Name $VMs.Name | Remove-VM -Confirm:$false
 
-            Write-Verbose "Removed VM $($VM.Name) ..."
+            Write-Verbose -Message $($LocalizedData.RemovedVMMessage `
+                -f $VM.Name)
         }
         else
         {
-            Write-Verbose "VM $($VM.Name) is not in Hyper-V ..."
+            Write-Verbose -Message $($LocalizedData.VMNotFoundMessage `
+                -f $VM.Name)
         }
     }
     Return $true
@@ -4207,6 +4304,7 @@ function Wait-LabVMInit
                     -f $VM.Name)
             }
             New-LabException @ExceptionParameters
+            return            
         }
 
         if (($Session) `
