@@ -2218,10 +2218,10 @@ function Start-LabVMDSC {
         -Configuration $Configuration `
         -VM $VM
 
-    While ((-not $Complete) -and (((Get-Date) - $StartTime).Seconds) -lt $TimeOut)
+    While ((-not $Complete) -and (((Get-Date) - $StartTime).TotalSeconds) -lt $TimeOut)
     {
         # Connect to the VM
-        While ((($Session -eq $null) -or ($Session.State -ne 'Opened')) -and ((((Get-Date) - $StartTime).Seconds) -lt $TimeOut))
+        While ((($Session -eq $null) -or ($Session.State -ne 'Opened')) -and ((((Get-Date) - $StartTime).TotalSeconds) -lt $TimeOut))
         {
             $Session = Connect-LabVM -VM $VM
         } # While
@@ -2229,7 +2229,7 @@ function Start-LabVMDSC {
         if (($Session) -and ($Session.State -eq 'Opened') -and (-not $ConfigCopyComplete))
         {
             # We are connected OK - upload the DSC files
-            While ((-not $ConfigCopyComplete) -and (((Get-Date) - $StartTime).Seconds) -lt $TimeOut)
+            While ((-not $ConfigCopyComplete) -and (((Get-Date) - $StartTime).TotalSeconds) -lt $TimeOut)
             {
                 Try
                 {
@@ -2277,7 +2277,7 @@ function Start-LabVMDSC {
         } # If
 
         # If the copy didn't complete and we're out of time, exit with a failure.
-        if ((-not $ConfigCopyComplete) -and (((Get-Date) - $StartTime).Seconds) -ge $TimeOut)
+        if ((-not $ConfigCopyComplete) -and (((Get-Date) - $StartTime).TotalSeconds) -ge $TimeOut)
         {
             Remove-PSSession -Session $Session
             Return $False
@@ -2312,7 +2312,7 @@ function Start-LabVMDSC {
             $ModuleCopyComplete = $True
         } # If
 
-        if ((-not $ModuleCopyComplete) -and (((Get-Date) - $StartTime).Seconds) -ge $TimeOut)
+        if ((-not $ModuleCopyComplete) -and (((Get-Date) - $StartTime).TotalSeconds) -ge $TimeOut)
         {
             # Timed out
             Remove-PSSession -Session $Session
@@ -3329,16 +3329,16 @@ function Get-LabVMSelfSignedCert {
     [System.Management.Automation.Runspaces.PSSession] $Session = $null
     [Boolean] $Complete = $False
 
-    While ((-not $Complete)  -and (((Get-Date) - $StartTime).Seconds) -lt $TimeOut) {
+    While ((-not $Complete)  -and (((Get-Date) - $StartTime).TotalSeconds) -lt $TimeOut) {
         # Connect to the VM
-        While ((($Session -eq $null) -or ($Session.State -ne 'Opened')) -and ((((Get-Date) - $StartTime).Seconds) -lt $TimeOut))
+        While ((($Session -eq $null) -or ($Session.State -ne 'Opened')) -and ((((Get-Date) - $StartTime).TotalSeconds) -lt $TimeOut))
         {
             $Session = Connect-LabVM -VM $VM
         } # While
 
         if (($Session) -and ($Session.State -eq 'Opened') -and (-not $Complete)) {
             # We connected OK - download the Certificate file
-            While ((-not $Complete) -and (((Get-Date) - $StartTime).Seconds) -lt $TimeOut) {
+            While ((-not $Complete) -and (((Get-Date) - $StartTime).TotalSeconds) -lt $TimeOut) {
                 Try {
                     $null = Copy-Item `
                         -Path "c:\windows\$Script:DSCEncryptionCert" `
@@ -3415,9 +3415,9 @@ function Get-LabVMCertificate {
 
     [Boolean] $Complete = $False
 
-    While ((-not $Complete)  -and (((Get-Date) - $StartTime).Seconds) -lt $TimeOut) {
+    While ((-not $Complete)  -and (((Get-Date) - $StartTime).TotalSeconds) -lt $TimeOut) {
         # Connect to the VM
-        While ((($Session -eq $null) -or ($Session.State -ne 'Opened')) -and ((((Get-Date) - $StartTime).Seconds) -lt $TimeOut))
+        While ((($Session -eq $null) -or ($Session.State -ne 'Opened')) -and ((((Get-Date) - $StartTime).TotalSeconds) -lt $TimeOut))
         {
             $Session = Connect-LabVM -VM $VM
         } # While
@@ -3432,7 +3432,7 @@ function Get-LabVMCertificate {
 
         if (($Session) -and ($Session.State -eq 'Opened') -and (-not $Complete)) {
             # We connected OK - Upload the script
-            While ((-not $Complete) -and (((Get-Date) - $StartTime).Seconds) -lt $TimeOut) {
+            While ((-not $Complete) -and (((Get-Date) - $StartTime).TotalSeconds) -lt $TimeOut) {
                 Try {
                     Copy-Item `
                         -Path "$VMLabBuilderFiles\GetDSCEncryptionCert.ps1" `
@@ -3450,7 +3450,7 @@ function Get-LabVMCertificate {
 
         if (($Session) -and ($Session.State -eq 'Opened') -and (-not $Complete)) {
             # Script uploaded, run it
-            While ((-not $Complete) -and (((Get-Date) - $StartTime).Seconds) -lt $TimeOut) {
+            While ((-not $Complete) -and (((Get-Date) - $StartTime).TotalSeconds) -lt $TimeOut) {
                 Try {
                     Invoke-Command -Session $Session -ScriptBlock {
                         C:\Windows\Setup\Scripts\GetDSCEncryptionCert.ps1
@@ -3467,7 +3467,7 @@ function Get-LabVMCertificate {
 
         if (($Session) -and ($Session.State -eq 'Opened') -and (-not $Complete)) {
             # Now download the Certificate
-            While ((-not $Complete) -and (((Get-Date) - $StartTime).Seconds) -lt $TimeOut) {
+            While ((-not $Complete) -and (((Get-Date) - $StartTime).TotalSeconds) -lt $TimeOut) {
                 Try {
                     $null = Copy-Item `
                         -Path "c:\windows\$($Script:DSCEncryptionCert)" `
@@ -4102,10 +4102,10 @@ function Wait-LabVMInit {
     Wait-LabVMStart -VM $VM
 
     [Boolean] $Complete = $False
-    while ((-not $Complete)  -and (((Get-Date) - $StartTime).Seconds) -lt $TimeOut)
+    while ((-not $Complete)  -and (((Get-Date) - $StartTime).TotalSeconds) -lt $TimeOut)
     {
         # Connect to the VM
-        While ((($Session -eq $null) -or ($Session.State -ne 'Opened')) -and ((((Get-Date) - $StartTime).Seconds) -lt $TimeOut))
+        While ((($Session -eq $null) -or ($Session.State -ne 'Opened')) -and ((((Get-Date) - $StartTime).TotalSeconds) -lt $TimeOut))
         {
             $Session = Connect-LabVM -VM $VM
         } # While
@@ -4113,7 +4113,7 @@ function Wait-LabVMInit {
         if (($Session) -and ($Session.State -eq 'Opened') -and (-not $Complete))
         {
             # We connected OK - check for init file
-            while ((-not $Complete) -and (((Get-Date) - $StartTime).Seconds) -lt $TimeOut)
+            while ((-not $Complete) -and (((Get-Date) - $StartTime).TotalSeconds) -lt $TimeOut)
             {
                 try
                 {
