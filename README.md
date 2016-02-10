@@ -7,10 +7,6 @@ Summary
 -------
 This module will build a multiple machine Hyper-V Lab environment from an XML configuration file and other installation scripts.
 
-Discus this Project
--------------------
-[![Gitter](https://badges.gitter.im/PlagueHO/LabBuilder.svg)](https://gitter.im/PlagueHO/LabBuilder?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge)
-
 Introduction
 ------------
 While studying for some of my Microsoft certifications I had a need to quickly and easily spin up various Hyper-V Lab environments so that I could experiment with and learn the technologies involved.
