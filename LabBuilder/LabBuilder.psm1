@@ -56,7 +56,7 @@ DSCConfigCreatingLCMMOFMessage=Creating DSC LCM Config file '{0}' in VM '{1}'.
 DSCConfigCreatingMOFMessage=Creating DSC Config file '{0}' in VM '{1}'.
 DSCConfigMOFCreatedMessage=DSC MOF File '{0}' for VM '{1}'. was created successfully.
 ConnectingMessage=Connecting to '{0}'.
-ConnectingFailedMessage=Connection to '{0}' failed, retrying in {1} seconds.
+ConnectingFailedMessage=Connection to '{0}' failed ({2}), retrying in {1} seconds.
 CopyingFilesToComputerMessage=Copying {1} Files to '{0}'.
 CopyingFilesToComputerFailedMessage=Copying {1} Files to '{0}' failed, retrying in {2} seconds.
 StartingDSCMessage=Starting DSC on VM '{0}'.
@@ -65,7 +65,7 @@ DownloadingVMBootDiskFileMessage=Downloading VM '{0}' {1} file '{2}'.
 ApplyingVMBootDiskFileMessage=Applying VM '{0}' {1} file '{2}'.
 DismountingVMBootDiskMessage=Dismounting VM '{0}' Boot Disk VHDx '{1}'.
 AddingIPAddressToTrustedHostsMessage=Adding IP Address '{1}' to WS-Man Trusted Hosts to allow remoting to '{0}'.
-WaitingForIPAddressAssignedMessage=Waiting for valid IP Address to be assigned to '{0}'.
+WaitingForIPAddressAssignedMessage=Waiting for valid IP Address to be assigned to '{0}', retrying in {1} seconds.
 '@
 }
 
@@ -4212,6 +4212,8 @@ function Wait-LabVMOff {
    
    If the connection fails, it will be retried until the ConnectTimeout is reached. If the
    ConnectTimeout is reached and a connection has not been established then $null is returned. 
+   
+   The connection will try to be established using two possible sets of credentials: First
 .EXAMPLE
    $Config = Get-LabConfiguration -Path c:\mylab\config.xml
    $VMs = Get-LabVM -Configuration $Config
@@ -4240,9 +4242,9 @@ function Connect-LabVM {
     [DateTime] $StartTime = Get-Date
     [System.Management.Automation.Runspaces.PSSession] $Session = $null
     [PSCredential] $AdmininistratorCredential = New-Credential `
-        -Username "$($VM.ComputerName)\Administrator" `
+        -Username '.\Administrator' `
         -Password $VM.AdministratorPassword
-    while (($Session -eq $null) -and (((Get-Date) - $StartTime).Seconds) -lt $ConnectTimeout)
+    while (($Session -eq $null) -and (((Get-Date) - $StartTime).TotalSeconds) -lt $ConnectTimeout)
     {
         try
         {                
@@ -4253,41 +4255,40 @@ function Connect-LabVM {
                 -Configuration $Configuration `
                 -VM $VM
             
-            if ($IPAddress)
+            # Add the IP Address to trusted hosts if not already in it
+            # This could be avoided if able to use SSL or if PS Direct is used.
+            $TrustedHosts = (Get-Item -Path WSMAN::localhost\Client\TrustedHosts).Value
+            if (($TrustedHosts -notlike "*$IPAddress*"))
             {
-                # Add the IP Address to trusted hosts if not already in it
-                # This could be avoided if able to use SSL or if PS Direct is used.
-                $TrustedHosts = Get-Item -Path WSMAN::localhost\Client\TrustedHosts
-                if (($TrustedHosts -like "*$IPAddress*"))
-                {
-                    Set-Item `
-                        -Path WSMAN::localhost\Client\TrustedHosts `
-                        -Value "$TrustedHosts,$IPAddress" `
-                        -Force
-                    Write-Verbose -Message $($LocalizedData.AddingIPAddressToTrustedHostsMessage `
-                        -f $VM.ComputerName,$IPAddress)
-                }
-         
-                Write-Verbose -Message $($LocalizedData.ConnectingMessage `
-                    -f $VM.ComputerName)
+                Set-Item `
+                    -Path WSMAN::localhost\Client\TrustedHosts `
+                    -Value "$TrustedHosts,$IPAddress" `
+                    -Force
+                Write-Verbose -Message $($LocalizedData.AddingIPAddressToTrustedHostsMessage `
+                    -f $VM.ComputerName,$IPAddress)
+            }
+        
+            Write-Verbose -Message $($LocalizedData.ConnectingMessage `
+                -f $VM.ComputerName)
 
-                # TODO: Convert to PS Direct once supported for this cmdlet.
-                $Session = New-PSSession `
-                    -ComputerName $IPAddress `
-                    -Credential $AdmininistratorCredential `
-                    -ErrorAction Stop
-            }
-            else
-            {
-                Write-Verbose -Message $($LocalizedData.WaitingForIPAddressAssignedMessage `
-                    -f $VM.ComputerName)                
-            }
+            # TODO: Convert to PS Direct once supported for this cmdlet.
+            $Session = New-PSSession `
+                -ComputerName $IPAddress `
+                -Credential $AdmininistratorCredential `
+                -ErrorAction Stop
         }
         catch
         {
-            Write-Verbose -Message $($LocalizedData.ConnectingFailedMessage `
-                -f $VM.ComputerName,$Script:RetryConnectSeconds)
-
+            if (-not $IPAddress)
+            {
+                Write-Verbose -Message $($LocalizedData.WaitingForIPAddressAssignedMessage `
+                    -f $VM.ComputerName,$Script:RetryConnectSeconds)                                
+            }
+            else
+            {
+                Write-Verbose -Message $($LocalizedData.ConnectingFailedMessage `
+                    -f $VM.ComputerName,$Script:RetryConnectSeconds,$_.Exception.Message)
+            }
             Start-Sleep -Seconds $Script:RetryConnectSeconds
         } # Try
     } # While
