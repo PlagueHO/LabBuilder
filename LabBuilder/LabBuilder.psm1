@@ -4212,8 +4212,6 @@ function Wait-LabVMOff {
    
    If the connection fails, it will be retried until the ConnectTimeout is reached. If the
    ConnectTimeout is reached and a connection has not been established then $null is returned. 
-   
-   The connection will try to be established using two possible sets of credentials: First
 .EXAMPLE
    $Config = Get-LabConfiguration -Path c:\mylab\config.xml
    $VMs = Get-LabVM -Configuration $Config
