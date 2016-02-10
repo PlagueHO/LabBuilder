@@ -2276,11 +2276,24 @@ function Start-LabVMDSC {
             } # While
         } # If
 
-        # If the copy didn't complete and we're out of time, exit with a failure.
+        # If the copy didn't complete and we're out of time throw an exception
         if ((-not $ConfigCopyComplete) -and (((Get-Date) - $StartTime).TotalSeconds) -ge $TimeOut)
         {
-            Remove-PSSession -Session $Session
-            Return $False
+            if ($Session)
+            {
+                Remove-PSSession -Session $Session
+            }
+
+            $errorId = 'DSCInitializationError'
+            $errorCategory = [System.Management.Automation.ErrorCategory]::InvalidArgument
+            $errorMessage = $($LocalizedData.DSCInitializationError `
+                -f $VM.Name)
+            $exception = New-Object -TypeName System.InvalidOperationException `
+                -ArgumentList $errorMessage
+            $errorRecord = New-Object -TypeName System.Management.Automation.ErrorRecord `
+                -ArgumentList $exception, $errorId, $errorCategory, $null
+    
+            $PSCmdlet.ThrowTerminatingError($errorRecord)
         } # If
 
         # Now Upload any required modules
@@ -2315,7 +2328,10 @@ function Start-LabVMDSC {
         if ((-not $ModuleCopyComplete) -and (((Get-Date) - $StartTime).TotalSeconds) -ge $TimeOut)
         {
             # Timed out
-            Remove-PSSession -Session $Session
+            if ($Session)
+            {
+                Remove-PSSession -Session $Session
+            }
 
             $errorId = 'DSCInitializationError'
             $errorCategory = [System.Management.Automation.ErrorCategory]::InvalidArgument
