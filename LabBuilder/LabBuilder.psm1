@@ -3891,17 +3891,6 @@ function Initialize-LabVMs {
     )
     
     $CurrentVMs = Get-VM
-    [String] $VMPath = $Configuration.labbuilderconfig.settings.vmpath
-
-    # Load path variables
-    [String] $VMRootPath = Join-Path `
-        -Path $VMPath `
-        -ChildPath $VM.Name
-
-    # Get Path to LabBuilder files
-    [String] $VMLabBuilderFiles = Join-Path `
-        -Path $VMRootPath `
-        -ChildPath 'LabBuilder Files'
 
     # Figure out the name of the LabBuilder control switch
     $ManagementSwitchName = ('LabBuilder Management {0}' -f $Configuration.labbuilderconfig.name)
@@ -3921,9 +3910,19 @@ function Initialize-LabVMs {
             Write-Verbose -Message $($LocalizedData.CreatingVMMessage `
                 -f $VM.Name)
 
+            # Get the root path of the VM
+            [String] $VMRootPath = Get-LabVMRootPath `
+                -Configuration $Configuration `
+                -VM $VM
+
             # Make sure the appropriate folders exist
             Initialize-LabVMPath `
                 -VMPath $VMRootPath
+
+            # Get Path to LabBuilder files
+            [String] $VMLabBuilderFiles = Join-Path `
+                -Path $VMRootPath `
+                -ChildPath 'LabBuilder Files'
 
             # Create the boot disk
             $VMBootDiskPath = "$VMRootPath\Virtual Hard Disks\$($VM.Name) Boot Disk.vhdx"
