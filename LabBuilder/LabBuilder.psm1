@@ -3080,17 +3080,6 @@ function Get-LabVMs {
             }
             New-LabException @ExceptionParameters
         } # If
-        # Check the VHD File path in the template is not empty
-        if (-not $TemplateVHDPath)
-        {
-            $ExceptionParameters = @{
-                errorId = 'VMTemplateVHDPathEmptyError'
-                errorCategory = 'InvalidArgument'
-                errorMessage = $($LocalizedData.VMTemplateVHDPathEmptyError `
-                    -f $VM.template)
-            }
-            New-LabException @ExceptionParameters
-        } # If
 
         # Assemble the Network adapters that this VM will use
         [System.Collections.Hashtable[]] $VMAdapters = @()
@@ -3367,22 +3356,22 @@ function Get-LabVMs {
             $SetupComplete = Join-Path `
                 -Path $Configuration.labbuilderconfig.settings.fullconfigpath `
                 -ChildPath $VM.SetupComplete
-            if (-not (Test-Path $SetupComplete))
-            {
-                $ExceptionParameters = @{
-                    errorId = 'SetupCompleteFileMissingError'
-                    errorCategory = 'InvalidArgument'
-                    errorMessage = $($LocalizedData.SetupCompleteFileMissingError `
-                        -f $VM.name,$SetupComplete)
-                }
-                New-LabException @ExceptionParameters
-            } # If
             if ([System.IO.Path]::GetExtension($SetupComplete).ToLower() -notin '.ps1','.cmd' )
             {
                 $ExceptionParameters = @{
                     errorId = 'SetupCompleteFileBadTypeError'
                     errorCategory = 'InvalidArgument'
                     errorMessage = $($LocalizedData.SetupCompleteFileBadTypeError `
+                        -f $VM.name,$SetupComplete)
+                }
+                New-LabException @ExceptionParameters
+            } # If
+            if (-not (Test-Path $SetupComplete))
+            {
+                $ExceptionParameters = @{
+                    errorId = 'SetupCompleteFileMissingError'
+                    errorCategory = 'InvalidArgument'
+                    errorMessage = $($LocalizedData.SetupCompleteFileMissingError `
                         -f $VM.name,$SetupComplete)
                 }
                 New-LabException @ExceptionParameters
@@ -3396,22 +3385,22 @@ function Get-LabVMs {
             $DSCConfigFile = Join-Path `
                 -Path $Configuration.labbuilderconfig.settings.fullconfigpath `
                 -ChildPath $VM.DSC.ConfigFile
-            if (-not (Test-Path $DSCConfigFile))
-            {
-                $ExceptionParameters = @{
-                    errorId = 'DSCConfigFileMissingError'
-                    errorCategory = 'InvalidArgument'
-                    errorMessage = $($LocalizedData.DSCConfigFileMissingError `
-                        -f $VM.name,$DSCConfigFile)
-                }
-                New-LabException @ExceptionParameters
-            }
             if ([System.IO.Path]::GetExtension($DSCConfigFile).ToLower() -ne '.ps1' )
             {
                 $ExceptionParameters = @{
                     errorId = 'DSCConfigFileBadTypeError'
                     errorCategory = 'InvalidArgument'
                     errorMessage = $($LocalizedData.DSCConfigFileBadTypeError `
+                        -f $VM.name,$DSCConfigFile)
+                }
+                New-LabException @ExceptionParameters
+            }
+            if (-not (Test-Path $DSCConfigFile))
+            {
+                $ExceptionParameters = @{
+                    errorId = 'DSCConfigFileMissingError'
+                    errorCategory = 'InvalidArgument'
+                    errorMessage = $($LocalizedData.DSCConfigFileMissingError `
                         -f $VM.name,$DSCConfigFile)
                 }
                 New-LabException @ExceptionParameters
