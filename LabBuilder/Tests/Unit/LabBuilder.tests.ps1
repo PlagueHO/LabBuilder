@@ -1490,7 +1490,8 @@ InModuleScope LabBuilder {
 
         Context 'Configuration passed with VM missing VM Name.' {
             It 'Throw VMNameError Exception' {
-                $Config = Get-LabConfiguration -Path "$Global:TestConfigPath\PesterTestConfig.VMFail.NoName.xml"
+                $Config = Get-LabConfiguration -Path $Global:TestConfigOKPath
+                $Config.labbuilderconfig.vms.vm.RemoveAttribute('name')
                 [Array]$Switches = Get-LabSwitches -Configuration $Config
                 [array]$Templates = Get-LabVMTemplates -Configuration $Config
                 $ExceptionParameters = @{
@@ -1504,14 +1505,15 @@ InModuleScope LabBuilder {
         }
         Context 'Configuration passed with VM missing Template.' {
             It 'Throw VMTemplateNameEmptyError Exception' {
-                $Config = Get-LabConfiguration -Path "$Global:TestConfigPath\PesterTestConfig.VMFail.NoTemplate.xml"
+                $Config = Get-LabConfiguration -Path $Global:TestConfigOKPath
+                $Config.labbuilderconfig.vms.vm.RemoveAttribute('template')
                 [Array]$Switches = Get-LabSwitches -Configuration $Config
                 [array]$Templates = Get-LabVMTemplates -Configuration $Config
                 $ExceptionParameters = @{
                     errorId = 'VMTemplateNameEmptyError'
                     errorCategory = 'InvalidArgument'
                     errorMessage = $($LocalizedData.VMTemplateNameEmptyError `
-                        -f 'PESTER01')
+                        -f $Config.labbuilderconfig.vms.vm.name)
                 }
                 $Exception = New-Exception @ExceptionParameters
                 { Get-LabVMs -Configuration $Config -VMTemplates $Templates -Switches $Switches } | Should Throw $Exception
@@ -1519,14 +1521,15 @@ InModuleScope LabBuilder {
         }
         Context 'Configuration passed with VM invalid Template Name.' {
             It 'Throw VMTemplateNotFoundError Exception' {
-                $Config = Get-LabConfiguration -Path "$Global:TestConfigPath\PesterTestConfig.VMFail.BadTemplate.xml"
+                $Config = Get-LabConfiguration -Path $Global:TestConfigOKPath
+                $Config.labbuilderconfig.vms.vm.template = 'BadTemplate'
                 [Array]$Switches = Get-LabSwitches -Configuration $Config
                 [array]$Templates = Get-LabVMTemplates -Configuration $Config
                 $ExceptionParameters = @{
                     errorId = 'VMTemplateNotFoundError'
                     errorCategory = 'InvalidArgument'
                     errorMessage = $($LocalizedData.VMTemplateNotFoundError `
-                        -f 'PESTER01','BadTemplate')
+                        -f $Config.labbuilderconfig.vms.vm.name,'BadTemplate')
                 }
                 $Exception = New-Exception @ExceptionParameters
                 { Get-LabVMs -Configuration $Config -VMTemplates $Templates -Switches $Switches } | Should Throw $Exception
@@ -1534,44 +1537,47 @@ InModuleScope LabBuilder {
         }
         Context 'Configuration passed with VM missing adapter name.' {
             It 'Throw VMAdapterNameError Exception' {
-                $Config = Get-LabConfiguration -Path "$Global:TestConfigPath\PesterTestConfig.VMFail.NoAdapterName.xml"
+                $Config = Get-LabConfiguration -Path $Global:TestConfigOKPath
+                $Config.labbuilderconfig.vms.vm.adapters.adapter[0].RemoveAttribute('name')
                 [Array]$Switches = Get-LabSwitches -Configuration $Config
                 [array]$Templates = Get-LabVMTemplates -Configuration $Config
                 $ExceptionParameters = @{
                     errorId = 'VMAdapterNameError'
                     errorCategory = 'InvalidArgument'
                     errorMessage = $($LocalizedData.VMAdapterNameError `
-                        -f 'PESTER01')
+                        -f $Config.labbuilderconfig.vms.vm.name)
                 }
                 $Exception = New-Exception @ExceptionParameters
                 { Get-LabVMs -Configuration $Config -VMTemplates $Templates -Switches $Switches } | Should Throw $Exception
             }
         }
         Context 'Configuration passed with VM missing adapter switch name.' {
-            It 'Throw VMAdapterSwitchNameErrorException' {
-                $Config = Get-LabConfiguration -Path "$Global:TestConfigPath\PesterTestConfig.VMFail.NoAdapterSwitch.xml"
+            It 'Throw VMAdapterSwitchNameError Exception' {
+                $Config = Get-LabConfiguration -Path $Global:TestConfigOKPath
+                $Config.labbuilderconfig.vms.vm.adapters.adapter[0].RemoveAttribute('switchname')
                 [Array]$Switches = Get-LabSwitches -Configuration $Config
                 [array]$Templates = Get-LabVMTemplates -Configuration $Config
                 $ExceptionParameters = @{
                     errorId = 'VMAdapterSwitchNameError'
                     errorCategory = 'InvalidArgument'
                     errorMessage = $($LocalizedData.VMAdapterSwitchNameError `
-                        -f 'PESTER01','Pester Test Private Vlan')
+                        -f $Config.labbuilderconfig.vms.vm.name,$Config.labbuilderconfig.vms.vm.adapters.adapter[0].name)
                 }
                 $Exception = New-Exception @ExceptionParameters
                 { Get-LabVMs -Configuration $Config -VMTemplates $Templates -Switches $Switches } | Should Throw $Exception
             }
         }
-        Context 'Configuration passed with VM invalid adapter switch name.' {
-            It 'Throw VMAdapterSwitchNotFoundErrorException' {
-                $Config = Get-LabConfiguration -Path "$Global:TestConfigPath\PesterTestConfig.VMFail.BadAdapterSwitch.xml"
+        Context 'Configuration passed with VM Data Disk with empty VHD.' {
+            It 'Throw VMDataDiskVHDEmptyError Exception' {
+                $Config = Get-LabConfiguration -Path $Global:TestConfigOKPath
+                $Config.labbuilderconfig.vms.vm.datavhds.datavhd[0].vhd = ''
                 [Array]$Switches = Get-LabSwitches -Configuration $Config
                 [array]$Templates = Get-LabVMTemplates -Configuration $Config
                 $ExceptionParameters = @{
-                    errorId = 'VMAdapterSwitchNotFoundError'
+                    errorId = 'VMDataDiskVHDEmptyError'
                     errorCategory = 'InvalidArgument'
-                    errorMessage = $($LocalizedData.VMAdapterSwitchNotFoundError `
-                        -f 'PESTER01','Pester Test Private Vlan','Pester Bad Switch')
+                    errorMessage = $($LocalizedData.VMDataDiskVHDEmptyError `
+                        -f $Config.labbuilderconfig.vms.vm.name)
                 }
                 $Exception = New-Exception @ExceptionParameters
                 { Get-LabVMs -Configuration $Config -VMTemplates $Templates -Switches $Switches } | Should Throw $Exception
@@ -1579,14 +1585,15 @@ InModuleScope LabBuilder {
         }
         Context "Configuration passed with VM unattend file that can't be found." {
             It 'Throw UnattendFileMissingError Exception' {
-                $Config = Get-LabConfiguration -Path "$Global:TestConfigPath\PesterTestConfig.VMFail.BadUnattendFile.xml"
+                $Config = Get-LabConfiguration -Path $Global:TestConfigOKPath
+                $Config.labbuilderconfig.vms.vm.unattendfile = 'ThisFileDoesntExist.xml'
                 [Array]$Switches = Get-LabSwitches -Configuration $Config
                 [array]$Templates = Get-LabVMTemplates -Configuration $Config
                 $ExceptionParameters = @{
                     errorId = 'UnattendFileMissingError'
                     errorCategory = 'InvalidArgument'
                     errorMessage = $($LocalizedData.UnattendFileMissingError `
-                        -f 'PESTER01',"$Global:TestConfigPath\ThisFileDoesntExist.xml")
+                        -f $Config.labbuilderconfig.vms.vm.name,"$Global:TestConfigPath\ThisFileDoesntExist.xml")
                 }
                 $Exception = New-Exception @ExceptionParameters
                 { Get-LabVMs -Configuration $Config -VMTemplates $Templates -Switches $Switches } | Should Throw $Exception
@@ -1594,14 +1601,15 @@ InModuleScope LabBuilder {
         }
         Context "Configuration passed with VM setup complete file that can't be found." {
             It 'Throw SetupCompleteFileMissingError Exception' {
-                $Config = Get-LabConfiguration -Path "$Global:TestConfigPath\PesterTestConfig.VMFail.BadSetupCompleteFile.xml"
+                $Config = Get-LabConfiguration -Path $Global:TestConfigOKPath
+                $Config.labbuilderconfig.vms.vm.setupcomplete = 'ThisFileDoesntExist.ps1'
                 [Array]$Switches = Get-LabSwitches -Configuration $Config
                 [array]$Templates = Get-LabVMTemplates -Configuration $Config
                 $ExceptionParameters = @{
                     errorId = 'SetupCompleteFileMissingError'
                     errorCategory = 'InvalidArgument'
                     errorMessage = $($LocalizedData.SetupCompleteFileMissingError `
-                        -f 'PESTER01',"$Global:TestConfigPath\ThisFileDoesntExist.ps1")
+                        -f $Config.labbuilderconfig.vms.vm.name,"$Global:TestConfigPath\ThisFileDoesntExist.ps1")
                 }
                 $Exception = New-Exception @ExceptionParameters
                 { Get-LabVMs -Configuration $Config -VMTemplates $Templates -Switches $Switches } | Should Throw $Exception
@@ -1609,14 +1617,15 @@ InModuleScope LabBuilder {
         }
         Context 'Configuration passed with VM setup complete file with an invalid file extension.' {
             It 'Throw SetupCompleteFileBadTypeError Exception' {
-                $Config = Get-LabConfiguration -Path "$Global:TestConfigPath\PesterTestConfig.VMFail.BadSetupCompleteFileType.xml"
+                $Config = Get-LabConfiguration -Path $Global:TestConfigOKPath
+                $Config.labbuilderconfig.vms.vm.setupcomplete = 'ThisFileDoesntExist.abc'
                 [Array]$Switches = Get-LabSwitches -Configuration $Config
                 [array]$Templates = Get-LabVMTemplates -Configuration $Config
                 $ExceptionParameters = @{
                     errorId = 'SetupCompleteFileBadTypeError'
                     errorCategory = 'InvalidArgument'
                     errorMessage = $($LocalizedData.SetupCompleteFileBadTypeError `
-                        -f 'PESTER01',"$Global:TestConfigPath\ThisFileTypIsNotAllowed.abc")
+                        -f $Config.labbuilderconfig.vms.vm.name,"$Global:TestConfigPath\ThisFileDoesntExist.abc")
                 }
                 $Exception = New-Exception @ExceptionParameters
                 { Get-LabVMs -Configuration $Config -VMTemplates $Templates -Switches $Switches } | Should Throw $Exception
@@ -1624,14 +1633,15 @@ InModuleScope LabBuilder {
         }
         Context "Configuration passed with VM DSC Config File that can't be found." {
             It 'Throw DSCConfigFileMissingError Exception' {
-                $Config = Get-LabConfiguration -Path "$Global:TestConfigPath\PesterTestConfig.VMFail.BadDSCConfigFile.xml"
+                $Config = Get-LabConfiguration -Path $Global:TestConfigOKPath
+                $Config.labbuilderconfig.vms.vm.dsc.configfile = 'ThisFileDoesntExist.ps1'
                 [Array]$Switches = Get-LabSwitches -Configuration $Config
                 [array]$Templates = Get-LabVMTemplates -Configuration $Config
                 $ExceptionParameters = @{
                     errorId = 'DSCConfigFileMissingError'
                     errorCategory = 'InvalidArgument'
                     errorMessage = $($LocalizedData.DSCConfigFileMissingError `
-                        -f 'PESTER01',"$Global:TestConfigPath\FileDoesNotExist.ps1")
+                        -f $Config.labbuilderconfig.vms.vm.name,"$Global:TestConfigPath\ThisFileDoesntExist.ps1")
                 }
                 $Exception = New-Exception @ExceptionParameters
                 { Get-LabVMs -Configuration $Config -VMTemplates $Templates -Switches $Switches } | Should Throw $Exception
@@ -1639,14 +1649,15 @@ InModuleScope LabBuilder {
         }
         Context 'Configuration passed with VM DSC Config File with an invalid file extension.' {
             It 'Throw DSCConfigFileBadTypeError Exception' {
-                $Config = Get-LabConfiguration -Path "$Global:TestConfigPath\PesterTestConfig.VMFail.BadDSCConfigFileType.xml"
+                $Config = Get-LabConfiguration -Path $Global:TestConfigOKPath
+                $Config.labbuilderconfig.vms.vm.dsc.configfile = 'FileWithBadType.xyz'
                 [Array]$Switches = Get-LabSwitches -Configuration $Config
                 [array]$Templates = Get-LabVMTemplates -Configuration $Config
                 $ExceptionParameters = @{
                     errorId = 'DSCConfigFileBadTypeError'
                     errorCategory = 'InvalidArgument'
                     errorMessage = $($LocalizedData.DSCConfigFileBadTypeError `
-                        -f 'PESTER01',"$Global:TestConfigPath\FileWithBadType.xyz")
+                        -f $Config.labbuilderconfig.vms.vm.name,"$Global:TestConfigPath\FileWithBadType.xyz")
                 }
                 $Exception = New-Exception @ExceptionParameters
                 { Get-LabVMs -Configuration $Config -VMTemplates $Templates -Switches $Switches } | Should Throw $Exception
@@ -1654,14 +1665,15 @@ InModuleScope LabBuilder {
         }
         Context 'Configuration passed with VM DSC Config File but no DSC Name.' {
             It 'Throw DSCConfigNameIsEmptyError Exception' {
-                $Config = Get-LabConfiguration -Path "$Global:TestConfigPath\PesterTestConfig.VMFail.BadDSCNameMissing.xml"
+                $Config = Get-LabConfiguration -Path $Global:TestConfigOKPath
+                $Config.labbuilderconfig.vms.vm.dsc.configname = ''
                 [Array]$Switches = Get-LabSwitches -Configuration $Config
                 [Array]$Templates = Get-LabVMTemplates -Configuration $Config
                 $ExceptionParameters = @{
                     errorId = 'DSCConfigNameIsEmptyError'
                     errorCategory = 'InvalidArgument'
                     errorMessage = $($LocalizedData.DSCConfigNameIsEmptyError `
-                        -f 'PESTER01')
+                        -f $Config.labbuilderconfig.vms.vm.name)
                 }
                 $Exception = New-Exception @ExceptionParameters
                 { Get-LabVMs -Configuration $Config -VMTemplates $Templates -Switches $Switches } | Should Throw $Exception

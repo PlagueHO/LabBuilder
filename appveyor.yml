@@ -8,9 +8,9 @@ environment:
     secure: 3fXfDuds8yhTa7WTOLIEhytrpsej9kcP+4rPrgLaFVmIhimmc+FgUVxkR4u468LH
 install: 
   - cinst -y pester
-  - ps:
-      install-windowsfeature hyper-v-powershell
-      Get-PackageProvider -name nuget -ForceBootStrap -Force
+  - ps: |
+      Install-WindowsFeature -Name hyper-v-powershell
+      Get-PackageProvider -Name nuget -ForceBootStrap -Force
 
 #---------------------------------# 
 #      build configuration        # 

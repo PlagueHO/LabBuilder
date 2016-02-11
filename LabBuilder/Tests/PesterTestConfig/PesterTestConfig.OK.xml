@@ -85,7 +85,9 @@
         usedifferencingbootdisk="Y"
         administratorpassword="Something"
         productkey="DDDDD-DDDDD-DDDDD-DDDDD-DDDDD"
-        timezone="Pacific Standard Time">
+        timezone="Pacific Standard Time"
+        unattendfile=""
+        setupcomplete="" >
       <datavhds>
         <datavhd vhd="DataDiskCopy.vhdx" sourcevhd=".\Tests\PesterTestConfig\DataDisk.vhdx" />
         <datavhd vhd="DataDiskFixed.vhdx" type="fixed" size="10GB" />
