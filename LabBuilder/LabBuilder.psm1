@@ -25,6 +25,7 @@ TemplateSourceVHDNotFoundError=The Template Source VHD '{0}' in Template '{1}' c
 DSCModuleDownloadError=Module '{2}' required by DSC Config File '{0}' in VM '{1}' could not be found or downloaded.					
 DSCModuleNotFoundError=Module '{2}' required by DSC Config File '{0}' in VM '{1}' could not be found in the module path.
 CertificateCreateError=The self-signed certificate for VM '{0}' could not be created and downloaded.
+CertificateDownloadError=The self-signed certificate for VM '{0}' could not be downloaded.
 DSCConfigMetaMOFCreateError=A Meta MOF File was not created by the DSC LCM Config for VM '{0}'.
 DSCConfigMoreThanOneNodeError=A single Node element cannot be found in the DSC Config File '{0}' in VM '{1}'.
 DSCConfigMOFCreateError=A MOF File was not created by the DSC Config File '{0}' in VM '{1}'.
@@ -33,8 +34,23 @@ NetworkAdapterBlankMacError=VM Network Adapter '{0}' attached to VM '{1}' has a 
 ManagmentIPAddressError=An IPv4 address for the network adapter connected to the {0} for VM '{1}' could not be identified.
 DSCInitializationError=An error occurred initializing DSC for VM '{0}'.
 RemotingConnectionError=An error occurred connecting to VM '{0}' using PowerShell Remoting.
-CertificateDownloadError=An error occurred downloading the certificate for VM '{0}'.
 InitialSetupCompleteError=The Initial Setup for VM '{0}' did not complete before the timeout occurred.
+InitializationDidNotCompleteError=Initialization for VM '{0}' did not complete.
+SetupCompleteScriptMissingError=The Setup Complete Script file '{1}' specified in VM '{0}' could not be found.
+UnattendFileMissingError=The Unattend file '{1}' specified in VM '{0}' could not be found.
+SetupCompleteFileMissingError=The Setup Complete file '{1}' specified in VM '{0}' could not be found.
+SetupCompleteFileBadTypeError=The Setup Complete file '{1}' specified in VM '{0}' must be either a PS1 or CMD file.
+DSCConfigFileMissingError=The DSC Config file '{1}' specified in VM '{0}' could not be found.
+DSCConfigFileBadTypeError=The DSC Config file '{1}' specified in VM '{0}' must be a PS1 file.
+DSCConfigNameIsEmptyError=The DSC Config Name specified in VM '{0}' is empty.
+VMNameError=The VM name cannot be 'VM' or empty.
+VMTemplateNameEmptyError=The template name in VM '{0}' is empty.
+VMTemplateNotFoundError=The template '{1}' specified in VM '{0}' could not be found.
+VMTemplateVHDPathEmptyError=The template VHD path set in template '{0}' is empty.
+VMAdapterNameError=The Adapter Name in VM '{0}' cannot be 'adapter' or empty.
+VMAdapterSwitchNameError=The Switch Name specified in adapter '{1}' specified in VM '{0}' cannot be empty.
+VMAdapterSwitchNotFoundError=The switch '{2}' specified in adapter '{1}' in VM '{0}' could not be found in Switches.
+VMDataDiskVHDShrinkError=The Data Disk '{1}' in VM '{0}' cannot be shrunk to {2}.
 InstallingHyperVComponentsMesage=Installing {0} Hyper-V Components.
 InitializingHyperVComponentsMesage=Initializing Hyper-V Components.
 DownloadingLabResourcesMessage=Downloading Lab Resources.
@@ -2753,7 +2769,13 @@ Add-Content ``
         [String] $SetupComplete = $VM.SetupComplete
         if (-not (Test-Path -Path $SetupComplete))
         {
-            Throw "SetupComplete Script file $SetupComplete could not be found for VM $($VM.Name)."
+            $ExceptionParameters = @{
+                errorId = 'SetupCompleteScriptMissingError'
+                errorCategory = 'InvalidArgument'
+                errorMessage = $($LocalizedData.SetupCompleteScriptMissingError `
+                    -f $VM.name,$SetupComplete)
+            }
+            New-LabException @ExceptionParameters
         }
         [String] $Extension = [System.IO.Path]::GetExtension($SetupComplete)
         Switch ($Extension.ToLower())
@@ -2863,7 +2885,6 @@ function Initialize-LabVMImage {
     Write-Verbose -Message $($LocalizedData.MountingVMBootDiskMessage `
         -f $VM.Name,$VMBootDiskPath)
       
-    $null = New-Item -Path $MountPoint -ItemType Directory
     [String] $MountPoint = Join-Path `
         -Path $VMLabBuilderFiles `
         -ChildPath 'Mount'
@@ -3010,10 +3031,21 @@ function Get-LabVMs {
 
     foreach ($VM in $VMs) {
         if ($VM.Name -eq 'VM') {
-            throw "The VM name cannot be 'VM' or empty."
+            $ExceptionParameters = @{
+                errorId = 'VMNameError'
+                errorCategory = 'InvalidArgument'
+                errorMessage = $($LocalizedData.VMNameError)
+            }
+            New-LabException @ExceptionParameters
         } # If
         if (-not $VM.Template) {
-            throw "The template name in VM $($VM.Name) cannot be empty."
+            $ExceptionParameters = @{
+                errorId = 'VMTemplateNameEmptyError'
+                errorCategory = 'InvalidArgument'
+                errorMessage = $($LocalizedData.VMTemplateNameEmptyError `
+                    -f $VM.name)
+            }
+            New-LabException @ExceptionParameters
         } # If
 
         # Find the template that this VM uses and get the VHD Path
@@ -3027,11 +3059,23 @@ function Get-LabVMs {
             } # If
         } # Foreach
         if (-not $Found) {
-            throw "The template $($VM.Template) specified in VM $($VM.Name) could not be found."
+            $ExceptionParameters = @{
+                errorId = 'VMTemplateNotFoundError'
+                errorCategory = 'InvalidArgument'
+                errorMessage = $($LocalizedData.VMTemplateNotFoundError `
+                    -f $VM.name,$VM.template)
+            }
+            New-LabException @ExceptionParameters
         } # If
         # Check the VHD File path in the template is not empty
         if (-not $TemplateVHDPath) {
-            throw "The template VHD path set in template $($VM.Template) cannot be empty."
+            $ExceptionParameters = @{
+                errorId = 'VMTemplateVHDPathEmptyError'
+                errorCategory = 'InvalidArgument'
+                errorMessage = $($LocalizedData.VMTemplateVHDPathEmptyError `
+                    -f $VM.template)
+            }
+            New-LabException @ExceptionParameters
         } # If
 
         # Assemble the Network adapters that this VM will use
@@ -3040,10 +3084,22 @@ function Get-LabVMs {
         foreach ($VMAdapter in $VM.Adapters.Adapter) {
             $AdapterCount++
             if ($VMAdapter.Name -eq 'adapter') {
-                Throw "The Adapter Name in VM $($VM.Name) cannot be 'adapter' or empty."
+                $ExceptionParameters = @{
+                    errorId = 'VMAdapterNameError'
+                    errorCategory = 'InvalidArgument'
+                    errorMessage = $($LocalizedData.VMAdapterNameError `
+                        -f $VM.name)
+                }
+                New-LabException @ExceptionParameters
             }
             if (-not $VMAdapter.SwitchName) {
-                Throw "The Switch Name specified in adapter $($VMAdapter.Name) specified in VM ($VM.Name) cannot be empty."
+                $ExceptionParameters = @{
+                    errorId = 'VMAdapterSwitchNameError'
+                    errorCategory = 'InvalidArgument'
+                    errorMessage = $($LocalizedData.VMAdapterSwitchNameError `
+                        -f $VM.name,$VMAdapter.name)
+                }
+                New-LabException @ExceptionParameters
             }
             # Check the switch is in the switch list
             [Boolean] $Found = $False
@@ -3056,7 +3112,13 @@ function Get-LabVMs {
                 } # If
             } # Foreach
             if (-not $Found) {
-                throw "The switch $($VMAdapter.SwitchName) specified in VM ($VM.Name) could not be found in Switches."
+                $ExceptionParameters = @{
+                    errorId = 'VMAdapterSwitchNotFoundError'
+                    errorCategory = 'InvalidArgument'
+                    errorMessage = $($LocalizedData.VMAdapterSwitchNotFoundError `
+                        -f $VM.name,$VMAdapter.name,$VMAdapter.switchname)
+                }
+                New-LabException @ExceptionParameters
             } # If
             
             # Figure out the VLan - If defined in the VM use it, otherwise use the one defined in the Switch, otherwise keep blank.
@@ -3110,7 +3172,13 @@ function Get-LabVMs {
                 -Path $Configuration.labbuilderconfig.settings.fullconfigpath `
                 -ChildPath $VM.UnattendFile
             if (-not (Test-Path $UnattendFile)) {
-                Throw "The Unattend File $UnattendFile specified in VM $($VM.Name) can not be found."
+                $ExceptionParameters = @{
+                    errorId = 'UnattendFileMissingError'
+                    errorCategory = 'InvalidArgument'
+                    errorMessage = $($LocalizedData.UnattendFileMissingError `
+                        -f $VM.name,$UnattendFile)
+                }
+                New-LabException @ExceptionParameters
             } # If
         } # If
         
@@ -3121,10 +3189,22 @@ function Get-LabVMs {
                 -Path $Configuration.labbuilderconfig.settings.fullconfigpath `
                 -ChildPath $VM.SetupComplete
             if (-not (Test-Path $SetupComplete)) {
-                Throw "The Setup Complete File $SetupComplete specified in VM $($VM.Name) can not be found."
+                $ExceptionParameters = @{
+                    errorId = 'SetupCompleteFileMissingError'
+                    errorCategory = 'InvalidArgument'
+                    errorMessage = $($LocalizedData.SetupCompleteFileMissingError `
+                        -f $VM.name,$SetupComplete)
+                }
+                New-LabException @ExceptionParameters
             } # If
             if ([System.IO.Path]::GetExtension($SetupComplete).ToLower() -notin '.ps1','.cmd' ) {
-                Throw "The Setup Complete File $SetupComplete specified in VM $($VM.Name) must be either a PS1 or CMD file."
+                $ExceptionParameters = @{
+                    errorId = 'SetupCompleteFileBadTypeError'
+                    errorCategory = 'InvalidArgument'
+                    errorMessage = $($LocalizedData.SetupCompleteFileBadTypeError `
+                        -f $VM.name,$SetupComplete)
+                }
+                New-LabException @ExceptionParameters
             } # If
         } # If
 
@@ -3135,13 +3215,31 @@ function Get-LabVMs {
                 -Path $Configuration.labbuilderconfig.settings.fullconfigpath `
                 -ChildPath $VM.DSC.ConfigFile
             if (-not (Test-Path $DSCConfigFile)) {
-                Throw "The DSC Config File $DSCConfigFile specified in VM $($VM.Name) can not be found."
+                $ExceptionParameters = @{
+                    errorId = 'DSCConfigFileMissingError'
+                    errorCategory = 'InvalidArgument'
+                    errorMessage = $($LocalizedData.DSCConfigFileMissingError `
+                        -f $VM.name,$DSCConfigFile)
+                }
+                New-LabException @ExceptionParameters
             }
             if ([System.IO.Path]::GetExtension($DSCConfigFile).ToLower() -ne '.ps1' ) {
-                Throw "The DSC Config File $DSCConfigFile specified in VM $($VM.Name) must be a PS1 file."
+                $ExceptionParameters = @{
+                    errorId = 'DSCConfigFileBadTypeError'
+                    errorCategory = 'InvalidArgument'
+                    errorMessage = $($LocalizedData.DSCConfigFileBadTypeError `
+                        -f $VM.name,$DSCConfigFile)
+                }
+                New-LabException @ExceptionParameters
             }
             if (-not $VM.DSC.ConfigName) {
-                Throw "The DSC Config Name specified in VM $($VM.Name) is empty."
+                $ExceptionParameters = @{
+                    errorId = 'DSCConfigNameIsEmptyError'
+                    errorCategory = 'InvalidArgument'
+                    errorMessage = $($LocalizedData.DSCConfigNameIsEmptyError `
+                        -f $VM.name)
+                }
+                New-LabException @ExceptionParameters
             }
         }
         
@@ -3820,12 +3918,24 @@ function Start-LabVM {
                 }
                 else
                 {
-                    Throw "Certificate for VM $($VM.Name) could not be downloaded ..."
+                    $ExceptionParameters = @{
+                        errorId = 'CertificateDownloadError'
+                        errorCategory = 'InvalidArgument'
+                        errorMessage = $($LocalizedData.CertificateDownloadError `
+                            -f $VM.name)
+                    }
+                    New-LabException @ExceptionParameters
                 } # If
             }
             else
             {
-                Throw "Initialization for VM $($VM.Name) did not complete ..."
+                $ExceptionParameters = @{
+                    errorId = 'InitializationDidNotCompleteError'
+                    errorCategory = 'InvalidArgument'
+                    errorMessage = $($LocalizedData.InitializationDidNotCompleteError `
+                        -f $VM.name)
+                }
+                New-LabException @ExceptionParameters
             } # If
         } # If
 
@@ -4080,7 +4190,13 @@ function Initialize-LabVMs {
                 }
                 elseif ((Get-VHD -Path $VMDataDiskPath).Size -gt $VM.DataVHDSize)
                 {
-                    Throw "VM $($VM.Name) Data Disk $VMDataDiskPath cannot be shrunk to $($VM.DataVHDSize) ..."
+                    $ExceptionParameters = @{
+                        errorId = 'VMDataDiskVHDShrinkError'
+                        errorCategory = 'InvalidArgument'
+                        errorMessage = $($LocalizedData.VMDataDiskVHDShrinkError `
+                            -f $VM.name,$VMDataDiskPath,$VM.DataVHDSize)
+                    }
+                    New-LabException @ExceptionParameters
                 }
             }
             else
