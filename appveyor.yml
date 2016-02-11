@@ -78,6 +78,8 @@ deploy_script:
           Push-AppveyorArtifact $_
       }
 
+      Get-ChildItem "$ProjectRoot\LabBuilder\Artifacts\*.*" | Foreach-Object { Push-AppveyorArtifact $_ }
+      
       # If this is a build of the Master branch and not a PR push
       # then publish the Module to the PowerShell Gallery.
       if ((! $ENV:APPVEYOR_PULL_REQUEST_NUMBER) -and ($ENV:APPVEYOR_REPO_BRANCH -eq 'master'))
@@ -90,6 +92,3 @@ deploy_script:
       
       # Remove Staging Folder
       $null = Remove-Item -Path $StagingFolder -Recurse -Force
-
-on_finish:
-    - ps: Get-ChildItem "$ProjectRoot\LabBuilder\Artifacts\*.*" | Foreach-Object { Push-AppveyorArtifact $_ }
