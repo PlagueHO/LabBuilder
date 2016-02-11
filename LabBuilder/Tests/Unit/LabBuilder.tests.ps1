@@ -85,7 +85,7 @@ InModuleScope LabBuilder {
                 $errorId = 'FileDownloadError'
                 $errorCategory = [System.Management.Automation.ErrorCategory]::InvalidOperation
                 $errorMessage = $($LocalizedData.FileDownloadError) `
-                    -f 'WMF 5.0 Installer','http://download.microsoft.com/download/3/F/D/3FD04B49-26F9-4D9A-8C34-4533B9D5B020/Win8.1AndW2K12R2-KB3066437-x64.msu','Download Error'
+                    -f 'WMF 5.0 Installer','https://download.microsoft.com/download/2/C/6/2C6E1B4A-EBE5-48A6-B225-2D2058A9CEFB/W2K12R2-KB3094174-x64.msu','Download Error'
                 $exception = New-Object -TypeName System.InvalidOperationException `
                     -ArgumentList $errorMessage
                 $errorRecord = New-Object -TypeName System.Management.Automation.ErrorRecord `
@@ -363,6 +363,11 @@ InModuleScope LabBuilder {
         Mock Download-WMF5Installer
         Mock Download-LabResources
         Mock Set-VMHost
+        Mock Get-VMSwitch
+        Mock New-VMSwitch
+        Mock Get-VMNetworkAdapter -MockWith { @{ Name = 'Management Adapter'} }
+        Mock Get-VMNetworkAdapterVlan
+        Mock Set-VMNetworkAdapterVlan        
 
         Context 'Valid configuration is passed' {
             It 'Does not throw an Exception' {
@@ -373,6 +378,11 @@ InModuleScope LabBuilder {
                 Assert-MockCalled Download-WMF5Installer -Exactly 1
                 Assert-MockCalled Download-LabResources -Exactly 1
                 Assert-MockCalled Set-VMHost -Exactly 1
+                Assert-MockCalled Get-VMSwitch -Exactly 1
+                Assert-MockCalled New-VMSwitch -Exactly 1
+                Assert-MockCalled Get-VMNetworkAdapter -Exactly 1
+                Assert-MockCalled Get-VMNetworkAdapterVlan -Exactly 1
+                Assert-MockCalled Set-VMNetworkAdapterVlan -Exactly 1
             }		
         }
     }
@@ -751,7 +761,7 @@ InModuleScope LabBuilder {
 
 
 
-    Describe 'Download-LabResources' {
+    Describe 'Download-LabResources' -Tags 'Incomplete' {
         $Config = Get-LabConfiguration -Path $Global:TestConfigOKPath
 
         Context 'Valid configuration is passed' {
@@ -1155,7 +1165,7 @@ InModuleScope LabBuilder {
 
 
 
-    Describe 'Set-LabVMDSCMOFFile' {
+    Describe 'Set-LabVMDSCMOFFile' -Tags 'Incomplete' {
 
         Mock Get-VM
 
@@ -1327,8 +1337,6 @@ InModuleScope LabBuilder {
                 Assert-MockCalled ConfigLCM -Exactly 1
             }
         }
-
-        # TODO: Complete Tests
     }
 
 
@@ -1347,17 +1355,15 @@ InModuleScope LabBuilder {
         Context 'Network Adapter does not Exist' {
             $VM = $VMS[0].Clone()
             $VM.Adapters[0].Name = 'DoesNotExist'
-            $errorId = 'NetworkAdapterNotFoundError'
-            $errorCategory = [System.Management.Automation.ErrorCategory]::InvalidArgument
-            $errorMessage = $($LocalizedData.NetworkAdapterNotFoundError `
-                -f 'DoesNotExist',$VM.Name)
-            $exception = New-Object -TypeName System.InvalidOperationException `
-                -ArgumentList $errorMessage
-            $errorRecord = New-Object -TypeName System.Management.Automation.ErrorRecord `
-                -ArgumentList $exception, $errorId, $errorCategory, $null
-
+            $ExceptionParameters = @{
+                errorId = 'NetworkAdapterNotFoundError'
+                errorCategory = 'InvalidArgument'
+                errorMessage = $($LocalizedData.NetworkAdapterNotFoundError `
+                    -f 'DoesNotExist',$VMS[0].Name)
+            }
+            $Exception = New-Exception @ExceptionParameters
             It 'Throws a NetworkAdapterNotFoundError Exception' {
-                { Set-LabVMDSCStartFile -Configuration $Config -VM $VM } | Should Throw $errorRecord
+                { Set-LabVMDSCStartFile -Configuration $Config -VM $VM } | Should Throw $Exception
             }
             It 'Calls Mocked commands' {
                 Assert-MockCalled Get-VMNetworkAdapter -Exactly 1
@@ -1369,17 +1375,16 @@ InModuleScope LabBuilder {
         Context 'Network Adapter has blank MAC Address' {
             $VM = $VMS[0].Clone()
             $VM.Adapters[0].Name = 'Exists'
-            $errorId = 'NetworkAdapterBlankMacError'
-            $errorCategory = [System.Management.Automation.ErrorCategory]::InvalidArgument
-            $errorMessage = $($LocalizedData.NetworkAdapterBlankMacError `
-                -f 'Exists',$VM.Name)
-            $exception = New-Object -TypeName System.InvalidOperationException `
-                -ArgumentList $errorMessage
-            $errorRecord = New-Object -TypeName System.Management.Automation.ErrorRecord `
-                -ArgumentList $exception, $errorId, $errorCategory, $null
+            $ExceptionParameters = @{
+                errorId = 'NetworkAdapterBlankMacError'
+                errorCategory = 'InvalidArgument'
+                errorMessage = $($LocalizedData.NetworkAdapterBlankMacError `
+                    -f 'Exists',$VMS[0].Name)
+            }
+            $Exception = New-Exception @ExceptionParameters
 
             It 'Throws a NetworkAdapterBlankMacError Exception' {
-                { Set-LabVMDSCStartFile -Configuration $Config -VM $VM } | Should Throw $errorRecord
+                { Set-LabVMDSCStartFile -Configuration $Config -VM $VM } | Should Throw $Exception
             }
             It 'Calls Mocked commands' {
                 Assert-MockCalled Get-VMNetworkAdapter -Exactly 1
@@ -1431,7 +1436,7 @@ InModuleScope LabBuilder {
 
 
 
-    Describe 'Start-LabVMDSC' {
+    Describe 'Start-LabVMDSC' -Tags 'Incomplete' {
 
         Mock Get-VM
 
@@ -1444,7 +1449,7 @@ InModuleScope LabBuilder {
 
 
 
-    Describe 'Get-LabUnattendFile' {
+    Describe 'Get-LabUnattendFile' -Tags 'Incomplete' {
 
         Mock Get-VM
 
@@ -1465,7 +1470,7 @@ InModuleScope LabBuilder {
 
 
 
-    Describe 'Set-LabVMInitializationFiles' {
+    Describe 'Set-LabVMInitializationFiles' -Tags 'Incomplete' {
 
         #region Mocks
         Mock Get-VM
@@ -1708,12 +1713,12 @@ InModuleScope LabBuilder {
 
 
 
-    Describe 'Get-LabVMSelfSignedCert' {
+    Describe 'Get-LabVMSelfSignedCert' -Tags 'Incomplete' {
     }
 
 
 
-    Describe 'Start-LabVM' {
+    Describe 'Start-LabVM' -Tags 'Incomplete' {
         #region Mocks
         Mock Get-VM -ParameterFilter { $Name -eq 'PESTER01' } -MockWith { [PSObject]@{ Name='PESTER01'; State='Off' } }
         Mock Get-VM -ParameterFilter { $Name -eq 'pester template *' }
@@ -1753,7 +1758,7 @@ InModuleScope LabBuilder {
 
 
 
-    Describe 'Initialize-LabVMs' {
+    Describe 'Initialize-LabVMs'  -Tags 'Incomplete' {
         #region Mocks
         Mock New-VHD
         Mock New-VM
@@ -1835,26 +1840,26 @@ InModuleScope LabBuilder {
 
 
 
-    Describe 'Wait-LabVMInit' {
+    Describe 'Wait-LabVMInit' -Tags 'Incomplete' {
     }
 
 
 
-    Describe 'Wait-LabVMStart' {
+    Describe 'Wait-LabVMStart' -Tags 'Incomplete'  {
     }
 
 
 
-    Describe 'Wait-LabVMOff' {
+    Describe 'Wait-LabVMOff' -Tags 'Incomplete'  {
     }
 
 
 
-    Describe 'Install-Lab' {
+    Describe 'Install-Lab' -Tags 'Incomplete'  {
     }
 
 
 
-    Describe 'Uninstall-Lab' {
+    Describe 'Uninstall-Lab' -Tags 'Incomplete'  {
     }
 }
