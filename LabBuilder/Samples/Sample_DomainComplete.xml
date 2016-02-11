@@ -472,8 +472,10 @@
     <vm name="LABBUILDER.COM SA-WDS"
       template="Template Windows Server 2012 R2 Datacenter Full"
       computername="SA-WDS"
-      usedifferencingbootdisk="Y"
-      datavhdsize="10GB" >
+      usedifferencingbootdisk="Y" >
+      <datavhds>
+        <datavhd vhd="LABBUILDER.COM SA-WDS Data Disk.vhdx" size="10GB" type="dynamic" />
+      </datavhds>
       <dsc configname="MEMBER_WDS"
            configfile="MEMBER_WDS.DSC.ps1">
         <parameters>
@@ -500,8 +502,10 @@
     <vm name="LABBUILDER.COM SA-WSUS"
       template="Template Windows Server 2012 R2 Datacenter CORE"
       computername="SA-WSUS"
-      usedifferencingbootdisk="Y" 
-      datavhdsize="10GB" >
+      usedifferencingbootdisk="Y" >
+      <datavhds>
+        <datavhd vhd="LABBUILDER.COM SA-WSUS Data Disk.vhdx" size="10GB" type="dynamic" />
+      </datavhds>
       <dsc configname="MEMBER_WSUS"
            configfile="MEMBER_WSUS.DSC.ps1">
         <parameters>
@@ -564,8 +568,10 @@
     <vm name="LABBUILDER.COM SA-FS1"
         template="Template Windows Server 2012 R2 Datacenter CORE"
         computername="SA-FS1"
-        usedifferencingbootdisk="Y"
-        datavhdsize="10GB" >
+        usedifferencingbootdisk="Y" >
+      <datavhds>
+        <datavhd vhd="LABBUILDER.COM SA-FS1 Data Disk.vhdx" size="10GB" type="dynamic" />
+      </datavhds>
       <dsc configname="MEMBER_FILESERVER"
            configfile="MEMBER_FILESERVER.DSC.ps1"
            logging="Y">
@@ -593,8 +599,10 @@
     <vm name="LABBUILDER.COM SA-FS2"
         template="Template Windows Server 2012 R2 Datacenter CORE"
         computername="SA-FS2"
-        usedifferencingbootdisk="Y" 
-        datavhdsize="10GB" >
+        usedifferencingbootdisk="Y" >
+      <datavhds>
+        <datavhd vhd="LABBUILDER.COM SA-FS2 Data Disk.vhdx" size="10GB" type="dynamic" />
+      </datavhds>
       <dsc configname="MEMBER_FILESERVER"
            configfile="MEMBER_FILESERVER.DSC.ps1">
         <parameters>

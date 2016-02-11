@@ -50,6 +50,14 @@ VMTemplateVHDPathEmptyError=The template VHD path set in template '{0}' is empty
 VMAdapterNameError=The Adapter Name in VM '{0}' cannot be 'adapter' or empty.
 VMAdapterSwitchNameError=The Switch Name specified in adapter '{1}' specified in VM '{0}' cannot be empty.
 VMAdapterSwitchNotFoundError=The switch '{2}' specified in adapter '{1}' in VM '{0}' could not be found in Switches.
+VMDataDiskVHDEmptyError=The Data Disk VHD in VM '{0}' cannot be 'datavhd' or empty.
+VMDataDiskCantBeCreatedError=The Data Disk VHD '{1}' specifid in VM '{0}' does not exist but the size and type or Source VHD was not provided so it not be created.
+VMDataDiskParentVHDNotFoundError=The Data Disk Parent VHD '{1}' specified in VM '{0}' could not be found.
+VMDataDiskSourceVHDNotFoundError=The Data Disk Source VHD '{1}' specified in VM '{0}' could not be found.
+VMDataDiskUnknownTypeError=Unknown Data Disk type '{2}' specified in VM '{0}' for VHD '{1}'.
+VMDataDiskSupportPRError=The SupportPR flag is not supported for non-shared Data Disk VHD '{1}' specified in VM '{0}'.
+VMDataDiskSharedDifferencingError=The Differencing Data Disk VHD '{1}' specified in VM '{0}' is can not be set as Shared VHD.
+VMDataDiskSourceVHDIfMoveError=The Data Disk VHD '{1}' specified in VM '{0}' must have a Source VHD specified if MoveSourceVHD is set.
 VMDataDiskVHDShrinkError=The Data Disk '{1}' in VM '{0}' cannot be shrunk to {2}.
 InstallingHyperVComponentsMesage=Installing {0} Hyper-V Components.
 InitializingHyperVComponentsMesage=Initializing Hyper-V Components.
@@ -864,7 +872,7 @@ function Download-LabResources {
    Gets an array of switches from a Lab Configuration file.
 .DESCRIPTION
    Takes a provided Lab Configuration file and returns the list of switches required for this Lab.
-   This list is usually passed to Initialize-LabSwitches to configure the swtiches required for this
+   This list is usually passed to Initialize-LabSwitches to configure the switches required for this
    lab.
 .PARAMETER Configuration
    Contains the Lab Builder configuration object that was loaded by the Get-LabConfiguration object.
@@ -1227,14 +1235,14 @@ function Remove-LabSwitches {
 .SYNOPSIS
    Gets an Array of VM Templates for a Lab configuration.
 .DESCRIPTION
-   Takes a provided Lab Configuration file and returns the list of Virtul Machine template machines
+   Takes the provided Lab Configuration file and returns the list of Virtul Machine template machines
    that will be used to create the Virtual Machines in this lab. This list is usually passed to
    Initialize-LabVMTemplates.
 .PARAMETER Configuration
    Contains the Lab Builder configuration object that was loaded by the Get-LabConfiguration object.
 .EXAMPLE
    $Config = Get-LabConfiguration -Path c:\mylab\config.xml
-   $Switches = Get-LabVMTemplates -Configuration $Config
+   $VMTemplates = Get-LabVMTemplates -Configuration $Config
    Loads a Lab Builder configuration and pulls the array of VMTemplates from it.
 .OUTPUTS
    Returns an array of VM Templates.
@@ -1367,10 +1375,6 @@ function Get-LabVMTemplates {
                 {
                     $VMTemplate.ExposeVirtualizationExtensions = $Template.ExposeVirtualizationExtensions
                 }
-                if ($DataVHDSize)
-                {
-                    $VMTemplate.DataVHDSize = $DataVHDSize
-                } # If
                 if ($Template.AdministratorPassword)
                 {
                     $VMTemplate.AdministratorPassword = $Template.AdministratorPassword
@@ -1405,7 +1409,7 @@ function Get-LabVMTemplates {
                     errorId = 'EmptyTemplateVHDError'
                     errorCategory = 'InvalidArgument'
                     errorMessage = $($LocalizedData.EmptyTemplateVHDError `
-                        -f $VMTemplate.Name)
+                        -f $Template.Name)
                 }
                 New-LabException @ExceptionParameters
             } # If
@@ -1437,7 +1441,6 @@ function Get-LabVMTemplates {
                     {
                         $null
                     };
-                datavhdsize = $Template.DataVHDSize;
                 administratorpassword = $Template.AdministratorPassword;
                 productkey = $Template.ProductKey;
                 timezone = $Template.TimeZone;
@@ -2988,24 +2991,30 @@ function Initialize-LabVMImage {
 ####################################################################################################
 <#
 .SYNOPSIS
-   Short description
+   Gets an Array of VMs from a Lab configuration.
 .DESCRIPTION
-   Long description
+   Takes the provided Lab Configuration file and returns the list of Virtul Machines
+   that will be created in this lab. This list is usually passed to Initialize-LabVMs.
+.PARAMETER Configuration
+   Contains the Lab Builder configuration object that was loaded by the Get-LabConfiguration object.
+.PARAMETER VMTemplates
+   Contains the array of VM Templates returned by Get-LabVMTemplates from this configuration.
+.PARAMETER Switches
+   Contains the array of Virtual Switches returned by Get-LabSwitches from this configuration.
 .EXAMPLE
-   Example of how to use this cmdlet
-.EXAMPLE
-   Another example of how to use this cmdlet
-.INPUTS
-   Inputs to this cmdlet (if any)
+   $Config = Get-LabConfiguration -Path c:\mylab\config.xml
+   $VMTemplates = Get-LabVMTemplates -Configuration $Config
+   $Switches = Get-LabSwitches -Configuration $Config
+   $VMs = Get-LabVMs -Configuration $Config -VMTemplates $VMTemplates -Switches $Switches
+   Loads a Lab Builder configuration and pulls the array of VMs from it.
 .OUTPUTS
-   Output from this cmdlet (if any)
-.NOTES
-   General notes
+   Returns an array of VMs.
 #>
 function Get-LabVMs {
     [OutputType([System.Collections.Hashtable[]])]
     [CmdLetBinding()]
-    param (
+    param
+    (
         [Parameter(
             Mandatory,
             Position=0)]
@@ -3029,8 +3038,10 @@ function Get-LabVMs {
     [String] $VHDParentPath = $Configuration.labbuilderconfig.settings.vhdparentpath
     $VMs = $Configuration.labbuilderconfig.SelectNodes('vms').vm
 
-    foreach ($VM in $VMs) {
-        if ($VM.Name -eq 'VM') {
+    foreach ($VM in $VMs)
+    {
+        if ($VM.Name -eq 'VM')
+        {
             $ExceptionParameters = @{
                 errorId = 'VMNameError'
                 errorCategory = 'InvalidArgument'
@@ -3038,7 +3049,8 @@ function Get-LabVMs {
             }
             New-LabException @ExceptionParameters
         } # If
-        if (-not $VM.Template) {
+        if (-not $VM.Template)
+        {
             $ExceptionParameters = @{
                 errorId = 'VMTemplateNameEmptyError'
                 errorCategory = 'InvalidArgument'
@@ -3058,7 +3070,8 @@ function Get-LabVMs {
                 Break
             } # If
         } # Foreach
-        if (-not $Found) {
+        if (-not $Found)
+        {
             $ExceptionParameters = @{
                 errorId = 'VMTemplateNotFoundError'
                 errorCategory = 'InvalidArgument'
@@ -3068,7 +3081,8 @@ function Get-LabVMs {
             New-LabException @ExceptionParameters
         } # If
         # Check the VHD File path in the template is not empty
-        if (-not $TemplateVHDPath) {
+        if (-not $TemplateVHDPath)
+        {
             $ExceptionParameters = @{
                 errorId = 'VMTemplateVHDPathEmptyError'
                 errorCategory = 'InvalidArgument'
@@ -3081,9 +3095,11 @@ function Get-LabVMs {
         # Assemble the Network adapters that this VM will use
         [System.Collections.Hashtable[]] $VMAdapters = @()
         [Int] $AdapterCount = 0
-        foreach ($VMAdapter in $VM.Adapters.Adapter) {
+        foreach ($VMAdapter in $VM.Adapters.Adapter)
+        {
             $AdapterCount++
-            if ($VMAdapter.Name -eq 'adapter') {
+            if ($VMAdapter.Name -eq 'adapter')
+            {
                 $ExceptionParameters = @{
                     errorId = 'VMAdapterNameError'
                     errorCategory = 'InvalidArgument'
@@ -3092,7 +3108,8 @@ function Get-LabVMs {
                 }
                 New-LabException @ExceptionParameters
             }
-            if (-not $VMAdapter.SwitchName) {
+            if (-not $VMAdapter.SwitchName)
+            {
                 $ExceptionParameters = @{
                     errorId = 'VMAdapterSwitchNameError'
                     errorCategory = 'InvalidArgument'
@@ -3103,15 +3120,18 @@ function Get-LabVMs {
             }
             # Check the switch is in the switch list
             [Boolean] $Found = $False
-            foreach ($Switch in $Switches) {
-                if ($Switch.Name -eq $VMAdapter.SwitchName) {
+            foreach ($Switch in $Switches)
+            {
+                if ($Switch.Name -eq $VMAdapter.SwitchName)
+                {
                     # The switch is found in the switch list - record the VLAN (if there is one)
                     $Found = $True
                     $SwitchVLan = $Switch.Vlan
                     Break
                 } # If
             } # Foreach
-            if (-not $Found) {
+            if (-not $Found)
+            {
                 $ExceptionParameters = @{
                     errorId = 'VMAdapterSwitchNotFoundError'
                     errorCategory = 'InvalidArgument'
@@ -3123,18 +3143,21 @@ function Get-LabVMs {
             
             # Figure out the VLan - If defined in the VM use it, otherwise use the one defined in the Switch, otherwise keep blank.
             [String] $VLan = $VMAdapter.VLan
-            if (-not $VLan) {
+            if (-not $VLan)
+            {
                 $VLan = $SwitchVLan
             } # If
             
             [String] $MACAddressSpoofing = 'Off'
-            if ($VMAdapter.macaddressspoofing -eq 'On') {
+            if ($VMAdapter.macaddressspoofing -eq 'On')
+            {
                 $MACAddressSpoofing = 'On'
             }
             
             # Have we got any IPv4 settings?
             [System.Collections.Hashtable] $IPv4 = @{}
-            if ($VMAdapter.IPv4) {
+            if ($VMAdapter.IPv4)
+            {
                 $IPv4 = @{
                     Address = $VMAdapter.IPv4.Address;
                     defaultgateway = $VMAdapter.IPv4.DefaultGateway;
@@ -3145,7 +3168,8 @@ function Get-LabVMs {
 
             # Have we got any IPv6 settings?
             [System.Collections.Hashtable] $IPv6 = @{}
-            if ($VMAdapter.IPv6) {
+            if ($VMAdapter.IPv6)
+            {
                 $IPv6 = @{
                     Address = $VMAdapter.IPv6.Address;
                     defaultgateway = $VMAdapter.IPv6.DefaultGateway;
@@ -3165,13 +3189,167 @@ function Get-LabVMs {
             }
         } # Foreach
 
+        # Assemble the Data Disks this VM will use
+        [System.Collections.Hashtable[]] $DataVhds = @()
+        [Int] $DataVhdCount = 0
+        foreach ($VMDataVhd in $VM.DataVhds.DataVhd)
+        {
+            $DataVhdCount++
+            # Load all the VHD properties and check they are valid
+            [String] $Vhd = $VMDataVhd.VHD
+            if (! $Vhd)
+            {
+                $ExceptionParameters = @{
+                    errorId = 'VMDataDiskVHDEmptyError'
+                    errorCategory = 'InvalidArgument'
+                    errorMessage = $($LocalizedData.VMDataDiskVHDEmptyError `
+                        -f $VM.name)
+                }
+                New-LabException @ExceptionParameters
+            }
+            
+            # Does the VHD already exist?
+            $Exists = Test-Path -Path $Vhd
+
+            # Get the Parent VHD and check it exists if passed
+            [String] $ParentVhd = $VMDataVhd.ParentVHD
+            if ($ParentVhd -and ! (Test-Path -Path $ParentVhd))
+            {
+                $ExceptionParameters = @{
+                    errorId = 'VMDataDiskParentVHDNotFoundError'
+                    errorCategory = 'InvalidArgument'
+                    errorMessage = $($LocalizedData.VMDataDiskParentVHDNotFoundError `
+                        -f $VM.name,$ParentVhd)
+                }
+                New-LabException @ExceptionParameters
+            }
+
+            # Get the Source VHD and check it exists if passed
+            [String] $SourceVhd = $VMDataVhd.SourceVHD
+            if ($SourceVhd -and ! (Test-Path -Path $SourceVhd))
+            {
+                $ExceptionParameters = @{
+                    errorId = 'VMDataDiskSourceVHDNotFoundError'
+                    errorCategory = 'InvalidArgument'
+                    errorMessage = $($LocalizedData.VMDataDiskSourceVHDNotFoundError `
+                        -f $VM.name,$SourceVhd)
+                }
+                New-LabException @ExceptionParameters
+            }
+
+            # Get the disk size if provided
+            [Int64] $Size = $null
+            if ($VMDataVhd.Size)
+            {
+                $Size = (Invoke-Expression $VMDataVhd.size)         
+            }
+
+            [Boolean] $Shared = ($VMDataVhd.shared -eq 'Y')
+
+            # Validate the data disk type specified
+            [String] $Type = $VMDataVhd.type
+            if ($type)
+            {
+                switch ($type)
+                {
+                    'fixed'
+                    {
+                        break;
+                    }
+                    'dynamic'
+                    {
+                        break;
+                    }
+                    'differencing'
+                    {
+                        if ($Shared)
+                        {
+                            $ExceptionParameters = @{
+                                errorId = 'VMDataDiskSharedDifferencingError'
+                                errorCategory = 'InvalidArgument'
+                                errorMessage = $($LocalizedData.VMDataDiskSharedDifferencingError `
+                                    -f $VM.Name,$VHD)
+                            }
+                            New-LabException @ExceptionParameters                            
+                        }
+                    }
+                    Default
+                    {
+                        $ExceptionParameters = @{
+                            errorId = 'VMDataDiskUnknownTypeError'
+                            errorCategory = 'InvalidArgument'
+                            errorMessage = $($LocalizedData.VMDataDiskUnknownTypeError `
+                                -f $VM.Name,$VHD,$type)
+                        }
+                        New-LabException @ExceptionParameters
+                    }
+                }
+                
+                # Get the Support Persistent Reservations
+                [Boolean] $SupportPR = ($VMDataVhd.supportPR -eq 'Y')
+                if ($SupportPR -and -not $Shared)
+                {
+                    $ExceptionParameters = @{
+                        errorId = 'VMDataDiskSupportPRError'
+                        errorCategory = 'InvalidArgument'
+                        errorMessage = $($LocalizedData.VMDataDiskSupportPRError `
+                            -f $VM.Name,$VHD)
+                    }
+                    New-LabException @ExceptionParameters
+                }
+                
+                # If the data disk file doesn't exist then some basic parameters MUST be provided
+                if (! $Exists `
+                    -and (($Type -notin ('Fixed','Dynamic','Differncing')) `
+                    -and $Size -eq $null) `
+                    -or $SourceVhd )
+                {
+                    $ExceptionParameters = @{
+                        errorId = 'VMDataDiskCantBeCreatedError'
+                        errorCategory = 'InvalidArgument'
+                        errorMessage = $($LocalizedData.VMDataDiskCantBeCreatedError `
+                            -f $VM.Name,$VHD)
+                    }
+                    New-LabException @ExceptionParameters                    
+                }
+                
+                # Shoudl the Source VHD be moved rather than copied
+                [Boolean] $MoveSourceVHD = ($VMDataVhd.MoveSourceVHD -eq 'Y')
+                if ($MoveSourceVHD)
+                {
+                    if (! $SourceVHD)
+                    {
+                        $ExceptionParameters = @{
+                            errorId = 'VMDataDiskSourceVHDIfMoveError'
+                            errorCategory = 'InvalidArgument'
+                            errorMessage = $($LocalizedData.VMDataDiskSourceVHDIfMoveError `
+                                -f $VM.Name,$VHD)
+                        }
+                        New-LabException @ExceptionParameters                        
+                    }
+                }
+            }
+            $DataVhds += @{
+                vhd = $Vhd;
+                type = $Type;
+                size = $Size
+                sourcevhd = $SourceVHD;
+                parentvhd = $ParentVHD;
+                shared = $Shared;
+                supportPR = $SupportPR;
+                moveorcopy = $MoveOrCopy;
+            }
+        } # Foreach
+
         # Does the VM have an Unattend file specified?
         [String] $UnattendFile = ''
-        if ($VM.UnattendFile) {
+        if ($VM.UnattendFile)
+        {
             $UnattendFile = Join-Path `
                 -Path $Configuration.labbuilderconfig.settings.fullconfigpath `
                 -ChildPath $VM.UnattendFile
-            if (-not (Test-Path $UnattendFile)) {
+            if (-not (Test-Path $UnattendFile))
+            {
                 $ExceptionParameters = @{
                     errorId = 'UnattendFileMissingError'
                     errorCategory = 'InvalidArgument'
@@ -3184,11 +3362,13 @@ function Get-LabVMs {
         
         # Does the VM specify a Setup Complete Script?
         [String] $SetupComplete = ''
-        if ($VM.SetupComplete) {
+        if ($VM.SetupComplete)
+        {
             $SetupComplete = Join-Path `
                 -Path $Configuration.labbuilderconfig.settings.fullconfigpath `
                 -ChildPath $VM.SetupComplete
-            if (-not (Test-Path $SetupComplete)) {
+            if (-not (Test-Path $SetupComplete))
+            {
                 $ExceptionParameters = @{
                     errorId = 'SetupCompleteFileMissingError'
                     errorCategory = 'InvalidArgument'
@@ -3197,7 +3377,8 @@ function Get-LabVMs {
                 }
                 New-LabException @ExceptionParameters
             } # If
-            if ([System.IO.Path]::GetExtension($SetupComplete).ToLower() -notin '.ps1','.cmd' ) {
+            if ([System.IO.Path]::GetExtension($SetupComplete).ToLower() -notin '.ps1','.cmd' )
+            {
                 $ExceptionParameters = @{
                     errorId = 'SetupCompleteFileBadTypeError'
                     errorCategory = 'InvalidArgument'
@@ -3210,11 +3391,13 @@ function Get-LabVMs {
 
         # Load the DSC Config File setting and check it
         [String] $DSCConfigFile = ''
-        if ($VM.DSC.ConfigFile) {
+        if ($VM.DSC.ConfigFile)
+        {
             $DSCConfigFile = Join-Path `
                 -Path $Configuration.labbuilderconfig.settings.fullconfigpath `
                 -ChildPath $VM.DSC.ConfigFile
-            if (-not (Test-Path $DSCConfigFile)) {
+            if (-not (Test-Path $DSCConfigFile))
+            {
                 $ExceptionParameters = @{
                     errorId = 'DSCConfigFileMissingError'
                     errorCategory = 'InvalidArgument'
@@ -3223,7 +3406,8 @@ function Get-LabVMs {
                 }
                 New-LabException @ExceptionParameters
             }
-            if ([System.IO.Path]::GetExtension($DSCConfigFile).ToLower() -ne '.ps1' ) {
+            if ([System.IO.Path]::GetExtension($DSCConfigFile).ToLower() -ne '.ps1' )
+            {
                 $ExceptionParameters = @{
                     errorId = 'DSCConfigFileBadTypeError'
                     errorCategory = 'InvalidArgument'
@@ -3232,7 +3416,8 @@ function Get-LabVMs {
                 }
                 New-LabException @ExceptionParameters
             }
-            if (-not $VM.DSC.ConfigName) {
+            if (-not $VM.DSC.ConfigName)
+            {
                 $ExceptionParameters = @{
                     errorId = 'DSCConfigNameIsEmptyError'
                     errorCategory = 'InvalidArgument'
@@ -3281,10 +3466,12 @@ function Get-LabVMs {
         
         # Get the Memory Startup Bytes (from the template or VM)
         [Int] $ProcessorCount = 1
-        if ($VMTemplate.processorcount) {
+        if ($VMTemplate.processorcount)
+        {
             $ProcessorCount = $VMTemplate.processorcount
         } # If
-        if ($VM.processorcount) {
+        if ($VM.processorcount)
+        {
             $ProcessorCount = (Invoke-Expression $VM.processorcount)
         } # If
 
@@ -3298,54 +3485,54 @@ function Get-LabVMs {
         {
             $ExposeVirtualizationExtensions = $VM.ExposeVirtualizationExtensions
         } # If        
-
-        # Get the data VHD Size (from the template or VM)
-        [Int64] $DataVHDSize = 0
-        if ($VMTemplate.datavhdsize) {
-            $DataVHDSize = $VMTemplate.datavhdsize
-        } # If
-        if ($VM.DataVHDSize) {
-            $DataVHDSize = (Invoke-Expression $VM.DataVHDSize)
-        } # If
         
         # Get the Administrator password (from the template or VM)
         [String] $AdministratorPassword = ''
-        if ($VMTemplate.administratorpassword) {
+        if ($VMTemplate.administratorpassword){
             $AdministratorPassword = $VMTemplate.administratorpassword
         } # If
-        if ($VM.administratorpassword) {
+        if ($VM.administratorpassword)
+        {
             $AdministratorPassword = $VM.administratorpassword
         } # If
 
         # Get the Product Key (from the template or VM)
         [String] $ProductKey = ''
-        if ($VMTemplate.productkey) {
+        if ($VMTemplate.productkey)
+        {
             $ProductKey = $VMTemplate.productkey
         } # If
-        if ($VM.productkey) {
+        if ($VM.productkey)
+        {
             $ProductKey = $VM.productkey
         } # If
 
         # Get the Timezone (from the template or VM)
         [String] $Timezone = 'Pacific Standard Time'
-        if ($VMTemplate.timezone) {
+        if ($VMTemplate.timezone)
+        {
             $Timezone = $VMTemplate.timezone
         } # If
-        if ($VM.timezone) {
+        if ($VM.timezone)
+        {
             $Timezone = $VM.timezone
         } # If
 
         # Get the OS Type
-        if ($VMTemplate.ostype) {
+        if ($VMTemplate.ostype)
+        {
             $OSType = $VMTemplate.ostype
-        } Else {
+        }
+        else
+        {
             $OSType = 'Server'
         } # If
 
         # Do we have any MSU files that are listed as needing to be applied to the OS before
         # first boot up?
         [String[]] $InstallMSU = @()
-        foreach ($Update in $VM.Install.MSU) {
+        foreach ($Update in $VM.Install.MSU)
+        {
             $InstallMSU += $Update.URL
         } # Foreach
 
@@ -3363,7 +3550,7 @@ function Get-LabVMs {
             ProductKey = $ProductKey;
             TimeZone =$Timezone;
             Adapters = $VMAdapters;
-            DataVHDSize = $DataVHDSize;
+            DataVHDs = $DataVHDs;
             UnattendFile = $UnattendFile;
             SetupComplete = $SetupComplete;
             DSCConfigFile = $DSCConfigFile;

@@ -1,96 +1,164 @@
 ﻿{
-    "TemplateVHD":  "C:\\Pester Lab\\Virtual Hard Disk Templates\\Windows Server 2012 R2 Datacenter Full.vhdx",
-    "ProcessorCount":  1,
-    "TimeZone":  "Pacific Standard Time",
     "Template":  "Pester Windows Server 2012 R2 Datacenter Full",
-    "MemoryStartupBytes":  10737418240,
+    "DSCParameters":  "\r\n          Dummy = \"Dummy\"\r\n        ",
+    "Name":  "PESTER01",
     "SetupComplete":  "",
     "OSType":  "Server",
     "DSCConfigName":  "STANDALONE_DEFAULT",
-    "DSCParameters":  "\r\n          Dummy = \"Dummy\"\r\n        ",
-    "UseDifferencingDisk":  "Y",
-    "DSCConfigFile":  "",
-    "ComputerName":  "PESTER01",
+    "DataVHDs":  [
+                     {
+                         "size":  0,
+                         "type":  "",
+                         "moveorcopy":  null,
+                         "supportPR":  null,
+                         "shared":  false,
+                         "vhd":  "DataDiskCopy.vhdx",
+                         "parentvhd":  "",
+                         "sourcevhd":  ".\\Tests\\PesterTestConfig\\DataDisk.vhdx"
+                     },
+                     {
+                         "size":  10737418240,
+                         "type":  "fixed",
+                         "moveorcopy":  null,
+                         "supportPR":  false,
+                         "shared":  false,
+                         "vhd":  "DataDiskFixed.vhdx",
+                         "parentvhd":  "",
+                         "sourcevhd":  ""
+                     },
+                     {
+                         "size":  10737418240,
+                         "type":  "dynamic",
+                         "moveorcopy":  null,
+                         "supportPR":  false,
+                         "shared":  false,
+                         "vhd":  "DataDiskDynamic.vhdx",
+                         "parentvhd":  "",
+                         "sourcevhd":  ""
+                     },
+                     {
+                         "size":  10737418240,
+                         "type":  "differencing",
+                         "moveorcopy":  null,
+                         "supportPR":  false,
+                         "shared":  false,
+                         "vhd":  "DataDiskDifferencing.vhdx",
+                         "parentvhd":  ".\\Tests\\PesterTestConfig\\DataDisk.vhdx",
+                         "sourcevhd":  ""
+                     },
+                     {
+                         "size":  0,
+                         "type":  "",
+                         "moveorcopy":  null,
+                         "supportPR":  false,
+                         "shared":  false,
+                         "vhd":  "DataDiskMove.vhdx",
+                         "parentvhd":  "",
+                         "sourcevhd":  ".\\Tests\\PesterTestConfig\\DataDisk.vhdx"
+                     },
+                     {
+                         "size":  10737418240,
+                         "type":  "fixed",
+                         "moveorcopy":  null,
+                         "supportPR":  false,
+                         "shared":  true,
+                         "vhd":  "DataDiskShared.vhdx",
+                         "parentvhd":  "",
+                         "sourcevhd":  ""
+                     }
+                 ],
+    "TemplateVHD":  "C:\\Pester Lab\\Virtual Hard Disk Templates\\Windows Server 2012 R2 Datacenter Full.vhdx",
     "ProductKey":  "DDDDD-DDDDD-DDDDD-DDDDD-DDDDD",
-    "DataVHDSize":  0,
-    "Name":  "PESTER01",
-    "UnattendFile":  "",
-    "AdministratorPassword":  "Something",
+    "DSCConfigFile":  "",
+    "TimeZone":  "Pacific Standard Time",
     "Adapters":  [
                      {
-                         "IPv6":  {
-                                      "dnsserver":  "fd53:ccc5:895a:0000::1",
-                                      "subnetmask":  "64",
-                                      "Address":  "fd53:ccc5:895a:0000::1",
-                                      "defaultgateway":  ""
-                                  },
-                         "Name":  "Pester Test Private Vlan",
-                         "SwitchName":  "Pester Test Private Vlan",
-                         "VLan":  "2",
                          "IPv4":  {
                                       "dnsserver":  "192.168.16.1",
                                       "subnetmask":  "24",
                                       "Address":  "192.168.16.1",
                                       "defaultgateway":  ""
                                   },
+                         "Name":  "Pester Test Private Vlan",
+                         "SwitchName":  "Pester Test Private Vlan",
+                         "VLan":  "2",
+                         "IPv6":  {
+                                      "dnsserver":  "fd53:ccc5:895a:0000::1",
+                                      "subnetmask":  "64",
+                                      "Address":  "fd53:ccc5:895a:0000::1",
+                                      "defaultgateway":  ""
+                                  },
+                         "MACAddressSpoofing":  "Off",
                          "MACAddress":  "00155D010801"
                      },
                      {
-                         "IPv6":  {
-                                      "dnsserver":  "fd53:ccc5:895a:0000::2",
-                                      "subnetmask":  "64",
-                                      "Address":  "fd53:ccc5:895a:0000::2",
-                                      "defaultgateway":  ""
-                                  },
-                         "Name":  "Pester Test Internal Vlan",
-                         "SwitchName":  "Pester Test Internal Vlan",
-                         "VLan":  "3",
                          "IPv4":  {
                                       "dnsserver":  "192.168.16.2",
                                       "subnetmask":  "24",
                                       "Address":  "192.168.16.2",
                                       "defaultgateway":  ""
                                   },
+                         "Name":  "Pester Test Internal Vlan",
+                         "SwitchName":  "Pester Test Internal Vlan",
+                         "VLan":  "3",
+                         "IPv6":  {
+                                      "dnsserver":  "fd53:ccc5:895a:0000::2",
+                                      "subnetmask":  "64",
+                                      "Address":  "fd53:ccc5:895a:0000::2",
+                                      "defaultgateway":  ""
+                                  },
+                         "MACAddressSpoofing":  "Off",
                          "MACAddress":  "00155D010802"
                      },
                      {
-                         "IPv6":  {
-                                      "dnsserver":  "fd53:ccc5:895a:0000::3",
-                                      "subnetmask":  "64",
-                                      "Address":  "fd53:ccc5:895a:0000::3",
-                                      "defaultgateway":  ""
-                                  },
-                         "Name":  "Pester Test Private",
-                         "SwitchName":  "Pester Test Private",
-                         "VLan":  "3",
                          "IPv4":  {
                                       "dnsserver":  "192.168.16.3",
                                       "subnetmask":  "24",
                                       "Address":  "192.168.16.3",
                                       "defaultgateway":  ""
                                   },
+                         "Name":  "Pester Test Private",
+                         "SwitchName":  "Pester Test Private",
+                         "VLan":  "3",
+                         "IPv6":  {
+                                      "dnsserver":  "fd53:ccc5:895a:0000::3",
+                                      "subnetmask":  "64",
+                                      "Address":  "fd53:ccc5:895a:0000::3",
+                                      "defaultgateway":  ""
+                                  },
+                         "MACAddressSpoofing":  "Off",
                          "MACAddress":  "00155D010803"
                      },
                      {
-                         "IPv6":  {
-                                      "dnsserver":  "fd53:ccc5:895a:0000::4",
-                                      "subnetmask":  "64",
-                                      "Address":  "fd53:ccc5:895a:0000::4",
-                                      "defaultgateway":  ""
-                                  },
-                         "Name":  "Pester Test Internal",
-                         "SwitchName":  "Pester Test Internal",
-                         "VLan":  "4",
                          "IPv4":  {
                                       "dnsserver":  "192.168.16.4",
                                       "subnetmask":  "24",
                                       "Address":  "192.168.16.4",
                                       "defaultgateway":  ""
                                   },
+                         "Name":  "Pester Test Internal",
+                         "SwitchName":  "Pester Test Internal",
+                         "VLan":  "4",
+                         "IPv6":  {
+                                      "dnsserver":  "fd53:ccc5:895a:0000::4",
+                                      "subnetmask":  "64",
+                                      "Address":  "fd53:ccc5:895a:0000::4",
+                                      "defaultgateway":  ""
+                                  },
+                         "MACAddressSpoofing":  "Off",
                          "MACAddress":  "00155D010804"
                      }
                  ],
+    "AdministratorPassword":  "Something",
+    "DynamicMemoryEnabled":  "N",
+    "MemoryStartupBytes":  2147483648,
+    "ProcessorCount":  1,
     "InstallMSU":  [
                        "http://download.microsoft.com/download/1/D/8/1D8B5022-5477-4B9A-8104-6A71FF9D98AB/WindowsTH-KB2693643-x64.msu"
-                   ]
+                   ],
+    "ComputerName":  "PESTER01",
+    "DSCLogging":  false,
+    "UnattendFile":  "",
+    "UseDifferencingDisk":  "Y",
+    "ExposeVirtualizationExtensions":  "Y"
 }

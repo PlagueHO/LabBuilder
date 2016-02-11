@@ -83,10 +83,17 @@
         dynamicmemoryenabled="N"
         exposevirtualizationextensions="Y"
         usedifferencingbootdisk="Y"
-        datavhdsize="10GB"
         administratorpassword="Something"
         productkey="DDDDD-DDDDD-DDDDD-DDDDD-DDDDD"
         timezone="Pacific Standard Time">
+      <datavhds>
+        <datavhd vhd="DataDiskCopy.vhdx" sourcevhd=".\Tests\PesterTestConfig\DataDisk.vhdx" />
+        <datavhd vhd="DataDiskFixed.vhdx" type="fixed" size="10GB" />
+        <datavhd vhd="DataDiskDynamic.vhdx" type="dynamic" size="10GB" />
+        <datavhd vhd="DataDiskDifferencing.vhdx" type="differencing" size="10GB" parentvhd=".\Tests\PesterTestConfig\DataDisk.vhdx" />
+        <datavhd vhd="DataDiskMove.vhdx" sourcevhd=".\Tests\PesterTestConfig\DataDisk.vhdx" movesourcevhd="Y" />
+        <datavhd vhd="DataDiskShared.vhdx" type="fixed" size="10GB" shared="Y" supportsr="Y" />
+      </datavhds>
       <adapters>
         <adapter name="Pester Test Private Vlan" switchname="Pester Test Private Vlan" macaddress="00155D010801" >
           <ipv4 address="192.168.16.1"

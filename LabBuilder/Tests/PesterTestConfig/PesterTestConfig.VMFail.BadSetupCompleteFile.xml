@@ -31,7 +31,6 @@
         template="Pester Windows Server 2012 R2 Datacenter Full"
         computername="PESTER01"
         usedifferencingbootdisk="Y"
-        datavhdsize="10GB"
         administratorpassword="Something"
         productkey="DDDDD-DDDDD-DDDDD-DDDDD-DDDDD"
         timezone="Pacific Standard Time"

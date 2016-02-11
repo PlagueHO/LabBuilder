@@ -31,7 +31,6 @@
         template="BadTemplate"
         computername="PESTER01"
         usedifferencingbootdisk="Y"
-        datavhdsize="10GB"
         administratorpassword="Something"
         productkey="DDDDD-DDDDD-DDDDD-DDDDD-DDDDD"
         timezone="Pacific Standard Time"
