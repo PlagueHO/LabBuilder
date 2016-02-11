@@ -4045,6 +4045,7 @@ function Initialize-LabVMs {
         if ($VM.DataVHDSize -and ($VM.DataVHDSize -gt 0))
         {
             [String] $VMDataDiskPath = "$VHDPath\$($VM.Name) Data Disk.vhdx"
+
             # Does the disk already exist?
             if (Test-Path -Path $VMDataDiskPath)
             {
