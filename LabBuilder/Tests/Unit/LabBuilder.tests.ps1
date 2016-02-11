@@ -82,16 +82,15 @@ InModuleScope LabBuilder {
                 Mock Test-Path -MockWith { $false }
                 Mock Invoke-WebRequest { Throw ('Download Error') }
 
-                $errorId = 'FileDownloadError'
-                $errorCategory = [System.Management.Automation.ErrorCategory]::InvalidOperation
-                $errorMessage = $($LocalizedData.FileDownloadError) `
-                    -f 'WMF 5.0 Installer','https://download.microsoft.com/download/2/C/6/2C6E1B4A-EBE5-48A6-B225-2D2058A9CEFB/W2K12R2-KB3094174-x64.msu','Download Error'
-                $exception = New-Object -TypeName System.InvalidOperationException `
-                    -ArgumentList $errorMessage
-                $errorRecord = New-Object -TypeName System.Management.Automation.ErrorRecord `
-                    -ArgumentList $exception, $errorId, $errorCategory, $null
+                $ExceptionParameters = @{
+                    errorId = 'FileDownloadError'
+                    errorCategory = 'InvalidArgument'
+                    errorMessage = $($LocalizedData.FileDownloadError `
+                        -f 'WMF 5.0 Installer','https://download.microsoft.com/download/2/C/6/2C6E1B4A-EBE5-48A6-B225-2D2058A9CEFB/W2K12R2-KB3094174-x64.msu','Download Error')
+                }
+                $Exception = New-Exception @ExceptionParameters
 
-                { Download-WMF5Installer } | Should Throw $errorRecord
+                { Download-WMF5Installer } | Should Throw $Exception
             }
             It 'Calls appropriate mocks' {
                 Assert-MockCalled Test-Path -Exactly 1
@@ -152,16 +151,15 @@ InModuleScope LabBuilder {
                 Mock Test-Path -MockWith { $false }
                 Mock Invoke-WebRequest { Throw ('Download Error') }
 
-                $errorId = 'FileDownloadError'
-                $errorCategory = [System.Management.Automation.ErrorCategory]::InvalidOperation
-                $errorMessage = $($LocalizedData.FileDownloadError) `
-                    -f 'Certificate Generator','https://gallery.technet.microsoft.com/scriptcenter/Self-signed-certificate-5920a7c6/file/101251/1/New-SelfSignedCertificateEx.zip','Download Error'
-                $exception = New-Object -TypeName System.InvalidOperationException `
-                    -ArgumentList $errorMessage
-                $errorRecord = New-Object -TypeName System.Management.Automation.ErrorRecord `
-                    -ArgumentList $exception, $errorId, $errorCategory, $null
+                $ExceptionParameters = @{
+                    errorId = 'FileDownloadError'
+                    errorCategory = 'InvalidArgument'
+                    errorMessage = $($LocalizedData.FileDownloadError `
+                        -f 'Certificate Generator','https://gallery.technet.microsoft.com/scriptcenter/Self-signed-certificate-5920a7c6/file/101251/1/New-SelfSignedCertificateEx.zip','Download Error')
+                }
+                $Exception = New-Exception @ExceptionParameters
 
-                { Download-CertGenerator } | Should Throw $errorRecord
+                { Download-CertGenerator } | Should Throw $Exception
             }
             It 'Calls appropriate mocks' {
                 Assert-MockCalled Test-Path -Exactly 1
@@ -197,36 +195,36 @@ InModuleScope LabBuilder {
 
         Context 'Path is provided but file does not exist' {
             It 'Throws ConfigurationFileNotFoundError Exception' {
-                $errorId = 'ConfigurationFileNotFoundError'
-                $errorCategory = [System.Management.Automation.ErrorCategory]::InvalidArgument
-                $errorMessage = $($LocalizedData.ConfigurationFileNotFoundError) `
-                    -f 'c:\doesntexist.xml'
-                $exception = New-Object -TypeName System.InvalidOperationException `
-                    -ArgumentList $errorMessage
-                $errorRecord = New-Object -TypeName System.Management.Automation.ErrorRecord `
-                    -ArgumentList $exception, $errorId, $errorCategory, $null
+
+                $ExceptionParameters = @{
+                    errorId = 'ConfigurationFileNotFoundError'
+                    errorCategory = 'InvalidArgument'
+                    errorMessage = $($LocalizedData.ConfigurationFileNotFoundError `
+                        -f 'c:\doesntexist.xml')
+                }
+                $Exception = New-Exception @ExceptionParameters
 
                 Mock Test-Path -MockWith { $false }
 
-                { Get-LabConfiguration -Path 'c:\doesntexist.xml' } | Should Throw $errorRecord
+                { Get-LabConfiguration -Path 'c:\doesntexist.xml' } | Should Throw $Exception
             }
         }
 
         Context 'Path is provided and file exists but is empty' {
             It 'Throws ConfigurationFileEmptyError Exception' {
-                $errorId = 'ConfigurationFileEmptyError'
-                $errorCategory = [System.Management.Automation.ErrorCategory]::InvalidArgument
-                $errorMessage = $($LocalizedData.ConfigurationFileEmptyError) `
-                    -f 'c:\isempty.xml'
-                $exception = New-Object -TypeName System.InvalidOperationException `
-                    -ArgumentList $errorMessage
-                $errorRecord = New-Object -TypeName System.Management.Automation.ErrorRecord `
-                    -ArgumentList $exception, $errorId, $errorCategory, $null
+
+                $ExceptionParameters = @{
+                    errorId = 'ConfigurationFileEmptyError'
+                    errorCategory = 'InvalidArgument'
+                    errorMessage = $($LocalizedData.ConfigurationFileEmptyError `
+                        -f 'c:\isempty.xml')
+                }
+                $Exception = New-Exception @ExceptionParameters
 
                 Mock Test-Path -MockWith { $true }
                 Mock Get-Content -MockWith {''}
 
-                { Get-LabConfiguration -Path 'c:\isempty.xml' } | Should Throw $errorRecord
+                { Get-LabConfiguration -Path 'c:\isempty.xml' } | Should Throw $Exception
             }
         }
     }
@@ -254,16 +252,15 @@ InModuleScope LabBuilder {
                 $Config.labbuilderconfig.settings.vmpath = ''
                 $Config.labbuilderconfig.settings.vhdparentpath = 'c:\exists\'
 
-                $errorId = 'ConfigurationMissingElementError'
-                $errorCategory = [System.Management.Automation.ErrorCategory]::InvalidArgument
-                $errorMessage = $($LocalizedData.ConfigurationMissingElementError) `
-                    -f '<settings>\<vmpath>'
-                $exception = New-Object -TypeName System.InvalidOperationException `
-                    -ArgumentList $errorMessage
-                $errorRecord = New-Object -TypeName System.Management.Automation.ErrorRecord `
-                    -ArgumentList $exception, $errorId, $errorCategory, $null
+                $ExceptionParameters = @{
+                    errorId = 'ConfigurationMissingElementError'
+                    errorCategory = 'InvalidArgument'
+                    errorMessage = $($LocalizedData.ConfigurationMissingElementError `
+                        -f '<settings>\<vmpath>')
+                }
+                $Exception = New-Exception @ExceptionParameters
 
-                { Test-LabConfiguration -Configuration $Config } | Should Throw $ErrorRecord
+                { Test-LabConfiguration -Configuration $Config } | Should Throw $Exception
             }
         }
 
@@ -272,16 +269,15 @@ InModuleScope LabBuilder {
                 $Config.labbuilderconfig.settings.vmpath = 'c:\doesnotexist\'
                 $Config.labbuilderconfig.settings.vhdparentpath = 'c:\exists\'
             
-                $errorId = 'PathNotFoundError'
-                $errorCategory = [System.Management.Automation.ErrorCategory]::InvalidArgument
-                $errorMessage = $($LocalizedData.PathNotFoundError) `
-                    -f '<settings>\<vmpath>','c:\doesnotexist\'
-                $exception = New-Object -TypeName System.InvalidOperationException `
-                    -ArgumentList $errorMessage
-                $errorRecord = New-Object -TypeName System.Management.Automation.ErrorRecord `
-                    -ArgumentList $exception, $errorId, $errorCategory, $null
+                $ExceptionParameters = @{
+                    errorId = 'PathNotFoundError'
+                    errorCategory = 'InvalidArgument'
+                    errorMessage = $($LocalizedData.PathNotFoundError `
+                        -f '<settings>\<vmpath>','c:\doesnotexist\')
+                }
+                $Exception = New-Exception @ExceptionParameters
 
-                { Test-LabConfiguration -Configuration $Config } | Should Throw $errorRecord
+                { Test-LabConfiguration -Configuration $Config } | Should Throw $Exception
             }
         }
         
@@ -290,16 +286,15 @@ InModuleScope LabBuilder {
                 $Config.labbuilderconfig.settings.vmpath = 'c:\exists\'
                 $Config.labbuilderconfig.settings.vhdparentpath = ''
 
-                $errorId = 'ConfigurationMissingElementError'
-                $errorCategory = [System.Management.Automation.ErrorCategory]::InvalidArgument
-                $errorMessage = $($LocalizedData.ConfigurationMissingElementError) `
-                    -f '<settings>\<vhdparentpath>'
-                $exception = New-Object -TypeName System.InvalidOperationException `
-                    -ArgumentList $errorMessage
-                $errorRecord = New-Object -TypeName System.Management.Automation.ErrorRecord `
-                    -ArgumentList $exception, $errorId, $errorCategory, $null
+                $ExceptionParameters = @{
+                    errorId = 'ConfigurationMissingElementError'
+                    errorCategory = 'InvalidArgument'
+                    errorMessage = $($LocalizedData.ConfigurationMissingElementError `
+                        -f '<settings>\<vhdparentpath>')
+                }
+                $Exception = New-Exception @ExceptionParameters
 
-                { Test-LabConfiguration -Configuration $Config } | Should Throw $errorRecord
+                { Test-LabConfiguration -Configuration $Config } | Should Throw $Exception
             }
         }
 
@@ -308,16 +303,15 @@ InModuleScope LabBuilder {
                 $Config.labbuilderconfig.settings.vmpath = 'c:\exists\'
                 $Config.labbuilderconfig.settings.vhdparentpath = 'c:\doesnotexist\'
                 
-                $errorId = 'PathNotFoundError'
-                $errorCategory = [System.Management.Automation.ErrorCategory]::InvalidArgument
-                $errorMessage = $($LocalizedData.PathNotFoundError) `
-                    -f '<settings>\<vhdparentpath>','c:\doesnotexist\'
-                $exception = New-Object -TypeName System.InvalidOperationException `
-                    -ArgumentList $errorMessage
-                $errorRecord = New-Object -TypeName System.Management.Automation.ErrorRecord `
-                    -ArgumentList $exception, $errorId, $errorCategory, $null
+                $ExceptionParameters = @{
+                    errorId = 'PathNotFoundError'
+                    errorCategory = 'InvalidArgument'
+                    errorMessage = $($LocalizedData.PathNotFoundError `
+                        -f '<settings>\<vhdparentpath>','c:\doesnotexist\')
+                }
+                $Exception = New-Exception @ExceptionParameters
 
-                { Test-LabConfiguration -Configuration $Config } | Should Throw $errorRecord
+                { Test-LabConfiguration -Configuration $Config } | Should Throw $Exception
             }
         }
     }
@@ -639,21 +633,20 @@ InModuleScope LabBuilder {
 
         Context 'Module is not installed; Bad URL passed' {
             It 'Throws a FileDownloadError exception' {
-                $errorId = 'FileDownloadError'
-                $errorCategory = [System.Management.Automation.ErrorCategory]::InvalidOperation
-                $errorMessage = $($LocalizedData.FileDownloadError) `
-                    -f 'Module Resource xNetworking',$URL,'Download Error'
-                $exception = New-Object -TypeName System.InvalidOperationException `
-                    -ArgumentList $errorMessage
-                $errorRecord = New-Object -TypeName System.Management.Automation.ErrorRecord `
-                    -ArgumentList $exception, $errorId, $errorCategory, $null
+                $ExceptionParameters = @{
+                    errorId = 'FileDownloadError'
+                    errorCategory = 'InvalidOperation'
+                    errorMessage = $($LocalizedData.FileDownloadError `
+                        -f 'Module Resource xNetworking',$URL,'Download Error')
+                }
+                $Exception = New-Exception @ExceptionParameters
 
                 {
                     Download-LabModule `
                         -Name 'xNetworking' `
                         -URL $URL `
                         -Folder 'xNetworkingDev'
-                } | Should Throw $errorRecord
+                } | Should Throw $Exception
             }
             It 'Should call appropriate Mocks' {
                 Assert-MockCalled Get-Module -Exactly 1
@@ -671,19 +664,18 @@ InModuleScope LabBuilder {
 
         Context 'Module is not installed; Not available in Repository' {
             It 'Throws a ModuleNotAvailableError exception' {
-                $errorId = 'ModuleNotAvailableError'
-                $errorCategory = [System.Management.Automation.ErrorCategory]::InvalidArgument
-                $errorMessage = $($LocalizedData.ModuleNotAvailableError) `
-                    -f 'xDoesNotExist','any version',"No match was found for the specified search criteria and module name 'xDoesNotExist'"
-                $exception = New-Object -TypeName System.InvalidOperationException `
-                    -ArgumentList $errorMessage
-                $errorRecord = New-Object -TypeName System.Management.Automation.ErrorRecord `
-                    -ArgumentList $exception, $errorId, $errorCategory, $null
+                $ExceptionParameters = @{
+                    errorId = 'ModuleNotAvailableError'
+                    errorCategory = 'InvalidArgument'
+                    errorMessage = $($LocalizedData.ModuleNotAvailableError `
+                        -f 'xDoesNotExist','any version',"No match was found for the specified search criteria and module name 'xDoesNotExist'")
+                }
+                $Exception = New-Exception @ExceptionParameters
 
                 {
                     Download-LabModule `
                         -Name 'xDoesNotExist'
-                } | Should Throw $errorRecord
+                } | Should Throw $Exception
             }
             It 'Should call appropriate Mocks' {
                 Assert-MockCalled Get-Module -Exactly 1
@@ -701,20 +693,19 @@ InModuleScope LabBuilder {
 
         Context 'Wrong version of module is installed; No URL or Folder passed, but Required Version passed. Required Version is not available' {
             It ' Throws a ModuleNotAvailableError Exception' {
-                $errorId = 'ModuleNotAvailableError'
-                $errorCategory = [System.Management.Automation.ErrorCategory]::InvalidArgument
-                $errorMessage = $($LocalizedData.ModuleNotAvailableError) `
-                    -f 'xNetworking','2.5.0.0',"No match was found for the specified search criteria and module name 'xNetworking'"
-                $exception = New-Object -TypeName System.InvalidOperationException `
-                    -ArgumentList $errorMessage
-                $errorRecord = New-Object -TypeName System.Management.Automation.ErrorRecord `
-                    -ArgumentList $exception, $errorId, $errorCategory, $null
+                $ExceptionParameters = @{
+                    errorId = 'ModuleNotAvailableError'
+                    errorCategory = 'InvalidArgument'
+                    errorMessage = $($LocalizedData.ModuleNotAvailableError `
+                        -f 'xNetworking','2.5.0.0',"No match was found for the specified search criteria and module name 'xNetworking'" )
+                }
+                $Exception = New-Exception @ExceptionParameters
 
                 {
                     Download-LabModule `
                         -Name 'xNetworking' `
                         -RequiredVersion '2.5.0.0'
-                } | Should Throw $errorRecord
+                } | Should Throw $Exception
             }
             It 'Should call appropriate Mocks' {
                 Assert-MockCalled Get-Module -Exactly 1
@@ -730,20 +721,19 @@ InModuleScope LabBuilder {
         
         Context 'Wrong version of module is installed; No URL or Folder passed, but Minimum Version passed. Minimum Version is not available' {
             It ' Throws a ModuleNotAvailableError Exception' {
-                $errorId = 'ModuleNotAvailableError'
-                $errorCategory = [System.Management.Automation.ErrorCategory]::InvalidArgument
-                $errorMessage = $($LocalizedData.ModuleNotAvailableError) `
-                    -f 'xNetworking','min 2.5.0.0',"No match was found for the specified search criteria and module name 'xNetworking'"
-                $exception = New-Object -TypeName System.InvalidOperationException `
-                    -ArgumentList $errorMessage
-                $errorRecord = New-Object -TypeName System.Management.Automation.ErrorRecord `
-                    -ArgumentList $exception, $errorId, $errorCategory, $null
+                $ExceptionParameters = @{
+                    errorId = 'ModuleNotAvailableError'
+                    errorCategory = 'InvalidArgument'
+                    errorMessage = $($LocalizedData.ModuleNotAvailableError `
+                        -f 'xNetworking','min 2.5.0.0',"No match was found for the specified search criteria and module name 'xNetworking'" )
+                }
+                $Exception = New-Exception @ExceptionParameters
 
                 {
                     Download-LabModule `
                         -Name 'xNetworking' `
                         -MinimumVersion '2.5.0.0'
-                } | Should Throw $errorRecord
+                } | Should Throw $Exception
             }
             It 'Should call appropriate Mocks' {
                 Assert-MockCalled Get-Module -Exactly 1
@@ -780,57 +770,53 @@ InModuleScope LabBuilder {
     Describe 'Get-LabSwitches' {
         Context 'Configuration passed with switch missing Switch Name.' {
             It 'Throws a SwitchNameIsEmptyError Exception' {
-                $errorId = 'SwitchNameIsEmptyError'
-                $errorCategory = [System.Management.Automation.ErrorCategory]::InvalidArgument
-                $errorMessage = $($LocalizedData.SwitchNameIsEmptyError)
-                $exception = New-Object -TypeName System.InvalidOperationException `
-                    -ArgumentList $errorMessage
-                $errorRecord = New-Object -TypeName System.Management.Automation.ErrorRecord `
-                    -ArgumentList $exception, $errorId, $errorCategory, $null
+                $ExceptionParameters = @{
+                    errorId = 'SwitchNameIsEmptyError'
+                    errorCategory = 'InvalidArgument'
+                    errorMessage = $($LocalizedData.SwitchNameIsEmptyError)
+                }
+                $Exception = New-Exception @ExceptionParameters
 
-                { Get-LabSwitches -Configuration (Get-LabConfiguration -Path "$Global:TestConfigPath\PesterTestConfig.SwitchFail.NoName.xml") } | Should Throw $errorRecord
+                { Get-LabSwitches -Configuration (Get-LabConfiguration -Path "$Global:TestConfigPath\PesterTestConfig.SwitchFail.NoName.xml") } | Should Throw $Exception
             }
         }
         Context 'Configuration passed with switch missing Switch Type.' {
             It 'Throws a UnknownSwitchTypeError Exception' {
-                $errorId = 'UnknownSwitchTypeError'
-                $errorCategory = [System.Management.Automation.ErrorCategory]::InvalidArgument
-                $errorMessage = $($LocalizedData.UnknownSwitchTypeError) `
-                    -f '','Pester Switch Fail'
-                $exception = New-Object -TypeName System.InvalidOperationException `
-                    -ArgumentList $errorMessage
-                $errorRecord = New-Object -TypeName System.Management.Automation.ErrorRecord `
-                    -ArgumentList $exception, $errorId, $errorCategory, $null
+                $ExceptionParameters = @{
+                    errorId = 'UnknownSwitchTypeError'
+                    errorCategory = 'InvalidArgument'
+                    errorMessage = $($LocalizedData.UnknownSwitchTypeError `
+                        -f '','Pester Switch Fail')
+                }
+                $Exception = New-Exception @ExceptionParameters
 
-                { Get-LabSwitches -Configuration (Get-LabConfiguration -Path "$Global:TestConfigPath\PesterTestConfig.SwitchFail.NoType.xml") } | Should Throw $errorRecord
+                { Get-LabSwitches -Configuration (Get-LabConfiguration -Path "$Global:TestConfigPath\PesterTestConfig.SwitchFail.NoType.xml") } | Should Throw $Exception
             }
         }
         Context 'Configuration passed with switch invalid Switch Type.' {
             It 'Throws a UnknownSwitchTypeError Exception' {
-                $errorId = 'UnknownSwitchTypeError'
-                $errorCategory = [System.Management.Automation.ErrorCategory]::InvalidArgument
-                $errorMessage = $($LocalizedData.UnknownSwitchTypeError) `
-                    -f 'BadType','Pester Switch Fail'
-                $exception = New-Object -TypeName System.InvalidOperationException `
-                    -ArgumentList $errorMessage
-                $errorRecord = New-Object -TypeName System.Management.Automation.ErrorRecord `
-                    -ArgumentList $exception, $errorId, $errorCategory, $null
+                $ExceptionParameters = @{
+                    errorId = 'UnknownSwitchTypeError'
+                    errorCategory = 'InvalidArgument'
+                    errorMessage = $($LocalizedData.UnknownSwitchTypeError `
+                        -f 'BadType','Pester Switch Fail')
+                }
+                $Exception = New-Exception @ExceptionParameters
 
-                { Get-LabSwitches -Configuration (Get-LabConfiguration -Path "$Global:TestConfigPath\PesterTestConfig.SwitchFail.BadType.xml") } | Should Throw $errorRecord
+                { Get-LabSwitches -Configuration (Get-LabConfiguration -Path "$Global:TestConfigPath\PesterTestConfig.SwitchFail.BadType.xml") } | Should Throw $Exception
             }
         }
         Context 'Configuration passed with switch containing adapters but is not External type.' {
             It 'Throws a AdapterSpecifiedError Exception' {
-                $errorId = 'AdapterSpecifiedError'
-                $errorCategory = [System.Management.Automation.ErrorCategory]::InvalidArgument
-                $errorMessage = $($LocalizedData.AdapterSpecifiedError) `
-                    -f 'Private','Pester Switch Fail'
-                $exception = New-Object -TypeName System.InvalidOperationException `
-                    -ArgumentList $errorMessage
-                $errorRecord = New-Object -TypeName System.Management.Automation.ErrorRecord `
-                    -ArgumentList $exception, $errorId, $errorCategory, $null
+                $ExceptionParameters = @{
+                    errorId = 'AdapterSpecifiedError'
+                    errorCategory = 'InvalidArgument'
+                    errorMessage = $($LocalizedData.AdapterSpecifiedError `
+                        -f 'Private','Pester Switch Fail')
+                }
+                $Exception = New-Exception @ExceptionParameters
 
-                { Get-LabSwitches -Configuration (Get-LabConfiguration -Path "$Global:TestConfigPath\PesterTestConfig.SwitchFail.AdaptersSet.xml") } | Should Throw $errorRecord
+                { Get-LabSwitches -Configuration (Get-LabConfiguration -Path "$Global:TestConfigPath\PesterTestConfig.SwitchFail.AdaptersSet.xml") } | Should Throw $Exception
             }
         }
         Context 'Valid configuration is passed' {
@@ -873,16 +859,15 @@ InModuleScope LabBuilder {
         Context 'Valid configuration with invalid switch type passed' {	
             $Switches[0].Type='Invalid'
             It 'Throws a UnknownSwitchTypeError Exception' {
-                $errorId = 'UnknownSwitchTypeError'
-                $errorCategory = [System.Management.Automation.ErrorCategory]::InvalidArgument
-                $errorMessage = $($LocalizedData.UnknownSwitchTypeError) `
-                    -f 'Invalid',$Switches[0].Name
-                $exception = New-Object -TypeName System.InvalidOperationException `
-                    -ArgumentList $errorMessage
-                $errorRecord = New-Object -TypeName System.Management.Automation.ErrorRecord `
-                    -ArgumentList $exception, $errorId, $errorCategory, $null
+                $ExceptionParameters = @{
+                    errorId = 'UnknownSwitchTypeError'
+                    errorCategory = 'InvalidArgument'
+                    errorMessage = $($LocalizedData.UnknownSwitchTypeError `
+                        -f 'Invalid',$Switches[0].Name)
+                }
+                $Exception = New-Exception @ExceptionParameters
 
-                { Initialize-LabSwitches -Configuration $Config -Switches $Switches } | Should Throw $errorRecord
+                { Initialize-LabSwitches -Configuration $Config -Switches $Switches } | Should Throw $Exception
             }
             It 'Calls Mocked commands' {
                 Assert-MockCalled Get-VMSwitch -Exactly 1
@@ -895,16 +880,15 @@ InModuleScope LabBuilder {
         Context 'Valid configuration NAT with blank NAT Subnet Address' {	
             $Switches[0].Type = 'NAT'
             It 'Throws a NatSubnetAddressEmptyError Exception' {
-                $errorId = 'NatSubnetAddressEmptyError'
-                $errorCategory = [System.Management.Automation.ErrorCategory]::InvalidArgument
-                $errorMessage = $($LocalizedData.NatSubnetAddressEmptyError `
-                    -f $Switches[0].Name)
-                $exception = New-Object -TypeName System.InvalidOperationException `
-                    -ArgumentList $errorMessage
-                $errorRecord = New-Object -TypeName System.Management.Automation.ErrorRecord `
-                    -ArgumentList $exception, $errorId, $errorCategory, $null
+                $ExceptionParameters = @{
+                    errorId = 'NatSubnetAddressEmptyError'
+                    errorCategory = 'InvalidArgument'
+                    errorMessage = $($LocalizedData.NatSubnetAddressEmptyError `
+                        -f $Switches[0].Name)
+                }
+                $Exception = New-Exception @ExceptionParameters
 
-                { Initialize-LabSwitches -Configuration $Config -Switches $Switches } | Should Throw $errorRecord
+                { Initialize-LabSwitches -Configuration $Config -Switches $Switches } | Should Throw $Exception
             }
             It 'Calls Mocked commands' {
                 Assert-MockCalled Get-VMSwitch -Exactly 1
@@ -918,15 +902,14 @@ InModuleScope LabBuilder {
             $Switches[0].Type = 'External'
             $Switches[0].Name = ''
             It 'Throws a SwitchNameIsEmptyError Exception' {
-                $errorId = 'SwitchNameIsEmptyError'
-                $errorCategory = [System.Management.Automation.ErrorCategory]::InvalidArgument
-                $errorMessage = $($LocalizedData.SwitchNameIsEmptyError)
-                $exception = New-Object -TypeName System.InvalidOperationException `
-                    -ArgumentList $errorMessage
-                $errorRecord = New-Object -TypeName System.Management.Automation.ErrorRecord `
-                    -ArgumentList $exception, $errorId, $errorCategory, $null
+                $ExceptionParameters = @{
+                    errorId = 'SwitchNameIsEmptyError'
+                    errorCategory = 'InvalidArgument'
+                    errorMessage = $($LocalizedData.SwitchNameIsEmptyError)
+                }
+                $Exception = New-Exception @ExceptionParameters
 
-                { Initialize-LabSwitches -Configuration $Config -Switches $Switches } | Should Throw $errorRecord
+                { Initialize-LabSwitches -Configuration $Config -Switches $Switches } | Should Throw $Exception
             }
             It 'Calls Mocked commands' {
                 Assert-MockCalled Get-VMSwitch -Exactly 1
@@ -960,16 +943,15 @@ InModuleScope LabBuilder {
         Context 'Valid configuration with invalid switch type passed' {	
             $Switches[0].Type='Invalid'
             It 'Throws a UnknownSwitchTypeError Exception' {
-                $errorId = 'UnknownSwitchTypeError'
-                $errorCategory = [System.Management.Automation.ErrorCategory]::InvalidArgument
-                $errorMessage = $($LocalizedData.UnknownSwitchTypeError) `
-                    -f 'Invalid',$Switches[0].Name
-                $exception = New-Object -TypeName System.InvalidOperationException `
-                    -ArgumentList $errorMessage
-                $errorRecord = New-Object -TypeName System.Management.Automation.ErrorRecord `
-                    -ArgumentList $exception, $errorId, $errorCategory, $null
+                $ExceptionParameters = @{
+                    errorId = 'UnknownSwitchTypeError'
+                    errorCategory = 'InvalidArgument'
+                    errorMessage = $($LocalizedData.UnknownSwitchTypeError `
+                        -f 'Invalid',$Switches[0].Name)
+                }
+                $Exception = New-Exception @ExceptionParameters
 
-                { Remove-LabSwitches -Configuration $Config -Switches $Switches } | Should Throw $errorRecord
+                { Remove-LabSwitches -Configuration $Config -Switches $Switches } | Should Throw $Exception
             }
             It 'Calls Mocked commands' {
                 Assert-MockCalled Get-VMSwitch -Exactly 1
@@ -981,15 +963,14 @@ InModuleScope LabBuilder {
             $Switches[0].Type = 'External'
             $Switches[0].Name = ''
             It 'Throws a SwitchNameIsEmptyError Exception' {
-                $errorId = 'SwitchNameIsEmptyError'
-                $errorCategory = [System.Management.Automation.ErrorCategory]::InvalidArgument
-                $errorMessage = $($LocalizedData.SwitchNameIsEmptyError)
-                $exception = New-Object -TypeName System.InvalidOperationException `
-                    -ArgumentList $errorMessage
-                $errorRecord = New-Object -TypeName System.Management.Automation.ErrorRecord `
-                    -ArgumentList $exception, $errorId, $errorCategory, $null
+                $ExceptionParameters = @{
+                    errorId = 'SwitchNameIsEmptyError'
+                    errorCategory = 'InvalidArgument'
+                    errorMessage = $($LocalizedData.SwitchNameIsEmptyError)
+                }
+                $Exception = New-Exception @ExceptionParameters
 
-                { Remove-LabSwitches -Configuration $Config -Switches $Switches } | Should Throw $errorRecord
+                { Remove-LabSwitches -Configuration $Config -Switches $Switches } | Should Throw $Exception
             }
             It 'Calls Mocked commands' {
                 Assert-MockCalled Get-VMSwitch -Exactly 1
@@ -1007,45 +988,42 @@ InModuleScope LabBuilder {
         
         Context 'Configuration passed with template missing Template Name.' {
             It 'Throws a EmptyTemplateNameError Exception' {
-                $errorId = 'EmptyTemplateNameError'
-                $errorCategory = [System.Management.Automation.ErrorCategory]::InvalidArgument
-                $errorMessage = $($LocalizedData.EmptyTemplateNameError)
-                $exception = New-Object -TypeName System.InvalidOperationException `
-                    -ArgumentList $errorMessage
-                $errorRecord = New-Object -TypeName System.Management.Automation.ErrorRecord `
-                    -ArgumentList $exception, $errorId, $errorCategory, $null
+                $ExceptionParameters = @{
+                    errorId = 'EmptyTemplateNameError'
+                    errorCategory = 'InvalidArgument'
+                    errorMessage = $($LocalizedData.EmptyTemplateNameError)
+                }
+                $Exception = New-Exception @ExceptionParameters
 
-                { Get-LabVMTemplates -Configuration (Get-LabConfiguration -Path "$Global:TestConfigPath\PesterTestConfig.TemplateFail.NoName.xml") } | Should Throw $errorRecord
+                { Get-LabVMTemplates -Configuration (Get-LabConfiguration -Path "$Global:TestConfigPath\PesterTestConfig.TemplateFail.NoName.xml") } | Should Throw $Exception
             }
         }
 
         Context 'Configuration passed with template VHD empty.' {
             It 'Throws a EmptyTemplateVHDError Exception' {
-                $errorId = 'EmptyTemplateVHDError'
-                $errorCategory = [System.Management.Automation.ErrorCategory]::InvalidArgument
-                $errorMessage = $($LocalizedData.EmptyTemplateVHDError `
-                    -f 'No VHD')
-                $exception = New-Object -TypeName System.InvalidOperationException `
-                    -ArgumentList $errorMessage
-                $errorRecord = New-Object -TypeName System.Management.Automation.ErrorRecord `
-                    -ArgumentList $exception, $errorId, $errorCategory, $null
+                $ExceptionParameters = @{
+                    errorId = 'EmptyTemplateVHDError'
+                    errorCategory = 'InvalidArgument'
+                    errorMessage = $($LocalizedData.EmptyTemplateVHDError `
+                        -f 'No VHD')
+                }
+                $Exception = New-Exception @ExceptionParameters
 
-                { Get-LabVMTemplates -Configuration (Get-LabConfiguration -Path "$Global:TestConfigPath\PesterTestConfig.TemplateFail.NoVHD.xml") } | Should Throw $errorRecord
+                { Get-LabVMTemplates -Configuration (Get-LabConfiguration -Path "$Global:TestConfigPath\PesterTestConfig.TemplateFail.NoVHD.xml") } | Should Throw $Exception
             }
         }
 
         Context 'Configuration passed with template with Source VHD set to non-existent file.' {
             It 'Throws a TemplateSourceVHDNotFoundError Exception' {
-                $errorId = 'TemplateSourceVHDNotFoundError'
-                $errorCategory = [System.Management.Automation.ErrorCategory]::InvalidArgument
-                $errorMessage = $($LocalizedData.TemplateSourceVHDNotFoundError `
-                    -f 'Bad VHD','This File Doesnt Exist.vhdx')
-                $exception = New-Object -TypeName System.InvalidOperationException `
-                    -ArgumentList $errorMessage
-                $errorRecord = New-Object -TypeName System.Management.Automation.ErrorRecord `
-                    -ArgumentList $exception, $errorId, $errorCategory, $null
+                $ExceptionParameters = @{
+                    errorId = 'TemplateSourceVHDNotFoundError'
+                    errorCategory = 'InvalidArgument'
+                    errorMessage = $($LocalizedData.TemplateSourceVHDNotFoundError `
+                        -f 'Bad VHD','This File Doesnt Exist.vhdx')
+                }
+                $Exception = New-Exception @ExceptionParameters
 
-                { Get-LabVMTemplates -Configuration (Get-LabConfiguration -Path "$Global:TestConfigPath\PesterTestConfig.TemplateFail.BadSourceVHD.xml") } | Should Throw $errorRecord
+                { Get-LabVMTemplates -Configuration (Get-LabConfiguration -Path "$Global:TestConfigPath\PesterTestConfig.TemplateFail.BadSourceVHD.xml") } | Should Throw $Exception
             }
         }
         
@@ -1112,16 +1090,15 @@ InModuleScope LabBuilder {
             } )
 
             It 'Throws a TemplateSourceVHDNotFoundError Exception' {
-                $errorId = 'TemplateSourceVHDNotFoundError'
-                $errorCategory = [System.Management.Automation.ErrorCategory]::InvalidArgument
-                $errorMessage = $($LocalizedData.TemplateSourceVHDNotFoundError `
-                    -f 'Bad VHD','This File Doesnt Exist.vhdx')
-                $exception = New-Object -TypeName System.InvalidOperationException `
-                    -ArgumentList $errorMessage
-                $errorRecord = New-Object -TypeName System.Management.Automation.ErrorRecord `
-                    -ArgumentList $exception, $errorId, $errorCategory, $null
+                $ExceptionParameters = @{
+                    errorId = 'TemplateSourceVHDNotFoundError'
+                    errorCategory = 'InvalidArgument'
+                    errorMessage = $($LocalizedData.TemplateSourceVHDNotFoundError `
+                        -f 'Bad VHD','This File Doesnt Exist.vhdx')
+                }
+                $Exception = New-Exception @ExceptionParameters
 
-                { Initialize-LabVMTemplates -Configuration $Config -VMTemplates $Templates } | Should Throw $errorRecord
+                { Initialize-LabVMTemplates -Configuration $Config -VMTemplates $Templates } | Should Throw $Exception
             }
         }
 
@@ -1194,17 +1171,16 @@ InModuleScope LabBuilder {
         
         Context 'DSC Module Not Found' {
             $VM = $VMS[0].Clone()
-            $errorId = 'DSCModuleDownloadError'
-            $errorCategory = [System.Management.Automation.ErrorCategory]::InvalidArgument
-            $errorMessage = $($LocalizedData.DSCModuleDownloadError `
-                -f $VM.DSCConfigFile,$VM.Name,'TestModule')
-            $exception = New-Object -TypeName System.InvalidOperationException `
-                -ArgumentList $errorMessage
-            $errorRecord = New-Object -TypeName System.Management.Automation.ErrorRecord `
-                -ArgumentList $exception, $errorId, $errorCategory, $null
+            $ExceptionParameters = @{
+                errorId = 'DSCModuleDownloadError'
+                errorCategory = 'InvalidArgument'
+                errorMessage = $($LocalizedData.DSCModuleDownloadError `
+                    -f $VM.DSCConfigFile,$VM.Name,'TestModule')
+            }
+            $Exception = New-Exception @ExceptionParameters
 
             It 'Throws a DSCModuleDownloadError Exception' {
-                { Set-LabVMDSCMOFFile -Configuration $Config -VM $VM } | Should Throw $errorRecord
+                { Set-LabVMDSCMOFFile -Configuration $Config -VM $VM } | Should Throw $Exception
             }
             It 'Calls Mocked commands' {
                 Assert-MockCalled Create-LabVMPath -Exactly 1
@@ -1219,17 +1195,16 @@ InModuleScope LabBuilder {
         
         Context 'DSC Module Download Error' {
             $VM = $VMS[0].Clone()
-            $errorId = 'DSCModuleDownloadError'
-            $errorCategory = [System.Management.Automation.ErrorCategory]::InvalidArgument
-            $errorMessage = $($LocalizedData.DSCModuleDownloadError `
-                -f $VM.DSCConfigFile,$VM.Name,'TestModule')
-            $exception = New-Object -TypeName System.InvalidOperationException `
-                -ArgumentList $errorMessage
-            $errorRecord = New-Object -TypeName System.Management.Automation.ErrorRecord `
-                -ArgumentList $exception, $errorId, $errorCategory, $null
+            $ExceptionParameters = @{
+                errorId = 'DSCModuleDownloadError'
+                errorCategory = 'InvalidArgument'
+                errorMessage = $($LocalizedData.DSCModuleDownloadError `
+                    -f $VM.DSCConfigFile,$VM.Name,'TestModule')
+            }
+            $Exception = New-Exception @ExceptionParameters
 
             It 'Throws a DSCModuleDownloadError Exception' {
-                { Set-LabVMDSCMOFFile -Configuration $Config -VM $VM } | Should Throw $errorRecord
+                { Set-LabVMDSCMOFFile -Configuration $Config -VM $VM } | Should Throw $Exception
             }
             It 'Calls Mocked commands' {
                 Assert-MockCalled Create-LabVMPath -Exactly 1
@@ -1246,17 +1221,16 @@ InModuleScope LabBuilder {
         
         Context 'DSC Module Not Found in Path' {
             $VM = $VMS[0].Clone()
-            $errorId = 'DSCModuleNotFoundError'
-            $errorCategory = [System.Management.Automation.ErrorCategory]::InvalidArgument
-            $errorMessage = $($LocalizedData.DSCModuleNotFoundError `
-                -f $VM.DSCConfigFile,$VM.Name,'TestModule')
-            $exception = New-Object -TypeName System.InvalidOperationException `
-                -ArgumentList $errorMessage
-            $errorRecord = New-Object -TypeName System.Management.Automation.ErrorRecord `
-                -ArgumentList $exception, $errorId, $errorCategory, $null
+            $ExceptionParameters = @{
+                errorId = 'DSCModuleNotFoundError'
+                errorCategory = 'InvalidArgument'
+                errorMessage = $($LocalizedData.DSCModuleNotFoundError `
+                    -f $VM.DSCConfigFile,$VM.Name,'TestModule')
+            }
+            $Exception = New-Exception @ExceptionParameters
 
             It 'Throws a DSCModuleNotFoundError Exception' {
-                { Set-LabVMDSCMOFFile -Configuration $Config -VM $VM } | Should Throw $errorRecord
+                { Set-LabVMDSCMOFFile -Configuration $Config -VM $VM } | Should Throw $Exception
             }
             It 'Calls Mocked commands' {
                 Assert-MockCalled Create-LabVMPath -Exactly 1
@@ -1275,17 +1249,16 @@ InModuleScope LabBuilder {
         
         Context 'Certificate Create Failed' {
             $VM = $VMS[0].Clone()
-            $errorId = 'CertificateCreateError'
-            $errorCategory = [System.Management.Automation.ErrorCategory]::InvalidArgument
-            $errorMessage = $($LocalizedData.CertificateCreateError `
-                -f $VM.Name)
-            $exception = New-Object -TypeName System.InvalidOperationException `
-                -ArgumentList $errorMessage
-            $errorRecord = New-Object -TypeName System.Management.Automation.ErrorRecord `
-                -ArgumentList $exception, $errorId, $errorCategory, $null
+            $ExceptionParameters = @{
+                errorId = 'CertificateCreateError'
+                errorCategory = 'InvalidArgument'
+                errorMessage = $($LocalizedData.CertificateCreateError `
+                    -f $VM.Name)
+            }
+            $Exception = New-Exception @ExceptionParameters
 
             It 'Throws a CertificateCreateError Exception' {
-                { Set-LabVMDSCMOFFile -Configuration $Config -VM $VM } | Should Throw $errorRecord
+                { Set-LabVMDSCMOFFile -Configuration $Config -VM $VM } | Should Throw $Exception
             }
             It 'Calls Mocked commands' {
                 Assert-MockCalled Create-LabVMPath -Exactly 1
@@ -1311,17 +1284,16 @@ InModuleScope LabBuilder {
         
         Context 'Meta MOF Create Failed' {
             $VM = $VMS[0].Clone()
-            $errorId = 'DSCConfigMetaMOFCreateError'
-            $errorCategory = [System.Management.Automation.ErrorCategory]::InvalidArgument
-            $errorMessage = $($LocalizedData.DSCConfigMetaMOFCreateError `
-                -f $VM.Name)
-            $exception = New-Object -TypeName System.InvalidOperationException `
-                -ArgumentList $errorMessage
-            $errorRecord = New-Object -TypeName System.Management.Automation.ErrorRecord `
-                -ArgumentList $exception, $errorId, $errorCategory, $null
+            $ExceptionParameters = @{
+                errorId = 'DSCConfigMetaMOFCreateError'
+                errorCategory = 'InvalidArgument'
+                errorMessage = $($LocalizedData.DSCConfigMetaMOFCreateError `
+                    -f $VM.Name)
+            }
+            $Exception = New-Exception @ExceptionParameters
 
             It 'Throws a DSCConfigMetaMOFCreateError Exception' {
-                { Set-LabVMDSCMOFFile -Configuration $Config -VM $VM } | Should Throw $errorRecord
+                { Set-LabVMDSCMOFFile -Configuration $Config -VM $VM } | Should Throw $Exception
             }
             It 'Calls Mocked commands' {
                 Assert-MockCalled Create-LabVMPath -Exactly 1
