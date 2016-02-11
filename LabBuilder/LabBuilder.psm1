@@ -77,10 +77,11 @@ StoppingVMMessage=Stopping VM '{0}'.
 RemovingVMMessage=Removing VM '{0}'.
 RemovedVMMessage=Removed VM '{0}'.
 StartingDSCMessage=Starting DSC on VM '{0}'.
-WriteMountingVMBootDiskMessage=Mounting VM '{0}' Boot Disk VHDx '{1}'.
+WriteMountingVMBootDiskMessage=Mounting VM '{0}' VHD Boot Disk '{1}'.
 DownloadingVMBootDiskFileMessage=Downloading VM '{0}' {1} file '{2}'.
-ApplyingVMBootDiskFileMessage=Applying {1} file '{2}' to VM '{0}'.
-DismountingVMBootDiskMessage=Dismounting VM '{0}' Boot Disk VHDx '{1}'.
+ApplyingVMBootDiskFileMessage=Applying {1} file '{2}' to VHD Boot Disk for VM '{0}'.
+CreatingVMBootDiskPantherFolderMessage=Creating Panther folder to VHD Boot Disk for VM '{0}'.
+DismountingVMBootDiskMessage=Dismounting VM '{0}' VHD Boot Disk '{1}'.
 AddingIPAddressToTrustedHostsMessage=Adding IP Address '{1}' to WS-Man Trusted Hosts to allow remoting to '{0}'.
 WaitingForIPAddressAssignedMessage=Waiting for valid IP Address to be assigned to VM '{0}', retrying in {1} seconds.
 WaitingForInitialSetupCompleteMessage=Waiting for Initial Setup to be complete on VM '{0}', retrying in {1} seconds.
@@ -2891,11 +2892,24 @@ function Initialize-LabVMImage {
     } # Foreach
 
     # Create the scripts folder where setup scripts will be put
-    $null = New-Item -Path "$MountPoint\Windows\Setup\Scripts" -ItemType Directory
+    $null = New-Item `
+        -Path "$MountPoint\Windows\Setup\Scripts" `
+        -ItemType Directory
 
     # Apply an unattended setup file
     Write-Verbose -Message $($LocalizedData.ApplyingVMBootDiskFileMessage `
         -f $VM.Name,'Unattend','Unattend.xml')
+
+    if (! (Test-Path -Path "$MountPoint\Windows\Panther" -PathType Container))
+    {
+        Write-Verbose -Message $($LocalizedData.CreatingVMBootDiskPantherFolderMessage `
+            -f $VM.Name)
+
+        $null = New-Item `
+            -Path "$MountPoint\Windows\Panther" `
+            -ItemType Directory
+    }
+    
     $null = Copy-Item `
         -Path (Join-Path -Path $VMLabBuilderFiles -ChildPath 'Unattend.xml') `
         -Destination "$MountPoint\Windows\Panther\Unattend.xml" `

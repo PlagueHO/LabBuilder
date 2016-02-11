@@ -44,7 +44,8 @@ Versions
 * Updated AppVeyor.yml to push more artifacts.
 * Fix issue preventing timeout from triggering.
 * Improved handling of Remoting connection by moving into a new function Connect-LabVM
-* IP Address of VMs automatically added to WS-Man Trusted Hosts to enable HTTP remoting connection. 
+* IP Address of VMs automatically added to WS-Man Trusted Hosts to enable HTTP remoting connection.
+* Prevent error if Panther folder doesn't exist in VHD image when creating a new VM.
 
 ### 0.2.0.0
 * Code cleanup and refactoring.
