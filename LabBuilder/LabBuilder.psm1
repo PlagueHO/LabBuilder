@@ -4472,7 +4472,7 @@ function Connect-LabVM
 
     [DateTime] $StartTime = Get-Date
     [System.Management.Automation.Runspaces.PSSession] $Session = $null
-    [PSCredential] $AdmininistratorCredential = New-Credential `
+    [PSCredential] $AdminCredential = New-Credential `
         -Username '.\Administrator' `
         -Password $VM.AdministratorPassword
     [Boolean] $FatalException = $False
@@ -4509,7 +4509,7 @@ function Connect-LabVM
             # TODO: Convert to PS Direct once supported for this cmdlet.
             $Session = New-PSSession `
                 -ComputerName $IPAddress `
-                -Credential $AdmininistratorCredential `
+                -Credential $AdminCredential `
                 -ErrorAction Stop
         }
         catch
