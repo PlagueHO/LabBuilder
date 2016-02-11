@@ -2862,11 +2862,21 @@ function Initialize-LabVMImage {
     # Mount the VMs Boot VHD so that files can be loaded into it
     Write-Verbose -Message $($LocalizedData.MountingVMBootDiskMessage `
         -f $VM.Name,$VMBootDiskPath)
-    [String] $MountPoint = Join-Path `
-        -Path $ENV:Temp `
-        -ChildPath ([System.IO.Path]::GetRandomFileName())
+      
     $null = New-Item -Path $MountPoint -ItemType Directory
-    $null = Mount-WindowsImage -ImagePath $VMBootDiskPath -Path $MountPoint -Index 1
+    [String] $MountPoint = Join-Path `
+        -Path $VMLabBuilderFiles `
+        -ChildPath 'Mount'
+    if (! (Test-Path -Path $MountPoint -PathType Container))
+    {
+        $null = New-Item `
+            -Path $MountPoint `
+            -ItemType Directory
+    }
+    $null = Mount-WindowsImage `
+        -ImagePath $VMBootDiskPath `
+        -Path $MountPoint `
+        -Index 1
 
     # Copy the WMF 5.0 Installer to the VM in case it is needed
     # Write-Verbose -Message $($LocalizedData.ApplyingVMBootDiskFileMessage `
@@ -2877,18 +2887,24 @@ function Initialize-LabVMImage {
     foreach ($URL in $VM.InstallMSU)
     {
         $MSUFilename = $URL.Substring($URL.LastIndexOf('/') + 1)
-        $MSUPath = Join-Path -Path $Script:WorkingFolder -ChildPath $MSUFilename
+        $MSUPath = Join-Path `
+            -Path $Script:WorkingFolder `
+            -ChildPath $MSUFilename
         if (-not (Test-Path -Path $MSUPath))
         {
             Write-Verbose -Message $($LocalizedData.DownloadingVMBootDiskFileMessage `
                 -f $VM.Name,'MSU',$URL)
-            Invoke-WebRequest -Uri $URL -OutFile $MSUPath
+            Invoke-WebRequest `
+                -Uri $URL `
+                -OutFile $MSUPath
         } # If
 
         # Once downloaded apply the update
         Write-Verbose -Message $($LocalizedData.ApplyingVMBootDiskFileMessage `
             -f $VM.Name,'MSU',$URL)
-        $null = Add-WindowsPackage -PackagePath $MSUPath -Path $MountPoint
+        $null = Add-WindowsPackage `
+            -PackagePath $MSUPath `
+            -Path $MountPoint
     } # Foreach
 
     # Create the scripts folder where setup scripts will be put
@@ -3925,34 +3941,34 @@ function Initialize-LabVMs {
 
     foreach ($VM in $VMs)
     {
+        # Get the root path of the VM
+        [String] $VMRootPath = Get-LabVMRootPath `
+            -Configuration $Configuration `
+            -VM $VM
+
+        # Get the Virtual Machine Path
+        [String] $VMPath = Join-Path `
+            -Path $VMRootPath `
+            -ChildPath 'Virtual Machines'
+            
+        # Get the Virtual Hard Disk Path
+        [String] $VHDPath = Join-Path `
+            -Path $VMRootPath `
+            -ChildPath 'Virtual Hard Disks'
+
+        # Get Path to LabBuilder files
+        [String] $VMLabBuilderFiles = Join-Path `
+            -Path $VMRootPath `
+            -ChildPath 'LabBuilder Files'
+
         if (($CurrentVMs | Where-Object -Property Name -eq $VM.Name).Count -eq 0)
         {
             Write-Verbose -Message $($LocalizedData.CreatingVMMessage `
                 -f $VM.Name)
 
-            # Get the root path of the VM
-            [String] $VMRootPath = Get-LabVMRootPath `
-                -Configuration $Configuration `
-                -VM $VM
-
             # Make sure the appropriate folders exist
             Initialize-LabVMPath `
                 -VMPath $VMRootPath
-
-            # Get the Virtual Machine Path
-            [String] $VMPath = Join-Path `
-                -Path $VMRootPath `
-                -ChildPath 'Virtual Machines'
-                
-            # Get the Virtual Hard Disk Path
-            [String] $VHDPath = Join-Path `
-                -Path $VMRootPath `
-                -ChildPath 'Virtual Hard Disks'
-
-            # Get Path to LabBuilder files
-            [String] $VMLabBuilderFiles = Join-Path `
-                -Path $VMRootPath `
-                -ChildPath 'LabBuilder Files'
 
             # Create the boot disk
             $VMBootDiskPath = "$VHDPath\$($VM.Name) Boot Disk.vhdx"
