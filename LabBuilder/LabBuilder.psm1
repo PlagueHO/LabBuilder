@@ -58,11 +58,11 @@ DSCConfigSavingModuleMessage=Saving Module '{2}' required by DSC Config File '{0
 DSCConfigCreatingLCMMOFMessage=Creating DSC LCM Config file '{0}' in VM '{1}'.
 DSCConfigCreatingMOFMessage=Creating DSC Config file '{0}' in VM '{1}'.
 DSCConfigMOFCreatedMessage=DSC MOF File '{0}' for VM '{1}'. was created successfully.
-ConnectingMessage=Connecting to '{0}'.
-ConnectingFailedMessage=Connection to '{0}' failed ({2}), retrying in {1} seconds.
-ConnectingAccessDeniedMessage=Access Denied connecting to '{0}', the connection will not be retried.
-CopyingFilesToComputerMessage=Copying {1} Files to '{0}'.
-CopyingFilesToComputerFailedMessage=Copying {1} Files to '{0}' failed, retrying in {2} seconds.
+ConnectingVMMessage=Connecting to VM '{0}'.
+ConnectingVMFailedMessage=Connection to VM '{0}' failed ({2}), retrying in {1} seconds.
+ConnectingVMAccessDeniedMessage=Access Denied connecting to VM '{0}', the connection will not be retried.
+CopyingFilesToVMMessage=Copying {1} Files to VM '{0}'.
+CopyingFilesToVMFailedMessage=Copying {1} Files to VM '{0}' failed, retrying in {2} seconds.
 CreatingVMMessage=Creating VM '{0}'.
 CreatingVMDiskMessage=Creating {2} disk {1} for VM '{0}'.
 VMDiskAlreadyExistsMessage={2} disk {1} for VM '{0}' already exists.
@@ -2178,8 +2178,8 @@ function Start-LabVMDSC {
             {
                 Try
                 {
-                    Write-Verbose -Message $($LocalizedData.CopyingFilesToComputerMessage `
-                        -f $VM.ComputerName,'DSC')
+                    Write-Verbose -Message $($LocalizedData.CopyingFilesToVMMessage `
+                        -f $VM.Name,'DSC')
 
                     $null = Copy-Item `
                         @CopyParameters `
@@ -2209,8 +2209,8 @@ function Start-LabVMDSC {
                 }
                 Catch
                 {
-                    Write-Verbose -Message $($LocalizedData.CopyingFilesToComputerFailedMessage `
-                        -f $VM.ComputerName,'DSC',$Script:RetryConnectSeconds)
+                    Write-Verbose -Message $($LocalizedData.CopyingFilesToVMFailedMessage `
+                        -f $VM.Name,'DSC',$Script:RetryConnectSeconds)
 
                     Start-Sleep -Seconds $Script:RetryConnectSeconds
                 } # Try
@@ -2245,8 +2245,8 @@ function Start-LabVMDSC {
             {
                 try
                 {
-                    Write-Verbose -Message $($LocalizedData.CopyingFilesToComputerMessage `
-                        -f $VM.ComputerName,"DSC Module $ModuleName")
+                    Write-Verbose -Message $($LocalizedData.CopyingFilesToVMMessage `
+                        -f $VM.Name,"DSC Module $ModuleName")
 
                     $null = Copy-Item `
                         -Path (Join-Path `
@@ -2260,8 +2260,8 @@ function Start-LabVMDSC {
                 }
                 catch
                 {
-                    Write-Verbose -Message $($LocalizedData.CopyingFilesToComputerFailedMessage `
-                        -f $VM.ComputerName,"DSC Module $ModuleName",$Script:RetryConnectSeconds)
+                    Write-Verbose -Message $($LocalizedData.CopyingFilesToVMFailedMessage `
+                        -f $VM.Name,"DSC Module $ModuleName",$Script:RetryConnectSeconds)
 
                     Start-Sleep -Seconds $Script:RetryConnectSeconds
                 } # Try
@@ -2294,7 +2294,7 @@ function Start-LabVMDSC {
             -and ($ModuleCopyComplete))
         {
             Write-Verbose -Message $($LocalizedData.StartingDSCMessage `
-                -f $VM.ComputerName)
+                -f $VM.Name)
 
             Invoke-Command -Session $Session { c:\windows\setup\scripts\StartDSC.ps1 }
             $Complete = $True
@@ -4545,8 +4545,8 @@ function Connect-LabVM
                     -f $VM.Name,$IPAddress)
             }
         
-            Write-Verbose -Message $($LocalizedData.ConnectingMessage `
-                -f $VM.ComputerName)
+            Write-Verbose -Message $($LocalizedData.ConnectingVMMessage `
+                -f $VM.Name)
 
             # TODO: Convert to PS Direct once supported for this cmdlet.
             $Session = New-PSSession `
@@ -4558,7 +4558,7 @@ function Connect-LabVM
         {
             if ($_.Exception.ErrorCode -eq 5)
             {
-                Write-Verbose -Message $($LocalizedData.ConnectingAccessDeniedMessage `
+                Write-Verbose -Message $($LocalizedData.ConnectingVMAccessDeniedMessage `
                     -f $VM.Name)
                 $FatalException = $True
             }
@@ -4571,7 +4571,7 @@ function Connect-LabVM
                 }
                 else
                 {
-                    Write-Verbose -Message $($LocalizedData.ConnectingFailedMessage `
+                    Write-Verbose -Message $($LocalizedData.ConnectingVMFailedMessage `
                         -f $VM.Name,$Script:RetryConnectSeconds,$_.Exception.Message)
                 }
                 Start-Sleep -Seconds $Script:RetryConnectSeconds
