@@ -359,7 +359,7 @@ InModuleScope LabBuilder {
         Mock Set-VMHost
         Mock Get-VMSwitch
         Mock New-VMSwitch
-        Mock Get-VMNetworkAdapter -MockWith { @{ Name = 'Management Adapter'} }
+        Mock Get-VMNetworkAdapter -MockWith { @{ Name = 'LabBuilder Management PesterTestConfig' } }
         Mock Get-VMNetworkAdapterVlan
         Mock Set-VMNetworkAdapterVlan        
 

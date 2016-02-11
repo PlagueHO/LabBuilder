@@ -603,16 +603,23 @@ function Initialize-LabConfiguration {
             -f $ManagementSwitchName,$ManagementVlan)
     }
     # Check the Vlan ID of the adapter on the switch
-    $ExistingManagementAdapter = Get-VMNetworkAdapter -ManagementOS -Name $ManagementSwitchName
-    $ExistingVlan = (Get-VMNetworkAdapterVlan -VMNetworkAdapter $ExistingManagementAdapter).AccessVlanId
+    $ExistingManagementAdapter = Get-VMNetworkAdapter `
+        -ManagementOS `
+        -Name $ManagementSwitchName
+    $ExistingVlan = (Get-VMNetworkAdapterVlan `
+        -VMNetworkAdapterName $ManagementSwitchName `
+        -ManagementOS).AccessVlanId
     if ($ExistingVlan -ne $ManagementVlan)
     {
         Write-Verbose -Message ($LocalizedData.UpdatingLabManagementSwitchMessage `
             -f $ManagementSwitchName,$ManagementVlan)
 
-        $ExistingManagementAdapter | Set-VMNetworkAdapterVlan -Access -VlanId $ManagementVlan
+        Set-VMNetworkAdapterVlan `
+            -VMNetworkAdapterName $ManagementSwitchName `
+            -ManagementOS `
+            -Access `
+            -VlanId $ManagementVlan
     }
-    
     # Download the New-SelfSignedCertificateEx.ps1 script
     Download-CertGenerator
 
