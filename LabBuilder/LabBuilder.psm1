@@ -3925,13 +3925,23 @@ function Initialize-LabVMs {
             Initialize-LabVMPath `
                 -VMPath $VMRootPath
 
+            # Get the Virtual Machine Path
+            [String] $VMPath = Join-Path `
+                -Path $VMRootPath `
+                -ChildPath 'Virtual Machines'
+                
+            # Get the Virtual Hard Disk Path
+            [String] $VHDPath = Join-Path `
+                -Path $VMRootPath `
+                -ChildPath 'Virtual Hard Disks'
+
             # Get Path to LabBuilder files
             [String] $VMLabBuilderFiles = Join-Path `
                 -Path $VMRootPath `
                 -ChildPath 'LabBuilder Files'
 
             # Create the boot disk
-            $VMBootDiskPath = "$VMRootPath\Virtual Hard Disks\$($VM.Name) Boot Disk.vhdx"
+            $VMBootDiskPath = "$VHDPath\$($VM.Name) Boot Disk.vhdx"
             if (-not (Test-Path -Path $VMBootDiskPath))
             {
                 if ($VM.UseDifferencingDisk -eq 'Y')
@@ -3972,7 +3982,8 @@ function Initialize-LabVMs {
             $null = New-VM `
                 -Name $VM.Name `
                 -MemoryStartupBytes $VM.MemoryStartupBytes `
-                -Generation 2 -Path $VMPath `
+                -Generation 2 `
+                -Path $VMPath `
                 -VHDPath $VMBootDiskPath
             # Remove the default network adapter created with the VM because we don't need it
             Remove-VMNetworkAdapter `
@@ -4019,7 +4030,7 @@ function Initialize-LabVMs {
         # Do we need to add a data disk?
         if ($VM.DataVHDSize -and ($VM.DataVHDSize -gt 0))
         {
-            [String] $VMDataDiskPath = "$VMRootPath\Virtual Hard Disks\$($VM.Name) Data Disk.vhdx"
+            [String] $VMDataDiskPath = "$VHDPath\$($VM.Name) Data Disk.vhdx"
             # Does the disk already exist?
             if (Test-Path -Path $VMDataDiskPath)
             {
