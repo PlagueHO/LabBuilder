@@ -367,7 +367,8 @@ function Get-LabConfiguration {
         }
         New-LabException @ExceptionParameters
     } # If
-    [XML] $Configuration = New-Object -TypeName XML
+    [XML] $Configuration = New-Object System.Xml.XmlDocument
+    $Configuration.PreserveWhitespace = $true
     $Configuration.LoadXML($Content)
     # Figure out the Config path and load it into the XML object (if we can)
     # This path is used to find any additional configuration files that might
