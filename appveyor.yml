@@ -27,7 +27,7 @@ test_script:
         $testResultsFile = ".\TestsResults.xml"
         $res = Invoke-Pester -OutputFormat NUnitXml -OutputFile $testResultsFile -PassThru -ExcludeTag Incomplete
         (New-Object 'System.Net.WebClient').UploadFile("https://ci.appveyor.com/api/testresults/nunit/$($env:APPVEYOR_JOB_ID)", (Resolve-Path $testResultsFile))
-        Get-ChildItem "$ENV:APPVEYOR_BUILD_FOLDER\LabBuilder\LabBuilder\Artifacts\*.*" | Foreach-Object { Push-AppveyorArtifact $_ }
+        Get-ChildItem "$ENV:APPVEYOR_BUILD_FOLDER\LabBuilder\Artifacts\*.*" | Foreach-Object { Push-AppveyorArtifact $_ }
         if ($res.FailedCount -gt 0) { 
             throw "$($res.FailedCount) tests failed."
         }
