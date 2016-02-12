@@ -376,7 +376,7 @@ function Get-LabConfiguration {
     [String] $ConfigPath = [System.IO.Path]::GetDirectoryName($Path)
     [String] $XMLConfigPath = $Configuration.labbuilderconfig.settings.configpath
     if ($XMLConfigPath) {
-        if ($XMLConfigPath.Substring(0,1) -eq '.')
+        if (! [System.IO.Path]::IsPathRooted($XMLConfigurationPath))
         {
             # A relative path was provided in the config path so add the actual path of the
             # XML to it
@@ -3044,6 +3044,7 @@ function Get-LabVMs {
 
     [System.Collections.Hashtable[]] $LabVMs = @()
     [String] $VHDParentPath = $Configuration.labbuilderconfig.settings.vhdparentpath
+    [String] $VMPath = $Configuration.labbuilderconfig.settings.vmpath
     $VMs = $Configuration.labbuilderconfig.SelectNodes('vms').vm
 
     foreach ($VM in $VMs)
@@ -3204,34 +3205,62 @@ function Get-LabVMs {
                 }
                 New-LabException @ExceptionParameters
             }
+            # Adjust the path to be relative to the Virtual Hard Disks folder of the VM
+            # if it doesn't contain a root (e.g. c:\)
+            if (! [System.IO.Path]::IsPathRooted($Vhd))
+            {
+                $Vhd = Join-Path -Path $VMPath -ChildPath "$($VM.Name)\Virtual Hard Disks\$Vhd"
+            }
             
             # Does the VHD already exist?
             $Exists = Test-Path -Path $Vhd
 
             # Get the Parent VHD and check it exists if passed
             [String] $ParentVhd = $VMDataVhd.ParentVHD
-            if ($ParentVhd -and ! (Test-Path -Path $ParentVhd))
+            if ($ParentVhd)
             {
-                $ExceptionParameters = @{
-                    errorId = 'VMDataDiskParentVHDNotFoundError'
-                    errorCategory = 'InvalidArgument'
-                    errorMessage = $($LocalizedData.VMDataDiskParentVHDNotFoundError `
-                        -f $VM.name,$ParentVhd)
+                # Adjust the path to be relative to the Virtual Hard Disks folder of the VM
+                # if it doesn't contain a root (e.g. c:\)
+                if (! [System.IO.Path]::IsPathRooted($ParentVhd))
+                {
+                    $ParentVhd = Join-Path `
+                        -Path $Configuration.labbuilderconfig.settings.fullconfigpath `
+                        -ChildPath $ParentVhd
                 }
-                New-LabException @ExceptionParameters
+                if (-not (Test-Path -Path $ParentVhd))
+                {
+                    $ExceptionParameters = @{
+                        errorId = 'VMDataDiskParentVHDNotFoundError'
+                        errorCategory = 'InvalidArgument'
+                        errorMessage = $($LocalizedData.VMDataDiskParentVHDNotFoundError `
+                            -f $VM.name,$ParentVhd)
+                    }
+                    New-LabException @ExceptionParameters
+                }
             }
 
             # Get the Source VHD and check it exists if passed
             [String] $SourceVhd = $VMDataVhd.SourceVHD
-            if ($SourceVhd -and ! (Test-Path -Path $SourceVhd))
+            if ($SourceVhd)
             {
-                $ExceptionParameters = @{
-                    errorId = 'VMDataDiskSourceVHDNotFoundError'
-                    errorCategory = 'InvalidArgument'
-                    errorMessage = $($LocalizedData.VMDataDiskSourceVHDNotFoundError `
-                        -f $VM.name,$SourceVhd)
+                # Adjust the path to be relative to the Virtual Hard Disks folder of the VM
+                # if it doesn't contain a root (e.g. c:\)
+                if (! [System.IO.Path]::IsPathRooted($SourceVhd))
+                {
+                    $SourceVhd = Join-Path `
+                        -Path $Configuration.labbuilderconfig.settings.fullconfigpath `
+                        -ChildPath $SourceVhd
                 }
-                New-LabException @ExceptionParameters
+                if (! (Test-Path -Path $SourceVhd))
+                {
+                    $ExceptionParameters = @{
+                        errorId = 'VMDataDiskSourceVHDNotFoundError'
+                        errorCategory = 'InvalidArgument'
+                        errorMessage = $($LocalizedData.VMDataDiskSourceVHDNotFoundError `
+                            -f $VM.name,$SourceVhd)
+                    }
+                    New-LabException @ExceptionParameters
+                }
             }
 
             # Get the disk size if provided

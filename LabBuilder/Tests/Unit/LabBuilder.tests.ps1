@@ -1588,14 +1588,14 @@ InModuleScope LabBuilder {
         Context "Configuration passed with VM Data Disk where ParentVHD can't be found." {
             It 'Throw VMDataDiskParentVHDNotFoundError Exception' {
                 $Config = Get-LabConfiguration -Path $Global:TestConfigOKPath
-                $Config.labbuilderconfig.vms.vm.datavhds.datavhd[3].parentvhd = 'ThisFileDoesntExist.vhdx'
+                $Config.labbuilderconfig.vms.vm.datavhds.datavhd[3].parentvhd = 'c:\ThisFileDoesntExist.vhdx'
                 [Array]$Switches = Get-LabSwitches -Configuration $Config
                 [array]$Templates = Get-LabVMTemplates -Configuration $Config
                 $ExceptionParameters = @{
                     errorId = 'VMDataDiskParentVHDNotFoundError'
                     errorCategory = 'InvalidArgument'
                     errorMessage = $($LocalizedData.VMDataDiskParentVHDNotFoundError `
-                        -f $Config.labbuilderconfig.vms.vm.name,"ThisFileDoesntExist.vhdx")
+                        -f $Config.labbuilderconfig.vms.vm.name,"c:\ThisFileDoesntExist.vhdx")
                 }
                 $Exception = New-Exception @ExceptionParameters
                 { Get-LabVMs -Configuration $Config -VMTemplates $Templates -Switches $Switches } | Should Throw $Exception
@@ -1604,14 +1604,14 @@ InModuleScope LabBuilder {
         Context "Configuration passed with VM Data Disk where SourceVHD can't be found." {
             It 'Throw VMDataDiskSourceVHDNotFoundError Exception' {
                 $Config = Get-LabConfiguration -Path $Global:TestConfigOKPath
-                $Config.labbuilderconfig.vms.vm.datavhds.datavhd[0].sourcevhd = 'ThisFileDoesntExist.vhdx'
+                $Config.labbuilderconfig.vms.vm.datavhds.datavhd[0].sourcevhd = 'c:\ThisFileDoesntExist.vhdx'
                 [Array]$Switches = Get-LabSwitches -Configuration $Config
                 [array]$Templates = Get-LabVMTemplates -Configuration $Config
                 $ExceptionParameters = @{
                     errorId = 'VMDataDiskSourceVHDNotFoundError'
                     errorCategory = 'InvalidArgument'
                     errorMessage = $($LocalizedData.VMDataDiskSourceVHDNotFoundError `
-                        -f $Config.labbuilderconfig.vms.vm.name,"ThisFileDoesntExist.vhdx")
+                        -f $Config.labbuilderconfig.vms.vm.name,"c:\ThisFileDoesntExist.vhdx")
                 }
                 $Exception = New-Exception @ExceptionParameters
                 { Get-LabVMs -Configuration $Config -VMTemplates $Templates -Switches $Switches } | Should Throw $Exception
@@ -1627,7 +1627,7 @@ InModuleScope LabBuilder {
                     errorId = 'VMDataDiskSharedDifferencingError'
                     errorCategory = 'InvalidArgument'
                     errorMessage = $($LocalizedData.VMDataDiskSharedDifferencingError `
-                        -f $Config.labbuilderconfig.vms.vm.name,$Config.labbuilderconfig.vms.vm.datavhds.datavhd[5].vhd)
+                        -f $Config.labbuilderconfig.vms.vm.name,"$($Config.labbuilderconfig.settings.vmpath)\$($Config.labbuilderconfig.vms.vm.name)\Virtual Hard Disks\$($Config.labbuilderconfig.vms.vm.datavhds.datavhd[5].vhd)")
                 }
                 $Exception = New-Exception @ExceptionParameters
                 { Get-LabVMs -Configuration $Config -VMTemplates $Templates -Switches $Switches } | Should Throw $Exception
@@ -1643,7 +1643,7 @@ InModuleScope LabBuilder {
                     errorId = 'VMDataDiskUnknownTypeError'
                     errorCategory = 'InvalidArgument'
                     errorMessage = $($LocalizedData.VMDataDiskUnknownTypeError `
-                        -f $Config.labbuilderconfig.vms.vm.name,$Config.labbuilderconfig.vms.vm.datavhds.datavhd[1].vhd,'badtype')
+                        -f $Config.labbuilderconfig.vms.vm.name,"$($Config.labbuilderconfig.settings.vmpath)\$($Config.labbuilderconfig.vms.vm.name)\Virtual Hard Disks\$($Config.labbuilderconfig.vms.vm.datavhds.datavhd[1].vhd)",'badtype')
                 }
                 $Exception = New-Exception @ExceptionParameters
                 { Get-LabVMs -Configuration $Config -VMTemplates $Templates -Switches $Switches } | Should Throw $Exception
@@ -1659,7 +1659,7 @@ InModuleScope LabBuilder {
                     errorId = 'VMDataDiskSupportPRError'
                     errorCategory = 'InvalidArgument'
                     errorMessage = $($LocalizedData.VMDataDiskSupportPRError `
-                        -f $Config.labbuilderconfig.vms.vm.name,$Config.labbuilderconfig.vms.vm.datavhds.datavhd[1].vhd)
+                        -f $Config.labbuilderconfig.vms.vm.name,"$($Config.labbuilderconfig.settings.vmpath)\$($Config.labbuilderconfig.vms.vm.name)\Virtual Hard Disks\$($Config.labbuilderconfig.vms.vm.datavhds.datavhd[1].vhd)")
                 }
                 $Exception = New-Exception @ExceptionParameters
                 { Get-LabVMs -Configuration $Config -VMTemplates $Templates -Switches $Switches } | Should Throw $Exception
@@ -1675,7 +1675,7 @@ InModuleScope LabBuilder {
                     errorId = 'VMDataDiskCantBeCreatedError'
                     errorCategory = 'InvalidArgument'
                     errorMessage = $($LocalizedData.VMDataDiskCantBeCreatedError `
-                        -f $Config.labbuilderconfig.vms.vm.name,$Config.labbuilderconfig.vms.vm.datavhds.datavhd[1].vhd)
+                        -f $Config.labbuilderconfig.vms.vm.name,"$($Config.labbuilderconfig.settings.vmpath)\$($Config.labbuilderconfig.vms.vm.name)\Virtual Hard Disks\$($Config.labbuilderconfig.vms.vm.datavhds.datavhd[1].vhd)")
                 }
                 $Exception = New-Exception @ExceptionParameters
                 { Get-LabVMs -Configuration $Config -VMTemplates $Templates -Switches $Switches } | Should Throw $Exception
@@ -1691,7 +1691,7 @@ InModuleScope LabBuilder {
                     errorId = 'VMDataDiskCantBeCreatedError'
                     errorCategory = 'InvalidArgument'
                     errorMessage = $($LocalizedData.VMDataDiskCantBeCreatedError `
-                        -f $Config.labbuilderconfig.vms.vm.name,$Config.labbuilderconfig.vms.vm.datavhds.datavhd[1].vhd)
+                        -f $Config.labbuilderconfig.vms.vm.name,"$($Config.labbuilderconfig.settings.vmpath)\$($Config.labbuilderconfig.vms.vm.name)\Virtual Hard Disks\$($Config.labbuilderconfig.vms.vm.datavhds.datavhd[1].vhd)")
                 }
                 $Exception = New-Exception @ExceptionParameters
                 { Get-LabVMs -Configuration $Config -VMTemplates $Templates -Switches $Switches } | Should Throw $Exception
@@ -1707,7 +1707,7 @@ InModuleScope LabBuilder {
                     errorId = 'VMDataDiskCantBeCreatedError'
                     errorCategory = 'InvalidArgument'
                     errorMessage = $($LocalizedData.VMDataDiskCantBeCreatedError `
-                        -f $Config.labbuilderconfig.vms.vm.name,$Config.labbuilderconfig.vms.vm.datavhds.datavhd[0].vhd)
+                        -f $Config.labbuilderconfig.vms.vm.name,"$($Config.labbuilderconfig.settings.vmpath)\$($Config.labbuilderconfig.vms.vm.name)\Virtual Hard Disks\$($Config.labbuilderconfig.vms.vm.datavhds.datavhd[0].vhd)")
                 }
                 $Exception = New-Exception @ExceptionParameters
                 { Get-LabVMs -Configuration $Config -VMTemplates $Templates -Switches $Switches } | Should Throw $Exception
@@ -1723,7 +1723,7 @@ InModuleScope LabBuilder {
                     errorId = 'VMDataDiskSourceVHDIfMoveError'
                     errorCategory = 'InvalidArgument'
                     errorMessage = $($LocalizedData.VMDataDiskSourceVHDIfMoveError `
-                        -f $Config.labbuilderconfig.vms.vm.name,$Config.labbuilderconfig.vms.vm.datavhds.datavhd[4].vhd)
+                        -f $Config.labbuilderconfig.vms.vm.name,"$($Config.labbuilderconfig.settings.vmpath)\$($Config.labbuilderconfig.vms.vm.name)\Virtual Hard Disks\$($Config.labbuilderconfig.vms.vm.datavhds.datavhd[4].vhd)")
                 }
                 $Exception = New-Exception @ExceptionParameters
                 { Get-LabVMs -Configuration $Config -VMTemplates $Templates -Switches $Switches } | Should Throw $Exception
@@ -1825,20 +1825,86 @@ InModuleScope LabBuilder {
                 { Get-LabVMs -Configuration $Config -VMTemplates $Templates -Switches $Switches } | Should Throw $Exception
             }
         }
-
+        Context 'Valid configuration is passed with VM Data Disk with rooted VHD path.' {
+            $Config = Get-LabConfiguration -Path $Global:TestConfigOKPath
+            $Config.labbuilderconfig.vms.vm.datavhds.datavhd[0].vhd = "$Global:TestConfigPath\DataDisk.vhdx"
+            [Array]$Switches = Get-LabSwitches -Configuration $Config
+            [Array]$Templates = Get-LabVMTemplates -Configuration $Config
+            [Array]$VMs = Get-LabVMs -Configuration $Config -VMTemplates $Templates -Switches $Switches
+            It 'Returns Template Object containing VHD with correct rooted path' {
+                $VMs[0].DataVhds[0].vhd | Should Be "$Global:TestConfigPath\DataDisk.vhdx"
+            }
+        }
+        Context 'Valid configuration is passed with VM Data Disk with non-rooted VHD path.' {
+            $Config = Get-LabConfiguration -Path $Global:TestConfigOKPath
+            $Config.labbuilderconfig.vms.vm.datavhds.datavhd[0].vhd = "DataDisk.vhdx"
+            [Array]$Switches = Get-LabSwitches -Configuration $Config
+            [Array]$Templates = Get-LabVMTemplates -Configuration $Config
+            [Array]$VMs = Get-LabVMs -Configuration $Config -VMTemplates $Templates -Switches $Switches
+            It 'Returns Template Object containing VHD with correct rooted path' {
+                $VMs[0].DataVhds[0].vhd | Should Be "$($Config.labbuilderconfig.settings.vmpath)\$($Config.labbuilderconfig.vms.vm.name)\Virtual Hard Disks\DataDisk.vhdx"
+            }
+        }
+        Context 'Valid configuration is passed with VM Data Disk with rooted Parent VHD path.' {
+            $Config = Get-LabConfiguration -Path $Global:TestConfigOKPath
+            $Config.labbuilderconfig.vms.vm.datavhds.datavhd[3].parentvhd = "$Global:TestConfigPath\DataDisk.vhdx"
+            [Array]$Switches = Get-LabSwitches -Configuration $Config
+            [Array]$Templates = Get-LabVMTemplates -Configuration $Config
+            [Array]$VMs = Get-LabVMs -Configuration $Config -VMTemplates $Templates -Switches $Switches
+            It 'Returns Template Object containing Parent VHD with correct rooted path' {
+                $VMs[0].DataVhds[3].parentvhd | Should Be "$Global:TestConfigPath\DataDisk.vhdx"
+            }
+        }
+        Context 'Valid configuration is passed with VM Data Disk with non-rooted Parent VHD path.' {
+            Mock Test-Path -MockWith { $true }
+            $Config = Get-LabConfiguration -Path $Global:TestConfigOKPath
+            $Config.labbuilderconfig.vms.vm.datavhds.datavhd[3].parentvhd = "DataDisk.vhdx"
+            [Array]$Switches = Get-LabSwitches -Configuration $Config
+            [Array]$Templates = Get-LabVMTemplates -Configuration $Config
+            [Array]$VMs = Get-LabVMs -Configuration $Config -VMTemplates $Templates -Switches $Switches
+            It 'Returns Template Object containing Parent VHD with correct rooted path' {
+                $VMs[0].DataVhds[3].parentvhd | Should Be "$Global:TestConfigPath\DataDisk.vhdx"
+            }
+        }
+        Context 'Valid configuration is passed with VM Data Disk with rooted Source VHD path.' {
+            $Config = Get-LabConfiguration -Path $Global:TestConfigOKPath
+            $Config.labbuilderconfig.vms.vm.datavhds.datavhd[0].sourcevhd = "$Global:TestConfigPath\DataDisk.vhdx"
+            [Array]$Switches = Get-LabSwitches -Configuration $Config
+            [Array]$Templates = Get-LabVMTemplates -Configuration $Config
+            [Array]$VMs = Get-LabVMs -Configuration $Config -VMTemplates $Templates -Switches $Switches
+            It 'Returns Template Object containing Source VHD with correct rooted path' {
+                $VMs[0].DataVhds[0].sourcevhd | Should Be "$Global:TestConfigPath\DataDisk.vhdx"
+            }
+        }
+        Context 'Valid configuration is passed with VM Data Disk with non-rooted Source VHD path.' {
+            Mock Test-Path -MockWith { $true }
+            $Config = Get-LabConfiguration -Path $Global:TestConfigOKPath
+            $Config.labbuilderconfig.vms.vm.datavhds.datavhd[0].sourcevhd = "DataDisk.vhdx"
+            [Array]$Switches = Get-LabSwitches -Configuration $Config
+            [Array]$Templates = Get-LabVMTemplates -Configuration $Config
+            [Array]$VMs = Get-LabVMs -Configuration $Config -VMTemplates $Templates -Switches $Switches
+            It 'Returns Template Object containing Source VHD with correct rooted path' {
+                $VMs[0].DataVhds[0].sourcevhd | Should Be "$Global:TestConfigPath\DataDisk.vhdx"
+            }
+        }
         Context 'Valid configuration is passed' {
             $Config = Get-LabConfiguration -Path $Global:TestConfigOKPath
             [Array]$Switches = Get-LabSwitches -Configuration $Config
             [Array]$Templates = Get-LabVMTemplates -Configuration $Config
             [Array]$VMs = Get-LabVMs -Configuration $Config -VMTemplates $Templates -Switches $Switches
-            # Clear this value out because it is completely dependent on where the test is run from. 
-            $VMs[0].DSCConfigFile = ''
+            # Remove the Source VHD and Parent VHD values for any data disks because they
+            # will usually be relative to the test folder and won't exist
+            foreach ($DataVhd in $VMs[0].DataVhds)
+            {
+                $DataVhd.ParentVHD = ''
+                $DataVhd.SourceVHD = ''
+            }
             Set-Content -Path "$($Global:ArtifactPath)\VMs.json" -Value ($VMs | ConvertTo-Json -Depth 6) -Encoding UTF8 -NoNewLine
             It 'Returns Template Object that matches Expected Object' {
                 $ExpectedVMs = Get-Content -Path "$Global:TestConfigPath\ExpectedVMs.json" -Raw
                 [String]::Compare(($VMs | ConvertTo-Json -Depth 6),$ExpectedVMs,$true) | Should Be 0
             }
-        }
+        }        
     }
 
 

@@ -12,9 +12,9 @@
                          "moveorcopy":  null,
                          "supportPR":  false,
                          "shared":  false,
-                         "vhd":  "DataDiskCopy.vhdx",
+                         "vhd":  "C:\\Pester Lab\\PESTER01\\Virtual Hard Disks\\DataDiskCopy.vhdx",
                          "parentvhd":  "",
-                         "sourcevhd":  ".\\Tests\\PesterTestConfig\\DataDisk.vhdx"
+                         "sourcevhd":  ""
                      },
                      {
                          "size":  10737418240,
@@ -22,7 +22,7 @@
                          "moveorcopy":  null,
                          "supportPR":  false,
                          "shared":  false,
-                         "vhd":  "DataDiskFixed.vhdx",
+                         "vhd":  "C:\\Pester Lab\\PESTER01\\Virtual Hard Disks\\DataDiskFixed.vhdx",
                          "parentvhd":  "",
                          "sourcevhd":  ""
                      },
@@ -32,7 +32,7 @@
                          "moveorcopy":  null,
                          "supportPR":  false,
                          "shared":  false,
-                         "vhd":  "DataDiskDynamic.vhdx",
+                         "vhd":  "C:\\Pester Lab\\PESTER01\\Virtual Hard Disks\\DataDiskDynamic.vhdx",
                          "parentvhd":  "",
                          "sourcevhd":  ""
                      },
@@ -42,8 +42,8 @@
                          "moveorcopy":  null,
                          "supportPR":  false,
                          "shared":  false,
-                         "vhd":  "DataDiskDifferencing.vhdx",
-                         "parentvhd":  ".\\Tests\\PesterTestConfig\\DataDisk.vhdx",
+                         "vhd":  "C:\\Pester Lab\\PESTER01\\Virtual Hard Disks\\DataDiskDifferencing.vhdx",
+                         "parentvhd":  "",
                          "sourcevhd":  ""
                      },
                      {
@@ -52,9 +52,9 @@
                          "moveorcopy":  null,
                          "supportPR":  false,
                          "shared":  false,
-                         "vhd":  "DataDiskMove.vhdx",
+                         "vhd":  "C:\\Pester Lab\\PESTER01\\Virtual Hard Disks\\DataDiskMove.vhdx",
                          "parentvhd":  "",
-                         "sourcevhd":  ".\\Tests\\PesterTestConfig\\DataDisk.vhdx"
+                         "sourcevhd":  ""
                      },
                      {
                          "size":  10737418240,
@@ -62,14 +62,14 @@
                          "moveorcopy":  null,
                          "supportPR":  false,
                          "shared":  true,
-                         "vhd":  "DataDiskShared.vhdx",
+                         "vhd":  "C:\\Pester Lab\\PESTER01\\Virtual Hard Disks\\DataDiskShared.vhdx",
                          "parentvhd":  "",
                          "sourcevhd":  ""
                      }
                  ],
     "TemplateVHD":  "C:\\Pester Lab\\Virtual Hard Disk Templates\\Windows Server 2012 R2 Datacenter Full.vhdx",
     "ProductKey":  "DDDDD-DDDDD-DDDDD-DDDDD-DDDDD",
-    "DSCConfigFile":  "",
+    "DSCConfigFile":  "C:\\Users\\Daniel\\Source\\GitHub\\LabBuilder\\LabBuilder\\Tests\\PesterTestConfig\\PesterTest.DSC.ps1",
     "TimeZone":  "Pacific Standard Time",
     "Adapters":  [
                      {

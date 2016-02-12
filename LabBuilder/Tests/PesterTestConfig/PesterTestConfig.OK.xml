@@ -89,11 +89,11 @@
         unattendfile=""
         setupcomplete="" >
       <datavhds>
-        <datavhd vhd="DataDiskCopy.vhdx" sourcevhd=".\Tests\PesterTestConfig\DataDisk.vhdx" />
+        <datavhd vhd="DataDiskCopy.vhdx" sourcevhd="DataDisk.vhdx" />
         <datavhd vhd="DataDiskFixed.vhdx" type="fixed" size="10GB" supportpr="N"/>
         <datavhd vhd="DataDiskDynamic.vhdx" type="dynamic" size="10GB" />
-        <datavhd vhd="DataDiskDifferencing.vhdx" type="differencing" size="10GB" parentvhd=".\Tests\PesterTestConfig\DataDisk.vhdx" />
-        <datavhd vhd="DataDiskMove.vhdx" sourcevhd=".\Tests\PesterTestConfig\DataDisk.vhdx" movesourcevhd="Y" />
+        <datavhd vhd="DataDiskDifferencing.vhdx" type="differencing" size="10GB" parentvhd="DataDisk.vhdx" />
+        <datavhd vhd="DataDiskMove.vhdx" sourcevhd="DataDisk.vhdx" movesourcevhd="Y" />
         <datavhd vhd="DataDiskShared.vhdx" type="fixed" size="10GB" shared="Y" supportsr="Y" />
       </datavhds>
       <adapters>
