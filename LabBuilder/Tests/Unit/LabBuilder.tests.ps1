@@ -1081,6 +1081,7 @@ InModuleScope LabBuilder {
         Mock Set-ItemProperty -ParameterFilter { ($Name -eq 'IsReadOnly') -and ($Value -eq $False) }
         Mock Test-Path -ParameterFilter { $Path -eq 'This File Doesnt Exist.vhdx' } -MockWith { $false }
         Mock Optimize-VHD
+        Mock Get-VM
 
         Context 'Template Template Array with non-existent VHD source file' {
             [array]$Templates = @( @{
@@ -1126,6 +1127,7 @@ InModuleScope LabBuilder {
         Mock Set-ItemProperty -ParameterFilter { ($Name -eq 'IsReadOnly') -and ($Value -eq $False) }
         Mock Remove-Item
         Mock Test-Path -MockWith { $True }
+        Mock Get-VM
 
         Context 'Valid configuration is passed' {	
             [Array]$Templates = Get-LabVMTemplates -Configuration $Config
