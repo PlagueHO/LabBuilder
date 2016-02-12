@@ -88,10 +88,12 @@ ConnectingVMAccessDeniedMessage=Access Denied connecting to VM '{0}', the connec
 CopyingFilesToVMMessage=Copying {1} Files to VM '{0}'.
 CopyingFilesToVMFailedMessage=Copying {1} Files to VM '{0}' failed, retrying in {2} seconds.
 CreatingVMMessage=Creating VM '{0}'.
-CreatingVMDiskMessage=Creating {2} disk {1} for VM '{0}'.
-VMDiskAlreadyExistsMessage={2} disk {1} for VM '{0}' already exists.
-ExpandingVMDiskMessage=Expanding {2} disk {1} for VM '{0}' to {3}.
-AddingVMDiskMessage=Adding {2} disk {1} to VM '{0}'.
+CreatingVMDiskMessage=Creating {2} disk '{1}' for VM '{0}'.
+CreatingVMDiskByMovingSourceVHDMessage=Creating disk {1} for VM '{0}' by moving Source VHD '{2}'.
+CreatingVMDiskByCopyingSourceVHDMessage=Creating disk {1} for VM '{0}' by copying Source VHD '{2}'.
+VMDiskAlreadyExistsMessage={2} disk '{1}' for VM '{0}' already exists.
+ExpandingVMDiskMessage=Expanding {2} disk '{1}' for VM '{0}' to {3}.
+AddingVMDiskMessage=Adding {2} disk '{1}' to VM '{0}'.
 DeletingVMAllDisksMessage=Deleting all disks from VM '{0}'.
 AddingVMNetworkAdapterMessage=Adding {2} network adapter {1} to VM '{0}'.
 SettingVMNetworkAdapterVlanMessage=Setting VLAN on {2} network adapter {1} in VM '{0}' to {3}.
@@ -4034,7 +4036,7 @@ function Get-LabVMRootPath {
    Contains the Lab Builder configuration object that was loaded by the Get-LabConfiguration
    object.
 .PARAMETER VM
-   A Virtual Machine object pulled from the Lab Configuration file using Get-LabVM
+   A Virtual Machine object pulled from the Lab Configuration file using Get-LabVM.
 .EXAMPLE
    $Config = Get-LabConfiguration -Path c:\mylab\config.xml
    $VMs = Get-LabVM -Configuration $Config
@@ -4167,6 +4169,213 @@ function Start-LabVM {
 ####################################################################################################
 <#
 .SYNOPSIS
+   Updates the VM Data Disks to match the VM Configuration.
+.DESCRIPTION
+   This cmdlet will take the VM configuration provided and ensure that that data disks that are
+   attached to the VM.
+   
+   The function will use the array of items in the DataVHDs property of the VM to create and
+   attach any data disk VHDs that are missing.
+   
+   If the data disk VHD file exists but is not attached it will be attached to the VM. If the
+   data disk VHD file does not exist then it will be created and attached. 
+.EXAMPLE
+   $Config = Get-LabConfiguration -Path c:\mylab\config.xml
+   $VMs = Get-LabVM -Configuration $Config
+   $Path = Get-LabVMRootPath -Configuration $Configuration -VM $VM[0]
+   Update-LabVMDataDisk -Configuration $Config -VM VM[0]
+   This will update the data disks for the first VM in the configuration file c:\mylab\config.xml.
+.PARAMETER Configuration
+   Contains the Lab Builder configuration object that was loaded by the Get-LabConfiguration
+   object.
+.PARAMETER VM
+   A Virtual Machine object pulled from the Lab Configuration file using Get-LabVM.
+.OUTPUTS
+   None.
+#>
+function Update-LabVMDataDisk {
+    [CmdLetBinding()]
+    param
+    (
+        [Parameter(
+            Mandatory,
+            Position=0)]
+        [ValidateNotNullOrEmpty()]
+        [XML] $Configuration,
+
+        [Parameter(
+            Mandatory,
+            Position=1)]
+        [ValidateNotNullOrEmpty()]
+        $VM
+    )
+
+    # Get the root path of the VM
+    [String] $VMRootPath = Get-LabVMRootPath `
+        -Configuration $Configuration `
+        -VM $VM
+
+    # Get the Virtual Hard Disk Path
+    [String] $VHDPath = Join-Path `
+        -Path $VMRootPath `
+        -ChildPath 'Virtual Hard Disks'
+
+    foreach ($DataVhd -in $VM.DataVHDs)
+    {
+        $Vhd = $DataVhd.Vhd
+        if (Test-Path -Path $Vhd)
+        {
+            Write-Verbose -Message $($LocalizedData.VMDiskAlreadyExistsMessage `
+                -f $VM.Name,$Vhd,'Data')
+                
+            # Check the parameters of the VHD match
+            
+        }
+        else
+        {
+            # The data disk VHD does not exist so create it
+            $SourceVhd = $DataVhd.SourceVhd
+            if ($SourceVhd)
+            {
+                # A source VHD was specified to create the new VHD using
+                if (! Test-Path -Path $SourceVhd)
+                {
+                    $ExceptionParameters = @{
+                        errorId = 'VMDataDiskSourceVHDNotFoundError'
+                        errorCategory = 'InvalidArgument'
+                        errorMessage = $($LocalizedData.VMDataDiskSourceVHDNotFoundError `
+                            -f $VM.name,$SourceVhd)
+                    }
+                    New-LabException @ExceptionParameters                    
+                }
+                # Should the Source VHD be copied or moved
+                if ($DataVhd.MoveSourceVHD)
+                {
+                    Write-Verbose -Message $($LocalizedData.CreatingVMDiskByMovingSourceVHDMessage `
+                        -f $VM.Name,$Vhd,$SourceVhd)
+
+                    Move-Item `
+                        -Path $SourceVhd `
+                        -DestinationPath $VHDPath `
+                        -Force `
+                        -ErrorAction Stop
+                }
+                else
+                {
+                    Write-Verbose -Message $($LocalizedData.CreatingVMDiskByCopyingSourceVHDMessage `
+                        -f $VM.Name,$Vhd,$SourceVhd)
+
+                    Copy-Item `
+                        -Path $SourceVhd `
+                        -DestinationPath $VHDPath `
+                        -Force `
+                        -ErrorAction Stop 
+                } # if
+            }
+            else
+            {
+                $Size = $DataVhd.size
+                switch ($DataVhd.type)
+                {
+                    'fixed'
+                    {
+                        # Create a new Fixed VHD
+                        Write-Verbose -Message $($LocalizedData.CreatingVMDiskMessage `
+                            -f $VM.Name,$Vhd,'Fixed Data')
+
+                        $null = New-VHD `
+                            -Path $Vhd `
+                            -SizeBytes $Size `
+                            -Fixed `
+                            -ErrorAction Stop
+                        break;
+                    } # 'fixed'
+                    'dynamic'
+                    {
+                        # Create a new Dynamic VHD
+                        Write-Verbose -Message $($LocalizedData.CreatingVMDiskMessage `
+                            -f $VM.Name,$Vhd,'Dynamic Data')
+
+                        $null = New-VHD `
+                            -Path $Vhd `
+                            -SizeBytes $Size `
+                            -Dynamic `
+                            -ErrorAction Stop
+                        break;                            
+                    } # 'dynamic'
+                    'differencing'
+                    {
+                        # Create a new Differencing VHD
+                        Write-Verbose -Message $($LocalizedData.CreatingVMDiskMessage `
+                            -f $VM.Name,$Vhd,"Differencing Data using Parent '$ParentVhd'")
+
+                        $null = New-VHD `
+                            -Path $Vhd `
+                            -SizeBytes $Size `
+                            -Differencing `
+                            -ParentPath $ParentVhd `
+                            -ErrorAction Stop
+                        break;
+                    } # 'differencing'
+                    default
+                    {
+                        $ExceptionParameters = @{
+                            errorId = 'VMDataDiskUnknownTypeError'
+                            errorCategory = 'InvalidArgument'
+                            errorMessage = $($LocalizedData.VMDataDiskUnknownTypeError `
+                                -f $VM.Name,$Vhd,$Type)
+                        }
+                        New-LabException @ExceptionParameters                        
+                    } # default
+                } # switch
+            } # if
+        } # if
+        
+        # Get a list of disks attached to the VM
+        $VMHardDiskDrives = Get-VMHardDiskDrive `
+            -VMName $VM.Name
+
+        # The data disk VHD will now exist so ensure it is attached
+        if (($VMHardDiskDrives | Where-Object -Property Path -eq $Vhd).Count -eq 0)
+        {
+            # The data disk is not yet attached
+            Write-Verbose -Message $($LocalizedData.AddingVMDiskMessage `
+                -f $VM.Name,$Vhd,'Data')
+
+            # Determine the ControllerLocation and ControllerNumber to
+            # attach the VHD to.
+            $ControllerLocation = ($VMHardDiskDrives | 
+                Measure-Object -Property ControllerLocation -Maximum).Maximum + 1
+            
+            $NewHardDiskParams = @{
+                VMName = $VM.Name
+                Path = $Vhd
+                ControllerType = 'SCSI'
+                ControllerLocation = $ControllerLocation
+                ControllerNumber = 0
+                ErrorAction = 'Stop'
+            }
+            if ($DataVhd.Shared)
+            {
+                $NewHardDiskParams += @{
+                    ShareVirtualDisk = $true
+                }
+                if ($DataVhd.SupportSR)
+                {
+                    $NewHardDiskParams += @{
+                        SupportPersistentReservations = $true
+                    }
+                } # if
+            } # if
+            $Null = Add-VMHardDiskDrive @NewHardDiskParams
+        } # if
+    } # foreach
+} # Update-LabVMDataDisk
+####################################################################################################
+
+####################################################################################################
+<#
+.SYNOPSIS
    Creates the folder structure that will contain a Lab Virtual Machine. 
 .DESCRIPTION
    Creates a standard Hyper-V Virtual Machine folder structure as well as additional folders
@@ -4222,14 +4431,13 @@ function Initialize-LabVMPath {
    Long description
 .EXAMPLE
    Example of how to use this cmdlet
-.EXAMPLE
-   Another example of how to use this cmdlet
-.INPUTS
-   Inputs to this cmdlet (if any)
+.PARAMETER Configuration
+   Contains the Lab Builder configuration object that was loaded by the Get-LabConfiguration
+   object.
+.PARAMETER VMs
+   Array of Virtual Machines pulled from a configuration object.
 .OUTPUTS
-   Output from this cmdlet (if any)
-.NOTES
-   General notes
+   None
 #>
 function Initialize-LabVMs {
     [CmdLetBinding()]
@@ -4379,64 +4587,10 @@ function Initialize-LabVMs {
             }   
         }
 
-        # Do we need to add a data disk?
-        if ($VM.DataVHDSize -and ($VM.DataVHDSize -gt 0))
-        {
-            [String] $VMDataDiskPath = "$VHDPath\$($VM.Name) Data Disk.vhdx"
-
-            # Does the disk already exist?
-            if (Test-Path -Path $VMDataDiskPath)
-            {
-                Write-Verbose -Message $($LocalizedData.VMDiskAlreadyExistsMessage `
-                    -f $VM.Name,$VMDataDiskPath,'Data')
-
-                # Does the disk need to shrink or grow?
-                if ((Get-VHD -Path $VMDataDiskPath).Size -lt $VM.DataVHDSize)
-                {
-                    Write-Verbose -Message $($LocalizedData.ExpandingVMDiskMessage `
-                        -f $VM.Name,$VMDataDiskPath,'Data',$VM.DataVHDSize)
-
-                    $null = Resize-VHD `
-                        -Path $VMDataDiskPath `
-                        -SizeBytes $VM.DataVHDSize
-                }
-                elseif ((Get-VHD -Path $VMDataDiskPath).Size -gt $VM.DataVHDSize)
-                {
-                    $ExceptionParameters = @{
-                        errorId = 'VMDataDiskVHDShrinkError'
-                        errorCategory = 'InvalidArgument'
-                        errorMessage = $($LocalizedData.VMDataDiskVHDShrinkError `
-                            -f $VM.name,$VMDataDiskPath,$VM.DataVHDSize)
-                    }
-                    New-LabException @ExceptionParameters
-                }
-            }
-            else
-            {
-                # Create a new VHD
-                Write-Verbose -Message $($LocalizedData.CreatingVMDiskMessage `
-                    -f $VM.Name,$VMDataDiskPath,'Data')
-
-                $null = New-VHD `
-                    -Path $VMDataDiskPath `
-                    -SizeBytes $VM.DataVHDSize `
-                    -Dynamic
-            } # If
-
-            # Does the disk already exist in the VM
-            if ((Get-VMHardDiskDrive -VMName $VM.Name | Where-Object -Property Path -EQ $VMDataDiskPath).Count -EQ 0)
-            {
-                Write-Verbose -Message $($LocalizedData.AddingVMDiskMessage `
-                    -f $VM.Name,$VMDataDiskPath,'Data')
-
-                $Null = Add-VMHardDiskDrive `
-                    -VMName $VM.Name `
-                    -Path $VMDataDiskPath `
-                    -ControllerType SCSI `
-                    -ControllerLocation 1 `
-                    -ControllerNumber 0
-            } # If
-        } # If
+        # Update the data disks for the VM
+        Update-LabVMDataDisk `
+            -Configuration $Configuration `
+            -VM $VM        
             
         # Create/Update the Management Network Adapter
         if ((Get-VMNetworkAdapter -VMName $VM.Name | Where-Object -Property Name -EQ $ManagementSwitchName).Count -eq 0)
@@ -4506,7 +4660,7 @@ function Initialize-LabVMs {
         } # Foreach
 
         Start-LabVM `
-            -Configuration $Config `
+            -Configuration $Configuration `
             -VM $VM
     } # Foreach
 } # Initialize-LabVMs
