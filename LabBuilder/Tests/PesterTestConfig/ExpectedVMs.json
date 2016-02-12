@@ -10,7 +10,7 @@
                          "size":  0,
                          "type":  "",
                          "moveorcopy":  null,
-                         "supportPR":  null,
+                         "supportPR":  false,
                          "shared":  false,
                          "vhd":  "DataDiskCopy.vhdx",
                          "parentvhd":  "",

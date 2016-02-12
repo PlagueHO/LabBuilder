@@ -51,7 +51,7 @@ VMAdapterNameError=The Adapter Name in VM '{0}' cannot be 'adapter' or empty.
 VMAdapterSwitchNameError=The Switch Name specified in adapter '{1}' specified in VM '{0}' cannot be empty.
 VMAdapterSwitchNotFoundError=The switch '{2}' specified in adapter '{1}' in VM '{0}' could not be found in Switches.
 VMDataDiskVHDEmptyError=The Data Disk VHD in VM '{0}' cannot be 'datavhd' or empty.
-VMDataDiskCantBeCreatedError=The Data Disk VHD '{1}' specifid in VM '{0}' does not exist but the size and type or Source VHD was not provided so it not be created.
+VMDataDiskCantBeCreatedError=The Data Disk VHD '{1}' specified in VM '{0}' does not exist but the size and type or Source VHD was not provided so it not be created.
 VMDataDiskParentVHDNotFoundError=The Data Disk Parent VHD '{1}' specified in VM '{0}' could not be found.
 VMDataDiskSourceVHDNotFoundError=The Data Disk Source VHD '{1}' specified in VM '{0}' could not be found.
 VMDataDiskUnknownTypeError=Unknown Data Disk type '{2}' specified in VM '{0}' for VHD '{1}'.
@@ -3280,51 +3280,50 @@ function Get-LabVMs {
                         New-LabException @ExceptionParameters
                     }
                 }
-                
-                # Get the Support Persistent Reservations
-                [Boolean] $SupportPR = ($VMDataVhd.supportPR -eq 'Y')
-                if ($SupportPR -and -not $Shared)
+            }
+            # Get the Support Persistent Reservations
+            [Boolean] $SupportPR = ($VMDataVhd.supportPR -eq 'Y')
+            if ($SupportPR -and -not $Shared)
+            {
+                $ExceptionParameters = @{
+                    errorId = 'VMDataDiskSupportPRError'
+                    errorCategory = 'InvalidArgument'
+                    errorMessage = $($LocalizedData.VMDataDiskSupportPRError `
+                        -f $VM.Name,$VHD)
+                }
+                New-LabException @ExceptionParameters
+            }
+            
+            # Should the Source VHD be moved rather than copied
+            [Boolean] $MoveSourceVHD = ($VMDataVhd.MoveSourceVHD -eq 'Y')
+            if ($MoveSourceVHD)
+            {
+                if (! $SourceVHD)
                 {
                     $ExceptionParameters = @{
-                        errorId = 'VMDataDiskSupportPRError'
+                        errorId = 'VMDataDiskSourceVHDIfMoveError'
                         errorCategory = 'InvalidArgument'
-                        errorMessage = $($LocalizedData.VMDataDiskSupportPRError `
+                        errorMessage = $($LocalizedData.VMDataDiskSourceVHDIfMoveError `
                             -f $VM.Name,$VHD)
                     }
-                    New-LabException @ExceptionParameters
-                }
-                
-                # If the data disk file doesn't exist then some basic parameters MUST be provided
-                if (! $Exists `
-                    -and (($Type -notin ('Fixed','Dynamic','Differncing')) `
-                    -and $Size -eq $null) `
-                    -or $SourceVhd )
-                {
-                    $ExceptionParameters = @{
-                        errorId = 'VMDataDiskCantBeCreatedError'
-                        errorCategory = 'InvalidArgument'
-                        errorMessage = $($LocalizedData.VMDataDiskCantBeCreatedError `
-                            -f $VM.Name,$VHD)
-                    }
-                    New-LabException @ExceptionParameters                    
-                }
-                
-                # Shoudl the Source VHD be moved rather than copied
-                [Boolean] $MoveSourceVHD = ($VMDataVhd.MoveSourceVHD -eq 'Y')
-                if ($MoveSourceVHD)
-                {
-                    if (! $SourceVHD)
-                    {
-                        $ExceptionParameters = @{
-                            errorId = 'VMDataDiskSourceVHDIfMoveError'
-                            errorCategory = 'InvalidArgument'
-                            errorMessage = $($LocalizedData.VMDataDiskSourceVHDIfMoveError `
-                                -f $VM.Name,$VHD)
-                        }
-                        New-LabException @ExceptionParameters                        
-                    }
+                    New-LabException @ExceptionParameters                        
                 }
             }
+
+            # If the data disk file doesn't exist then some basic parameters MUST be provided
+            if (-not $Exists `
+                -and ((( $Type -notin ('fixed','dynamic','differencing') ) -or $Size -eq $null -or $Size -eq 0 ) `
+                -and -not $SourceVhd ))
+            {
+                $ExceptionParameters = @{
+                    errorId = 'VMDataDiskCantBeCreatedError'
+                    errorCategory = 'InvalidArgument'
+                    errorMessage = $($LocalizedData.VMDataDiskCantBeCreatedError `
+                        -f $VM.Name,$VHD)
+                }
+                New-LabException @ExceptionParameters                    
+            }
+            
             $DataVhds += @{
                 vhd = $Vhd;
                 type = $Type;

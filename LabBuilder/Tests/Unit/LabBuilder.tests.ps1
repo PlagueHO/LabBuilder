@@ -1583,6 +1583,150 @@ InModuleScope LabBuilder {
                 { Get-LabVMs -Configuration $Config -VMTemplates $Templates -Switches $Switches } | Should Throw $Exception
             }
         }
+        Context "Configuration passed with VM Data Disk where ParentVHD can't be found." {
+            It 'Throw VMDataDiskParentVHDNotFoundError Exception' {
+                $Config = Get-LabConfiguration -Path $Global:TestConfigOKPath
+                $Config.labbuilderconfig.vms.vm.datavhds.datavhd[3].parentvhd = 'ThisFileDoesntExist.vhdx'
+                [Array]$Switches = Get-LabSwitches -Configuration $Config
+                [array]$Templates = Get-LabVMTemplates -Configuration $Config
+                $ExceptionParameters = @{
+                    errorId = 'VMDataDiskParentVHDNotFoundError'
+                    errorCategory = 'InvalidArgument'
+                    errorMessage = $($LocalizedData.VMDataDiskParentVHDNotFoundError `
+                        -f $Config.labbuilderconfig.vms.vm.name,"ThisFileDoesntExist.vhdx")
+                }
+                $Exception = New-Exception @ExceptionParameters
+                { Get-LabVMs -Configuration $Config -VMTemplates $Templates -Switches $Switches } | Should Throw $Exception
+            }
+        }
+        Context "Configuration passed with VM Data Disk where SourceVHD can't be found." {
+            It 'Throw VMDataDiskSourceVHDNotFoundError Exception' {
+                $Config = Get-LabConfiguration -Path $Global:TestConfigOKPath
+                $Config.labbuilderconfig.vms.vm.datavhds.datavhd[0].sourcevhd = 'ThisFileDoesntExist.vhdx'
+                [Array]$Switches = Get-LabSwitches -Configuration $Config
+                [array]$Templates = Get-LabVMTemplates -Configuration $Config
+                $ExceptionParameters = @{
+                    errorId = 'VMDataDiskSourceVHDNotFoundError'
+                    errorCategory = 'InvalidArgument'
+                    errorMessage = $($LocalizedData.VMDataDiskSourceVHDNotFoundError `
+                        -f $Config.labbuilderconfig.vms.vm.name,"ThisFileDoesntExist.vhdx")
+                }
+                $Exception = New-Exception @ExceptionParameters
+                { Get-LabVMs -Configuration $Config -VMTemplates $Templates -Switches $Switches } | Should Throw $Exception
+            }
+        }
+        Context "Configuration passed with VM Data Disk where it is a Differencing type disk but is shared." {
+            It 'Throw VMDataDiskSharedDifferencingError Exception' {
+                $Config = Get-LabConfiguration -Path $Global:TestConfigOKPath
+                $Config.labbuilderconfig.vms.vm.datavhds.datavhd[5].type = 'differencing'
+                [Array]$Switches = Get-LabSwitches -Configuration $Config
+                [array]$Templates = Get-LabVMTemplates -Configuration $Config
+                $ExceptionParameters = @{
+                    errorId = 'VMDataDiskSharedDifferencingError'
+                    errorCategory = 'InvalidArgument'
+                    errorMessage = $($LocalizedData.VMDataDiskSharedDifferencingError `
+                        -f $Config.labbuilderconfig.vms.vm.name,$Config.labbuilderconfig.vms.vm.datavhds.datavhd[5].vhd)
+                }
+                $Exception = New-Exception @ExceptionParameters
+                { Get-LabVMs -Configuration $Config -VMTemplates $Templates -Switches $Switches } | Should Throw $Exception
+            }
+        }
+        Context "Configuration passed with VM Data Disk where it has an unknown Type." {
+            It 'Throw VMDataDiskUnknownTypeError Exception' {
+                $Config = Get-LabConfiguration -Path $Global:TestConfigOKPath
+                $Config.labbuilderconfig.vms.vm.datavhds.datavhd[1].type = 'badtype'
+                [Array]$Switches = Get-LabSwitches -Configuration $Config
+                [array]$Templates = Get-LabVMTemplates -Configuration $Config
+                $ExceptionParameters = @{
+                    errorId = 'VMDataDiskUnknownTypeError'
+                    errorCategory = 'InvalidArgument'
+                    errorMessage = $($LocalizedData.VMDataDiskUnknownTypeError `
+                        -f $Config.labbuilderconfig.vms.vm.name,$Config.labbuilderconfig.vms.vm.datavhds.datavhd[1].vhd,'badtype')
+                }
+                $Exception = New-Exception @ExceptionParameters
+                { Get-LabVMs -Configuration $Config -VMTemplates $Templates -Switches $Switches } | Should Throw $Exception
+            }
+        }
+        Context "Configuration passed with VM Data Disk is not Shared but SupportPR is Y." {
+            It 'Throw VMDataDiskSupportPRError Exception' {
+                $Config = Get-LabConfiguration -Path $Global:TestConfigOKPath
+                $Config.labbuilderconfig.vms.vm.datavhds.datavhd[1].supportpr = 'Y'
+                [Array]$Switches = Get-LabSwitches -Configuration $Config
+                [array]$Templates = Get-LabVMTemplates -Configuration $Config
+                $ExceptionParameters = @{
+                    errorId = 'VMDataDiskSupportPRError'
+                    errorCategory = 'InvalidArgument'
+                    errorMessage = $($LocalizedData.VMDataDiskSupportPRError `
+                        -f $Config.labbuilderconfig.vms.vm.name,$Config.labbuilderconfig.vms.vm.datavhds.datavhd[1].vhd)
+                }
+                $Exception = New-Exception @ExceptionParameters
+                { Get-LabVMs -Configuration $Config -VMTemplates $Templates -Switches $Switches } | Should Throw $Exception
+            }
+        }        
+        Context "Configuration passed with VM Data Disk that does not exist but Type missing." {
+            It 'Throw VMDataDiskCantBeCreatedError Exception' {
+                $Config = Get-LabConfiguration -Path $Global:TestConfigOKPath
+                $Config.labbuilderconfig.vms.vm.datavhds.datavhd[1].RemoveAttribute('type')
+                [Array]$Switches = Get-LabSwitches -Configuration $Config
+                [array]$Templates = Get-LabVMTemplates -Configuration $Config
+                $ExceptionParameters = @{
+                    errorId = 'VMDataDiskCantBeCreatedError'
+                    errorCategory = 'InvalidArgument'
+                    errorMessage = $($LocalizedData.VMDataDiskCantBeCreatedError `
+                        -f $Config.labbuilderconfig.vms.vm.name,$Config.labbuilderconfig.vms.vm.datavhds.datavhd[1].vhd)
+                }
+                $Exception = New-Exception @ExceptionParameters
+                { Get-LabVMs -Configuration $Config -VMTemplates $Templates -Switches $Switches } | Should Throw $Exception
+            }
+        }
+        Context "Configuration passed with VM Data Disk that does not exist but Size missing." {
+            It 'Throw VMDataDiskCantBeCreatedError Exception' {
+                $Config = Get-LabConfiguration -Path $Global:TestConfigOKPath
+                $Config.labbuilderconfig.vms.vm.datavhds.datavhd[1].RemoveAttribute('size')
+                [Array]$Switches = Get-LabSwitches -Configuration $Config
+                [array]$Templates = Get-LabVMTemplates -Configuration $Config
+                $ExceptionParameters = @{
+                    errorId = 'VMDataDiskCantBeCreatedError'
+                    errorCategory = 'InvalidArgument'
+                    errorMessage = $($LocalizedData.VMDataDiskCantBeCreatedError `
+                        -f $Config.labbuilderconfig.vms.vm.name,$Config.labbuilderconfig.vms.vm.datavhds.datavhd[1].vhd)
+                }
+                $Exception = New-Exception @ExceptionParameters
+                { Get-LabVMs -Configuration $Config -VMTemplates $Templates -Switches $Switches } | Should Throw $Exception
+            }
+        }
+        Context "Configuration passed with VM Data Disk that does not exist but SourceVHD missing." {
+            It 'Throw VMDataDiskCantBeCreatedError Exception' {
+                $Config = Get-LabConfiguration -Path $Global:TestConfigOKPath
+                $Config.labbuilderconfig.vms.vm.datavhds.datavhd[0].RemoveAttribute('sourcevhd')
+                [Array]$Switches = Get-LabSwitches -Configuration $Config
+                [array]$Templates = Get-LabVMTemplates -Configuration $Config
+                $ExceptionParameters = @{
+                    errorId = 'VMDataDiskCantBeCreatedError'
+                    errorCategory = 'InvalidArgument'
+                    errorMessage = $($LocalizedData.VMDataDiskCantBeCreatedError `
+                        -f $Config.labbuilderconfig.vms.vm.name,$Config.labbuilderconfig.vms.vm.datavhds.datavhd[0].vhd)
+                }
+                $Exception = New-Exception @ExceptionParameters
+                { Get-LabVMs -Configuration $Config -VMTemplates $Templates -Switches $Switches } | Should Throw $Exception
+            }
+        }
+        Context "Configuration passed with VM Data Disk that has MoveSourceVHD flag but SourceVHD missing." {
+            It 'Throw VMDataDiskSourceVHDIfMoveError Exception' {
+                $Config = Get-LabConfiguration -Path $Global:TestConfigOKPath
+                $Config.labbuilderconfig.vms.vm.datavhds.datavhd[4].RemoveAttribute('sourcevhd')
+                [Array]$Switches = Get-LabSwitches -Configuration $Config
+                [array]$Templates = Get-LabVMTemplates -Configuration $Config
+                $ExceptionParameters = @{
+                    errorId = 'VMDataDiskSourceVHDIfMoveError'
+                    errorCategory = 'InvalidArgument'
+                    errorMessage = $($LocalizedData.VMDataDiskSourceVHDIfMoveError `
+                        -f $Config.labbuilderconfig.vms.vm.name,$Config.labbuilderconfig.vms.vm.datavhds.datavhd[4].vhd)
+                }
+                $Exception = New-Exception @ExceptionParameters
+                { Get-LabVMs -Configuration $Config -VMTemplates $Templates -Switches $Switches } | Should Throw $Exception
+            }
+        }
         Context "Configuration passed with VM unattend file that can't be found." {
             It 'Throw UnattendFileMissingError Exception' {
                 $Config = Get-LabConfiguration -Path $Global:TestConfigOKPath
