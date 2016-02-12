@@ -30,6 +30,7 @@ test_script:
         if ($res.FailedCount -gt 0) { 
             throw "$($res.FailedCount) tests failed."
         }
+        Get-ChildItem "$ENV:APPVEYOR_BUILD_FOLDER\LabBuilder\LabBuilder\Artifacts\*.*" | Foreach-Object { Push-AppveyorArtifact $_ }
     
 #---------------------------------# 
 #      deployment configuration   # 
@@ -48,12 +49,12 @@ deploy_script:
       $null = New-Item -Path $VersionFolder -Type directory
       
       # Populate Version Folder
-      $null = Copy-Item -Path (Join-Path -Path $buildFolder -ChildPath 'LaBuilder.psd1') -Destination $VersionFolder
-      $null = Copy-Item -Path (Join-Path -Path $buildFolder -ChildPath 'LaBuilder.psm1') -Destination $VersionFolder
-      $null = Copy-Item -Path (Join-Path -Path $buildFolder -ChildPath 'LICENSE') -Destination $VersionFolder
-      $null = Copy-Item -Path (Join-Path -Path $buildFolder -ChildPath 'README.MD') -Destination $VersionFolder
-      $null = Copy-Item -Path (Join-Path -Path $buildFolder -ChildPath 'Samples') -Destination $VersionFolder -Recurse
-      $null = Copy-Item -Path (Join-Path -Path $buildFolder -ChildPath 'DscLibrary') -Destination $VersionFolder -Recurse
+      $null = Copy-Item -Path (Join-Path -Path $buildFolder -ChildPath 'LabBuilder\LaBuilder.psd1') -Destination $VersionFolder
+      $null = Copy-Item -Path (Join-Path -Path $buildFolder -ChildPath 'LabBuilder\LaBuilder.psm1') -Destination $VersionFolder
+      $null = Copy-Item -Path (Join-Path -Path $buildFolder -ChildPath 'LabBuilder\LICENSE') -Destination $VersionFolder
+      $null = Copy-Item -Path (Join-Path -Path $buildFolder -ChildPath 'LabBuilder\README.MD') -Destination $VersionFolder
+      $null = Copy-Item -Path (Join-Path -Path $buildFolder -ChildPath 'LabBuilder\Samples') -Destination $VersionFolder -Recurse
+      $null = Copy-Item -Path (Join-Path -Path $buildFolder -ChildPath 'LabBuilder\DscLibrary') -Destination $VersionFolder -Recurse
 
       # Set version number
       $manifest = Join-Path -Path $VersionFolder -ChildPath "LabBuilder.psd1"
@@ -92,3 +93,4 @@ deploy_script:
       
       # Remove Staging Folder
       $null = Remove-Item -Path $StagingFolder -Recurse -Force
+
