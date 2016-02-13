@@ -347,14 +347,14 @@ function Get-LabConfiguration {
     # Figure out the Config path and load it into the XML object (if we can)
     # This path is used to find any additional configuration files that might
     # be provided with config
-    [String] $ConfigPath = [System.IO.Path]::GetDirectoryName($Path)
+    [String] $ConfigPath = (Get-Location).Path
     [String] $XMLConfigPath = $Configuration.labbuilderconfig.settings.configpath
     if ($XMLConfigPath) {
         if ($XMLConfigPath.Substring(0,1) -eq '.')
         {
             # A relative path was provided in the config path so add the actual path of the
             # XML to it
-            [String] $FullConfigPath = Join-Path -Path $ConfigPath -ChildPath $XMLConfigPath
+            [String] $FullConfigPath = Join-Path -Path $ConfigPath -ChildPath $XMLConfigPath.Substring(2,($XMLConfigPath.Length - 2))
         } # If
     }
     Else
@@ -798,8 +798,8 @@ function Download-LabResources {
     # Downloading Lab Resources
     Write-Verbose -Message $($LocalizedData.DownloadingLabResourcesMessage)
 
-    # Bootstrap Nuget
-    $null = Get-PackageProvider -Name NuGet -ForceBootstrap -Force
+    # Bootstrap Nuget # This needs to be a test, not a force 
+    # $null = Get-PackageProvider -Name NuGet -ForceBootstrap -Force
     
     # Make sure PSGallery is trusted
     Set-PSRepository -Name PSGallery -InstallationPolicy Trusted    
@@ -1331,7 +1331,7 @@ function Get-LabVMTemplates {
                     $VMTemplate.SourceVHD = $Template.SourceVHD
                 }
                 $VMTemplate.InstallISO = $Template.InstallISO
-                $VMTemplate.Edition = $Template.Edtion
+                $VMTemplate.Edition = $Template.Edition
                 $VMTemplate.AllowCreate = $Template.AllowCreate
                 # Write any template specific default VM attributes
                 if ($MemoryStartupBytes)
@@ -1438,6 +1438,120 @@ function Get-LabVMTemplates {
     Return $VMTemplates
 } # Get-LabVMTemplates
 ####################################################################################################
+####################################################################################################
+<#
+.SYNOPSIS
+   Gets an Array of TemplateDisks for a Lab configuration.
+.DESCRIPTION
+   Takes a provided Lab Configuration file and returns the list of Template Disks
+   that will be used to create the Virtual Machines in this lab. This list is usually passed to
+   Initialize-LabVMTemplateDisks.
+.PARAMETER Configuration
+   Contains the Lab Builder configuration object that was loaded by the Get-LabConfiguration object.
+.EXAMPLE
+   $VMTemplateDisks = Get-LabVMTemplateDisks -Config c:\mylab\config.xml 
+   Loads a Lab Builder configuration and pulls the array of TemplateDisks from it.
+.OUTPUTS
+   Returns an array of TemplateDisks.
+#>
+function Get-LabVMTemplateDisks {
+    [OutputType([System.Collections.Hashtable[]])]
+    [CmdLetBinding()]
+    param
+    (
+        [Parameter(
+            Mandatory,
+            Position=0)]
+        [ValidateNotNullOrEmpty()]
+        [XML] $Config
+    )
+
+    [System.Collections.Hashtable[]] $VMTemplateDisks = @()
+    [String] $VHDParentPath = $Config.labbuilderconfig.SelectNodes('settings').vhdparentpath
+   
+	Write-Verbose "VHD parent path = $VHDParentPath" 
+   
+    # Read the list of templateDisks from the configuration file
+    $TemplateDisks = $Config.labbuilderconfig.SelectNodes('TemplateDisks').TemplateDisk
+    foreach ($TemplateDisk in $TemplateDisks)
+    {
+        # It can't be template because if the name attrib/node is missing the name property on
+        # the XML object defaults to the name of the parent. So we can't easily tell if no name
+        # was specified or if they actually specified 'template' as the name.
+        if ($TemplateDisk.Name -eq 'TemplateDisk')
+        {
+            $ExceptionParameters = @{
+                errorId = 'EmptyTemplateNameError'
+                errorCategory = 'InvalidArgument'
+                errorMessage = $($LocalizedData.EmptyTemplateNameError)
+            }
+            New-LabException @ExceptionParameters
+        } # If
+        
+        # Get the Template Disk Name
+        [String] $DiskName = ""
+        if ($TemplateDisk.name)
+        {
+            $DiskName = $TemplateDisk.Name
+        } # if
+        
+		Write-Verbose "Template disk name = $DiskName"
+
+        # Get the Template OS Type 
+        [String] $isNano = 'False'
+        if ($TemplateDisk.isNano)
+        {
+            $isNano = $TemplateDisk.isNano
+        } # If
+        
+		# Get the Template Wim Image to use 
+        [String] $WimImage = ""
+        if ($TemplateDisk.WimImage)
+        {
+            $WimImage = $TemplateDisk.WimImage
+        } # If
+
+        # Get the Template VHD Type 
+        [String] $VHDFormat = "VHDX"
+        if ($TemplateDisk.VHDFormat)
+        {
+            $VHDFormat = $TemplateDisk.VHDFormat
+        } # If
+
+        # Get the Template VM Generation 
+        [int] $Generation = "2"
+        if ($TemplateDisk.Generation)
+        {
+            $Generation = $TemplateDisk.Generation
+        } # If
+
+        # Get the Template Packages for Nano 
+        [String] $Packages = ""
+        if ($TemplateDisk.packages)
+        {
+            $Packages = $TemplateDisk.Packages
+        } # If
+
+		#Create the List
+            $VMTemplateDisks += @{
+                name = $DiskName;
+                isNano = $isNano;
+                WimImage = $WimImage;
+                Generation = $Generation;
+				VHDFormat = $VHDFormat;
+                Packages = if ($Packages)
+                    {
+                        $Packages
+                    }
+                    else
+                    {
+                        $null
+                    };
+            }
+     } # Foreach
+    Return $VMTemplateDisks
+} # Get-LabVMTemplateDisks
+####################################################################################################
 
 ####################################################################################################
 <#
@@ -1484,16 +1598,19 @@ function Initialize-LabVMTemplates {
         {
             # The template VHD isn't in the VHD Parent folder - so copy it there after optimizing it
             if (-not (Test-Path $VMTemplate.sourcevhd))
-            {
+            {  
+				$VMTemplateDisks = Get-LabVMTemplateDisks -Config $Configuration
+				Initialize-TemplateVHD -Config $Configuration  -VMTemplateDisks $VMTemplateDisks
+
                 # The source VHD does not exist - so try and create it from the ISO
                 # This feature is not yet supported so will throw an error
-                $ExceptionParameters = @{
-                    errorId = 'TemplateSourceVHDNotFoundError'
-                    errorCategory = 'InvalidArgument'
-                    errorMessage = $($LocalizedData.TemplateSourceVHDNotFoundError `
-                        -f $VMTemplate.name,$VMTemplate.sourcevhd)
-                }
-                New-LabException @ExceptionParameters
+                #$ExceptionParameters = @{
+                #    errorId = 'TemplateSourceVHDNotFoundError'
+                #    errorCategory = 'InvalidArgument'
+                #    errorMessage = $($LocalizedData.TemplateSourceVHDNotFoundError `
+                #        -f $VMTemplate.name,$VMTemplate.sourcevhd)
+                #}
+                #New-LabException @ExceptionParameters
             }
             Write-Verbose -Message $($LocalizedData.CopyingTemplateSourceVHDMessage `
                 -f $VMTemplate.sourcevhd,$VMTemplate.templatevhd)
@@ -1820,6 +1937,8 @@ function Set-LabVMDSCMOFFile {
 
     [String] $DSCConfigName = $VM.DSCConfigName
     
+	Write-Verbose "DSC Config name = $DSCConfigname"
+
     # Generate the Configuration Nodes data that always gets passed to the DSC configuration.
     [String] $ConfigurationData = @"
 @{
@@ -2376,10 +2495,10 @@ function Get-LabUnattendFile {
         </component>
         <component name="Microsoft-Windows-Shell-Setup" processorArchitecture="amd64" publicKeyToken="31bf3856ad364e35" language="neutral" versionScope="nonSxS" xmlns:wcm="http://schemas.microsoft.com/WMIConfig/2002/State" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
             <ComputerName>$($VM.ComputerName)</ComputerName>
-            <ProductKey>$($VM.ProductKey)</ProductKey>
-        </component>
-
+		</component>
 "@
+		
+
         if ($VM.OSType -eq 'Client')
         {
             $UnattendContent += @"
@@ -2470,7 +2589,7 @@ function Get-LabNetworkingDSCFile {
     )
     [String] $NetworkingDSCConfig = @"
 Configuration Networking {
-    Import-DscResource -ModuleName xNetworking
+    Import-DscResource -ModuleName xNetworking -ModuleVersion 2.7.0.0  #Current as of 13-Feb-2016
 
 "@
     [Int] $AdapterCount = 0
@@ -2732,10 +2851,6 @@ function Set-LabVMInitializationFiles {
     [String] $GetCertPs = Get-LabGetCertificatePs -Configuration $Configuration -VM $VM
     [String] $SetupCompleteCmd = ''
     [String] $SetupCompletePs = @"
-Add-Content ``
-    -Path "C:\WINDOWS\Setup\Scripts\SetupComplete.log" ``
-    -Value 'SetupComplete.ps1 Script Started...' ``
-    -Encoding Ascii
 $GetCertPs
 Add-Content ``
     -Path `"`$(`$ENV:SystemRoot)\Setup\Scripts\SetupComplete.log`" ``
@@ -2772,11 +2887,12 @@ Add-Content ``
 
     # Write out the CMD Setup Complete File
     $SetupCompleteCmd = @"
-@echo SetupComplete.cmd Script Started... >> %SYSTEMROOT%\Setup\Scripts\SetupComplete.log
+@echo SetupComplete.cmd Script Started... >> %SYSTEMROOT%\Setup\Scripts\SetupComplete.log`r
 $SetupCompleteCmd
-powerShell.exe -ExecutionPolicy Unrestricted -Command `"%SYSTEMROOT%\Setup\Scripts\SetupComplete.ps1`"
-@echo SetupComplete.cmd Script Finished... >> %SYSTEMROOT%\Setup\Scripts\SetupComplete.log
-@echo Initial Setup Completed - this file indicates that setup has completed. >> %SYSTEMROOT%\Setup\Scripts\InitialSetupCompleted.txt
+Timeout 30 `r
+powerShell.exe -ExecutionPolicy Unrestricted -Command `"%SYSTEMROOT%\Setup\Scripts\SetupComplete.ps1`" `r
+@echo SetupComplete.cmd Script Finished... >> %SYSTEMROOT%\Setup\Scripts\SetupComplete.log`r
+@echo Initial Setup Completed - this file indicates that setup has completed. >> %SYSTEMROOT%\Setup\Scripts\InitialSetupCompleted.txt`r
 "@
     $null = Set-Content `
         -Path (Join-Path -Path $VMLabBuilderFiles -ChildPath 'SetupComplete.cmd') `
@@ -2896,6 +3012,7 @@ function Initialize-LabVMImage {
     # Apply an unattended setup file
     Write-Verbose -Message $($LocalizedData.ApplyingVMBootDiskFileMessage `
         -f $VM.Name,'Unattend','Unattend.xml')
+		New-Item -Path "$MountPoint\Windows\Panther" -ItemType Directory -Force -InformationAction SilentlyContinue
     $null = Copy-Item `
         -Path (Join-Path -Path $VMLabBuilderFiles -ChildPath 'Unattend.xml') `
         -Destination "$MountPoint\Windows\Panther\Unattend.xml" `
@@ -4762,6 +4879,196 @@ Function Uninstall-Lab {
 } # Uninstall-Lab
 ####################################################################################################
 
+
+##########################################################################################
+#   Create Directories for Labs
+##########################################################################################
+<#.Synopsis
+<!<SnippetShortDescription>!>
+.DESCRIPTION
+<!<SnippetLongDescription>!>
+.EXAMPLE
+<!<SnippetExample>!>
+.EXAMPLE
+<!<SnippetAnotherExample>!>
+#>
+function Initialize-TemplateVHD
+{
+   param (
+        [Parameter(
+            Mandatory,
+            Position=0)]
+        [XML] $Config,
+
+        [Parameter(
+            Mandatory,
+            Position=1)]
+	   [System.Collections.Hashtable[]] $VMTemplateDisks
+    )
+
+
+	$ScriptDir = $Config.labbuilderconfig.settings.FullConfigPath
+	$TemplateDiskPath = $Config.labbuilderconfig.settings.TemplateDiskPath
+	$ServerISO = $Config.labbuilderconfig.settings.TemplateISO
+
+	[String]$WorkFolder = Join-Path -Path $ScriptDir -ChildPath 'WinImage'
+	[String]$DismFolder = Join-Path -Path $ScriptDir -ChildPath 'DISM'
+	[String]$MountFolder = Join-Path -Path $ScriptDir -ChildPath 'Mount'
+
+	Write-Verbose "Script Directory = $ScriptDir"
+	Write-Verbose "Template disk path = $TemplateDiskpath"
+	Write-Verbose "ISO to use = $ServerISO"
+
+
+	##########################################################################################
+	#   Create Parent VHDX files for VMs
+	##########################################################################################
+	# Mount the Windows Server 2016 ISO and get the drive letter
+
+
+	Write-Verbose -Message 'Mounting Server ISO'
+	$null = Mount-DiskImage -ImagePath $ServerISO
+	[String]$DriveLetter = (Get-Diskimage -ImagePath $ServerISO | Get-Volume).DriveLetter
+	$ISODrive = "$([string]$DriveLetter):"
+
+	Write-Verbose "CD Drive is $ISODrive"
+
+	Write-Verbose 'Copying DISM from Server ISO to Working Folders'
+	If (-not (Test-Path -Path $DismFolder -PathType Container)) 
+		{
+		$null = New-Item -Path $DismFolder -ItemType Directory
+		} #EndIf
+	$null = Copy-Item -Path "$ISODrive\Sources\api*downlevel*.dll" -Destination $DismFolder -Force
+	$null = Copy-Item -Path "$ISODrive\Sources\*dism*" -Destination $DismFolder -Force
+	$null = Copy-Item -Path "$ISODrive\Sources\*provider*" -Destination $DismFolder -Force
+	
+	Start-Sleep 5
+
+	 # As of 2015-06-16 Convert-WindowsImage contains a function instead of being a standalone script.
+	 # . source the Convert-WindowsImage.ps1 so it can be called
+	. "$ScriptDir\Convert-WindowsImage.ps1"
+	$TemplatePrefix  = $Config.labbuilderconfig.TemplateDisks.Prefix
+
+	Write-Verbose "Prefix to use $TemplatePrefix"
+
+	# Create working folder
+	Write-Verbose -Message 'Creating Working Folders'
+	If (-not (Test-Path -Path $WorkFolder -PathType Container)) 
+		{
+		$null = New-Item -Path $WorkFolder -ItemType Directory
+		} #EndIf
+
+	foreach ($VMTemplateDisk in $VMTemplateDisks)
+		{
+			$VMTemplateDiskName = "$TemplatePrefix" + [string]$VMTemplateDisk.Name
+			Write-Verbose "Disk to be created = $VMTemplateDiskName"
+
+			$PathtoDisk = $TemplateDiskpath + "\" + $VMTemplateDiskName
+
+			if (!(Test-Path $PathtoDisk ))
+			{ 
+				[String]$VHDFormat = $VMTemplateDisk.VHDFormat
+				If ($VHDFormat -eq $null) {$VHDFormat = 'VHDX'}
+
+				Write-Verbose "VHD Format is $VHDFormat"
+
+				$WimpathTestVariable = [string]$VMTemplateDisk.isNano
+
+				Write-Verbose "Current Nano Setting is $WimpathTestVariable"
+
+				If ($VMTemplateDisk.isNano -eq $null){$WimPath = 'Sources\Install.WIM'}
+				Else {
+					switch ($VMTemplateDisk.isNano)
+						{
+							'False' {[String]$WimPath = 'Sources\Install.WIM'}
+							'True' {[String]$WimPath = 'NanoServer\NanoServer.wim'}
+						}
+				} #End Else	
+
+				Write-Verbose "WimPath = $Wimpath"
+		
+				If ($VMTemplateDisk.Generation -eq $Null) {$VhdPartitionStyle = 'UEFI'}
+				Else {
+				switch ($VMTemplateDisk.Generation)
+					{
+						'1' {[String]$VHDPartitionStyle = 'BIOS'}
+						'2' {[String]$VHDPartitionStyle = 'UEFI'}
+					}
+				} #End Else
+
+				Write-Verbose "VHDPartition Style = $VhdPartitionStyle"
+				
+				$Edition = $VMTemplateDisk.WimImage
+				
+				Write-Verbose "Image to use = $Edition"
+
+				$Sourcepath = "$([string]$DriveLetter):\" + $WimPath
+				Write-Verbose "Source path for convert-windowsimage is $Sourcepath"
+
+				$VHDpath = "$([string]$TemplateDiskPath)\" + $VMTemplateDiskName
+
+				Convert-WindowsImage `
+					-Sourcepath $Sourcepath `
+					-VHDpath $VHDpath `
+					–VHDFormat $VHDFormat `
+					-Edition $Edition `
+					-DiskLayout $VHDPartitionStyle 
+					      
+
+				if ($VMTemplateDisk.IsNano -eq 'True')
+				{
+					$Packages = $TemplateDisk.Packages
+
+					# Mount the VHD to load packages into it
+					& "$DismFolder\Dism.exe" '/Mount-Image' "/ImageFile:$TemplateDiskName" '/Index:1' "/MountDir:$MountFolder"
+
+					$PackageList = @(
+						@{ Name = 'Compute'; Filename = 'Microsoft-NanoServer-Compute-Package.cab' },
+						@{ Name = 'OEM-Drivers'; Filename = 'Microsoft-NanoServer-OEM-Drivers-Package.cab' },
+						@{ Name = 'Storage'; Filename = 'Microsoft-NanoServer-Storage-Package.cab' },
+						@{ Name = 'FailoverCluster'; Filename = 'Microsoft-NanoServer-FailoverCluster-Package.cab' },
+						@{ Name = 'ReverseForwarders'; Filename = 'Microsoft-OneCore-ReverseForwarders-Package.cab' },
+						@{ Name = 'Guest'; Filename = 'Microsoft-NanoServer-Guest-Package.cab' },
+						@{ Name = 'Containers'; Filename = 'Microsoft-NanoServer-Containers-Package.cab' },
+						@{ Name = 'Defender'; Filename = 'Microsoft-NanoServer-Defender-Package.cab' },
+						@{ Name = 'DCB'; Filename = 'Microsoft-NanoServer-DCB-Package.cab' },
+						@{ Name = 'DNS'; Filename = 'Microsoft-NanoServer-DNS-Package.cab' },
+						@{ Name = 'DSC'; Filename = 'Microsoft-NanoServer-DSC-Package.cab' },
+						@{ Name = 'IIS'; Filename = 'Microsoft-NanoServer-IIS-Package.cab' },
+						@{ Name = 'NPDS'; Filename = 'Microsoft-NanoServer-NPDS-Package.cab' },
+						@{ Name = 'SCVMM'; Filename = 'Microsoft-Windows-Server-SCVMM-Package.cab' },
+						@{ Name = 'SCVMM-Compute'; Filename = 'Microsoft-Windows-Server-SCVMM-Compute-Package.cab' }
+					)
+
+					# Add the selected packages
+					foreach ($Package in $PackageList) {
+						If ($Package.Name -in $Packages) {
+							Write-Verbose -Message "Adding Package $($Package.Filename) to Image"
+							& "$DismFolder\Dism.exe" '/Add-Package' "/PackagePath:$($DriveLetter):\NanoServer\packages\$($Package.Filename)" "/Image:$MountFolder"
+							& "$DismFolder\Dism.exe" '/Add-Package' "/PackagePath:$($DriveLetter):\NanoServer\packages\en-us\$($Package.Filename)" "/Image:$MountFolder"
+						}
+					}
+
+
+				} #EndIf
+			}
+			Else 
+			{
+				Write-Host -ForegroundColor Cyan "Template Disk $VMTemplateDisk Already Exists"
+		       
+			} #End Else
+			
+		} #EndFor
+
+
+	# Dismount the ISO File
+	Write-Verbose -Message 'Dismounting Server ISO'
+	Dismount-DiskImage -ImagePath $ServerISO
+       
+} # Initialize-TemplateVHD
+
+
+
 ####################################################################################################
 # DSC Config Files
 ####################################################################################################
@@ -4776,8 +5083,8 @@ Configuration ConfigLCM {
             RefreshMode = 'Push'
             ConfigurationMode = 'ApplyAndAutoCorrect'
             CertificateId = $Thumbprint
-            ConfigurationModeFrequencyMins = 15
-            RefreshFrequencyMins = 30
+            ConfigurationModeFrequencyMins = 5
+            RefreshFrequencyMins = 10
             RebootNodeIfNeeded = $True
             ActionAfterReboot = 'ContinueConfiguration'
         } 
