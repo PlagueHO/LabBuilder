@@ -1954,6 +1954,40 @@ InModuleScope LabBuilder {
 
 
 
+    Describe 'Update-LabVMDataDisk' -Tags 'InProcess' {
+        #region Mocks
+        Mock Resize-VHD
+        Mock Move-Item
+        Mock Copy-Item
+        Mock New-VHD
+        Mock Get-VMHardDiskDrive
+        Mock Add-VMHardDiskDrive
+        #endregion
+
+        # The same VM will be used for all tests, but a different
+        # DataVHds array will be created/assigned for each test.
+        $Config = Get-LabConfiguration -Path $Global:TestConfigOKPath
+        [Array]$Templates = Get-LabVMTemplates -Configuration $Config
+        [Array]$Switches = Get-LabSwitches -Configuration $Config
+        [Array]$VMs = Get-LabVMs -Configuration $Config -VMTemplates $Templates -Switches $Switches
+        $VMs[0].DataVHDs = @()
+        Context 'Valid configuration is passed with no DataVHDs' {
+            It 'Does not throw an Exception' {
+                { Update-LabVMDataDisk -Configuration $Config -VM $VMs[0] } | Should Not Throw 
+            }
+            It 'Calls Mocked commands' {
+                Assert-MockCalled Resize-VHD -Exactly 0
+                Assert-MockCalled Move-Item -Exactly 0
+                Assert-MockCalled Copy-Item -Exactly 0
+                Assert-MockCalled New-VHD -Exactly 0
+                Assert-MockCalled Get-VMHardDiskDrive -Exactly 0
+                Assert-MockCalled Add-VMHardDiskDrive -Exactly 0
+            }
+        }
+    }
+
+
+
     Describe 'Initialize-LabVMs'  -Tags 'Incomplete' {
         #region Mocks
         Mock New-VHD

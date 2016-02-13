@@ -58,6 +58,7 @@ VMDataDiskUnknownTypeError=Unknown Data Disk type '{2}' specified in VM '{0}' fo
 VMDataDiskSupportPRError=The SupportPR flag is not supported for non-shared Data Disk VHD '{1}' specified in VM '{0}'.
 VMDataDiskSharedDifferencingError=The Differencing Data Disk VHD '{1}' specified in VM '{0}' is can not be set as Shared VHD.
 VMDataDiskSourceVHDIfMoveError=The Data Disk VHD '{1}' specified in VM '{0}' must have a Source VHD specified if MoveSourceVHD is set.
+VMDataDiskVHDConvertError=The Data Disk '{1}' in VM '{0}' cannot be converted to a {2} type.
 VMDataDiskVHDShrinkError=The Data Disk '{1}' in VM '{0}' cannot be shrunk to {2}.
 InstallingHyperVComponentsMesage=Installing {0} Hyper-V Components.
 InitializingHyperVComponentsMesage=Initializing Hyper-V Components.
@@ -1328,14 +1329,7 @@ function Get-LabVMTemplates {
         {
             $MemoryStartupBytes = (Invoke-Expression $Template.MemoryStartupBytes)
         } # if
-        
-        # Get the Template Default Data VHD Size
-        [Int64] $DataVHDSize = 0
-        if ($Template.DataVHDSize)
-        {
-            $DataVHDSize = (Invoke-Expression $Template.DataVHDSize)
-        } # If
-        
+                
         # Does the template already exist in the list?
         [Boolean] $Found = $False
         foreach ($VMTemplate in $VMTemplates)
@@ -4210,6 +4204,12 @@ function Update-LabVMDataDisk {
         $VM
     )
 
+    # If there are no data VHDs just return
+    if (! $VM.DataVHDs)
+    {
+        return
+    }
+
     # Get the root path of the VM
     [String] $VMRootPath = Get-LabVMRootPath `
         -Configuration $Configuration `
@@ -4220,7 +4220,7 @@ function Update-LabVMDataDisk {
         -Path $VMRootPath `
         -ChildPath 'Virtual Hard Disks'
 
-    foreach ($DataVhd -in $VM.DataVHDs)
+    foreach ($DataVhd in @($VM.DataVHDs))
     {
         $Vhd = $DataVhd.Vhd
         if (Test-Path -Path $Vhd)
@@ -4229,7 +4229,47 @@ function Update-LabVMDataDisk {
                 -f $VM.Name,$Vhd,'Data')
                 
             # Check the parameters of the VHD match
+            $ExistingVhd = Get-VM -Path $Vhd
+
+            # Check the VHD Type
+            if (($DataVhd.type) -and ($ExistingVhd.VhdType -ne $DataVhd.type))
+            {
+                # The type of disk can't be changed.
+                $ExceptionParameters = @{
+                    errorId = 'VMDataDiskVHDConvertError'
+                    errorCategory = 'InvalidArgument'
+                    errorMessage = $($LocalizedData.VMDataDiskVHDConvertError `
+                        -f $VM.name,$Vhd,$DataVhd.type)
+                }
+                New-LabException @ExceptionParameters                
+            }
             
+            # Check the size
+            if ($DataVhd.Size)
+            {
+                if ($ExistingVhd.Size -lt $DataVhd.Size)
+                {
+                    # Expand the disk
+                    Write-Verbose -Message $($LocalizedData.ExpandingVMDiskMessage `
+                        -f $VM.Name,$Vhd,'Data',$DataVhd.Size)
+
+                    $null = Resize-VHD `
+                        -Path $Vhd `
+                        -SizeBytes $DataVhd.Size
+                }
+                elseif ($ExistingVhd.Size -gt $DataVhd.Size)
+                {
+                    # The disk size can't be reduced.
+                    # This could be revisited later.
+                    $ExceptionParameters = @{
+                        errorId = 'VMDataDiskVHDShrinkError'
+                        errorCategory = 'InvalidArgument'
+                        errorMessage = $($LocalizedData.VMDataDiskVHDShrinkError `
+                            -f $VM.name,$Vhd,$DataVhd.Size)
+                    }
+                    New-LabException @ExceptionParameters
+                } # if
+            } # if
         }
         else
         {
@@ -4238,7 +4278,7 @@ function Update-LabVMDataDisk {
             if ($SourceVhd)
             {
                 # A source VHD was specified to create the new VHD using
-                if (! Test-Path -Path $SourceVhd)
+                if (! (Test-Path -Path $SourceVhd))
                 {
                     $ExceptionParameters = @{
                         errorId = 'VMDataDiskSourceVHDNotFoundError'
@@ -4247,14 +4287,14 @@ function Update-LabVMDataDisk {
                             -f $VM.name,$SourceVhd)
                     }
                     New-LabException @ExceptionParameters                    
-                }
+                } # if
                 # Should the Source VHD be copied or moved
                 if ($DataVhd.MoveSourceVHD)
                 {
                     Write-Verbose -Message $($LocalizedData.CreatingVMDiskByMovingSourceVHDMessage `
                         -f $VM.Name,$Vhd,$SourceVhd)
 
-                    Move-Item `
+                    $null = Move-Item `
                         -Path $SourceVhd `
                         -DestinationPath $VHDPath `
                         -Force `
@@ -4265,7 +4305,7 @@ function Update-LabVMDataDisk {
                     Write-Verbose -Message $($LocalizedData.CreatingVMDiskByCopyingSourceVHDMessage `
                         -f $VM.Name,$Vhd,$SourceVhd)
 
-                    Copy-Item `
+                    $null = Copy-Item `
                         -Path $SourceVhd `
                         -DestinationPath $VHDPath `
                         -Force `
@@ -4402,23 +4442,33 @@ function Initialize-LabVMPath {
 
     if (-not (Test-Path -Path $VMPath))
     {
-        $Null = New-Item -Path $VMPath -ItemType Directory
+        $Null = New-Item `
+            -Path $VMPath `
+            -ItemType Directory
     }
     if (-not (Test-Path -Path "$VMPath\Virtual Machines"))
     {
-        $Null = New-Item -Path "$VMPath\Virtual Machines" -ItemType Directory
+        $Null = New-Item `
+            -Path "$VMPath\Virtual Machines" `
+            -ItemType Directory
     }
     if (-not (Test-Path -Path "$VMPath\Virtual Hard Disks"))
     {
-        $Null = New-Item -Path "$VMPath\Virtual Hard Disks" -ItemType Directory
+        $Null = New-Item `
+            -Path "$VMPath\Virtual Hard Disks" `
+            -ItemType Directory
     }
     if (-not (Test-Path -Path "$VMPath\LabBuilder Files"))
     {
-        $Null = New-Item -Path "$VMPath\LabBuilder Files" -ItemType Directory
+        $Null = New-Item `
+            -Path "$VMPath\LabBuilder Files" `
+            -ItemType Directory
     }
     if (-not (Test-Path -Path "$VMPath\LabBuilder Files\DSC Modules"))
     {
-        $Null = New-Item -Path "$VMPath\LabBuilder Files\DSC Modules" -ItemType Directory
+        $Null = New-Item `
+            -Path "$VMPath\LabBuilder Files\DSC Modules" `
+            -ItemType Directory
     }
 }
 ####################################################################################################
