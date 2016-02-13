@@ -4229,7 +4229,7 @@ function Update-LabVMDataDisk {
                 -f $VM.Name,$Vhd,'Data')
                 
             # Check the parameters of the VHD match
-            $ExistingVhd = Get-VM -Path $Vhd
+            $ExistingVhd = Get-VHD -Path $Vhd
 
             # Check the VHD Type
             if (($DataVhd.type) -and ($ExistingVhd.VhdType -ne $DataVhd.type))

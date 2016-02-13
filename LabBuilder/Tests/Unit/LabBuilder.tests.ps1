@@ -1956,6 +1956,7 @@ InModuleScope LabBuilder {
 
     Describe 'Update-LabVMDataDisk' -Tags 'InProcess' {
         #region Mocks
+        Mock Get-VHD
         Mock Resize-VHD
         Mock Move-Item
         Mock Copy-Item
@@ -1970,10 +1971,72 @@ InModuleScope LabBuilder {
         [Array]$Templates = Get-LabVMTemplates -Configuration $Config
         [Array]$Switches = Get-LabSwitches -Configuration $Config
         [Array]$VMs = Get-LabVMs -Configuration $Config -VMTemplates $Templates -Switches $Switches
-        $VMs[0].DataVHDs = @()
+
         Context 'Valid configuration is passed with no DataVHDs' {
+            $VMs[0].DataVHDs = @()
             It 'Does not throw an Exception' {
                 { Update-LabVMDataDisk -Configuration $Config -VM $VMs[0] } | Should Not Throw 
+            }
+            It 'Calls Mocked commands' {
+                Assert-MockCalled Resize-VHD -Exactly 0
+                Assert-MockCalled Move-Item -Exactly 0
+                Assert-MockCalled Copy-Item -Exactly 0
+                Assert-MockCalled New-VHD -Exactly 0
+                Assert-MockCalled Get-VMHardDiskDrive -Exactly 0
+                Assert-MockCalled Add-VMHardDiskDrive -Exactly 0
+            }
+        }
+        Context 'Valid configuration is passed with a DataVHD that exists but has different type' {
+            $VMs[0].DataVHDs = @( @{
+                Vhd = 'TestVHD.vhdx'
+                Type = 'Fixed'
+                Size = 10GB
+                
+            } )
+            Mock Test-Path -MockWith { $True }
+            Mock Get-VHD -MockWith { @{
+                VhdType =  'Dynamic'
+            } }
+            It 'Throws VMDataDiskVHDConvertError Exception' {
+                $ExceptionParameters = @{
+                    errorId = 'VMDataDiskVHDConvertError'
+                    errorCategory = 'InvalidArgument'
+                    errorMessage = $($LocalizedData.VMDataDiskVHDConvertError `
+                        -f $VMs[0].Name,$VMs[0].DataVHDs.Vhd,$VMs[0].DataVHDs.Type)
+                }
+                $Exception = New-Exception @ExceptionParameters
+                { Update-LabVMDataDisk -Configuration $Config -VM $VMs[0] } | Should Throw 
+            }
+            It 'Calls Mocked commands' {
+                Assert-MockCalled Resize-VHD -Exactly 0
+                Assert-MockCalled Move-Item -Exactly 0
+                Assert-MockCalled Copy-Item -Exactly 0
+                Assert-MockCalled New-VHD -Exactly 0
+                Assert-MockCalled Get-VMHardDiskDrive -Exactly 0
+                Assert-MockCalled Add-VMHardDiskDrive -Exactly 0
+            }
+        }
+        Context 'Valid configuration is passed with a DataVHD that exists but has smaller size' {
+            $VMs[0].DataVHDs = @( @{
+                Vhd = 'TestVHD.vhdx'
+                Type = 'Fixed'
+                Size = 10GB
+                
+            } )
+            Mock Test-Path -MockWith { $True }
+            Mock Get-VHD -MockWith { @{
+                VhdType =  'Fixed'
+                Size = 20GB
+            } }
+            It 'Throws VMDataDiskVHDShrinkError Exception' {
+                $ExceptionParameters = @{
+                    errorId = 'VMDataDiskVHDShrinkError'
+                    errorCategory = 'InvalidArgument'
+                    errorMessage = $($LocalizedData.VMDataDiskVHDShrinkError `
+                        -f $VMs[0].Name,$VMs[0].DataVHDs.Vhd,$VMs[0].DataVHDs.Size)
+                }
+                $Exception = New-Exception @ExceptionParameters
+                { Update-LabVMDataDisk -Configuration $Config -VM $VMs[0] } | Should Throw 
             }
             It 'Calls Mocked commands' {
                 Assert-MockCalled Resize-VHD -Exactly 0
