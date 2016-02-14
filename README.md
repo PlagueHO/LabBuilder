@@ -47,6 +47,8 @@ Versions
 * IP Address of VMs automatically added to WS-Man Trusted Hosts to enable HTTP remoting connection.
 * Prevent error if Panther folder doesn't exist in VHD image when creating a new VM.
 * Add support for multiple data disks for each VM.
+* Add support for creating new data disks by cloning exising VHDs.
+* Support for Fixed, Differencing and Shared data disks.
 
 ### 0.2.0.0
 * Code cleanup and refactoring.
