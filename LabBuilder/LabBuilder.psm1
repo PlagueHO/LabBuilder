@@ -4398,7 +4398,7 @@ function Update-LabVMDataDisk {
                             errorId = 'VMDataDiskUnknownTypeError'
                             errorCategory = 'InvalidArgument'
                             errorMessage = $($LocalizedData.VMDataDiskUnknownTypeError `
-                                -f $VM.Name,$Vhd,$Type)
+                                -f $VM.Name,$Vhd,$DataVhd.type)
                         }
                         New-LabException @ExceptionParameters                        
                     } # default

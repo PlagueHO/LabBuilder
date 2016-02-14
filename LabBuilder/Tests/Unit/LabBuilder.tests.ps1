@@ -2264,6 +2264,32 @@ InModuleScope LabBuilder {
                 Assert-MockCalled Add-VMHardDiskDrive -Exactly 1
             }
         }
+        Context 'Valid configuration is passed with a DataVHD that does not exist and an unknown Type' {
+            $VMs[0].DataVHDs = @( @{
+                Vhd = 'DoesNotExist.vhdx'
+                Type = 'Unknown'
+                Size = 10GB
+            } )
+            It 'Throws VMDataDiskUnknownTypeError Exception' {
+                $ExceptionParameters = @{
+                    errorId = 'VMDataDiskUnknownTypeError'
+                    errorCategory = 'InvalidArgument'
+                    errorMessage = $($LocalizedData.VMDataDiskUnknownTypeError `
+                        -f $VMs[0].Name,$VMs[0].DataVHDs[0].Vhd,$VMs[0].DataVHDs[0].Type)
+                }
+                $Exception = New-Exception @ExceptionParameters
+                { Update-LabVMDataDisk -Configuration $Config -VM $VMs[0] } | Should Throw $Exception
+            }
+            It 'Calls Mocked commands' {
+                Assert-MockCalled Get-VHD -Exactly 0
+                Assert-MockCalled Resize-VHD -Exactly 0
+                Assert-MockCalled Move-Item -Exactly 0
+                Assert-MockCalled Copy-Item -Exactly 0
+                Assert-MockCalled New-VHD -Exactly 0
+                Assert-MockCalled Get-VMHardDiskDrive -Exactly 0
+                Assert-MockCalled Add-VMHardDiskDrive -Exactly 0
+            }
+        }
 
     }
 
