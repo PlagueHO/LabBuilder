@@ -2021,7 +2021,6 @@ InModuleScope LabBuilder {
                 Vhd = 'TestVHD.vhdx'
                 Type = 'Fixed'
                 Size = 10GB
-                
             } )
             Mock Test-Path -MockWith { $True }
             Mock Get-VHD -MockWith { @{
@@ -2033,10 +2032,10 @@ InModuleScope LabBuilder {
                     errorId = 'VMDataDiskVHDShrinkError'
                     errorCategory = 'InvalidArgument'
                     errorMessage = $($LocalizedData.VMDataDiskVHDShrinkError `
-                        -f $VMs[0].Name,$VMs[0].DataVHDs.Vhd,$VMs[0].DataVHDs.Size)
+                        -f $VMs[0].Name,$VMs[0].DataVHDs[0].Vhd,$VMs[0].DataVHDs[0].Size)
                 }
                 $Exception = New-Exception @ExceptionParameters
-                { Update-LabVMDataDisk -Configuration $Config -VM $VMs[0] } | Should Throw 
+                { Update-LabVMDataDisk -Configuration $Config -VM $VMs[0] } | Should Throw $Exception
             }
             It 'Calls Mocked commands' {
                 Assert-MockCalled Resize-VHD -Exactly 0
@@ -2047,6 +2046,30 @@ InModuleScope LabBuilder {
                 Assert-MockCalled Add-VMHardDiskDrive -Exactly 0
             }
         }
+        Context 'Valid configuration is passed with a DataVHD that exists but has larger size' {
+            $VMs[0].DataVHDs = @( @{
+                Vhd = 'TestVHD.vhdx'
+                Type = 'Fixed'
+                Size = 30GB
+            } )
+            Mock Test-Path -MockWith { $True }
+            Mock Get-VHD -MockWith { @{
+                VhdType =  'Fixed'
+                Size = 20GB
+            } }
+            It 'Does not throw an Exception' {
+                { Update-LabVMDataDisk -Configuration $Config -VM $VMs[0] } | Should Not Throw
+            }
+            It 'Calls Mocked commands' {
+                Assert-MockCalled Resize-VHD -Exactly 1
+                Assert-MockCalled Move-Item -Exactly 0
+                Assert-MockCalled Copy-Item -Exactly 0
+                Assert-MockCalled New-VHD -Exactly 0
+                Assert-MockCalled Get-VMHardDiskDrive -Exactly 1
+                Assert-MockCalled Add-VMHardDiskDrive -Exactly 1
+            }
+        }
+
     }
 
 
