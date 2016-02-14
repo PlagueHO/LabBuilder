@@ -53,10 +53,11 @@ VMAdapterSwitchNotFoundError=The switch '{2}' specified in adapter '{1}' in VM '
 VMDataDiskVHDEmptyError=The Data Disk VHD in VM '{0}' cannot be 'datavhd' or empty.
 VMDataDiskCantBeCreatedError=The Data Disk VHD '{1}' specified in VM '{0}' does not exist but the size and type or Source VHD was not provided so it not be created.
 VMDataDiskParentVHDNotFoundError=The Data Disk Parent VHD '{1}' specified in VM '{0}' could not be found.
+VMDataDiskParentVHDMissingError=The Differencing Data Disk Parent VHD specified in VM '{0}' is empty.
 VMDataDiskSourceVHDNotFoundError=The Data Disk Source VHD '{1}' specified in VM '{0}' could not be found.
 VMDataDiskUnknownTypeError=Unknown Data Disk type '{2}' specified in VM '{0}' for VHD '{1}'.
 VMDataDiskSupportPRError=The SupportPR flag is not supported for non-shared Data Disk VHD '{1}' specified in VM '{0}'.
-VMDataDiskSharedDifferencingError=The Differencing Data Disk VHD '{1}' specified in VM '{0}' is can not be set as Shared VHD.
+VMDataDiskSharedDifferencingError=The Differencing Data Disk VHD '{1}' specified in VM '{0}' can not be set as Shared.
 VMDataDiskSourceVHDIfMoveError=The Data Disk VHD '{1}' specified in VM '{0}' must have a Source VHD specified if MoveSourceVHD is set.
 VMDataDiskVHDConvertError=The Data Disk '{1}' in VM '{0}' cannot be converted to a {2} type.
 VMDataDiskVHDShrinkError=The Data Disk '{1}' in VM '{0}' cannot be shrunk to {2}.
@@ -3284,6 +3285,16 @@ function Get-LabVMs {
                     }
                     'differencing'
                     {
+                        if (-not $ParentVhd)
+                        {
+                            $ExceptionParameters = @{
+                                errorId = 'VMDataDiskParentVHDMissingError'
+                                errorCategory = 'InvalidArgument'
+                                errorMessage = $($LocalizedData.VMDataDiskParentVHDMissingError `
+                                    -f $VM.name)
+                            }
+                            New-LabException @ExceptionParameters
+                        }
                         if ($Shared)
                         {
                             $ExceptionParameters = @{
@@ -4345,6 +4356,30 @@ function Update-LabVMDataDisk {
                     } # 'dynamic'
                     'differencing'
                     {
+                        # A differencing disk is specified so check the Parent VHD
+                        # is specified and exists
+                        $ParentVhd = $DataVhd.ParentVhd
+                        if (-not $ParentVhd)
+                        {
+                            $ExceptionParameters = @{
+                                errorId = 'VMDataDiskParentVHDMissingError'
+                                errorCategory = 'InvalidArgument'
+                                errorMessage = $($LocalizedData.VMDataDiskParentVHDMissingError `
+                                    -f $VM.name)
+                            }
+                            New-LabException @ExceptionParameters                    
+                        } # if
+                        if (-not (Test-Path -Path $ParentVhd))
+                        {
+                            $ExceptionParameters = @{
+                                errorId = 'VMDataDiskParentVHDNotFoundError'
+                                errorCategory = 'InvalidArgument'
+                                errorMessage = $($LocalizedData.VMDataDiskParentVHDNotFoundError `
+                                    -f $VM.name,$ParentVhd)
+                            }
+                            New-LabException @ExceptionParameters                    
+                        } # if
+                        
                         # Create a new Differencing VHD
                         Write-Verbose -Message $($LocalizedData.CreatingVMDiskMessage `
                             -f $VM.Name,$Vhd,"Differencing Data using Parent '$ParentVhd'")
