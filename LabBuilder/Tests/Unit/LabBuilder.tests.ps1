@@ -1972,6 +1972,7 @@ InModuleScope LabBuilder {
 
     Describe 'Update-LabVMDataDisk' -Tags 'InProcess' {
         #region Mocks
+        Mock Get-VM
         Mock Get-VHD
         Mock Resize-VHD
         Mock Move-Item
