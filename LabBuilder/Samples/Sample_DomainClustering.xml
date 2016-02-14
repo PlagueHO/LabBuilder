@@ -307,8 +307,10 @@
     <vm name="LABBUILDER.COM SA-FS1"
         template="Template Windows Server 2012 R2 Datacenter CORE"
         computername="SA-FS1"
-        usedifferencingbootdisk="Y"
-        datavhdsize="40GB" >
+        usedifferencingbootdisk="Y" >
+      <datavhds>
+        <datavhd vhd="LABBUILDER.COM SA-FS1 Data Disk.vhdx" size="40GB" type="dynamic" />
+      </datavhds>
       <dsc configname="MEMBER_FILESERVER_ISCSI"
            configfile="MEMBER_FILESERVER_ISCSI.DSC.ps1"
            logging="Y">
