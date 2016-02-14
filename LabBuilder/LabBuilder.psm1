@@ -1414,8 +1414,8 @@ function Get-LabVMTemplates {
                 processorcount = $Template.ProcessorCount;
                 exposevirtualizationextensions = if ($Template.ExposeVirtualizationExtensions)
                     {
-                        $Template.ExposeVirtualizationExtensions
-                    }
+						exposevirtualizationextensions=$Template.ExposeVirtualizationExtensions
+					}
                     else
                     {
                         $null
@@ -2887,12 +2887,12 @@ Add-Content ``
 
     # Write out the CMD Setup Complete File
     $SetupCompleteCmd = @"
-@echo SetupComplete.cmd Script Started... >> %SYSTEMROOT%\Setup\Scripts\SetupComplete.log`r
+@echo SetupComplete.cmd Script Started... >> %SYSTEMROOT%\Setup\Scripts\SetupComplete.log
 $SetupCompleteCmd
-Timeout 30 `r
+Timeout 30
 powerShell.exe -ExecutionPolicy Unrestricted -Command `"%SYSTEMROOT%\Setup\Scripts\SetupComplete.ps1`" `r
-@echo SetupComplete.cmd Script Finished... >> %SYSTEMROOT%\Setup\Scripts\SetupComplete.log`r
-@echo Initial Setup Completed - this file indicates that setup has completed. >> %SYSTEMROOT%\Setup\Scripts\InitialSetupCompleted.txt`r
+@echo SetupComplete.cmd Script Finished... >> %SYSTEMROOT%\Setup\Scripts\SetupComplete.log
+@echo Initial Setup Completed - this file indicates that setup has completed. >> %SYSTEMROOT%\Setup\Scripts\InitialSetupCompleted.txt
 "@
     $null = Set-Content `
         -Path (Join-Path -Path $VMLabBuilderFiles -ChildPath 'SetupComplete.cmd') `
@@ -3280,12 +3280,13 @@ function Get-LabVMs {
         # Get the Expose Virtualization Extensions flag
         [String] $ExposeVirtualizationExtensions = ''
         if ($VMTemplate.ExposeVirtualizationExtensions)
-        {
-            $ExposeVirtualizationExtensions = $VMTemplate.ExposeVirtualizationExtensions
-        }
+			{
+			$ExposeVirtualizationExtensions=$VMTemplate.ExposeVirtualizationExtensions
+			} # If
+
         if ($VM.ExposeVirtualizationExtensions)
         {
-            $ExposeVirtualizationExtensions = $VM.ExposeVirtualizationExtensions
+            $ExposeVirtualizationExtensions=$VM.ExposeVirtualizationExtensions
         } # If        
 
         # Get the data VHD Size (from the template or VM)
@@ -4217,8 +4218,8 @@ function Initialize-LabVMs {
         {
             if ((Get-VMNetworkAdapter -VMName $VM.Name | Where-Object -Property Name -EQ $VMAdapter.Name).Count -eq 0)
             {
-                Write-Verbose -Message $($LocalizedData.WaitingForCertificateMessage `
-                    -f $VM.Name,$Script:RetryConnectSeconds)
+                Write-Verbose -Message $($LocalizedData.AddingVMNetworkAdapterMessage `
+                    -f $VM.Name,$VMAdapter.SwitchName,$VMAdapter.Name)
 
                 Add-VMNetworkAdapter `
                     -VMName $VM.Name `
@@ -4881,16 +4882,16 @@ Function Uninstall-Lab {
 
 
 ##########################################################################################
-#   Create Directories for Labs
+#   Create Template VHD files for Labs
 ##########################################################################################
 <#.Synopsis
-<!<SnippetShortDescription>!>
+	Function used to create Template VHDs from source ISO file - Tested againist Win10/Win Server 2016 TP4
+	Uses Convert-WindowsImage from TP4 CD 
 .DESCRIPTION
-<!<SnippetLongDescription>!>
+	Uses an XML as the source for some config options and a hashtable of Disk configurations
 .EXAMPLE
-<!<SnippetExample>!>
-.EXAMPLE
-<!<SnippetAnotherExample>!>
+	Initialize-TemplateVHD -config Config.xml -VMTemplateDisk $VMTemplateDisks  
+
 #>
 function Initialize-TemplateVHD
 {
@@ -4932,6 +4933,7 @@ function Initialize-TemplateVHD
 	$ISODrive = "$([string]$DriveLetter):"
 
 	Write-Verbose "CD Drive is $ISODrive"
+	Get-PSDrive -PSProvider FileSystem # Work around an issue with script not seeing the drive 
 
 	Write-Verbose 'Copying DISM from Server ISO to Working Folders'
 	If (-not (Test-Path -Path $DismFolder -PathType Container)) 
@@ -4942,7 +4944,7 @@ function Initialize-TemplateVHD
 	$null = Copy-Item -Path "$ISODrive\Sources\*dism*" -Destination $DismFolder -Force
 	$null = Copy-Item -Path "$ISODrive\Sources\*provider*" -Destination $DismFolder -Force
 	
-	Start-Sleep 5
+	
 
 	 # As of 2015-06-16 Convert-WindowsImage contains a function instead of being a standalone script.
 	 # . source the Convert-WindowsImage.ps1 so it can be called
@@ -4986,7 +4988,7 @@ function Initialize-TemplateVHD
 				} #End Else	
 
 				Write-Verbose "WimPath = $Wimpath"
-		
+		 #This will have to change depending on the version of Convert-WindowsImage being used. 
 				If ($VMTemplateDisk.Generation -eq $Null) {$VhdPartitionStyle = 'UEFI'}
 				Else {
 				switch ($VMTemplateDisk.Generation)
@@ -5018,9 +5020,12 @@ function Initialize-TemplateVHD
 				if ($VMTemplateDisk.IsNano -eq 'True')
 				{
 					$Packages = $TemplateDisk.Packages
-
+						If (-not (Test-Path -Path $MountFolder -PathType Container)) 
+							{
+								$null = New-Item -Path $MountFolder -ItemType Directory
+							}
 					# Mount the VHD to load packages into it
-					& "$DismFolder\Dism.exe" '/Mount-Image' "/ImageFile:$TemplateDiskName" '/Index:1' "/MountDir:$MountFolder"
+					& "$DismFolder\Dism.exe" '/Mount-Image' "/ImageFile:$PathtoDisk" '/Index:1' "/MountDir:$MountFolder"
 
 					$PackageList = @(
 						@{ Name = 'Compute'; Filename = 'Microsoft-NanoServer-Compute-Package.cab' },
@@ -5048,7 +5053,7 @@ function Initialize-TemplateVHD
 							& "$DismFolder\Dism.exe" '/Add-Package' "/PackagePath:$($DriveLetter):\NanoServer\packages\en-us\$($Package.Filename)" "/Image:$MountFolder"
 						}
 					}
-
+					& "$DismFolder\Dism.exe" '/Unmount-Image' "/MountDir:$MountFolder" '/commit'
 
 				} #EndIf
 			}
@@ -5083,8 +5088,8 @@ Configuration ConfigLCM {
             RefreshMode = 'Push'
             ConfigurationMode = 'ApplyAndAutoCorrect'
             CertificateId = $Thumbprint
-            ConfigurationModeFrequencyMins = 5
-            RefreshFrequencyMins = 10
+            ConfigurationModeFrequencyMins = 15
+            RefreshFrequencyMins = 30
             RebootNodeIfNeeded = $True
             ActionAfterReboot = 'ContinueConfiguration'
         } 
