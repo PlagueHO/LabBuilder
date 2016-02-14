@@ -1979,6 +1979,8 @@ InModuleScope LabBuilder {
         Mock New-VHD
         Mock Get-VMHardDiskDrive
         Mock Add-VMHardDiskDrive
+        Mock Test-Path -ParameterFilter { $Path -eq 'DoesNotExist.Vhdx' } -MockWith { $False }        
+        Mock Test-Path -ParameterFilter { $Path -eq 'DoesExist.Vhdx' } -MockWith { $True }        
         #endregion
 
         # The same VM will be used for all tests, but a different
@@ -2005,12 +2007,11 @@ InModuleScope LabBuilder {
         }
         Context 'Valid configuration is passed with a DataVHD that exists but has different type' {
             $VMs[0].DataVHDs = @( @{
-                Vhd = 'TestVHD.vhdx'
+                Vhd = 'DoesExist.vhdx'
                 Type = 'Fixed'
                 Size = 10GB
                 
             } )
-            Mock Test-Path -MockWith { $True }
             Mock Get-VHD -MockWith { @{
                 VhdType =  'Dynamic'
             } }
@@ -2036,11 +2037,10 @@ InModuleScope LabBuilder {
         }
         Context 'Valid configuration is passed with a DataVHD that exists but has smaller size' {
             $VMs[0].DataVHDs = @( @{
-                Vhd = 'TestVHD.vhdx'
+                Vhd = 'DoesExist.vhdx'
                 Type = 'Fixed'
                 Size = 10GB
             } )
-            Mock Test-Path -MockWith { $True }
             Mock Get-VHD -MockWith { @{
                 VhdType =  'Fixed'
                 Size = 20GB
@@ -2067,11 +2067,10 @@ InModuleScope LabBuilder {
         }
         Context 'Valid configuration is passed with a DataVHD that exists but has larger size' {
             $VMs[0].DataVHDs = @( @{
-                Vhd = 'TestVHD.vhdx'
+                Vhd = 'DoesExist.vhdx'
                 Type = 'Fixed'
                 Size = 30GB
             } )
-            Mock Test-Path -MockWith { $True }
             Mock Get-VHD -MockWith { @{
                 VhdType =  'Fixed'
                 Size = 20GB
@@ -2091,15 +2090,12 @@ InModuleScope LabBuilder {
         }
         
         Mock Get-VHD
-        Mock Test-Path -ParameterFilter { $Path -eq 'TestVHD.vhdx' } -MockWith { $False }        
         
         Context 'Valid configuration is passed with a SourceVHD and DataVHD that do not exist' {
-            Mock Test-Path -ParameterFilter { $Path -eq 'NotExist.Vhdx' } -MockWith { $False }        
             $VMs[0].DataVHDs = @( @{
-                Vhd = 'TestVHD.vhdx'
-                SourceVhd = 'NotExist.Vhdx'
+                Vhd = 'DoesNotExist.vhdx'
+                SourceVhd = 'DoesNotExist.Vhdx'
             } )
-            Mock Test-Path -MockWith { $False }
             It 'Throws VMDataDiskSourceVHDNotFoundError Exception' {
                 $ExceptionParameters = @{
                     errorId = 'VMDataDiskSourceVHDNotFoundError'
@@ -2120,13 +2116,11 @@ InModuleScope LabBuilder {
                 Assert-MockCalled Add-VMHardDiskDrive -Exactly 0
             }
         }
-        Context 'Valid configuration is passed with a SourceVHD that exist and DataVHD that do not exist' {
-            Mock Test-Path -ParameterFilter { $Path -eq 'DoesExist.Vhdx' } -MockWith { $True }        
+        Context 'Valid configuration is passed with a SourceVHD that exists and DataVHD that do not exist' {
             $VMs[0].DataVHDs = @( @{
-                Vhd = 'TestVHD.vhdx'
+                Vhd = 'DoesNotExist.vhdx'
                 SourceVhd = 'DoesExist.Vhdx'
             } )
-            Mock Test-Path -MockWith { $False }
             It 'Does not throw an Exception' {
                 { Update-LabVMDataDisk -Configuration $Config -VM $VMs[0] } | Should Not Throw
             }
@@ -2140,14 +2134,12 @@ InModuleScope LabBuilder {
                 Assert-MockCalled Add-VMHardDiskDrive -Exactly 1
             }
         }
-        Context 'Valid configuration is passed with a SourceVHD that exist and DataVHD that do not exist and MoveSourceVHD set' {
-            Mock Test-Path -ParameterFilter { $Path -eq 'DoesExist.Vhdx' } -MockWith { $True }        
+        Context 'Valid configuration is passed with a SourceVHD that exists and DataVHD that do not exist and MoveSourceVHD set' {
             $VMs[0].DataVHDs = @( @{
-                Vhd = 'TestVHD.vhdx'
+                Vhd = 'DoesNotExist.vhdx'
                 SourceVhd = 'DoesExist.Vhdx'
                 MoveSourceVHD = $true
             } )
-            Mock Test-Path -MockWith { $False }
             It 'Does not throw an Exception' {
                 { Update-LabVMDataDisk -Configuration $Config -VM $VMs[0] } | Should Not Throw
             }
@@ -2163,7 +2155,7 @@ InModuleScope LabBuilder {
         }
         Context 'Valid configuration is passed with a 10GB Fixed DataVHD that does not exist' {
             $VMs[0].DataVHDs = @( @{
-                Vhd = 'TestVHD.vhdx'
+                Vhd = 'DoesNotExist.vhdx'
                 Type = 'Fixed'
                 Size = 10GB
             } )
@@ -2182,7 +2174,7 @@ InModuleScope LabBuilder {
         }
         Context 'Valid configuration is passed with a 10GB Dynamic DataVHD that does not exist' {
             $VMs[0].DataVHDs = @( @{
-                Vhd = 'TestVHD.vhdx'
+                Vhd = 'DoesNotExist.vhdx'
                 Type = 'Dynamic'
                 Size = 10GB
             } )
@@ -2201,7 +2193,7 @@ InModuleScope LabBuilder {
         }
         Context 'Valid configuration is passed with a 10GB Differencing DataVHD that does not exist where ParentVHD is not set' {
             $VMs[0].DataVHDs = @( @{
-                Vhd = 'TestVHD.vhdx'
+                Vhd = 'DoesNotExist.vhdx'
                 Type = 'Differencing'
                 Size = 10GB
             } )
@@ -2226,9 +2218,8 @@ InModuleScope LabBuilder {
             }
         }
         Context 'Valid configuration is passed with a 10GB Differencing DataVHD that does not exist where ParentVHD does not exist' {
-            Mock Test-Path -ParameterFilter { $Path -eq 'DoesNotExist.Vhdx' } -MockWith { $False }        
             $VMs[0].DataVHDs = @( @{
-                Vhd = 'TestVHD.vhdx'
+                Vhd = 'DoesNotExist.vhdx'
                 Type = 'Differencing'
                 Size = 10GB
                 ParentVHD = 'DoesNotExist.vhdx'
@@ -2251,6 +2242,26 @@ InModuleScope LabBuilder {
                 Assert-MockCalled New-VHD -Exactly 0
                 Assert-MockCalled Get-VMHardDiskDrive -Exactly 0
                 Assert-MockCalled Add-VMHardDiskDrive -Exactly 0
+            }
+        }
+        Context 'Valid configuration is passed with a 10GB Differencing DataVHD that does not exist' {
+            $VMs[0].DataVHDs = @( @{
+                Vhd = 'DoesNotExist.vhdx'
+                Type = 'Dynamic'
+                Size = 10GB
+                ParentVHD = 'DoesExist.vhdx'
+            } )
+            It 'Does not throw an Exception' {
+                { Update-LabVMDataDisk -Configuration $Config -VM $VMs[0] } | Should Not Throw
+            }
+            It 'Calls Mocked commands' {
+                Assert-MockCalled Get-VHD -Exactly 0
+                Assert-MockCalled Resize-VHD -Exactly 0
+                Assert-MockCalled Move-Item -Exactly 0
+                Assert-MockCalled Copy-Item -Exactly 0
+                Assert-MockCalled New-VHD -Exactly 1
+                Assert-MockCalled Get-VMHardDiskDrive -Exactly 1
+                Assert-MockCalled Add-VMHardDiskDrive -Exactly 1
             }
         }
 
