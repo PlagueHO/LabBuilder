@@ -2291,6 +2291,32 @@ InModuleScope LabBuilder {
             }
         }
 
+        Mock Get-VHD -MockWith { @{
+            VhdType =  'Fixed'
+            Size = 10GB
+        } }
+
+        Context 'Valid configuration is passed with a 10GB Fixed DataVHD that exists and is already added to VM' {
+            Mock Get-VMHardDiskDrive -MockWith { @{ Path = 'DoesExist.vhdx' } }
+            $VMs[0].DataVHDs = @( @{
+                Vhd = 'DoesExist.vhdx'
+                Type = 'Fixed'
+                Size = 10GB
+            } )
+            It 'Does not throw an Exception' {
+                { Update-LabVMDataDisk -Configuration $Config -VM $VMs[0] } | Should Not Throw
+            }
+            It 'Calls Mocked commands' {
+                Assert-MockCalled Get-VHD -Exactly 1
+                Assert-MockCalled Resize-VHD -Exactly 0
+                Assert-MockCalled Move-Item -Exactly 0
+                Assert-MockCalled Copy-Item -Exactly 0
+                Assert-MockCalled New-VHD -Exactly 0
+                Assert-MockCalled Get-VMHardDiskDrive -Exactly 1
+                Assert-MockCalled Add-VMHardDiskDrive -Exactly 0
+            }
+        }
+
     }
 
 
