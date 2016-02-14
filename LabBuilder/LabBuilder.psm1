@@ -4296,7 +4296,7 @@ function Update-LabVMDataDisk {
 
                     $null = Move-Item `
                         -Path $SourceVhd `
-                        -DestinationPath $VHDPath `
+                        -Destination $VHDPath `
                         -Force `
                         -ErrorAction Stop
                 }
@@ -4307,7 +4307,7 @@ function Update-LabVMDataDisk {
 
                     $null = Copy-Item `
                         -Path $SourceVhd `
-                        -DestinationPath $VHDPath `
+                        -Destination $VHDPath `
                         -Force `
                         -ErrorAction Stop 
                 } # if

@@ -1978,6 +1978,7 @@ InModuleScope LabBuilder {
                 { Update-LabVMDataDisk -Configuration $Config -VM $VMs[0] } | Should Not Throw 
             }
             It 'Calls Mocked commands' {
+                Assert-MockCalled Get-VHD -Exactly 0
                 Assert-MockCalled Resize-VHD -Exactly 0
                 Assert-MockCalled Move-Item -Exactly 0
                 Assert-MockCalled Copy-Item -Exactly 0
@@ -2008,6 +2009,7 @@ InModuleScope LabBuilder {
                 { Update-LabVMDataDisk -Configuration $Config -VM $VMs[0] } | Should Throw 
             }
             It 'Calls Mocked commands' {
+                Assert-MockCalled Get-VHD -Exactly 1
                 Assert-MockCalled Resize-VHD -Exactly 0
                 Assert-MockCalled Move-Item -Exactly 0
                 Assert-MockCalled Copy-Item -Exactly 0
@@ -2038,6 +2040,7 @@ InModuleScope LabBuilder {
                 { Update-LabVMDataDisk -Configuration $Config -VM $VMs[0] } | Should Throw $Exception
             }
             It 'Calls Mocked commands' {
+                Assert-MockCalled Get-VHD -Exactly 1
                 Assert-MockCalled Resize-VHD -Exactly 0
                 Assert-MockCalled Move-Item -Exactly 0
                 Assert-MockCalled Copy-Item -Exactly 0
@@ -2061,8 +2064,119 @@ InModuleScope LabBuilder {
                 { Update-LabVMDataDisk -Configuration $Config -VM $VMs[0] } | Should Not Throw
             }
             It 'Calls Mocked commands' {
+                Assert-MockCalled Get-VHD -Exactly 1
                 Assert-MockCalled Resize-VHD -Exactly 1
                 Assert-MockCalled Move-Item -Exactly 0
+                Assert-MockCalled Copy-Item -Exactly 0
+                Assert-MockCalled New-VHD -Exactly 0
+                Assert-MockCalled Get-VMHardDiskDrive -Exactly 1
+                Assert-MockCalled Add-VMHardDiskDrive -Exactly 1
+            }
+        }
+        
+        Mock Get-VHD
+        Mock Test-Path -ParameterFilter { $Path -eq 'TestVHD.vhdx' } -MockWith { $False }        
+        
+        Context 'Valid configuration is passed with a 10GB Fixed DataVHD that does not exist' {
+            $VMs[0].DataVHDs = @( @{
+                Vhd = 'TestVHD.vhdx'
+                Type = 'Fixed'
+                Size = 10GB
+            } )
+            It 'Does not throw an Exception' {
+                { Update-LabVMDataDisk -Configuration $Config -VM $VMs[0] } | Should Not Throw
+            }
+            It 'Calls Mocked commands' {
+                Assert-MockCalled Get-VHD -Exactly 0
+                Assert-MockCalled Resize-VHD -Exactly 0
+                Assert-MockCalled Move-Item -Exactly 0
+                Assert-MockCalled Copy-Item -Exactly 0
+                Assert-MockCalled New-VHD -Exactly 1
+                Assert-MockCalled Get-VMHardDiskDrive -Exactly 1
+                Assert-MockCalled Add-VMHardDiskDrive -Exactly 1
+            }
+        }
+        Context 'Valid configuration is passed with a 10GB Dynamic DataVHD that does not exist' {
+            $VMs[0].DataVHDs = @( @{
+                Vhd = 'TestVHD.vhdx'
+                Type = 'Dynamic'
+                Size = 10GB
+            } )
+            It 'Does not throw an Exception' {
+                { Update-LabVMDataDisk -Configuration $Config -VM $VMs[0] } | Should Not Throw
+            }
+            It 'Calls Mocked commands' {
+                Assert-MockCalled Get-VHD -Exactly 0
+                Assert-MockCalled Resize-VHD -Exactly 0
+                Assert-MockCalled Move-Item -Exactly 0
+                Assert-MockCalled Copy-Item -Exactly 0
+                Assert-MockCalled New-VHD -Exactly 1
+                Assert-MockCalled Get-VMHardDiskDrive -Exactly 1
+                Assert-MockCalled Add-VMHardDiskDrive -Exactly 1
+            }
+        }
+        Context 'Valid configuration is passed with a SourceVHD and DataVHD that do not exist' {
+            Mock Test-Path -ParameterFilter { $Path -eq 'NotExist.Vhdx' } -MockWith { $False }        
+            $VMs[0].DataVHDs = @( @{
+                Vhd = 'TestVHD.vhdx'
+                SourceVhd = 'NotExist.Vhdx'
+            } )
+            Mock Test-Path -MockWith { $False }
+            It 'Throws VMDataDiskSourceVHDNotFoundError Exception' {
+                $ExceptionParameters = @{
+                    errorId = 'VMDataDiskSourceVHDNotFoundError'
+                    errorCategory = 'InvalidArgument'
+                    errorMessage = $($LocalizedData.VMDataDiskSourceVHDNotFoundError `
+                        -f $VMs[0].Name,$VMs[0].DataVHDs[0].SourceVhd)
+                }
+                $Exception = New-Exception @ExceptionParameters
+                { Update-LabVMDataDisk -Configuration $Config -VM $VMs[0] } | Should Throw $Exception
+            }
+            It 'Calls Mocked commands' {
+                Assert-MockCalled Get-VHD -Exactly 0
+                Assert-MockCalled Resize-VHD -Exactly 0
+                Assert-MockCalled Move-Item -Exactly 0
+                Assert-MockCalled Copy-Item -Exactly 0
+                Assert-MockCalled New-VHD -Exactly 0
+                Assert-MockCalled Get-VMHardDiskDrive -Exactly 0
+                Assert-MockCalled Add-VMHardDiskDrive -Exactly 0
+            }
+        }
+        Context 'Valid configuration is passed with a SourceVHD that exist and DataVHD that do not exist' {
+            Mock Test-Path -ParameterFilter { $Path -eq 'DoesExist.Vhdx' } -MockWith { $True }        
+            $VMs[0].DataVHDs = @( @{
+                Vhd = 'TestVHD.vhdx'
+                SourceVhd = 'DoesExist.Vhdx'
+            } )
+            Mock Test-Path -MockWith { $False }
+            It 'Does not throw an Exception' {
+                { Update-LabVMDataDisk -Configuration $Config -VM $VMs[0] } | Should Not Throw
+            }
+            It 'Calls Mocked commands' {
+                Assert-MockCalled Get-VHD -Exactly 0
+                Assert-MockCalled Resize-VHD -Exactly 0
+                Assert-MockCalled Move-Item -Exactly 0
+                Assert-MockCalled Copy-Item -Exactly 1
+                Assert-MockCalled New-VHD -Exactly 0
+                Assert-MockCalled Get-VMHardDiskDrive -Exactly 1
+                Assert-MockCalled Add-VMHardDiskDrive -Exactly 1
+            }
+        }
+        Context 'Valid configuration is passed with a SourceVHD that exist and DataVHD that do not exist and MoveSourceVHD set' {
+            Mock Test-Path -ParameterFilter { $Path -eq 'DoesExist.Vhdx' } -MockWith { $True }        
+            $VMs[0].DataVHDs = @( @{
+                Vhd = 'TestVHD.vhdx'
+                SourceVhd = 'DoesExist.Vhdx'
+                MoveSourceVHD = $true
+            } )
+            Mock Test-Path -MockWith { $False }
+            It 'Does not throw an Exception' {
+                { Update-LabVMDataDisk -Configuration $Config -VM $VMs[0] } | Should Not Throw
+            }
+            It 'Calls Mocked commands' {
+                Assert-MockCalled Get-VHD -Exactly 0
+                Assert-MockCalled Resize-VHD -Exactly 0
+                Assert-MockCalled Move-Item -Exactly 1
                 Assert-MockCalled Copy-Item -Exactly 0
                 Assert-MockCalled New-VHD -Exactly 0
                 Assert-MockCalled Get-VMHardDiskDrive -Exactly 1
