@@ -48,12 +48,12 @@ deploy_script:
       $null = New-Item -Path $VersionFolder -Type directory
       
       # Populate Version Folder
-      $null = Copy-Item -Path (Join-Path -Path $buildFolder -ChildPath 'LaBuilder.psd1') -Destination $VersionFolder
-      $null = Copy-Item -Path (Join-Path -Path $buildFolder -ChildPath 'LaBuilder.psm1') -Destination $VersionFolder
+      $null = Copy-Item -Path (Join-Path -Path $buildFolder -ChildPath 'LabBuilder\LabBuilder.psd1') -Destination $VersionFolder
+      $null = Copy-Item -Path (Join-Path -Path $buildFolder -ChildPath 'LabBuilder\LabBuilder.psm1') -Destination $VersionFolder
       $null = Copy-Item -Path (Join-Path -Path $buildFolder -ChildPath 'LICENSE') -Destination $VersionFolder
       $null = Copy-Item -Path (Join-Path -Path $buildFolder -ChildPath 'README.MD') -Destination $VersionFolder
-      $null = Copy-Item -Path (Join-Path -Path $buildFolder -ChildPath 'Samples') -Destination $VersionFolder -Recurse
-      $null = Copy-Item -Path (Join-Path -Path $buildFolder -ChildPath 'DscLibrary') -Destination $VersionFolder -Recurse
+      $null = Copy-Item -Path (Join-Path -Path $buildFolder -ChildPath 'LabBuilder\Samples') -Destination $VersionFolder -Recurse
+      $null = Copy-Item -Path (Join-Path -Path $buildFolder -ChildPath 'LabBuilder\DscLibrary') -Destination $VersionFolder -Recurse
 
       # Set version number
       $manifest = Join-Path -Path $VersionFolder -ChildPath "LabBuilder.psd1"
