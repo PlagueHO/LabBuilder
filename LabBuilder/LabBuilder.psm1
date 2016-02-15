@@ -3402,7 +3402,7 @@ function Get-LabVMs {
                 parentvhd = $ParentVHD;
                 shared = $Shared;
                 supportPR = $SupportPR;
-                moveorcopy = $MoveOrCopy;
+                moveSourceVHD = $MoveSourceVHD;
             }
         } # Foreach
 
