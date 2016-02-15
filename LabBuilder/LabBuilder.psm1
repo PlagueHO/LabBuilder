@@ -3464,7 +3464,9 @@ function Get-LabVMs {
         [String] $DSCParameters = ''
         if ($VM.DSC.Parameters)
         {
-            $DSCParameters = $VM.DSC.Parameters
+            # Correct any LFs into CRLFs to ensure the new line format is the same when
+            # pulled from the XML.
+            $DSCParameters = ($VM.DSC.Parameters -replace "`r`n","`n") -replace "`n","`r`n"
         } # If
 
         # Load the DSC Parameters
