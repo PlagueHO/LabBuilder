@@ -822,11 +822,10 @@ InModuleScope LabBuilder {
         Context 'Valid configuration is passed' {
             $Config = Get-LabConfiguration -Path $Global:TestConfigOKPath
             [Array]$Switches = Get-LabSwitches -Configuration $Config
-            Set-Content -Path "$($Global:ArtifactPath)\ExpectedSwitches.json" -Value ($Switches | ConvertTo-Json -Depth 4) -Encoding UTF8 -NoNewLine
+            Set-Content -Path "$Global:ArtifactPath\ExpectedSwitches.json" -Value ($Switches | ConvertTo-Json -Depth 4) # -Encoding UTF8 -NoNewLine
             It 'Returns Switches Object that matches Expected Object' {
-                $ExpectedSwitches = Get-Content -Path "$Global:TestConfigPath\ExpectedSwitches.json" -Raw -Encoding UTF8
-                $SwitchesJSON = ($Switches | ConvertTo-Json -Depth 4)
-                [String]::Compare((Get-Content -Path "$($Global:ArtifactPath)\ExpectedSwitches.json" -Raw -Encoding UTF8),$ExpectedSwitches,$true) | Should Be 0
+                $ExpectedSwitches = Get-Content -Path "$Global:TestConfigPath\ExpectedSwitches.json" # -Raw -Encoding UTF8
+                [String]::Compare((Get-Content -Path "$Global:ArtifactPath\ExpectedSwitches.json"),$ExpectedSwitches,$true) | Should Be 0
             }
         }
     }
@@ -1914,7 +1913,7 @@ InModuleScope LabBuilder {
                 $DataVhd.ParentVHD = ''
                 $DataVhd.SourceVHD = ''
             }
-            Set-Content -Path "$($Global:ArtifactPath)\VMs.json" -Value ($VMs | ConvertTo-Json -Depth 6) -Encoding UTF8 -NoNewLine
+            Set-Content -Path "$($Global:ArtifactPath)\ExpectedVMs.json" -Value ($VMs | ConvertTo-Json -Depth 6) -Encoding UTF8 -NoNewLine
             It 'Returns Template Object that matches Expected Object' {
                 $ExpectedVMs = Get-Content -Path "$Global:TestConfigPath\ExpectedVMs.json" -Raw
                 [String]::Compare(($VMs | ConvertTo-Json -Depth 6),$ExpectedVMs,$true) | Should Be 0
