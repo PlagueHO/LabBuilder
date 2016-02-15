@@ -826,7 +826,7 @@ InModuleScope LabBuilder {
             It 'Returns Switches Object that matches Expected Object' {
                 $ExpectedSwitches = Get-Content -Path "$Global:TestConfigPath\ExpectedSwitches.json" -Raw -Encoding UTF8
                 $SwitchesJSON = ($Switches | ConvertTo-Json -Depth 4)
-                [String]::Compare(($Switches | ConvertTo-Json -Depth 4),$ExpectedSwitches,$true) | Should Be 0
+                [String]::Compare((Get-Content -Path "$($Global:ArtifactPath)\ExpectedSwitches.json" -Raw -Encoding UTF8),$ExpectedSwitches,$true) | Should Be 0
             }
         }
     }
