@@ -1,4 +1,4 @@
-﻿{
+{
     "Template":  "Pester Windows Server 2012 R2 Datacenter Full",
     "DSCParameters":  "\r\n          Dummy = \"Dummy\"\r\n        ",
     "Name":  "PESTER01",
@@ -69,7 +69,7 @@
                  ],
     "TemplateVHD":  "C:\\Pester Lab\\Virtual Hard Disk Templates\\Windows Server 2012 R2 Datacenter Full.vhdx",
     "ProductKey":  "DDDDD-DDDDD-DDDDD-DDDDD-DDDDD",
-    "DSCConfigFile":  "C:\\Users\\Daniel\\Source\\GitHub\\LabBuilder\\LabBuilder\\Tests\\PesterTestConfig\\PesterTest.DSC.ps1",
+    "DSCConfigFile":  "",
     "TimeZone":  "Pacific Standard Time",
     "Adapters":  [
                      {

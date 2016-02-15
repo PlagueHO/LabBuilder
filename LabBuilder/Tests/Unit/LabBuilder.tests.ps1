@@ -820,14 +820,12 @@ InModuleScope LabBuilder {
             }
         }
         Context 'Valid configuration is passed' {
-            $Config = Get-LabConfiguration -Path $Global:TestConfigOKPath
-            [Array]$Switches = Get-LabSwitches -Configuration $Config
-            Set-Content -Path "$($Global:ArtifactPath)\ExpectedSwitches.json" -Value ($Switches | ConvertTo-Json -Depth 4) -Encoding UTF8 -NoNewLine
-            
             It 'Returns Switches Object that matches Expected Object' {
-                $ExpectedSwitches = Get-Content -Path "$Global:TestConfigPath\ExpectedSwitches.json" -Raw
-                $SwitchesJSON = ($Switches | ConvertTo-Json -Depth 4)
-                [String]::Compare(($Switches | ConvertTo-Json -Depth 4),$ExpectedSwitches,$true) | Should Be 0
+                $Config = Get-LabConfiguration -Path $Global:TestConfigOKPath
+                [Array]$Switches = Get-LabSwitches -Configuration $Config
+                Set-Content -Path "$Global:ArtifactPath\ExpectedSwitches.json" -Value ($Switches | ConvertTo-Json -Depth 4)
+                $ExpectedSwitches = Get-Content -Path "$Global:TestConfigPath\ExpectedSwitches.json"
+                [String]::Compare((Get-Content -Path "$Global:ArtifactPath\ExpectedSwitches.json"),$ExpectedSwitches,$true) | Should Be 0
             }
         }
     }
@@ -1034,9 +1032,9 @@ InModuleScope LabBuilder {
         Context 'Valid configuration is passed but no templates found' {
             It 'Returns Template Object that matches Expected Object' {
                 [Array]$Templates = Get-LabVMTemplates -Configuration $Config 
-                Set-Content -Path "$($Global:ArtifactPath)\ExpectedTemplates.json" -Value ($Templates | ConvertTo-Json -Depth 2) -Encoding UTF8 -NoNewLine
-                $ExpectedTemplates = Get-Content -Path "$Global:TestConfigPath\ExpectedTemplates.json" -Raw
-                [String]::Compare(($Templates | ConvertTo-Json -Depth 2),$ExpectedTemplates,$true) | Should Be 0
+                Set-Content -Path "$Global:ArtifactPath\ExpectedTemplates.json" -Value ($Templates | ConvertTo-Json -Depth 2)
+                $ExpectedTemplates = Get-Content -Path "$Global:TestConfigPath\ExpectedTemplates.json"
+                [String]::Compare((Get-Content -Path "$Global:ArtifactPath\ExpectedTemplates.json"),$ExpectedTemplates,$true) | Should Be 0
             }
             It 'Calls Mocked commands' {
                 Assert-MockCalled Get-VM -Exactly 1
@@ -1058,9 +1056,9 @@ InModuleScope LabBuilder {
         Context 'Valid configuration is passed and templates are found' {
             It 'Returns Template Object that matches Expected Object' {
                 [Array]$Templates = Get-LabVMTemplates -Configuration $Config 
-                Set-Content -Path "$($Global:ArtifactPath)\ExpectedTemplates.FromVM.json" -Value ($Templates | ConvertTo-Json -Depth 2) -Encoding UTF8 -NoNewLine
-                $ExpectedTemplates = Get-Content -Path "$Global:TestConfigPath\ExpectedTemplates.FromVM.json" -Raw
-                [String]::Compare(($Templates | ConvertTo-Json -Depth 2),$ExpectedTemplates,$true) | Should Be 0
+                Set-Content -Path "$Global:ArtifactPath\ExpectedTemplates.FromVM.json" -Value ($Templates | ConvertTo-Json -Depth 2)
+                $ExpectedTemplates = Get-Content -Path "$Global:TestConfigPath\ExpectedTemplates.FromVM.json"
+                [String]::Compare((Get-Content -Path "$Global:ArtifactPath\ExpectedTemplates.FromVM.json"),$ExpectedTemplates,$true) | Should Be 0
             }
             It 'Calls Mocked commands' {
                 Assert-MockCalled Get-VM -Exactly 1
@@ -1915,10 +1913,12 @@ InModuleScope LabBuilder {
                 $DataVhd.ParentVHD = ''
                 $DataVhd.SourceVHD = ''
             }
-            Set-Content -Path "$($Global:ArtifactPath)\VMs.json" -Value ($VMs | ConvertTo-Json -Depth 6) -Encoding UTF8 -NoNewLine
+            # Remove the DSCConfigFile path as this will be relative as well
+            $VMs[0].DSCConfigFile = ''
             It 'Returns Template Object that matches Expected Object' {
-                $ExpectedVMs = Get-Content -Path "$Global:TestConfigPath\ExpectedVMs.json" -Raw
-                [String]::Compare(($VMs | ConvertTo-Json -Depth 6),$ExpectedVMs,$true) | Should Be 0
+                Set-Content -Path "$Global:ArtifactPath\ExpectedVMs.json" -Value ($VMs | ConvertTo-Json -Depth 6)
+                $ExpectedVMs = Get-Content -Path "$Global:TestConfigPath\ExpectedVMs.json"
+                [String]::Compare((Get-Content -Path "$Global:ArtifactPath\ExpectedVMs.json"),$ExpectedVMs,$true) | Should Be 0
             }
         }        
     }
