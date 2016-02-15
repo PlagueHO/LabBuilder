@@ -1913,9 +1913,11 @@ InModuleScope LabBuilder {
                 $DataVhd.ParentVHD = ''
                 $DataVhd.SourceVHD = ''
             }
+            # Remove the DSCConfigFile path as this will be relative as well
+            $VMs[0].DSCConfigFile = ''
             It 'Returns Template Object that matches Expected Object' {
                 Set-Content -Path "$Global:ArtifactPath\ExpectedVMs.json" -Value ($VMs | ConvertTo-Json -Depth 6)
-                $ExpectedVMs = Get-Content -Path "$Global:TestConfigPath\ExpectedVMs.json" -Raw
+                $ExpectedVMs = Get-Content -Path "$Global:TestConfigPath\ExpectedVMs.json"
                 [String]::Compare((Get-Content -Path "$Global:ArtifactPath\ExpectedVMs.json"),$ExpectedVMs,$true) | Should Be 0
             }
         }        
