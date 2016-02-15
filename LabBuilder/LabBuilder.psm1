@@ -600,7 +600,7 @@ function Initialize-LabConfiguration {
 		-ManagementOS `
 		-Name $ManagementSwitchName
     $ExistingVlan = (Get-VMNetworkAdapterVlan `
-		-VMNetworkAdapter $ManagementSwitchName `
+		-VMNetworkAdaptername $ExistingManagementAdapter.Name `
 		-ManagementOS).AccessVlanId
     if ($ExistingVlan -ne $ManagementVlan)
     {
@@ -821,7 +821,7 @@ function Download-LabResources {
     Write-Verbose -Message $($LocalizedData.DownloadingLabResourcesMessage)
 
     # Bootstrap Nuget # This needs to be a test, not a force 
-    $null = Get-PackageProvider -Name NuGet -ForceBootstrap -Force
+    # $null = Get-PackageProvider -Name NuGet -ForceBootstrap -Force
     
     # Make sure PSGallery is trusted
     Set-PSRepository -Name PSGallery -InstallationPolicy Trusted    
@@ -2932,8 +2932,8 @@ function Initialize-LabVMImage {
       
     [String] $MountPoint = Join-Path `
         -Path $VMLabBuilderFiles `
-
         -ChildPath 'Mount'
+        
     if (! (Test-Path -Path $MountPoint -PathType Container))
     {
         $null = New-Item `
@@ -3071,6 +3071,7 @@ function Get-LabVMs {
 
     [System.Collections.Hashtable[]] $LabVMs = @()
     [String] $VHDParentPath = $Configuration.labbuilderconfig.settings.vhdparentpath
+    [String] $VMPath = $Configuration.labbuilderconfig.settings.vmpath
     $VMs = $Configuration.labbuilderconfig.SelectNodes('vms').vm
 
     foreach ($VM in $VMs) 
@@ -5448,7 +5449,7 @@ function Initialize-TemplateVHD
 
 
                  $WimPath = 'Sources\Install.WIM'
-                 if ($VMTemplateDisk.isNano)
+                 if ($VMTemplateDisk.isNano -eq 'Y')
                     {
                         [String]$WimPath = 'NanoServer\NanoServer.wim'
                     }
@@ -5511,6 +5512,8 @@ function Initialize-TemplateVHD
 							Write-Verbose -Message "Adding Package $($Package.Filename) to Image"
 							& "$DismFolder\Dism.exe" '/Add-Package' "/PackagePath:$($DriveLetter):\NanoServer\packages\$($Package.Filename)" "/Image:$MountFolder"
 							& "$DismFolder\Dism.exe" '/Add-Package' "/PackagePath:$($DriveLetter):\NanoServer\packages\en-us\$($Package.Filename)" "/Image:$MountFolder"
+                            
+                            Write-Verbose "Added Package "
 						}
 					}
 					& "$DismFolder\Dism.exe" '/Unmount-Image' "/MountDir:$MountFolder" '/commit'
