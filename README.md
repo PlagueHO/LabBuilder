@@ -3,6 +3,9 @@ LabBuilder
 
 [![Join the chat at https://gitter.im/PlagueHO/LabBuilder](https://badges.gitter.im/PlagueHO/LabBuilder.svg)](https://gitter.im/PlagueHO/LabBuilder?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 
+[![Build status](https://ci.appveyor.com/api/projects/status/rcg7xmm97qhg2bjr/branch/master?svg=true)](https://ci.appveyor.com/project/PlagueHO/labbuilder/branch/master)
+
+
 Summary
 -------
 This module will build a multiple machine Hyper-V Lab environment from an XML configuration file and other installation scripts.
@@ -49,6 +52,8 @@ Versions
 * Add support for multiple data disks for each VM.
 * Add support for creating new data disks by cloning exising VHDs.
 * Support for Fixed, Differencing and Shared data disks.
+* JSON Object comparison unit tests fixed.
+* AppVeyor build status badge added.
 
 ### 0.2.0.0
 * Code cleanup and refactoring.
