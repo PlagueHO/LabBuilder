@@ -49,10 +49,10 @@ deploy_script:
       $null = New-Item -Path $VersionFolder -Type directory
       
       # Populate Version Folder
-      $null = Copy-Item -Path (Join-Path -Path $buildFolder -ChildPath 'LabBuilder\LaBuilder.psd1') -Destination $VersionFolder
-      $null = Copy-Item -Path (Join-Path -Path $buildFolder -ChildPath 'LabBuilder\LaBuilder.psm1') -Destination $VersionFolder
-      $null = Copy-Item -Path (Join-Path -Path $buildFolder -ChildPath 'LabBuilder\LICENSE') -Destination $VersionFolder
-      $null = Copy-Item -Path (Join-Path -Path $buildFolder -ChildPath 'LabBuilder\README.MD') -Destination $VersionFolder
+      $null = Copy-Item -Path (Join-Path -Path $buildFolder -ChildPath 'LabBuilder\LabBuilder.psd1') -Destination $VersionFolder
+      $null = Copy-Item -Path (Join-Path -Path $buildFolder -ChildPath 'LabBuilder\LabBuilder.psm1') -Destination $VersionFolder
+      $null = Copy-Item -Path (Join-Path -Path $buildFolder -ChildPath 'LICENSE') -Destination $VersionFolder
+      $null = Copy-Item -Path (Join-Path -Path $buildFolder -ChildPath 'README.MD') -Destination $VersionFolder
       $null = Copy-Item -Path (Join-Path -Path $buildFolder -ChildPath 'LabBuilder\Samples') -Destination $VersionFolder -Recurse
       $null = Copy-Item -Path (Join-Path -Path $buildFolder -ChildPath 'LabBuilder\DscLibrary') -Destination $VersionFolder -Recurse
 
