@@ -3004,6 +3004,15 @@ function Initialize-LabVMImage {
     Write-Verbose -Message $($LocalizedData.ApplyingVMBootDiskFileMessage `
         -f $VM.Name,'Unattend','Unattend.xml')
 
+    if (! (Test-Path -Path "$MountPoint\Windows\Panther" -PathType Container))
+    {
+        Write-Verbose -Message $($LocalizedData.CreatingVMBootDiskPantherFolderMessage `
+            -f $VM.Name)
+
+        $null = New-Item `
+            -Path "$MountPoint\Windows\Panther" `
+            -ItemType Directory
+    }
     $null = Copy-Item `
         -Path (Join-Path -Path $VMLabBuilderFiles -ChildPath 'Unattend.xml') `
         -Destination "$MountPoint\Windows\Panther\Unattend.xml" `
