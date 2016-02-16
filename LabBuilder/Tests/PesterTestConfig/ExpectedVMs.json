@@ -3,6 +3,7 @@
     "DSCParameters":  "\r\n          Dummy = \"Dummy\"\r\n        ",
     "Name":  "PESTER01",
     "SetupComplete":  "",
+    "IntegrationServices":  "Guest Service Interface,Heartbeat,Key-Value Pair Exchange,Shutdown,Time Synchronization,VSS",
     "OSType":  "Server",
     "DSCConfigName":  "STANDALONE_DEFAULT",
     "DataVHDs":  [
