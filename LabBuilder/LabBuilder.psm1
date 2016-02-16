@@ -1395,6 +1395,35 @@ function Get-LabVMTemplateVHD {
         New-LabException @ExceptionParameters
     }
 
+    # Determine the VHDRootPath where the VHD files should be put
+    # If no path is specified then look in the same path as the config
+    # If a path is specified but it is relative, make it relative to the
+    # config path. Otherwise use it as is.
+    [String] $VHDRootPath = $Config.labbuilderconfig.TemplateVHDs.VHDPath
+    if (-not $VHDRootPath)
+    {
+        $VHDRootPath = $Configuration.labbuilderconfig.settings.fullconfigpath
+    }
+    else
+    {
+        if (-not [System.IO.Path]::IsPathRooted($ISORootPath))
+        {
+            $VHDRootPath = Join-Path `
+                -Path $Configuration.labbuilderconfig.settings.fullconfigpath `
+                -ChildPath $VHDRootPath
+        }
+    }
+    if (-not (Test-Path -Path $VHDRootPath -Type Container))
+    {
+        $ExceptionParameters = @{
+            errorId = 'TemplateVHDRootPathNotFoundError'
+            errorCategory = 'InvalidArgument'
+            errorMessage = $($LocalizedData.TemplateVHDISORootPathNotFoundError `
+                -f $ISORootPath)
+        }
+        New-LabException @ExceptionParameters
+    }
+
     # Read the list of templateVHD from the configuration file
     $TemplateVHDs = $Config.labbuilderconfig.SelectNodes('TemplateVHDs').TemplateVHD
     [System.Collections.Hashtable[]] $VMTemplateVHDs = @()
@@ -1402,7 +1431,7 @@ function Get-LabVMTemplateVHD {
     {
         # It can't be template because if the name attrib/node is missing the name property on
         # the XML object defaults to the name of the parent. So we can't easily tell if no name
-        # was specified or if they actually specified 'template' as the name.
+        # was specified or if they actually specified 'templatevhd' as the name.
         if ($TemplateVHD.Name -eq 'TemplateVHD')
         {
             $ExceptionParameters = @{
@@ -1453,6 +1482,27 @@ function Get-LabVMTemplateVHD {
             New-LabException @ExceptionParameters            
         }
         
+        # Get the VHD Path
+        [String] $VHDPath = $TemplateVHD.VHD
+        if (-not $VHDPath)
+        {
+            $ExceptionParameters = @{
+                errorId = 'EmptyTemplateVHDPathError'
+                errorCategory = 'InvalidArgument'
+                errorMessage = $($LocalizedData.EmptyTemplateVHDPathError `
+                    -f $TemplateVHD.Name)
+            }
+            New-LabException @ExceptionParameters            
+        }
+
+        # Adjust the VHD Path if required
+        if (-not [System.IO.Path]::IsPathRooted($VHDPath))
+        {
+            $VHDPath = Join-Path `
+                -Path $VHDRootPath `
+                -ChildPath $VHDPath
+        }
+        
         # Get the Template OS Type 
         [String] $IsNano = 'N'
         if ($TemplateVHD.isNano)
@@ -1489,6 +1539,8 @@ function Get-LabVMTemplateVHD {
 		# Add template VHD to the list
             $VMTemplateVHDs += @{
                 Name = $Name;
+                ISOPath = $ISOPath;
+                VHDPath = $VHDPath;
                 IsNano = $isNano;
                 WimImage = $WimImage;
                 Generation = $Generation;

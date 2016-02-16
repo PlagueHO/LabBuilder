@@ -1066,9 +1066,42 @@ InModuleScope LabBuilder {
                 Assert-MockCalled Get-VMHardDiskDrive -Exactly 3
             }
         }
-
     }
 
+
+
+    Describe 'Get-LabVMTemplateVHD' {
+
+        Context 'Configuration passed with template missing Template Name.' {
+            It 'Throws a EmptyTemplateNameError Exception' {
+                $Config = Get-LabConfiguration -Path $Global:TestConfigOKPath
+                $Config.labbuilderconfig.templatevhds.Root
+                $ExceptionParameters = @{
+                    errorId = 'TemplateVHDISORootPathNotFoundError'
+                    errorCategory = 'InvalidArgument'
+                    errorMessage = $($LocalizedData.TemplateVHDISORootPathNotFoundError `
+                        -f $)
+                }
+                $Exception = New-Exception @ExceptionParameters
+
+                { Get-LabVMTemplate -Configuration $Config } | Should Throw $Exception
+            }
+        }
+
+        Context 'Valid configuration is passed and template VHD ISOs are found' {
+            It 'Returns Template Object that matches Expected Object' {
+                $Config = Get-LabConfiguration -Path $Global:TestConfigOKPath
+                [Array]$Templates = Get-LabVMTemplate -Configuration $Config 
+                Set-Content -Path "$Global:ArtifactPath\ExpectedTemplates.FromVM.json" -Value ($Templates | ConvertTo-Json -Depth 2)
+                $ExpectedTemplates = Get-Content -Path "$Global:TestConfigPath\ExpectedTemplates.FromVM.json"
+                [String]::Compare((Get-Content -Path "$Global:ArtifactPath\ExpectedTemplates.FromVM.json"),$ExpectedTemplates,$true) | Should Be 0
+            }
+            It 'Calls Mocked commands' {
+                Assert-MockCalled Get-VM -Exactly 1
+                Assert-MockCalled Get-VMHardDiskDrive -Exactly 3
+            }
+        }
+    }
 
 
     Describe 'Initialize-LabVMTemplate' {

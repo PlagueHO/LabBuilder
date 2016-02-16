@@ -17,8 +17,10 @@ ConvertFrom-StringData -StringData @'
     EmptyTemplateVHDError=VHD in Template '{0}' is empty.
     EmptyTemplateVHDNameError=Template VHD name is empty.
     EmptyTemplateVHDISOPathError=The ISO Path in Template VHD '{0}' is empty.
+    EmptyTemplateVHDPathError=The VHD Path in Template VHD '{0}' is empty.
     TemplateVHDISORootPathNotFoundError=The default ISO Folder '{0}' for template VHDs is not found.
     TemplateVHDISOPathNotFoundError=The ISO file '{1}' for Template VHD '{0}' could not be found.
+    TemplateVHDRootPathNotFoundError=The default VHD Folder '{0}' for template VHDs is not found.
     TemplateSourceVHDNotFoundError=The Template Source VHD '{0}' in Template '{1}' could not be found.
     DSCModuleDownloadError=Module '{2}' required by DSC Config File '{0}' in VM '{1}' could not be found or downloaded.					
     DSCModuleNotFoundError=Module '{2}' required by DSC Config File '{0}' in VM '{1}' could not be found in the module path.
