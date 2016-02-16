@@ -3056,7 +3056,19 @@ function Initialize-LabVMImage {
 >>>>>>> Update Includes Build from ISO
 =======
 
+<<<<<<< refs/remotes/upstream/dev
 >>>>>>> HEAD~8
+=======
+    if (! (Test-Path -Path "$MountPoint\Windows\Panther" -PathType Container))
+    {
+        Write-Verbose -Message $($LocalizedData.CreatingVMBootDiskPantherFolderMessage `
+            -f $VM.Name)
+
+        $null = New-Item `
+            -Path "$MountPoint\Windows\Panther" `
+            -ItemType Directory
+    }
+>>>>>>> HEAD~7
     $null = Copy-Item `
         -Path (Join-Path -Path $VMLabBuilderFiles -ChildPath 'Unattend.xml') `
         -Destination "$MountPoint\Windows\Panther\Unattend.xml" `
