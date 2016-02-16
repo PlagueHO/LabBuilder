@@ -369,14 +369,14 @@ function Get-LabConfiguration {
     # Figure out the Config path and load it into the XML object (if we can)
     # This path is used to find any additional configuration files that might
     # be provided with config
-    [String] $ConfigPath = (Get-Location).Path
+    [String] $ConfigPath = [System.IO.Path]::GetDirectoryName($Path)
     [String] $XMLConfigPath = $Configuration.labbuilderconfig.settings.configpath
     if ($XMLConfigPath) {
         if (! [System.IO.Path]::IsPathRooted($XMLConfigurationPath))
         {
             # A relative path was provided in the config path so add the actual path of the
             # XML to it
-            [String] $FullConfigPath = Join-Path -Path $ConfigPath -ChildPath $XMLConfigPath.Substring(2,($XMLConfigPath.Length - 2))
+            [String] $FullConfigPath = Join-Path -Path $ConfigPath -ChildPath $XMLConfigPath
         } # If
     }
     Else
@@ -597,14 +597,12 @@ function Initialize-LabConfiguration {
     }
     # Check the Vlan ID of the adapter on the switch
     $ExistingManagementAdapter = Get-VMNetworkAdapter `
-<<<<<<< HEAD
-=======
 		-ManagementOS `
 		-Name $ManagementSwitchName
     $ExistingVlan = (Get-VMNetworkAdapterVlan `
 		-VMNetworkAdaptername $ExistingManagementAdapter.Name `
 		-ManagementOS).AccessVlanId
->>>>>>> c1bb6a880299bdb94aeaa8f93f2445b12e9b4210
+
     if ($ExistingVlan -ne $ManagementVlan)
     {
         Write-Verbose -Message ($LocalizedData.UpdatingLabManagementSwitchMessage `
@@ -871,7 +869,7 @@ function Download-LabResources {
    Gets an array of switches from a Lab Configuration file.
 .DESCRIPTION
    Takes a provided Lab Configuration file and returns the list of switches required for this Lab.
-   This list is usually passed to Initialize-LabSwitches to configure the switches required for this
+   This list is usually passed to Initialize-LabSwitches to configure the swtiches required for this
    lab.
 .PARAMETER Configuration
    Contains the Lab Builder configuration object that was loaded by the Get-LabConfiguration object.
@@ -1305,10 +1303,7 @@ function Get-LabVMTemplates {
         {
             $MemoryStartupBytes = (Invoke-Expression $Template.MemoryStartupBytes)
         } # if
-<<<<<<< HEAD
-=======
 
->>>>>>> c1bb6a880299bdb94aeaa8f93f2445b12e9b4210
         # Does the template already exist in the list?
         [Boolean] $Found = $False
         foreach ($VMTemplate in $VMTemplates)
@@ -1358,10 +1353,7 @@ function Get-LabVMTemplates {
                 {
                     $VMTemplate.ExposeVirtualizationExtensions = $Template.ExposeVirtualizationExtensions
                 }
-<<<<<<< HEAD
-=======
 
->>>>>>> c1bb6a880299bdb94aeaa8f93f2445b12e9b4210
                 if ($Template.AdministratorPassword)
                 {
                     $VMTemplate.AdministratorPassword = $Template.AdministratorPassword
@@ -1466,21 +1458,14 @@ function Get-LabVMTemplateDisks {
     [CmdLetBinding()]
     param
     (
-<<<<<<< HEAD
-=======
         [Parameter (Mandatory)]
->>>>>>> c1bb6a880299bdb94aeaa8f93f2445b12e9b4210
         [ValidateNotNullOrEmpty()]
         [XML] $Config
     )
 
     [System.Collections.Hashtable[]] $VMTemplateDisks = @()
     [String] $VHDParentPath = $Config.labbuilderconfig.SelectNodes('settings').vhdparentpath
-   
-<<<<<<< HEAD
-=======
->>>>>>> c1bb6a880299bdb94aeaa8f93f2445b12e9b4210
-   
+
     # Read the list of templateDisks from the configuration file
     $TemplateDisks = $Config.labbuilderconfig.SelectNodes('TemplateDisks').TemplateDisk
     foreach ($TemplateDisk in $TemplateDisks)
@@ -1504,53 +1489,37 @@ function Get-LabVMTemplateDisks {
         {
             $DiskName = $TemplateDisk.Name
         } # if
-        
-<<<<<<< HEAD
-=======
 
         # Get the Template OS Type 
         [String] $isNano = 'N'
->>>>>>> c1bb6a880299bdb94aeaa8f93f2445b12e9b4210
         if ($TemplateDisk.isNano)
         {
             $isNano = $TemplateDisk.isNano
         } # If
         
 		# Get the Template Wim Image to use 
-<<<<<<< HEAD
-=======
         [String] $WimImage = ''
->>>>>>> c1bb6a880299bdb94aeaa8f93f2445b12e9b4210
         if ($TemplateDisk.WimImage)
         {
             $WimImage = $TemplateDisk.WimImage
         } # If
 
         # Get the Template VHD Type 
-<<<<<<< HEAD
-=======
         [String] $VHDFormat = 'VHDX'
->>>>>>> c1bb6a880299bdb94aeaa8f93f2445b12e9b4210
         if ($TemplateDisk.VHDFormat)
         {
             $VHDFormat = $TemplateDisk.VHDFormat
         } # If
 
         # Get the Template VM Generation 
-<<<<<<< HEAD
-=======
         [int] $Generation = 2
->>>>>>> c1bb6a880299bdb94aeaa8f93f2445b12e9b4210
         if ($TemplateDisk.Generation)
         {
             $Generation = $TemplateDisk.Generation
         } # If
 
         # Get the Template Packages for Nano 
-<<<<<<< HEAD
-=======
         [String] $Packages = ''
->>>>>>> c1bb6a880299bdb94aeaa8f93f2445b12e9b4210
         if ($TemplateDisk.packages)
         {
             $Packages = $TemplateDisk.Packages
@@ -1562,10 +1531,8 @@ function Get-LabVMTemplateDisks {
                 isNano = $isNano;
                 WimImage = $WimImage;
                 Generation = $Generation;
-<<<<<<< HEAD
-=======
                 VHDFormat = $VHDFormat;
->>>>>>> c1bb6a880299bdb94aeaa8f93f2445b12e9b4210
+
                 Packages = if ($Packages)
                     {
                         $Packages
@@ -1624,12 +1591,9 @@ function Initialize-LabVMTemplates {
             {  
 				$VMTemplateDisks = Get-LabVMTemplateDisks -Config $Configuration
 				Initialize-TemplateVHD -Config $Configuration  -VMTemplateDisks $VMTemplateDisks
-<<<<<<< HEAD
-=======
 			}
             
 			Write-Verbose -Message $($LocalizedData.CopyingTemplateSourceVHDMessage `
->>>>>>> c1bb6a880299bdb94aeaa8f93f2445b12e9b4210
                 -f $VMTemplate.sourcevhd,$VMTemplate.templatevhd)
             Copy-Item -Path $VMTemplate.sourcevhd -Destination $VMTemplate.templatevhd
             Write-Verbose -Message $($LocalizedData.OptimizingTemplateVHDMessage `
@@ -2293,10 +2257,7 @@ function Start-LabVMDSC {
             {
                 Try
                 {
-<<<<<<< HEAD
                     Write-Verbose -Message $($LocalizedData.CopyingFilesToVMMessage `
-=======
->>>>>>> c1bb6a880299bdb94aeaa8f93f2445b12e9b4210
                         -f $VM.Name,'DSC')
 
                     $null = Copy-Item `
@@ -2327,10 +2288,7 @@ function Start-LabVMDSC {
                 }
                 Catch
                 {
-<<<<<<< HEAD
                     Write-Verbose -Message $($LocalizedData.CopyingFilesToVMFailedMessage `
-=======
->>>>>>> c1bb6a880299bdb94aeaa8f93f2445b12e9b4210
                         -f $VM.Name,'DSC',$Script:RetryConnectSeconds)
 
                     Start-Sleep -Seconds $Script:RetryConnectSeconds
@@ -2366,10 +2324,7 @@ function Start-LabVMDSC {
             {
                 try
                 {
-<<<<<<< HEAD
                     Write-Verbose -Message $($LocalizedData.CopyingFilesToVMMessage `
-=======
->>>>>>> c1bb6a880299bdb94aeaa8f93f2445b12e9b4210
                         -f $VM.Name,"DSC Module $ModuleName")
 
                     $null = Copy-Item `
@@ -2497,10 +2452,7 @@ function Get-LabUnattendFile {
         </component>
         <component name="Microsoft-Windows-Shell-Setup" processorArchitecture="amd64" publicKeyToken="31bf3856ad364e35" language="neutral" versionScope="nonSxS" xmlns:wcm="http://schemas.microsoft.com/WMIConfig/2002/State" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
             <ComputerName>$($VM.ComputerName)</ComputerName>
-<<<<<<< HEAD
-=======
         </component>
->>>>>>> c1bb6a880299bdb94aeaa8f93f2445b12e9b4210
 "@
 		
 
@@ -2844,6 +2796,10 @@ function Set-LabVMInitializationFiles {
     [String] $GetCertPs = Get-LabGetCertificatePs -Configuration $Configuration -VM $VM
     [String] $SetupCompleteCmd = ''
     [String] $SetupCompletePs = @"
+Add-Content ``
+    -Path "C:\WINDOWS\Setup\Scripts\SetupComplete.log" ``
+    -Value 'SetupComplete.ps1 Script Started...' ``
+    -Encoding Ascii
 $GetCertPs
 Add-Content ``
     -Path `"`$(`$ENV:SystemRoot)\Setup\Scripts\SetupComplete.log`" ``
@@ -2867,9 +2823,6 @@ Add-Content ``
                     -f $VM.name,$SetupComplete)
             }
             New-LabException @ExceptionParameters
-<<<<<<< HEAD
-=======
->>>>>>> c1bb6a880299bdb94aeaa8f93f2445b12e9b4210
         }
         [String] $Extension = [System.IO.Path]::GetExtension($SetupComplete)
         Switch ($Extension.ToLower())
@@ -2891,13 +2844,10 @@ Add-Content ``
     $SetupCompleteCmd = @"
 @echo SetupComplete.cmd Script Started... >> %SYSTEMROOT%\Setup\Scripts\SetupComplete.log`r
 $SetupCompleteCmd
-<<<<<<< HEAD
-=======
 Timeout 30
 powerShell.exe -ExecutionPolicy Unrestricted -Command `"%SYSTEMROOT%\Setup\Scripts\SetupComplete.ps1`" `r
 @echo SetupComplete.cmd Script Finished... >> %SYSTEMROOT%\Setup\Scripts\SetupComplete.log
 @echo Initial Setup Completed - this file indicates that setup has completed. >> %SYSTEMROOT%\Setup\Scripts\InitialSetupCompleted.txt
->>>>>>> c1bb6a880299bdb94aeaa8f93f2445b12e9b4210
 "@
     $null = Set-Content `
         -Path (Join-Path -Path $VMLabBuilderFiles -ChildPath 'SetupComplete.cmd') `
@@ -2980,10 +2930,7 @@ function Initialize-LabVMImage {
     [String] $MountPoint = Join-Path `
         -Path $VMLabBuilderFiles `
         -ChildPath 'Mount'
-<<<<<<< HEAD
-=======
-        
->>>>>>> c1bb6a880299bdb94aeaa8f93f2445b12e9b4210
+
     if (! (Test-Path -Path $MountPoint -PathType Container))
     {
         $null = New-Item `
@@ -3005,49 +2952,35 @@ function Initialize-LabVMImage {
     {
         $MSUFilename = $URL.Substring($URL.LastIndexOf('/') + 1)
         $MSUPath = Join-Path `
-<<<<<<< HEAD
-=======
 			-Path $Script:WorkingFolder `
 			-ChildPath $MSUFilename
->>>>>>> c1bb6a880299bdb94aeaa8f93f2445b12e9b4210
+
         if (-not (Test-Path -Path $MSUPath))
         {
             Write-Verbose -Message $($LocalizedData.DownloadingVMBootDiskFileMessage `
                 -f $VM.Name,'MSU',$URL)
             Invoke-WebRequest `
-<<<<<<< HEAD
-=======
 				-Uri $URL `
 				-OutFile $MSUPath
->>>>>>> c1bb6a880299bdb94aeaa8f93f2445b12e9b4210
         } # If
 
         # Once downloaded apply the update
         Write-Verbose -Message $($LocalizedData.ApplyingVMBootDiskFileMessage `
             -f $VM.Name,'MSU',$URL)
         $null = Add-WindowsPackage `
-<<<<<<< HEAD
-=======
 			-PackagePath $MSUPath `
 			-Path $MountPoint
->>>>>>> c1bb6a880299bdb94aeaa8f93f2445b12e9b4210
     } # Foreach
 
     # Create the scripts folder where setup scripts will be put
     $null = New-Item `
-<<<<<<< HEAD
-=======
 		-Path "$MountPoint\Windows\Setup\Scripts" `
 		-ItemType Directory
->>>>>>> c1bb6a880299bdb94aeaa8f93f2445b12e9b4210
 
     # Apply an unattended setup file
     Write-Verbose -Message $($LocalizedData.ApplyingVMBootDiskFileMessage `
         -f $VM.Name,'Unattend','Unattend.xml')
 
-<<<<<<< HEAD
-=======
->>>>>>> c1bb6a880299bdb94aeaa8f93f2445b12e9b4210
     if (! (Test-Path -Path "$MountPoint\Windows\Panther" -PathType Container))
     {
         Write-Verbose -Message $($LocalizedData.CreatingVMBootDiskPantherFolderMessage `
@@ -3057,9 +2990,6 @@ function Initialize-LabVMImage {
             -Path "$MountPoint\Windows\Panther" `
             -ItemType Directory
     }
-<<<<<<< HEAD
-=======
->>>>>>> c1bb6a880299bdb94aeaa8f93f2445b12e9b4210
     $null = Copy-Item `
         -Path (Join-Path -Path $VMLabBuilderFiles -ChildPath 'Unattend.xml') `
         -Destination "$MountPoint\Windows\Panther\Unattend.xml" `
@@ -3123,11 +3053,8 @@ function Initialize-LabVMImage {
 function Get-LabVMs {
     [OutputType([System.Collections.Hashtable[]])]
     [CmdLetBinding()]
-<<<<<<< HEAD
-=======
     param (
         [Parameter(Mandatory)]
->>>>>>> c1bb6a880299bdb94aeaa8f93f2445b12e9b4210
         [ValidateNotNullOrEmpty()]
         [XML] $Configuration,
 
@@ -3145,13 +3072,10 @@ function Get-LabVMs {
     [String] $VMPath = $Configuration.labbuilderconfig.settings.vmpath
     $VMs = $Configuration.labbuilderconfig.SelectNodes('vms').vm
 
-<<<<<<< HEAD
-=======
     foreach ($VM in $VMs) 
 	{
         if ($VM.Name -eq 'VM')
 		{
->>>>>>> c1bb6a880299bdb94aeaa8f93f2445b12e9b4210
             $ExceptionParameters = @{
                 errorId = 'VMNameError'
                 errorCategory = 'InvalidArgument'
@@ -3159,8 +3083,6 @@ function Get-LabVMs {
             }
             New-LabException @ExceptionParameters
         } # If
-<<<<<<< HEAD
-=======
         if (-not $VM.Template) 
 		{
             $ExceptionParameters = @{
@@ -3192,22 +3114,16 @@ function Get-LabVMs {
                     -f $VM.name,$VM.template)
             }
             New-LabException @ExceptionParameters
-<<<<<<< HEAD
-=======
->>>>>>> c1bb6a880299bdb94aeaa8f93f2445b12e9b4210
         } # If
 
         # Assemble the Network adapters that this VM will use
         [System.Collections.Hashtable[]] $VMAdapters = @()
         [Int] $AdapterCount = 0
-<<<<<<< HEAD
-=======
         foreach ($VMAdapter in $VM.Adapters.Adapter) 
 		{
             $AdapterCount++
             if ($VMAdapter.Name -eq 'adapter') 
 			{
->>>>>>> c1bb6a880299bdb94aeaa8f93f2445b12e9b4210
                 $ExceptionParameters = @{
                     errorId = 'VMAdapterNameError'
                     errorCategory = 'InvalidArgument'
@@ -3216,11 +3132,8 @@ function Get-LabVMs {
                 }
                 New-LabException @ExceptionParameters
             }
-<<<<<<< HEAD
-=======
             if (-not $VMAdapter.SwitchName) 
 			{
->>>>>>> c1bb6a880299bdb94aeaa8f93f2445b12e9b4210
                 $ExceptionParameters = @{
                     errorId = 'VMAdapterSwitchNameError'
                     errorCategory = 'InvalidArgument'
@@ -3231,24 +3144,18 @@ function Get-LabVMs {
             }
             # Check the switch is in the switch list
             [Boolean] $Found = $False
-<<<<<<< HEAD
-=======
             foreach ($Switch in $Switches) 
 			{
                 if ($Switch.Name -eq $VMAdapter.SwitchName) 
 				{
->>>>>>> c1bb6a880299bdb94aeaa8f93f2445b12e9b4210
                     # The switch is found in the switch list - record the VLAN (if there is one)
                     $Found = $True
                     $SwitchVLan = $Switch.Vlan
                     Break
                 } # If
             } # Foreach
-<<<<<<< HEAD
-=======
             if (-not $Found) 
 			{
->>>>>>> c1bb6a880299bdb94aeaa8f93f2445b12e9b4210
                 $ExceptionParameters = @{
                     errorId = 'VMAdapterSwitchNotFoundError'
                     errorCategory = 'InvalidArgument'
@@ -3260,30 +3167,21 @@ function Get-LabVMs {
             
             # Figure out the VLan - If defined in the VM use it, otherwise use the one defined in the Switch, otherwise keep blank.
             [String] $VLan = $VMAdapter.VLan
-<<<<<<< HEAD
-=======
             if (-not $VLan) 
 			{
->>>>>>> c1bb6a880299bdb94aeaa8f93f2445b12e9b4210
                 $VLan = $SwitchVLan
             } # If
             
             [String] $MACAddressSpoofing = 'Off'
-<<<<<<< HEAD
-=======
             if ($VMAdapter.macaddressspoofing -eq 'On') 
 			{
->>>>>>> c1bb6a880299bdb94aeaa8f93f2445b12e9b4210
                 $MACAddressSpoofing = 'On'
             }
             
             # Have we got any IPv4 settings?
             [System.Collections.Hashtable] $IPv4 = @{}
-<<<<<<< HEAD
-=======
             if ($VMAdapter.IPv4) 
 			{
->>>>>>> c1bb6a880299bdb94aeaa8f93f2445b12e9b4210
                 $IPv4 = @{
                     Address = $VMAdapter.IPv4.Address;
                     defaultgateway = $VMAdapter.IPv4.DefaultGateway;
@@ -3294,11 +3192,9 @@ function Get-LabVMs {
 
             # Have we got any IPv6 settings?
             [System.Collections.Hashtable] $IPv6 = @{}
-<<<<<<< HEAD
-=======
+
             if ($VMAdapter.IPv6) 
 			{
->>>>>>> c1bb6a880299bdb94aeaa8f93f2445b12e9b4210
                 $IPv6 = @{
                     Address = $VMAdapter.IPv6.Address;
                     defaultgateway = $VMAdapter.IPv6.DefaultGateway;
@@ -3503,17 +3399,12 @@ function Get-LabVMs {
                 parentvhd = $ParentVHD;
                 shared = $Shared;
                 supportPR = $SupportPR;
-<<<<<<< HEAD
-=======
                 moveSourceVHD = $MoveSourceVHD;
->>>>>>> c1bb6a880299bdb94aeaa8f93f2445b12e9b4210
             }
         } # Foreach
 
         # Does the VM have an Unattend file specified?
         [String] $UnattendFile = ''
-<<<<<<< HEAD
-=======
         if ($VM.UnattendFile) 
 		{
             $UnattendFile = Join-Path `
@@ -3521,7 +3412,6 @@ function Get-LabVMs {
                 -ChildPath $VM.UnattendFile
             if (-not (Test-Path $UnattendFile)) 
 			{
->>>>>>> c1bb6a880299bdb94aeaa8f93f2445b12e9b4210
                 $ExceptionParameters = @{
                     errorId = 'UnattendFileMissingError'
                     errorCategory = 'InvalidArgument'
@@ -3534,11 +3424,8 @@ function Get-LabVMs {
         
         # Does the VM specify a Setup Complete Script?
         [String] $SetupComplete = ''
-<<<<<<< HEAD
-=======
         if ($VM.SetupComplete) 
 		{
->>>>>>> c1bb6a880299bdb94aeaa8f93f2445b12e9b4210
             $SetupComplete = Join-Path `
                 -Path $Configuration.labbuilderconfig.settings.fullconfigpath `
                 -ChildPath $VM.SetupComplete
@@ -3561,20 +3448,13 @@ function Get-LabVMs {
                         -f $VM.name,$SetupComplete)
                 }
                 New-LabException @ExceptionParameters
-<<<<<<< HEAD
-=======
-
->>>>>>> c1bb6a880299bdb94aeaa8f93f2445b12e9b4210
             } # If
         } # If
 
         # Load the DSC Config File setting and check it
         [String] $DSCConfigFile = ''
-<<<<<<< HEAD
-=======
         if ($VM.DSC.ConfigFile) 
 		{
->>>>>>> c1bb6a880299bdb94aeaa8f93f2445b12e9b4210
             $DSCConfigFile = Join-Path `
                 -Path $Configuration.labbuilderconfig.settings.fullconfigpath `
                 -ChildPath $VM.DSC.ConfigFile
@@ -3587,12 +3467,8 @@ function Get-LabVMs {
                         -f $VM.name,$DSCConfigFile)
                 }
                 New-LabException @ExceptionParameters
-<<<<<<< HEAD
-=======
-
-
->>>>>>> c1bb6a880299bdb94aeaa8f93f2445b12e9b4210
             }
+
             if (-not (Test-Path $DSCConfigFile))
             {
                 $ExceptionParameters = @{
@@ -3602,11 +3478,6 @@ function Get-LabVMs {
                         -f $VM.name,$DSCConfigFile)
                 }
                 New-LabException @ExceptionParameters
-<<<<<<< HEAD
-=======
-
-
->>>>>>> c1bb6a880299bdb94aeaa8f93f2445b12e9b4210
             }
             if (-not $VM.DSC.ConfigName)
             {
@@ -3617,10 +3488,6 @@ function Get-LabVMs {
                         -f $VM.name)
                 }
                 New-LabException @ExceptionParameters
-<<<<<<< HEAD
-=======
-
->>>>>>> c1bb6a880299bdb94aeaa8f93f2445b12e9b4210
             }
         }
         
@@ -3664,23 +3531,18 @@ function Get-LabVMs {
         
         # Get the Memory Startup Bytes (from the template or VM)
         [Int] $ProcessorCount = 1
-<<<<<<< HEAD
-=======
         if ($VMTemplate.processorcount) 
 		{
             $ProcessorCount = $VMTemplate.processorcount
         } # If
         if ($VM.processorcount) 
 		{
->>>>>>> c1bb6a880299bdb94aeaa8f93f2445b12e9b4210
             $ProcessorCount = (Invoke-Expression $VM.processorcount)
         } # If
 
         # Get the Expose Virtualization Extensions flag
         [String] $ExposeVirtualizationExtensions = ''
         if ($VMTemplate.ExposeVirtualizationExtensions)
-<<<<<<< HEAD
-=======
 			{
 			$ExposeVirtualizationExtensions=$VMTemplate.ExposeVirtualizationExtensions
 			} # If
@@ -3698,59 +3560,46 @@ function Get-LabVMs {
         } # If
         if ($VM.administratorpassword) 
 		{
->>>>>>> c1bb6a880299bdb94aeaa8f93f2445b12e9b4210
             $AdministratorPassword = $VM.administratorpassword
         } # If
 
         # Get the Product Key (from the template or VM)
         [String] $ProductKey = ''
-<<<<<<< HEAD
-=======
         if ($VMTemplate.productkey) 
 		{
             $ProductKey = $VMTemplate.productkey
         } # If
         if ($VM.productkey) 
 		{
->>>>>>> c1bb6a880299bdb94aeaa8f93f2445b12e9b4210
             $ProductKey = $VM.productkey
         } # If
 
         # Get the Timezone (from the template or VM)
         [String] $Timezone = 'Pacific Standard Time'
-<<<<<<< HEAD
-=======
         if ($VMTemplate.timezone) 
 		{
             $Timezone = $VMTemplate.timezone
         } # If
         if ($VM.timezone) 
 		{
->>>>>>> c1bb6a880299bdb94aeaa8f93f2445b12e9b4210
             $Timezone = $VM.timezone
         } # If
 
         # Get the OS Type
-<<<<<<< HEAD
-=======
         if ($VMTemplate.ostype) 
 		{
             $OSType = $VMTemplate.ostype
         } 
 		Else 
 		{
->>>>>>> c1bb6a880299bdb94aeaa8f93f2445b12e9b4210
             $OSType = 'Server'
         } # If
 
         # Do we have any MSU files that are listed as needing to be applied to the OS before
         # first boot up?
         [String[]] $InstallMSU = @()
-<<<<<<< HEAD
-=======
         foreach ($Update in $VM.Install.MSU) 
 		{
->>>>>>> c1bb6a880299bdb94aeaa8f93f2445b12e9b4210
             $InstallMSU += $Update.URL
         } # Foreach
 
@@ -4283,7 +4132,7 @@ function Start-LabVM {
     # We only perform this section of VM Initialization (DSC, Cert, etc) with Server OS
     if ($VM.OSType -eq 'Server')
     {
-        # Has this VM been initialized before (do we have a cer for it)
+        # Has this VM been initialized before (do we have a cert for it)
         if (-not (Test-Path "$VMPath\$($VM.Name)\LabBuilder Files\$Script:DSCEncryptionCert"))
         {
             # No, so check it is initialized and download the cert.
@@ -4913,47 +4762,32 @@ function Initialize-LabVMPath {
     if (-not (Test-Path -Path $VMPath))
     {
         $Null = New-Item `
-<<<<<<< HEAD
-=======
 			-Path $VMPath `
 			-ItemType Directory
->>>>>>> c1bb6a880299bdb94aeaa8f93f2445b12e9b4210
     }
     if (-not (Test-Path -Path "$VMPath\Virtual Machines"))
     {
         $Null = New-Item `
-<<<<<<< HEAD
-=======
 			-Path "$VMPath\Virtual Machines" `
 			-ItemType Directory
->>>>>>> c1bb6a880299bdb94aeaa8f93f2445b12e9b4210
     }
     if (-not (Test-Path -Path "$VMPath\Virtual Hard Disks"))
     {
         $Null = New-Item `
-<<<<<<< HEAD
-=======
 		-Path "$VMPath\Virtual Hard Disks" `
 		-ItemType Directory
->>>>>>> c1bb6a880299bdb94aeaa8f93f2445b12e9b4210
     }
     if (-not (Test-Path -Path "$VMPath\LabBuilder Files"))
     {
         $Null = New-Item `
-<<<<<<< HEAD
             -Path "$VMPath\LabBuilder Files" `
             -ItemType Directory
-=======
->>>>>>> c1bb6a880299bdb94aeaa8f93f2445b12e9b4210
     }
     if (-not (Test-Path -Path "$VMPath\LabBuilder Files\DSC Modules"))
     {
         $Null = New-Item `
-<<<<<<< HEAD
             -Path "$VMPath\LabBuilder Files\DSC Modules" `
             -ItemType Directory
-=======
->>>>>>> c1bb6a880299bdb94aeaa8f93f2445b12e9b4210
     }
 }
 ####################################################################################################
@@ -4973,10 +4807,6 @@ function Initialize-LabVMPath {
    Array of Virtual Machines pulled from a configuration object.
 .OUTPUTS
    None
-<<<<<<< HEAD
-=======
-
->>>>>>> c1bb6a880299bdb94aeaa8f93f2445b12e9b4210
 #>
 function Initialize-LabVMs {
     [CmdLetBinding()]
@@ -5794,10 +5624,7 @@ Function Uninstall-Lab {
 } # Uninstall-Lab
 ####################################################################################################
 
-
 ##########################################################################################
-<<<<<<< HEAD
-=======
 #   Create Template VHD files for Labs
 ##########################################################################################
 <#.Synopsis
@@ -5808,18 +5635,14 @@ Function Uninstall-Lab {
 .EXAMPLE
 	Initialize-TemplateVHD -config Config.xml -VMTemplateDisk $VMTemplateDisks  
 
->>>>>>> c1bb6a880299bdb94aeaa8f93f2445b12e9b4210
 #>
 function Initialize-TemplateVHD
 {
    param (
-<<<<<<< HEAD
-=======
         [Parameter(Mandatory)]
         [XML] $Config,
 
         [Parameter(Mandatory)]
->>>>>>> c1bb6a880299bdb94aeaa8f93f2445b12e9b4210
 	   [System.Collections.Hashtable[]] $VMTemplateDisks
     )
 
@@ -5828,9 +5651,6 @@ function Initialize-TemplateVHD
 	$TemplateDiskPath = $Config.labbuilderconfig.settings.TemplateDiskPath
 	$ServerISO = $Config.labbuilderconfig.settings.TemplateISO
 
-<<<<<<< HEAD
-=======
->>>>>>> c1bb6a880299bdb94aeaa8f93f2445b12e9b4210
 	[String]$MountFolder = Join-Path -Path $ScriptDir -ChildPath 'Mount'
 
 	Write-Verbose "Script Directory = $ScriptDir"
@@ -5849,12 +5669,8 @@ function Initialize-TemplateVHD
 	[String]$DriveLetter = (Get-Diskimage -ImagePath $ServerISO | Get-Volume).DriveLetter
 	$ISODrive = "$([string]$DriveLetter):"
 
-<<<<<<< HEAD
-=======
-
 	Get-PSDrive -PSProvider FileSystem # Work around an issue with script not seeing the drive 
 
->>>>>>> c1bb6a880299bdb94aeaa8f93f2445b12e9b4210
 
 	 # As of 2015-06-16 Convert-WindowsImage contains a function instead of being a standalone script.
 	 # . source the Convert-WindowsImage.ps1 so it can be called
@@ -5863,9 +5679,6 @@ function Initialize-TemplateVHD
 
 	Write-Verbose "Prefix to use $TemplatePrefix"
 
-<<<<<<< HEAD
-=======
->>>>>>> c1bb6a880299bdb94aeaa8f93f2445b12e9b4210
 	foreach ($VMTemplateDisk in $VMTemplateDisks)
 		{
 			$VMTemplateDiskName = "$TemplatePrefix" + [string]$VMTemplateDisk.Name
@@ -5877,11 +5690,6 @@ function Initialize-TemplateVHD
 			{ 
 				[String]$VHDFormat = $VMTemplateDisk.VHDFormat
 				If ($VHDFormat -eq $null) {$VHDFormat = 'VHDX'}
-
-<<<<<<< HEAD
-=======
-
-
 
                  $WimPath = 'Sources\Install.WIM'
                  if ($VMTemplateDisk.isNano -eq 'Y')
@@ -5896,7 +5704,6 @@ function Initialize-TemplateVHD
                             $VHDPartitionStyle = 'BIOS'
                         }
 
->>>>>>> c1bb6a880299bdb94aeaa8f93f2445b12e9b4210
 				$Edition = $VMTemplateDisk.WimImage
 				
 				Write-Verbose "Image to use = $Edition"
@@ -5914,8 +5721,6 @@ function Initialize-TemplateVHD
 					-DiskLayout $VHDPartitionStyle 
 					      
 
-<<<<<<< HEAD
-=======
 				if ($VMTemplateDisk.IsNano -eq 'Y')
 				{
 					$Packages = $VMTemplateDisk.Packages
@@ -5926,7 +5731,6 @@ function Initialize-TemplateVHD
 					# Mount the VHD to load packages into it
 
                     Mount-WindowsImage -Path "$MountFolder" -ImagePath "$PathtoDisk" -Index 1
->>>>>>> c1bb6a880299bdb94aeaa8f93f2445b12e9b4210
 					$PackageList = @(
 						@{ Name = 'Compute'; Filename = 'Microsoft-NanoServer-Compute-Package.cab' },
 						@{ Name = 'OEM-Drivers'; Filename = 'Microsoft-NanoServer-OEM-Drivers-Package.cab' },
@@ -5946,8 +5750,6 @@ function Initialize-TemplateVHD
 					)
 
 					# Add the selected packages
-<<<<<<< HEAD
-=======
 					foreach ($Package in $PackageList) 
                     {
 						If ($Package.Name -in $Packages) 
@@ -5962,7 +5764,6 @@ function Initialize-TemplateVHD
 						}
 					}
                     Dismount-WindowsImage -Path "$MountFolder" -Save
->>>>>>> c1bb6a880299bdb94aeaa8f93f2445b12e9b4210
 				} #EndIf
 			}
 			Else 
