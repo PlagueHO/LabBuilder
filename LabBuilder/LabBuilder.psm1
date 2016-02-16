@@ -674,11 +674,19 @@ function Initialize-LabConfiguration {
     }
     # Check the Vlan ID of the adapter on the switch
     $ExistingManagementAdapter = Get-VMNetworkAdapter `
+<<<<<<< refs/remotes/upstream/dev
         -ManagementOS `
         -Name $ManagementSwitchName
     $ExistingVlan = (Get-VMNetworkAdapterVlan `
         -VMNetworkAdapterName $ManagementSwitchName `
         -ManagementOS).AccessVlanId
+=======
+		-ManagementOS `
+		-Name $ManagementSwitchName
+    $ExistingVlan = (Get-VMNetworkAdapterVlan `
+		-VMNetworkAdapter $ManagementSwitchName `
+		-ManagementOS).AccessVlanId
+>>>>>>> HEAD~5
     if ($ExistingVlan -ne $ManagementVlan)
     {
         Write-Verbose -Message ($LocalizedData.UpdatingLabManagementSwitchMessage `
@@ -897,7 +905,7 @@ function Download-LabResources {
     Write-Verbose -Message $($LocalizedData.DownloadingLabResourcesMessage)
 
     # Bootstrap Nuget # This needs to be a test, not a force 
-    # $null = Get-PackageProvider -Name NuGet -ForceBootstrap -Force
+    $null = Get-PackageProvider -Name NuGet -ForceBootstrap -Force
     
     # Make sure PSGallery is trusted
     Set-PSRepository -Name PSGallery -InstallationPolicy Trusted    
@@ -2341,7 +2349,11 @@ function Start-LabVMDSC {
             {
                 Try
                 {
+<<<<<<< refs/remotes/upstream/dev
                     Write-Verbose -Message $($LocalizedData.CopyingFilesToVMMessage `
+=======
+                    Write-Verbose -Message $($LocalizedData.CopyingFilesToComputerMessage `
+>>>>>>> HEAD~5
                         -f $VM.Name,'DSC')
 
                     $null = Copy-Item `
@@ -2372,7 +2384,11 @@ function Start-LabVMDSC {
                 }
                 Catch
                 {
+<<<<<<< refs/remotes/upstream/dev
                     Write-Verbose -Message $($LocalizedData.CopyingFilesToVMFailedMessage `
+=======
+                    Write-Verbose -Message $($LocalizedData.CopyingFilesToComputerFailedMessage `
+>>>>>>> HEAD~5
                         -f $VM.Name,'DSC',$Script:RetryConnectSeconds)
 
                     Start-Sleep -Seconds $Script:RetryConnectSeconds
@@ -2428,10 +2444,14 @@ function Start-LabVMDSC {
                 catch
                 {
 <<<<<<< refs/remotes/upstream/dev
+<<<<<<< refs/remotes/upstream/dev
                     Write-Verbose -Message $($LocalizedData.CopyingFilesToVMFailedMessage `
 =======
                     Write-Verbose -Message $($LocalizedData.CopyingFilesToComputerFailedMessage `
 >>>>>>> HEAD~6
+=======
+                    Write-Verbose -Message $($LocalizedData.CopyingFilesToVMFailedMessage `
+>>>>>>> HEAD~5
                         -f $VM.Name,"DSC Module $ModuleName",$Script:RetryConnectSeconds)
 
                     Start-Sleep -Seconds $Script:RetryConnectSeconds
@@ -3051,29 +3071,49 @@ function Initialize-LabVMImage {
     {
         $MSUFilename = $URL.Substring($URL.LastIndexOf('/') + 1)
         $MSUPath = Join-Path `
+<<<<<<< refs/remotes/upstream/dev
             -Path $Script:WorkingFolder `
             -ChildPath $MSUFilename
+=======
+			-Path $Script:WorkingFolder `
+			-ChildPath $MSUFilename
+>>>>>>> HEAD~5
         if (-not (Test-Path -Path $MSUPath))
         {
             Write-Verbose -Message $($LocalizedData.DownloadingVMBootDiskFileMessage `
                 -f $VM.Name,'MSU',$URL)
             Invoke-WebRequest `
+<<<<<<< refs/remotes/upstream/dev
                 -Uri $URL `
                 -OutFile $MSUPath
+=======
+				-Uri $URL `
+				-OutFile $MSUPath
+>>>>>>> HEAD~5
         } # If
 
         # Once downloaded apply the update
         Write-Verbose -Message $($LocalizedData.ApplyingVMBootDiskFileMessage `
             -f $VM.Name,'MSU',$URL)
         $null = Add-WindowsPackage `
+<<<<<<< refs/remotes/upstream/dev
             -PackagePath $MSUPath `
             -Path $MountPoint
+=======
+			-PackagePath $MSUPath `
+			-Path $MountPoint
+>>>>>>> HEAD~5
     } # Foreach
 
     # Create the scripts folder where setup scripts will be put
     $null = New-Item `
+<<<<<<< refs/remotes/upstream/dev
         -Path "$MountPoint\Windows\Setup\Scripts" `
         -ItemType Directory
+=======
+		-Path "$MountPoint\Windows\Setup\Scripts" `
+		-ItemType Directory
+>>>>>>> HEAD~5
 
     # Apply an unattended setup file
     Write-Verbose -Message $($LocalizedData.ApplyingVMBootDiskFileMessage `
@@ -3199,10 +3239,17 @@ function Get-LabVMs {
     [String] $VMPath = $Configuration.labbuilderconfig.settings.vmpath
     $VMs = $Configuration.labbuilderconfig.SelectNodes('vms').vm
 
+<<<<<<< refs/remotes/upstream/dev
     foreach ($VM in $VMs)
     {
         if ($VM.Name -eq 'VM')
         {
+=======
+    foreach ($VM in $VMs) 
+	{
+        if ($VM.Name -eq 'VM')
+		{
+>>>>>>> HEAD~5
             $ExceptionParameters = @{
                 errorId = 'VMNameError'
                 errorCategory = 'InvalidArgument'
@@ -3210,8 +3257,13 @@ function Get-LabVMs {
             }
             New-LabException @ExceptionParameters
         } # If
+<<<<<<< refs/remotes/upstream/dev
         if (-not $VM.Template)
         {
+=======
+        if (-not $VM.Template) 
+		{
+>>>>>>> HEAD~5
             $ExceptionParameters = @{
                 errorId = 'VMTemplateNameEmptyError'
                 errorCategory = 'InvalidArgument'
@@ -3231,8 +3283,13 @@ function Get-LabVMs {
                 Break
             } # If
         } # Foreach
+<<<<<<< refs/remotes/upstream/dev
         if (-not $Found)
         {
+=======
+        if (-not $Found) 
+		{
+>>>>>>> HEAD~5
             $ExceptionParameters = @{
                 errorId = 'VMTemplateNotFoundError'
                 errorCategory = 'InvalidArgument'
@@ -3240,16 +3297,31 @@ function Get-LabVMs {
                     -f $VM.name,$VM.template)
             }
             New-LabException @ExceptionParameters
+<<<<<<< refs/remotes/upstream/dev
+=======
+        } # If
+        # Check the VHD File path in the template is not empty
+        if (-not $TemplateVHDPath) {
+            throw "The template VHD path set in template $($VM.Template) cannot be empty."
+>>>>>>> HEAD~5
         } # If
 
         # Assemble the Network adapters that this VM will use
         [System.Collections.Hashtable[]] $VMAdapters = @()
         [Int] $AdapterCount = 0
+<<<<<<< refs/remotes/upstream/dev
         foreach ($VMAdapter in $VM.Adapters.Adapter)
         {
             $AdapterCount++
             if ($VMAdapter.Name -eq 'adapter')
             {
+=======
+        foreach ($VMAdapter in $VM.Adapters.Adapter) 
+		{
+            $AdapterCount++
+            if ($VMAdapter.Name -eq 'adapter') 
+			{
+>>>>>>> HEAD~5
                 $ExceptionParameters = @{
                     errorId = 'VMAdapterNameError'
                     errorCategory = 'InvalidArgument'
@@ -3258,8 +3330,13 @@ function Get-LabVMs {
                 }
                 New-LabException @ExceptionParameters
             }
+<<<<<<< refs/remotes/upstream/dev
             if (-not $VMAdapter.SwitchName)
             {
+=======
+            if (-not $VMAdapter.SwitchName) 
+			{
+>>>>>>> HEAD~5
                 $ExceptionParameters = @{
                     errorId = 'VMAdapterSwitchNameError'
                     errorCategory = 'InvalidArgument'
@@ -3270,18 +3347,30 @@ function Get-LabVMs {
             }
             # Check the switch is in the switch list
             [Boolean] $Found = $False
+<<<<<<< refs/remotes/upstream/dev
             foreach ($Switch in $Switches)
             {
                 if ($Switch.Name -eq $VMAdapter.SwitchName)
                 {
+=======
+            foreach ($Switch in $Switches) 
+			{
+                if ($Switch.Name -eq $VMAdapter.SwitchName) 
+				{
+>>>>>>> HEAD~5
                     # The switch is found in the switch list - record the VLAN (if there is one)
                     $Found = $True
                     $SwitchVLan = $Switch.Vlan
                     Break
                 } # If
             } # Foreach
+<<<<<<< refs/remotes/upstream/dev
             if (-not $Found)
             {
+=======
+            if (-not $Found) 
+			{
+>>>>>>> HEAD~5
                 $ExceptionParameters = @{
                     errorId = 'VMAdapterSwitchNotFoundError'
                     errorCategory = 'InvalidArgument'
@@ -3293,21 +3382,36 @@ function Get-LabVMs {
             
             # Figure out the VLan - If defined in the VM use it, otherwise use the one defined in the Switch, otherwise keep blank.
             [String] $VLan = $VMAdapter.VLan
+<<<<<<< refs/remotes/upstream/dev
             if (-not $VLan)
             {
+=======
+            if (-not $VLan) 
+			{
+>>>>>>> HEAD~5
                 $VLan = $SwitchVLan
             } # If
             
             [String] $MACAddressSpoofing = 'Off'
+<<<<<<< refs/remotes/upstream/dev
             if ($VMAdapter.macaddressspoofing -eq 'On')
             {
+=======
+            if ($VMAdapter.macaddressspoofing -eq 'On') 
+			{
+>>>>>>> HEAD~5
                 $MACAddressSpoofing = 'On'
             }
             
             # Have we got any IPv4 settings?
             [System.Collections.Hashtable] $IPv4 = @{}
+<<<<<<< refs/remotes/upstream/dev
             if ($VMAdapter.IPv4)
             {
+=======
+            if ($VMAdapter.IPv4) 
+			{
+>>>>>>> HEAD~5
                 $IPv4 = @{
                     Address = $VMAdapter.IPv4.Address;
                     defaultgateway = $VMAdapter.IPv4.DefaultGateway;
@@ -3318,8 +3422,13 @@ function Get-LabVMs {
 
             # Have we got any IPv6 settings?
             [System.Collections.Hashtable] $IPv6 = @{}
+<<<<<<< refs/remotes/upstream/dev
             if ($VMAdapter.IPv6)
             {
+=======
+            if ($VMAdapter.IPv6) 
+			{
+>>>>>>> HEAD~5
                 $IPv6 = @{
                     Address = $VMAdapter.IPv6.Address;
                     defaultgateway = $VMAdapter.IPv6.DefaultGateway;
@@ -3530,6 +3639,7 @@ function Get-LabVMs {
 
         # Does the VM have an Unattend file specified?
         [String] $UnattendFile = ''
+<<<<<<< refs/remotes/upstream/dev
         if ($VM.UnattendFile)
         {
             $UnattendFile = Join-Path `
@@ -3537,6 +3647,15 @@ function Get-LabVMs {
                 -ChildPath $VM.UnattendFile
             if (-not (Test-Path $UnattendFile))
             {
+=======
+        if ($VM.UnattendFile) 
+		{
+            $UnattendFile = Join-Path `
+                -Path $Configuration.labbuilderconfig.settings.fullconfigpath `
+                -ChildPath $VM.UnattendFile
+            if (-not (Test-Path $UnattendFile)) 
+			{
+>>>>>>> HEAD~5
                 $ExceptionParameters = @{
                     errorId = 'UnattendFileMissingError'
                     errorCategory = 'InvalidArgument'
@@ -3549,8 +3668,13 @@ function Get-LabVMs {
         
         # Does the VM specify a Setup Complete Script?
         [String] $SetupComplete = ''
+<<<<<<< refs/remotes/upstream/dev
         if ($VM.SetupComplete)
         {
+=======
+        if ($VM.SetupComplete) 
+		{
+>>>>>>> HEAD~5
             $SetupComplete = Join-Path `
                 -Path $Configuration.labbuilderconfig.settings.fullconfigpath `
                 -ChildPath $VM.SetupComplete
@@ -3573,13 +3697,22 @@ function Get-LabVMs {
                         -f $VM.name,$SetupComplete)
                 }
                 New-LabException @ExceptionParameters
+<<<<<<< refs/remotes/upstream/dev
+=======
+
+>>>>>>> HEAD~5
             } # If
         } # If
 
         # Load the DSC Config File setting and check it
         [String] $DSCConfigFile = ''
+<<<<<<< refs/remotes/upstream/dev
         if ($VM.DSC.ConfigFile)
         {
+=======
+        if ($VM.DSC.ConfigFile) 
+		{
+>>>>>>> HEAD~5
             $DSCConfigFile = Join-Path `
                 -Path $Configuration.labbuilderconfig.settings.fullconfigpath `
                 -ChildPath $VM.DSC.ConfigFile
@@ -3592,6 +3725,11 @@ function Get-LabVMs {
                         -f $VM.name,$DSCConfigFile)
                 }
                 New-LabException @ExceptionParameters
+<<<<<<< refs/remotes/upstream/dev
+=======
+
+
+>>>>>>> HEAD~5
             }
             if (-not (Test-Path $DSCConfigFile))
             {
@@ -3602,6 +3740,11 @@ function Get-LabVMs {
                         -f $VM.name,$DSCConfigFile)
                 }
                 New-LabException @ExceptionParameters
+<<<<<<< refs/remotes/upstream/dev
+=======
+
+
+>>>>>>> HEAD~5
             }
             if (-not $VM.DSC.ConfigName)
             {
@@ -3612,6 +3755,10 @@ function Get-LabVMs {
                         -f $VM.name)
                 }
                 New-LabException @ExceptionParameters
+<<<<<<< refs/remotes/upstream/dev
+=======
+
+>>>>>>> HEAD~5
             }
         }
         
@@ -3655,12 +3802,21 @@ function Get-LabVMs {
         
         # Get the Memory Startup Bytes (from the template or VM)
         [Int] $ProcessorCount = 1
+<<<<<<< refs/remotes/upstream/dev
         if ($VMTemplate.processorcount)
         {
             $ProcessorCount = $VMTemplate.processorcount
         } # If
         if ($VM.processorcount)
         {
+=======
+        if ($VMTemplate.processorcount) 
+		{
+            $ProcessorCount = $VMTemplate.processorcount
+        } # If
+        if ($VM.processorcount) 
+		{
+>>>>>>> HEAD~5
             $ProcessorCount = (Invoke-Expression $VM.processorcount)
         } # If
 
@@ -3694,51 +3850,92 @@ function Get-LabVMs {
         
         # Get the Administrator password (from the template or VM)
         [String] $AdministratorPassword = ''
+<<<<<<< refs/remotes/upstream/dev
         if ($VMTemplate.administratorpassword){
             $AdministratorPassword = $VMTemplate.administratorpassword
         } # If
         if ($VM.administratorpassword)
         {
+=======
+        if ($VMTemplate.administratorpassword) 
+		{
+            $AdministratorPassword = $VMTemplate.administratorpassword
+        } # If
+        if ($VM.administratorpassword) 
+		{
+>>>>>>> HEAD~5
             $AdministratorPassword = $VM.administratorpassword
         } # If
 
         # Get the Product Key (from the template or VM)
         [String] $ProductKey = ''
+<<<<<<< refs/remotes/upstream/dev
         if ($VMTemplate.productkey)
         {
             $ProductKey = $VMTemplate.productkey
         } # If
         if ($VM.productkey)
         {
+=======
+        if ($VMTemplate.productkey) 
+		{
+            $ProductKey = $VMTemplate.productkey
+        } # If
+        if ($VM.productkey) 
+		{
+>>>>>>> HEAD~5
             $ProductKey = $VM.productkey
         } # If
 
         # Get the Timezone (from the template or VM)
         [String] $Timezone = 'Pacific Standard Time'
+<<<<<<< refs/remotes/upstream/dev
         if ($VMTemplate.timezone)
         {
             $Timezone = $VMTemplate.timezone
         } # If
         if ($VM.timezone)
         {
+=======
+        if ($VMTemplate.timezone) 
+		{
+            $Timezone = $VMTemplate.timezone
+        } # If
+        if ($VM.timezone) 
+		{
+>>>>>>> HEAD~5
             $Timezone = $VM.timezone
         } # If
 
         # Get the OS Type
+<<<<<<< refs/remotes/upstream/dev
         if ($VMTemplate.ostype)
         {
             $OSType = $VMTemplate.ostype
         }
         else
         {
+=======
+        if ($VMTemplate.ostype) 
+		{
+            $OSType = $VMTemplate.ostype
+        } 
+		Else 
+		{
+>>>>>>> HEAD~5
             $OSType = 'Server'
         } # If
 
         # Do we have any MSU files that are listed as needing to be applied to the OS before
         # first boot up?
         [String[]] $InstallMSU = @()
+<<<<<<< refs/remotes/upstream/dev
         foreach ($Update in $VM.Install.MSU)
         {
+=======
+        foreach ($Update in $VM.Install.MSU) 
+		{
+>>>>>>> HEAD~5
             $InstallMSU += $Update.URL
         } # Foreach
 
@@ -4901,32 +5098,57 @@ function Initialize-LabVMPath {
     if (-not (Test-Path -Path $VMPath))
     {
         $Null = New-Item `
+<<<<<<< refs/remotes/upstream/dev
             -Path $VMPath `
             -ItemType Directory
+=======
+			-Path $VMPath `
+			-ItemType Directory
+>>>>>>> HEAD~5
     }
     if (-not (Test-Path -Path "$VMPath\Virtual Machines"))
     {
         $Null = New-Item `
+<<<<<<< refs/remotes/upstream/dev
             -Path "$VMPath\Virtual Machines" `
             -ItemType Directory
+=======
+			-Path "$VMPath\Virtual Machines" `
+			-ItemType Directory
+>>>>>>> HEAD~5
     }
     if (-not (Test-Path -Path "$VMPath\Virtual Hard Disks"))
     {
         $Null = New-Item `
+<<<<<<< refs/remotes/upstream/dev
             -Path "$VMPath\Virtual Hard Disks" `
             -ItemType Directory
+=======
+		-Path "$VMPath\Virtual Hard Disks" `
+		-ItemType Directory
+>>>>>>> HEAD~5
     }
     if (-not (Test-Path -Path "$VMPath\LabBuilder Files"))
     {
         $Null = New-Item `
+<<<<<<< refs/remotes/upstream/dev
             -Path "$VMPath\LabBuilder Files" `
             -ItemType Directory
+=======
+		-Path "$VMPath\LabBuilder Files" `
+		-ItemType Directory
+>>>>>>> HEAD~5
     }
     if (-not (Test-Path -Path "$VMPath\LabBuilder Files\DSC Modules"))
     {
         $Null = New-Item `
+<<<<<<< refs/remotes/upstream/dev
             -Path "$VMPath\LabBuilder Files\DSC Modules" `
             -ItemType Directory
+=======
+		-Path "$VMPath\LabBuilder Files\DSC Modules" `
+		-ItemType Directory
+>>>>>>> HEAD~5
     }
 }
 ####################################################################################################
@@ -4946,6 +5168,10 @@ function Initialize-LabVMPath {
    Array of Virtual Machines pulled from a configuration object.
 .OUTPUTS
    None
+<<<<<<< refs/remotes/upstream/dev
+=======
+
+>>>>>>> HEAD~5
 #>
 function Initialize-LabVMs {
     [CmdLetBinding()]
@@ -5520,10 +5746,14 @@ function Connect-LabVM
             }
         
 <<<<<<< refs/remotes/upstream/dev
+<<<<<<< refs/remotes/upstream/dev
             Write-Verbose -Message $($LocalizedData.ConnectingVMMessage `
 =======
             Write-Verbose -Message $($LocalizedData.ConnectingMessage `
 >>>>>>> HEAD~6
+=======
+            Write-Verbose -Message $($LocalizedData.ConnectingVMMessage `
+>>>>>>> HEAD~5
                 -f $VM.Name)
 
             # TODO: Convert to PS Direct once supported for this cmdlet.
