@@ -1489,6 +1489,14 @@ function Get-LabVMTemplateVHD {
         # Does the ISO Exist?
         if (-not (Test-Path -Path $ISOPath))
         {
+            $URL = $TemplateVHD.URL
+            if ($URL)
+            {
+                Write-Host `
+                    -ForegroundColor Yellow `
+                    -Object $($LocalizedData.ISONotFoundDownloadURLMessage `
+                        -f $TemplateVHD.Name,$ISOPath,$URL)
+            }
             $ExceptionParameters = @{
                 errorId = 'TemplateVHDISOPathNotFoundError'
                 errorCategory = 'InvalidArgument'
@@ -1526,7 +1534,7 @@ function Get-LabVMTemplateVHD {
             $IsNano = $TemplateVHD.isNano
         } # If
         
-		# Get the Template Wim Image to use 
+		# Get the Template Wim Image to use
         if ($TemplateVHD.WimImage)
         {
             $WimImage = $TemplateVHD.WimImage
