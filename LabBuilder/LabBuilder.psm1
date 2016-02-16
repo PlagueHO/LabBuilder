@@ -3163,7 +3163,6 @@ function Get-LabVMs {
 =======
         if (-not $VM.Template) 
 		{
->>>>>>> c1bb6a880299bdb94aeaa8f93f2445b12e9b4210
             $ExceptionParameters = @{
                 errorId = 'VMTemplateNameEmptyError'
                 errorCategory = 'InvalidArgument'
@@ -3183,11 +3182,9 @@ function Get-LabVMs {
                 Break
             } # If
         } # Foreach
-<<<<<<< HEAD
-=======
+
         if (-not $Found) 
 		{
->>>>>>> c1bb6a880299bdb94aeaa8f93f2445b12e9b4210
             $ExceptionParameters = @{
                 errorId = 'VMTemplateNotFoundError'
                 errorCategory = 'InvalidArgument'
