@@ -1339,20 +1339,24 @@ function Get-LabVMTemplate {
 ####################################################################################################
 <#
 .SYNOPSIS
-   Gets an Array of TemplateDisks for a Lab configuration.
+   Gets an Array of TemplateVHDs for a Lab configuration.
 .DESCRIPTION
    Takes a provided Lab Configuration file and returns the list of Template Disks
    that will be used to create the Virtual Machines in this lab. This list is usually passed to
-   Initialize-LabVMTemplateDisks.
+   Initialize-LabVMTemplateVHDs.
+   
+   It will validate the paths to the ISO folder as well as to the ISO files themselves.
+   
+   If any ISO files references can't be found an exception will be thrown.
 .PARAMETER Configuration
    Contains the Lab Builder configuration object that was loaded by the Get-LabConfiguration object.
 .EXAMPLE
-   $VMTemplateDisks = Get-LabVMTemplateDisks -Config c:\mylab\config.xml 
-   Loads a Lab Builder configuration and pulls the array of TemplateDisks from it.
+   $VMTemplateVHDs = Get-LabVMTemplateVHD -Config c:\mylab\config.xml 
+   Loads a Lab Builder configuration and pulls the array of TemplateVHDs from it.
 .OUTPUTS
-   Returns an array of TemplateDisks.
+   Returns an array of TemplateVHDs.
 #>
-function Get-LabVMTemplateDisks {
+function Get-LabVMTemplateVHD {
     [OutputType([System.Collections.Hashtable[]])]
     [CmdLetBinding()]
     param
@@ -1362,88 +1366,138 @@ function Get-LabVMTemplateDisks {
         [XML] $Config
     )
 
-    [System.Collections.Hashtable[]] $VMTemplateDisks = @()
-    [String] $VHDParentPath = $Config.labbuilderconfig.SelectNodes('settings').vhdparentpath
+    # Determine the ISORootPath where the ISO files should be found
+    # If no path is specified then look in the same path as the config
+    # If a path is specified but it is relative, make it relative to the
+    # config path. Otherwise use it as is.
+    [String] $ISORootPath = $Config.labbuilderconfig.TemplateVHDs.ISOPath
+    if (-not $ISORootPath)
+    {
+        $ISORootPath = $Configuration.labbuilderconfig.settings.fullconfigpath
+    }
+    else
+    {
+        if (-not [System.IO.Path]::IsPathRooted($ISORootPath))
+        {
+            $ISORootPath = Join-Path `
+                -Path $Configuration.labbuilderconfig.settings.fullconfigpath `
+                -ChildPath $ISORootPath
+        }
+    }
+    if (-not (Test-Path -Path $ISORootPath -Type Container))
+    {
+        $ExceptionParameters = @{
+            errorId = 'TemplateVHDISORootPathNotFoundError'
+            errorCategory = 'InvalidArgument'
+            errorMessage = $($LocalizedData.TemplateVHDISORootPathNotFoundError `
+                -f $ISORootPath)
+        }
+        New-LabException @ExceptionParameters
+    }
 
-    # Read the list of templateDisks from the configuration file
-    $TemplateDisks = $Config.labbuilderconfig.SelectNodes('TemplateDisks').TemplateDisk
-    foreach ($TemplateDisk in $TemplateDisks)
+    # Read the list of templateVHD from the configuration file
+    $TemplateVHDs = $Config.labbuilderconfig.SelectNodes('TemplateVHDs').TemplateVHD
+    [System.Collections.Hashtable[]] $VMTemplateVHDs = @()
+    foreach ($TemplateVHD in $TemplateVHDs)
     {
         # It can't be template because if the name attrib/node is missing the name property on
         # the XML object defaults to the name of the parent. So we can't easily tell if no name
         # was specified or if they actually specified 'template' as the name.
-        if ($TemplateDisk.Name -eq 'TemplateDisk')
+        if ($TemplateVHD.Name -eq 'TemplateVHD')
         {
             $ExceptionParameters = @{
-                errorId = 'EmptyTemplateNameError'
+                errorId = 'EmptyTemplateVHDNameError'
                 errorCategory = 'InvalidArgument'
-                errorMessage = $($LocalizedData.EmptyTemplateNameError)
+                errorMessage = $($LocalizedData.EmptyTemplateVHDNameError)
             }
             New-LabException @ExceptionParameters
         } # If
         
         # Get the Template Disk Name
-        [String] $DiskName = ""
-        if ($TemplateDisk.name)
+        [String] $Name = ''
+        if ($TemplateVHD.name)
         {
-            $DiskName = $TemplateDisk.Name
+            $Name = $TemplateVHD.Name
         } # if
 
-        # Get the Template OS Type 
-        [String] $isNano = 'N'
-        if ($TemplateDisk.isNano)
+        # Get the ISO Path
+        [String] $ISOPath = $TemplateVHD.ISO
+        if (-not $ISOPath)
         {
-            $isNano = $TemplateDisk.isNano
+            $ExceptionParameters = @{
+                errorId = 'EmptyTemplateVHDISOPathError'
+                errorCategory = 'InvalidArgument'
+                errorMessage = $($LocalizedData.EmptyTemplateVHDISOPathError `
+                    -f $TemplateVHD.Name)
+            }
+            New-LabException @ExceptionParameters            
+        }
+
+        # Adjust the ISO Path if required
+        if (-not [System.IO.Path]::IsPathRooted($ISOPath))
+        {
+            $ISOPath = Join-Path `
+                -Path $ISORootPath `
+                -ChildPath $ISOPath
+        }
+        
+        # Does the ISO Exist?
+        if (-not (Test-Path -Path $ISOPath))
+        {
+            $ExceptionParameters = @{
+                errorId = 'TemplateVHDISOPathNotFoundError'
+                errorCategory = 'InvalidArgument'
+                errorMessage = $($LocalizedData.TemplateVHDISOPathNotFoundError `
+                    -f $TemplateVHD.Name,$ISOPath)
+            }
+            New-LabException @ExceptionParameters            
+        }
+        
+        # Get the Template OS Type 
+        [String] $IsNano = 'N'
+        if ($TemplateVHD.isNano)
+        {
+            $IsNano = $TemplateVHD.isNano
         } # If
         
 		# Get the Template Wim Image to use 
-        [String] $WimImage = ''
-        if ($TemplateDisk.WimImage)
+        if ($TemplateVHD.WimImage)
         {
-            $WimImage = $TemplateDisk.WimImage
+            $WimImage = $TemplateVHD.WimImage
         } # If
 
         # Get the Template VHD Type 
         [String] $VHDFormat = 'VHDX'
-        if ($TemplateDisk.VHDFormat)
+        if ($TemplateVHD.VHDFormat)
         {
-            $VHDFormat = $TemplateDisk.VHDFormat
+            $VHDFormat = $TemplateVHD.VHDFormat
         } # If
 
         # Get the Template VM Generation 
         [int] $Generation = 2
-        if ($TemplateDisk.Generation)
+        if ($TemplateVHD.Generation)
         {
-            $Generation = $TemplateDisk.Generation
+            $Generation = $TemplateVHD.Generation
         } # If
 
         # Get the Template Packages for Nano 
-        [String] $Packages = ''
-        if ($TemplateDisk.packages)
+        if ($TemplateVHD.packages)
         {
-            $Packages = $TemplateDisk.Packages
+            $Packages = $TemplateVHD.Packages
         } # If
 
-		#Create the List
-            $VMTemplateDisks += @{
-                name = $DiskName;
-                isNano = $isNano;
+		# Add template VHD to the list
+            $VMTemplateVHDs += @{
+                Name = $Name;
+                IsNano = $isNano;
                 WimImage = $WimImage;
                 Generation = $Generation;
                 VHDFormat = $VHDFormat;
-
-                Packages = if ($Packages)
-                    {
-                        $Packages
-                    }
-                    else
-                    {
-                        $null
-                    };
+                Packages = $Packages;
             }
      } # Foreach
-    Return $VMTemplateDisks
-} # Get-LabVMTemplateDisks
+    Return $VMTemplateVHDs
+} # Get-LabVMTemplateVHD
 ####################################################################################################
 
 ####################################################################################################
@@ -1488,8 +1542,11 @@ function Initialize-LabVMTemplate {
             # The template VHD isn't in the VHD Parent folder - so copy it there after optimizing it
             if (-not (Test-Path $VMTemplate.sourcevhd))
             {  
-				$VMTemplateDisks = Get-LabVMTemplateDisks -Config $Configuration
-				Initialize-TemplateVHD -Config $Configuration  -VMTemplateDisks $VMTemplateDisks
+				$VMTemplateVHDs = Get-LabVMTemplateVHD `
+                    -Config $Configuration
+				Initialize-LabTemplateVHD `
+                    -Config $Configuration ` 
+                    -VMTemplateVHDs $VMTemplateVHDs
 			}
             
 			Write-Verbose -Message $($LocalizedData.CopyingTemplateSourceVHDMessage `
@@ -5367,28 +5424,28 @@ Function Uninstall-Lab {
 .DESCRIPTION
 	Uses an XML as the source for some config options and a hashtable of Disk configurations
 .EXAMPLE
-	Initialize-TemplateVHD -config Config.xml -VMTemplateDisk $VMTemplateDisks  
+	Initialize-LabTemplateVHD -config Config.xml -VMTemplateVHD $VMTemplateVHDs  
 
 #>
-function Initialize-TemplateVHD
+function Initialize-LabTemplateVHD
 {
    param (
         [Parameter(Mandatory)]
         [XML] $Config,
 
         [Parameter(Mandatory)]
-	   [System.Collections.Hashtable[]] $VMTemplateDisks
+	   [System.Collections.Hashtable[]] $VMTemplateVHDs
     )
 
 
 	$ScriptDir = $Config.labbuilderconfig.settings.FullConfigPath
-	$TemplateDiskPath = $Config.labbuilderconfig.settings.TemplateDiskPath
+	$TemplateVHDPath = $Config.labbuilderconfig.settings.TemplateVHDPath
 	$ServerISO = $Config.labbuilderconfig.settings.TemplateISO
 
 	[String]$MountFolder = Join-Path -Path $ScriptDir -ChildPath 'Mount'
 
 	Write-Verbose "Script Directory = $ScriptDir"
-	Write-Verbose "Template disk path = $TemplateDiskpath"
+	Write-Verbose "Template disk path = $TemplateVHDpath"
 	Write-Verbose "ISO to use = $ServerISO"
 
 
@@ -5409,43 +5466,43 @@ function Initialize-TemplateVHD
 	 # As of 2015-06-16 Convert-WindowsImage contains a function instead of being a standalone script.
 	 # . source the Convert-WindowsImage.ps1 so it can be called
 	. "$ScriptDir\Convert-WindowsImage.ps1"
-	$TemplatePrefix  = $Config.labbuilderconfig.TemplateDisks.Prefix
+	$TemplatePrefix  = $Config.labbuilderconfig.TemplateVHDs.Prefix
 
 	Write-Verbose "Prefix to use $TemplatePrefix"
 
-	foreach ($VMTemplateDisk in $VMTemplateDisks)
+	foreach ($VMTemplateVHD in $VMTemplateVHDs)
 		{
-			$VMTemplateDiskName = "$TemplatePrefix" + [string]$VMTemplateDisk.Name
-			Write-Verbose "Disk to be created = $VMTemplateDiskName"
+			$VMTemplateVHDName = "$TemplatePrefix" + [string]$VMTemplateVHD.Name
+			Write-Verbose "Disk to be created = $VMTemplateVHDName"
 
-			$PathtoDisk = $TemplateDiskpath + "\" + $VMTemplateDiskName
+			$PathtoDisk = $TemplateVHDpath + "\" + $VMTemplateVHDName
 
 			if (!(Test-Path $PathtoDisk ))
 			{ 
-				[String]$VHDFormat = $VMTemplateDisk.VHDFormat
+				[String]$VHDFormat = $VMTemplateVHD.VHDFormat
 				If ($VHDFormat -eq $null) {$VHDFormat = 'VHDX'}
 
                  $WimPath = 'Sources\Install.WIM'
-                 if ($VMTemplateDisk.isNano -eq 'Y')
+                 if ($VMTemplateVHD.isNano -eq 'Y')
                     {
                         [String]$WimPath = 'NanoServer\NanoServer.wim'
                     }
 
 		 #This will have to change depending on the version of Convert-WindowsImage being used. 
                 [String] $VhdPartitionStyle = 'UEFI'
-                    if ($VMTemplateDisk.Generation -eq 1)
+                    if ($VMTemplateVHD.Generation -eq 1)
                         {
                             $VHDPartitionStyle = 'BIOS'
                         }
 
-				$Edition = $VMTemplateDisk.WimImage
+				$Edition = $VMTemplateVHD.WimImage
 				
 				Write-Verbose "Image to use = $Edition"
 
 				$Sourcepath = "$([string]$DriveLetter):\" + $WimPath
 				Write-Verbose "Source path for convert-windowsimage is $Sourcepath"
 
-				$VHDpath = "$([string]$TemplateDiskPath)\" + $VMTemplateDiskName
+				$VHDpath = "$([string]$TemplateVHDPath)\" + $VMTemplateVHDName
 
 				Convert-WindowsImage `
 					-Sourcepath $Sourcepath `
@@ -5455,9 +5512,9 @@ function Initialize-TemplateVHD
 					-DiskLayout $VHDPartitionStyle 
 					      
 
-				if ($VMTemplateDisk.IsNano -eq 'Y')
+				if ($VMTemplateVHD.IsNano -eq 'Y')
 				{
-					$Packages = $VMTemplateDisk.Packages
+					$Packages = $VMTemplateVHD.Packages
 						If (-not (Test-Path -Path $MountFolder -PathType Container)) 
 							{
 								$null = New-Item -Path $MountFolder -ItemType Directory
@@ -5502,7 +5559,7 @@ function Initialize-TemplateVHD
 			}
 			Else 
 			{
-				Write-Host -ForegroundColor Cyan "Template Disk $VMTemplateDisk Already Exists"
+				Write-Host -ForegroundColor Cyan "Template Disk $VMTemplateVHD Already Exists"
 		       
 			} #End Else
 			
@@ -5513,7 +5570,7 @@ function Initialize-TemplateVHD
 	Write-Verbose -Message 'Dismounting Server ISO'
 	Dismount-DiskImage -ImagePath $ServerISO
        
-} # Initialize-TemplateVHD
+} # Initialize-LabTemplateVHD
 ####################################################################################################
 
 
