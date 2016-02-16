@@ -8,8 +8,8 @@
     "DataVHDs":  [
                      {
                          "size":  0,
+                         "moveSourceVHD":  false,
                          "type":  "",
-                         "moveorcopy":  null,
                          "supportPR":  false,
                          "shared":  false,
                          "vhd":  "C:\\Pester Lab\\PESTER01\\Virtual Hard Disks\\DataDiskCopy.vhdx",
@@ -18,8 +18,8 @@
                      },
                      {
                          "size":  10737418240,
+                         "moveSourceVHD":  false,
                          "type":  "fixed",
-                         "moveorcopy":  null,
                          "supportPR":  false,
                          "shared":  false,
                          "vhd":  "C:\\Pester Lab\\PESTER01\\Virtual Hard Disks\\DataDiskFixed.vhdx",
@@ -28,8 +28,8 @@
                      },
                      {
                          "size":  10737418240,
+                         "moveSourceVHD":  false,
                          "type":  "dynamic",
-                         "moveorcopy":  null,
                          "supportPR":  false,
                          "shared":  false,
                          "vhd":  "C:\\Pester Lab\\PESTER01\\Virtual Hard Disks\\DataDiskDynamic.vhdx",
@@ -38,8 +38,8 @@
                      },
                      {
                          "size":  10737418240,
+                         "moveSourceVHD":  false,
                          "type":  "differencing",
-                         "moveorcopy":  null,
                          "supportPR":  false,
                          "shared":  false,
                          "vhd":  "C:\\Pester Lab\\PESTER01\\Virtual Hard Disks\\DataDiskDifferencing.vhdx",
@@ -48,8 +48,8 @@
                      },
                      {
                          "size":  0,
+                         "moveSourceVHD":  true,
                          "type":  "",
-                         "moveorcopy":  null,
                          "supportPR":  false,
                          "shared":  false,
                          "vhd":  "C:\\Pester Lab\\PESTER01\\Virtual Hard Disks\\DataDiskMove.vhdx",
@@ -58,8 +58,8 @@
                      },
                      {
                          "size":  10737418240,
+                         "moveSourceVHD":  false,
                          "type":  "fixed",
-                         "moveorcopy":  null,
                          "supportPR":  false,
                          "shared":  true,
                          "vhd":  "C:\\Pester Lab\\PESTER01\\Virtual Hard Disks\\DataDiskShared.vhdx",

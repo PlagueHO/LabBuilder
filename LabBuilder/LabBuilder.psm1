@@ -5627,7 +5627,8 @@ Function Uninstall-Lab {
 ##########################################################################################
 #   Create Template VHD files for Labs
 ##########################################################################################
-<#.Synopsis
+<#
+.Synopsis
 	Function used to create Template VHDs from source ISO file - Tested againist Win10/Win Server 2016 TP4
 	Uses Convert-WindowsImage from TP4 CD 
 .DESCRIPTION
@@ -5780,7 +5781,7 @@ function Initialize-TemplateVHD
 	Dismount-DiskImage -ImagePath $ServerISO
        
 } # Initialize-TemplateVHD
-
+####################################################################################################
 
 
 ####################################################################################################

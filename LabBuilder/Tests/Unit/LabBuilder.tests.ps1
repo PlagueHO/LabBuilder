@@ -1081,7 +1081,7 @@ InModuleScope LabBuilder {
         Mock Optimize-VHD
         Mock Get-VM
 
-        Context 'Template Template Array with non-existent VHD source file' {
+        Context 'Valid Template Array with non-existent VHD source file' {
             [array]$Templates = @( @{
                 name = 'Bad VHD'
                 templatevhd = 'This File Doesnt Exist.vhdx' 
