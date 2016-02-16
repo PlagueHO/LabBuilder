@@ -6138,8 +6138,10 @@ function Initialize-TemplateVHD
                         {
 							Write-Verbose -Message "Adding Package $($Package.Filename) to Image"
 
-                            Add-WindowsPackage -path "$MountFolder" -PackagePath "$($DriveLetter):\NanoServer\packages\$($Package.Filename)"
-                            Add-WindowsPackage -path "$MountFolder" -PackagePath "$($DriveLetter):\NanoServer\packages\en-us\$($Package.Filename)"
+                            Add-WindowsPackage -path "$MountFolder" `
+                            -PackagePath "$($DriveLetter):\NanoServer\packages\$($Package.Filename)"
+                            Add-WindowsPackage -path "$MountFolder" `
+                            -PackagePath "$($DriveLetter):\NanoServer\packages\en-us\$($Package.Filename)"
 
 						}
 					}
