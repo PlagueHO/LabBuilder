@@ -69,7 +69,7 @@
                  packages="Guest" />
   </templatevhds>
   
-  <templates fromvm="Pester *">
+  <templates fromvm="Pester *" >
     <template name="Pester Windows Server 2012 R2 Datacenter Full"
               vhd="Windows Server 2012 R2 Datacenter Full.vhdx"
               sourcevhd="VhdFiles\Windows Server 2012 R2 Datacenter Full.vhdx"

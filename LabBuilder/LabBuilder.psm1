@@ -1132,239 +1132,11 @@ function Remove-LabSwitch {
 ####################################################################################################
 <#
 .SYNOPSIS
-   Gets an Array of VM Templates for a Lab configuration.
-.DESCRIPTION
-   Takes the provided Lab Configuration file and returns the list of Virtul Machine template machines
-   that will be used to create the Virtual Machines in this lab. This list is usually passed to
-   Initialize-LabVMTemplate.
-.PARAMETER Configuration
-   Contains the Lab Builder configuration object that was loaded by the Get-LabConfiguration object.
-.EXAMPLE
-   $Config = Get-LabConfiguration -Path c:\mylab\config.xml
-   $VMTemplates = Get-LabVMTemplate -Config $Config
-   Loads a Lab Builder configuration and pulls the array of VMTemplates from it.
-.OUTPUTS
-   Returns an array of VM Templates.
-#>
-function Get-LabVMTemplate {
-    [OutputType([System.Collections.Hashtable[]])]
-    [CmdLetBinding()]
-    param
-    (
-        [Parameter(Mandatory)]
-        [ValidateNotNullOrEmpty()]
-        [XML] $Config
-    )
-
-    [System.Collections.Hashtable[]] $VMTemplates = @()
-    [String] $VHDParentPath = $Config.labbuilderconfig.SelectNodes('settings').vhdparentpath
-    
-    # Get a list of all templates in the Hyper-V system matching the phrase found in the fromvm
-    # config setting
-    [String] $FromVM=$Config.labbuilderconfig.SelectNodes('templates').fromvm
-    if ($FromVM)
-    {
-        $Templates = @(Get-VM -Name $FromVM)
-        foreach ($Template in $Templates)
-        {
-            [String] $VHDFilepath = (Get-VMHardDiskDrive -VMName $Template.Name).Path
-            [String] $VHDFilename = [System.IO.Path]::GetFileName($VHDFilepath)
-            $VMTemplates += @{
-                name = $Template.Name
-                vhd = $VHDFilename
-                sourcevhd = $VHDFilepath
-                templatevhd = "$VHDParentPath\$VHDFilename"
-            }
-        } # Foreach
-    } # If
-    
-    # Read the list of templates from the configuration file
-    $Templates = $Config.labbuilderconfig.SelectNodes('templates').template
-    foreach ($Template in $Templates)
-    {
-        # It can't be template because if the name attrib/node is missing the name property on
-        # the XML object defaults to the name of the parent. So we can't easily tell if no name
-        # was specified or if they actually specified 'template' as the name.
-        if ($Template.Name -eq 'template')
-        {
-            $ExceptionParameters = @{
-                errorId = 'EmptyTemplateNameError'
-                errorCategory = 'InvalidArgument'
-                errorMessage = $($LocalizedData.EmptyTemplateNameError)
-            }
-            New-LabException @ExceptionParameters
-        } # If
-        if ($Template.SourceVHD)
-        {
-            # A Source VHD file was specified - does it exist?
-            if (-not (Test-Path -Path $Template.SourceVHD))
-            {
-                $ExceptionParameters = @{
-                    errorId = 'TemplateSourceVHDNotFoundError'
-                    errorCategory = 'InvalidArgument'
-                    errorMessage = $($LocalizedData.TemplateSourceVHDNotFoundError `
-                        -f $Template.Name,$Template.SourceVHD)
-                }
-                New-LabException @ExceptionParameters
-            } # If
-        } # If
-        
-        # Get the Template Default Startup Bytes
-        [Int64] $MemoryStartupBytes = 0
-        if ($Template.MemoryStartupBytes)
-        {
-            $MemoryStartupBytes = (Invoke-Expression $Template.MemoryStartupBytes)
-        } # if
-
-        # Does the template already exist in the list?
-        [Boolean] $Found = $False
-        foreach ($VMTemplate in $VMTemplates)
-        {
-            if ($VMTemplate.Name -eq $Template.Name)
-            {
-                # The template already exists - so don't add it again, but update the VHD path
-                # if provided
-                if ($Template.VHD)
-                {
-                    $VMTemplate.VHD = $Template.VHD
-                    $VMTemplate.TemplateVHD = `
-                        "$VHDParentPath\$([System.IO.Path]::GetFileName($Template.VHD))"
-                } # If
-                # Check that we do end up with a VHD filename in the template
-                if (-not $VMTemplate.VHD)
-                {
-                    $ExceptionParameters = @{
-                        errorId = 'EmptyTemplateVHDError'
-                        errorCategory = 'InvalidArgument'
-                        errorMessage = $($LocalizedData.EmptyTemplateVHDError `
-                            -f $VMTemplate.Name)
-                    }
-                    New-LabException @ExceptionParameters
-                } # If
-                if ($Template.SourceVHD)
-                {
-                    $VMTemplate.SourceVHD = $Template.SourceVHD
-                }
-                $VMTemplate.InstallISO = $Template.InstallISO
-                $VMTemplate.Edition = $Template.Edition
-                $VMTemplate.AllowCreate = $Template.AllowCreate
-                # Write any template specific default VM attributes
-                if ($MemoryStartupBytes)
-                {
-                    $VMTemplate.MemoryStartupBytes = $MemoryStartupBytes
-                } # If
-                if ($Template.DynamicMemoryEnabled)
-                {
-                    $VMTemplate.DynamicMemoryEnabled = $Template.DynamicMemoryEnabled
-                }
-                if ($Template.ProcessorCount)
-                {
-                    $VMTemplate.ProcessorCount = $Template.ProcessorCount
-                } # If
-                if ($Template.ExposeVirtualizationExtensions)
-                {
-                    $VMTemplate.ExposeVirtualizationExtensions = $Template.ExposeVirtualizationExtensions
-                }
-                if ($Template.IntegrationServices)
-                {
-                    $VMTemplate.IntegrationServices = $Template.IntegrationServices
-                }
-                else
-                {
-                    $VMTemplate.IntegrationServices = $null
-                }
-                if ($Template.AdministratorPassword)
-                {
-                    $VMTemplate.AdministratorPassword = $Template.AdministratorPassword
-                } # If
-                if ($Template.ProductKey)
-                {
-                    $VMTemplate.ProductKey = $Template.ProductKey
-                } # If
-                if ($Template.TimeZone)
-                {
-                    $VMTemplate.TimeZone = $Template.TimeZone
-                } # If
-                if ($Template.OSType)
-                {
-                    $VMTemplate.OSType = $Template.OSType
-                }
-                Else
-                {
-                    $VMTemplate.OSType = 'Server'
-                }
-
-                $Found = $True
-                Break
-            } # If
-        } # Foreach
-        if (-not $Found)
-        {
-            # Check that we do end up with a VHD filename in the template
-            if (-not $Template.VHD)
-            {
-                $ExceptionParameters = @{
-                    errorId = 'EmptyTemplateVHDError'
-                    errorCategory = 'InvalidArgument'
-                    errorMessage = $($LocalizedData.EmptyTemplateVHDError `
-                        -f $Template.Name)
-                }
-                New-LabException @ExceptionParameters
-            } # If
-
-            # The template wasn't found in the list of templates so add it
-            $VMTemplates += @{
-                name = $Template.Name;
-                vhd = $Template.VHD;
-                sourcevhd = $Template.SourceVHD;
-                templatevhd = "$VHDParentPath\$([System.IO.Path]::GetFileName($Template.VHD))";
-                edition = $Template.Edition;
-                allowcreate = $Template.AllowCreate;
-                memorystartupbytes = $MemoryStartupBytes;
-                dynamicmemoryenabled = if ($Template.DynamicMemoryEnabled)
-                    {
-                        $Template.DynamicMemoryEnabled
-                    }
-                    else
-                    {
-                        'Y'
-                    };
-                processorcount = $Template.ProcessorCount;
-                exposevirtualizationextensions = if ($Template.ExposeVirtualizationExtensions)
-                    {
-						$Template.ExposeVirtualizationExtensions
-					}
-                    else
-                    {
-                        $null
-                    };
-                administratorpassword = $Template.AdministratorPassword;
-                productkey = $Template.ProductKey;
-                timezone = $Template.TimeZone;
-                ostype = if ($Template.OSType)
-                    {
-                        $Template.OSType
-                    }
-                    else
-                    {
-                        'Server'
-                    };
-                 integrationservices = $Template.IntegrationServices;
-            }
-        } # If
-    } # Foreach
-    Return $VMTemplates
-} # Get-LabVMTemplate
-####################################################################################################
-
-####################################################################################################
-<#
-.SYNOPSIS
    Gets an Array of TemplateVHDs for a Lab configuration.
 .DESCRIPTION
    Takes a provided Lab Configuration file and returns the list of Template Disks
    that will be used to create the Virtual Machines in this lab. This list is usually passed to
-   Initialize-LabVMTemplateVHDs.
+   Initialize-LabVMTemplateVHD.
    
    It will validate the paths to the ISO folder as well as to the ISO files themselves.
    
@@ -1579,6 +1351,396 @@ function Get-LabVMTemplateVHD {
 ####################################################################################################
 <#
 .SYNOPSIS
+	Function used to create Template VHDs from source ISO file - Tested againist Win10/Win Server 2016 TP4
+	Uses Convert-WindowsImage from TP4 CD 
+.DESCRIPTION
+	Uses an XML as the source for some config options and a hashtable of Disk configurations
+.EXAMPLE
+	Initialize-LabVMTemplateVHD -config Config.xml -VMTemplateVHD $VMTemplateVHDs  
+#>
+function Initialize-LabVMTemplateVHD
+{
+   param (
+        [Parameter(Mandatory)]
+        [XML] $Config,
+
+        [Parameter(Mandatory)]
+	    [System.Collections.Hashtable[]] $VMTemplateVHDs
+    )
+
+	$ScriptDir = $Config.labbuilderconfig.settings.FullConfigPath
+	$TemplateVHDPath = $Config.labbuilderconfig.settings.TemplateVHDPath
+	$ServerISO = $Config.labbuilderconfig.settings.TemplateISO
+
+	[String]$MountFolder = Join-Path -Path $ScriptDir -ChildPath 'Mount'
+
+	Write-Verbose "Script Directory = $ScriptDir"
+	Write-Verbose "Template disk path = $TemplateVHDpath"
+	Write-Verbose "ISO to use = $ServerISO"
+
+	##########################################################################################
+	#   Create Parent VHDX files for VMs
+	##########################################################################################
+	# Mount the Windows Server 2016 ISO and get the drive letter
+
+	Write-Verbose -Message 'Mounting Server ISO'
+	$null = Mount-DiskImage -ImagePath $ServerISO
+	[String]$DriveLetter = (Get-Diskimage -ImagePath $ServerISO | Get-Volume).DriveLetter
+	$ISODrive = "$([string]$DriveLetter):"
+
+	Get-PSDrive -PSProvider FileSystem # Work around an issue with script not seeing the drive 
+
+	 # As of 2015-06-16 Convert-WindowsImage contains a function instead of being a standalone script.
+	 # . source the Convert-WindowsImage.ps1 so it can be called
+	. "$ScriptDir\Convert-WindowsImage.ps1"
+	$TemplatePrefix  = $Config.labbuilderconfig.TemplateVHDs.Prefix
+
+	Write-Verbose "Prefix to use $TemplatePrefix"
+
+	foreach ($VMTemplateVHD in $VMTemplateVHDs)
+		{
+			$VMTemplateVHDName = "$TemplatePrefix" + [string]$VMTemplateVHD.Name
+			Write-Verbose "Disk to be created = $VMTemplateVHDName"
+
+			$PathtoDisk = $TemplateVHDpath + "\" + $VMTemplateVHDName
+
+			if (!(Test-Path $PathtoDisk ))
+			{ 
+				[String]$VHDFormat = $VMTemplateVHD.VHDFormat
+				If ($VHDFormat -eq $null) {$VHDFormat = 'VHDX'}
+
+                 $WimPath = 'Sources\Install.WIM'
+                 if ($VMTemplateVHD.isNano -eq 'Y')
+                    {
+                        [String]$WimPath = 'NanoServer\NanoServer.wim'
+                    }
+
+		 #This will have to change depending on the version of Convert-WindowsImage being used. 
+                [String] $VhdPartitionStyle = 'UEFI'
+                    if ($VMTemplateVHD.Generation -eq 1)
+                        {
+                            $VHDPartitionStyle = 'BIOS'
+                        }
+
+				$Edition = $VMTemplateVHD.WimImage
+				
+				Write-Verbose "Image to use = $Edition"
+
+				$Sourcepath = "$([string]$DriveLetter):\" + $WimPath
+				Write-Verbose "Source path for convert-windowsimage is $Sourcepath"
+
+				$VHDpath = "$([string]$TemplateVHDPath)\" + $VMTemplateVHDName
+
+				Convert-WindowsImage `
+					-Sourcepath $Sourcepath `
+					-VHDpath $VHDpath `
+					–VHDFormat $VHDFormat `
+					-Edition $Edition `
+					-DiskLayout $VHDPartitionStyle 
+					      
+
+				if ($VMTemplateVHD.IsNano -eq 'Y')
+				{
+					$Packages = $VMTemplateVHD.Packages
+						If (-not (Test-Path -Path $MountFolder -PathType Container)) 
+							{
+								$null = New-Item -Path $MountFolder -ItemType Directory
+							}
+					# Mount the VHD to load packages into it
+
+                    Mount-WindowsImage -Path "$MountFolder" -ImagePath "$PathtoDisk" -Index 1
+					$PackageList = @(
+						@{ Name = 'Compute'; Filename = 'Microsoft-NanoServer-Compute-Package.cab' },
+						@{ Name = 'OEM-Drivers'; Filename = 'Microsoft-NanoServer-OEM-Drivers-Package.cab' },
+						@{ Name = 'Storage'; Filename = 'Microsoft-NanoServer-Storage-Package.cab' },
+						@{ Name = 'FailoverCluster'; Filename = 'Microsoft-NanoServer-FailoverCluster-Package.cab' },
+						@{ Name = 'ReverseForwarders'; Filename = 'Microsoft-OneCore-ReverseForwarders-Package.cab' },
+						@{ Name = 'Guest'; Filename = 'Microsoft-NanoServer-Guest-Package.cab' },
+						@{ Name = 'Containers'; Filename = 'Microsoft-NanoServer-Containers-Package.cab' },
+						@{ Name = 'Defender'; Filename = 'Microsoft-NanoServer-Defender-Package.cab' },
+						@{ Name = 'DCB'; Filename = 'Microsoft-NanoServer-DCB-Package.cab' },
+						@{ Name = 'DNS'; Filename = 'Microsoft-NanoServer-DNS-Package.cab' },
+						@{ Name = 'DSC'; Filename = 'Microsoft-NanoServer-DSC-Package.cab' },
+						@{ Name = 'IIS'; Filename = 'Microsoft-NanoServer-IIS-Package.cab' },
+						@{ Name = 'NPDS'; Filename = 'Microsoft-NanoServer-NPDS-Package.cab' },
+						@{ Name = 'SCVMM'; Filename = 'Microsoft-Windows-Server-SCVMM-Package.cab' },
+						@{ Name = 'SCVMM-Compute'; Filename = 'Microsoft-Windows-Server-SCVMM-Compute-Package.cab' }
+					)
+
+					# Add the selected packages
+					foreach ($Package in $PackageList) 
+                    {
+						If ($Package.Name -in $Packages) 
+                        {
+							Write-Verbose -Message "Adding Package $($Package.Filename) to Image"
+
+                            Add-WindowsPackage -path "$MountFolder" `
+                            -PackagePath "$($DriveLetter):\NanoServer\packages\$($Package.Filename)"
+                            Add-WindowsPackage -path "$MountFolder" `
+                            -PackagePath "$($DriveLetter):\NanoServer\packages\en-us\$($Package.Filename)"
+
+						}
+					}
+                    Dismount-WindowsImage -Path "$MountFolder" -Save
+				} #EndIf
+			}
+			Else 
+			{
+				Write-Host -ForegroundColor Cyan "Template Disk $VMTemplateVHD Already Exists"
+		       
+			} #End Else
+			
+		} #EndFor
+
+
+	# Dismount the ISO File
+	Write-Verbose -Message 'Dismounting Server ISO'
+	Dismount-DiskImage -ImagePath $ServerISO
+       
+} # Initialize-LabVMTemplateVHD
+####################################################################################################
+
+####################################################################################################
+<#
+.SYNOPSIS
+   Gets an Array of VM Templates for a Lab configuration.
+.DESCRIPTION
+   Takes the provided Lab Configuration file and returns the list of Virtul Machine template machines
+   that will be used to create the Virtual Machines in this lab. This list is usually passed to
+   Initialize-LabVMTemplate.
+.PARAMETER Configuration
+   Contains the Lab Builder configuration object that was loaded by the Get-LabConfiguration object.
+.EXAMPLE
+   $Config = Get-LabConfiguration -Path c:\mylab\config.xml
+   $VMTemplates = Get-LabVMTemplate -Config $Config
+   Loads a Lab Builder configuration and pulls the array of VMTemplates from it.
+.OUTPUTS
+   Returns an array of VM Templates.
+#>
+function Get-LabVMTemplate {
+    [OutputType([System.Collections.Hashtable[]])]
+    [CmdLetBinding()]
+    param
+    (
+        [Parameter(Mandatory)]
+        [ValidateNotNullOrEmpty()]
+        [XML] $Config
+    )
+
+    [System.Collections.Hashtable[]] $VMTemplates = @()
+    [String] $VHDParentPath = $Config.labbuilderconfig.SelectNodes('settings').vhdparentpath
+    
+    # Get a list of all templates in the Hyper-V system matching the phrase found in the fromvm
+    # config setting
+    [String] $FromVM=$Config.labbuilderconfig.SelectNodes('templates').fromvm
+    if ($FromVM)
+    {
+        $Templates = @(Get-VM -Name $FromVM)
+        foreach ($Template in $Templates)
+        {
+            [String] $VHDFilepath = (Get-VMHardDiskDrive -VMName $Template.Name).Path
+            [String] $VHDFilename = [System.IO.Path]::GetFileName($VHDFilepath)
+            $VMTemplates += @{
+                name = $Template.Name
+                vhd = $VHDFilename
+                sourcevhd = $VHDFilepath
+                templatevhd = "$VHDParentPath\$VHDFilename"
+            }
+        } # Foreach
+    } # If
+    
+    # Read the list of templates from the configuration file
+    $Templates = $Config.labbuilderconfig.SelectNodes('templates').template
+    foreach ($Template in $Templates)
+    {
+        # It can't be template because if the name attrib/node is missing the name property on
+        # the XML object defaults to the name of the parent. So we can't easily tell if no name
+        # was specified or if they actually specified 'template' as the name.
+        if ($Template.Name -eq 'template')
+        {
+            $ExceptionParameters = @{
+                errorId = 'EmptyTemplateNameError'
+                errorCategory = 'InvalidArgument'
+                errorMessage = $($LocalizedData.EmptyTemplateNameError)
+            }
+            New-LabException @ExceptionParameters
+        } # If
+        [String] $SourceVHD = $Template.SourceVHD
+        if ($SourceVHD)
+        {
+            # If this is a relative path, add it to the config path
+            if (-not [System.IO.Path]::IsPathRooted($SourceVHD))
+            {
+                $SourceVHD = Join-Path `
+                    -Path $Config.labbuilderconfig.settings.fullconfigpath `
+                    -ChildPath $SourceVHD
+            }
+
+            # A Source VHD file was specified - does it exist?
+            if (-not (Test-Path -Path $SourceVHD))
+            {
+                $ExceptionParameters = @{
+                    errorId = 'TemplateSourceVHDNotFoundError'
+                    errorCategory = 'InvalidArgument'
+                    errorMessage = $($LocalizedData.TemplateSourceVHDNotFoundError `
+                        -f $Template.Name,$SourceVHD)
+                }
+                New-LabException @ExceptionParameters
+            } # If
+        } # If
+        
+        # Get the Template Default Startup Bytes
+        [Int64] $MemoryStartupBytes = 0
+        if ($Template.MemoryStartupBytes)
+        {
+            $MemoryStartupBytes = (Invoke-Expression $Template.MemoryStartupBytes)
+        } # if
+
+        # Does the template already exist in the list?
+        [Boolean] $Found = $False
+        foreach ($VMTemplate in $VMTemplates)
+        {
+            if ($VMTemplate.Name -eq $Template.Name)
+            {
+                # The template already exists - so don't add it again, but update the VHD path
+                # if provided
+                if ($Template.VHD)
+                {
+                    $VMTemplate.VHD = $Template.VHD
+                    $VMTemplate.TemplateVHD = `
+                        "$VHDParentPath\$([System.IO.Path]::GetFileName($Template.VHD))"
+                } # If
+                # Check that we do end up with a VHD filename in the template
+                if (-not $VMTemplate.VHD)
+                {
+                    $ExceptionParameters = @{
+                        errorId = 'EmptyTemplateVHDError'
+                        errorCategory = 'InvalidArgument'
+                        errorMessage = $($LocalizedData.EmptyTemplateVHDError `
+                            -f $VMTemplate.Name)
+                    }
+                    New-LabException @ExceptionParameters
+                } # If
+                
+                if ($SourceVHD)
+                {
+                    $VMTemplate.SourceVHD = $SourceVHD
+                }
+                $VMTemplate.InstallISO = $Template.InstallISO
+                $VMTemplate.Edition = $Template.Edition
+                $VMTemplate.AllowCreate = $Template.AllowCreate
+                # Write any template specific default VM attributes
+                if ($MemoryStartupBytes)
+                {
+                    $VMTemplate.MemoryStartupBytes = $MemoryStartupBytes
+                } # If
+                if ($Template.DynamicMemoryEnabled)
+                {
+                    $VMTemplate.DynamicMemoryEnabled = $Template.DynamicMemoryEnabled
+                }
+                if ($Template.ProcessorCount)
+                {
+                    $VMTemplate.ProcessorCount = $Template.ProcessorCount
+                } # If
+                if ($Template.ExposeVirtualizationExtensions)
+                {
+                    $VMTemplate.ExposeVirtualizationExtensions = $Template.ExposeVirtualizationExtensions
+                }
+                if ($Template.IntegrationServices)
+                {
+                    $VMTemplate.IntegrationServices = $Template.IntegrationServices
+                }
+                else
+                {
+                    $VMTemplate.IntegrationServices = $null
+                }
+                if ($Template.AdministratorPassword)
+                {
+                    $VMTemplate.AdministratorPassword = $Template.AdministratorPassword
+                } # If
+                if ($Template.ProductKey)
+                {
+                    $VMTemplate.ProductKey = $Template.ProductKey
+                } # If
+                if ($Template.TimeZone)
+                {
+                    $VMTemplate.TimeZone = $Template.TimeZone
+                } # If
+                if ($Template.OSType)
+                {
+                    $VMTemplate.OSType = $Template.OSType
+                }
+                Else
+                {
+                    $VMTemplate.OSType = 'Server'
+                }
+
+                $Found = $True
+                Break
+            } # If
+        } # Foreach
+        if (-not $Found)
+        {
+            # Check that we do end up with a VHD filename in the template
+            if (-not $Template.VHD)
+            {
+                $ExceptionParameters = @{
+                    errorId = 'EmptyTemplateVHDError'
+                    errorCategory = 'InvalidArgument'
+                    errorMessage = $($LocalizedData.EmptyTemplateVHDError `
+                        -f $Template.Name)
+                }
+                New-LabException @ExceptionParameters
+            } # If
+
+            # The template wasn't found in the list of templates so add it
+            $VMTemplates += @{
+                name = $Template.Name;
+                vhd = $Template.VHD;
+                sourcevhd = $SourceVHD;
+                templatevhd = "$VHDParentPath\$([System.IO.Path]::GetFileName($Template.VHD))";
+                edition = $Template.Edition;
+                allowcreate = $Template.AllowCreate;
+                memorystartupbytes = $MemoryStartupBytes;
+                dynamicmemoryenabled = if ($Template.DynamicMemoryEnabled)
+                    {
+                        $Template.DynamicMemoryEnabled
+                    }
+                    else
+                    {
+                        'Y'
+                    };
+                processorcount = $Template.ProcessorCount;
+                exposevirtualizationextensions = if ($Template.ExposeVirtualizationExtensions)
+                    {
+						$Template.ExposeVirtualizationExtensions
+					}
+                    else
+                    {
+                        $null
+                    };
+                administratorpassword = $Template.AdministratorPassword;
+                productkey = $Template.ProductKey;
+                timezone = $Template.TimeZone;
+                ostype = if ($Template.OSType)
+                    {
+                        $Template.OSType
+                    }
+                    else
+                    {
+                        'Server'
+                    };
+                 integrationservices = $Template.IntegrationServices;
+            }
+        } # If
+    } # Foreach
+    Return $VMTemplates
+} # Get-LabVMTemplate
+####################################################################################################
+
+####################################################################################################
+<#
+.SYNOPSIS
    Initializes the Virtual Machine templates used by a Lab from a provided array.
 .DESCRIPTION
    Takes an array of Virtual Machine templates that were configured in the Lab Configuration
@@ -1625,20 +1787,20 @@ function Initialize-LabVMTemplate {
         [System.Collections.Hashtable[]] $VMTemplateVHDs
     )
     
+    # Get the VM Templates if they weren't passed
     if (-not $VMTemplates)
     {
         $VMTemplates = Get-LabVMTemplate `
             -Config $Config
     }
-    if (-not $VMTemplateVHDs)
-    {
-        $VMTemplateVHDs = Get-LabVMTemplateVHD `
-            -Config $Config
-        Initialize-LabTemplateVHD `
-            -Config $Config ` 
-            -VMTemplateVHDs $VMTemplateVHDs
-    }
+
+    # Make sure the VM Template VHDs have been initialized
+    $null = $PSBoundParameters.Remove('VMTemplates')
+    Initialize-LabVMTemplateVHD @PSBoundParameters
     
+    # Check each template exists in the templates folder for the
+    # Lab. If it isn't, try and copy it from the SourceVHD
+    # Location.
     foreach ($VMTemplate in $VMTemplates)
     {
         if (-not (Test-Path $VMTemplate.templatevhd))
@@ -1647,7 +1809,8 @@ function Initialize-LabVMTemplate {
             # so copy it there, optimize it and mark it read-only.
             if (-not (Test-Path $VMTemplate.sourcevhd))
             {  
-                
+                # The source VHD could not be found.
+                                
 			}
             
 			Write-Verbose -Message $($LocalizedData.CopyingTemplateSourceVHDMessage `
@@ -5521,165 +5684,6 @@ Function Uninstall-Lab {
         $null = Remove-LabSwitch -Config $Config -Switches $Switches
     } # If
 } # Uninstall-Lab
-####################################################################################################
-
-##########################################################################################
-#   Create Template VHD files for Labs
-##########################################################################################
-<#
-.Synopsis
-	Function used to create Template VHDs from source ISO file - Tested againist Win10/Win Server 2016 TP4
-	Uses Convert-WindowsImage from TP4 CD 
-.DESCRIPTION
-	Uses an XML as the source for some config options and a hashtable of Disk configurations
-.EXAMPLE
-	Initialize-LabTemplateVHD -config Config.xml -VMTemplateVHD $VMTemplateVHDs  
-
-#>
-function Initialize-LabTemplateVHD
-{
-   param (
-        [Parameter(Mandatory)]
-        [XML] $Config,
-
-        [Parameter(Mandatory)]
-	   [System.Collections.Hashtable[]] $VMTemplateVHDs
-    )
-
-
-	$ScriptDir = $Config.labbuilderconfig.settings.FullConfigPath
-	$TemplateVHDPath = $Config.labbuilderconfig.settings.TemplateVHDPath
-	$ServerISO = $Config.labbuilderconfig.settings.TemplateISO
-
-	[String]$MountFolder = Join-Path -Path $ScriptDir -ChildPath 'Mount'
-
-	Write-Verbose "Script Directory = $ScriptDir"
-	Write-Verbose "Template disk path = $TemplateVHDpath"
-	Write-Verbose "ISO to use = $ServerISO"
-
-
-	##########################################################################################
-	#   Create Parent VHDX files for VMs
-	##########################################################################################
-	# Mount the Windows Server 2016 ISO and get the drive letter
-
-
-	Write-Verbose -Message 'Mounting Server ISO'
-	$null = Mount-DiskImage -ImagePath $ServerISO
-	[String]$DriveLetter = (Get-Diskimage -ImagePath $ServerISO | Get-Volume).DriveLetter
-	$ISODrive = "$([string]$DriveLetter):"
-
-	Get-PSDrive -PSProvider FileSystem # Work around an issue with script not seeing the drive 
-
-
-	 # As of 2015-06-16 Convert-WindowsImage contains a function instead of being a standalone script.
-	 # . source the Convert-WindowsImage.ps1 so it can be called
-	. "$ScriptDir\Convert-WindowsImage.ps1"
-	$TemplatePrefix  = $Config.labbuilderconfig.TemplateVHDs.Prefix
-
-	Write-Verbose "Prefix to use $TemplatePrefix"
-
-	foreach ($VMTemplateVHD in $VMTemplateVHDs)
-		{
-			$VMTemplateVHDName = "$TemplatePrefix" + [string]$VMTemplateVHD.Name
-			Write-Verbose "Disk to be created = $VMTemplateVHDName"
-
-			$PathtoDisk = $TemplateVHDpath + "\" + $VMTemplateVHDName
-
-			if (!(Test-Path $PathtoDisk ))
-			{ 
-				[String]$VHDFormat = $VMTemplateVHD.VHDFormat
-				If ($VHDFormat -eq $null) {$VHDFormat = 'VHDX'}
-
-                 $WimPath = 'Sources\Install.WIM'
-                 if ($VMTemplateVHD.isNano -eq 'Y')
-                    {
-                        [String]$WimPath = 'NanoServer\NanoServer.wim'
-                    }
-
-		 #This will have to change depending on the version of Convert-WindowsImage being used. 
-                [String] $VhdPartitionStyle = 'UEFI'
-                    if ($VMTemplateVHD.Generation -eq 1)
-                        {
-                            $VHDPartitionStyle = 'BIOS'
-                        }
-
-				$Edition = $VMTemplateVHD.WimImage
-				
-				Write-Verbose "Image to use = $Edition"
-
-				$Sourcepath = "$([string]$DriveLetter):\" + $WimPath
-				Write-Verbose "Source path for convert-windowsimage is $Sourcepath"
-
-				$VHDpath = "$([string]$TemplateVHDPath)\" + $VMTemplateVHDName
-
-				Convert-WindowsImage `
-					-Sourcepath $Sourcepath `
-					-VHDpath $VHDpath `
-					–VHDFormat $VHDFormat `
-					-Edition $Edition `
-					-DiskLayout $VHDPartitionStyle 
-					      
-
-				if ($VMTemplateVHD.IsNano -eq 'Y')
-				{
-					$Packages = $VMTemplateVHD.Packages
-						If (-not (Test-Path -Path $MountFolder -PathType Container)) 
-							{
-								$null = New-Item -Path $MountFolder -ItemType Directory
-							}
-					# Mount the VHD to load packages into it
-
-                    Mount-WindowsImage -Path "$MountFolder" -ImagePath "$PathtoDisk" -Index 1
-					$PackageList = @(
-						@{ Name = 'Compute'; Filename = 'Microsoft-NanoServer-Compute-Package.cab' },
-						@{ Name = 'OEM-Drivers'; Filename = 'Microsoft-NanoServer-OEM-Drivers-Package.cab' },
-						@{ Name = 'Storage'; Filename = 'Microsoft-NanoServer-Storage-Package.cab' },
-						@{ Name = 'FailoverCluster'; Filename = 'Microsoft-NanoServer-FailoverCluster-Package.cab' },
-						@{ Name = 'ReverseForwarders'; Filename = 'Microsoft-OneCore-ReverseForwarders-Package.cab' },
-						@{ Name = 'Guest'; Filename = 'Microsoft-NanoServer-Guest-Package.cab' },
-						@{ Name = 'Containers'; Filename = 'Microsoft-NanoServer-Containers-Package.cab' },
-						@{ Name = 'Defender'; Filename = 'Microsoft-NanoServer-Defender-Package.cab' },
-						@{ Name = 'DCB'; Filename = 'Microsoft-NanoServer-DCB-Package.cab' },
-						@{ Name = 'DNS'; Filename = 'Microsoft-NanoServer-DNS-Package.cab' },
-						@{ Name = 'DSC'; Filename = 'Microsoft-NanoServer-DSC-Package.cab' },
-						@{ Name = 'IIS'; Filename = 'Microsoft-NanoServer-IIS-Package.cab' },
-						@{ Name = 'NPDS'; Filename = 'Microsoft-NanoServer-NPDS-Package.cab' },
-						@{ Name = 'SCVMM'; Filename = 'Microsoft-Windows-Server-SCVMM-Package.cab' },
-						@{ Name = 'SCVMM-Compute'; Filename = 'Microsoft-Windows-Server-SCVMM-Compute-Package.cab' }
-					)
-
-					# Add the selected packages
-					foreach ($Package in $PackageList) 
-                    {
-						If ($Package.Name -in $Packages) 
-                        {
-							Write-Verbose -Message "Adding Package $($Package.Filename) to Image"
-
-                            Add-WindowsPackage -path "$MountFolder" `
-                            -PackagePath "$($DriveLetter):\NanoServer\packages\$($Package.Filename)"
-                            Add-WindowsPackage -path "$MountFolder" `
-                            -PackagePath "$($DriveLetter):\NanoServer\packages\en-us\$($Package.Filename)"
-
-						}
-					}
-                    Dismount-WindowsImage -Path "$MountFolder" -Save
-				} #EndIf
-			}
-			Else 
-			{
-				Write-Host -ForegroundColor Cyan "Template Disk $VMTemplateVHD Already Exists"
-		       
-			} #End Else
-			
-		} #EndFor
-
-
-	# Dismount the ISO File
-	Write-Verbose -Message 'Dismounting Server ISO'
-	Dismount-DiskImage -ImagePath $ServerISO
-       
-} # Initialize-LabTemplateVHD
 ####################################################################################################
 
 

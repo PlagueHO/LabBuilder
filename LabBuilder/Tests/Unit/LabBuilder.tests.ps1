@@ -1001,96 +1001,6 @@ InModuleScope LabBuilder {
 
 
 
-    Describe 'Get-LabVMTemplate' {
-
-        Mock Get-VM
-        
-        Context 'Configuration passed with template missing Template Name.' {
-            It 'Throws a EmptyTemplateNameError Exception' {
-                $Config = Get-LabConfiguration -Path $Global:TestConfigOKPath
-                $Config.labbuilderconfig.templates.template[0].RemoveAttribute('name')
-                $ExceptionParameters = @{
-                    errorId = 'EmptyTemplateNameError'
-                    errorCategory = 'InvalidArgument'
-                    errorMessage = $($LocalizedData.EmptyTemplateNameError)
-                }
-                $Exception = New-Exception @ExceptionParameters
-
-                { Get-LabVMTemplate -Config $Config } | Should Throw $Exception
-            }
-        }
-        Context 'Configuration passed with template VHD empty.' {
-            It 'Throws a EmptyTemplateVHDError Exception' {
-                $Config = Get-LabConfiguration -Path $Global:TestConfigOKPath
-                $Config.labbuilderconfig.templates.template[0].RemoveAttribute('vhd')
-                $ExceptionParameters = @{
-                    errorId = 'EmptyTemplateVHDError'
-                    errorCategory = 'InvalidArgument'
-                    errorMessage = $($LocalizedData.EmptyTemplateVHDError `
-                        -f $Config.labbuilderconfig.templates.template[0].name)
-                }
-                $Exception = New-Exception @ExceptionParameters
-
-                { Get-LabVMTemplate -Config $Config } | Should Throw $Exception
-            }
-        }
-        Context 'Configuration passed with template with Source VHD set to non-existent file.' {
-            It 'Throws a TemplateSourceVHDNotFoundError Exception' {
-                $Config = Get-LabConfiguration -Path $Global:TestConfigOKPath
-                $Config.labbuilderconfig.templates.template[0].sourcevhd = 'This File Doesnt Exist.vhdx'
-                $ExceptionParameters = @{
-                    errorId = 'TemplateSourceVHDNotFoundError'
-                    errorCategory = 'InvalidArgument'
-                    errorMessage = $($LocalizedData.TemplateSourceVHDNotFoundError `
-                        -f $Config.labbuilderconfig.templates.template[0].name,'This File Doesnt Exist.vhdx')
-                }
-                $Exception = New-Exception @ExceptionParameters
-
-                { Get-LabVMTemplate -Config $Config } | Should Throw $Exception
-            }
-        }
-        Context 'Valid configuration is passed but no templates found' {
-            It 'Returns Template Object that matches Expected Object' {
-                $Config = Get-LabConfiguration -Path $Global:TestConfigOKPath
-                [Array]$Templates = Get-LabVMTemplate -Config $Config 
-                Set-Content -Path "$Global:ArtifactPath\ExpectedTemplates.json" -Value ($Templates | ConvertTo-Json -Depth 2)
-                $ExpectedTemplates = Get-Content -Path "$Global:TestConfigPath\ExpectedTemplates.json"
-                [String]::Compare((Get-Content -Path "$Global:ArtifactPath\ExpectedTemplates.json"),$ExpectedTemplates,$true) | Should Be 0
-            }
-            It 'Calls Mocked commands' {
-                Assert-MockCalled Get-VM -Exactly 1
-            }
-        }
-
-        Mock Get-VM -MockWith { @( 
-                @{ name = 'Pester Windows Server 2012 R2 Datacenter Full' }
-                @{ name = 'Pester Windows Server 2012 R2 Datacenter Core' } 
-                @{ name = 'Pester Windows 10 Enterprise' } 
-            ) }
-        Mock Get-VMHardDiskDrive -ParameterFilter { $VMName -eq 'Pester Windows Server 2012 R2 Datacenter Full' } `
-            -MockWith { @{ path = 'Pester Windows Server 2012 R2 Datacenter Full.vhdx' } }
-        Mock Get-VMHardDiskDrive -ParameterFilter { $VMName -eq 'Pester Windows Server 2012 R2 Datacenter Core' } `
-            -MockWith { @{ path = 'Pester Windows Server 2012 R2 Datacenter Core.vhdx' } }
-        Mock Get-VMHardDiskDrive -ParameterFilter { $VMName -eq 'Pester Windows 10 Enterprise' } `
-            -MockWith { @{ path = 'Pester Windows 10 Enterprise.vhdx' } }
-
-        Context 'Valid configuration is passed and templates are found' {
-            It 'Returns Template Object that matches Expected Object' {
-                $Config = Get-LabConfiguration -Path $Global:TestConfigOKPath
-                [Array]$Templates = Get-LabVMTemplate -Config $Config 
-                Set-Content -Path "$Global:ArtifactPath\ExpectedTemplates.FromVM.json" -Value ($Templates | ConvertTo-Json -Depth 2)
-                $ExpectedTemplates = Get-Content -Path "$Global:TestConfigPath\ExpectedTemplates.FromVM.json"
-                [String]::Compare((Get-Content -Path "$Global:ArtifactPath\ExpectedTemplates.FromVM.json"),$ExpectedTemplates,$true) | Should Be 0
-            }
-            It 'Calls Mocked commands' {
-                Assert-MockCalled Get-VM -Exactly 1
-                Assert-MockCalled Get-VMHardDiskDrive -Exactly 3
-            }
-        }
-    }
-
-
-
     Describe 'Get-LabVMTemplateVHD' {
 
         Context 'Configuration passed with rooted ISO Root Path that does not exist.' {
@@ -1224,6 +1134,143 @@ InModuleScope LabBuilder {
     }
 
 
+
+    Describe 'Initialize-LabVMTemplateVHD' -Tag 'Incomplete' {
+
+        $Config = Get-LabConfiguration -Path $Global:TestConfigOKPath
+
+        Context 'Valid configuration is passed without VMTemplates or VMTemplateVHDs' {	
+            It 'Does not throw an Exception' {
+                { Initialize-LabVMTemplate -Config $Config } | Should Not Throw
+            }
+            It 'Calls Mocked commands' {
+                Assert-MockCalled Copy-Item -Exactly 3
+                Assert-MockCalled Set-ItemProperty -Exactly 3 -ParameterFilter { ($Name -eq 'IsReadOnly') -and ($Value -eq $True) }
+                Assert-MockCalled Set-ItemProperty -Exactly 3 -ParameterFilter { ($Name -eq 'IsReadOnly') -and ($Value -eq $False) }
+                Assert-MockCalled Optimize-VHD -Exactly 3
+            }
+        }
+    }
+
+
+
+    Describe 'Get-LabVMTemplate' {
+
+        Mock Get-VM
+        
+        Context 'Configuration passed with template missing Template Name.' {
+            It 'Throws a EmptyTemplateNameError Exception' {
+                $Config = Get-LabConfiguration -Path $Global:TestConfigOKPath
+                $Config.labbuilderconfig.templates.template[0].RemoveAttribute('name')
+                $ExceptionParameters = @{
+                    errorId = 'EmptyTemplateNameError'
+                    errorCategory = 'InvalidArgument'
+                    errorMessage = $($LocalizedData.EmptyTemplateNameError)
+                }
+                $Exception = New-Exception @ExceptionParameters
+
+                { Get-LabVMTemplate -Config $Config } | Should Throw $Exception
+            }
+        }
+        Context 'Configuration passed with template VHD empty.' {
+            It 'Throws a EmptyTemplateVHDError Exception' {
+                $Config = Get-LabConfiguration -Path $Global:TestConfigOKPath
+                $Config.labbuilderconfig.templates.template[0].RemoveAttribute('vhd')
+                $ExceptionParameters = @{
+                    errorId = 'EmptyTemplateVHDError'
+                    errorCategory = 'InvalidArgument'
+                    errorMessage = $($LocalizedData.EmptyTemplateVHDError `
+                        -f $Config.labbuilderconfig.templates.template[0].name)
+                }
+                $Exception = New-Exception @ExceptionParameters
+
+                { Get-LabVMTemplate -Config $Config } | Should Throw $Exception
+            }
+        }
+        Context 'Configuration passed with template with Source VHD set to relative non-existent file.' {
+            It 'Throws a TemplateSourceVHDNotFoundError Exception' {
+                $Config = Get-LabConfiguration -Path $Global:TestConfigOKPath
+                $Config.labbuilderconfig.templates.template[0].sourcevhd = 'This File Doesnt Exist.vhdx'
+                $ExceptionParameters = @{
+                    errorId = 'TemplateSourceVHDNotFoundError'
+                    errorCategory = 'InvalidArgument'
+                    errorMessage = $($LocalizedData.TemplateSourceVHDNotFoundError `
+                        -f $Config.labbuilderconfig.templates.template[0].name,"$Global:TestConfigPath\This File Doesnt Exist.vhdx")
+                }
+                $Exception = New-Exception @ExceptionParameters
+
+                { Get-LabVMTemplate -Config $Config } | Should Throw $Exception
+            }
+        }
+        Context 'Configuration passed with template with Source VHD set to absolute non-existent file.' {
+            It 'Throws a TemplateSourceVHDNotFoundError Exception' {
+                $Config = Get-LabConfiguration -Path $Global:TestConfigOKPath
+                $Config.labbuilderconfig.templates.template[0].sourcevhd = 'c:\This File Doesnt Exist.vhdx'
+                $ExceptionParameters = @{
+                    errorId = 'TemplateSourceVHDNotFoundError'
+                    errorCategory = 'InvalidArgument'
+                    errorMessage = $($LocalizedData.TemplateSourceVHDNotFoundError `
+                        -f $Config.labbuilderconfig.templates.template[0].name,"c:\This File Doesnt Exist.vhdx")
+                }
+                $Exception = New-Exception @ExceptionParameters
+
+                { Get-LabVMTemplate -Config $Config } | Should Throw $Exception
+            }
+        }
+        Context 'Valid configuration is passed but no templates found' {
+            It 'Returns Template Object that matches Expected Object' {
+                $Config = Get-LabConfiguration -Path $Global:TestConfigOKPath
+                [Array]$Templates = Get-LabVMTemplate -Config $Config 
+                # Remove the SourceVHD values for any templates because they
+                # will usually be relative to the test folder and won't exist
+                foreach ($Template in $Templates)
+                {
+                    $Template.SourceVHD = ''
+                }
+                Set-Content -Path "$Global:ArtifactPath\ExpectedTemplates.json" -Value ($Templates | ConvertTo-Json -Depth 2)
+                $ExpectedTemplates = Get-Content -Path "$Global:TestConfigPath\ExpectedTemplates.json"
+                [String]::Compare((Get-Content -Path "$Global:ArtifactPath\ExpectedTemplates.json"),$ExpectedTemplates,$true) | Should Be 0
+            }
+            It 'Calls Mocked commands' {
+                Assert-MockCalled Get-VM -Exactly 1
+            }
+        }
+
+        Mock Get-VM -MockWith { @( 
+                @{ name = 'Pester Windows Server 2012 R2 Datacenter Full' }
+                @{ name = 'Pester Windows Server 2012 R2 Datacenter Core' } 
+                @{ name = 'Pester Windows 10 Enterprise' } 
+            ) }
+        Mock Get-VMHardDiskDrive -ParameterFilter { $VMName -eq 'Pester Windows Server 2012 R2 Datacenter Full' } `
+            -MockWith { @{ path = 'Pester Windows Server 2012 R2 Datacenter Full.vhdx' } }
+        Mock Get-VMHardDiskDrive -ParameterFilter { $VMName -eq 'Pester Windows Server 2012 R2 Datacenter Core' } `
+            -MockWith { @{ path = 'Pester Windows Server 2012 R2 Datacenter Core.vhdx' } }
+        Mock Get-VMHardDiskDrive -ParameterFilter { $VMName -eq 'Pester Windows 10 Enterprise' } `
+            -MockWith { @{ path = 'Pester Windows 10 Enterprise.vhdx' } }
+
+        Context 'Valid configuration is passed and templates are found' {
+            It 'Returns Template Object that matches Expected Object' {
+                $Config = Get-LabConfiguration -Path $Global:TestConfigOKPath
+                [Array]$Templates = Get-LabVMTemplate -Config $Config 
+                # Remove the SourceVHD values for any templates because they
+                # will usually be relative to the test folder and won't exist
+                foreach ($Template in $Templates)
+                {
+                    $Template.SourceVHD = ''
+                }
+                Set-Content -Path "$Global:ArtifactPath\ExpectedTemplates.FromVM.json" -Value ($Templates | ConvertTo-Json -Depth 2)
+                $ExpectedTemplates = Get-Content -Path "$Global:TestConfigPath\ExpectedTemplates.FromVM.json"
+                [String]::Compare((Get-Content -Path "$Global:ArtifactPath\ExpectedTemplates.FromVM.json"),$ExpectedTemplates,$true) | Should Be 0
+            }
+            It 'Calls Mocked commands' {
+                Assert-MockCalled Get-VM -Exactly 1
+                Assert-MockCalled Get-VMHardDiskDrive -Exactly 3
+            }
+        }
+    }
+    
+    
+    
     Describe 'Initialize-LabVMTemplate' {
 
         $Config = Get-LabConfiguration -Path $Global:TestConfigOKPath

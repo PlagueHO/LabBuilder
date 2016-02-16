@@ -14,7 +14,7 @@
         "MemoryStartupBytes":  1073741824,
         "ProcessorCount":  "1",
         "TimeZone":  "Pacific Standard Time",
-        "sourcevhd":  ".\\Tests\\PesterTestConfig\\VhdFiles\\Windows Server 2012 R2 Datacenter Full.vhdx"
+        "sourcevhd":  ""
     },
     {
         "vhd":  "Windows Server 2012 R2 Datacenter Core.vhdx",
@@ -31,7 +31,7 @@
         "MemoryStartupBytes":  1073741824,
         "ProcessorCount":  "1",
         "TimeZone":  "Pacific Standard Time",
-        "sourcevhd":  ".\\Tests\\PesterTestConfig\\VhdFiles\\Windows Server 2012 R2 Datacenter Full.vhdx",
+        "sourcevhd":  "",
         "ExposeVirtualizationExtensions":  "Y"
     },
     {
@@ -48,6 +48,6 @@
         "MemoryStartupBytes":  2147483648,
         "ProductKey":  "CCCCC-CCCCC-CCCCC-CCCCC-CCCCC",
         "TimeZone":  "Pacific Standard Time",
-        "sourcevhd":  ".\\Tests\\PesterTestConfig\\VhdFiles\\Windows 10 Enterprise.vhdx"
+        "sourcevhd":  ""
     }
 ]
