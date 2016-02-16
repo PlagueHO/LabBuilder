@@ -33,8 +33,8 @@
     <switch name="Pester Test Internal" type="Internal" />
   </switches>
 
-  <templatevhds isopath=".\Tests\PesterTestConfig\ISOFiles" 
-                vhdpath=".\Tests\PesterTestConfig\VHDFiles" >
+  <templatevhds isopath="ISOFiles" 
+                vhdpath="VHDFiles" >
     <templatevhd name="Windows Server 2012 R2 Datacenter Full"
                  iso="9600.16384.130821-1623_x64fre_Server_EN-US_IRM_SSS_DV5.iso"
                  vhd="Windows Server 2012 R2 Datacenter Full.vhdx" 
@@ -46,11 +46,19 @@
     <templatevhd name="Windows Server 2016 TP4 Datacenter FULL"
                  iso="10586.0.151029-1700.TH2_RELEASE_SERVER_OEMRET_X64FRE_EN-US.ISO"
                  vhd="Windows Server 2016 TP4 Datacenter Full.vhdx"
-                 winimage="" />
+                 winimage="Windows Server 2016 Technical Preview 4 SERVERDATACENTER" />
+    <templatevhd name="Windows Server 2016 TP4 Datacenter CORE"
+                 iso="10586.0.151029-1700.TH2_RELEASE_SERVER_OEMRET_X64FRE_EN-US.ISO"
+                 vhd="Windows Server 2016 TP4 Datacenter Core.vhdx"
+                 winimage="Windows Server 2016 Technical Preview 4 SERVERDATACENTERCORE" />
+    <templatevhd name="Windows 10 Enterprise"
+                 iso="10586.0.151029-1700.TH2_RELEASE_CLIENTENTERPRISEEVAL_OEMRET_X64FRE_EN-US"
+                 vhd="Windows 10 Enterprise.vhdx"
+                 winimage="Windows 10 Enterprise" />
     <templatevhd name="Nano Server 2016 TP4 Basic"
                  iso="10586.0.151029-1700.TH2_RELEASE_SERVER_OEMRET_X64FRE_EN-US.ISO"
                  vhd="Nano Server 2016 TP4 Basic.vhdx"
-                 winimage="" 
+                 winimage="CORESYSTEMSERVER_INSTALL" 
                  isnano="Y"
                  packages="Guest" />
   </templatevhds>
@@ -58,7 +66,7 @@
   <templates fromvm="Pester *">
     <template name="Pester Windows Server 2012 R2 Datacenter Full"
               vhd="Windows Server 2012 R2 Datacenter Full.vhdx"
-              sourcevhd=".\Tests\PesterTestConfig\VhdFiles\Windows Server 2012 R2 Datacenter Full.vhdx"
+              sourcevhd="VhdFiles\Windows Server 2012 R2 Datacenter Full.vhdx"
               edition="Windows Server 2012 R2 SERVERDATACENTER"
               allowcreate="Y"
               memorystartupbytes="1GB"
@@ -71,7 +79,7 @@
               integrationservices="Guest Service Interface,Heartbeat,Key-Value Pair Exchange,Shutdown,Time Synchronization,VSS" />
     <template name="Pester Windows Server 2012 R2 Datacenter Core"
               vhd="Windows Server 2012 R2 Datacenter Core.vhdx"
-              sourcevhd=".\Tests\PesterTestConfig\VhdFiles\Windows Server 2012 R2 Datacenter Full.vhdx"
+              sourcevhd="VhdFiles\Windows Server 2012 R2 Datacenter Full.vhdx"
               edition="Windows Server 2012 R2 SERVERDATACENTERCORE"
               allowcreate="Y"
               memorystartupbytes="1GB"
@@ -85,7 +93,7 @@
               integrationservices="Guest Service Interface,Heartbeat,Key-Value Pair Exchange,Shutdown,Time Synchronization,VSS" />
     <template name="Pester Windows 10 Enterprise"
               vhd="Windows 10 Enterprise.vhdx"
-              sourcevhd=".\Tests\PesterTestConfig\VhdFiles\Windows 10 Enterprise.vhdx"
+              sourcevhd="VhdFiles\Windows 10 Enterprise.vhdx"
               edition="Windows 10 Enterprise"
               allowcreate="Y"
               memorystartupbytes="2GB"
