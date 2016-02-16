@@ -5385,8 +5385,6 @@ function Initialize-TemplateVHD
 	$TemplateDiskPath = $Config.labbuilderconfig.settings.TemplateDiskPath
 	$ServerISO = $Config.labbuilderconfig.settings.TemplateISO
 
-	[String]$WorkFolder = Join-Path -Path $ScriptDir -ChildPath 'WinImage'
-	[String]$DismFolder = Join-Path -Path $ScriptDir -ChildPath 'DISM'
 	[String]$MountFolder = Join-Path -Path $ScriptDir -ChildPath 'Mount'
 
 	Write-Verbose "Script Directory = $ScriptDir"
@@ -5405,19 +5403,9 @@ function Initialize-TemplateVHD
 	[String]$DriveLetter = (Get-Diskimage -ImagePath $ServerISO | Get-Volume).DriveLetter
 	$ISODrive = "$([string]$DriveLetter):"
 
-	Write-Verbose "CD Drive is $ISODrive"
+
 	Get-PSDrive -PSProvider FileSystem # Work around an issue with script not seeing the drive 
 
-	Write-Verbose 'Copying DISM from Server ISO to Working Folders'
-	If (-not (Test-Path -Path $DismFolder -PathType Container)) 
-		{
-		$null = New-Item -Path $DismFolder -ItemType Directory
-		} #EndIf
-	$null = Copy-Item -Path "$ISODrive\Sources\api*downlevel*.dll" -Destination $DismFolder -Force
-	$null = Copy-Item -Path "$ISODrive\Sources\*dism*" -Destination $DismFolder -Force
-	$null = Copy-Item -Path "$ISODrive\Sources\*provider*" -Destination $DismFolder -Force
-	
-	
 
 	 # As of 2015-06-16 Convert-WindowsImage contains a function instead of being a standalone script.
 	 # . source the Convert-WindowsImage.ps1 so it can be called
@@ -5425,13 +5413,6 @@ function Initialize-TemplateVHD
 	$TemplatePrefix  = $Config.labbuilderconfig.TemplateDisks.Prefix
 
 	Write-Verbose "Prefix to use $TemplatePrefix"
-
-	# Create working folder
-	Write-Verbose -Message 'Creating Working Folders'
-	If (-not (Test-Path -Path $WorkFolder -PathType Container)) 
-		{
-		$null = New-Item -Path $WorkFolder -ItemType Directory
-		} #EndIf
 
 	foreach ($VMTemplateDisk in $VMTemplateDisks)
 		{
@@ -5480,14 +5461,14 @@ function Initialize-TemplateVHD
 
 				if ($VMTemplateDisk.IsNano -eq 'Y')
 				{
-					$Packages = $TemplateDisk.Packages
+					$Packages = $VMTemplateDisk.Packages
 						If (-not (Test-Path -Path $MountFolder -PathType Container)) 
 							{
 								$null = New-Item -Path $MountFolder -ItemType Directory
 							}
 					# Mount the VHD to load packages into it
-					& "$DismFolder\Dism.exe" '/Mount-Image' "/ImageFile:$PathtoDisk" '/Index:1' "/MountDir:$MountFolder"
 
+                    Mount-WindowsImage -Path "$MountFolder" -ImagePath "$PathtoDisk" -Index 1
 					$PackageList = @(
 						@{ Name = 'Compute'; Filename = 'Microsoft-NanoServer-Compute-Package.cab' },
 						@{ Name = 'OEM-Drivers'; Filename = 'Microsoft-NanoServer-OEM-Drivers-Package.cab' },
@@ -5507,17 +5488,18 @@ function Initialize-TemplateVHD
 					)
 
 					# Add the selected packages
-					foreach ($Package in $PackageList) {
-						If ($Package.Name -in $Packages) {
+					foreach ($Package in $PackageList) 
+                    {
+						If ($Package.Name -in $Packages) 
+                        {
 							Write-Verbose -Message "Adding Package $($Package.Filename) to Image"
-							& "$DismFolder\Dism.exe" '/Add-Package' "/PackagePath:$($DriveLetter):\NanoServer\packages\$($Package.Filename)" "/Image:$MountFolder"
-							& "$DismFolder\Dism.exe" '/Add-Package' "/PackagePath:$($DriveLetter):\NanoServer\packages\en-us\$($Package.Filename)" "/Image:$MountFolder"
-                            
-                            Write-Verbose "Added Package "
+
+                            Add-WindowsPackage -path "$MountFolder" -PackagePath "$($DriveLetter):\NanoServer\packages\$($Package.Filename)"
+                            Add-WindowsPackage -path "$MountFolder" -PackagePath "$($DriveLetter):\NanoServer\packages\en-us\$($Package.Filename)"
+
 						}
 					}
-					& "$DismFolder\Dism.exe" '/Unmount-Image' "/MountDir:$MountFolder" '/commit'
-
+                    Dismount-WindowsImage -Path "$MountFolder" -Save
 				} #EndIf
 			}
 			Else 
