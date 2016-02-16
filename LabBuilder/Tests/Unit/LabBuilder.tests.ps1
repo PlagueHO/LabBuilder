@@ -1971,7 +1971,7 @@ InModuleScope LabBuilder {
 
 
 
-    Describe 'Update-LabVMDataDisk' -Tags 'InProcess' {
+    Describe 'Update-LabVMDataDisk' {
         #region Mocks
         Mock Get-VM
         Mock Get-VHD
@@ -2318,11 +2318,79 @@ InModuleScope LabBuilder {
                 Assert-MockCalled Add-VMHardDiskDrive -Exactly 0
             }
         }
-
     }
 
 
+    Describe 'Update-LabVMIntegrationService' {
+        #region Mocks
+        Mock Get-VMIntegrationService -MockWith { @(
+            @{ Name = 'Guest Service Interface'; Enabled = $False }
+            @{ Name = 'Heartbeat'; Enabled = $True }
+            @{ Name = 'Key-Value Pair Exchange'; Enabled = $True }
+            @{ Name = 'Shutdown'; Enabled = $True }
+            @{ Name = 'Time Synchronization'; Enabled = $True }
+            @{ Name = 'VSS'; Enabled = $True }                             
+        ) }
+        Mock Enable-VMIntegrationService
+        Mock Disable-VMIntegrationService
+        #endregion
 
+        $Config = Get-LabConfiguration -Path $Global:TestConfigOKPath
+        [Array]$Templates = Get-LabVMTemplates -Configuration $Config
+        [Array]$Switches = Get-LabSwitches -Configuration $Config
+
+        Context 'Valid configuration is passed with null Integration Services' {
+            [Array]$VMs = Get-LabVMs -Configuration $Config -VMTemplates $Templates -Switches $Switches
+            $VMs[0].Remove('IntegrationServices')
+            It 'Does not throw an Exception' {
+                { Update-LabVMIntegrationService -VM $VMs[0] } | Should Not Throw 
+            }
+            It 'Calls Mocked commands' {
+                Assert-MockCalled Get-VMIntegrationService -Exactly 1
+                Assert-MockCalled Enable-VMIntegrationService -Exactly 1
+                Assert-MockCalled Disable-VMIntegrationService -Exactly 0
+            }
+        }
+
+        Context 'Valid configuration is passed with blank Integration Services' {
+            [Array]$VMs = Get-LabVMs -Configuration $Config -VMTemplates $Templates -Switches $Switches
+            $VMs[0].IntegrationServices = ''
+            It 'Does not throw an Exception' {
+                { Update-LabVMIntegrationService -VM $VMs[0] } | Should Not Throw 
+            }
+            It 'Calls Mocked commands' {
+                Assert-MockCalled Get-VMIntegrationService -Exactly 1
+                Assert-MockCalled Enable-VMIntegrationService -Exactly 0 
+                Assert-MockCalled Disable-VMIntegrationService -Exactly 5
+            }
+        }
+
+        Context 'Valid configuration is passed with VSS only enabled' {
+            [Array]$VMs = Get-LabVMs -Configuration $Config -VMTemplates $Templates -Switches $Switches
+            $VMs[0].IntegrationServices = 'VSS'
+            It 'Does not throw an Exception' {
+                { Update-LabVMIntegrationService -VM $VMs[0] } | Should Not Throw 
+            }
+            It 'Calls Mocked commands' {
+                Assert-MockCalled Get-VMIntegrationService -Exactly 1
+                Assert-MockCalled Enable-VMIntegrationService -Exactly 0 
+                Assert-MockCalled Disable-VMIntegrationService -Exactly 4
+            }
+        }
+        Context 'Valid configuration is passed with Guest Service Interface only enabled' {
+            [Array]$VMs = Get-LabVMs -Configuration $Config -VMTemplates $Templates -Switches $Switches
+            $VMs[0].IntegrationServices = 'Guest Service Interface'
+            It 'Does not throw an Exception' {
+                { Update-LabVMIntegrationService -VM $VMs[0] } | Should Not Throw 
+            }
+            It 'Calls Mocked commands' {
+                Assert-MockCalled Get-VMIntegrationService -Exactly 1
+                Assert-MockCalled Enable-VMIntegrationService -Exactly 1 
+                Assert-MockCalled Disable-VMIntegrationService -Exactly 5
+            }
+        }
+    }
+    
     Describe 'Initialize-LabVMs'  -Tags 'Incomplete' {
         #region Mocks
         Mock New-VHD

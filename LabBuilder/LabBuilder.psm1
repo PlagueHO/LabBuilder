@@ -61,6 +61,7 @@ VMDataDiskSharedDifferencingError=The Differencing Data Disk VHD '{1}' specified
 VMDataDiskSourceVHDIfMoveError=The Data Disk VHD '{1}' specified in VM '{0}' must have a Source VHD specified if MoveSourceVHD is set.
 VMDataDiskVHDConvertError=The Data Disk '{1}' in VM '{0}' cannot be converted to a {2} type.
 VMDataDiskVHDShrinkError=The Data Disk '{1}' in VM '{0}' cannot be shrunk to {2}.
+InvalidIntegrationServiceError=An invalid Integration Service '{1}' was specified in VM '{0}'.
 InstallingHyperVComponentsMesage=Installing {0} Hyper-V Components.
 InitializingHyperVComponentsMesage=Initializing Hyper-V Components.
 DownloadingLabResourcesMessage=Downloading Lab Resources.
@@ -1353,14 +1354,10 @@ function Get-LabVMTemplates {
                 {
                     $VMTemplate.ExposeVirtualizationExtensions = $Template.ExposeVirtualizationExtensions
                 }
-<<<<<<< HEAD
                 if ($Template.IntegrationServices)
                 {
                     $VMTemplate.IntegrationServices = $Template.IntegrationServices
                 }
-=======
-
->>>>>>> dev
                 if ($Template.AdministratorPassword)
                 {
                     $VMTemplate.AdministratorPassword = $Template.AdministratorPassword
@@ -1445,6 +1442,7 @@ function Get-LabVMTemplates {
     Return $VMTemplates
 } # Get-LabVMTemplates
 ####################################################################################################
+
 ####################################################################################################
 <#
 .SYNOPSIS
@@ -3556,31 +3554,20 @@ function Get-LabVMs {
 			} # If
 
         if ($VM.ExposeVirtualizationExtensions)
-<<<<<<< HEAD
         {
             $ExposeVirtualizationExtensions = $VM.ExposeVirtualizationExtensions
         } # If
         
         # Get the Integration Services flags
         [String] $IntegrationServices = $null
-        if ($VMTemplate.$IntegrationServices -ne $null)
+        if ($VMTemplate.IntegrationServices -ne $null)
         {
-            $IntegrationServices = $VMTemplate.$IntegrationServices
+            $IntegrationServices = $VMTemplate.IntegrationServices
         }
-        if ($VM.$IntegrationServices -ne $null)
+        if ($VM.IntegrationServices -ne $null)
         {
-            $IntegrationServices = $VM.$IntegrationServices
+            $IntegrationServices = $VM.IntegrationServices
         } # If
-        # If integration services flags are specified then enable all of them
-        if ($IntegrationServices -eq $null)
-        {
-            $IntegrationServices = 'Guest Service Interface,Heartbeat,Key-Value Pair Exchange,ShutdownTime Synchronization,VSS'
-        }
-=======
-            {
-            $ExposeVirtualizationExtensions=$VM.ExposeVirtualizationExtensions
-            } # If        
->>>>>>> dev
         
         # Get the Administrator password (from the template or VM)
         [String] $AdministratorPassword = ''
@@ -4212,6 +4199,7 @@ function Start-LabVM {
     } # If
 } # Start-LabVM
 ####################################################################################################
+
 ####################################################################################################
 <#
 .SYNOPSIS
@@ -4488,281 +4476,98 @@ function Update-LabVMDataDisk {
     } # foreach
 } # Update-LabVMDataDisk
 ####################################################################################################
+
 ####################################################################################################
 <#
 .SYNOPSIS
-   Updates the VM Data Disks to match the VM Configuration.
+   Updates the VM Integration Services to match the VM Configuration.
 .DESCRIPTION
-   This cmdlet will take the VM configuration provided and ensure that that data disks that are
-   attached to the VM.
+   This cmdlet will take the VM object provided and ensure the integration services specified
+   in it are enabled.
    
-   The function will use the array of items in the DataVHDs property of the VM to create and
-   attach any data disk VHDs that are missing.
+   The function will use comma delimited list of integration services in the VM object passed
+   and enable the integration services listed for this VM.
    
-   If the data disk VHD file exists but is not attached it will be attached to the VM. If the
-   data disk VHD file does not exist then it will be created and attached. 
+   If the IntegrationServices property of the VM is not set or set to null then ALL integration
+   services will be ENABLED.
+   
+   If the IntegrationServices property of the VM is set but is blank then ALL integration
+   services will be DISABLED.
+   
+   The IntegrationServices property should contain a comma delimited list of Integration Services
+   that should be enabled.
+   
+   The currently available Integration Services are:
+   - Guest Service Interface
+   - Heartbeat
+   - Key-Value Pair Exchange
+   - Shutdown
+   - Time Synchronization
+   - VSS
 .EXAMPLE
    $Config = Get-LabConfiguration -Path c:\mylab\config.xml
    $VMs = Get-LabVM -Configuration $Config
    $Path = Get-LabVMRootPath -Configuration $Configuration -VM $VM[0]
-   Update-LabVMDataDisk -Configuration $Config -VM VM[0]
-   This will update the data disks for the first VM in the configuration file c:\mylab\config.xml.
-.PARAMETER Configuration
-   Contains the Lab Builder configuration object that was loaded by the Get-LabConfiguration
-   object.
+   Update-LabVMIntegrationService -VM VM[0]
+   This will update the Integration Services for the first VM in the configuration file c:\mylab\config.xml.
 .PARAMETER VM
    A Virtual Machine object pulled from the Lab Configuration file using Get-LabVM.
 .OUTPUTS
    None.
 #>
-function Update-LabVMDataDisk {
+function Update-LabVMIntegrationService {
     [CmdLetBinding()]
     param
     (
-        [Parameter(
-            Mandatory,
-            Position=0)]
-        [ValidateNotNullOrEmpty()]
-        [XML] $Configuration,
-
         [Parameter(
             Mandatory,
             Position=1)]
         [ValidateNotNullOrEmpty()]
         $VM
     )
-
-    # If there are no data VHDs just return
-    if (! $VM.DataVHDs)
+    # Configure the Integration services
+    $IntegrationServices = $VM.IntegrationServices
+    if ($IntegrationServices -eq $null)
     {
-        return
+        $IntegrationServices = 'Guest Service Interface,Heartbeat,Key-Value Pair Exchange,Shutdown,Time Synchronization,VSS'
     }
-
-    # Get the root path of the VM
-    [String] $VMRootPath = Get-LabVMRootPath `
-        -Configuration $Configuration `
-        -VM $VM
-
-    # Get the Virtual Hard Disk Path
-    [String] $VHDPath = Join-Path `
-        -Path $VMRootPath `
-        -ChildPath 'Virtual Hard Disks'
-
-    foreach ($DataVhd in @($VM.DataVHDs))
+    $EnabledIntegrationServices = $IntegrationServices -split ','
+    $ExistingIntegrationServices = Get-VMIntegrationService `
+        -VMName $VM.Name `
+        -ErrorAction Stop
+    # Loop through listed integration services and enable them
+    foreach ($ExistingIntegrationService in $ExistingIntegrationServices)
     {
-        $Vhd = $DataVhd.Vhd
-        if (Test-Path -Path $Vhd)
+        if ($ExistingIntegrationService.Name -in $EnabledIntegrationServices)
         {
-            Write-Verbose -Message $($LocalizedData.VMDiskAlreadyExistsMessage `
-                -f $VM.Name,$Vhd,'Data')
-                
-            # Check the parameters of the VHD match
-            $ExistingVhd = Get-VHD -Path $Vhd
-
-            # Check the VHD Type
-            if (($DataVhd.type) -and ($ExistingVhd.VhdType -ne $DataVhd.type))
+            # This integration service should be enabled
+            if (-not $ExistingIntegrationService.Enabled)
             {
-                # The type of disk can't be changed.
-                $ExceptionParameters = @{
-                    errorId = 'VMDataDiskVHDConvertError'
-                    errorCategory = 'InvalidArgument'
-                    errorMessage = $($LocalizedData.VMDataDiskVHDConvertError `
-                        -f $VM.name,$Vhd,$DataVhd.type)
-                }
-                New-LabException @ExceptionParameters                
-            }
-            
-            # Check the size
-            if ($DataVhd.Size)
-            {
-                if ($ExistingVhd.Size -lt $DataVhd.Size)
-                {
-                    # Expand the disk
-                    Write-Verbose -Message $($LocalizedData.ExpandingVMDiskMessage `
-                        -f $VM.Name,$Vhd,'Data',$DataVhd.Size)
+                # It is disabled so enable it
+                Write-Verbose -Message $($LocalizedData.EnableVMIntegrationServiceMessage `
+                    -f $VM.Name,$IntegrationService.Name)
 
-                    $null = Resize-VHD `
-                        -Path $Vhd `
-                        -SizeBytes $DataVhd.Size
-                }
-                elseif ($ExistingVhd.Size -gt $DataVhd.Size)
-                {
-                    # The disk size can't be reduced.
-                    # This could be revisited later.
-                    $ExceptionParameters = @{
-                        errorId = 'VMDataDiskVHDShrinkError'
-                        errorCategory = 'InvalidArgument'
-                        errorMessage = $($LocalizedData.VMDataDiskVHDShrinkError `
-                            -f $VM.name,$Vhd,$DataVhd.Size)
-                    }
-                    New-LabException @ExceptionParameters
-                } # if
+                Enable-VMIntegrationService `
+                    -VMName $VM.Name `
+                    -Name $ExistingIntegrationService.Name 
             } # if
         }
         else
         {
-            # The data disk VHD does not exist so create it
-            $SourceVhd = $DataVhd.SourceVhd
-            if ($SourceVhd)
+            # This integration service should be disabled
+            if ($ExistingIntegrationService.Enabled)
             {
-                # A source VHD was specified to create the new VHD using
-                if (! (Test-Path -Path $SourceVhd))
-                {
-                    $ExceptionParameters = @{
-                        errorId = 'VMDataDiskSourceVHDNotFoundError'
-                        errorCategory = 'InvalidArgument'
-                        errorMessage = $($LocalizedData.VMDataDiskSourceVHDNotFoundError `
-                            -f $VM.name,$SourceVhd)
-                    }
-                    New-LabException @ExceptionParameters                    
-                } # if
-                # Should the Source VHD be copied or moved
-                if ($DataVhd.MoveSourceVHD)
-                {
-                    Write-Verbose -Message $($LocalizedData.CreatingVMDiskByMovingSourceVHDMessage `
-                        -f $VM.Name,$Vhd,$SourceVhd)
+                # It is enabled so disable it
+                Write-Verbose -Message $($LocalizedData.DisableVMIntegrationServiceMessage `
+                    -f $VM.Name,$ExistingIntegrationService.Name)
 
-                    $null = Move-Item `
-                        -Path $SourceVhd `
-                        -Destination $VHDPath `
-                        -Force `
-                        -ErrorAction Stop
-                }
-                else
-                {
-                    Write-Verbose -Message $($LocalizedData.CreatingVMDiskByCopyingSourceVHDMessage `
-                        -f $VM.Name,$Vhd,$SourceVhd)
-
-                    $null = Copy-Item `
-                        -Path $SourceVhd `
-                        -Destination $VHDPath `
-                        -Force `
-                        -ErrorAction Stop 
-                } # if
-            }
-            else
-            {
-                $Size = $DataVhd.size
-                switch ($DataVhd.type)
-                {
-                    'fixed'
-                    {
-                        # Create a new Fixed VHD
-                        Write-Verbose -Message $($LocalizedData.CreatingVMDiskMessage `
-                            -f $VM.Name,$Vhd,'Fixed Data')
-
-                        $null = New-VHD `
-                            -Path $Vhd `
-                            -SizeBytes $Size `
-                            -Fixed `
-                            -ErrorAction Stop
-                        break;
-                    } # 'fixed'
-                    'dynamic'
-                    {
-                        # Create a new Dynamic VHD
-                        Write-Verbose -Message $($LocalizedData.CreatingVMDiskMessage `
-                            -f $VM.Name,$Vhd,'Dynamic Data')
-
-                        $null = New-VHD `
-                            -Path $Vhd `
-                            -SizeBytes $Size `
-                            -Dynamic `
-                            -ErrorAction Stop
-                        break;                            
-                    } # 'dynamic'
-                    'differencing'
-                    {
-                        # A differencing disk is specified so check the Parent VHD
-                        # is specified and exists
-                        $ParentVhd = $DataVhd.ParentVhd
-                        if (-not $ParentVhd)
-                        {
-                            $ExceptionParameters = @{
-                                errorId = 'VMDataDiskParentVHDMissingError'
-                                errorCategory = 'InvalidArgument'
-                                errorMessage = $($LocalizedData.VMDataDiskParentVHDMissingError `
-                                    -f $VM.name)
-                            }
-                            New-LabException @ExceptionParameters                    
-                        } # if
-                        if (-not (Test-Path -Path $ParentVhd))
-                        {
-                            $ExceptionParameters = @{
-                                errorId = 'VMDataDiskParentVHDNotFoundError'
-                                errorCategory = 'InvalidArgument'
-                                errorMessage = $($LocalizedData.VMDataDiskParentVHDNotFoundError `
-                                    -f $VM.name,$ParentVhd)
-                            }
-                            New-LabException @ExceptionParameters                    
-                        } # if
-                        
-                        # Create a new Differencing VHD
-                        Write-Verbose -Message $($LocalizedData.CreatingVMDiskMessage `
-                            -f $VM.Name,$Vhd,"Differencing Data using Parent '$ParentVhd'")
-
-                        $null = New-VHD `
-                            -Path $Vhd `
-                            -SizeBytes $Size `
-                            -Differencing `
-                            -ParentPath $ParentVhd `
-                            -ErrorAction Stop
-                        break;
-                    } # 'differencing'
-                    default
-                    {
-                        $ExceptionParameters = @{
-                            errorId = 'VMDataDiskUnknownTypeError'
-                            errorCategory = 'InvalidArgument'
-                            errorMessage = $($LocalizedData.VMDataDiskUnknownTypeError `
-                                -f $VM.Name,$Vhd,$DataVhd.type)
-                        }
-                        New-LabException @ExceptionParameters                        
-                    } # default
-                } # switch
+                Disable-VMIntegrationService `
+                    -VMName $VM.Name `
+                    -Name $ExistingIntegrationService.Name
             } # if
-        } # if
-        
-        # Get a list of disks attached to the VM
-        $VMHardDiskDrives = Get-VMHardDiskDrive `
-            -VMName $VM.Name
-
-        # The data disk VHD will now exist so ensure it is attached
-        if (($VMHardDiskDrives | Where-Object -Property Path -eq $Vhd).Count -eq 0)
-        {
-            # The data disk is not yet attached
-            Write-Verbose -Message $($LocalizedData.AddingVMDiskMessage `
-                -f $VM.Name,$Vhd,'Data')
-
-            # Determine the ControllerLocation and ControllerNumber to
-            # attach the VHD to.
-            $ControllerLocation = ($VMHardDiskDrives | 
-                Measure-Object -Property ControllerLocation -Maximum).Maximum + 1
-            
-            $NewHardDiskParams = @{
-                VMName = $VM.Name
-                Path = $Vhd
-                ControllerType = 'SCSI'
-                ControllerLocation = $ControllerLocation
-                ControllerNumber = 0
-                ErrorAction = 'Stop'
-            }
-            if ($DataVhd.Shared)
-            {
-                $NewHardDiskParams += @{
-                    ShareVirtualDisk = $true
-                }
-                if ($DataVhd.SupportSR)
-                {
-                    $NewHardDiskParams += @{
-                        SupportPersistentReservations = $true
-                    }
-                } # if
-            } # if
-            $Null = Add-VMHardDiskDrive @NewHardDiskParams
         } # if
     } # foreach
-} # Update-LabVMDataDisk
+} # Update-LabVMIntegrationService
 ####################################################################################################
 
 ####################################################################################################
@@ -4970,52 +4775,6 @@ function Initialize-LabVMs {
             } # If
         } # If
 
-        # Configure the Integration services
-        if ($VM.IntegrationServices)
-        {
-            $ExistingIntegrationServices = Get-VMIntegrationServices `
-                -VMName $VM.Name `
-                -ErrorAction Stop
-            $IntegrationServices = $VM.IntegrationServices -split ','
-            # Loop through listed integration services and enable them
-            foreach ($IntegrationService in $IntegrationServices)
-            {
-                $ExistingIntegrationService = $ExistingIntegrationServices | Where-Object -Property Name -eq $IntegrationServices
-                if ($ExistingIntegrationService)
-                {
-                    # This integration service doesn't exist
-                    
-                }
-                else
-                {
-                    if (! $ExistingIntegrationService.Enabled)
-                    {
-                        Write-Verbose -Message $($LocalizedData.EnableVMIntegrationServiceMessage `
-                            -f $VM.Name,$IntegrationService.Name)
-
-                        Enable-VMIntegrationService `
-                            -VM $VM.Name `
-                            -Name $IntegrationService 
-                    } # if
-                } # if
-            } # foreach
-            $ExistingIntegrationServices = Get-VMIntegrationServices `
-                -VMName $VM.Name `
-                -ErrorAction Stop
-            foreach ($ExistingIntegrationService in $ExistingIntegrationServices)
-            {
-                if (($ExistingIntegrationService.Name -notin $IntegrationServices) `
-                    -and ($ExistingIntegrationService.Enabled))
-                {
-                    Write-Verbose -Message $($LocalizedData.DisableVMIntegrationServiceMessage `
-                        -f $VM.Name,$ExistingIntegrationService.Name)
-
-                    Disable-VMIntegrationService `
-                        -VMName $VM.Name `
-                        -Name $ExistingIntegrationService.Name
-                } # if
-            } # foreach
-        } # if
         
         # If the ExposeVirtualizationExtensions is configured then try and set this on 
         # Virtual Processor. Only supported in certain builds on Windows 10/Server 2016 TP4.
@@ -5030,6 +4789,10 @@ function Initialize-LabVMs {
             }   
         }
 
+        # Enable/Disable the Integration Services
+        Update-LabVMIntegrationService `
+            -VM $VM
+        
         # Update the data disks for the VM
         Update-LabVMDataDisk `
             -Configuration $Configuration `
