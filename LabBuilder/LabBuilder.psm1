@@ -61,7 +61,6 @@ VMDataDiskSharedDifferencingError=The Differencing Data Disk VHD '{1}' specified
 VMDataDiskSourceVHDIfMoveError=The Data Disk VHD '{1}' specified in VM '{0}' must have a Source VHD specified if MoveSourceVHD is set.
 VMDataDiskVHDConvertError=The Data Disk '{1}' in VM '{0}' cannot be converted to a {2} type.
 VMDataDiskVHDShrinkError=The Data Disk '{1}' in VM '{0}' cannot be shrunk to {2}.
-InvalidIntegrationServiceError=An invalid Integration Service '{1}' was specified in VM '{0}'.
 InstallingHyperVComponentsMesage=Installing {0} Hyper-V Components.
 InitializingHyperVComponentsMesage=Initializing Hyper-V Components.
 DownloadingLabResourcesMessage=Downloading Lab Resources.
@@ -122,6 +121,8 @@ InitialSetupIsAlreadyCompleteMessaage=Initial Setup on VM '{0}' has already been
 CertificateDownloadStartedMessage=Certificate download from VM '{0}' started.
 CertificateDownloadCompleteMessage=Certificate download from VM '{0}' complete.
 VMNotFoundMessage=VM '{0}' was not found in Hyper-V server.
+EnableVMIntegrationServiceMessage=The '{1}' Integration Service has been enabled in VM '{0}'.
+DisableVMIntegrationServiceMessage=The '{1}' Integration Service has been disabled in VM '{0}'.
 '@
 }
 
@@ -1358,6 +1359,10 @@ function Get-LabVMTemplates {
                 {
                     $VMTemplate.IntegrationServices = $Template.IntegrationServices
                 }
+                else
+                {
+                    $VMTemplate.IntegrationServices = $null
+                }
                 if ($Template.AdministratorPassword)
                 {
                     $VMTemplate.AdministratorPassword = $Template.AdministratorPassword
@@ -1435,7 +1440,7 @@ function Get-LabVMTemplates {
                     {
                         'Server'
                     };
-                 integrationservices = $IntegrationServices;
+                 integrationservices = $Template.IntegrationServices;
             }
         } # If
     } # Foreach
@@ -3559,7 +3564,6 @@ function Get-LabVMs {
         } # If
         
         # Get the Integration Services flags
-        [String] $IntegrationServices = $null
         if ($VMTemplate.IntegrationServices -ne $null)
         {
             $IntegrationServices = $VMTemplate.IntegrationServices
@@ -4544,12 +4548,12 @@ function Update-LabVMIntegrationService {
             if (-not $ExistingIntegrationService.Enabled)
             {
                 # It is disabled so enable it
-                Write-Verbose -Message $($LocalizedData.EnableVMIntegrationServiceMessage `
-                    -f $VM.Name,$IntegrationService.Name)
-
                 Enable-VMIntegrationService `
                     -VMName $VM.Name `
                     -Name $ExistingIntegrationService.Name 
+
+                Write-Verbose -Message $($LocalizedData.EnableVMIntegrationServiceMessage `
+                    -f $VM.Name,$IntegrationService.Name)
             } # if
         }
         else
@@ -4558,12 +4562,12 @@ function Update-LabVMIntegrationService {
             if ($ExistingIntegrationService.Enabled)
             {
                 # It is enabled so disable it
-                Write-Verbose -Message $($LocalizedData.DisableVMIntegrationServiceMessage `
-                    -f $VM.Name,$ExistingIntegrationService.Name)
-
                 Disable-VMIntegrationService `
                     -VMName $VM.Name `
                     -Name $ExistingIntegrationService.Name
+
+                Write-Verbose -Message $($LocalizedData.DisableVMIntegrationServiceMessage `
+                    -f $VM.Name,$ExistingIntegrationService.Name)
             } # if
         } # if
     } # foreach
@@ -5639,8 +5643,8 @@ Configuration ConfigLCM {
             RefreshMode = 'Push'
             ConfigurationMode = 'ApplyAndAutoCorrect'
             CertificateId = $Thumbprint
-            ConfigurationModeFrequencyMins = 5
-            RefreshFrequencyMins = 10
+            ConfigurationModeFrequencyMins = 15
+            RefreshFrequencyMins = 30
             RebootNodeIfNeeded = $True
             ActionAfterReboot = 'ContinueConfiguration'
         } 

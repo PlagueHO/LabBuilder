@@ -1921,7 +1921,7 @@ InModuleScope LabBuilder {
                 $ExpectedVMs = Get-Content -Path "$Global:TestConfigPath\ExpectedVMs.json"
                 [String]::Compare((Get-Content -Path "$Global:ArtifactPath\ExpectedVMs.json"),$ExpectedVMs,$true) | Should Be 0
             }
-        }        
+        }
     }
 
 
