@@ -759,18 +759,18 @@ function Download-LabResources {
    Gets an array of switches from a Lab Configuration file.
 .DESCRIPTION
    Takes a provided Lab Configuration file and returns the list of switches required for this Lab.
-   This list is usually passed to Initialize-LabSwitches to configure the swtiches required for this
+   This list is usually passed to Initialize-LabSwitch to configure the swtiches required for this
    lab.
 .PARAMETER Configuration
    Contains the Lab Builder configuration object that was loaded by the Get-LabConfiguration object.
 .EXAMPLE
    $Config = Get-LabConfiguration -Path c:\mylab\config.xml
-   $Switches = Get-LabSwitches -Configuration $Config
+   $Switches = Get-LabSwitch -Configuration $Config
    Loads a Lab Builder configuration and pulls the array of switches from it.
 .OUTPUTS
    Returns an array of switches.
 #>
-function Get-LabSwitches {
+function Get-LabSwitch {
     [OutputType([Array])]
     [CmdLetBinding()]
     param
@@ -838,7 +838,7 @@ function Get-LabSwitches {
             adapters = $ConfigAdapters }
     }
     return $Switches
-} # Get-LabSwitches
+} # Get-LabSwitch
 ####################################################################################################
 
 ####################################################################################################
@@ -847,21 +847,21 @@ function Get-LabSwitches {
    Creates Hyper-V Virtual Switches from a provided array.
 .DESCRIPTION
    Takes an array of switches that were pulled from a Lab Configuration object by calling
-   Get-LabSwitches
+   Get-LabSwitch
    and ensures that they Hyper-V Virtual Switches on the system are configured to match.
 .PARAMETER Configuration
    Contains the Lab Builder configuration object that was loaded by the Get-LabConfiguration object.
 .PARAMETER Switches
-   The array of switches pulled from the Lab Configuration file using Get-LabSwitches
+   The array of switches pulled from the Lab Configuration file using Get-LabSwitch
 .EXAMPLE
    $Config = Get-LabConfiguration -Path c:\mylab\config.xml
-   $Switches = Get-LabSwitches -Configuration $Config
-   Initialize-LabSwitches -Configuration $Config -Switches $Switches
+   $Switches = Get-LabSwitch -Configuration $Config
+   Initialize-LabSwitch -Configuration $Config -Switches $Switches
    Initializes the Hyper-V switches in the configured in the Lab c:\mylab\config.xml
 .OUTPUTS
    None.
 #>
-function Initialize-LabSwitches {
+function Initialize-LabSwitch {
     [CmdLetBinding()]
     param
     (
@@ -1002,7 +1002,7 @@ function Initialize-LabSwitches {
             } # Switch
         } # If
     } # Foreach       
-} # Initialize-LabSwitches
+} # Initialize-LabSwitch
 ####################################################################################################
 
 ####################################################################################################
@@ -1011,20 +1011,20 @@ function Initialize-LabSwitches {
    Removes all Hyper-V Virtual Switches provided.
 .DESCRIPTION
    This cmdlet is used to remove any Hyper-V Virtual Switches that were created by
-   the Initialize-LabSwitches cmdlet.
+   the Initialize-LabSwitch cmdlet.
 .PARAMETER Configuration
    Contains the Lab Builder configuration object that was loaded by the Get-LabConfiguration object.
 .PARAMETER Switches
-   The array of switches pulled from the Lab Configuration file using Get-LabSwitches
+   The array of switches pulled from the Lab Configuration file using Get-LabSwitch
 .EXAMPLE
    $Config = Get-LabConfiguration -Path c:\mylab\config.xml
-   $Switches = Get-LabSwitches -Configuration $Config
-   Remove-LabSwitches -Configuration $Config -Switches $Switches
+   $Switches = Get-LabSwitch -Configuration $Config
+   Remove-LabSwitch -Configuration $Config -Switches $Switches
    Removes any Hyper-V switches in the configured in the Lab c:\mylab\config.xml
 .OUTPUTS
    None.
 #>
-function Remove-LabSwitches {
+function Remove-LabSwitch {
     [CmdLetBinding()]
     param
     (
@@ -1104,7 +1104,7 @@ function Remove-LabSwitches {
             } # Switch
         } # If
     } # Foreach        
-} # Remove-LabSwitches
+} # Remove-LabSwitch
 ####################################################################################################
 
 ####################################################################################################
@@ -1114,17 +1114,17 @@ function Remove-LabSwitches {
 .DESCRIPTION
    Takes the provided Lab Configuration file and returns the list of Virtul Machine template machines
    that will be used to create the Virtual Machines in this lab. This list is usually passed to
-   Initialize-LabVMTemplates.
+   Initialize-LabVMTemplate.
 .PARAMETER Configuration
    Contains the Lab Builder configuration object that was loaded by the Get-LabConfiguration object.
 .EXAMPLE
    $Config = Get-LabConfiguration -Path c:\mylab\config.xml
-   $VMTemplates = Get-LabVMTemplates -Configuration $Config
+   $VMTemplates = Get-LabVMTemplate -Configuration $Config
    Loads a Lab Builder configuration and pulls the array of VMTemplates from it.
 .OUTPUTS
    Returns an array of VM Templates.
 #>
-function Get-LabVMTemplates {
+function Get-LabVMTemplate {
     [OutputType([System.Collections.Hashtable[]])]
     [CmdLetBinding()]
     param
@@ -1333,7 +1333,7 @@ function Get-LabVMTemplates {
         } # If
     } # Foreach
     Return $VMTemplates
-} # Get-LabVMTemplates
+} # Get-LabVMTemplate
 ####################################################################################################
 
 ####################################################################################################
@@ -1459,16 +1459,16 @@ function Get-LabVMTemplateDisks {
 .PARAMETER Configuration
    Contains the Lab Builder configuration object that was loaded by the Get-LabConfiguration object.
 .PARAMETER VMTemplates
-   The array of VM Templates pulled from the Lab Configuration file using Get-LabVMTemplates
+   The array of VM Templates pulled from the Lab Configuration file using Get-LabVMTemplate
 .EXAMPLE
    $Config = Get-LabConfiguration -Path c:\mylab\config.xml
-   $VMTemplates = Get-LabVMTemplates -Configuration $Config
-   Initialize-LabVMTemplates -Configuration $Config -VMTemplates $VMTemplates
+   $VMTemplates = Get-LabVMTemplate -Configuration $Config
+   Initialize-LabVMTemplate -Configuration $Config -VMTemplates $VMTemplates
    Initializes the Virtual Machine templates in the configured in the Lab c:\mylab\config.xml
 .OUTPUTS
    None.
 #>
-function Initialize-LabVMTemplates {
+function Initialize-LabVMTemplate {
     [CmdLetBinding()]
     param
     (
@@ -1509,7 +1509,7 @@ function Initialize-LabVMTemplates {
                 -f $VMTemplate.templatevhd)
         }
     }
-} # Initialize-LabVMTemplates
+} # Initialize-LabVMTemplate
 ####################################################################################################
 
 ####################################################################################################
@@ -1529,16 +1529,16 @@ function Initialize-LabVMTemplates {
    object.
 .PARAMETER VMTemplates
    The array of Virtual Machine Templates pulled from the Lab Configuration file using
-   Get-LabVMTemplates
+   Get-LabVMTemplate
 .EXAMPLE
    $Config = Get-LabConfiguration -Path c:\mylab\config.xml
-   $VMTemplates = Get-LabVMTemplates -Configuration $Config
-   Remove-LabVMTemplates -Configuration $Config -VMTemplates $VMTemplates
+   $VMTemplates = Get-LabVMTemplate -Configuration $Config
+   Remove-LabVMTemplate -Configuration $Config -VMTemplates $VMTemplates
    Removes any Virtual Machine template VHDs configured in the Lab c:\mylab\config.xml
 .OUTPUTS
    None.
 #>
-function Remove-LabVMTemplates {
+function Remove-LabVMTemplate {
     [CmdLetBinding()]
     param
     (
@@ -1561,7 +1561,7 @@ function Remove-LabVMTemplates {
             Remove-Item -Path $VMTemplate.templatevhd -Confirm:$false -Force
         }
     }
-} # Remove-LabVMTemplates
+} # Remove-LabVMTemplate
 ####################################################################################################
 
 ####################################################################################################
@@ -2933,23 +2933,23 @@ function Initialize-LabVMImage {
    Gets an Array of VMs from a Lab configuration.
 .DESCRIPTION
    Takes the provided Lab Configuration file and returns the list of Virtul Machines
-   that will be created in this lab. This list is usually passed to Initialize-LabVMs.
+   that will be created in this lab. This list is usually passed to Initialize-LabVM.
 .PARAMETER Configuration
    Contains the Lab Builder configuration object that was loaded by the Get-LabConfiguration object.
 .PARAMETER VMTemplates
-   Contains the array of VM Templates returned by Get-LabVMTemplates from this configuration.
+   Contains the array of VM Templates returned by Get-LabVMTemplate from this configuration.
 .PARAMETER Switches
-   Contains the array of Virtual Switches returned by Get-LabSwitches from this configuration.
+   Contains the array of Virtual Switches returned by Get-LabSwitch from this configuration.
 .EXAMPLE
    $Config = Get-LabConfiguration -Path c:\mylab\config.xml
-   $VMTemplates = Get-LabVMTemplates -Configuration $Config
-   $Switches = Get-LabSwitches -Configuration $Config
-   $VMs = Get-LabVMs -Configuration $Config -VMTemplates $VMTemplates -Switches $Switches
+   $VMTemplates = Get-LabVMTemplate -Configuration $Config
+   $Switches = Get-LabSwitch -Configuration $Config
+   $VMs = Get-LabVM -Configuration $Config -VMTemplates $VMTemplates -Switches $Switches
    Loads a Lab Builder configuration and pulls the array of VMs from it.
 .OUTPUTS
    Returns an array of VMs.
 #>
-function Get-LabVMs {
+function Get-LabVM {
     [OutputType([System.Collections.Hashtable[]])]
     [CmdLetBinding()]
     param (
@@ -3540,7 +3540,7 @@ function Get-LabVMs {
     } # Foreach        
 
     Return $LabVMs
-} # Get-LabVMs
+} # Get-LabVM
 ####################################################################################################
 
 ####################################################################################################
@@ -3564,13 +3564,13 @@ function Get-LabVMs {
 .EXAMPLE
    $Config = Get-LabConfiguration -Path c:\mylab\config.xml
    $VMs = Get-LabVM -Configuration $Config
-   Get-LabVMSelfSignedCert -Configuration $Config -VM $VMs[0]
+   Get-LabVMelfSignedCert -Configuration $Config -VM $VMs[0]
    Downloads the existing Self-signed certificate for the VM to the Labbuilder files folder of the
    VM.
 .OUTPUTS
    The path to the certificate file that was downloaded.
 #>
-function Get-LabVMSelfSignedCert
+function Get-LabVMelfSignedCert
 {
     [CmdLetBinding()]
     [OutputType([Boolean])]
@@ -3672,7 +3672,7 @@ function Get-LabVMSelfSignedCert
         } # If
     } # While
     return (Get-Item -Path "$VMLabBuilderFiles\$($Script:DSCEncryptionCert)")        
-} # Get-LabVMSelfSignedCert
+} # Get-LabVMelfSignedCert
 ####################################################################################################
 
 ####################################################################################################
@@ -4051,7 +4051,7 @@ function Start-LabVM {
                 Write-Verbose -Message $($LocalizedData.CertificateDownloadStartedMessage `
                     -f $VM.Name)
                     
-                if (Get-LabVMSelfSignedCert -Configuration $Configuration -VM $VM)
+                if (Get-LabVMelfSignedCert -Configuration $Configuration -VM $VM)
                 {
                     Write-Verbose -Message $($LocalizedData.CertificateDownloadCompleteMessage `
                         -f $VM.Name)
@@ -4536,7 +4536,7 @@ function Initialize-LabVMPath {
 .OUTPUTS
    None
 #>
-function Initialize-LabVMs {
+function Initialize-LabVM {
     [CmdLetBinding()]
     param
     (
@@ -4761,7 +4761,7 @@ function Initialize-LabVMs {
             -Configuration $Configuration `
             -VM $VM
     } # Foreach
-} # Initialize-LabVMs
+} # Initialize-LabVM
 ####################################################################################################
 
 ####################################################################################################
@@ -4781,7 +4781,7 @@ function Initialize-LabVMs {
 .NOTES
    General notes
 #>
-function Remove-LabVMs {
+function Remove-LabVM {
     [CmdLetBinding()]
     [OutputType([Boolean])]
     param
@@ -5270,23 +5270,23 @@ Function Install-Lab {
     Initialize-LabConfiguration `
         -Configuration $Config
 
-    $Switches = Get-LabSwitches `
+    $Switches = Get-LabSwitch `
         -Configuration $Config
-    Initialize-LabSwitches `
+    Initialize-LabSwitch `
         -Configuration $Config `
         -Switches $Switches
 
-    $VMTemplates = Get-LabVMTemplates `
+    $VMTemplates = Get-LabVMTemplate `
         -Configuration $Config
-    Initialize-LabVMTemplates `
+    Initialize-LabVMTemplate `
         -Configuration $Config `
         -VMTemplates $VMTemplates
 
-    $VMs = Get-LabVMs `
+    $VMs = Get-LabVM `
         -Configuration $Config `
         -VMTemplates $VMTemplates `
         -Switches $Switches
-    Initialize-LabVMs `
+    Initialize-LabVM `
         -Configuration $Config `
         -VMs $VMs 
 } # Build-Lab
@@ -5331,28 +5331,28 @@ Function Uninstall-Lab {
         return
     }
 
-    $VMTemplates = Get-LabVMTemplates -Configuration $Config
+    $VMTemplates = Get-LabVMTemplate -Configuration $Config
 
-    $Switches = Get-LabSwitches -Configuration $Config
+    $Switches = Get-LabSwitch -Configuration $Config
 
-    $VMs = Get-LabVMs -Configuration $Config -VMTemplates $VMTemplates -Switches $Switches
+    $VMs = Get-LabVM -Configuration $Config -VMTemplates $VMTemplates -Switches $Switches
     if ($RemoveVHDs)
     {
-        $null = Remove-LabVMs -Configuration $Config -VMs $VMs -RemoveVHDs
+        $null = Remove-LabVM -Configuration $Config -VMs $VMs -RemoveVHDs
     }
     else
     {
-        $null = Remove-LabVMs -Configuration $Config -VMs $VMs
+        $null = Remove-LabVM -Configuration $Config -VMs $VMs
     } # If
 
     if ($RemoveTemplates)
     {
-        $null = Remove-LabVMTemplates -Configuration $Config -VMTemplates $VMTemplates
+        $null = Remove-LabVMTemplate -Configuration $Config -VMTemplates $VMTemplates
     } # If
 
     if ($RemoveSwitches)
     {
-        $null = Remove-LabSwitches -Configuration $Config -Switches $Switches
+        $null = Remove-LabSwitch -Configuration $Config -Switches $Switches
     } # If
 } # Uninstall-Lab
 ####################################################################################################
@@ -5547,15 +5547,15 @@ Export-ModuleMember -Function `
     Test-LabConfiguration, `
     Install-LabHyperV, `
     Initialize-LabConfiguration, `
-    Get-LabSwitches, `
-    Initialize-LabSwitches, `
-    Remove-LabSwitches, `
-    Get-LabVMTemplates, `
-    Initialize-LabVMTemplates, `
-    Remove-LabVMTemplates, `
-    Get-LabVMs, `
-    Initialize-LabVMs, `
-    Remove-LabVMs, `
+    Get-LabSwitch, `
+    Initialize-LabSwitch, `
+    Remove-LabSwitch, `
+    Get-LabVMTemplate, `
+    Initialize-LabVMTemplate, `
+    Remove-LabVMTemplate, `
+    Get-LabVM, `
+    Initialize-LabVM, `
+    Remove-LabVM, `
     Start-LabVM, `
     Wait-LabVMStart, `
     Wait-LabVMOff, `
