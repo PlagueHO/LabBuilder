@@ -54,6 +54,7 @@ Versions
 * Support for Fixed, Differencing and Shared data disks.
 * JSON Object comparison unit tests fixed.
 * AppVeyor build status badge added.
+* Add support for VM Integration Services flag.
 
 ### 0.2.0.0
 * Code cleanup and refactoring.

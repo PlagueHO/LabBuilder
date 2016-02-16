@@ -1380,6 +1380,10 @@ function Get-LabVMTemplates {
                 {
                     $VMTemplate.ExposeVirtualizationExtensions = $Template.ExposeVirtualizationExtensions
                 }
+                if ($Template.IntegrationServices)
+                {
+                    $VMTemplate.IntegrationServices = $Template.IntegrationServices
+                }
                 if ($Template.AdministratorPassword)
                 {
                     $VMTemplate.AdministratorPassword = $Template.AdministratorPassword
@@ -1457,6 +1461,7 @@ function Get-LabVMTemplates {
                     {
                         'Server'
                     };
+                 integrationservices = $IntegrationServices;
             }
         } # If
     } # Foreach
@@ -3510,7 +3515,7 @@ function Get-LabVMs {
         } # If
 
         # Get the Expose Virtualization Extensions flag
-        [String] $ExposeVirtualizationExtensions = ''
+        [String] $ExposeVirtualizationExtensions = $null
         if ($VMTemplate.ExposeVirtualizationExtensions)
         {
             $ExposeVirtualizationExtensions = $VMTemplate.ExposeVirtualizationExtensions
@@ -3518,7 +3523,23 @@ function Get-LabVMs {
         if ($VM.ExposeVirtualizationExtensions)
         {
             $ExposeVirtualizationExtensions = $VM.ExposeVirtualizationExtensions
-        } # If        
+        } # If
+        
+        # Get the Integration Services flags
+        [String] $IntegrationServices = $null
+        if ($VMTemplate.$IntegrationServices -ne $null)
+        {
+            $IntegrationServices = $VMTemplate.$IntegrationServices
+        }
+        if ($VM.$IntegrationServices -ne $null)
+        {
+            $IntegrationServices = $VM.$IntegrationServices
+        } # If
+        # If integration services flags are specified then enable all of them
+        if ($IntegrationServices -eq $null)
+        {
+            $IntegrationServices = 'Guest Service Interface,Heartbeat,Key-Value Pair Exchange,ShutdownTime Synchronization,VSS'
+        }
         
         # Get the Administrator password (from the template or VM)
         [String] $AdministratorPassword = ''
@@ -3580,6 +3601,7 @@ function Get-LabVMs {
             DynamicMemoryEnabled = $DynamicMemoryEnabled;
             ProcessorCount = $ProcessorCount;
             ExposeVirtualizationExtensions = $ExposeVirtualizationExtensions;
+            IntegrationServices = $IntegrationServices;
             AdministratorPassword = $AdministratorPassword;
             ProductKey = $ProductKey;
             TimeZone =$Timezone;
@@ -4661,6 +4683,53 @@ function Initialize-LabVMs {
             } # If
         } # If
 
+        # Configure the Integration services
+        if ($VM.IntegrationServices)
+        {
+            $ExistingIntegrationServices = Get-VMIntegrationServices `
+                -VMName $VM.Name `
+                -ErrorAction Stop
+            $IntegrationServices = $VM.IntegrationServices -split ','
+            # Loop through listed integration services and enable them
+            foreach ($IntegrationService in $IntegrationServices)
+            {
+                $ExistingIntegrationService = $ExistingIntegrationServices | Where-Object -Property Name -eq $IntegrationServices
+                if ($ExistingIntegrationService)
+                {
+                    # This integration service doesn't exist
+                    
+                }
+                else
+                {
+                    if (! $ExistingIntegrationService.Enabled)
+                    {
+                        Write-Verbose -Message $($LocalizedData.EnableVMIntegrationServiceMessage `
+                            -f $VM.Name,$IntegrationService.Name)
+
+                        Enable-VMIntegrationService `
+                            -VM $VM.Name `
+                            -Name $IntegrationService 
+                    } # if
+                } # if
+            } # foreach
+            $ExistingIntegrationServices = Get-VMIntegrationServices `
+                -VMName $VM.Name `
+                -ErrorAction Stop
+            foreach ($ExistingIntegrationService in $ExistingIntegrationServices)
+            {
+                if (($ExistingIntegrationService.Name -notin $IntegrationServices) `
+                    -and ($ExistingIntegrationService.Enabled))
+                {
+                    Write-Verbose -Message $($LocalizedData.DisableVMIntegrationServiceMessage `
+                        -f $VM.Name,$ExistingIntegrationService.Name)
+
+                    Disable-VMIntegrationService `
+                        -VMName $VM.Name `
+                        -Name $ExistingIntegrationService.Name
+                } # if
+            } # foreach
+        } # if
+        
         # If the ExposeVirtualizationExtensions is configured then try and set this on 
         # Virtual Processor. Only supported in certain builds on Windows 10/Server 2016 TP4.
         if ($VM.ExposeVirtualizationExtensions)

@@ -3,6 +3,7 @@
     "DSCParameters":  "\r\n          Dummy = \"Dummy\"\r\n        ",
     "Name":  "PESTER01",
     "SetupComplete":  "",
+    "IntegrationServices":  "",
     "OSType":  "Server",
     "DSCConfigName":  "STANDALONE_DEFAULT",
     "DataVHDs":  [

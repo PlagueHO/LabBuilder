@@ -986,6 +986,8 @@ InModuleScope LabBuilder {
         
         Context 'Configuration passed with template missing Template Name.' {
             It 'Throws a EmptyTemplateNameError Exception' {
+                $Config = Get-LabConfiguration -Path $Global:TestConfigOKPath
+                $Config.labbuilderconfig.templates.template[0].RemoveAttribute('name')
                 $ExceptionParameters = @{
                     errorId = 'EmptyTemplateNameError'
                     errorCategory = 'InvalidArgument'
@@ -993,44 +995,42 @@ InModuleScope LabBuilder {
                 }
                 $Exception = New-Exception @ExceptionParameters
 
-                { Get-LabVMTemplates -Configuration (Get-LabConfiguration -Path "$Global:TestConfigPath\PesterTestConfig.TemplateFail.NoName.xml") } | Should Throw $Exception
+                { Get-LabVMTemplates -Configuration $Config } | Should Throw $Exception
             }
         }
-
         Context 'Configuration passed with template VHD empty.' {
             It 'Throws a EmptyTemplateVHDError Exception' {
+                $Config = Get-LabConfiguration -Path $Global:TestConfigOKPath
+                $Config.labbuilderconfig.templates.template[0].RemoveAttribute('vhd')
                 $ExceptionParameters = @{
                     errorId = 'EmptyTemplateVHDError'
                     errorCategory = 'InvalidArgument'
                     errorMessage = $($LocalizedData.EmptyTemplateVHDError `
-                        -f 'No VHD')
+                        -f $Config.labbuilderconfig.templates.template[0].name)
                 }
                 $Exception = New-Exception @ExceptionParameters
 
-                { Get-LabVMTemplates -Configuration (Get-LabConfiguration -Path "$Global:TestConfigPath\PesterTestConfig.TemplateFail.NoVHD.xml") } | Should Throw $Exception
+                { Get-LabVMTemplates -Configuration $Config } | Should Throw $Exception
             }
         }
-
         Context 'Configuration passed with template with Source VHD set to non-existent file.' {
             It 'Throws a TemplateSourceVHDNotFoundError Exception' {
+                $Config = Get-LabConfiguration -Path $Global:TestConfigOKPath
+                $Config.labbuilderconfig.templates.template[0].sourcevhd = 'This File Doesnt Exist.vhdx'
                 $ExceptionParameters = @{
                     errorId = 'TemplateSourceVHDNotFoundError'
                     errorCategory = 'InvalidArgument'
                     errorMessage = $($LocalizedData.TemplateSourceVHDNotFoundError `
-                        -f 'Bad VHD','This File Doesnt Exist.vhdx')
+                        -f $Config.labbuilderconfig.templates.template[0].name,'This File Doesnt Exist.vhdx')
                 }
                 $Exception = New-Exception @ExceptionParameters
 
-                { Get-LabVMTemplates -Configuration (Get-LabConfiguration -Path "$Global:TestConfigPath\PesterTestConfig.TemplateFail.BadSourceVHD.xml") } | Should Throw $Exception
+                { Get-LabVMTemplates -Configuration $Config } | Should Throw $Exception
             }
         }
-        
-        $Config = Get-LabConfiguration -Path $Global:TestConfigOKPath
-
-        Mock Get-VM
-            
         Context 'Valid configuration is passed but no templates found' {
             It 'Returns Template Object that matches Expected Object' {
+                $Config = Get-LabConfiguration -Path $Global:TestConfigOKPath
                 [Array]$Templates = Get-LabVMTemplates -Configuration $Config 
                 Set-Content -Path "$Global:ArtifactPath\ExpectedTemplates.json" -Value ($Templates | ConvertTo-Json -Depth 2)
                 $ExpectedTemplates = Get-Content -Path "$Global:TestConfigPath\ExpectedTemplates.json"
@@ -1055,6 +1055,7 @@ InModuleScope LabBuilder {
 
         Context 'Valid configuration is passed and templates are found' {
             It 'Returns Template Object that matches Expected Object' {
+                $Config = Get-LabConfiguration -Path $Global:TestConfigOKPath
                 [Array]$Templates = Get-LabVMTemplates -Configuration $Config 
                 Set-Content -Path "$Global:ArtifactPath\ExpectedTemplates.FromVM.json" -Value ($Templates | ConvertTo-Json -Depth 2)
                 $ExpectedTemplates = Get-Content -Path "$Global:TestConfigPath\ExpectedTemplates.FromVM.json"
