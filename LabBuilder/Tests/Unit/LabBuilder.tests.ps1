@@ -1431,7 +1431,7 @@ InModuleScope LabBuilder {
             [Array]$Templates = Get-LabVMTemplates -Configuration $Config
             [Array]$VMs = Get-LabVMs -Configuration $Config -VMTemplates $Templates -Switches $Switches
             [String]$UnattendFile = Get-LabUnattendFile -Configuration $Config -VM $VMs[0]
-            Set-Content -Path "$($Global:ArtifactPath)\UnattendFile.xml" -Value $UnattendFile -Encoding UTF8 -NoNewLine
+            Set-Content -Path "$($Global:ArtifactPath)\ExpectedUnattendFile.xml" -Value $UnattendFile -Encoding UTF8 -NoNewLine
             It 'Returns Expected File Content' {
                 $UnattendFile | Should Be $True
                 $ExpectedUnattendFile = Get-Content -Path "$Global:TestConfigPath\ExpectedUnattendFile.xml" -Raw
