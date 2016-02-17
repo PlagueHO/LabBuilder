@@ -1,0 +1,1 @@
+Place any Windows Installation ISO Files required for this Lab in this folder.

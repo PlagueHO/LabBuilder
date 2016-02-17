@@ -6,12 +6,12 @@ Function Test-StartLabVM {
         [String[]]$StartVMs
     )
     $Config = Get-LabConfiguration -Path $Script:ConfigPath
-    [Array]$Templates = Get-LabVMTemplate -Configuration $Config
-    [Array]$Switches = Get-LabSwitch -Configuration $Config
-    [Array]$VMs = Get-LabVM -Configuration $Config -VMTemplates $Templates -Switches $Switches
+    [Array]$Templates = Get-LabVMTemplate -Config $Config
+    [Array]$Switches = Get-LabSwitch -Config $Config
+    [Array]$VMs = Get-LabVM -Config $Config -VMTemplates $Templates -Switches $Switches
     Foreach ($VM in $VMs) {
         If ($VM.ComputerName -in $StartVMs) {
-            Start-LabVM -Configuration $Config -VM $VM -Verbose
+            Start-LabVM -Config $Config -VM $VM -Verbose
         }
     }
 }

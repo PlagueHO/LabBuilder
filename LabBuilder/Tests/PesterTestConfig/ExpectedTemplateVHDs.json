@@ -1,0 +1,68 @@
+[
+    {
+        "Generation":  2,
+        "Packages":  null,
+        "VHDFormat":  "vhdx",
+        "VHDPath":  "C:\\Users\\Daniel\\Source\\GitHub\\labbuilder\\LabBuilder\\Tests\\PesterTestConfig\\VHDFiles\\Windows Server 2012 R2 Datacenter Full.vhdx",
+        "Edition":  "Windows Server 2012 R2 SERVERDATACENTER",
+        "Name":  "Windows Server 2012 R2 Datacenter Full",
+        "VHDType":  "dynamic",
+        "ISOPath":  "C:\\Users\\Daniel\\Source\\GitHub\\labbuilder\\LabBuilder\\Tests\\PesterTestConfig\\ISOFiles\\9600.16384.130821-1623_x64fre_Server_EN-US_IRM_SSS_DV5.iso",
+        "OSType":  "Server"
+    },
+    {
+        "Generation":  2,
+        "Packages":  null,
+        "VHDFormat":  "vhdx",
+        "VHDPath":  "C:\\Users\\Daniel\\Source\\GitHub\\labbuilder\\LabBuilder\\Tests\\PesterTestConfig\\VHDFiles\\Windows Server 2012 R2 Datacenter Core.vhdx",
+        "Edition":  "Windows Server 2012 R2 SERVERDATACENTERCORE",
+        "Name":  "Windows Server 2012 R2 Datacenter Core",
+        "VHDType":  "dynamic",
+        "ISOPath":  "C:\\Users\\Daniel\\Source\\GitHub\\labbuilder\\LabBuilder\\Tests\\PesterTestConfig\\ISOFiles\\9600.16384.130821-1623_x64fre_Server_EN-US_IRM_SSS_DV5.iso",
+        "OSType":  "Server"
+    },
+    {
+        "Generation":  2,
+        "Packages":  null,
+        "VHDFormat":  "vhdx",
+        "VHDPath":  "C:\\Users\\Daniel\\Source\\GitHub\\labbuilder\\LabBuilder\\Tests\\PesterTestConfig\\VHDFiles\\Windows Server 2016 TP4 Datacenter Full.vhdx",
+        "Edition":  "Windows Server 2016 Technical Preview 4 SERVERDATACENTER",
+        "Name":  "Windows Server 2016 TP4 Datacenter FULL",
+        "VHDType":  "dynamic",
+        "ISOPath":  "C:\\Users\\Daniel\\Source\\GitHub\\labbuilder\\LabBuilder\\Tests\\PesterTestConfig\\ISOFiles\\10586.0.151029-1700.TH2_RELEASE_SERVER_OEMRET_X64FRE_EN-US.ISO",
+        "OSType":  "Server"
+    },
+    {
+        "Generation":  2,
+        "Packages":  null,
+        "VHDFormat":  "vhdx",
+        "VHDPath":  "C:\\Users\\Daniel\\Source\\GitHub\\labbuilder\\LabBuilder\\Tests\\PesterTestConfig\\VHDFiles\\Windows Server 2016 TP4 Datacenter Core.vhdx",
+        "Edition":  "Windows Server 2016 Technical Preview 4 SERVERDATACENTERCORE",
+        "Name":  "Windows Server 2016 TP4 Datacenter CORE",
+        "VHDType":  "dynamic",
+        "ISOPath":  "C:\\Users\\Daniel\\Source\\GitHub\\labbuilder\\LabBuilder\\Tests\\PesterTestConfig\\ISOFiles\\10586.0.151029-1700.TH2_RELEASE_SERVER_OEMRET_X64FRE_EN-US.ISO",
+        "OSType":  "Server"
+    },
+    {
+        "Generation":  2,
+        "Packages":  null,
+        "VHDFormat":  "vhdx",
+        "VHDPath":  "C:\\Users\\Daniel\\Source\\GitHub\\labbuilder\\LabBuilder\\Tests\\PesterTestConfig\\VHDFiles\\Windows 10 Enterprise.vhdx",
+        "Edition":  "Windows 10 Enterprise",
+        "Name":  "Windows 10 Enterprise",
+        "VHDType":  "dynamic",
+        "ISOPath":  "C:\\Users\\Daniel\\Source\\GitHub\\labbuilder\\LabBuilder\\Tests\\PesterTestConfig\\ISOFiles\\10586.0.151029-1700.TH2_RELEASE_CLIENTENTERPRISEEVAL_OEMRET_X64FRE_EN-US.ISO",
+        "OSType":  "Client"
+    },
+    {
+        "Generation":  2,
+        "Packages":  "Guest",
+        "VHDFormat":  "vhdx",
+        "VHDPath":  "C:\\Users\\Daniel\\Source\\GitHub\\labbuilder\\LabBuilder\\Tests\\PesterTestConfig\\VHDFiles\\Nano Server 2016 TP4 Basic.vhdx",
+        "Edition":  "Windows 10 Enterprise",
+        "Name":  "Nano Server 2016 TP4 Basic",
+        "VHDType":  "dynamic",
+        "ISOPath":  "C:\\Users\\Daniel\\Source\\GitHub\\labbuilder\\LabBuilder\\Tests\\PesterTestConfig\\ISOFiles\\10586.0.151029-1700.TH2_RELEASE_SERVER_OEMRET_X64FRE_EN-US.ISO",
+        "OSType":  "Nano"
+    }
+]

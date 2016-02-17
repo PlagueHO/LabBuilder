@@ -55,6 +55,8 @@ Versions
 * JSON Object comparison unit tests fixed.
 * AppVeyor build status badge added.
 * Add support for VM Integration Services flag.
+* Initialize-Lab* arrays made optional and will be pulled from config if not passed.
+* Configuration parameter changed to Config to reduce size/typing.
 
 ### 0.2.0.0
 * Code cleanup and refactoring.
