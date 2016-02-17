@@ -131,8 +131,11 @@ ConvertFrom-StringData -StringData @'
     ISONotFoundDownloadURLMessage=The ISO '{1}' for VM template VHD '{0}' could not be found. It can be downloaded from '{2}'.
     CreatingMountFolderMessage=Creating a temporary mount folder '{0}'.
     CreatingVMTemplateVHDMessage=Creating the '{0}' VM Template VHD '{1}'.
-    MountingVMTemplateVHISODMessage=Mounting the ISO '{1}' VM Template VHD '{0}'.
+    MountingVMTemplateVHDISODMessage=Mounting the ISO '{1}' VM Template VHD '{0}'.
     DismountingVMTemplateVHISODMessage=Dismounting the ISO '{1}' VM Template VHD '{0}'.
     RemovingMountFolderMessage=Removing the temporary mount folder '{0}'.
     ConvertingWIMtoVHDMessage=Converting '{3}' in '{0}' to a bootable {4} {5} {2} '{1}'.
+    MountingVMTemplateVHDMessage=Mounting the VHD '{1}' VM Template VHD '{0}'.
+    DismountingVMTemplateVHDMessage=Dismounting the VHD '{1}' VM Template VHD '{0}'.
+    AddingPackageToVMTemplateVHDMessage=Adding Package VHD '{1}' to VM Template VHD '{0}'.
 '@

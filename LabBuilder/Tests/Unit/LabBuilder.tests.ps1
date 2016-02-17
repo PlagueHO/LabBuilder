@@ -223,7 +223,7 @@ InModuleScope LabBuilder {
     Describe 'Get-ModulesInDSCConfig' {
         Context 'Called with Test DSC Resource File' {
             $Modules = Get-ModulesInDSCConfig `
-                -DSCConfigFile (Join-Path -Path $Global:TestConfigPath -ChildPath 'PesterTest.DSC.ps1')
+                -DSCConfigFile (Join-Path -Path $Global:TestConfigPath -ChildPath 'dsclibrary\PesterTest.DSC.ps1')
             It 'Should Return Expected Modules' {
                 @(Compare-Object -ReferenceObject $Modules `
                     -DifferenceObject @('xActiveDirectory','xComputerManagement','xDHCPServer','xNetworking')).Count `
@@ -1361,6 +1361,7 @@ InModuleScope LabBuilder {
         Context 'Valid configuration is passed and templates are found' {
             It 'Returns Template Object that matches Expected Object' {
                 $Config = Get-LabConfiguration -Path $Global:TestConfigOKPath
+                $Config.labbuilderconfig.templates.SetAttribute('fromvm','Pester *')
                 [Array]$Templates = Get-LabVMTemplate -Config $Config 
                 # Remove the SourceVHD values for any templates because they
                 # will usually be relative to the test folder and won't exist
