@@ -1255,6 +1255,8 @@ function Get-LabVMTemplateVHD {
         New-LabException @ExceptionParameters
     }
 
+    $TemplatePrefix = $Config.labbuilderconfig.templatevhds.prefix
+
     # Read the list of templateVHD from the configuration file
     $TemplateVHDs = $Config.labbuilderconfig.SelectNodes('templatevhds').templatevhd
     [System.Collections.Hashtable[]] $VMTemplateVHDs = @()
@@ -1335,6 +1337,14 @@ function Get-LabVMTemplateVHD {
             $VHDPath = Join-Path `
                 -Path $VHDRootPath `
                 -ChildPath $VHDPath
+        }
+        
+        # Add the template prefix to the VHD name.
+        if ([String]::IsNullOrWhitespace($TemplatePrefix))
+        {
+             $VHDPath = Join `
+                -Path (Split-Path -Path $VHDPath)`
+                -ChildPath ("$TemplatePrefix$(Split-Path -Path $VHDPath -Leaf)")
         }
         
         # Get the Template OS Type 
@@ -1431,12 +1441,18 @@ function Initialize-LabVMTemplateVHD
     [String] $MountFolder = Join-Path `
         -Path $ENV:Temp `
         -ChildPath "LabBuilder_Mount_$([System.IO.Path]::GetRandomFileName())"
+
+    # Make sure Convert-WindowsImage.ps1 is downloaded. 
+    Download-ConvertWindowsImage
+    
+    # . source the Convert-WindowsImage function so it can be called
+    . $Script:ConvertWindowsImagePath
         
     foreach ($VMTemplateVHD in $VMTemplateVHDs)
     {
         [String] $Name = $VMTemplateVHD.Name
         [String] $VHDPath = $VMTemplateVHD.VHDPath
-        [String] $ISOPath = $VMTemplate.ISOPath
+        
         if (Test-Path -Path ($VHDPath))
         {
             # The SourceVHD already exists
@@ -1459,6 +1475,8 @@ function Initialize-LabVMTemplateVHD
                 -ErrorAction Stop
         }
                
+        # Check the ISO exists.
+        [String] $ISOPath = $VMTemplate.ISOPath
         if (-not (Test-Path -Path $ISOPath))
         {
             $ExceptionParameters = @{
@@ -1470,6 +1488,7 @@ function Initialize-LabVMTemplateVHD
             New-LabException @ExceptionParameters            
         }
         
+        # Mount the ISO so we can read the files.
         Write-Verbose -Message ($LocalizedData.CreatingMountFolderMessage `
                 -f $MountFolder)
 
@@ -1479,114 +1498,97 @@ function Initialize-LabVMTemplateVHD
         [String] $ISODrive = "$([string]$DriveLetter):"
 
         # Work around an issue with script not seeing the drive
-        Get-PSDrive -PSProvider FileSystem  
+        Get-PSDrive `
+            -PSProvider FileSystem  
 
-        # As of 2015-06-16 Convert-WindowsImage contains a function instead of being a standalone script.
-        # . source the Convert-WindowsImage.ps1 so it can be called
-        . "$ScriptDir\Convert-WindowsImage.ps1"
-        $TemplatePrefix  = $Config.labbuilderconfig.TemplateVHDs.Prefix
+        # Determine the path to the WIM
+        [String] $WimPath = "$ISODrive\Sources\Install.WIM"
+        if ($VMTemplateVHD.IsNano -eq 'Y')
+        {
+            $WimPath = "$ISODrive\Nanoserver\NanoServer.WIM"
+        }
 
-        Write-Verbose "Prefix to use $TemplatePrefix"
+        # This will have to change depending on the version
+        # of Convert-WindowsImage being used. 
+        [String] $VHDFormat = $VMTemplateVHD.VHDFormat       
+        [String] $VhdPartitionStyle = 'UEFI'
+        if ($VMTemplateVHD.Generation -eq 1)
+        {
+            $VHDPartitionStyle = 'BIOS'
+        }
 
-        foreach ($VMTemplateVHD in $VMTemplateVHDs)
-            {
-                $VMTemplateVHDName = "$TemplatePrefix" + [string]$VMTemplateVHD.Name
-                Write-Verbose "Disk to be created = $VMTemplateVHDName"
+        [String] $Edition = $VMTemplateVHD.WimImage
+        # If edition is not set then use Get-WindowsImage to get the name
+        # of the first image in the WIM.
+        if (-not $Edition)
+        {
+            $Edition = (Get-WindowsImage `
+                -ImagePath $WimPath `
+                -Index 1).ImageName
+        }
 
-                $PathtoDisk = $TemplateVHDpath + "\" + $VMTemplateVHDName
+        Write-Verbose -Message ($LocalizedData.ConvertingWIMtoVHDMessage `
+            -f $WIMPath,$VHDPath,$VHDFormat,$Edition,$VHDPartitionStyle)
 
-                if (!(Test-Path $PathtoDisk ))
-                { 
-                    [String]$VHDFormat = $VMTemplateVHD.VHDFormat
-                    If ($VHDFormat -eq $null) {$VHDFormat = 'VHDX'}
+        @ConvertParams = @{
+            sourcepath = $WimPath
+            vhdpath = $VHDpath
+            vhdformat = $VHDFormat
+            edition = $Edition
+            disklayout = $VHDPartitionStyle
+        }                          
 
-                    $WimPath = 'Sources\Install.WIM'
-                    if ($VMTemplateVHD.isNano -eq 'Y')
-                        {
-                            [String]$WimPath = 'NanoServer\NanoServer.wim'
-                        }
-
-            #This will have to change depending on the version of Convert-WindowsImage being used. 
-                    [String] $VhdPartitionStyle = 'UEFI'
-                        if ($VMTemplateVHD.Generation -eq 1)
-                            {
-                                $VHDPartitionStyle = 'BIOS'
-                            }
-
-                    $Edition = $VMTemplateVHD.WimImage
-                    
-                    Write-Verbose "Image to use = $Edition"
-
-                    $Sourcepath = "$([string]$DriveLetter):\" + $WimPath
-                    Write-Verbose "Source path for convert-windowsimage is $Sourcepath"
-
-                    $VHDpath = "$([string]$TemplateVHDPath)\" + $VMTemplateVHDName
-
-                    Convert-WindowsImage `
-                        -Sourcepath $Sourcepath `
-                        -VHDpath $VHDpath `
-                        –VHDFormat $VHDFormat `
-                        -Edition $Edition `
-                        -DiskLayout $VHDPartitionStyle 
-                            
-
-                    if ($VMTemplateVHD.IsNano -eq 'Y')
+        if ($VMTemplateVHD.IsNano -eq 'Y')
+        {
+<#
+            $Packages = $VMTemplateVHD.Packages
+                If (-not (Test-Path -Path $MountFolder -PathType Container)) 
                     {
-                        $Packages = $VMTemplateVHD.Packages
-                            If (-not (Test-Path -Path $MountFolder -PathType Container)) 
-                                {
-                                    $null = New-Item -Path $MountFolder -ItemType Directory
-                                }
-                        # Mount the VHD to load packages into it
+                        $null = New-Item -Path $MountFolder -ItemType Directory
+                    }
+            # Mount the VHD to load packages into it
 
-                        Mount-WindowsImage -Path "$MountFolder" -ImagePath "$PathtoDisk" -Index 1
-                        $PackageList = @(
-                            @{ Name = 'Compute'; Filename = 'Microsoft-NanoServer-Compute-Package.cab' },
-                            @{ Name = 'OEM-Drivers'; Filename = 'Microsoft-NanoServer-OEM-Drivers-Package.cab' },
-                            @{ Name = 'Storage'; Filename = 'Microsoft-NanoServer-Storage-Package.cab' },
-                            @{ Name = 'FailoverCluster'; Filename = 'Microsoft-NanoServer-FailoverCluster-Package.cab' },
-                            @{ Name = 'ReverseForwarders'; Filename = 'Microsoft-OneCore-ReverseForwarders-Package.cab' },
-                            @{ Name = 'Guest'; Filename = 'Microsoft-NanoServer-Guest-Package.cab' },
-                            @{ Name = 'Containers'; Filename = 'Microsoft-NanoServer-Containers-Package.cab' },
-                            @{ Name = 'Defender'; Filename = 'Microsoft-NanoServer-Defender-Package.cab' },
-                            @{ Name = 'DCB'; Filename = 'Microsoft-NanoServer-DCB-Package.cab' },
-                            @{ Name = 'DNS'; Filename = 'Microsoft-NanoServer-DNS-Package.cab' },
-                            @{ Name = 'DSC'; Filename = 'Microsoft-NanoServer-DSC-Package.cab' },
-                            @{ Name = 'IIS'; Filename = 'Microsoft-NanoServer-IIS-Package.cab' },
-                            @{ Name = 'NPDS'; Filename = 'Microsoft-NanoServer-NPDS-Package.cab' },
-                            @{ Name = 'SCVMM'; Filename = 'Microsoft-Windows-Server-SCVMM-Package.cab' },
-                            @{ Name = 'SCVMM-Compute'; Filename = 'Microsoft-Windows-Server-SCVMM-Compute-Package.cab' }
-                        )
+            Mount-WindowsImage -Path "$MountFolder" -ImagePath "$PathtoDisk" -Index 1
+            $PackageList = @(
+                @{ Name = 'Compute'; Filename = 'Microsoft-NanoServer-Compute-Package.cab' },
+                @{ Name = 'OEM-Drivers'; Filename = 'Microsoft-NanoServer-OEM-Drivers-Package.cab' },
+                @{ Name = 'Storage'; Filename = 'Microsoft-NanoServer-Storage-Package.cab' },
+                @{ Name = 'FailoverCluster'; Filename = 'Microsoft-NanoServer-FailoverCluster-Package.cab' },
+                @{ Name = 'ReverseForwarders'; Filename = 'Microsoft-OneCore-ReverseForwarders-Package.cab' },
+                @{ Name = 'Guest'; Filename = 'Microsoft-NanoServer-Guest-Package.cab' },
+                @{ Name = 'Containers'; Filename = 'Microsoft-NanoServer-Containers-Package.cab' },
+                @{ Name = 'Defender'; Filename = 'Microsoft-NanoServer-Defender-Package.cab' },
+                @{ Name = 'DCB'; Filename = 'Microsoft-NanoServer-DCB-Package.cab' },
+                @{ Name = 'DNS'; Filename = 'Microsoft-NanoServer-DNS-Package.cab' },
+                @{ Name = 'DSC'; Filename = 'Microsoft-NanoServer-DSC-Package.cab' },
+                @{ Name = 'IIS'; Filename = 'Microsoft-NanoServer-IIS-Package.cab' },
+                @{ Name = 'NPDS'; Filename = 'Microsoft-NanoServer-NPDS-Package.cab' },
+                @{ Name = 'SCVMM'; Filename = 'Microsoft-Windows-Server-SCVMM-Package.cab' },
+                @{ Name = 'SCVMM-Compute'; Filename = 'Microsoft-Windows-Server-SCVMM-Compute-Package.cab' }
+            )
 
-                        # Add the selected packages
-                        foreach ($Package in $PackageList) 
-                        {
-                            If ($Package.Name -in $Packages) 
-                            {
-                                Write-Verbose -Message "Adding Package $($Package.Filename) to Image"
-
-                                Add-WindowsPackage -path "$MountFolder" `
-                                -PackagePath "$($DriveLetter):\NanoServer\packages\$($Package.Filename)"
-                                Add-WindowsPackage -path "$MountFolder" `
-                                -PackagePath "$($DriveLetter):\NanoServer\packages\en-us\$($Package.Filename)"
-
-                            }
-                        }
-                        Dismount-WindowsImage -Path "$MountFolder" -Save
-                    } #EndIf
-                }
-                Else 
+            # Add the selected packages
+            foreach ($Package in $PackageList) 
+            {
+                If ($Package.Name -in $Packages) 
                 {
-                    Write-Host -ForegroundColor Cyan "Template Disk $VMTemplateVHD Already Exists"
-                
-                } #End Else
-                
-            } #EndFor
+                    Write-Verbose -Message "Adding Package $($Package.Filename) to Image"
 
+                    Add-WindowsPackage -path "$MountFolder" `
+                    -PackagePath "$($DriveLetter):\NanoServer\packages\$($Package.Filename)"
+                    Add-WindowsPackage -path "$MountFolder" `
+                    -PackagePath "$($DriveLetter):\NanoServer\packages\en-us\$($Package.Filename)"
+
+                }
+            }
+            Dismount-WindowsImage -Path "$MountFolder" -Save
+            #>
+        } #EndIf
 
         # Dismount the ISO File
         Write-Verbose -Message 'Dismounting Server ISO'
-        Dismount-DiskImage -ImagePath $ServerISO
+        Dismount-DiskImage `
+            -ImagePath $ISO
     } # endfor
     
     # Cleanup
