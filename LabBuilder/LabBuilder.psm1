@@ -19,22 +19,27 @@ Import-LocalizedData `
 ####################################################################################################
 # This is the URL to the WMF 5.0 RTM
 [String] $Script:WorkingFolder = $ENV:Temp
+
+# Supporting files
 [String] $Script:WMF5DownloadURL = 'https://download.microsoft.com/download/2/C/6/2C6E1B4A-EBE5-48A6-B225-2D2058A9CEFB/W2K12R2-KB3094174-x64.msu'
 [String] $Script:WMF5InstallerFilename = ($Script:WMF5DownloadURL).Substring(($Script:WMF5DownloadURL).LastIndexOf('/') + 1)
 [String] $Script:WMF5InstallerPath = Join-Path -Path $Script:WorkingFolder -ChildPath $Script:WMF5InstallerFilename
 [String] $Script:ConvertWindowsImageDownloadURL = 'https://gallery.technet.microsoft.com/scriptcenter/Convert-WindowsImageps1-0fe23a8f/file/59237/7/Convert-WindowsImage.ps1'
 [String] $Script:ConvertWindowsImageFilename = ($Script:ConvertWindowsImageDownloadURL).Substring(($Script:ConvertWindowsImageDownloadURL).LastIndexOf('/') + 1)
 [String] $Script:ConvertWindowsImagePath = Join-Path -Path $Script:WorkingFolder -ChildPath $Script:ConvertWindowsImageFilename
+[String] $Script:SupportConvertWindowsImagePath = Join-Path -Path $PSScriptRoot -ChildPath 'Support\Convert-WindowsImage.ps1'
 [String] $Script:CertGenDownloadURL = 'https://gallery.technet.microsoft.com/scriptcenter/Self-signed-certificate-5920a7c6/file/101251/1/New-SelfSignedCertificateEx.zip'
 [String] $Script:CertGenZipFilename = ($Script:CertGenDownloadURL).Substring(($Script:CertGenDownloadURL).LastIndexOf('/') + 1)
 [String] $Script:CertGenZipPath = Join-Path -Path $Script:WorkingFolder -ChildPath $Script:CertGenZipFilename
 [String] $Script:CertGenPS1Filename = 'New-SelfSignedCertificateEx.ps1'
 [String] $Script:CertGenPS1Path = Join-Path -Path $Script:WorkingFolder -ChildPath $Script:CertGenPS1Filename
-[String] $Script:NanoServerImageGeneratorFilename = 'NanoServerImageGenerator.psm1'
-[String] $Script:NanoServerConvertWindowsImageFilename = 'Convert-WindowsImage.ps1'
+
+# Virtual Networking Parameters
 [Int] $Script:DefaultManagementVLan = 99
 [String] $Script:DefaultMacAddressMinimum = '00155D010600'
 [String] $Script:DefaultMacAddressMaximum = '00155D0106FF'
+
+# Self-signed Certificate Parameters
 [Int] $Script:SelfSignedCertKeyLength = 2048
 # Warning - using KSP causes the Private Key to not be accessible to PS.
 [String] $Script:SelfSignedCertProviderName = 'Microsoft Enhanced Cryptographic Provider v1.0' # 'Microsoft Software Key Storage Provider'
@@ -1478,6 +1483,7 @@ function Get-LabVMTemplateVHD {
    Contains the Lab Builder configuration object that was loaded by the Get-LabConfiguration object.
 .PARAMETER VMTemplateVHDs
    The array of VMTemplateVHDs pulled from the Lab Configuration file using Get-LabVMTemplateVHD
+   
    If not provided it will attempt to pull the list from the configuration file.
 .EXAMPLE
    $Config = Get-LabConfiguration -Path c:\mylab\config.xml
@@ -1510,9 +1516,12 @@ function Initialize-LabVMTemplateVHD
         $VMTemplateVHDs = Get-LabVMTemplateVHD -Config $Config        
     }
 
-    # Make sure Convert-WindowsImage.ps1 is downloaded. 
-    Download-ConvertWindowsImage
-    
+    # If there are no VMTemplateVHDs just return
+    if (-not $VMTemplateVHDs)
+    {
+        return
+    }
+        
     # Generate the Mount folder
     [String] $MountFolder = Join-Path `
         -Path $ENV:Temp `
@@ -1616,6 +1625,16 @@ function Initialize-LabVMTemplateVHD
                 erroraction = 'Stop'
             }                       
             
+            # . source the Downloaded Convert-WindowsImage function
+            # so it can be called
+            # Use the Downloaded Convert-WindowsImage for any disk type
+            # except Nano Server.
+            . $Script:SupportConvertWindowsImagePath        
+
+            Convert-WindowsImage @ConvertParams
+            
+            Remove-Item -Path Function:\Convert-WindowsImage
+
             if ($VMTemplateVHD.OSType -eq 'Nano')
             {
                 # First, make a copy of the NanoServerImageGenerator.psm1 in the
@@ -1624,34 +1643,6 @@ function Initialize-LabVMTemplateVHD
                 [String] $VHDFolder = Split-Path `
                     -Path $VHDPath `
                     -Parent
-
-                [String] $NanoServerImageGeneratorPath = Join-Path `
-                    -Path $VHDFolder `
-                    -ChildPath ($Script:NanoServerImageGeneratorFilename) 
-                if (-not (Test-Path -Path $NanoServerImageGeneratorPath))
-                {
-                    [String] $NanoServerImageGeneratorSourcePath = Join-Path `
-                        -Path "$ISODrive\Nanoserver" `
-                        -ChildPath $Script:NanoServerImageGeneratorFilename
-                    
-                    Copy-Item `
-                        -Path $NanoServerImageGeneratorSourcePath `
-                        -Destination $NanoServerImageGeneratorPath
-                }
-
-                [String] $NanoServerConvertWindowsImagePath = Join-Path `
-                    -Path $VHDFolder `
-                    -ChildPath ($Script:NanoServerConvertWindowsImageFilename) 
-                if (-not (Test-Path -Path $NanoServerConvertWindowsImagePath))
-                {
-                    [String] $NanoServerConvertWindowsImageSourcePath = Join-Path `
-                        -Path "$ISODrive\Nanoserver" `
-                        -ChildPath $Script:NanoServerConvertWindowsImageFilename
-                    
-                    Copy-Item `
-                        -Path $NanoServerConvertWindowsImageSourcePath `
-                        -Destination $NanoServerConvertWindowsImagePath
-                }
 
                 # Copy the packages folder over so it is also accessible once the
                 # ISO has dismounted.
@@ -1671,14 +1662,6 @@ function Initialize-LabVMTemplateVHD
                 }
                 
                 $Packages = $VMTemplateVHD.Packages
-
-                # . source the NanoServer Convert-WindowsImage function
-                # so it can be called
-                . $NanoServerConvertWindowsImagePath
-
-                Convert-WindowsImage @ConvertParams
-                
-                Remove-Item -Path Function:\Convert-WindowsImage
 
                 # Generate the VHD Mount folder
                 [String] $VHDMountFolder = Join-Path `
@@ -1746,18 +1729,6 @@ function Initialize-LabVMTemplateVHD
                         -Force `
                         -ErrorAction Stop
                 }
-            }
-            else
-            {
-                # . source the Downloaded Convert-WindowsImage function
-                # so it can be called
-                # Use the Downloaded Convert-WindowsImage for any disk type
-                # except Nano Server.
-                . $Script:ConvertWindowsImagePath        
-
-                Convert-WindowsImage @ConvertParams
-                
-                Remove-Item -Path Function:\Convert-WindowsImage
             } # if
 
             # Dismount the ISO File
@@ -6068,6 +6039,9 @@ Export-ModuleMember -Function `
     Get-LabSwitch, `
     Initialize-LabSwitch, `
     Remove-LabSwitch, `
+    Get-LabVMTemplateVHD, `
+    Initialize-LabVMTemplateVHD, `
+    Remove-LabVMTemplateVHD, `
     Get-LabVMTemplate, `
     Initialize-LabVMTemplate, `
     Remove-LabVMTemplate, `
