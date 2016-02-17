@@ -64,9 +64,13 @@
     <Compile Include="LabBuilder.psd1" />
     <Compile Include="LabBuilder.psm1" />
     <Compile Include="Support\Convert-WindowsImage.ps1" />
+    <Compile Include="Tests\PesterTestConfig\artifacts\ExpectedSwitches.json" />
+    <Compile Include="Tests\PesterTestConfig\artifacts\ExpectedTemplates.FromVM.json" />
+    <Compile Include="Tests\PesterTestConfig\artifacts\ExpectedTemplates.json" />
+    <Compile Include="Tests\PesterTestConfig\artifacts\ExpectedTemplateVHDs.json" />
+    <Compile Include="Tests\PesterTestConfig\artifacts\ExpectedUnattendFile.xml" />
+    <Compile Include="Tests\PesterTestConfig\artifacts\ExpectedVMs.json" />
     <Compile Include="Tests\PesterTestConfig\dsclibrary\PesterTest.DSC.ps1" />
-    <Compile Include="Tests\PesterTestConfig\ExpectedTemplates.FromVM.json" />
-    <Compile Include="Tests\PesterTestConfig\ExpectedTemplateVHDs.json" />
     <Compile Include="Tests\PesterTestConfig\isofiles\10586.0.151029-1700.TH2_RELEASE_CLIENTENTERPRISEEVAL_OEMRET_X64FRE_EN-US.ISO" />
     <Compile Include="Tests\PesterTestConfig\isofiles\10586.0.151029-1700.TH2_RELEASE_SERVER_OEMRET_X64FRE_EN-US.ISO" />
     <Compile Include="Tests\PesterTestConfig\isofiles\9600.16384.130821-1623_x64fre_Server_EN-US_IRM_SSS_DV5.iso" />
@@ -87,6 +91,7 @@
     <Folder Include="Samples\vhdfiles\" />
     <Folder Include="Support\" />
     <Folder Include="Tests\" />
+    <Folder Include="Tests\PesterTestConfig\artifacts\" />
     <Folder Include="Tests\PesterTestConfig\dsclibrary\" />
     <Folder Include="Tests\PesterTestConfig\isofiles\" />
     <Folder Include="Tests\PesterTestConfig\vhdfiles\" />
@@ -99,10 +104,6 @@
     <Content Include="Samples\Sample_DomainClustering.xml" />
     <Content Include="Samples\Sample_DomainComplete.xml" />
     <Content Include="Samples\Sample_Simple.xml" />
-    <Content Include="Tests\PesterTestConfig\ExpectedSwitches.json" />
-    <Content Include="Tests\PesterTestConfig\ExpectedTemplates.json" />
-    <Content Include="Tests\PesterTestConfig\ExpectedUnattendFile.xml" />
-    <Content Include="Tests\PesterTestConfig\ExpectedVMs.json" />
     <Content Include="Tests\PesterTestConfig\PesterTestConfig.SwitchFail.AdaptersSet.xml" />
     <Content Include="Tests\PesterTestConfig\PesterTestConfig.SwitchFail.BadType.xml" />
     <Content Include="Tests\PesterTestConfig\PesterTestConfig.SwitchFail.NoType.xml" />

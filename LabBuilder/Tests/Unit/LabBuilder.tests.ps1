@@ -874,7 +874,7 @@ InModuleScope LabBuilder {
                 $Config = Get-LabConfiguration -Path $Global:TestConfigOKPath
                 [Array]$Switches = Get-LabSwitch -Config $Config
                 Set-Content -Path "$Global:ArtifactPath\ExpectedSwitches.json" -Value ($Switches | ConvertTo-Json -Depth 4)
-                $ExpectedSwitches = Get-Content -Path "$Global:TestConfigPath\ExpectedSwitches.json"
+                $ExpectedSwitches = Get-Content -Path "$Global:TestConfigPath\Artifacts\ExpectedSwitches.json"
                 [String]::Compare((Get-Content -Path "$Global:ArtifactPath\ExpectedSwitches.json"),$ExpectedSwitches,$true) | Should Be 0
             }
         }
@@ -1236,8 +1236,16 @@ InModuleScope LabBuilder {
             It 'Returns VMTemplateVHDs array that matches Expected array' {
                 $Config = Get-LabConfiguration -Path $Global:TestConfigOKPath
                 [Array] $TemplateVHDs = Get-LabVMTemplateVHD -Config $Config 
+                # Remove the VHDPath and ISOPath values for any VMtemplatesVHD
+                #  because they will usually be relative to the test folder and
+                # won't exist on any other test system
+                foreach ($TemplateVHD in $TemplateVHDs)
+                {
+                    $TemplateVHD.VHDPath = 'Intentionally Removed'
+                    $TemplateVHD.ISOPath = 'Intentionally Removed'
+                }
                 Set-Content -Path "$Global:ArtifactPath\ExpectedTemplateVHDs.json" -Value ($TemplateVHDs | ConvertTo-Json -Depth 2)
-                $ExpectedTemplateVHDs = Get-Content -Path "$Global:TestConfigPath\ExpectedTemplateVHDs.json"
+                $ExpectedTemplateVHDs = Get-Content -Path "$Global:TestConfigPath\Artifacts\ExpectedTemplateVHDs.json"
                 [String]::Compare((Get-Content -Path "$Global:ArtifactPath\ExpectedTemplateVHDs.json"),$ExpectedTemplateVHDs,$true) | Should Be 0
             }
         }
@@ -1335,10 +1343,10 @@ InModuleScope LabBuilder {
                 # will usually be relative to the test folder and won't exist
                 foreach ($Template in $Templates)
                 {
-                    $Template.SourceVHD = ''
+                    $Template.SourceVHD = 'Intentionally Removed'
                 }
                 Set-Content -Path "$Global:ArtifactPath\ExpectedTemplates.json" -Value ($Templates | ConvertTo-Json -Depth 2)
-                $ExpectedTemplates = Get-Content -Path "$Global:TestConfigPath\ExpectedTemplates.json"
+                $ExpectedTemplates = Get-Content -Path "$Global:TestConfigPath\Artifacts\ExpectedTemplates.json"
                 [String]::Compare((Get-Content -Path "$Global:ArtifactPath\ExpectedTemplates.json"),$ExpectedTemplates,$true) | Should Be 0
             }
             It 'Calls Mocked commands' {
@@ -1367,10 +1375,10 @@ InModuleScope LabBuilder {
                 # will usually be relative to the test folder and won't exist
                 foreach ($Template in $Templates)
                 {
-                    $Template.SourceVHD = ''
+                    $Template.SourceVHD = 'Intentionally Removed'
                 }
                 Set-Content -Path "$Global:ArtifactPath\ExpectedTemplates.FromVM.json" -Value ($Templates | ConvertTo-Json -Depth 2)
-                $ExpectedTemplates = Get-Content -Path "$Global:TestConfigPath\ExpectedTemplates.FromVM.json"
+                $ExpectedTemplates = Get-Content -Path "$Global:TestConfigPath\Artifacts\ExpectedTemplates.FromVM.json"
                 [String]::Compare((Get-Content -Path "$Global:ArtifactPath\ExpectedTemplates.FromVM.json"),$ExpectedTemplates,$true) | Should Be 0
             }
             It 'Calls Mocked commands' {
@@ -1757,7 +1765,7 @@ InModuleScope LabBuilder {
             Set-Content -Path "$($Global:ArtifactPath)\ExpectedUnattendFile.xml" -Value $UnattendFile -Encoding UTF8 -NoNewLine
             It 'Returns Expected File Content' {
                 $UnattendFile | Should Be $True
-                $ExpectedUnattendFile = Get-Content -Path "$Global:TestConfigPath\ExpectedUnattendFile.xml" -Raw
+                $ExpectedUnattendFile = Get-Content -Path "$Global:TestConfigPath\Artifacts\ExpectedUnattendFile.xml" -Raw
                 [String]::Compare($UnattendFile,$ExpectedUnattendFile,$true) | Should Be 0
             }
         }
@@ -2231,14 +2239,14 @@ InModuleScope LabBuilder {
             # will usually be relative to the test folder and won't exist
             foreach ($DataVhd in $VMs[0].DataVhds)
             {
-                $DataVhd.ParentVHD = ''
-                $DataVhd.SourceVHD = ''
+                $DataVhd.ParentVHD = 'Intentionally Removed'
+                $DataVhd.SourceVHD = 'Intentionally Removed'
             }
             # Remove the DSCConfigFile path as this will be relative as well
             $VMs[0].DSCConfigFile = ''
             It 'Returns Template Object that matches Expected Object' {
                 Set-Content -Path "$Global:ArtifactPath\ExpectedVMs.json" -Value ($VMs | ConvertTo-Json -Depth 6)
-                $ExpectedVMs = Get-Content -Path "$Global:TestConfigPath\ExpectedVMs.json"
+                $ExpectedVMs = Get-Content -Path "$Global:TestConfigPath\Artifacts\ExpectedVMs.json"
                 [String]::Compare((Get-Content -Path "$Global:ArtifactPath\ExpectedVMs.json"),$ExpectedVMs,$true) | Should Be 0
             }
         }
@@ -2251,14 +2259,14 @@ InModuleScope LabBuilder {
             # will usually be relative to the test folder and won't exist
             foreach ($DataVhd in $VMs[0].DataVhds)
             {
-                $DataVhd.ParentVHD = ''
-                $DataVhd.SourceVHD = ''
+                $DataVhd.ParentVHD = 'Intentionally Removed'
+                $DataVhd.SourceVHD = 'Intentionally Removed'
             }
             # Remove the DSCConfigFile path as this will be relative as well
             $VMs[0].DSCConfigFile = ''
             It 'Returns Template Object that matches Expected Object' {
                 Set-Content -Path "$Global:ArtifactPath\ExpectedVMs.json" -Value ($VMs | ConvertTo-Json -Depth 6)
-                $ExpectedVMs = Get-Content -Path "$Global:TestConfigPath\ExpectedVMs.json"
+                $ExpectedVMs = Get-Content -Path "$Global:TestConfigPath\Artifacts\ExpectedVMs.json"
                 [String]::Compare((Get-Content -Path "$Global:ArtifactPath\ExpectedVMs.json"),$ExpectedVMs,$true) | Should Be 0
             }
         }
