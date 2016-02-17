@@ -117,5 +117,6 @@ ConvertFrom-StringData -StringData @'
     VMNotFoundMessage=VM '{0}' was not found in Hyper-V server.
     EnableVMIntegrationServiceMessage=The '{1}' Integration Service has been enabled in VM '{0}'.
     DisableVMIntegrationServiceMessage=The '{1}' Integration Service has been disabled in VM '{0}'.
+    FolderCopyToVHDFailedServiceMessage=The '{1}' Folder could not be found and can't be copied into the Data VHD '{2}' for VM '{0}'.
 '@
 
