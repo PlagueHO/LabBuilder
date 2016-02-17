@@ -108,7 +108,7 @@
               integrationservices="Guest Service Interface,Heartbeat,Key-Value Pair Exchange,Shutdown,Time Synchronization,VSS" />
     <template name="Pester Windows Server 2012 R2 Datacenter Core"
               vhd="Windows Server 2012 R2 Datacenter Core.vhdx"
-              sourcevhd="Windows Server 2012 R2 Datacenter Core"
+              sourcevhd="VhdFiles\Windows Server 2012 R2 Datacenter Core.vhdx"
               allowcreate="Y"
               memorystartupbytes="1GB"
               dynamicmemoryenabled="N"
@@ -121,7 +121,7 @@
               integrationservices="Guest Service Interface,Heartbeat,Key-Value Pair Exchange,Shutdown,Time Synchronization,VSS" />
     <template name="Pester Windows 10 Enterprise"
               vhd="Windows 10 Enterprise.vhdx"
-              sourcevhd="Windows 10 Enterprise"
+              sourcevhd="VhdFiles\Windows 10 Enterprise.vhdx"
               allowcreate="Y"
               memorystartupbytes="2GB"
               processorcount="1"

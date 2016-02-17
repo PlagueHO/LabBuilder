@@ -1342,7 +1342,7 @@ InModuleScope LabBuilder {
                 [String]::Compare((Get-Content -Path "$Global:ArtifactPath\ExpectedTemplates.json"),$ExpectedTemplates,$true) | Should Be 0
             }
             It 'Calls Mocked commands' {
-                Assert-MockCalled Get-VM -Exactly 1
+                Assert-MockCalled Get-VM -Exactly 0
             }
         }
 
@@ -2802,7 +2802,40 @@ InModuleScope LabBuilder {
                 Remove-LabVM -Config $Config -VMs $VMs | Should Be $True
             }
             It 'Calls Mocked commands' {
-                Assert-MockCalled Get-VM -Exactly 4
+                Assert-MockCalled Get-VM -Exactly 3
+                Assert-MockCalled Stop-VM -Exactly 1
+                Assert-MockCalled Wait-LabVMOff -Exactly 1
+                Assert-MockCalled Get-VMHardDiskDrive -Exactly 0
+                Assert-MockCalled Remove-VM -Exactly 1
+            }
+        }
+        Context 'Valid configuration is passed but VMs not passed' {	
+            $Config = Get-LabConfiguration -Path $Global:TestConfigOKPath
+
+            # Create the dummy VM's that the Remove-LabVM function 
+            It 'Returns True' {
+                Remove-LabVM -Config $Config | Should Be $True
+            }
+            It 'Calls Mocked commands' {
+                Assert-MockCalled Get-VM -Exactly 3
+                Assert-MockCalled Stop-VM -Exactly 1
+                Assert-MockCalled Wait-LabVMOff -Exactly 1
+                Assert-MockCalled Get-VMHardDiskDrive -Exactly 0
+                Assert-MockCalled Remove-VM -Exactly 1
+            }
+        }
+        Context 'Valid configuration is passed with RemoveVHDs switch' {	
+            $Config = Get-LabConfiguration -Path $Global:TestConfigOKPath
+            [Array]$Templates = Get-LabVMTemplate -Config $Config
+            [Array]$Switches = Get-LabSwitch -Config $Config
+            [Array]$VMs = Get-LabVM -Config $Config -VMTemplates $Templates -Switches $Switches
+
+            # Create the dummy VM's that the Remove-LabVM function 
+            It 'Returns True' {
+                Remove-LabVM -Config $Config -VMs $VMs -RemoveVHDs | Should Be $True
+            }
+            It 'Calls Mocked commands' {
+                Assert-MockCalled Get-VM -Exactly 3
                 Assert-MockCalled Stop-VM -Exactly 1
                 Assert-MockCalled Wait-LabVMOff -Exactly 1
                 Assert-MockCalled Get-VMHardDiskDrive -Exactly 1

@@ -2076,10 +2076,7 @@ function Initialize-LabVMTemplate {
         [XML] $Config,
 
         [ValidateNotNullOrEmpty()]
-        [System.Collections.Hashtable[]] $VMTemplates,
-
-        [ValidateNotNullOrEmpty()]
-        [System.Collections.Hashtable[]] $VMTemplateVHDs
+        [System.Collections.Hashtable[]] $VMTemplates
     )
     
     # Get the VM Templates if they weren't passed
@@ -2088,10 +2085,6 @@ function Initialize-LabVMTemplate {
         $VMTemplates = Get-LabVMTemplate `
             -Config $Config
     }
-
-    # Make sure the VM Template VHDs have been initialized
-    $null = $PSBoundParameters.Remove('VMTemplates')
-    Initialize-LabVMTemplateVHD @PSBoundParameters
     
     # Check each template exists in the templates folder for the
     # Lab. If it isn't, try and copy it from the SourceVHD
@@ -2105,7 +2098,13 @@ function Initialize-LabVMTemplate {
             if (-not (Test-Path $VMTemplate.sourcevhd))
             {  
                 # The source VHD could not be found.
-                                
+                $ExceptionParameters = @{
+                    errorId = 'TemplateSourceVHDNotFoundError'
+                    errorCategory = 'InvalidArgument'
+                    errorMessage = $($LocalizedData.TemplateSourceVHDNotFoundError `
+                        -f $VMTemplate.Name,$VMTemplate.sourcevhd)
+                }
+                New-LabException @ExceptionParameters                
 			}
             
 			Write-Verbose -Message $($LocalizedData.CopyingTemplateSourceVHDMessage `
@@ -5457,12 +5456,17 @@ function Remove-LabVM {
         [ValidateNotNullOrEmpty()]
         [XML] $Config,
 
-        [Parameter(Mandatory)]
         [ValidateNotNullOrEmpty()]
         [System.Collections.Hashtable[]] $VMs,
 
         [Switch] $RemoveVHDs
     )
+    
+    # If VMs not passed then pull them from the config
+    if (-not $VMs)
+    {
+        $VMs = Get-LabVM -Config $Config
+    }
     
     $CurrentVMs = Get-VM
     [String] $VMPath = $Config.labbuilderconfig.settings.vmpath
@@ -5479,7 +5483,7 @@ function Remove-LabVM {
 
                 Stop-VM -Name $VM.Name
                 # Wait for it to completely shut down and report that it is off.
-                Wait-LabVMOff -VM $VM | Out-Null
+                Wait-LabVMOff -VM $VM
             }
 
             Write-Verbose -Message $($LocalizedData.RemovingVMMessage `
@@ -5491,11 +5495,11 @@ function Remove-LabVM {
                 Write-Verbose -Message $($LocalizedData.DeletingVMAllDisksMessage `
                     -f $VM.Name)
 
-                Get-VMHardDiskDrive -VMName $VM.Name | Select-Object -Property Path | Remove-Item
+                $null = Get-VMHardDiskDrive -VMName $VM.Name | Select-Object -Property Path | Remove-Item
             }
             
             # Now delete the actual VM
-            Get-VM -Name $VMs.Name | Remove-VM -Confirm:$false
+            Get-VM -Name $VM.Name | Remove-VM -Confirm:$false
 
             Write-Verbose -Message $($LocalizedData.RemovedVMMessage `
                 -f $VM.Name)
@@ -5942,6 +5946,12 @@ Function Install-Lab {
     Initialize-LabSwitch `
         -Config $Config `
         -Switches $Switches
+
+    $VMTemplateVHDs = Get-LabVMTemplateVHD `
+        -Config $Config
+    Initialize-LabVMTemplateVHD `
+        -Config $Config `
+        -VMTemplateVHDs $VMTemplateVHDs
 
     $VMTemplates = Get-LabVMTemplate `
         -Config $Config
