@@ -124,5 +124,8 @@ ConvertFrom-StringData -StringData @'
     EnableVMIntegrationServiceMessage=The '{1}' Integration Service has been enabled in VM '{0}'.
     DisableVMIntegrationServiceMessage=The '{1}' Integration Service has been disabled in VM '{0}'.
     ISONotFoundDownloadURLMessage=The ISO '{1}' for VM template VHD '{0}' could not be found. It can be downloaded from '{2}'.
+    CreatingMountFolderMessage=Creating a temporary mount folder '{0}'.
+    CreatingVMTemplateVHDMessage=Creating the '{0}' VM Template VHD '{1}'.
+    RemovingMountFolderMessage=Removing the temporary mount folder '{0}'.
 '@
 

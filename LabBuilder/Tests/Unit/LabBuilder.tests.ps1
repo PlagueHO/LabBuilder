@@ -101,6 +101,56 @@ InModuleScope LabBuilder {
 
 
 
+    Describe 'Download-ConvertWindowsImage' {
+        Context 'Convert-WindowsImage.ps1 File Exists' {
+            It 'Does not throw an Exception' {
+                Mock Test-Path -MockWith { $true }
+                Mock Invoke-WebRequest
+
+                { Download-ConvertWindowsImage } | Should Not Throw
+            }
+            It 'Calls appropriate mocks' {
+                Assert-MockCalled Test-Path -Exactly 1
+                Assert-MockCalled Invoke-WebRequest -Exactly 0
+            }
+        }
+
+        Context 'Convert-WindowsImage.ps1 File Does Not Exist' {
+            It 'Does not throw an Exception' {
+                Mock Test-Path -MockWith { $false }
+                Mock Invoke-WebRequest
+
+                { Download-ConvertWindowsImage } | Should Not Throw
+            }
+            It 'Calls appropriate mocks' {
+                Assert-MockCalled Test-Path -Exactly 1
+                Assert-MockCalled Invoke-WebRequest -Exactly 1
+            }
+        }
+
+        Context 'Convert-WindowsImage.ps1 File Does Not Exist and Fails Downloading' {
+            It 'Throws a FileDownloadError Exception' {
+                Mock Test-Path -MockWith { $false }
+                Mock Invoke-WebRequest { Throw ('Download Error') }
+
+                $ExceptionParameters = @{
+                    errorId = 'FileDownloadError'
+                    errorCategory = 'InvalidArgument'
+                    errorMessage = $($LocalizedData.FileDownloadError `
+                        -f 'Convert-WindowsImage script','https://gallery.technet.microsoft.com/scriptcenter/Convert-WindowsImageps1-0fe23a8f/file/59237/7/Convert-WindowsImage.ps1','Download Error')
+                }
+                $Exception = New-Exception @ExceptionParameters
+
+                { Download-ConvertWindowsImage } | Should Throw $Exception
+            }
+            It 'Calls appropriate mocks' {
+                Assert-MockCalled Test-Path -Exactly 1
+                Assert-MockCalled Invoke-WebRequest -Exactly 1
+            }
+        }
+    }
+
+
     Describe 'Download-CertGenerator' {
         Context 'Certificate Generator Zip File and PS1 File Exists' {
             It 'Does not throw an Exception' {
