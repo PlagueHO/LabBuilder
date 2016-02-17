@@ -2163,6 +2163,24 @@ InModuleScope LabBuilder {
                 $VMs[0].DataVhds[0].sourcevhd | Should Be "$Global:TestConfigPath\VhdFiles\DataDisk.vhdx"
             }
         }
+        Context 'Valid configuration is passed but switches and VMTemplates not passed' {
+            $Config = Get-LabConfiguration -Path $Global:TestConfigOKPath
+            [Array]$VMs = Get-LabVM -Config $Config
+            # Remove the Source VHD and Parent VHD values for any data disks because they
+            # will usually be relative to the test folder and won't exist
+            foreach ($DataVhd in $VMs[0].DataVhds)
+            {
+                $DataVhd.ParentVHD = ''
+                $DataVhd.SourceVHD = ''
+            }
+            # Remove the DSCConfigFile path as this will be relative as well
+            $VMs[0].DSCConfigFile = ''
+            It 'Returns Template Object that matches Expected Object' {
+                Set-Content -Path "$Global:ArtifactPath\ExpectedVMs.json" -Value ($VMs | ConvertTo-Json -Depth 6)
+                $ExpectedVMs = Get-Content -Path "$Global:TestConfigPath\ExpectedVMs.json"
+                [String]::Compare((Get-Content -Path "$Global:ArtifactPath\ExpectedVMs.json"),$ExpectedVMs,$true) | Should Be 0
+            }
+        }
         Context 'Valid configuration is passed' {
             $Config = Get-LabConfiguration -Path $Global:TestConfigOKPath
             [Array]$Switches = Get-LabSwitch -Config $Config
