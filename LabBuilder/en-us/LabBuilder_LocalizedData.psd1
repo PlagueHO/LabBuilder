@@ -13,14 +13,18 @@ ConvertFrom-StringData -StringData @'
     UnknownSwitchTypeError=Unknown switch type '{0}' specified for switch '{1}'.
     AdapterSpecifiedError=Adapter specified on '{0}' switch '{1}'.
     NatSubnetAddressEmptyError=Switch NAT Subnet Address is empty '{0}'.
+    EmptyVMTemplateVHDNameError=Template VHD name is empty.
+    EmptyVMTemplateVHDISOPathError=The ISO Path in VM Template VHD '{0}' is empty.
+    EmptyVMTemplateVHDPathError=The VHD Path in VM Template VHD '{0}' is empty.
+    VMTemplateVHDISORootPathNotFoundError=The default ISO Folder '{0}' for VM template VHDs is not found.
+    VMTemplateVHDISOPathNotFoundError=The ISO file '{1}' for VM Template VHD '{0}' could not be found.
+    VMTemplateVHDRootPathNotFoundError=The default VHD Folder '{0}' for VM template VHDs is not found.
+    InvalidVMTemplateVHDOSTypeError=The OSType '{1}' in VM template VHD '{0}' is invalid. Valid settings are Server, Client or Nano.
+    InvalidVMTemplateVHDVHDFormatError=The VHDFormat '{1}' in VM template VHD '{0}' is invalid. Valid settings are VHDx or VHD.
+    InvalidVMTemplateVHDVHDTypeError=The VHDType '{1}' in VM template VHD '{0}' is invalid. Valid settings are Dynamic or Fixed.
+    InvalidVMTemplateVHDGenerationError=The Generation '{1}' in VM template VHD '{0}' is invalid. Valid settings are 1 or 2.
     EmptyTemplateNameError=Template Name is missing or empty.
     EmptyTemplateVHDError=VHD in Template '{0}' is empty.
-    EmptyTemplateVHDNameError=Template VHD name is empty.
-    EmptyTemplateVHDISOPathError=The ISO Path in Template VHD '{0}' is empty.
-    EmptyTemplateVHDPathError=The VHD Path in Template VHD '{0}' is empty.
-    TemplateVHDISORootPathNotFoundError=The default ISO Folder '{0}' for template VHDs is not found.
-    TemplateVHDISOPathNotFoundError=The ISO file '{1}' for Template VHD '{0}' could not be found.
-    TemplateVHDRootPathNotFoundError=The default VHD Folder '{0}' for template VHDs is not found.
     TemplateSourceVHDNotFoundError=The Template Source VHD '{0}' in Template '{1}' could not be found.
     DSCModuleDownloadError=Module '{2}' required by DSC Config File '{0}' in VM '{1}' could not be found or downloaded.					
     DSCModuleNotFoundError=Module '{2}' required by DSC Config File '{0}' in VM '{1}' could not be found in the module path.
@@ -61,6 +65,7 @@ ConvertFrom-StringData -StringData @'
     VMDataDiskSourceVHDIfMoveError=The Data Disk VHD '{1}' specified in VM '{0}' must have a Source VHD specified if MoveSourceVHD is set.
     VMDataDiskVHDConvertError=The Data Disk '{1}' in VM '{0}' cannot be converted to a {2} type.
     VMDataDiskVHDShrinkError=The Data Disk '{1}' in VM '{0}' cannot be shrunk to {2}.
+
     InstallingHyperVComponentsMesage=Installing {0} Hyper-V Components.
     InitializingHyperVComponentsMesage=Initializing Hyper-V Components.
     DownloadingLabResourcesMessage=Downloading Lab Resources.

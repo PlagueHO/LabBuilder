@@ -1218,9 +1218,9 @@ function Get-LabVMTemplateVHD {
     if (-not (Test-Path -Path $ISORootPath -Type Container))
     {
         $ExceptionParameters = @{
-            errorId = 'TemplateVHDISORootPathNotFoundError'
+            errorId = 'VMTemplateVHDISORootPathNotFoundError'
             errorCategory = 'InvalidArgument'
-            errorMessage = $($LocalizedData.TemplateVHDISORootPathNotFoundError `
+            errorMessage = $($LocalizedData.VMTemplateVHDISORootPathNotFoundError `
                 -f $ISORootPath)
         }
         New-LabException @ExceptionParameters
@@ -1247,9 +1247,9 @@ function Get-LabVMTemplateVHD {
     if (-not (Test-Path -Path $VHDRootPath -Type Container))
     {
         $ExceptionParameters = @{
-            errorId = 'TemplateVHDRootPathNotFoundError'
+            errorId = 'VMTemplateVHDRootPathNotFoundError'
             errorCategory = 'InvalidArgument'
-            errorMessage = $($LocalizedData.TemplateVHDRootPathNotFoundError `
+            errorMessage = $($LocalizedData.VMTemplateVHDRootPathNotFoundError `
                 -f $VHDRootPath)
         }
         New-LabException @ExceptionParameters
@@ -1270,9 +1270,9 @@ function Get-LabVMTemplateVHD {
             -or ([String]::IsNullOrWhiteSpace($Name)))
         {
             $ExceptionParameters = @{
-                errorId = 'EmptyTemplateVHDNameError'
+                errorId = 'EmptyVMTemplateVHDNameError'
                 errorCategory = 'InvalidArgument'
-                errorMessage = $($LocalizedData.EmptyTemplateVHDNameError)
+                errorMessage = $($LocalizedData.EmptyVMTemplateVHDNameError)
             }
             New-LabException @ExceptionParameters
         } # If
@@ -1282,9 +1282,9 @@ function Get-LabVMTemplateVHD {
         if (-not $ISOPath)
         {
             $ExceptionParameters = @{
-                errorId = 'EmptyTemplateVHDISOPathError'
+                errorId = 'EmptyVMTemplateVHDISOPathError'
                 errorCategory = 'InvalidArgument'
-                errorMessage = $($LocalizedData.EmptyTemplateVHDISOPathError `
+                errorMessage = $($LocalizedData.EmptyVMTemplateVHDISOPathError `
                     -f $TemplateVHD.Name)
             }
             New-LabException @ExceptionParameters
@@ -1310,9 +1310,9 @@ function Get-LabVMTemplateVHD {
                         -f $TemplateVHD.Name,$ISOPath,$URL)
             }
             $ExceptionParameters = @{
-                errorId = 'TemplateVHDISOPathNotFoundError'
+                errorId = 'VMTemplateVHDISOPathNotFoundError'
                 errorCategory = 'InvalidArgument'
-                errorMessage = $($LocalizedData.TemplateVHDISOPathNotFoundError `
+                errorMessage = $($LocalizedData.VMTemplateVHDISOPathNotFoundError `
                     -f $TemplateVHD.Name,$ISOPath)
             }
             New-LabException @ExceptionParameters            
@@ -1323,12 +1323,12 @@ function Get-LabVMTemplateVHD {
         if (-not $VHDPath)
         {
             $ExceptionParameters = @{
-                errorId = 'EmptyTemplateVHDPathError'
+                errorId = 'EmptyVMTemplateVHDPathError'
                 errorCategory = 'InvalidArgument'
-                errorMessage = $($LocalizedData.EmptyTemplateVHDPathError `
+                errorMessage = $($LocalizedData.EmptyVMTemplateVHDPathError `
                     -f $TemplateVHD.Name)
             }
-            New-LabException @ExceptionParameters            
+            New-LabException @ExceptionParameters
         }
 
         # Adjust the VHD Path if required
@@ -1348,12 +1348,22 @@ function Get-LabVMTemplateVHD {
         }
         
         # Get the Template OS Type 
-        [String] $IsNano = 'N'
-        if ($TemplateVHD.isNano)
+        [String] $OSType = 'Server'
+        if ($TemplateVHD.OSType)
         {
-            $IsNano = $TemplateVHD.isNano
+            $OSType = $TemplateVHD.OSType
         } # If
-        
+        if ($OSType -notin @('Server','Client','Nano') )
+        {
+            $ExceptionParameters = @{
+                errorId = 'InvalidVMTemplateVHDOSTypeError'
+                errorCategory = 'InvalidArgument'
+                errorMessage = $($LocalizedData.InvalidVMTemplateVHDOSTypeError `
+                    -f $TemplateVHD.Name,$OSType)
+            }
+            New-LabException @ExceptionParameters            
+        }
+
 		# Get the Template Wim Image to use
         if ($TemplateVHD.WimImage)
         {
@@ -1366,6 +1376,16 @@ function Get-LabVMTemplateVHD {
         {
             $VHDFormat = $TemplateVHD.VHDFormat
         } # If
+        if ($VHDFormat -notin @('VHDx','VHD') )
+        {
+            $ExceptionParameters = @{
+                errorId = 'InvalidVMTemplateVHDVHDFormatError'
+                errorCategory = 'InvalidArgument'
+                errorMessage = $($LocalizedData.InvalidVMTemplateVHDVHDFormatError `
+                    -f $TemplateVHD.Name,$VHDFormat)
+            }
+            New-LabException @ExceptionParameters            
+        }
 
         # Get the Template VHD Type 
         [String] $VHDType = 'Dynamic'
@@ -1373,6 +1393,16 @@ function Get-LabVMTemplateVHD {
         {
             $VHDType = $TemplateVHD.VHDType
         } # If
+        if ($VHDType -notin @('Dynamic','Fixed') )
+        {
+            $ExceptionParameters = @{
+                errorId = 'InvalidVMTemplateVHDVHDTypeError'
+                errorCategory = 'InvalidArgument'
+                errorMessage = $($LocalizedData.InvalidVMTemplateVHDVHDTypeError `
+                    -f $TemplateVHD.Name,$VHDType)
+            }
+            New-LabException @ExceptionParameters            
+        }
 
         # Get the Template VM Generation 
         [int] $Generation = 2
@@ -1380,6 +1410,16 @@ function Get-LabVMTemplateVHD {
         {
             $Generation = $TemplateVHD.Generation
         } # If
+        if ($Generation -notin @(1,2) )
+        {
+            $ExceptionParameters = @{
+                errorId = 'InvalidVMTemplateVHDGenerationError'
+                errorCategory = 'InvalidArgument'
+                errorMessage = $($LocalizedData.InvalidVMTemplateVHDGenerationError `
+                    -f $TemplateVHD.Name,$Generation)
+            }
+            New-LabException @ExceptionParameters            
+        }
 
         # Get the Template Packages for Nano 
         if ($TemplateVHD.packages)
@@ -1392,7 +1432,7 @@ function Get-LabVMTemplateVHD {
                 Name = $Name;
                 ISOPath = $ISOPath;
                 VHDPath = $VHDPath;
-                IsNano = $isNano;
+                OSType = $OSType;
                 WimImage = $WimImage;
                 Generation = $Generation;
                 VHDFormat = $VHDFormat;
@@ -1517,7 +1557,7 @@ function Initialize-LabVMTemplateVHD
 
             # Determine the path to the WIM
             [String] $WimPath = "$ISODrive\Sources\Install.WIM"
-            if ($VMTemplateVHD.IsNano -eq 'Y')
+            if ($VMTemplateVHD.OSType -eq 'Nano')
             {
                 $WimPath = "$ISODrive\Nanoserver\NanoServer.WIM"
             }
@@ -1556,7 +1596,7 @@ function Initialize-LabVMTemplateVHD
             
             Convert-WindowsImage @ConvertParams
             
-            if ($VMTemplateVHD.IsNano -eq 'Y')
+            if ($VMTemplateVHD.OSType -eq 'Nano')
             {
     <#
                 $Packages = $VMTemplateVHD.Packages
