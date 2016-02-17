@@ -303,7 +303,7 @@ function Get-LabConfiguration {
             [String] $FullConfigPath = Join-Path -Path $ConfigPath -ChildPath $XMLConfigPath
         } # If
     }
-    Else
+    else
     {
         [String] $FullConfigPath = $ConfigPath
     }
@@ -1530,7 +1530,7 @@ function Initialize-LabVMTemplateVHD
         Write-Verbose -Message ($LocalizedData.ConvertingWIMtoVHDMessage `
             -f $WIMPath,$VHDPath,$VHDFormat,$Edition,$VHDPartitionStyle)
 
-        @ConvertParams = @{
+        $ConvertParams = @{
             sourcepath = $WimPath
             vhdpath = $VHDpath
             vhdformat = $VHDFormat
@@ -3790,9 +3790,25 @@ function Get-LabVM {
         [String] $DSCConfigFile = ''
         if ($VM.DSC.ConfigFile) 
 		{
-            $DSCConfigFile = Join-Path `
-                -Path $Config.labbuilderconfig.settings.fullconfigpath `
-                -ChildPath $VM.DSC.ConfigFile
+            [String] $DSCLibraryPath = $Config.labbuilderconfig.settings.dsclibrarypath
+            if ($DSCLibraryPath)
+            {
+                if ([System.IO.Path]::IsPathRooted($DSCLibraryPath))
+                {
+                    $DSCConfigFile = Join-Path `
+                        -Path $DSCLibraryPath `
+                        -ChildPath $VM.DSC.ConfigFile
+                }
+                else
+                {
+                    $DSCConfigFile = Join-Path `
+                        -Path $Config.labbuilderconfig.settings.fullconfigpath `
+                        -ChildPath $DSCLibraryPath
+                    $DSCConfigFile = Join-Path `
+                        -Path $DSCConfigFile `
+                        -ChildPath $VM.DSC.ConfigFile
+                }
+            }
             if ([System.IO.Path]::GetExtension($DSCConfigFile).ToLower() -ne '.ps1' )
             {
                 $ExceptionParameters = @{

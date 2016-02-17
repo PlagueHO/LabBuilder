@@ -131,4 +131,3 @@ ConvertFrom-StringData -StringData @'
     RemovingMountFolderMessage=Removing the temporary mount folder '{0}'.
     ConvertingWIMtoVHDMessage=Converting '{0}' in '{3}' to a bootable {4} {2} '{1}'.
 '@
-

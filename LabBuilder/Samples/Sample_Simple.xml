@@ -8,7 +8,7 @@
             email="daniel@LABBUILDER.COM"
             vmpath="c:\vm\LABBUILDER.COM"
             vhdparentpath="c:\vm\LABBUILDER.COM\Virtual Hard Disk Templates"
-            configpath=".\..\DSCLibrary\" />
+            dsclibrarypath="..\..\DSCLibrary\" />
 
   <resources>
   </resources>
@@ -28,8 +28,8 @@
     <switch name="Domain Private Site C" type="Private" vlan="4" />
   </switches>
 
-  <templatevhds isopath=".\ISOFiles" 
-                vhdpath=".\VHDFiles" >
+  <templatevhds isopath="ISOFiles" 
+                vhdpath="VHDFiles" >
     <templatevhd name="Windows Server 2012 R2 Datacenter Full"
                  iso="9600.16384.130821-1623_x64fre_Server_EN-US_IRM_SSS_DV5.iso"
                  url="https://www.microsoft.com/en-us/evalcenter/evaluate-windows-server-2012-r2"
