@@ -1737,8 +1737,6 @@ function Initialize-LabVMTemplateVHD
 
             Dismount-DiskImage `
                 -ImagePath $ISOPath `
-                -Confirm:$false `
-                -Discard `
                 -ErrorAction Stop
         } # endfor
     } 
