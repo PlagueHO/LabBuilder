@@ -1504,7 +1504,7 @@ function Initialize-LabVMTemplateVHD
     {
         return
     }
-    
+
     foreach ($VMTemplateVHD in $VMTemplateVHDs)
     {
         [String] $Name = $VMTemplateVHD.Name
@@ -1528,9 +1528,9 @@ function Initialize-LabVMTemplateVHD
         if (-not (Test-Path -Path $ISOPath))
         {
             $ExceptionParameters = @{
-                errorId = 'TemplateVHDISOPathNotFoundError'
+                errorId = 'VMTemplateVHDISOPathNotFoundError'
                 errorCategory = 'InvalidArgument'
-                errorMessage = $($LocalizedData.TemplateVHDISOPathNotFoundError `
+                errorMessage = $($LocalizedData.VMTemplateVHDISOPathNotFoundError `
                     -f $Name,$ISOPath)
             }
             New-LabException @ExceptionParameters            
@@ -1545,7 +1545,8 @@ function Initialize-LabVMTemplateVHD
             -StorageType ISO `
             -Access Readonly
     
-        [String] $DriveLetter = ( Get-DiskImage -ImagePath $ISOPath | Get-Volume ).DriveLetter
+        $DiskImage = Get-DiskImage -ImagePath $ISOPath
+        [String] $DriveLetter = ( Get-Volume -DiskImage $DiskImage ).DriveLetter
         [String] $ISODrive = "$([string]$DriveLetter):"
 
         # Determine the path to the WIM
@@ -1584,7 +1585,7 @@ function Initialize-LabVMTemplateVHD
             disklayout = $VHDDiskLayout
             erroraction = 'Stop'
         }
-
+        
         # Set the size
         if ($VMTemplateVHD.VHDSize -ne $null)
         {
@@ -1660,11 +1661,11 @@ function Initialize-LabVMTemplateVHD
         {
             . $Script:SupportConvertWindowsImagePath
         }
-
+        
         # Call the Convert-WindowsImage script
         Convert-WindowsImage @ConvertParams
 
-        # Mount the ISO so we can read the files.
+        # Dismount the ISO.
         Write-Verbose -Message ($LocalizedData.DismountingVMTemplateVHDISOMessage `
                 -f $Name,$ISOPath)
 

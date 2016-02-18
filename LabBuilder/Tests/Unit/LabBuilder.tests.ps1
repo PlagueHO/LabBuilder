@@ -4,7 +4,7 @@
 # You can download Pester from http://go.microsoft.com/fwlink/?LinkID=534084
 #
 
-$ModuleRoot = Split-Path -Parent (Split-Path -Parent (Split-Path -Parent $Script:MyInvocation.MyCommand.Path))
+$Global:ModuleRoot = Split-Path -Parent (Split-Path -Parent (Split-Path -Parent $Script:MyInvocation.MyCommand.Path))
 
 Set-Location $ModuleRoot
 if (Get-Module LabBuilder -All)
@@ -12,10 +12,10 @@ if (Get-Module LabBuilder -All)
     Get-Module LabBuilder -All | Remove-Module
 }
 
-Import-Module "$ModuleRoot\LabBuilder.psd1" -Force -DisableNameChecking
-$Global:TestConfigPath = "$ModuleRoot\Tests\PesterTestConfig"
+Import-Module "$Global:ModuleRoot\LabBuilder.psd1" -Force -DisableNameChecking
+$Global:TestConfigPath = "$Global:ModuleRoot\Tests\PesterTestConfig"
 $Global:TestConfigOKPath = "$Global:TestConfigPath\PesterTestConfig.OK.xml"
-$Global:ArtifactPath = "$ModuleRoot\Artifacts"
+$Global:ArtifactPath = "$Global:ModuleRoot\Artifacts"
 $null = New-Item -Path "$Global:ArtifactPath" -ItemType Directory -Force -ErrorAction SilentlyContinue
 
 
@@ -1217,17 +1217,39 @@ InModuleScope LabBuilder {
 
 
 
-    Describe 'Initialize-LabVMTemplateVHD' -Tag 'Incomplete' {
+    Describe 'Initialize-LabVMTemplateVHD' {
         Mock Mount-DiskImage
-        Mock Get-Diskimage -MockWith { @{ DriveLetter = 'X' } }
+        Mock Get-Diskimage -MockWith {
+            New-CimInstance `
+                -ClassName 'MSFT_DiskImage' `
+                -Namespace Root/Microsoft/Windows/Storage `
+                -ClientOnly `
+                -Property @{
+                    Attached = $True
+                    BlockSize = 0
+                    DevicePath = '\\.\CDROM1'
+                    ImagePath = 'c:\doesnotmatter.iso'
+                    LogicalSectorSize = 2048
+                    Number = 1
+                    Size = 3842639872
+                    StorageType = 1
+                }
+        }
         Mock Get-Volume -MockWith { @{ DriveLetter = 'X' } }
         Mock Dismount-DiskImage
-        Mock Get-WindowsImage
+        Mock Get-WindowsImage -MockWith { @{ ImageName = 'DOESNOTMATTER' } }
         Mock Copy-Item
         Mock Rename-Item
-        Mock New-Item
-        Mock Remove-Item
         
+        # Mock Convert-WindowsImage
+        if (-not (Test-Path -Path Function:Convert-WindowsImage))
+        {
+            . "$Global:ModuleRoot\support\Convert-WindowsImage.ps1"
+        }
+        Mock Convert-WindowsImage 
+        Mock Resolve-Path -MockWith { 'X:\Sources\Install.WIM' }
+        Mock Test-Path -MockWith { $True } -ParameterFilter { $Path -eq 'X:\Sources\Install.WIM' }
+                
         Context 'Configuration passed with no VMtemplateVHDs' {
             It 'Does not throw an Exception' {
                 $Config = Get-LabConfiguration -Path $Global:TestConfigOKPath
@@ -1242,8 +1264,34 @@ InModuleScope LabBuilder {
                 Assert-MockCalled Get-WindowsImage -Exactly 0
                 Assert-MockCalled Copy-Item -Exactly 0
                 Assert-MockCalled Rename-Item -Exactly 0
-                Assert-MockCalled New-Item -Exactly 0
-                Assert-MockCalled Remove-Item -Exactly 0
+                Assert-MockCalled Convert-WindowsImage -Exactly 0
+            }            
+        }
+        Context 'Configuration passed where the template ISO can not be found' {
+            It 'Throws an VMTemplateVHDISOPathNotFoundError Exception' {
+                $Config = Get-LabConfiguration -Path $Global:TestConfigOKPath
+                $VMTemplateVHDs = Get-LabVMTemplateVHD -Config $Config
+                $VMTemplateVHDs[0].isopath = 'doesnotexist.iso'
+                $VMTemplateVHDs[0].vhdpath = 'doesnotexist.vhdx'
+                $ExceptionParameters = @{
+                    errorId = 'VMTemplateVHDISOPathNotFoundError'
+                    errorCategory = 'InvalidArgument'
+                    errorMessage = $($LocalizedData.VMTemplateVHDISOPathNotFoundError `
+                        -f $Config.labbuilderconfig.templatevhds.templatevhd[0].name,'doesnotexist.iso')
+                }
+                $Exception = New-Exception @ExceptionParameters
+
+                { Initialize-LabVMTemplateVHD -Config $Config -VMTemplateVHDs $VMTemplateVHDs } | Should Throw $Exception
+            }
+            It 'Calls expected mocks commands' {
+                Assert-MockCalled Mount-DiskImage -Exactly 0
+                Assert-MockCalled Get-Diskimage -Exactly 0
+                Assert-MockCalled Get-Volume -Exactly 0
+                Assert-MockCalled Dismount-DiskImage -Exactly 0
+                Assert-MockCalled Get-WindowsImage -Exactly 0
+                Assert-MockCalled Copy-Item -Exactly 0
+                Assert-MockCalled Rename-Item -Exactly 0
+                Assert-MockCalled Convert-WindowsImage -Exactly 0
             }            
         }
         Context 'Valid configuration passed' {
@@ -1252,15 +1300,14 @@ InModuleScope LabBuilder {
                 { Initialize-LabVMTemplateVHD -Config $Config } | Should Not Throw
             }
             It 'Calls expected mocks commands' {
-                Assert-MockCalled Mount-DiskImage -Exactly 6
-                Assert-MockCalled Get-Diskimage -Exactly 6
-                Assert-MockCalled Get-Volume -Exactly 6
-                Assert-MockCalled Dismount-DiskImage -Exactly 6
-                Assert-MockCalled Get-WindowsImage -Exactly 6
+                Assert-MockCalled Mount-DiskImage -Exactly 3
+                Assert-MockCalled Get-Diskimage -Exactly 3
+                Assert-MockCalled Get-Volume -Exactly 3
+                Assert-MockCalled Dismount-DiskImage -Exactly 3
+                Assert-MockCalled Get-WindowsImage -Exactly 1
                 Assert-MockCalled Copy-Item -Exactly 1
                 Assert-MockCalled Rename-Item -Exactly 1
-                Assert-MockCalled New-Item -Exactly 1
-                Assert-MockCalled Remove-Item -Exactly 1
+                Assert-MockCalled Convert-WindowsImage -Exactly 3
             }            
         }
     }
