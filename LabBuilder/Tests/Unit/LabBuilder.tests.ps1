@@ -4,7 +4,7 @@
 # You can download Pester from http://go.microsoft.com/fwlink/?LinkID=534084
 #
 
-$ModuleRoot = Split-Path -Parent (Split-Path -Parent (Split-Path -Parent $Script:MyInvocation.MyCommand.Path))
+$Global:ModuleRoot = Split-Path -Parent (Split-Path -Parent (Split-Path -Parent $Script:MyInvocation.MyCommand.Path))
 
 Set-Location $ModuleRoot
 if (Get-Module LabBuilder -All)
@@ -12,10 +12,10 @@ if (Get-Module LabBuilder -All)
     Get-Module LabBuilder -All | Remove-Module
 }
 
-Import-Module "$ModuleRoot\LabBuilder.psd1" -Force -DisableNameChecking
-$Global:TestConfigPath = "$ModuleRoot\Tests\PesterTestConfig"
+Import-Module "$Global:ModuleRoot\LabBuilder.psd1" -Force -DisableNameChecking
+$Global:TestConfigPath = "$Global:ModuleRoot\Tests\PesterTestConfig"
 $Global:TestConfigOKPath = "$Global:TestConfigPath\PesterTestConfig.OK.xml"
-$Global:ArtifactPath = "$ModuleRoot\Artifacts"
+$Global:ArtifactPath = "$Global:ModuleRoot\Artifacts"
 $null = New-Item -Path "$Global:ArtifactPath" -ItemType Directory -Force -ErrorAction SilentlyContinue
 
 
@@ -99,56 +99,6 @@ InModuleScope LabBuilder {
         }
     }
 
-
-
-    Describe 'Download-ConvertWindowsImage' {
-        Context 'Convert-WindowsImage.ps1 File Exists' {
-            It 'Does not throw an Exception' {
-                Mock Test-Path -MockWith { $true }
-                Mock Invoke-WebRequest
-
-                { Download-ConvertWindowsImage } | Should Not Throw
-            }
-            It 'Calls appropriate mocks' {
-                Assert-MockCalled Test-Path -Exactly 1
-                Assert-MockCalled Invoke-WebRequest -Exactly 0
-            }
-        }
-
-        Context 'Convert-WindowsImage.ps1 File Does Not Exist' {
-            It 'Does not throw an Exception' {
-                Mock Test-Path -MockWith { $false }
-                Mock Invoke-WebRequest
-
-                { Download-ConvertWindowsImage } | Should Not Throw
-            }
-            It 'Calls appropriate mocks' {
-                Assert-MockCalled Test-Path -Exactly 1
-                Assert-MockCalled Invoke-WebRequest -Exactly 1
-            }
-        }
-
-        Context 'Convert-WindowsImage.ps1 File Does Not Exist and Fails Downloading' {
-            It 'Throws a FileDownloadError Exception' {
-                Mock Test-Path -MockWith { $false }
-                Mock Invoke-WebRequest { Throw ('Download Error') }
-
-                $ExceptionParameters = @{
-                    errorId = 'FileDownloadError'
-                    errorCategory = 'InvalidArgument'
-                    errorMessage = $($LocalizedData.FileDownloadError `
-                        -f 'Convert-WindowsImage script','https://gallery.technet.microsoft.com/scriptcenter/Convert-WindowsImageps1-0fe23a8f/file/59237/7/Convert-WindowsImage.ps1','Download Error')
-                }
-                $Exception = New-Exception @ExceptionParameters
-
-                { Download-ConvertWindowsImage } | Should Throw $Exception
-            }
-            It 'Calls appropriate mocks' {
-                Assert-MockCalled Test-Path -Exactly 1
-                Assert-MockCalled Invoke-WebRequest -Exactly 1
-            }
-        }
-    }
 
 
     Describe 'Download-CertGenerator' {
@@ -874,7 +824,7 @@ InModuleScope LabBuilder {
                 $Config = Get-LabConfiguration -Path $Global:TestConfigOKPath
                 [Array]$Switches = Get-LabSwitch -Config $Config
                 Set-Content -Path "$Global:ArtifactPath\ExpectedSwitches.json" -Value ($Switches | ConvertTo-Json -Depth 4)
-                $ExpectedSwitches = Get-Content -Path "$Global:TestConfigPath\ExpectedSwitches.json"
+                $ExpectedSwitches = Get-Content -Path "$Global:TestConfigPath\Artifacts\ExpectedSwitches.json"
                 [String]::Compare((Get-Content -Path "$Global:ArtifactPath\ExpectedSwitches.json"),$ExpectedSwitches,$true) | Should Be 0
             }
         }
@@ -1232,12 +1182,34 @@ InModuleScope LabBuilder {
                 { Get-LabVMTemplateVHD -Config $Config } | Should Throw $Exception
             }
         }
+        Context 'Valid configuration is passed missing TemplateVHDs Node' {
+            $Config = Get-LabConfiguration -Path $Global:TestConfigOKPath
+            $Config.labbuilderconfig.RemoveChild($Config.labbuilderconfig.templatevhds)
+            It 'Returns null' {
+                Get-LabVMTemplateVHD -Config $Config  | Should Be $null
+            }
+        }
+        Context 'Valid configuration is passed with no TemplateVHD Nodes' {
+            $Config = Get-LabConfiguration -Path $Global:TestConfigOKPath
+            $Config.labbuilderconfig.templatevhds.IsEmpty = $true
+            It 'Returns null' {
+                Get-LabVMTemplateVHD -Config $Config | Should Be $null
+            }
+        }
         Context 'Valid configuration is passed and template VHD ISOs are found' {
             It 'Returns VMTemplateVHDs array that matches Expected array' {
                 $Config = Get-LabConfiguration -Path $Global:TestConfigOKPath
                 [Array] $TemplateVHDs = Get-LabVMTemplateVHD -Config $Config 
+                # Remove the VHDPath and ISOPath values for any VMtemplatesVHD
+                #  because they will usually be relative to the test folder and
+                # won't exist on any other test system
+                foreach ($TemplateVHD in $TemplateVHDs)
+                {
+                    $TemplateVHD.VHDPath = 'Intentionally Removed'
+                    $TemplateVHD.ISOPath = 'Intentionally Removed'
+                }
                 Set-Content -Path "$Global:ArtifactPath\ExpectedTemplateVHDs.json" -Value ($TemplateVHDs | ConvertTo-Json -Depth 2)
-                $ExpectedTemplateVHDs = Get-Content -Path "$Global:TestConfigPath\ExpectedTemplateVHDs.json"
+                $ExpectedTemplateVHDs = Get-Content -Path "$Global:TestConfigPath\Artifacts\ExpectedTemplateVHDs.json"
                 [String]::Compare((Get-Content -Path "$Global:ArtifactPath\ExpectedTemplateVHDs.json"),$ExpectedTemplateVHDs,$true) | Should Be 0
             }
         }
@@ -1245,20 +1217,98 @@ InModuleScope LabBuilder {
 
 
 
-    Describe 'Initialize-LabVMTemplateVHD' -Tag 'Incomplete' {
-
-        $Config = Get-LabConfiguration -Path $Global:TestConfigOKPath
-
-        Context 'Valid configuration is passed without VMTemplates or VMTemplateVHDs' {	
+    Describe 'Initialize-LabVMTemplateVHD' {
+        Mock Mount-DiskImage
+        Mock Get-Diskimage -MockWith {
+            New-CimInstance `
+                -ClassName 'MSFT_DiskImage' `
+                -Namespace Root/Microsoft/Windows/Storage `
+                -ClientOnly `
+                -Property @{
+                    Attached = $True
+                    BlockSize = 0
+                    DevicePath = '\\.\CDROM1'
+                    ImagePath = 'c:\doesnotmatter.iso'
+                    LogicalSectorSize = 2048
+                    Number = 1
+                    Size = 3842639872
+                    StorageType = 1
+                }
+        }
+        Mock Get-Volume -MockWith { @{ DriveLetter = 'X' } }
+        Mock Dismount-DiskImage
+        Mock Get-WindowsImage -MockWith { @{ ImageName = 'DOESNOTMATTER' } }
+        Mock Copy-Item
+        Mock Rename-Item
+        
+        # Mock Convert-WindowsImage
+        if (-not (Test-Path -Path Function:Convert-WindowsImage))
+        {
+            . "$Global:ModuleRoot\support\Convert-WindowsImage.ps1"
+        }
+        Mock Convert-WindowsImage 
+        Mock Resolve-Path -MockWith { 'X:\Sources\Install.WIM' }
+        Mock Test-Path -MockWith { $True } -ParameterFilter { $Path -eq 'X:\Sources\Install.WIM' }
+                
+        Context 'Configuration passed with no VMtemplateVHDs' {
             It 'Does not throw an Exception' {
-                { Initialize-LabVMTemplate -Config $Config } | Should Not Throw
+                $Config = Get-LabConfiguration -Path $Global:TestConfigOKPath
+                $Config.labbuilderconfig.RemoveChild($Config.labbuilderconfig.templatevhds)
+                { Initialize-LabVMTemplateVHD -Config $Config } | Should Not Throw
             }
-            It 'Calls Mocked commands' {
-                Assert-MockCalled Copy-Item -Exactly 3
-                Assert-MockCalled Set-ItemProperty -Exactly 3 -ParameterFilter { ($Name -eq 'IsReadOnly') -and ($Value -eq $True) }
-                Assert-MockCalled Set-ItemProperty -Exactly 3 -ParameterFilter { ($Name -eq 'IsReadOnly') -and ($Value -eq $False) }
-                Assert-MockCalled Optimize-VHD -Exactly 3
+            It 'Calls expected mocks commands' {
+                Assert-MockCalled Mount-DiskImage -Exactly 0
+                Assert-MockCalled Get-Diskimage -Exactly 0
+                Assert-MockCalled Get-Volume -Exactly 0
+                Assert-MockCalled Dismount-DiskImage -Exactly 0
+                Assert-MockCalled Get-WindowsImage -Exactly 0
+                Assert-MockCalled Copy-Item -Exactly 0
+                Assert-MockCalled Rename-Item -Exactly 0
+                Assert-MockCalled Convert-WindowsImage -Exactly 0
+            }            
+        }
+        Context 'Configuration passed where the template ISO can not be found' {
+            It 'Throws an VMTemplateVHDISOPathNotFoundError Exception' {
+                $Config = Get-LabConfiguration -Path $Global:TestConfigOKPath
+                $VMTemplateVHDs = Get-LabVMTemplateVHD -Config $Config
+                $VMTemplateVHDs[0].isopath = 'doesnotexist.iso'
+                $VMTemplateVHDs[0].vhdpath = 'doesnotexist.vhdx'
+                $ExceptionParameters = @{
+                    errorId = 'VMTemplateVHDISOPathNotFoundError'
+                    errorCategory = 'InvalidArgument'
+                    errorMessage = $($LocalizedData.VMTemplateVHDISOPathNotFoundError `
+                        -f $Config.labbuilderconfig.templatevhds.templatevhd[0].name,'doesnotexist.iso')
+                }
+                $Exception = New-Exception @ExceptionParameters
+
+                { Initialize-LabVMTemplateVHD -Config $Config -VMTemplateVHDs $VMTemplateVHDs } | Should Throw $Exception
             }
+            It 'Calls expected mocks commands' {
+                Assert-MockCalled Mount-DiskImage -Exactly 0
+                Assert-MockCalled Get-Diskimage -Exactly 0
+                Assert-MockCalled Get-Volume -Exactly 0
+                Assert-MockCalled Dismount-DiskImage -Exactly 0
+                Assert-MockCalled Get-WindowsImage -Exactly 0
+                Assert-MockCalled Copy-Item -Exactly 0
+                Assert-MockCalled Rename-Item -Exactly 0
+                Assert-MockCalled Convert-WindowsImage -Exactly 0
+            }            
+        }
+        Context 'Valid configuration passed' {
+            It 'Does not throw an Exception' {
+                $Config = Get-LabConfiguration -Path $Global:TestConfigOKPath
+                { Initialize-LabVMTemplateVHD -Config $Config } | Should Not Throw
+            }
+            It 'Calls expected mocks commands' {
+                Assert-MockCalled Mount-DiskImage -Exactly 3
+                Assert-MockCalled Get-Diskimage -Exactly 3
+                Assert-MockCalled Get-Volume -Exactly 3
+                Assert-MockCalled Dismount-DiskImage -Exactly 3
+                Assert-MockCalled Get-WindowsImage -Exactly 1
+                Assert-MockCalled Copy-Item -Exactly 1
+                Assert-MockCalled Rename-Item -Exactly 1
+                Assert-MockCalled Convert-WindowsImage -Exactly 3
+            }            
         }
     }
 
@@ -1335,10 +1385,10 @@ InModuleScope LabBuilder {
                 # will usually be relative to the test folder and won't exist
                 foreach ($Template in $Templates)
                 {
-                    $Template.SourceVHD = ''
+                    $Template.SourceVHD = 'Intentionally Removed'
                 }
                 Set-Content -Path "$Global:ArtifactPath\ExpectedTemplates.json" -Value ($Templates | ConvertTo-Json -Depth 2)
-                $ExpectedTemplates = Get-Content -Path "$Global:TestConfigPath\ExpectedTemplates.json"
+                $ExpectedTemplates = Get-Content -Path "$Global:TestConfigPath\Artifacts\ExpectedTemplates.json"
                 [String]::Compare((Get-Content -Path "$Global:ArtifactPath\ExpectedTemplates.json"),$ExpectedTemplates,$true) | Should Be 0
             }
             It 'Calls Mocked commands' {
@@ -1367,10 +1417,10 @@ InModuleScope LabBuilder {
                 # will usually be relative to the test folder and won't exist
                 foreach ($Template in $Templates)
                 {
-                    $Template.SourceVHD = ''
+                    $Template.SourceVHD = 'Intentionally Removed'
                 }
                 Set-Content -Path "$Global:ArtifactPath\ExpectedTemplates.FromVM.json" -Value ($Templates | ConvertTo-Json -Depth 2)
-                $ExpectedTemplates = Get-Content -Path "$Global:TestConfigPath\ExpectedTemplates.FromVM.json"
+                $ExpectedTemplates = Get-Content -Path "$Global:TestConfigPath\Artifacts\ExpectedTemplates.FromVM.json"
                 [String]::Compare((Get-Content -Path "$Global:ArtifactPath\ExpectedTemplates.FromVM.json"),$ExpectedTemplates,$true) | Should Be 0
             }
             It 'Calls Mocked commands' {
@@ -1757,7 +1807,7 @@ InModuleScope LabBuilder {
             Set-Content -Path "$($Global:ArtifactPath)\ExpectedUnattendFile.xml" -Value $UnattendFile -Encoding UTF8 -NoNewLine
             It 'Returns Expected File Content' {
                 $UnattendFile | Should Be $True
-                $ExpectedUnattendFile = Get-Content -Path "$Global:TestConfigPath\ExpectedUnattendFile.xml" -Raw
+                $ExpectedUnattendFile = Get-Content -Path "$Global:TestConfigPath\Artifacts\ExpectedUnattendFile.xml" -Raw
                 [String]::Compare($UnattendFile,$ExpectedUnattendFile,$true) | Should Be 0
             }
         }
@@ -2231,14 +2281,14 @@ InModuleScope LabBuilder {
             # will usually be relative to the test folder and won't exist
             foreach ($DataVhd in $VMs[0].DataVhds)
             {
-                $DataVhd.ParentVHD = ''
-                $DataVhd.SourceVHD = ''
+                $DataVhd.ParentVHD = 'Intentionally Removed'
+                $DataVhd.SourceVHD = 'Intentionally Removed'
             }
             # Remove the DSCConfigFile path as this will be relative as well
             $VMs[0].DSCConfigFile = ''
             It 'Returns Template Object that matches Expected Object' {
                 Set-Content -Path "$Global:ArtifactPath\ExpectedVMs.json" -Value ($VMs | ConvertTo-Json -Depth 6)
-                $ExpectedVMs = Get-Content -Path "$Global:TestConfigPath\ExpectedVMs.json"
+                $ExpectedVMs = Get-Content -Path "$Global:TestConfigPath\Artifacts\ExpectedVMs.json"
                 [String]::Compare((Get-Content -Path "$Global:ArtifactPath\ExpectedVMs.json"),$ExpectedVMs,$true) | Should Be 0
             }
         }
@@ -2251,14 +2301,14 @@ InModuleScope LabBuilder {
             # will usually be relative to the test folder and won't exist
             foreach ($DataVhd in $VMs[0].DataVhds)
             {
-                $DataVhd.ParentVHD = ''
-                $DataVhd.SourceVHD = ''
+                $DataVhd.ParentVHD = 'Intentionally Removed'
+                $DataVhd.SourceVHD = 'Intentionally Removed'
             }
             # Remove the DSCConfigFile path as this will be relative as well
             $VMs[0].DSCConfigFile = ''
             It 'Returns Template Object that matches Expected Object' {
                 Set-Content -Path "$Global:ArtifactPath\ExpectedVMs.json" -Value ($VMs | ConvertTo-Json -Depth 6)
-                $ExpectedVMs = Get-Content -Path "$Global:TestConfigPath\ExpectedVMs.json"
+                $ExpectedVMs = Get-Content -Path "$Global:TestConfigPath\Artifacts\ExpectedVMs.json"
                 [String]::Compare((Get-Content -Path "$Global:ArtifactPath\ExpectedVMs.json"),$ExpectedVMs,$true) | Should Be 0
             }
         }

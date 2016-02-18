@@ -80,7 +80,8 @@ ConvertFrom-StringData -StringData @'
     CopyingTemplateSourceVHDMessage=Copying template source VHD '{0}' to '{1}'.
     OptimizingTemplateVHDMessage=Optimizing template VHD '{0}'.
     SettingTemplateVHDReadonlyMessage=Setting template VHD '{0}' as readonly.
-    SkippingTemplateVHDFileMessage=Skipping template VHD file '{0}' because it already exists.
+    SkipTemplateVHDFileMessage=Skip copying template VHD file '{1}' for '{0}' because it already exists.
+    SkipVMTemplateVHDFileMessage=Skip building VM template VHD file '{1}' for '{0}' because it already exists.
     DeletingTemplateVHDMessage=Deleting Template VHD '{0}'.
     DSCConfigIdentifyModulesMessage=Identifying Modules used by DSC Config File '{0}' in VM '{1}'.
     DSCConfigSearchingForModuleMessage=Searching for Module '{2}' required by DSC Config File '{0}' in VM '{1}'.
@@ -131,12 +132,5 @@ ConvertFrom-StringData -StringData @'
     ISONotFoundDownloadURLMessage=The ISO '{1}' for VM template VHD '{0}' could not be found. It can be downloaded from '{2}'.
     CreatingMountFolderMessage=Creating a temporary mount folder '{0}'.
     CreatingVMTemplateVHDMessage=Creating the '{0}' VM Template VHD '{1}'.
-    MountingVMTemplateVHDISODMessage=Mounting the ISO '{1}' VM Template VHD '{0}'.
-    DismountingVMTemplateVHISODMessage=Dismounting the ISO '{1}' VM Template VHD '{0}'.
-    RemovingMountFolderMessage=Removing the temporary mount folder '{0}'.
     ConvertingWIMtoVHDMessage=Converting '{3}' in '{0}' to a bootable {4} {5} {2} '{1}'.
-    MountingVMTemplateVHDMessage=Mounting the VHD '{1}' VM Template VHD '{0}'.
-    DismountingVMTemplateVHDMessage=Dismounting the VHD '{1}' VM Template VHD '{0}'.
-    AddingPackageToVMTemplateVHDMessage=Adding Package VHD '{1}' to VM Template VHD '{0}'.
-    FolderCopyToVHDFailedServiceMessage=The '{1}' Folder could not be found and can't be copied into the Data VHD '{2}' for VM '{0}'.
 '@

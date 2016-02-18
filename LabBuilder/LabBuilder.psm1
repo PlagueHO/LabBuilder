@@ -19,22 +19,24 @@ Import-LocalizedData `
 ####################################################################################################
 # This is the URL to the WMF 5.0 RTM
 [String] $Script:WorkingFolder = $ENV:Temp
+
+# Supporting files
 [String] $Script:WMF5DownloadURL = 'https://download.microsoft.com/download/2/C/6/2C6E1B4A-EBE5-48A6-B225-2D2058A9CEFB/W2K12R2-KB3094174-x64.msu'
 [String] $Script:WMF5InstallerFilename = ($Script:WMF5DownloadURL).Substring(($Script:WMF5DownloadURL).LastIndexOf('/') + 1)
 [String] $Script:WMF5InstallerPath = Join-Path -Path $Script:WorkingFolder -ChildPath $Script:WMF5InstallerFilename
-[String] $Script:ConvertWindowsImageDownloadURL = 'https://gallery.technet.microsoft.com/scriptcenter/Convert-WindowsImageps1-0fe23a8f/file/59237/7/Convert-WindowsImage.ps1'
-[String] $Script:ConvertWindowsImageFilename = ($Script:ConvertWindowsImageDownloadURL).Substring(($Script:ConvertWindowsImageDownloadURL).LastIndexOf('/') + 1)
-[String] $Script:ConvertWindowsImagePath = Join-Path -Path $Script:WorkingFolder -ChildPath $Script:ConvertWindowsImageFilename
+[String] $Script:SupportConvertWindowsImagePath = Join-Path -Path $PSScriptRoot -ChildPath 'Support\Convert-WindowsImage.ps1'
 [String] $Script:CertGenDownloadURL = 'https://gallery.technet.microsoft.com/scriptcenter/Self-signed-certificate-5920a7c6/file/101251/1/New-SelfSignedCertificateEx.zip'
 [String] $Script:CertGenZipFilename = ($Script:CertGenDownloadURL).Substring(($Script:CertGenDownloadURL).LastIndexOf('/') + 1)
 [String] $Script:CertGenZipPath = Join-Path -Path $Script:WorkingFolder -ChildPath $Script:CertGenZipFilename
 [String] $Script:CertGenPS1Filename = 'New-SelfSignedCertificateEx.ps1'
 [String] $Script:CertGenPS1Path = Join-Path -Path $Script:WorkingFolder -ChildPath $Script:CertGenPS1Filename
-[String] $Script:NanoServerImageGeneratorFilename = 'NanoServerImageGenerator.psm1'
-[String] $Script:NanoServerConvertWindowsImageFilename = 'Convert-WindowsImage.ps1'
+
+# Virtual Networking Parameters
 [Int] $Script:DefaultManagementVLan = 99
 [String] $Script:DefaultMacAddressMinimum = '00155D010600'
 [String] $Script:DefaultMacAddressMaximum = '00155D0106FF'
+
+# Self-signed Certificate Parameters
 [Int] $Script:SelfSignedCertKeyLength = 2048
 # Warning - using KSP causes the Private Key to not be accessible to PS.
 [String] $Script:SelfSignedCertProviderName = 'Microsoft Enhanced Cryptographic Provider v1.0' # 'Microsoft Software Key Storage Provider'
@@ -115,37 +117,6 @@ function Download-WMF5Installer()
         }
     }
 } # Download-WMF5Installer
-####################################################################################################
-<#
-.SYNOPSIS
-   Download the latest Convert-WindowsImage.ps1 Script to the Working Folder
-#>
-function Download-ConvertWindowsImage()
-{
-    [CmdletBinding()]
-    Param ()
-
-    if (-not (Test-Path -Path $Script:ConvertWindowsImagePath))
-    {
-        try
-        {
-            Invoke-WebRequest `
-                -Uri $Script:ConvertWindowsImageDownloadURL `
-                -OutFile $Script:ConvertWindowsImagePath `
-                -ErrorAction Stop
-        }
-        catch
-        {
-            $ExceptionParameters = @{
-                errorId = 'FileDownloadError'
-                errorCategory = 'InvalidOperation'
-                errorMessage = $($LocalizedData.FileDownloadError `
-                    -f 'Convert-WindowsImage script',$Script:ConvertWindowsImageDownloadURL,$_.Exception.Message)
-            }
-            New-LabException @ExceptionParameters
-        }
-    }
-} # Download-ConvertWindowsImage
 ####################################################################################################
 <#
 .SYNOPSIS
@@ -565,9 +536,6 @@ function Initialize-LabConfiguration {
     # Download WMF 5.0 in case any VMs need it	
     Download-WMF5Installer
 
-    # Download the New-SelfSignedCertificateEx.ps1 script
-    Download-ConvertWindowsImage
-
     # Download any other resources required by this lab
     Download-LabResources -Config $Config	
 
@@ -932,7 +900,6 @@ function Initialize-LabSwitch {
         [ValidateNotNullOrEmpty()]
         [XML] $Config,
 
-        [ValidateNotNullOrEmpty()]
         [Array] $Switches
     )
 
@@ -1106,7 +1073,6 @@ function Remove-LabSwitch {
         [ValidateNotNullOrEmpty()]
         [XML] $Config,
 
-        [ValidateNotNullOrEmpty()]
         [System.Collections.Hashtable[]] $Switches
     )
 
@@ -1206,7 +1172,8 @@ function Remove-LabSwitch {
    $VMTemplateVHDs = Get-LabVMTemplateVHD -Config $Config
    Loads a Lab Builder configuration and pulls the array of TemplateVHDs from it.
 .OUTPUTS
-   Returns an array of TemplateVHDs.
+   Returns an array of TemplateVHDs. It will return Null if the TemplateVHDs node does
+   not exist or contains no TemplateVHD nodes.
 #>
 function Get-LabVMTemplateVHD {
     [OutputType([System.Collections.Hashtable[]])]
@@ -1218,6 +1185,12 @@ function Get-LabVMTemplateVHD {
         [XML] $Config
     )
 
+    # return null if the TemplateVHDs node does not exist
+    if (-not $Config.labbuilderconfig.TemplateVHDs)
+    {
+        return
+    }
+    
     # Determine the ISORootPath where the ISO files should be found
     # If no path is specified then look in the same path as the config
     # If a path is specified but it is relative, make it relative to the
@@ -1386,6 +1359,7 @@ function Get-LabVMTemplateVHD {
         }
 
 		# Get the Template Wim Image to use
+        $Edition = $null
         if ($TemplateVHD.Edition)
         {
             $Edition = $TemplateVHD.Edition
@@ -1424,6 +1398,13 @@ function Get-LabVMTemplateVHD {
             }
             New-LabException @ExceptionParameters            
         }
+        
+        # Get the disk size if provided
+        [Int64] $Size = 25GB
+        if ($TemplateVHD.VHDSize)
+        {
+            $VHDSize = (Invoke-Expression $TemplateVHD.VHDSize)         
+        }
 
         # Get the Template VM Generation 
         [int] $Generation = 2
@@ -1442,10 +1423,16 @@ function Get-LabVMTemplateVHD {
             New-LabException @ExceptionParameters            
         }
 
-        # Get the Template Packages for Nano 
+        # Get the Template Packages
         if ($TemplateVHD.packages)
         {
             $Packages = $TemplateVHD.Packages
+        } # If
+
+        # Get the Template Features
+        if ($TemplateVHD.features)
+        {
+            $Features = $TemplateVHD.Features
         } # If
 
 		# Add template VHD to the list
@@ -1458,7 +1445,9 @@ function Get-LabVMTemplateVHD {
                 Generation = $Generation;
                 VHDFormat = $VHDFormat;
                 VHDType = $VHDType;
+                VHDSize = $VHDSize;
                 Packages = $Packages;
+                Features = $Features;
             }
      } # Foreach
     Return $VMTemplateVHDs
@@ -1478,6 +1467,7 @@ function Get-LabVMTemplateVHD {
    Contains the Lab Builder configuration object that was loaded by the Get-LabConfiguration object.
 .PARAMETER VMTemplateVHDs
    The array of VMTemplateVHDs pulled from the Lab Configuration file using Get-LabVMTemplateVHD
+   
    If not provided it will attempt to pull the list from the configuration file.
 .EXAMPLE
    $Config = Get-LabConfiguration -Path c:\mylab\config.xml
@@ -1500,7 +1490,6 @@ function Initialize-LabVMTemplateVHD
         [ValidateNotNullOrEmpty()]
         [XML] $Config,
 
-        [ValidateNotNullOrEmpty()]
 	    [System.Collections.Hashtable[]] $VMTemplateVHDs
     )
 
@@ -1510,288 +1499,180 @@ function Initialize-LabVMTemplateVHD
         $VMTemplateVHDs = Get-LabVMTemplateVHD -Config $Config        
     }
 
-    # Make sure Convert-WindowsImage.ps1 is downloaded. 
-    Download-ConvertWindowsImage
-    
-    # Generate the Mount folder
-    [String] $MountFolder = Join-Path `
-        -Path $ENV:Temp `
-        -ChildPath "LabBuilder_Mount_$([System.IO.Path]::GetRandomFileName())"
-
-    # Create the mount folder if it doesn't exist
-    if (-not (Test-Path -Path $MountFolder))
+    # If there are no VMTemplateVHDs just return
+    if ($VMTemplateVHDs -eq $null)
     {
-        Write-Verbose -Message ($LocalizedData.CreatingMountFolderMessage `
-                -f $MountFolder)
-
-        $null = New-Item `
-            -Path $MountFolder `
-            -Type Directory `
-            -ErrorAction Stop
-    } # if
-
-    try
-    {
-        foreach ($VMTemplateVHD in $VMTemplateVHDs)
-        {
-            [String] $Name = $VMTemplateVHD.Name
-            [String] $VHDPath = $VMTemplateVHD.VHDPath
-            
-            if (Test-Path -Path ($VHDPath))
-            {
-                # The SourceVHD already exists
-                continue
-            }
-            
-            # Create the VHD
-            Write-Verbose -Message ($LocalizedData.CreatingVMTemplateVHDMessage `
-                    -f $Name,$VHDPath)
-                
-            # Check the ISO exists.
-            [String] $ISOPath = $VMTemplateVHD.ISOPath
-            if (-not (Test-Path -Path $ISOPath))
-            {
-                $ExceptionParameters = @{
-                    errorId = 'TemplateVHDISOPathNotFoundError'
-                    errorCategory = 'InvalidArgument'
-                    errorMessage = $($LocalizedData.TemplateVHDISOPathNotFoundError `
-                        -f $Name,$ISOPath)
-                }
-                New-LabException @ExceptionParameters            
-            }
-            
-            # Mount the ISO so we can read the files.
-            Write-Verbose -Message ($LocalizedData.MountingVMTemplateVHDISOMessage `
-                    -f $Name,$ISOPath)
-
-            $null = Mount-DiskImage `
-                -ImagePath $ISOPath `
-                -StorageType ISO `
-                -Access Readonly
-        
-            [String] $DriveLetter = (Get-Diskimage -ImagePath $ISOPath | Get-Volume).DriveLetter
-            [String] $ISODrive = "$([string]$DriveLetter):"
-
-            # Work around an issue with script not seeing the drive
-            $null = Get-PSDrive `
-                -PSProvider FileSystem  
-
-            # Determine the path to the WIM
-            [String] $WimPath = "$ISODrive\Sources\Install.WIM"
-            if ($VMTemplateVHD.OSType -eq 'Nano')
-            {
-                $WimPath = "$ISODrive\Nanoserver\NanoServer.WIM"
-            }
-
-            # This will have to change depending on the version
-            # of Convert-WindowsImage being used. 
-            [String] $VHDFormat = $VMTemplateVHD.VHDFormat       
-            [String] $VHDType = $VMTemplateVHD.VHDType       
-            [String] $VhdPartitionStyle = 'GPT'
-            if ($VMTemplateVHD.Generation -eq 1)
-            {
-                $VHDPartitionStyle = 'MBR'
-            }
-
-            [String] $Edition = $VMTemplateVHD.Edition
-            # If edition is not set then use Get-WindowsImage to get the name
-            # of the first image in the WIM.
-            if ([String]::IsNullOrWhiteSpace($Edition))
-            {
-                $Edition = (Get-WindowsImage `
-                    -ImagePath $WimPath `
-                    -Index 1).ImageName
-            }
-
-            Write-Verbose -Message ($LocalizedData.ConvertingWIMtoVHDMessage `
-                -f $WIMPath,$VHDPath,$VHDFormat,$Edition,$VHDPartitionStyle,$VHDType)
-
-            $ConvertParams = @{
-                sourcepath = $WimPath
-                vhd = $VHDpath
-                vhdformat = $VHDFormat
-                vhdtype = $VHDType
-                edition = $Edition
-                vhdpartitionstyle = $VHDPartitionStyle
-                erroraction = 'Stop'
-            }                       
-            
-            if ($VMTemplateVHD.OSType -eq 'Nano')
-            {
-                # First, make a copy of the NanoServerImageGenerator.psm1 in the
-                # VHDPath so that if it is ever needed during VM/Template creation
-                # It is available.
-                [String] $VHDFolder = Split-Path `
-                    -Path $VHDPath `
-                    -Parent
-
-                [String] $NanoServerImageGeneratorPath = Join-Path `
-                    -Path $VHDFolder `
-                    -ChildPath ($Script:NanoServerImageGeneratorFilename) 
-                if (-not (Test-Path -Path $NanoServerImageGeneratorPath))
-                {
-                    [String] $NanoServerImageGeneratorSourcePath = Join-Path `
-                        -Path "$ISODrive\Nanoserver" `
-                        -ChildPath $Script:NanoServerImageGeneratorFilename
-                    
-                    Copy-Item `
-                        -Path $NanoServerImageGeneratorSourcePath `
-                        -Destination $NanoServerImageGeneratorPath
-                }
-
-                [String] $NanoServerConvertWindowsImagePath = Join-Path `
-                    -Path $VHDFolder `
-                    -ChildPath ($Script:NanoServerConvertWindowsImageFilename) 
-                if (-not (Test-Path -Path $NanoServerConvertWindowsImagePath))
-                {
-                    [String] $NanoServerConvertWindowsImageSourcePath = Join-Path `
-                        -Path "$ISODrive\Nanoserver" `
-                        -ChildPath $Script:NanoServerConvertWindowsImageFilename
-                    
-                    Copy-Item `
-                        -Path $NanoServerConvertWindowsImageSourcePath `
-                        -Destination $NanoServerConvertWindowsImagePath
-                }
-
-                # Copy the packages folder over so it is also accessible once the
-                # ISO has dismounted.
-                [String] $PackagesFolder = Join-Path `
-                    -Path $VHDFolder `
-                    -ChildPath 'NanoServerPackages'
-                if (-not (Test-Path -Path $PackagesFolder -Type Container))
-                {
-                    Copy-Item `
-                        -Path "$ISODrive\Nanoserver\Packages" `
-                        -Destination $VHDFolder `
-                        -Recurse `
-                        -Force
-                    Rename-Item `
-                        -Path "$VHDFolder\Packages" `
-                        -NewName $PackagesFolder
-                }
-                
-                $Packages = $VMTemplateVHD.Packages
-
-                # . source the NanoServer Convert-WindowsImage function
-                # so it can be called
-                . $NanoServerConvertWindowsImagePath
-
-                Convert-WindowsImage @ConvertParams
-                
-                Remove-Item -Path Function:\Convert-WindowsImage
-
-                # Generate the VHD Mount folder
-                [String] $VHDMountFolder = Join-Path `
-                    -Path $ENV:Temp `
-                    -ChildPath "LabBuilder_VHDMount_$Name"
-
-                # Create a VHD Mount folder
-                if (-not (Test-Path -Path $VHDMountFolder))
-                {
-                    Write-Verbose -Message ($LocalizedData.CreatingMountFolderMessage `
-                            -f $VHDMountFolder)
-
-                    $null = New-Item `
-                        -Path $VHDMountFolder `
-                        -Type Directory `
-                        -ErrorAction Stop
-                }
-
-                # Mount the VHD to load packages into it
-                Write-Verbose -Message ($LocalizedData.MountingVMTemplateVHDMessage `
-                        -f $Name,$VHDPath)
-
-                Mount-WindowsImage `
-                    -Path $VHDMountFolder `
-                    -ImagePath $VHDPath `
-                    -Index 1
-
-                try
-                {
-                    # Add the selected packages
-                    foreach ($Package in $Script:NanoServerPackageList) 
-                    {
-                        If ($Package.Name -in $Packages) 
-                        {
-                            Write-Verbose -Message ($LocalizedData.AddingPackageToVMTemplateVHDMessage `
-                                    -f $Name,$Package.Filename)
-
-                            Add-WindowsPackage `
-                                -Path $VHDMountFolder `
-                                -PackagePath (Join-Path -Path $PackagesFolder -ChildPath $Package.Filename)
-                            Add-WindowsPackage `
-                                -Path $VHDMountFolder `
-                                -PackagePath (Join-Path -Path $PackagesFolder -ChildPath "en-us\$($Package.Filename)")
-                        }
-                    } # foreach                    
-                }
-                catch [System.Exception]
-                {
-                    Throw $_
-                }
-                finally
-                {
-                    # Dismount the VHD to load packages into it
-                    Write-Verbose -Message ($LocalizedData.DismountingVMTemplateVHDMessage `
-                            -f $Name,$VHDPath)
-
-                    Dismount-WindowsImage `
-                        -Path $VHDMountFolder `
-                        -Save `
-                        -ErrorAction Stop
-                        
-                    Remove-Item `
-                        -Path $VHDMountFolder `
-                        -Recurse `
-                        -Force `
-                        -ErrorAction Stop
-                }
-            }
-            else
-            {
-                # . source the Downloaded Convert-WindowsImage function
-                # so it can be called
-                # Use the Downloaded Convert-WindowsImage for any disk type
-                # except Nano Server.
-                . $Script:ConvertWindowsImagePath        
-
-                Convert-WindowsImage @ConvertParams
-                
-                Remove-Item -Path Function:\Convert-WindowsImage
-            } # if
-
-            # Dismount the ISO File
-            Write-Verbose -Message ($LocalizedData.DismountingVMTemplateVHDISOMessage `
-                    -f $Name,$ISOPath)
-
-            Dismount-DiskImage `
-                -ImagePath $ISOPath `
-                -Confirm:$false `
-                -Discard `
-                -ErrorAction Stop
-        } # endfor
-    } 
-    catch [System.Exception]
-    {
-        throw $_
+        return
     }
-    finally
+
+    foreach ($VMTemplateVHD in $VMTemplateVHDs)
     {
-        # Cleanup
-
-        # Remove the mount folder if it exists
-        if (-not (Test-Path -Path $MountFolder))
+        [String] $Name = $VMTemplateVHD.Name
+        [String] $VHDPath = $VMTemplateVHD.VHDPath
+        
+        if (Test-Path -Path ($VHDPath))
         {
-            Write-Verbose -Message ($LocalizedData.RemovingMountFolderMessage `
-                    -f $MountFolder)
+            # The SourceVHD already exists
+            Write-Verbose -Message ($LocalizedData.SkipVMTemplateVHDFileMessage `
+                -f $Name,$VHDPath)
 
-            Remove-Item `
-                -Path $MountFolder `
-                -Recurse `
-                -Force `
-                -ErrorAction Stop
-        }    
-    }    
+            continue
+        }
+        
+        # Create the VHD
+        Write-Verbose -Message ($LocalizedData.CreatingVMTemplateVHDMessage `
+            -f $Name,$VHDPath)
+            
+        # Check the ISO exists.
+        [String] $ISOPath = $VMTemplateVHD.ISOPath
+        if (-not (Test-Path -Path $ISOPath))
+        {
+            $ExceptionParameters = @{
+                errorId = 'VMTemplateVHDISOPathNotFoundError'
+                errorCategory = 'InvalidArgument'
+                errorMessage = $($LocalizedData.VMTemplateVHDISOPathNotFoundError `
+                    -f $Name,$ISOPath)
+            }
+            New-LabException @ExceptionParameters            
+        }
+        
+        # Mount the ISO so we can read the files.
+        Write-Verbose -Message ($LocalizedData.MountingVMTemplateVHDISOMessage `
+                -f $Name,$ISOPath)
+
+        $null = Mount-DiskImage `
+            -ImagePath $ISOPath `
+            -StorageType ISO `
+            -Access Readonly
+    
+        $DiskImage = Get-DiskImage -ImagePath $ISOPath
+        [String] $DriveLetter = ( Get-Volume -DiskImage $DiskImage ).DriveLetter
+        [String] $ISODrive = "$([string]$DriveLetter):"
+
+        # Determine the path to the WIM
+        [String] $SourcePath = "$ISODrive\Sources\Install.WIM"
+        if ($VMTemplateVHD.OSType -eq 'Nano')
+        {
+            $SourcePath = "$ISODrive\Nanoserver\NanoServer.WIM"
+        }
+
+        # This will have to change depending on the version
+        # of Convert-WindowsImage being used. 
+        [String] $VHDFormat = $VMTemplateVHD.VHDFormat       
+        [String] $VHDType = $VMTemplateVHD.VHDType       
+        [String] $VHDDiskLayout = 'UEFI'
+        if ($VMTemplateVHD.Generation -eq 1)
+        {
+            $VHDDiskLayout = 'BIOS'
+        }
+
+        [String] $Edition = $VMTemplateVHD.Edition
+        # If edition is not set then use Get-WindowsImage to get the name
+        # of the first image in the WIM.
+        if ([String]::IsNullOrWhiteSpace($Edition))
+        {
+            $Edition = (Get-WindowsImage `
+                -ImagePath $SourcePath `
+                -Index 1).ImageName
+        }
+
+        $ConvertParams = @{
+            sourcepath = $SourcePath
+            vhdpath = $VHDpath
+            vhdformat = $VHDFormat
+            # vhdtype = $VHDType
+            edition = $Edition
+            disklayout = $VHDDiskLayout
+            erroraction = 'Stop'
+        }
+        
+        # Set the size
+        if ($VMTemplateVHD.VHDSize -ne $null)
+        {
+            $ConvertParams += @{
+                sizebytes = $VMTemplateVHD.VHDSize
+            }
+        }
+        
+        # Are any features specified?
+        if (-not [String]::IsNullOrWhitespace($VMTemplateVHD.Features))
+        {
+            $Features = @($VMTemplateVHD.Features -split ',')
+            $ConvertParams += @{
+                feature = $Features
+            }
+        }
+        
+        # Perform Nano Server package prep
+        if ($VMTemplateVHD.OSType -eq 'Nano')
+        {
+            # Make a copy of the all the Nano packages in the VHD root folder
+            # So that if any VMs need to add more packages they are accessible
+            # once the ISO has been dismounted
+            [String] $VHDFolder = Split-Path `
+                -Path $VHDPath `
+                -Parent
+
+            [String] $PackagesFolder = Join-Path `
+                -Path $VHDFolder `
+                -ChildPath 'NanoServerPackages'
+            if (-not (Test-Path -Path $PackagesFolder -Type Container))
+            {
+                Copy-Item `
+                    -Path "$ISODrive\Nanoserver\Packages" `
+                    -Destination $VHDFolder `
+                    -Recurse `
+                    -Force
+                Rename-Item `
+                    -Path "$VHDFolder\Packages" `
+                    -NewName $PackagesFolder
+            }
+
+            # Now specify the Nano Server packages to add.
+            if (-not [String]::IsNullOrWhitespace($VMTemplateVHD.Packages))
+            {
+                $Packages = @()
+                $NanoPackages = @($VMTemplateVHD.Packages -split ',')
+
+                foreach ($Package in $Script:NanoServerPackageList) 
+                {
+                    If ($Package.Name -in $NanoPackages) 
+                    {
+                        $Packages += @(Join-Path -Path $PackagesFolder -ChildPath $Package.Filename)
+                        $Packages += @(Join-Path -Path $PackagesFolder -ChildPath "en-us\$($Package.Filename)")
+                    } # if
+                } # foreach
+                $ConvertParams += @{
+                    package = $Packages
+                }
+            } # if
+        } # if 
+        
+        Write-Verbose -Message ($LocalizedData.ConvertingWIMtoVHDMessage `
+            -f $SourcePath,$VHDPath,$VHDFormat,$Edition,$VHDPartitionStyle,$VHDType)
+
+        # Work around an issue with Convert-WindowsImage not seeing the drive
+        Get-PSDrive `
+            -PSProvider FileSystem  
+        
+        # Dot source the Convert-WindowsImage script
+        # Should only be done once 
+        if (-not (Test-Path -Path Function:Convert-WindowsImage))
+        {
+            . $Script:SupportConvertWindowsImagePath
+        }
+        
+        # Call the Convert-WindowsImage script
+        Convert-WindowsImage @ConvertParams
+
+        # Dismount the ISO.
+        Write-Verbose -Message ($LocalizedData.DismountingVMTemplateVHDISOMessage `
+                -f $Name,$ISOPath)
+
+        $null = Dismount-DiskImage `
+            -ImagePath $ISOPath
+
+    } # endfor
 } # Initialize-LabVMTemplateVHD
 ####################################################################################################
 
@@ -2075,7 +1956,6 @@ function Initialize-LabVMTemplate {
         [ValidateNotNullOrEmpty()]
         [XML] $Config,
 
-        [ValidateNotNullOrEmpty()]
         [System.Collections.Hashtable[]] $VMTemplates
     )
     
@@ -2120,8 +2000,8 @@ function Initialize-LabVMTemplate {
         }
         Else
         {
-            Write-Verbose -Message $($LocalizedData.SkippingTemplateVHDFileMessage `
-                -f $VMTemplate.templatevhd)
+            Write-Verbose -Message $($LocalizedData.SkipTemplateVHDFileMessage `
+                -f $VMTemplate.Name,$VMTemplate.templatevhd)
         }
     }
 } # Initialize-LabVMTemplate
@@ -2165,10 +2045,10 @@ function Remove-LabVMTemplate {
         [ValidateNotNullOrEmpty()]
         [XML] $Config,
 
-        [ValidateNotNullOrEmpty()]
         [System.Collections.Hashtable[]] $VMTemplates
     )
 
+    # Get the VM Templates if they weren't passed
     if (-not $VMTemplates)
     {
         $VMTemplates = Get-LabVMTemplate `
@@ -5259,14 +5139,13 @@ function Initialize-LabVM {
         [ValidateNotNullOrEmpty()]
         [XML] $Config,
 
-        [ValidateNotNullOrEmpty()]
         [System.Collections.Hashtable[]] $VMs
     )
     
     # If the VMs list was not passed pull it
     if (-not $VMs)
     {
-        $VMs = Get-LabVMs -Config $Config
+        $VMs = Get-LabVM -Config $Config
     }
     
     # If there are not VMs just return
@@ -6129,6 +6008,9 @@ Export-ModuleMember -Function `
     Get-LabSwitch, `
     Initialize-LabSwitch, `
     Remove-LabSwitch, `
+    Get-LabVMTemplateVHD, `
+    Initialize-LabVMTemplateVHD, `
+    Remove-LabVMTemplateVHD, `
     Get-LabVMTemplate, `
     Initialize-LabVMTemplate, `
     Remove-LabVMTemplate, `

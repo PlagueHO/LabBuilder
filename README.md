@@ -57,6 +57,7 @@ Versions
 * Add support for VM Integration Services flag.
 * Initialize-Lab* arrays made optional and will be pulled from config if not passed.
 * Configuration parameter changed to Config to reduce size/typing.
+* Support for creating VHD boot disks from ISO via TemplateVHD nodes in XML.
 
 ### 0.2.0.0
 * Code cleanup and refactoring.
