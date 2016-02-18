@@ -3778,6 +3778,33 @@ function Get-LabVM {
                 }
                 New-LabException @ExceptionParameters
             }
+
+            # Get the Folder to copy and check it exists if passed
+            [String]$CopyFolder = $VMDataVhd.CopyFolder
+            if ($CopyFolder)
+            {
+                # Adjust the path to be relative to the working directory folder 
+                # if it doesn't contain a root (e.g. c:\)
+                if (! [System.IO.Path]::IsPathRooted($CopyFolder))
+                {
+                    $CopyFolder = Join-Path `
+                        -Path $Configuration.labbuilderconfig.settings.fullconfigpath `
+                        -ChildPath $CopyFolder
+                }
+                if (! (Test-Path -Path $CopyFolder))
+                {
+                   $ExceptionParameters = @{
+                       errorId = 'FolderCopyToVHDFailedServiceMessage'
+                       errorCategory = 'InvalidArgument'
+                       errorMessage = $($LocalizedData.FolderCopyToVHDFailedServiceMessage `
+                           -f $VM.Name,$CopyFolder,$VHD)
+                    }
+                New-LabException @ExceptionParameters 
+                }                   
+            }
+
+
+            
             
             # Should the Source VHD be moved rather than copied
             [Boolean] $MoveSourceVHD = ($VMDataVhd.MoveSourceVHD -eq 'Y')
@@ -3818,6 +3845,7 @@ function Get-LabVM {
                 shared = $Shared;
                 supportPR = $SupportPR;
                 moveSourceVHD = $MoveSourceVHD;
+                CopyFolder = $CopyFolder
             }
         } # Foreach
 
@@ -4861,6 +4889,38 @@ function Update-LabVMDataDisk {
                 } # switch
             } # if
         } # if
+        
+         if ($DataVhd.CopyFolder -ne $Null)
+        {
+              if($DataVHD.SourceVHD -ne $Null)  # if we used a source VHD assuming it already has a file system
+              {
+                  [String]$DriveLetter = (Mount-VHD -Path $VHD `
+                        -passthru | `
+                        get-partition | `
+                        get-volume).DriveLetter
+              } Else {
+              
+              Write-Verbose -Message "Mounting VHD $VHD to copy Folder $($DataVHD.CopyFolder)"
+              
+	          [String]$DriveLetter = (Mount-VHD -Path $VHD -Passthru | `
+                    get-disk -number {$_.DiskNumber} | `
+                    Initialize-Disk -PartitionStyle GPT `
+                    -PassThru | New-Partition -UseMaximumSize `
+                    -AssignDriveLetter:$False | `
+                    Format-Volume -Confirm:$false -FileSystem NTFS -force | `
+                    get-partition | `
+                    Add-PartitionAccessPath -AssignDriveLetter -PassThru | `
+                    get-volume).DriveLetter 
+              }
+	         $MountVHD = "$([string]$DriveLetter):\"
+
+	         $null = Get-PSDrive -PSProvider FileSystem # Work around an issue with script not seeing the drive 
+             
+             Copy-item -path "$($DataVHD.CopyFolder)" -Destination $MountVHD -Recurse -Force
+             
+             Dismount-VHD -Path $VHD 
+
+           }# if
         
         # Get a list of disks attached to the VM
         $VMHardDiskDrives = Get-VMHardDiskDrive `
@@ -5912,6 +5972,7 @@ Function Uninstall-Lab {
     } # If
 } # Uninstall-Lab
 ####################################################################################################
+
 
 
 ####################################################################################################
