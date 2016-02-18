@@ -1674,6 +1674,14 @@ function Initialize-LabVMTemplateVHD
             
             # Call the Convert-WindowsImage script
             & $Script:SupportConvertWindowsImagePath @ConvertParams
+
+            # Mount the ISO so we can read the files.
+            Write-Verbose -Message ($LocalizedData.DismountingVMTemplateVHDISOMessage `
+                    -f $Name,$ISOPath)
+
+            $null = Dismount-DiskImage `
+                -ImagePath $ISOPath
+
         } # endfor
     } 
     catch [System.Exception]
