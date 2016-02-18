@@ -16,6 +16,7 @@ Import-Module "$Global:ModuleRoot\LabBuilder.psd1" -Force -DisableNameChecking
 $Global:TestConfigPath = "$Global:ModuleRoot\Tests\PesterTestConfig"
 $Global:TestConfigOKPath = "$Global:TestConfigPath\PesterTestConfig.OK.xml"
 $Global:ArtifactPath = "$Global:ModuleRoot\Artifacts"
+$Global:ExpectedContentPath = "$Global:TestConfigPath\ExpectedContent"
 $null = New-Item -Path "$Global:ArtifactPath" -ItemType Directory -Force -ErrorAction SilentlyContinue
 
 
@@ -799,7 +800,7 @@ InModuleScope LabBuilder {
                 $Config = Get-LabConfiguration -Path $Global:TestConfigOKPath
                 [Array]$Switches = Get-LabSwitch -Config $Config
                 Set-Content -Path "$Global:ArtifactPath\ExpectedSwitches.json" -Value ($Switches | ConvertTo-Json -Depth 4)
-                $ExpectedSwitches = Get-Content -Path "$Global:TestConfigPath\Artifacts\ExpectedSwitches.json"
+                $ExpectedSwitches = Get-Content -Path "$Global:ExpectedContentPath\ExpectedSwitches.json"
                 [String]::Compare((Get-Content -Path "$Global:ArtifactPath\ExpectedSwitches.json"),$ExpectedSwitches,$true) | Should Be 0
             }
         }
@@ -1184,7 +1185,7 @@ InModuleScope LabBuilder {
                     $TemplateVHD.ISOPath = 'Intentionally Removed'
                 }
                 Set-Content -Path "$Global:ArtifactPath\ExpectedTemplateVHDs.json" -Value ($TemplateVHDs | ConvertTo-Json -Depth 2)
-                $ExpectedTemplateVHDs = Get-Content -Path "$Global:TestConfigPath\Artifacts\ExpectedTemplateVHDs.json"
+                $ExpectedTemplateVHDs = Get-Content -Path "$Global:ExpectedContentPath\ExpectedTemplateVHDs.json"
                 [String]::Compare((Get-Content -Path "$Global:ArtifactPath\ExpectedTemplateVHDs.json"),$ExpectedTemplateVHDs,$true) | Should Be 0
             }
         }
@@ -1363,7 +1364,7 @@ InModuleScope LabBuilder {
                     $Template.SourceVHD = 'Intentionally Removed'
                 }
                 Set-Content -Path "$Global:ArtifactPath\ExpectedTemplates.json" -Value ($Templates | ConvertTo-Json -Depth 2)
-                $ExpectedTemplates = Get-Content -Path "$Global:TestConfigPath\Artifacts\ExpectedTemplates.json"
+                $ExpectedTemplates = Get-Content -Path "$Global:ExpectedContentPath\ExpectedTemplates.json"
                 [String]::Compare((Get-Content -Path "$Global:ArtifactPath\ExpectedTemplates.json"),$ExpectedTemplates,$true) | Should Be 0
             }
             It 'Calls Mocked commands' {
@@ -1395,7 +1396,7 @@ InModuleScope LabBuilder {
                     $Template.SourceVHD = 'Intentionally Removed'
                 }
                 Set-Content -Path "$Global:ArtifactPath\ExpectedTemplates.FromVM.json" -Value ($Templates | ConvertTo-Json -Depth 2)
-                $ExpectedTemplates = Get-Content -Path "$Global:TestConfigPath\Artifacts\ExpectedTemplates.FromVM.json"
+                $ExpectedTemplates = Get-Content -Path "$Global:ExpectedContentPath\ExpectedTemplates.FromVM.json"
                 [String]::Compare((Get-Content -Path "$Global:ArtifactPath\ExpectedTemplates.FromVM.json"),$ExpectedTemplates,$true) | Should Be 0
             }
             It 'Calls Mocked commands' {
@@ -1782,7 +1783,7 @@ InModuleScope LabBuilder {
             Set-Content -Path "$($Global:ArtifactPath)\ExpectedUnattendFile.xml" -Value $UnattendFile -Encoding UTF8 -NoNewLine
             It 'Returns Expected File Content' {
                 $UnattendFile | Should Be $True
-                $ExpectedUnattendFile = Get-Content -Path "$Global:TestConfigPath\Artifacts\ExpectedUnattendFile.xml" -Raw
+                $ExpectedUnattendFile = Get-Content -Path "$Global:ExpectedContentPath\ExpectedUnattendFile.xml" -Raw
                 [String]::Compare($UnattendFile,$ExpectedUnattendFile,$true) | Should Be 0
             }
         }
@@ -2263,7 +2264,7 @@ InModuleScope LabBuilder {
             $VMs[0].DSCConfigFile = ''
             It 'Returns Template Object that matches Expected Object' {
                 Set-Content -Path "$Global:ArtifactPath\ExpectedVMs.json" -Value ($VMs | ConvertTo-Json -Depth 6)
-                $ExpectedVMs = Get-Content -Path "$Global:TestConfigPath\Artifacts\ExpectedVMs.json"
+                $ExpectedVMs = Get-Content -Path "$Global:ExpectedContentPath\ExpectedVMs.json"
                 [String]::Compare((Get-Content -Path "$Global:ArtifactPath\ExpectedVMs.json"),$ExpectedVMs,$true) | Should Be 0
             }
         }
@@ -2283,7 +2284,7 @@ InModuleScope LabBuilder {
             $VMs[0].DSCConfigFile = ''
             It 'Returns Template Object that matches Expected Object' {
                 Set-Content -Path "$Global:ArtifactPath\ExpectedVMs.json" -Value ($VMs | ConvertTo-Json -Depth 6)
-                $ExpectedVMs = Get-Content -Path "$Global:TestConfigPath\Artifacts\ExpectedVMs.json"
+                $ExpectedVMs = Get-Content -Path "$Global:ExpectedContentPath\ExpectedVMs.json"
                 [String]::Compare((Get-Content -Path "$Global:ArtifactPath\ExpectedVMs.json"),$ExpectedVMs,$true) | Should Be 0
             }
         }

@@ -1,0 +1,54 @@
+[
+    {
+        "adapters":  [
+                         {
+                             "name":  "Cluster",
+                             "macaddress":  "00155D010701"
+                         },
+                         {
+                             "name":  "Management",
+                             "macaddress":  "00155D010702"
+                         },
+                         {
+                             "name":  "SMB",
+                             "macaddress":  "00155D010703"
+                         },
+                         {
+                             "name":  "LM",
+                             "macaddress":  "00155D010704"
+                         }
+                     ],
+        "vlan":  null,
+        "name":  "Pester Test External",
+        "natsubnetaddress":  null,
+        "type":  "External"
+    },
+    {
+        "adapters":  null,
+        "vlan":  "2",
+        "name":  "Pester Test Private Vlan",
+        "natsubnetaddress":  null,
+        "type":  "Private"
+    },
+    {
+        "adapters":  null,
+        "vlan":  null,
+        "name":  "Pester Test Private",
+        "natsubnetaddress":  null,
+        "type":  "Private"
+    },
+    {
+        "adapters":  null,
+        "vlan":  "3",
+        "name":  "Pester Test Internal Vlan",
+        "natsubnetaddress":  null,
+        "type":  "Internal"
+    },
+    {
+        "adapters":  null,
+        "vlan":  null,
+        "name":  "Pester Test Internal",
+        "natsubnetaddress":  null,
+        "type":  "Internal"
+    }
+]

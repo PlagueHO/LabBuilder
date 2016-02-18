@@ -1,0 +1,53 @@
+[
+    {
+        "vhd":  "Windows Server 2012 R2 Datacenter Full.vhdx",
+        "name":  "Pester Windows Server 2012 R2 Datacenter Full",
+        "ProductKey":  "AAAAA-AAAAA-AAAAA-AAAAA-AAAAA",
+        "InstallISO":  null,
+        "IntegrationServices":  "Guest Service Interface,Heartbeat,Key-Value Pair Exchange,Shutdown,Time Synchronization,VSS",
+        "OSType":  "Server",
+        "templatevhd":  "C:\\Pester Lab\\Virtual Hard Disk Templates\\Windows Server 2012 R2 Datacenter Full.vhdx",
+        "AllowCreate":  "Y",
+        "Edition":  null,
+        "AdministratorPassword":  "None",
+        "DynamicMemoryEnabled":  "Y",
+        "MemoryStartupBytes":  1073741824,
+        "ProcessorCount":  "1",
+        "TimeZone":  "Pacific Standard Time",
+        "sourcevhd":  "Intentionally Removed"
+    },
+    {
+        "vhd":  "Windows Server 2012 R2 Datacenter Core.vhdx",
+        "name":  "Pester Windows Server 2012 R2 Datacenter Core",
+        "ProductKey":  "BBBBB-BBBBB-BBBBB-BBBBB-BBBBB",
+        "InstallISO":  null,
+        "IntegrationServices":  "Guest Service Interface,Heartbeat,Key-Value Pair Exchange,Shutdown,Time Synchronization,VSS",
+        "OSType":  "Server",
+        "templatevhd":  "C:\\Pester Lab\\Virtual Hard Disk Templates\\Windows Server 2012 R2 Datacenter Core.vhdx",
+        "AllowCreate":  "Y",
+        "Edition":  null,
+        "AdministratorPassword":  "None",
+        "DynamicMemoryEnabled":  "N",
+        "MemoryStartupBytes":  1073741824,
+        "ProcessorCount":  "1",
+        "TimeZone":  "Pacific Standard Time",
+        "sourcevhd":  "Intentionally Removed",
+        "ExposeVirtualizationExtensions":  "Y"
+    },
+    {
+        "vhd":  "Windows 10 Enterprise.vhdx",
+        "AdministratorPassword":  "None",
+        "ProcessorCount":  "1",
+        "InstallISO":  null,
+        "IntegrationServices":  "Guest Service Interface,Heartbeat,Key-Value Pair Exchange,Shutdown,Time Synchronization,VSS",
+        "OSType":  "Client",
+        "name":  "Pester Windows 10 Enterprise",
+        "templatevhd":  "C:\\Pester Lab\\Virtual Hard Disk Templates\\Windows 10 Enterprise.vhdx",
+        "AllowCreate":  "Y",
+        "Edition":  null,
+        "MemoryStartupBytes":  2147483648,
+        "ProductKey":  "CCCCC-CCCCC-CCCCC-CCCCC-CCCCC",
+        "TimeZone":  "Pacific Standard Time",
+        "sourcevhd":  "Intentionally Removed"
+    }
+]
