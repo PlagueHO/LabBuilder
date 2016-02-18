@@ -3419,7 +3419,7 @@ function Initialize-LabVMImage {
         -f $VM.Name,'Certificate Create Script',$CertGenFilename)
     $null = Copy-Item `
         -Path $Script:SupportGertGenPath `
-        -Destination "$MountPoint\Windows\Setup\Scripts\$CertGenFilename"`
+        -Destination "$MountPoint\Windows\Setup\Scripts\"`
         -Force
         
     # Dismount the VHD in preparation for boot
