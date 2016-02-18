@@ -3414,11 +3414,12 @@ function Initialize-LabVMImage {
 
 
     # Apply the Certificate Generator script
+    $CertGenFilename = Split-Path -Path $Script:SupportGertGenPath -Leaf
     Write-Verbose -Message $($LocalizedData.ApplyingVMBootDiskFileMessage `
-        -f $VM.Name,'Certificate Create Script',$Script:CertGenPS1Filename)
+        -f $VM.Name,'Certificate Create Script',$CertGenFilename)
     $null = Copy-Item `
-        -Path $Script:CertGenPS1Path `
-        -Destination "$MountPoint\Windows\Setup\Scripts\$($Script:CertGenPS1Filename)"`
+        -Path $Script:SupportGertGenPath `
+        -Destination "$MountPoint\Windows\Setup\Scripts\$CertGenFilename"`
         -Force
         
     # Dismount the VHD in preparation for boot
