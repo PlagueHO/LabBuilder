@@ -4355,26 +4355,37 @@ function Update-LabVMDataDisk {
             } # if
         } # if
         
-        If ($DataVhd.CopyFolder -neq $Null)
+         if ($DataVhd.CopyFolder -ne $Null)
         {
+              if($DataVHD.SourceVHD -ne $Null)  # if we used a source VHD assuming it already has a file system
+              {
+                  [String]$DriveLetter = (Mount-VHD -Path $VHD `
+                        -passthru | `
+                        get-partition | `
+                        get-volume).DriveLetter
+              } Else {
+              
               Write-Verbose -Message "Mounting VHD $VHD to copy Folder $($DataVHD.CopyFolder)"
               
-	          [String]$DriveLetter = (Mount-VHD -Path $VHD -passthrough | `
-              get-disk -number {$_.DiskNumber} | `
-              Initialize-Disk -PartitionStyle GPT -PassThru | `
-              New-Partition -UseMaximumSize -AssignDriveLetter:$False -MbrType IFS | `
-              Format-Volume -Confirm:$false -FileSystem NTFS -force | `
-              get-partition | `
-              Add-PartitionAccessPath -AssignDriveLetter -PassThru | `
-              get-volume).DriveLetter 
-
+	          [String]$DriveLetter = (Mount-VHD -Path $VHD -Passthru | `
+                    get-disk -number {$_.DiskNumber} | `
+                    Initialize-Disk -PartitionStyle GPT `
+                    -PassThru | New-Partition -UseMaximumSize `
+                    -AssignDriveLetter:$False | `
+                    Format-Volume -Confirm:$false -FileSystem NTFS -force | `
+                    get-partition | `
+                    Add-PartitionAccessPath -AssignDriveLetter -PassThru | `
+                    get-volume).DriveLetter 
+              }
 	         $MountVHD = "$([string]$DriveLetter):\"
 
 	         $null = Get-PSDrive -PSProvider FileSystem # Work around an issue with script not seeing the drive 
              
              Copy-item -path "$($DataVHD.CopyFolder)" -Destination $MountVHD -Recurse -Force
+             
+             Dismount-VHD -Path $VHD 
 
-        }# if
+           }# if
         
         # Get a list of disks attached to the VM
         $VMHardDiskDrives = Get-VMHardDiskDrive `
