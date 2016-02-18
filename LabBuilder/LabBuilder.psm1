@@ -1359,6 +1359,7 @@ function Get-LabVMTemplateVHD {
         }
 
 		# Get the Template Wim Image to use
+        $Edition = $null
         if ($TemplateVHD.Edition)
         {
             $Edition = $TemplateVHD.Edition
@@ -1503,7 +1504,7 @@ function Initialize-LabVMTemplateVHD
     {
         return
     }
-        
+    
     # Generate the Mount folder
     [String] $MountFolder = Join-Path `
         -Path $ENV:Temp `
@@ -1531,12 +1532,15 @@ function Initialize-LabVMTemplateVHD
             if (Test-Path -Path ($VHDPath))
             {
                 # The SourceVHD already exists
+                Write-Verbose -Message ($LocalizedData.SkipVMTemplateVHDFileMessage `
+                    -f $Name,$VHDPath)
+
                 continue
             }
             
             # Create the VHD
             Write-Verbose -Message ($LocalizedData.CreatingVMTemplateVHDMessage `
-                    -f $Name,$VHDPath)
+                -f $Name,$VHDPath)
                 
             # Check the ISO exists.
             [String] $ISOPath = $VMTemplateVHD.ISOPath
@@ -1669,8 +1673,15 @@ function Initialize-LabVMTemplateVHD
             Get-PSDrive `
                 -PSProvider FileSystem  
             
+            # Dot source the Convert-WindowsImage script
+            # Should only be done once 
+            if (-not (Test-Path -Path Function:Convert-WindowsImage))
+            {
+                . $Script:SupportConvertWindowsImagePath
+            }
+
             # Call the Convert-WindowsImage script
-            & $Script:SupportConvertWindowsImagePath @ConvertParams
+            Convert-WindowsImage @ConvertParams
 
             # Mount the ISO so we can read the files.
             Write-Verbose -Message ($LocalizedData.DismountingVMTemplateVHDISOMessage `
@@ -2029,8 +2040,8 @@ function Initialize-LabVMTemplate {
         }
         Else
         {
-            Write-Verbose -Message $($LocalizedData.SkippingTemplateVHDFileMessage `
-                -f $VMTemplate.templatevhd)
+            Write-Verbose -Message $($LocalizedData.SkipTemplateVHDFileMessage `
+                -f $VMTemplate.Name,$VMTemplate.templatevhd)
         }
     }
 } # Initialize-LabVMTemplate
