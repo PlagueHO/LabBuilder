@@ -114,7 +114,7 @@ ConvertFrom-StringData -StringData @'
     RemovingVMMessage=Removing VM '{0}'.
     RemovedVMMessage=Removed VM '{0}'.
     StartingDSCMessage=Starting DSC on VM '{0}'.
-    WriteMountingVMBootDiskMessage=Mounting VM '{0}' VHD Boot Disk '{1}'.
+    MountingVMBootDiskMessage=Mounting VM '{0}' VHD Boot Disk '{1}'.
     DownloadingVMBootDiskFileMessage=Downloading VM '{0}' {1} file '{2}'.
     ApplyingVMBootDiskFileMessage=Applying {1} file '{2}' to VHD Boot Disk for VM '{0}'.
     CreatingVMBootDiskPantherFolderMessage=Creating Panther folder to VHD Boot Disk for VM '{0}'.
@@ -136,4 +136,5 @@ ConvertFrom-StringData -StringData @'
     CreatingMountFolderMessage=Creating a temporary mount folder '{0}'.
     CreatingVMTemplateVHDMessage=Creating the '{0}' VM Template VHD '{1}'.
     ConvertingWIMtoVHDMessage=Converting '{3}' in '{0}' to a bootable {4} {5} {2} '{1}'.
+    CreatedVMInitializationFiles=Created Initialization files for VM '{0}'.
 '@
