@@ -1,6 +1,9 @@
 # culture="en-US"
 ConvertFrom-StringData -StringData @'
     FileNotFoundError=The {0} file '{1}' was not found.
+    InitializeVHDPartitionFailedError=The VHD '{0}' failed to initialize because more than one partition already exists on VHD.
+    InitializeVHDVolumeFailedError=The VHD '{0}' failed to initialize because more than one volume already exists in partition on VHD.
+    InitializeVHDAccessPathNotFoundError=The VHD '{0}' could not be assigned to the access path '{1}' because it does not exist.
     FileDownloadError=Error downloading {0} from '{1}'; {2}.
     FileExtractError=Error extracting {0}; {1}.
     ConfigurationFileNotFoundError=Configuration file {0} is not found.
@@ -70,6 +73,13 @@ ConvertFrom-StringData -StringData @'
     
     InstallingHyperVComponentsMesage=Installing {0} Hyper-V Components.
     InitializingHyperVComponentsMesage=Initializing Hyper-V Components.
+    InitializeVHDMountingMessage=Mounting VHD {0} for Initialization.
+    InitializeVHDInitializingMessage=Initializing {1} partition table on VHD {0}.
+    InitializeVHDCreatePartitionMessage=Creating partition on VHD {0}.
+    InitializeVHDFormatVolumeMessage=Formatting volume as {1} on VHD {0}.
+    InitializeVHDSetLabelVolumeMessage=Setting volume label to {1} on VHD {0}.
+    InitializeVHDAssignDriveLetterMessage=Assigning drive letter {1}: to VHD {0}.
+    InitializeVHDAccessPathMessage=Assigning access path {1} to VHD {0}.
     DownloadingFileMessage=Downloading File '{0}' from '{1}' to '{2}'.
     ExtractingFileMessage=Extracting downloaded File '{0}' to '{1}'.
     DownloadingLabResourcesMessage=Downloading Lab Resources.

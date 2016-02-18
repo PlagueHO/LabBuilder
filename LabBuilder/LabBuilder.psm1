@@ -273,7 +273,7 @@ function New-Credential()
 function Initialize-Vhd
 {
     [OutputType([Microsoft.Management.Infrastructure.CimInstance])]
-    [CmdletBinding()]
+    [CmdletBinding(DefaultParameterSetName = 'AssignDriveLetter')]
     Param (
         [Parameter(Mandatory=$True)]
         [ValidateNotNullOrEmpty()]	
@@ -290,9 +290,11 @@ function Initialize-Vhd
         [ValidateNotNullOrEmpty()]	
         [String] $FileSystemLabel,
         
+        [Parameter(ParameterSetName = 'AssignDriveLetter')]
         [ValidateNotNullOrEmpty()]	
         [String] $AssignDriveLetter,
         
+        [Parameter(ParameterSetName = 'AccessPath')]
         [ValidateNotNullOrEmpty()]	
         [String] $AccessPath
     )
@@ -314,6 +316,9 @@ function Initialize-Vhd
         -Path $VHDPath
     if (-not $VHD.Attached)
     {
+        Write-Verbose -Message ($LocalizedData.InitializeVHDMountingMessage `
+            -f $VHDPath)
+
         $null = Mount-VHD `
             -ImagePath $VHDPath `
             -ErrorAction Stop
@@ -325,6 +330,9 @@ function Initialize-Vhd
     $DiskNumber = $VHD.DiskNumber 
     if ((Get-Disk -Number $DiskNumber).PartitionStyle -eq 'RAW')
     {
+        Write-Verbose -Message ($LocalizedData.InitializeVHDInitializingMessage `
+            -f $VHDPath,$PartitionStyle)
+
         Initialize-Disk `
             -Number $DiskNumber `
             -PartitionStyle $PartitionStyle `
@@ -337,6 +345,9 @@ function Initialize-Vhd
         -ErrorAction SilentlyContinue)
     if (-not ($Partitions))
     {
+        Write-Verbose -Message ($LocalizedData.InitializeVHDCreatePartitionMessage `
+            -f $VHDPath)
+
         $Partitions = @(New-Partition `
             -DiskNumber $DiskNumber `
             -UseMaximumSize `
@@ -347,10 +358,10 @@ function Initialize-Vhd
         # If there are more than one partition on this drive
         # then we can't safely continue.
         $ExceptionParameters = @{
-            errorId = 'InitializeVHDFailed'
+            errorId = 'InitializeVHDPartitionFailedError'
             errorCategory = 'InvalidArgument'
-            errorMessage = $($LocalizedData.InitializeVHDFailed `
-            -f $VHDPath,'more than one partition already exists on VHD')
+            errorMessage = $($LocalizedData.InitializeVHDPartitionFailedError `
+            -f $VHDPath)
         }
         New-LabException @ExceptionParameters        
     }
@@ -358,15 +369,19 @@ function Initialize-Vhd
     # Check for volume
     $Volumes = @(Get-Volume `
         -Partition $Partitions[0])
+    
+    # When partitioned there is always at least one volume on a drive
+    # So we don't need to create one.
+
     if ($Volumes.Count -gt 1)
     {
         # If there are more than one partition on this drive
         # then we can't safely continue.
         $ExceptionParameters = @{
-            errorId = 'InitializeVHDFailed'
+            errorId = 'InitializeVHDVolumeFailedError'
             errorCategory = 'InvalidArgument'
-            errorMessage = $($LocalizedData.InitializeVHDFailed `
-            -f $VHDPath,'more than one volume already exists in partition on VHD')
+            errorMessage = $($LocalizedData.InitializeVHDVolumeFailedError `
+            -f $VHDPath)
         }
         New-LabException @ExceptionParameters        
     }
@@ -374,6 +389,9 @@ function Initialize-Vhd
     # Check for file system
     if ($Volumes[0].FileSystemType -eq 'Unknown')
     {
+        Write-Verbose -Message ($LocalizedData.InitializeVHDFormatVolumeMessage `
+            -f $VHDPath,$FileSystem)
+
         $Volumes = @(Format-Volume `
             -InputObject $Volumes[0] `
             -FileSystem $FileSystem `
@@ -384,6 +402,9 @@ function Initialize-Vhd
     if (($FileSystemLabel) -and `
         ($Volumes[0].FileSystemLabel -ne $FileSystemLabel))
     {
+        Write-Verbose -Message ($LocalizedData.InitializeVHDSetLabelVolumeMessage `
+            -f $VHDPath,$FileSystemLabel)
+
         $Volumes = @(Set-Volume `
             -InputObject $Volumes[0]
             -NewFileSystemLabel $FileSystemLabel `
@@ -393,23 +414,38 @@ function Initialize-Vhd
     # Assign an access path or Drive letter
     if ($AssignDriveLetter -or $AccessPath)
     {
-        if ($AssignDriveLetter)
+        switch ($PSCmdlet.ParameterSetName)
         {
-            
-            $Params = @{
-                AssignDriveLetter = $AssignDriveLetter
+            'AssignDriveLetter'
+                {
+                $Params = @{
+                    AssignDriveLetter = $AssignDriveLetter
+                }
+
+                Write-Verbose -Message ($LocalizedData.InitializeVHDAssignDriveLetterMessage `
+                    -f $VHDPath,$AssignDriveLetter.ToUpper())
             }
-        }
-        else
-        {
-            if (-not (Test-Path -Path $AccessPath))
+            'AccessPath'
             {
-                
+                if (-not (Test-Path -Path $AccessPath -Type Container))
+                {
+                    $ExceptionParameters = @{
+                        errorId = 'InitializeVHDAccessPathNotFoundError'
+                        errorCategory = 'InvalidArgument'
+                        errorMessage = $($LocalizedData.InitializeVHDAccessPathNotFoundError `
+                        -f $VHDPath,$AccessPath)
+                    }
+                    New-LabException @ExceptionParameters        
+                }
+                $Params = @{
+                    AssignDriveLetter = $AccessPath
+                }            
+
+                Write-Verbose -Message ($LocalizedData.InitializeVHDAccessPathMessage `
+                    -f $VHDPath,$AccessPath)
             }
-            $Params = @{
-                AssignDriveLetter = $AccessPath
-            }            
         }
+
         Add-PartitionAccessPath `
             -DiskNumber $DiskNumber `
             -PartitionNumber 1 `
