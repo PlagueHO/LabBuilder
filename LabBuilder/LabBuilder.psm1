@@ -1560,7 +1560,7 @@ function Initialize-LabVMTemplateVHD
                 -StorageType ISO `
                 -Access Readonly
         
-            [String] $DriveLetter = (Get-Diskimage -ImagePath $ISOPath | Get-Volume).DriveLetter
+            [String] $DriveLetter = ( Get-DiskImage -ImagePath $ISOPath | Get-Volume ).DriveLetter
             [String] $ISODrive = "$([string]$DriveLetter):"
 
             # Determine the path to the WIM
@@ -1652,9 +1652,6 @@ function Initialize-LabVMTemplateVHD
                     {
                         If ($Package.Name -in $NanoPackages) 
                         {
-                            Write-Verbose -Message ($LocalizedData.AddingPackageToVMTemplateVHDMessage `
-                                    -f $Name,$Package.Filename)
-
                             $Packages += @(Join-Path -Path $PackagesFolder -ChildPath $Package.Filename)
                             $Packages += @(Join-Path -Path $PackagesFolder -ChildPath "en-us\$($Package.Filename)")
                         } # if
@@ -5111,14 +5108,13 @@ function Initialize-LabVM {
         [ValidateNotNullOrEmpty()]
         [XML] $Config,
 
-        [ValidateNotNullOrEmpty()]
         [System.Collections.Hashtable[]] $VMs
     )
     
     # If the VMs list was not passed pull it
     if (-not $VMs)
     {
-        $VMs = Get-LabVMs -Config $Config
+        $VMs = Get-LabVM -Config $Config
     }
     
     # If there are not VMs just return

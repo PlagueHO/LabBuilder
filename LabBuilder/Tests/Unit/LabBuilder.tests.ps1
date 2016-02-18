@@ -1219,15 +1219,14 @@ InModuleScope LabBuilder {
 
     Describe 'Initialize-LabVMTemplateVHD' -Tag 'Incomplete' {
         Mock Mount-DiskImage
+        Mock Get-Diskimage -MockWith { @{ DriveLetter = 'X' } }
+        Mock Get-Volume -MockWith { @{ DriveLetter = 'X' } }
         Mock Dismount-DiskImage
         Mock Get-WindowsImage
         Mock Copy-Item
         Mock Rename-Item
         Mock New-Item
         Mock Remove-Item
-        Mock Mount-WindowsImage
-        Mock Add-WindowsPackage
-        Mock Dismount-WindowsImage
         
         Context 'Configuration passed with no VMtemplateVHDs' {
             It 'Does not throw an Exception' {
@@ -1237,15 +1236,31 @@ InModuleScope LabBuilder {
             }
             It 'Calls expected mocks commands' {
                 Assert-MockCalled Mount-DiskImage -Exactly 0
+                Assert-MockCalled Get-Diskimage -Exactly 0
+                Assert-MockCalled Get-Volume -Exactly 0
                 Assert-MockCalled Dismount-DiskImage -Exactly 0
                 Assert-MockCalled Get-WindowsImage -Exactly 0
                 Assert-MockCalled Copy-Item -Exactly 0
                 Assert-MockCalled Rename-Item -Exactly 0
                 Assert-MockCalled New-Item -Exactly 0
                 Assert-MockCalled Remove-Item -Exactly 0
-                Assert-MockCalled Mount-WindowsImage -Exactly 0
-                Assert-MockCalled Add-WindowsPackage -Exactly 0
-                Assert-MockCalled Dismount-WindowsImage -Exactly 0
+            }            
+        }
+        Context 'Valid configuration passed' {
+            It 'Does not throw an Exception' {
+                $Config = Get-LabConfiguration -Path $Global:TestConfigOKPath
+                { Initialize-LabVMTemplateVHD -Config $Config } | Should Not Throw
+            }
+            It 'Calls expected mocks commands' {
+                Assert-MockCalled Mount-DiskImage -Exactly 6
+                Assert-MockCalled Get-Diskimage -Exactly 6
+                Assert-MockCalled Get-Volume -Exactly 6
+                Assert-MockCalled Dismount-DiskImage -Exactly 6
+                Assert-MockCalled Get-WindowsImage -Exactly 6
+                Assert-MockCalled Copy-Item -Exactly 1
+                Assert-MockCalled Rename-Item -Exactly 1
+                Assert-MockCalled New-Item -Exactly 1
+                Assert-MockCalled Remove-Item -Exactly 1
             }            
         }
     }
