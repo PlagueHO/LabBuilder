@@ -2316,7 +2316,8 @@ function Set-LabVMDSCMOFFile {
 
     [String] $DSCConfigName = $VM.DSCConfigName
     
-	Write-Verbose "DSC Config name = $DSCConfigname"
+    Write-Verbose -Message $($LocalizedData.DSCConfigPrepareMessage `
+        -f $DSCConfigname,$VM.Name)
 
     # Generate the Configuration Nodes data that always gets passed to the DSC configuration.
     [String] $ConfigData = @"

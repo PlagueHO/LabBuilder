@@ -47,6 +47,7 @@ Versions
 * Correct Verbose message shown when Integration Services enabled.
 * Added Verbose message to indicate creation of VM Initialization files.
 * Correct Verbose message not appearing when mounting VM boot disk image file.
+* Moved DSC Config message into Localization data.
 
 ### 0.3.0.0
 * Fix to Module detection regex.
