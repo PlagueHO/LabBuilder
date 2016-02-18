@@ -8,7 +8,7 @@
             email="daniel@LABBUILDER-WS2016TP4.COM"
             vmpath="c:\vm\LABBUILDER-WS2016TP4.COM"
             vhdparentpath="c:\vm\LABBUILDER-WS2016TP4.COM\Virtual Hard Disk Templates"
-            dsclibrarypath="..\..\DSCLibrary\" />
+            dsclibrarypath="..\DSCLibrary\" />
 
   <resources>
   </resources>

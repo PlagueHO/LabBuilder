@@ -65,9 +65,12 @@ ConvertFrom-StringData -StringData @'
     VMDataDiskSourceVHDIfMoveError=The Data Disk VHD '{1}' specified in VM '{0}' must have a Source VHD specified if MoveSourceVHD is set.
     VMDataDiskVHDConvertError=The Data Disk '{1}' in VM '{0}' cannot be converted to a {2} type.
     VMDataDiskVHDShrinkError=The Data Disk '{1}' in VM '{0}' cannot be shrunk to {2}.
+    DownloadFolderDoesNotExistError=The folder '{0}' to download '{1}' to does not exist.
 
     InstallingHyperVComponentsMesage=Installing {0} Hyper-V Components.
     InitializingHyperVComponentsMesage=Initializing Hyper-V Components.
+    DownloadingFileMessage=Downloading File '{0}' from '{1}' to '{2}'.
+    ExtractingFileMessage=Extracting downloaded File '{0}' to '{1}'.
     DownloadingLabResourcesMessage=Downloading Lab Resources.
     CreatingLabManagementSwitchMessage=Creating Lab Management Switch {0} on Vlan {1}.
     UpdatingLabManagementSwitchMessage=Updating Lab Management Switch {0} to Vlan {1}.

@@ -50,120 +50,99 @@ InModuleScope LabBuilder {
         return $errorRecord
     }
 
-    Describe 'Download-WMF5Installer' {
-        Context 'WMF 5.0 Installer File Exists' {
-            It 'Does not throw an Exception' {
-                Mock Test-Path -MockWith { $true }
-                Mock Invoke-WebRequest
 
-                { Download-WMF5Installer } | Should Not Throw
+
+    Describe 'DownloadAndUnzipFile' {
+        $URL = 'https://raw.githubusercontent.com/PlagueHO/LabBuilder/dev/LICENSE'      
+        Context 'Download folder does not exist' {
+            Mock Invoke-WebRequest
+            Mock Expand-Archive
+            Mock Remove-Item
+            It 'Throws a DownloadFolderDoesNotExistError Exception' {
+                $ExceptionParameters = @{
+                    errorId = 'DownloadFolderDoesNotExistError'
+                    errorCategory = 'InvalidArgument'
+                    errorMessage = $($LocalizedData.DownloadFolderDoesNotExistError `
+                        -f 'c:\doesnotexist','LICENSE')
+                }
+                $Exception = New-Exception @ExceptionParameters
+
+                { DownloadAndUnzipFile -URL $URL -DestinationPath 'c:\doesnotexist' } | Should Throw $Exception
             }
             It 'Calls appropriate mocks' {
-                Assert-MockCalled Test-Path -Exactly 1
                 Assert-MockCalled Invoke-WebRequest -Exactly 0
+                Assert-MockCalled Expand-Archive -Exactly 0
+                Assert-MockCalled Remove-Item -Exactly 0
             }
         }
-
-        Context 'WMF 5.0 Installer File Does Not Exist' {
-            It 'Does not throw an Exception' {
-                Mock Test-Path -MockWith { $false }
-                Mock Invoke-WebRequest
-
-                { Download-WMF5Installer } | Should Not Throw
-            }
-            It 'Calls appropriate mocks' {
-                Assert-MockCalled Test-Path -Exactly 1
-                Assert-MockCalled Invoke-WebRequest -Exactly 1
-            }
-        }
-
-        Context 'WMF 5.0 Installer File Does Not Exist and Fails Downloading' {
+        Context 'Download fails' {
+            Mock Invoke-WebRequest { Throw ('Download Error') }
+            Mock Expand-Archive
+            Mock Remove-Item
             It 'Throws a FileDownloadError Exception' {
-                Mock Test-Path -MockWith { $false }
-                Mock Invoke-WebRequest { Throw ('Download Error') }
 
                 $ExceptionParameters = @{
                     errorId = 'FileDownloadError'
                     errorCategory = 'InvalidArgument'
                     errorMessage = $($LocalizedData.FileDownloadError `
-                        -f 'WMF 5.0 Installer','https://download.microsoft.com/download/2/C/6/2C6E1B4A-EBE5-48A6-B225-2D2058A9CEFB/W2K12R2-KB3094174-x64.msu','Download Error')
+                        -f 'LICENSE',$URL,'Download Error')
                 }
                 $Exception = New-Exception @ExceptionParameters
 
-                { Download-WMF5Installer } | Should Throw $Exception
+                { DownloadAndUnzipFile -URL $URL -DestinationPath $ENV:Temp } | Should Throw $Exception
             }
             It 'Calls appropriate mocks' {
-                Assert-MockCalled Test-Path -Exactly 1
                 Assert-MockCalled Invoke-WebRequest -Exactly 1
+                Assert-MockCalled Expand-Archive -Exactly 0
+                Assert-MockCalled Remove-Item -Exactly 0
             }
         }
-    }
-
-
-
-    Describe 'Download-CertGenerator' {
-        Context 'Certificate Generator Zip File and PS1 File Exists' {
+        Context 'Download OK' {
+            Mock Invoke-WebRequest
+            Mock Expand-Archive
+            Mock Remove-Item
             It 'Does not throw an Exception' {
-                Mock Test-Path -MockWith { $true }
-                Mock Invoke-WebRequest
-
-                { Download-CertGenerator } | Should Not Throw
+                { DownloadAndUnzipFile -URL $URL -DestinationPath $ENV:Temp } | Should Not Throw
             }
             It 'Calls appropriate mocks' {
-                Assert-MockCalled Test-Path -Exactly 2
-                Assert-MockCalled Invoke-WebRequest -Exactly 0
-            }
-        }
-
-        Context 'Certificate Generator Zip File Exists but PS1 File Does Not' {
-            It 'Does not throw an Exception' {
-                Mock Test-Path -ParameterFilter { $Path -like '*.zip' } -MockWith { $true }
-                Mock Test-Path -ParameterFilter { $Path -like '*.ps1' } -MockWith { $false }
-                Mock Expand-Archive
-                Mock Invoke-WebRequest
-
-                { Download-CertGenerator } | Should Not Throw
-            }
-            It 'Calls appropriate mocks' {
-                Assert-MockCalled Test-Path -Exactly 2
-                Assert-MockCalled Expand-Archive -Exactly 1
-                Assert-MockCalled Invoke-WebRequest -Exactly 0
-            }
-        }
-
-        Context 'Certificate Generator Zip File Does Not Exist' {
-            It 'Does not throw an Exception' {
-                Mock Test-Path -MockWith { $false }
-                Mock Expand-Archive
-                Mock Invoke-WebRequest
-
-                { Download-CertGenerator } | Should Not Throw
-            }
-            It 'Calls appropriate mocks' {
-                Assert-MockCalled Test-Path -Exactly 2
-                Assert-MockCalled Expand-Archive -Exactly 1
                 Assert-MockCalled Invoke-WebRequest -Exactly 1
+                Assert-MockCalled Expand-Archive -Exactly 0
+                Assert-MockCalled Remove-Item -Exactly 0                
             }
         }
-
-        Context 'Certificate Generator Zip File Does Not Exist and Fails Downloading' {
-            It 'Throws a FileDownloadError Exception' {
-                Mock Test-Path -MockWith { $false }
-                Mock Invoke-WebRequest { Throw ('Download Error') }
+        $URL = 'https://raw.githubusercontent.com/PlagueHO/LabBuilder/dev/LICENSE.ZIP'
+        Context 'Zip Download OK, Extract fails' {
+            Mock Invoke-WebRequest
+            Mock Expand-Archive { Throw ('Extract Error') }
+            Mock Remove-Item
+            It 'Throws a FileExtractError Exception' {
 
                 $ExceptionParameters = @{
-                    errorId = 'FileDownloadError'
+                    errorId = 'FileExtractError'
                     errorCategory = 'InvalidArgument'
-                    errorMessage = $($LocalizedData.FileDownloadError `
-                        -f 'Certificate Generator','https://gallery.technet.microsoft.com/scriptcenter/Self-signed-certificate-5920a7c6/file/101251/1/New-SelfSignedCertificateEx.zip','Download Error')
+                    errorMessage = $($LocalizedData.FileExtractError `
+                        -f 'LICENSE.ZIP','Extract Error')
                 }
                 $Exception = New-Exception @ExceptionParameters
 
-                { Download-CertGenerator } | Should Throw $Exception
+                { DownloadAndUnzipFile -URL $URL -DestinationPath $ENV:Temp } | Should Throw $Exception
             }
             It 'Calls appropriate mocks' {
-                Assert-MockCalled Test-Path -Exactly 1
                 Assert-MockCalled Invoke-WebRequest -Exactly 1
+                Assert-MockCalled Expand-Archive -Exactly 1
+                Assert-MockCalled Remove-Item -Exactly 1
+            }
+        }
+        Context 'Zip Download OK, Extract OK' {
+            Mock Invoke-WebRequest
+            Mock Expand-Archive
+            Mock Remove-Item
+            It 'Does not throw an Exception' {
+                { DownloadAndUnzipFile -URL $URL -DestinationPath $ENV:Temp } | Should Not Throw
+            }
+            It 'Calls appropriate mocks' {
+                Assert-MockCalled Invoke-WebRequest -Exactly 1
+                Assert-MockCalled Expand-Archive -Exactly 1
             }
         }
     }
@@ -353,8 +332,6 @@ InModuleScope LabBuilder {
     Describe 'Initialize-LabConfiguration' {
         $Config = Get-LabConfiguration -Path $Global:TestConfigOKPath
 
-        Mock Download-CertGenerator
-        Mock Download-WMF5Installer
         Mock Download-LabResources
         Mock Set-VMHost
         Mock Get-VMSwitch
@@ -368,8 +345,6 @@ InModuleScope LabBuilder {
                 { Initialize-LabConfiguration -Config $Config } | Should Not Throw
             }
             It 'Calls appropriate mocks' {
-                Assert-MockCalled Download-CertGenerator -Exactly 1
-                Assert-MockCalled Download-WMF5Installer -Exactly 1
                 Assert-MockCalled Download-LabResources -Exactly 1
                 Assert-MockCalled Set-VMHost -Exactly 1
                 Assert-MockCalled Get-VMSwitch -Exactly 1
