@@ -1,17 +1,17 @@
 ﻿[String]$Script:ModulePath = "$PSScriptRoot\..\LabBuilder.psd1"
-[String]$Script:ConfigPath = "$PSScriptRoot\..\Samples\Sample_DomainComplete.xml"
+[String]$Script:ConfigPath = "$PSScriptRoot\..\Samples\Sample_WS2016TP4_DCandDHCPOnly.xml"
 ##########################################################################################################################################
 Function Test-StartLabVM {
     Param (
         [String[]]$StartVMs
     )
     $Config = Get-LabConfiguration -Path $Script:ConfigPath
-    [Array]$Templates = Get-LabVMTemplates -Configuration $Config
-    [Array]$Switches = Get-LabSwitches -Configuration $Config
-    [Array]$VMs = Get-LabVMs -Configuration $Config -VMTemplates $Templates -Switches $Switches
+    [Array]$Templates = Get-LabVMTemplate -Config $Config
+    [Array]$Switches = Get-LabSwitch -Config $Config
+    [Array]$VMs = Get-LabVM -Config $Config -VMTemplates $Templates -Switches $Switches
     Foreach ($VM in $VMs) {
         If ($VM.ComputerName -in $StartVMs) {
-            Start-LabVM -Configuration $Config -VM $VM -Verbose
+            Start-LabVM -Config $Config -VM $VM -Verbose
         }
     }
 }
@@ -30,6 +30,6 @@ Function Test-LabBuilderLoadModule {
 ##########################################################################################################################################
 Test-LabBuilderLoadModule
 Test-LabBuilderInstall
-# Test-StartLabVM -StartVMs 'SA-FS1'
+# Test-StartLabVM -StartVMs 'SA-DC1'
 # Sleep 30 # Wait 30 seconds for everything to finish building
 # Test-LabBuilderUninstall

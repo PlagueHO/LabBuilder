@@ -1,14 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
 
-<labbuilderconfig name="SampleConfig_DomainClustering"
+<labbuilderconfig name="Sample_WS2012R2_DomainClustering"
                   version="1.0">
-  <description>Sample Lab Configuration Domain Clustering</description>
+  <description>Sample Windows Server 2012 R2 Lab Configuration Domain Clustering</description>
 
   <settings domainname="LABBUILDER.COM"
             email="daniel@LABBUILDER.COM"
             vmpath="c:\vm\LABBUILDER.COM"
             vhdparentpath="c:\vm\LABBUILDER.COM\Virtual Hard Disk Templates"
-            configpath=".\..\DSCLibrary\" />
+            dsclibrarypath="..\DSCLibrary\" />
 
   <resources>
   </resources>
@@ -28,7 +28,45 @@
     <switch name="Domain Private Site A SMB" type="Private" vlan="5" />
   </switches>
 
-  <templates fromvm="template *">
+  <templatevhds isopath="ISOFiles" 
+                vhdpath="VHDFiles" 
+                prefix="Template " >
+    <templatevhd name="Windows Server 2012 R2 Datacenter Full"
+                 iso="9600.16384.130821-1623_x64fre_Server_EN-US_IRM_SSS_DV5.iso"
+                 url="https://www.microsoft.com/en-us/evalcenter/evaluate-windows-server-2012-r2"
+                 vhd="Windows Server 2012 R2 Datacenter Full.vhdx" 
+                 edition="Windows Server 2012 R2 SERVERDATACENTER" 
+                 ostype="Server"
+                 features=""
+                 vhdformat="vhdx" 
+                 vhdtype="dynamic" 
+                 generation="2" 
+                 vhdsize="40GB" />
+    <templatevhd name="Windows Server 2012 R2 Datacenter Core"
+                 iso="9600.16384.130821-1623_x64fre_Server_EN-US_IRM_SSS_DV5.iso"
+                 url="https://www.microsoft.com/en-us/evalcenter/evaluate-windows-server-2012-r2"
+                 vhd="Windows Server 2012 R2 Datacenter Core.vhdx"
+                 edition="Windows Server 2012 R2 SERVERDATACENTERCORE"
+                 ostype="Server"
+                 features=""
+                 vhdformat="vhdx" 
+                 vhdtype="dynamic" 
+                 generation="2" 
+                 vhdsize="25GB" />
+    <templatevhd name="Windows 10 Enterprise"
+                 iso="10586.0.151029-1700.TH2_RELEASE_CLIENTENTERPRISEEVAL_OEMRET_X64FRE_EN-US.ISO"
+                 url="https://www.microsoft.com/en-us/evalcenter/evaluate-windows-10-enterprise"
+                 vhd="Windows 10 Enterprise.vhdx"
+                 edition="Windows 10 Enterprise"
+                 ostype="Client"
+                 features=""
+                 vhdformat="vhdx" 
+                 vhdtype="dynamic" 
+                 generation="2"
+                 vhdsize="25GB" />
+  </templatevhds>
+
+  <templates>
     <template name="Template Windows Server 2012 R2 Datacenter Full"
               memorystartupbytes="1GB"
               processorcount="1"

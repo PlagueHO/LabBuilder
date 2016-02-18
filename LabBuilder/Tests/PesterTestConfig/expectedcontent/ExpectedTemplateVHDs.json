@@ -1,0 +1,80 @@
+[
+    {
+        "Generation":  2,
+        "Packages":  null,
+        "VHDFormat":  "vhdx",
+        "VHDSize":  42949672960,
+        "VHDPath":  "Intentionally Removed",
+        "Edition":  "Windows Server 2012 R2 SERVERDATACENTER",
+        "Name":  "Windows Server 2012 R2 Datacenter Full",
+        "VHDType":  "dynamic",
+        "ISOPath":  "Intentionally Removed",
+        "OSType":  "Server",
+        "Features":  null
+    },
+    {
+        "Generation":  2,
+        "Packages":  null,
+        "VHDFormat":  "vhdx",
+        "VHDSize":  26843545600,
+        "VHDPath":  "Intentionally Removed",
+        "Edition":  "Windows Server 2012 R2 SERVERDATACENTERCORE",
+        "Name":  "Windows Server 2012 R2 Datacenter Core",
+        "VHDType":  "dynamic",
+        "ISOPath":  "Intentionally Removed",
+        "OSType":  "Server",
+        "Features":  null
+    },
+    {
+        "Generation":  2,
+        "Packages":  null,
+        "VHDFormat":  "vhdx",
+        "VHDSize":  42949672960,
+        "VHDPath":  "Intentionally Removed",
+        "Edition":  "Windows Server 2016 Technical Preview 4 SERVERDATACENTER",
+        "Name":  "Windows Server 2016 TP4 Datacenter FULL",
+        "VHDType":  "dynamic",
+        "ISOPath":  "Intentionally Removed",
+        "OSType":  "Server",
+        "Features":  null
+    },
+    {
+        "Generation":  2,
+        "Packages":  null,
+        "VHDFormat":  "vhdx",
+        "VHDSize":  26843545600,
+        "VHDPath":  "Intentionally Removed",
+        "Edition":  "Windows Server 2016 Technical Preview 4 SERVERDATACENTERCORE",
+        "Name":  "Windows Server 2016 TP4 Datacenter CORE",
+        "VHDType":  "dynamic",
+        "ISOPath":  "Intentionally Removed",
+        "OSType":  "Server",
+        "Features":  null
+    },
+    {
+        "Generation":  2,
+        "Packages":  null,
+        "VHDFormat":  "vhdx",
+        "VHDSize":  26843545600,
+        "VHDPath":  "Intentionally Removed",
+        "Edition":  "Windows 10 Enterprise",
+        "Name":  "Windows 10 Enterprise",
+        "VHDType":  "dynamic",
+        "ISOPath":  "Intentionally Removed",
+        "OSType":  "Client",
+        "Features":  null
+    },
+    {
+        "Generation":  2,
+        "Packages":  "Guest",
+        "VHDFormat":  "vhdx",
+        "VHDSize":  26843545600,
+        "VHDPath":  "Intentionally Removed",
+        "Edition":  null,
+        "Name":  "Nano Server 2016 TP4 Basic",
+        "VHDType":  "dynamic",
+        "ISOPath":  "Intentionally Removed",
+        "OSType":  "Nano",
+        "Features":  null
+    }
+]

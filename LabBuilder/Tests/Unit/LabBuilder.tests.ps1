@@ -4,7 +4,7 @@
 # You can download Pester from http://go.microsoft.com/fwlink/?LinkID=534084
 #
 
-$ModuleRoot = Split-Path -Parent (Split-Path -Parent (Split-Path -Parent $Script:MyInvocation.MyCommand.Path))
+$Global:ModuleRoot = Split-Path -Parent (Split-Path -Parent (Split-Path -Parent $Script:MyInvocation.MyCommand.Path))
 
 Set-Location $ModuleRoot
 if (Get-Module LabBuilder -All)
@@ -12,10 +12,11 @@ if (Get-Module LabBuilder -All)
     Get-Module LabBuilder -All | Remove-Module
 }
 
-Import-Module "$ModuleRoot\LabBuilder.psd1" -Force -DisableNameChecking
-$Global:TestConfigPath = "$ModuleRoot\Tests\PesterTestConfig"
+Import-Module "$Global:ModuleRoot\LabBuilder.psd1" -Force -DisableNameChecking
+$Global:TestConfigPath = "$Global:ModuleRoot\Tests\PesterTestConfig"
 $Global:TestConfigOKPath = "$Global:TestConfigPath\PesterTestConfig.OK.xml"
-$Global:ArtifactPath = "$ModuleRoot\Artifacts"
+$Global:ArtifactPath = "$Global:ModuleRoot\Artifacts"
+$Global:ExpectedContentPath = "$Global:TestConfigPath\ExpectedContent"
 $null = New-Item -Path "$Global:ArtifactPath" -ItemType Directory -Force -ErrorAction SilentlyContinue
 
 
@@ -50,120 +51,99 @@ InModuleScope LabBuilder {
         return $errorRecord
     }
 
-    Describe 'Download-WMF5Installer' {
-        Context 'WMF 5.0 Installer File Exists' {
-            It 'Does not throw an Exception' {
-                Mock Test-Path -MockWith { $true }
-                Mock Invoke-WebRequest
 
-                { Download-WMF5Installer } | Should Not Throw
+
+    Describe 'DownloadAndUnzipFile' {
+        $URL = 'https://raw.githubusercontent.com/PlagueHO/LabBuilder/dev/LICENSE'      
+        Context 'Download folder does not exist' {
+            Mock Invoke-WebRequest
+            Mock Expand-Archive
+            Mock Remove-Item
+            It 'Throws a DownloadFolderDoesNotExistError Exception' {
+                $ExceptionParameters = @{
+                    errorId = 'DownloadFolderDoesNotExistError'
+                    errorCategory = 'InvalidArgument'
+                    errorMessage = $($LocalizedData.DownloadFolderDoesNotExistError `
+                        -f 'c:\doesnotexist','LICENSE')
+                }
+                $Exception = New-Exception @ExceptionParameters
+
+                { DownloadAndUnzipFile -URL $URL -DestinationPath 'c:\doesnotexist' } | Should Throw $Exception
             }
             It 'Calls appropriate mocks' {
-                Assert-MockCalled Test-Path -Exactly 1
                 Assert-MockCalled Invoke-WebRequest -Exactly 0
+                Assert-MockCalled Expand-Archive -Exactly 0
+                Assert-MockCalled Remove-Item -Exactly 0
             }
         }
-
-        Context 'WMF 5.0 Installer File Does Not Exist' {
-            It 'Does not throw an Exception' {
-                Mock Test-Path -MockWith { $false }
-                Mock Invoke-WebRequest
-
-                { Download-WMF5Installer } | Should Not Throw
-            }
-            It 'Calls appropriate mocks' {
-                Assert-MockCalled Test-Path -Exactly 1
-                Assert-MockCalled Invoke-WebRequest -Exactly 1
-            }
-        }
-
-        Context 'WMF 5.0 Installer File Does Not Exist and Fails Downloading' {
+        Context 'Download fails' {
+            Mock Invoke-WebRequest { Throw ('Download Error') }
+            Mock Expand-Archive
+            Mock Remove-Item
             It 'Throws a FileDownloadError Exception' {
-                Mock Test-Path -MockWith { $false }
-                Mock Invoke-WebRequest { Throw ('Download Error') }
 
                 $ExceptionParameters = @{
                     errorId = 'FileDownloadError'
                     errorCategory = 'InvalidArgument'
                     errorMessage = $($LocalizedData.FileDownloadError `
-                        -f 'WMF 5.0 Installer','https://download.microsoft.com/download/2/C/6/2C6E1B4A-EBE5-48A6-B225-2D2058A9CEFB/W2K12R2-KB3094174-x64.msu','Download Error')
+                        -f 'LICENSE',$URL,'Download Error')
                 }
                 $Exception = New-Exception @ExceptionParameters
 
-                { Download-WMF5Installer } | Should Throw $Exception
+                { DownloadAndUnzipFile -URL $URL -DestinationPath $ENV:Temp } | Should Throw $Exception
             }
             It 'Calls appropriate mocks' {
-                Assert-MockCalled Test-Path -Exactly 1
                 Assert-MockCalled Invoke-WebRequest -Exactly 1
+                Assert-MockCalled Expand-Archive -Exactly 0
+                Assert-MockCalled Remove-Item -Exactly 0
             }
         }
-    }
-
-
-
-    Describe 'Download-CertGenerator' {
-        Context 'Certificate Generator Zip File and PS1 File Exists' {
+        Context 'Download OK' {
+            Mock Invoke-WebRequest
+            Mock Expand-Archive
+            Mock Remove-Item
             It 'Does not throw an Exception' {
-                Mock Test-Path -MockWith { $true }
-                Mock Invoke-WebRequest
-
-                { Download-CertGenerator } | Should Not Throw
+                { DownloadAndUnzipFile -URL $URL -DestinationPath $ENV:Temp } | Should Not Throw
             }
             It 'Calls appropriate mocks' {
-                Assert-MockCalled Test-Path -Exactly 2
-                Assert-MockCalled Invoke-WebRequest -Exactly 0
-            }
-        }
-
-        Context 'Certificate Generator Zip File Exists but PS1 File Does Not' {
-            It 'Does not throw an Exception' {
-                Mock Test-Path -ParameterFilter { $Path -like '*.zip' } -MockWith { $true }
-                Mock Test-Path -ParameterFilter { $Path -like '*.ps1' } -MockWith { $false }
-                Mock Expand-Archive
-                Mock Invoke-WebRequest
-
-                { Download-CertGenerator } | Should Not Throw
-            }
-            It 'Calls appropriate mocks' {
-                Assert-MockCalled Test-Path -Exactly 2
-                Assert-MockCalled Expand-Archive -Exactly 1
-                Assert-MockCalled Invoke-WebRequest -Exactly 0
-            }
-        }
-
-        Context 'Certificate Generator Zip File Does Not Exist' {
-            It 'Does not throw an Exception' {
-                Mock Test-Path -MockWith { $false }
-                Mock Expand-Archive
-                Mock Invoke-WebRequest
-
-                { Download-CertGenerator } | Should Not Throw
-            }
-            It 'Calls appropriate mocks' {
-                Assert-MockCalled Test-Path -Exactly 2
-                Assert-MockCalled Expand-Archive -Exactly 1
                 Assert-MockCalled Invoke-WebRequest -Exactly 1
+                Assert-MockCalled Expand-Archive -Exactly 0
+                Assert-MockCalled Remove-Item -Exactly 0                
             }
         }
-
-        Context 'Certificate Generator Zip File Does Not Exist and Fails Downloading' {
-            It 'Throws a FileDownloadError Exception' {
-                Mock Test-Path -MockWith { $false }
-                Mock Invoke-WebRequest { Throw ('Download Error') }
+        $URL = 'https://raw.githubusercontent.com/PlagueHO/LabBuilder/dev/LICENSE.ZIP'
+        Context 'Zip Download OK, Extract fails' {
+            Mock Invoke-WebRequest
+            Mock Expand-Archive { Throw ('Extract Error') }
+            Mock Remove-Item
+            It 'Throws a FileExtractError Exception' {
 
                 $ExceptionParameters = @{
-                    errorId = 'FileDownloadError'
+                    errorId = 'FileExtractError'
                     errorCategory = 'InvalidArgument'
-                    errorMessage = $($LocalizedData.FileDownloadError `
-                        -f 'Certificate Generator','https://gallery.technet.microsoft.com/scriptcenter/Self-signed-certificate-5920a7c6/file/101251/1/New-SelfSignedCertificateEx.zip','Download Error')
+                    errorMessage = $($LocalizedData.FileExtractError `
+                        -f 'LICENSE.ZIP','Extract Error')
                 }
                 $Exception = New-Exception @ExceptionParameters
 
-                { Download-CertGenerator } | Should Throw $Exception
+                { DownloadAndUnzipFile -URL $URL -DestinationPath $ENV:Temp } | Should Throw $Exception
             }
             It 'Calls appropriate mocks' {
-                Assert-MockCalled Test-Path -Exactly 1
                 Assert-MockCalled Invoke-WebRequest -Exactly 1
+                Assert-MockCalled Expand-Archive -Exactly 1
+                Assert-MockCalled Remove-Item -Exactly 1
+            }
+        }
+        Context 'Zip Download OK, Extract OK' {
+            Mock Invoke-WebRequest
+            Mock Expand-Archive
+            Mock Remove-Item
+            It 'Does not throw an Exception' {
+                { DownloadAndUnzipFile -URL $URL -DestinationPath $ENV:Temp } | Should Not Throw
+            }
+            It 'Calls appropriate mocks' {
+                Assert-MockCalled Invoke-WebRequest -Exactly 1
+                Assert-MockCalled Expand-Archive -Exactly 1
             }
         }
     }
@@ -173,7 +153,7 @@ InModuleScope LabBuilder {
     Describe 'Get-ModulesInDSCConfig' {
         Context 'Called with Test DSC Resource File' {
             $Modules = Get-ModulesInDSCConfig `
-                -DSCConfigFile (Join-Path -Path $Global:TestConfigPath -ChildPath 'PesterTest.DSC.ps1')
+                -DSCConfigFile (Join-Path -Path $Global:TestConfigPath -ChildPath 'dsclibrary\PesterTest.DSC.ps1')
             It 'Should Return Expected Modules' {
                 @(Compare-Object -ReferenceObject $Modules `
                     -DifferenceObject @('xActiveDirectory','xComputerManagement','xDHCPServer','xNetworking')).Count `
@@ -243,7 +223,7 @@ InModuleScope LabBuilder {
                 $Config.labbuilderconfig.settings.vmpath = 'c:\exists\'
                 $Config.labbuilderconfig.settings.vhdparentpath = 'c:\exists\'
 
-                Test-LabConfiguration -Configuration $Config | Should Be $True
+                Test-LabConfiguration -Config $Config | Should Be $True
             }
         }
 
@@ -260,7 +240,7 @@ InModuleScope LabBuilder {
                 }
                 $Exception = New-Exception @ExceptionParameters
 
-                { Test-LabConfiguration -Configuration $Config } | Should Throw $Exception
+                { Test-LabConfiguration -Config $Config } | Should Throw $Exception
             }
         }
 
@@ -277,7 +257,7 @@ InModuleScope LabBuilder {
                 }
                 $Exception = New-Exception @ExceptionParameters
 
-                { Test-LabConfiguration -Configuration $Config } | Should Throw $Exception
+                { Test-LabConfiguration -Config $Config } | Should Throw $Exception
             }
         }
         
@@ -294,7 +274,7 @@ InModuleScope LabBuilder {
                 }
                 $Exception = New-Exception @ExceptionParameters
 
-                { Test-LabConfiguration -Configuration $Config } | Should Throw $Exception
+                { Test-LabConfiguration -Config $Config } | Should Throw $Exception
             }
         }
 
@@ -311,7 +291,7 @@ InModuleScope LabBuilder {
                 }
                 $Exception = New-Exception @ExceptionParameters
 
-                { Test-LabConfiguration -Configuration $Config } | Should Throw $Exception
+                { Test-LabConfiguration -Config $Config } | Should Throw $Exception
             }
         }
     }
@@ -353,8 +333,6 @@ InModuleScope LabBuilder {
     Describe 'Initialize-LabConfiguration' {
         $Config = Get-LabConfiguration -Path $Global:TestConfigOKPath
 
-        Mock Download-CertGenerator
-        Mock Download-WMF5Installer
         Mock Download-LabResources
         Mock Set-VMHost
         Mock Get-VMSwitch
@@ -365,11 +343,9 @@ InModuleScope LabBuilder {
 
         Context 'Valid configuration is passed' {
             It 'Does not throw an Exception' {
-                { Initialize-LabConfiguration -Configuration $Config } | Should Not Throw
+                { Initialize-LabConfiguration -Config $Config } | Should Not Throw
             }
             It 'Calls appropriate mocks' {
-                Assert-MockCalled Download-CertGenerator -Exactly 1
-                Assert-MockCalled Download-WMF5Installer -Exactly 1
                 Assert-MockCalled Download-LabResources -Exactly 1
                 Assert-MockCalled Set-VMHost -Exactly 1
                 Assert-MockCalled Get-VMSwitch -Exactly 1
@@ -757,7 +733,7 @@ InModuleScope LabBuilder {
         Context 'Valid configuration is passed' {
             Mock Download-LabModule
             It 'Does not throw an Exception' {
-                { Download-LabResources -Configuration $Config } | Should Not Throw
+                { Download-LabResources -Config $Config } | Should Not Throw
             }
             It 'Should call appropriate Mocks' {
                 Assert-MockCalled Download-LabModule -Exactly 4
@@ -767,7 +743,7 @@ InModuleScope LabBuilder {
 
 
 
-    Describe 'Get-LabSwitches' {
+    Describe 'Get-LabSwitch' {
         Context 'Configuration passed with switch missing Switch Name.' {
             It 'Throws a SwitchNameIsEmptyError Exception' {
                 $ExceptionParameters = @{
@@ -777,7 +753,7 @@ InModuleScope LabBuilder {
                 }
                 $Exception = New-Exception @ExceptionParameters
 
-                { Get-LabSwitches -Configuration (Get-LabConfiguration -Path "$Global:TestConfigPath\PesterTestConfig.SwitchFail.NoName.xml") } | Should Throw $Exception
+                { Get-LabSwitch -Config (Get-LabConfiguration -Path "$Global:TestConfigPath\PesterTestConfig.SwitchFail.NoName.xml") } | Should Throw $Exception
             }
         }
         Context 'Configuration passed with switch missing Switch Type.' {
@@ -790,7 +766,7 @@ InModuleScope LabBuilder {
                 }
                 $Exception = New-Exception @ExceptionParameters
 
-                { Get-LabSwitches -Configuration (Get-LabConfiguration -Path "$Global:TestConfigPath\PesterTestConfig.SwitchFail.NoType.xml") } | Should Throw $Exception
+                { Get-LabSwitch -Config (Get-LabConfiguration -Path "$Global:TestConfigPath\PesterTestConfig.SwitchFail.NoType.xml") } | Should Throw $Exception
             }
         }
         Context 'Configuration passed with switch invalid Switch Type.' {
@@ -803,7 +779,7 @@ InModuleScope LabBuilder {
                 }
                 $Exception = New-Exception @ExceptionParameters
 
-                { Get-LabSwitches -Configuration (Get-LabConfiguration -Path "$Global:TestConfigPath\PesterTestConfig.SwitchFail.BadType.xml") } | Should Throw $Exception
+                { Get-LabSwitch -Config (Get-LabConfiguration -Path "$Global:TestConfigPath\PesterTestConfig.SwitchFail.BadType.xml") } | Should Throw $Exception
             }
         }
         Context 'Configuration passed with switch containing adapters but is not External type.' {
@@ -816,15 +792,15 @@ InModuleScope LabBuilder {
                 }
                 $Exception = New-Exception @ExceptionParameters
 
-                { Get-LabSwitches -Configuration (Get-LabConfiguration -Path "$Global:TestConfigPath\PesterTestConfig.SwitchFail.AdaptersSet.xml") } | Should Throw $Exception
+                { Get-LabSwitch -Config (Get-LabConfiguration -Path "$Global:TestConfigPath\PesterTestConfig.SwitchFail.AdaptersSet.xml") } | Should Throw $Exception
             }
         }
         Context 'Valid configuration is passed' {
             It 'Returns Switches Object that matches Expected Object' {
                 $Config = Get-LabConfiguration -Path $Global:TestConfigOKPath
-                [Array]$Switches = Get-LabSwitches -Configuration $Config
+                [Array]$Switches = Get-LabSwitch -Config $Config
                 Set-Content -Path "$Global:ArtifactPath\ExpectedSwitches.json" -Value ($Switches | ConvertTo-Json -Depth 4)
-                $ExpectedSwitches = Get-Content -Path "$Global:TestConfigPath\ExpectedSwitches.json"
+                $ExpectedSwitches = Get-Content -Path "$Global:ExpectedContentPath\ExpectedSwitches.json"
                 [String]::Compare((Get-Content -Path "$Global:ArtifactPath\ExpectedSwitches.json"),$ExpectedSwitches,$true) | Should Be 0
             }
         }
@@ -832,10 +808,10 @@ InModuleScope LabBuilder {
 
 
 
-    Describe 'Initialize-LabSwitches' {
+    Describe 'Initialize-LabSwitch' {
 
         $Config = Get-LabConfiguration -Path $Global:TestConfigOKPath
-        [Array]$Switches = Get-LabSwitches -Configuration $Config
+        [Array]$Switches = Get-LabSwitch -Config $Config
 
         Mock Get-VMSwitch
         Mock New-VMSwitch
@@ -844,7 +820,19 @@ InModuleScope LabBuilder {
 
         Context 'Valid configuration is passed' {	
             It 'Does not throw an Exception' {
-                { Initialize-LabSwitches -Configuration $Config -Switches $Switches } | Should Not Throw
+                { Initialize-LabSwitch -Config $Config -Switches $Switches } | Should Not Throw
+            }
+            It 'Calls Mocked commands' {
+                Assert-MockCalled Get-VMSwitch -Exactly 5
+                Assert-MockCalled New-VMSwitch -Exactly 5
+                Assert-MockCalled Add-VMNetworkAdapter -Exactly 4
+                Assert-MockCalled Set-VMNetworkAdapterVlan -Exactly 0
+            }
+        }
+
+        Context 'Valid configuration without switches is passed' {	
+            It 'Does not throw an Exception' {
+                { Initialize-LabSwitch -Config $Config } | Should Not Throw
             }
             It 'Calls Mocked commands' {
                 Assert-MockCalled Get-VMSwitch -Exactly 5
@@ -865,7 +853,7 @@ InModuleScope LabBuilder {
                 }
                 $Exception = New-Exception @ExceptionParameters
 
-                { Initialize-LabSwitches -Configuration $Config -Switches $Switches } | Should Throw $Exception
+                { Initialize-LabSwitch -Config $Config -Switches $Switches } | Should Throw $Exception
             }
             It 'Calls Mocked commands' {
                 Assert-MockCalled Get-VMSwitch -Exactly 1
@@ -886,7 +874,7 @@ InModuleScope LabBuilder {
                 }
                 $Exception = New-Exception @ExceptionParameters
 
-                { Initialize-LabSwitches -Configuration $Config -Switches $Switches } | Should Throw $Exception
+                { Initialize-LabSwitch -Config $Config -Switches $Switches } | Should Throw $Exception
             }
             It 'Calls Mocked commands' {
                 Assert-MockCalled Get-VMSwitch -Exactly 1
@@ -907,7 +895,7 @@ InModuleScope LabBuilder {
                 }
                 $Exception = New-Exception @ExceptionParameters
 
-                { Initialize-LabSwitches -Configuration $Config -Switches $Switches } | Should Throw $Exception
+                { Initialize-LabSwitch -Config $Config -Switches $Switches } | Should Throw $Exception
             }
             It 'Calls Mocked commands' {
                 Assert-MockCalled Get-VMSwitch -Exactly 1
@@ -920,17 +908,27 @@ InModuleScope LabBuilder {
 
 
 
-    Describe 'Remove-LabSwitches' {
+    Describe 'Remove-LabSwitch' {
 
         $Config = Get-LabConfiguration -Path $Global:TestConfigOKPath
-        [Array]$Switches = Get-LabSwitches -Configuration $Config
+        [Array]$Switches = Get-LabSwitch -Config $Config
 
         Mock Get-VMSwitch -MockWith { $Switches }
         Mock Remove-VMSwitch
 
         Context 'Valid configuration is passed' {	
             It 'Does not throw an Exception' {
-                { Remove-LabSwitches -Configuration $Config -Switches $Switches } | Should Not Throw
+                { Remove-LabSwitch -Config $Config -Switches $Switches } | Should Not Throw
+            }
+            It 'Calls Mocked commands' {
+                Assert-MockCalled Get-VMSwitch -Exactly 5
+                Assert-MockCalled Remove-VMSwitch -Exactly 5
+            }
+        }
+
+        Context 'Valid configuration is passed without switches' {	
+            It 'Does not throw an Exception' {
+                { Remove-LabSwitch -Config $Config } | Should Not Throw
             }
             It 'Calls Mocked commands' {
                 Assert-MockCalled Get-VMSwitch -Exactly 5
@@ -949,7 +947,7 @@ InModuleScope LabBuilder {
                 }
                 $Exception = New-Exception @ExceptionParameters
 
-                { Remove-LabSwitches -Configuration $Config -Switches $Switches } | Should Throw $Exception
+                { Remove-LabSwitch -Config $Config -Switches $Switches } | Should Throw $Exception
             }
             It 'Calls Mocked commands' {
                 Assert-MockCalled Get-VMSwitch -Exactly 1
@@ -968,24 +966,338 @@ InModuleScope LabBuilder {
                 }
                 $Exception = New-Exception @ExceptionParameters
 
-                { Remove-LabSwitches -Configuration $Config -Switches $Switches } | Should Throw $Exception
+                { Remove-LabSwitch -Config $Config -Switches $Switches } | Should Throw $Exception
             }
             It 'Calls Mocked commands' {
                 Assert-MockCalled Get-VMSwitch -Exactly 1
                 Assert-MockCalled Remove-VMSwitch -Exactly 0
             }
         }
-
     }
 
 
 
-    Describe 'Get-LabVMTemplates' {
+    Describe 'Get-LabVMTemplateVHD' {
+
+        Context 'Configuration passed with rooted ISO Root Path that does not exist' {
+            It 'Throws a VMTemplateVHDISORootPathNotFoundError Exception' {
+                $Config = Get-LabConfiguration -Path $Global:TestConfigOKPath
+                $Config.labbuilderconfig.templatevhds.ISOPath = "$Global:TestConfigPath\MissingFolder"
+                $ExceptionParameters = @{
+                    errorId = 'VMTemplateVHDISORootPathNotFoundError'
+                    errorCategory = 'InvalidArgument'
+                    errorMessage = $($LocalizedData.VMTemplateVHDISORootPathNotFoundError `
+                        -f "$Global:TestConfigPath\MissingFolder")
+                }
+                $Exception = New-Exception @ExceptionParameters
+
+                { Get-LabVMTemplateVHD -Config $Config } | Should Throw $Exception
+            }
+        }
+        Context 'Configuration passed with relative ISO Root Path that does not exist' {
+            It 'Throws a VMTemplateVHDISORootPathNotFoundError Exception' {
+                $Config = Get-LabConfiguration -Path $Global:TestConfigOKPath
+                $Config.labbuilderconfig.templatevhds.ISOPath = "MissingFolder"
+                $ExceptionParameters = @{
+                    errorId = 'VMTemplateVHDISORootPathNotFoundError'
+                    errorCategory = 'InvalidArgument'
+                    errorMessage = $($LocalizedData.VMTemplateVHDISORootPathNotFoundError `
+                        -f "$Global:TestConfigPath\MissingFolder")
+                }
+                $Exception = New-Exception @ExceptionParameters
+
+                { Get-LabVMTemplateVHD -Config $Config } | Should Throw $Exception
+            }
+        }
+        Context 'Configuration passed with rooted VHD Root Path that does not exist' {
+            It 'Throws a VMTemplateVHDRootPathNotFoundError Exception' {
+                $Config = Get-LabConfiguration -Path $Global:TestConfigOKPath
+                $Config.labbuilderconfig.templatevhds.VHDPath = "$Global:TestConfigPath\MissingFolder"
+                $ExceptionParameters = @{
+                    errorId = 'VMTemplateVHDRootPathNotFoundError'
+                    errorCategory = 'InvalidArgument'
+                    errorMessage = $($LocalizedData.VMTemplateVHDRootPathNotFoundError `
+                        -f "$Global:TestConfigPath\MissingFolder")
+                }
+                $Exception = New-Exception @ExceptionParameters
+
+                { Get-LabVMTemplateVHD -Config $Config } | Should Throw $Exception
+            }
+        }
+        Context 'Configuration passed with relative VHD Root Path that does not exist' {
+            It 'Throws a VMTemplateVHDRootPathNotFoundError Exception' {
+                $Config = Get-LabConfiguration -Path $Global:TestConfigOKPath
+                $Config.labbuilderconfig.templatevhds.VHDPath = "MissingFolder"
+                $ExceptionParameters = @{
+                    errorId = 'VMTemplateVHDRootPathNotFoundError'
+                    errorCategory = 'InvalidArgument'
+                    errorMessage = $($LocalizedData.VMTemplateVHDRootPathNotFoundError `
+                        -f "$Global:TestConfigPath\MissingFolder")
+                }
+                $Exception = New-Exception @ExceptionParameters
+
+                { Get-LabVMTemplateVHD -Config $Config } | Should Throw $Exception
+            }
+        }
+        Context 'Configuration passed with empty template VHD Name' {
+            It 'Throws a EmptyVMTemplateVHDNameError Exception' {
+                $Config = Get-LabConfiguration -Path $Global:TestConfigOKPath
+                $Config.labbuilderconfig.templatevhds.templatevhd[0].RemoveAttribute('name')
+                $ExceptionParameters = @{
+                    errorId = 'EmptyVMTemplateVHDNameError'
+                    errorCategory = 'InvalidArgument'
+                    errorMessage = $($LocalizedData.EmptyVMTemplateVHDNameError)
+                }
+                $Exception = New-Exception @ExceptionParameters
+
+                { Get-LabVMTemplateVHD -Config $Config } | Should Throw $Exception
+            }
+        }
+        Context 'Configuration passed with template ISO Path is empty' {
+            It 'Throws a EmptyVMTemplateVHDISOPathError Exception' {
+                $Config = Get-LabConfiguration -Path $Global:TestConfigOKPath
+                $Config.labbuilderconfig.templatevhds.templatevhd[0].ISO = ''
+                $ExceptionParameters = @{
+                    errorId = 'EmptyVMTemplateVHDISOPathError'
+                    errorCategory = 'InvalidArgument'
+                    errorMessage = $($LocalizedData.EmptyVMTemplateVHDISOPathError `
+                        -f $Config.labbuilderconfig.templatevhds.templatevhd[0].name)
+                }
+                $Exception = New-Exception @ExceptionParameters
+
+                { Get-LabVMTemplateVHD -Config $Config } | Should Throw $Exception
+            }
+        }
+        Context 'Configuration passed with template ISO Path that does not exist' {
+            It 'Throws a VMTemplateVHDISOPathNotFoundError Exception' {
+                $Config = Get-LabConfiguration -Path $Global:TestConfigOKPath
+                $Config.labbuilderconfig.templatevhds.templatevhd[0].ISO = "$Global:TestConfigPath\MissingFolder\DoesNotExist.iso"
+                $ExceptionParameters = @{
+                    errorId = 'VMTemplateVHDISOPathNotFoundError'
+                    errorCategory = 'InvalidArgument'
+                    errorMessage = $($LocalizedData.VMTemplateVHDISOPathNotFoundError `
+                        -f $Config.labbuilderconfig.templatevhds.templatevhd[0].name,"$Global:TestConfigPath\MissingFolder\DoesNotExist.iso")
+                }
+                $Exception = New-Exception @ExceptionParameters
+
+                { Get-LabVMTemplateVHD -Config $Config } | Should Throw $Exception
+            }
+        }
+        Context 'Configuration passed with relative template ISO Path that does not exist' {
+            It 'Throws a VMTemplateVHDISOPathNotFoundError Exception' {
+                $Config = Get-LabConfiguration -Path $Global:TestConfigOKPath
+                $Config.labbuilderconfig.templatevhds.templatevhd[0].ISO = "MissingFolder\DoesNotExist.iso"
+                $ExceptionParameters = @{
+                    errorId = 'VMTemplateVHDISOPathNotFoundError'
+                    errorCategory = 'InvalidArgument'
+                    errorMessage = $($LocalizedData.VMTemplateVHDISOPathNotFoundError `
+                        -f $Config.labbuilderconfig.templatevhds.templatevhd[0].name,"$Global:TestConfigPath\ISOFiles\MissingFolder\DoesNotExist.iso")
+                }
+                $Exception = New-Exception @ExceptionParameters
+
+                { Get-LabVMTemplateVHD -Config $Config } | Should Throw $Exception
+            }
+        }
+        Context 'Configuration passed with invalid OSType' {
+            It 'Throws a InvalidVMTemplateVHDOSTypeError Exception' {
+                $Config = Get-LabConfiguration -Path $Global:TestConfigOKPath
+                $Config.labbuilderconfig.templatevhds.templatevhd[0].OSType = 'invalid'
+                $ExceptionParameters = @{
+                    errorId = 'InvalidVMTemplateVHDOSTypeError'
+                    errorCategory = 'InvalidArgument'
+                    errorMessage = $($LocalizedData.InvalidVMTemplateVHDOSTypeError `
+                        -f $Config.labbuilderconfig.templatevhds.templatevhd[0].name,'invalid')
+                }
+                $Exception = New-Exception @ExceptionParameters
+
+                { Get-LabVMTemplateVHD -Config $Config } | Should Throw $Exception
+            }
+        }
+        Context 'Configuration passed with invalid VHDFormat' {
+            It 'Throws a InvalidVMTemplateVHDVHDFormatError Exception' {
+                $Config = Get-LabConfiguration -Path $Global:TestConfigOKPath
+                $Config.labbuilderconfig.templatevhds.templatevhd[0].VHDFormat = 'invalid'
+                $ExceptionParameters = @{
+                    errorId = 'InvalidVMTemplateVHDVHDFormatError'
+                    errorCategory = 'InvalidArgument'
+                    errorMessage = $($LocalizedData.InvalidVMTemplateVHDVHDFormatError `
+                        -f $Config.labbuilderconfig.templatevhds.templatevhd[0].name,'invalid')
+                }
+                $Exception = New-Exception @ExceptionParameters
+
+                { Get-LabVMTemplateVHD -Config $Config } | Should Throw $Exception
+            }
+        }
+        Context 'Configuration passed with invalid VHDType' {
+            It 'Throws a InvalidVMTemplateVHDVHDTypeError Exception' {
+                $Config = Get-LabConfiguration -Path $Global:TestConfigOKPath
+                $Config.labbuilderconfig.templatevhds.templatevhd[0].VHDType = 'invalid'
+                $ExceptionParameters = @{
+                    errorId = 'InvalidVMTemplateVHDVHDTypeError'
+                    errorCategory = 'InvalidArgument'
+                    errorMessage = $($LocalizedData.InvalidVMTemplateVHDVHDTypeError `
+                        -f $Config.labbuilderconfig.templatevhds.templatevhd[0].name,'invalid')
+                }
+                $Exception = New-Exception @ExceptionParameters
+
+                { Get-LabVMTemplateVHD -Config $Config } | Should Throw $Exception
+            }
+        }
+        Context 'Configuration passed with invalid VHDType' {
+            It 'Throws a InvalidVMTemplateVHDGenerationError Exception' {
+                $Config = Get-LabConfiguration -Path $Global:TestConfigOKPath
+                $Config.labbuilderconfig.templatevhds.templatevhd[0].Generation = '99'
+                $ExceptionParameters = @{
+                    errorId = 'InvalidVMTemplateVHDGenerationError'
+                    errorCategory = 'InvalidArgument'
+                    errorMessage = $($LocalizedData.InvalidVMTemplateVHDGenerationError `
+                        -f $Config.labbuilderconfig.templatevhds.templatevhd[0].name,'99')
+                }
+                $Exception = New-Exception @ExceptionParameters
+
+                { Get-LabVMTemplateVHD -Config $Config } | Should Throw $Exception
+            }
+        }
+        Context 'Valid configuration is passed missing TemplateVHDs Node' {
+            $Config = Get-LabConfiguration -Path $Global:TestConfigOKPath
+            $Config.labbuilderconfig.RemoveChild($Config.labbuilderconfig.templatevhds)
+            It 'Returns null' {
+                Get-LabVMTemplateVHD -Config $Config  | Should Be $null
+            }
+        }
+        Context 'Valid configuration is passed with no TemplateVHD Nodes' {
+            $Config = Get-LabConfiguration -Path $Global:TestConfigOKPath
+            $Config.labbuilderconfig.templatevhds.IsEmpty = $true
+            It 'Returns null' {
+                Get-LabVMTemplateVHD -Config $Config | Should Be $null
+            }
+        }
+        Context 'Valid configuration is passed and template VHD ISOs are found' {
+            It 'Returns VMTemplateVHDs array that matches Expected array' {
+                $Config = Get-LabConfiguration -Path $Global:TestConfigOKPath
+                [Array] $TemplateVHDs = Get-LabVMTemplateVHD -Config $Config 
+                # Remove the VHDPath and ISOPath values for any VMtemplatesVHD
+                #  because they will usually be relative to the test folder and
+                # won't exist on any other test system
+                foreach ($TemplateVHD in $TemplateVHDs)
+                {
+                    $TemplateVHD.VHDPath = 'Intentionally Removed'
+                    $TemplateVHD.ISOPath = 'Intentionally Removed'
+                }
+                Set-Content -Path "$Global:ArtifactPath\ExpectedTemplateVHDs.json" -Value ($TemplateVHDs | ConvertTo-Json -Depth 2)
+                $ExpectedTemplateVHDs = Get-Content -Path "$Global:ExpectedContentPath\ExpectedTemplateVHDs.json"
+                [String]::Compare((Get-Content -Path "$Global:ArtifactPath\ExpectedTemplateVHDs.json"),$ExpectedTemplateVHDs,$true) | Should Be 0
+            }
+        }
+    }
+
+
+
+    Describe 'Initialize-LabVMTemplateVHD' {
+        Mock Mount-DiskImage
+        Mock Get-Diskimage -MockWith {
+            New-CimInstance `
+                -ClassName 'MSFT_DiskImage' `
+                -Namespace Root/Microsoft/Windows/Storage `
+                -ClientOnly `
+                -Property @{
+                    Attached = $True
+                    BlockSize = 0
+                    DevicePath = '\\.\CDROM1'
+                    ImagePath = 'c:\doesnotmatter.iso'
+                    LogicalSectorSize = 2048
+                    Number = 1
+                    Size = 3842639872
+                    StorageType = 1
+                }
+        }
+        Mock Get-Volume -MockWith { @{ DriveLetter = 'X' } }
+        Mock Dismount-DiskImage
+        Mock Get-WindowsImage -MockWith { @{ ImageName = 'DOESNOTMATTER' } }
+        Mock Copy-Item
+        Mock Rename-Item
+        
+        # Mock Convert-WindowsImage
+        if (-not (Test-Path -Path Function:Convert-WindowsImage))
+        {
+            . "$Global:ModuleRoot\support\Convert-WindowsImage.ps1"
+        }
+        Mock Convert-WindowsImage 
+        Mock Resolve-Path -MockWith { 'X:\Sources\Install.WIM' }
+        Mock Test-Path -MockWith { $True } -ParameterFilter { $Path -eq 'X:\Sources\Install.WIM' }
+                
+        Context 'Configuration passed with no VMtemplateVHDs' {
+            It 'Does not throw an Exception' {
+                $Config = Get-LabConfiguration -Path $Global:TestConfigOKPath
+                $Config.labbuilderconfig.RemoveChild($Config.labbuilderconfig.templatevhds)
+                { Initialize-LabVMTemplateVHD -Config $Config } | Should Not Throw
+            }
+            It 'Calls expected mocks commands' {
+                Assert-MockCalled Mount-DiskImage -Exactly 0
+                Assert-MockCalled Get-Diskimage -Exactly 0
+                Assert-MockCalled Get-Volume -Exactly 0
+                Assert-MockCalled Dismount-DiskImage -Exactly 0
+                Assert-MockCalled Get-WindowsImage -Exactly 0
+                Assert-MockCalled Copy-Item -Exactly 0
+                Assert-MockCalled Rename-Item -Exactly 0
+                Assert-MockCalled Convert-WindowsImage -Exactly 0
+            }            
+        }
+        Context 'Configuration passed where the template ISO can not be found' {
+            It 'Throws an VMTemplateVHDISOPathNotFoundError Exception' {
+                $Config = Get-LabConfiguration -Path $Global:TestConfigOKPath
+                $VMTemplateVHDs = Get-LabVMTemplateVHD -Config $Config
+                $VMTemplateVHDs[0].isopath = 'doesnotexist.iso'
+                $VMTemplateVHDs[0].vhdpath = 'doesnotexist.vhdx'
+                $ExceptionParameters = @{
+                    errorId = 'VMTemplateVHDISOPathNotFoundError'
+                    errorCategory = 'InvalidArgument'
+                    errorMessage = $($LocalizedData.VMTemplateVHDISOPathNotFoundError `
+                        -f $Config.labbuilderconfig.templatevhds.templatevhd[0].name,'doesnotexist.iso')
+                }
+                $Exception = New-Exception @ExceptionParameters
+
+                { Initialize-LabVMTemplateVHD -Config $Config -VMTemplateVHDs $VMTemplateVHDs } | Should Throw $Exception
+            }
+            It 'Calls expected mocks commands' {
+                Assert-MockCalled Mount-DiskImage -Exactly 0
+                Assert-MockCalled Get-Diskimage -Exactly 0
+                Assert-MockCalled Get-Volume -Exactly 0
+                Assert-MockCalled Dismount-DiskImage -Exactly 0
+                Assert-MockCalled Get-WindowsImage -Exactly 0
+                Assert-MockCalled Copy-Item -Exactly 0
+                Assert-MockCalled Rename-Item -Exactly 0
+                Assert-MockCalled Convert-WindowsImage -Exactly 0
+            }            
+        }
+        Context 'Valid configuration passed' {
+            It 'Does not throw an Exception' {
+                $Config = Get-LabConfiguration -Path $Global:TestConfigOKPath
+                { Initialize-LabVMTemplateVHD -Config $Config } | Should Not Throw
+            }
+            It 'Calls expected mocks commands' {
+                Assert-MockCalled Mount-DiskImage -Exactly 3
+                Assert-MockCalled Get-Diskimage -Exactly 3
+                Assert-MockCalled Get-Volume -Exactly 3
+                Assert-MockCalled Dismount-DiskImage -Exactly 3
+                Assert-MockCalled Get-WindowsImage -Exactly 1
+                Assert-MockCalled Copy-Item -Exactly 1
+                Assert-MockCalled Rename-Item -Exactly 1
+                Assert-MockCalled Convert-WindowsImage -Exactly 3
+            }            
+        }
+    }
+
+
+
+    Describe 'Get-LabVMTemplate' {
 
         Mock Get-VM
         
         Context 'Configuration passed with template missing Template Name.' {
             It 'Throws a EmptyTemplateNameError Exception' {
+                $Config = Get-LabConfiguration -Path $Global:TestConfigOKPath
+                $Config.labbuilderconfig.templates.template[0].RemoveAttribute('name')
                 $ExceptionParameters = @{
                     errorId = 'EmptyTemplateNameError'
                     errorCategory = 'InvalidArgument'
@@ -993,51 +1305,70 @@ InModuleScope LabBuilder {
                 }
                 $Exception = New-Exception @ExceptionParameters
 
-                { Get-LabVMTemplates -Configuration (Get-LabConfiguration -Path "$Global:TestConfigPath\PesterTestConfig.TemplateFail.NoName.xml") } | Should Throw $Exception
+                { Get-LabVMTemplate -Config $Config } | Should Throw $Exception
             }
         }
-
         Context 'Configuration passed with template VHD empty.' {
             It 'Throws a EmptyTemplateVHDError Exception' {
+                $Config = Get-LabConfiguration -Path $Global:TestConfigOKPath
+                $Config.labbuilderconfig.templates.template[0].RemoveAttribute('vhd')
                 $ExceptionParameters = @{
                     errorId = 'EmptyTemplateVHDError'
                     errorCategory = 'InvalidArgument'
                     errorMessage = $($LocalizedData.EmptyTemplateVHDError `
-                        -f 'No VHD')
+                        -f $Config.labbuilderconfig.templates.template[0].name)
                 }
                 $Exception = New-Exception @ExceptionParameters
 
-                { Get-LabVMTemplates -Configuration (Get-LabConfiguration -Path "$Global:TestConfigPath\PesterTestConfig.TemplateFail.NoVHD.xml") } | Should Throw $Exception
+                { Get-LabVMTemplate -Config $Config } | Should Throw $Exception
             }
         }
-
-        Context 'Configuration passed with template with Source VHD set to non-existent file.' {
+        Context 'Configuration passed with template with Source VHD set to relative non-existent file.' {
             It 'Throws a TemplateSourceVHDNotFoundError Exception' {
+                $Config = Get-LabConfiguration -Path $Global:TestConfigOKPath
+                $Config.labbuilderconfig.templates.template[0].sourcevhd = 'This File Doesnt Exist.vhdx'
                 $ExceptionParameters = @{
                     errorId = 'TemplateSourceVHDNotFoundError'
                     errorCategory = 'InvalidArgument'
                     errorMessage = $($LocalizedData.TemplateSourceVHDNotFoundError `
-                        -f 'Bad VHD','This File Doesnt Exist.vhdx')
+                        -f $Config.labbuilderconfig.templates.template[0].name,"$Global:TestConfigPath\This File Doesnt Exist.vhdx")
                 }
                 $Exception = New-Exception @ExceptionParameters
 
-                { Get-LabVMTemplates -Configuration (Get-LabConfiguration -Path "$Global:TestConfigPath\PesterTestConfig.TemplateFail.BadSourceVHD.xml") } | Should Throw $Exception
+                { Get-LabVMTemplate -Config $Config } | Should Throw $Exception
             }
         }
-        
-        $Config = Get-LabConfiguration -Path $Global:TestConfigOKPath
+        Context 'Configuration passed with template with Source VHD set to absolute non-existent file.' {
+            It 'Throws a TemplateSourceVHDNotFoundError Exception' {
+                $Config = Get-LabConfiguration -Path $Global:TestConfigOKPath
+                $Config.labbuilderconfig.templates.template[0].sourcevhd = 'c:\This File Doesnt Exist.vhdx'
+                $ExceptionParameters = @{
+                    errorId = 'TemplateSourceVHDNotFoundError'
+                    errorCategory = 'InvalidArgument'
+                    errorMessage = $($LocalizedData.TemplateSourceVHDNotFoundError `
+                        -f $Config.labbuilderconfig.templates.template[0].name,"c:\This File Doesnt Exist.vhdx")
+                }
+                $Exception = New-Exception @ExceptionParameters
 
-        Mock Get-VM
-            
+                { Get-LabVMTemplate -Config $Config } | Should Throw $Exception
+            }
+        }
         Context 'Valid configuration is passed but no templates found' {
             It 'Returns Template Object that matches Expected Object' {
-                [Array]$Templates = Get-LabVMTemplates -Configuration $Config 
+                $Config = Get-LabConfiguration -Path $Global:TestConfigOKPath
+                [Array]$Templates = Get-LabVMTemplate -Config $Config 
+                # Remove the SourceVHD values for any templates because they
+                # will usually be relative to the test folder and won't exist
+                foreach ($Template in $Templates)
+                {
+                    $Template.SourceVHD = 'Intentionally Removed'
+                }
                 Set-Content -Path "$Global:ArtifactPath\ExpectedTemplates.json" -Value ($Templates | ConvertTo-Json -Depth 2)
-                $ExpectedTemplates = Get-Content -Path "$Global:TestConfigPath\ExpectedTemplates.json"
+                $ExpectedTemplates = Get-Content -Path "$Global:ExpectedContentPath\ExpectedTemplates.json"
                 [String]::Compare((Get-Content -Path "$Global:ArtifactPath\ExpectedTemplates.json"),$ExpectedTemplates,$true) | Should Be 0
             }
             It 'Calls Mocked commands' {
-                Assert-MockCalled Get-VM -Exactly 1
+                Assert-MockCalled Get-VM -Exactly 0
             }
         }
 
@@ -1055,9 +1386,17 @@ InModuleScope LabBuilder {
 
         Context 'Valid configuration is passed and templates are found' {
             It 'Returns Template Object that matches Expected Object' {
-                [Array]$Templates = Get-LabVMTemplates -Configuration $Config 
+                $Config = Get-LabConfiguration -Path $Global:TestConfigOKPath
+                $Config.labbuilderconfig.templates.SetAttribute('fromvm','Pester *')
+                [Array]$Templates = Get-LabVMTemplate -Config $Config 
+                # Remove the SourceVHD values for any templates because they
+                # will usually be relative to the test folder and won't exist
+                foreach ($Template in $Templates)
+                {
+                    $Template.SourceVHD = 'Intentionally Removed'
+                }
                 Set-Content -Path "$Global:ArtifactPath\ExpectedTemplates.FromVM.json" -Value ($Templates | ConvertTo-Json -Depth 2)
-                $ExpectedTemplates = Get-Content -Path "$Global:TestConfigPath\ExpectedTemplates.FromVM.json"
+                $ExpectedTemplates = Get-Content -Path "$Global:ExpectedContentPath\ExpectedTemplates.FromVM.json"
                 [String]::Compare((Get-Content -Path "$Global:ArtifactPath\ExpectedTemplates.FromVM.json"),$ExpectedTemplates,$true) | Should Be 0
             }
             It 'Calls Mocked commands' {
@@ -1065,12 +1404,11 @@ InModuleScope LabBuilder {
                 Assert-MockCalled Get-VMHardDiskDrive -Exactly 3
             }
         }
-
     }
-
-
-
-    Describe 'Initialize-LabVMTemplates' {
+    
+    
+    
+    Describe 'Initialize-LabVMTemplate' {
 
         $Config = Get-LabConfiguration -Path $Global:TestConfigOKPath
 
@@ -1081,7 +1419,7 @@ InModuleScope LabBuilder {
         Mock Optimize-VHD
         Mock Get-VM
 
-        Context 'Template Template Array with non-existent VHD source file' {
+        Context 'Valid Template Array with non-existent VHD source file' {
             [array]$Templates = @( @{
                 name = 'Bad VHD'
                 templatevhd = 'This File Doesnt Exist.vhdx' 
@@ -1097,15 +1435,26 @@ InModuleScope LabBuilder {
                 }
                 $Exception = New-Exception @ExceptionParameters
 
-                { Initialize-LabVMTemplates -Configuration $Config -VMTemplates $Templates } | Should Throw $Exception
+                { Initialize-LabVMTemplate -Config $Config -VMTemplates $Templates } | Should Throw $Exception
             }
         }
-
-        Context 'Valid Template Array is passed' {	
-            [array]$Templates = Get-LabVMTemplates -Configuration $Config
+        Context 'Valid configuration is passed' {	
+            [array]$VMTemplates = Get-LabVMTemplate -Config $Config
+            [array]$VMTemplateVHDs = Get-LabVMTemplateVHD -Config $Config
 
             It 'Does not throw an Exception' {
-                { Initialize-LabVMTemplates -Configuration $Config -VMTemplates $Templates } | Should Not Throw
+                { Initialize-LabVMTemplate -Config $Config -VMTemplates $VMTemplates } | Should Not Throw
+            }
+            It 'Calls Mocked commands' {
+                Assert-MockCalled Copy-Item -Exactly 3
+                Assert-MockCalled Set-ItemProperty -Exactly 3 -ParameterFilter { ($Name -eq 'IsReadOnly') -and ($Value -eq $True) }
+                Assert-MockCalled Set-ItemProperty -Exactly 3 -ParameterFilter { ($Name -eq 'IsReadOnly') -and ($Value -eq $False) }
+                Assert-MockCalled Optimize-VHD -Exactly 3
+            }
+        }
+        Context 'Valid configuration is passed without VMTemplates or VMTemplateVHDs' {	
+            It 'Does not throw an Exception' {
+                { Initialize-LabVMTemplate -Config $Config } | Should Not Throw
             }
             It 'Calls Mocked commands' {
                 Assert-MockCalled Copy-Item -Exactly 3
@@ -1118,7 +1467,7 @@ InModuleScope LabBuilder {
 
 
 
-    Describe 'Remove-LabVMTemplates' {
+    Describe 'Remove-LabVMTemplate' {
 
         $Config = Get-LabConfiguration -Path $Global:TestConfigOKPath
 
@@ -1128,10 +1477,10 @@ InModuleScope LabBuilder {
         Mock Get-VM
 
         Context 'Valid configuration is passed' {	
-            [Array]$Templates = Get-LabVMTemplates -Configuration $Config
+            [Array]$Templates = Get-LabVMTemplate -Config $Config
             
             It 'Does not throw an Exception' {
-                { Remove-LabVMTemplates -Configuration $Config -VMTemplates $Templates } | Should Not Throw
+                { Remove-LabVMTemplate -Config $Config -VMTemplates $Templates } | Should Not Throw
             }
             It 'Calls Mocked commands' {
                 Assert-MockCalled Set-ItemProperty -Exactly 3 -ParameterFilter { ($Name -eq 'IsReadOnly') -and ($Value -eq $False) }
@@ -1147,9 +1496,9 @@ InModuleScope LabBuilder {
         Mock Get-VM
 
         $Config = Get-LabConfiguration -Path $Global:TestConfigOKPath
-        [Array]$Switches = Get-LabSwitches -Configuration $Config
-        [Array]$Templates = Get-LabVMTemplates -Configuration $Config
-        [Array]$VMs = Get-LabVMs -Configuration $Config -VMTemplates $Templates -Switches $Switches
+        [Array]$Switches = Get-LabSwitch -Config $Config
+        [Array]$Templates = Get-LabVMTemplate -Config $Config
+        [Array]$VMs = Get-LabVM -Config $Config -VMTemplates $Templates -Switches $Switches
         
         Mock Create-LabVMPath
         Mock Get-Module
@@ -1159,7 +1508,7 @@ InModuleScope LabBuilder {
             $VM = $VMS[0].Clone()
             $VM.DSCConfigFile = ''
             It 'Does not throw an Exception' {
-                { Set-LabVMDSCMOFFile -Configuration $Config -VM $VM } | Should Not Throw
+                { Set-LabVMDSCMOFFile -Config $Config -VM $VM } | Should Not Throw
             }
             It 'Calls Mocked commands' {
                 Assert-MockCalled Create-LabVMPath -Exactly 1
@@ -1180,7 +1529,7 @@ InModuleScope LabBuilder {
             $Exception = New-Exception @ExceptionParameters
 
             It 'Throws a DSCModuleDownloadError Exception' {
-                { Set-LabVMDSCMOFFile -Configuration $Config -VM $VM } | Should Throw $Exception
+                { Set-LabVMDSCMOFFile -Config $Config -VM $VM } | Should Throw $Exception
             }
             It 'Calls Mocked commands' {
                 Assert-MockCalled Create-LabVMPath -Exactly 1
@@ -1204,7 +1553,7 @@ InModuleScope LabBuilder {
             $Exception = New-Exception @ExceptionParameters
 
             It 'Throws a DSCModuleDownloadError Exception' {
-                { Set-LabVMDSCMOFFile -Configuration $Config -VM $VM } | Should Throw $Exception
+                { Set-LabVMDSCMOFFile -Config $Config -VM $VM } | Should Throw $Exception
             }
             It 'Calls Mocked commands' {
                 Assert-MockCalled Create-LabVMPath -Exactly 1
@@ -1230,7 +1579,7 @@ InModuleScope LabBuilder {
             $Exception = New-Exception @ExceptionParameters
 
             It 'Throws a DSCModuleNotFoundError Exception' {
-                { Set-LabVMDSCMOFFile -Configuration $Config -VM $VM } | Should Throw $Exception
+                { Set-LabVMDSCMOFFile -Config $Config -VM $VM } | Should Throw $Exception
             }
             It 'Calls Mocked commands' {
                 Assert-MockCalled Create-LabVMPath -Exactly 1
@@ -1258,7 +1607,7 @@ InModuleScope LabBuilder {
             $Exception = New-Exception @ExceptionParameters
 
             It 'Throws a CertificateCreateError Exception' {
-                { Set-LabVMDSCMOFFile -Configuration $Config -VM $VM } | Should Throw $Exception
+                { Set-LabVMDSCMOFFile -Config $Config -VM $VM } | Should Throw $Exception
             }
             It 'Calls Mocked commands' {
                 Assert-MockCalled Create-LabVMPath -Exactly 1
@@ -1293,7 +1642,7 @@ InModuleScope LabBuilder {
             $Exception = New-Exception @ExceptionParameters
 
             It 'Throws a DSCConfigMetaMOFCreateError Exception' {
-                { Set-LabVMDSCMOFFile -Configuration $Config -VM $VM } | Should Throw $Exception
+                { Set-LabVMDSCMOFFile -Config $Config -VM $VM } | Should Throw $Exception
             }
             It 'Calls Mocked commands' {
                 Assert-MockCalled Create-LabVMPath -Exactly 1
@@ -1318,9 +1667,9 @@ InModuleScope LabBuilder {
         Mock Get-VM
 
         $Config = Get-LabConfiguration -Path $Global:TestConfigOKPath
-        [Array]$Switches = Get-LabSwitches -Configuration $Config
-        [Array]$Templates = Get-LabVMTemplates -Configuration $Config
-        [Array]$VMs = Get-LabVMs -Configuration $Config -VMTemplates $Templates -Switches $Switches
+        [Array]$Switches = Get-LabSwitch -Config $Config
+        [Array]$Templates = Get-LabVMTemplate -Config $Config
+        [Array]$VMs = Get-LabVM -Config $Config -VMTemplates $Templates -Switches $Switches
 
         Mock Get-VMNetworkAdapter
 
@@ -1335,7 +1684,7 @@ InModuleScope LabBuilder {
             }
             $Exception = New-Exception @ExceptionParameters
             It 'Throws a NetworkAdapterNotFoundError Exception' {
-                { Set-LabVMDSCStartFile -Configuration $Config -VM $VM } | Should Throw $Exception
+                { Set-LabVMDSCStartFile -Config $Config -VM $VM } | Should Throw $Exception
             }
             It 'Calls Mocked commands' {
                 Assert-MockCalled Get-VMNetworkAdapter -Exactly 1
@@ -1356,7 +1705,7 @@ InModuleScope LabBuilder {
             $Exception = New-Exception @ExceptionParameters
 
             It 'Throws a NetworkAdapterBlankMacError Exception' {
-                { Set-LabVMDSCStartFile -Configuration $Config -VM $VM } | Should Throw $Exception
+                { Set-LabVMDSCStartFile -Config $Config -VM $VM } | Should Throw $Exception
             }
             It 'Calls Mocked commands' {
                 Assert-MockCalled Get-VMNetworkAdapter -Exactly 1
@@ -1370,7 +1719,7 @@ InModuleScope LabBuilder {
             $VM = $VMS[0].Clone()
             
             It 'Does Not Throw Exception' {
-                { Set-LabVMDSCStartFile -Configuration $Config -VM $VM } | Should Not Throw
+                { Set-LabVMDSCStartFile -Config $Config -VM $VM } | Should Not Throw
             }
             It 'Calls Mocked commands' {
                 Assert-MockCalled Get-VMNetworkAdapter -Exactly ($VM.Adapters.Count+1)
@@ -1386,9 +1735,9 @@ InModuleScope LabBuilder {
         Mock Get-VM
 
         $Config = Get-LabConfiguration -Path $Global:TestConfigOKPath
-        [Array]$Switches = Get-LabSwitches -Configuration $Config
-        [Array]$Templates = Get-LabVMTemplates -Configuration $Config
-        [Array]$VMs = Get-LabVMs -Configuration $Config -VMTemplates $Templates -Switches $Switches
+        [Array]$Switches = Get-LabSwitch -Config $Config
+        [Array]$Templates = Get-LabVMTemplate -Config $Config
+        [Array]$VMs = Get-LabVM -Config $Config -VMTemplates $Templates -Switches $Switches
 
         Mock Set-LabVMDSCMOFFile
         Mock Set-LabVMDSCStartFile
@@ -1397,7 +1746,7 @@ InModuleScope LabBuilder {
             $VM = $VMS[0].Clone()
             
             It 'Does Not Throw Exception' {
-                { Initialize-LabVMDSC -Configuration $Config -VM $VM } | Should Not Throw
+                { Initialize-LabVMDSC -Config $Config -VM $VM } | Should Not Throw
             }
             It 'Calls Mocked commands' {
                 Assert-MockCalled Set-LabVMDSCMOFFile -Exactly 1
@@ -1413,9 +1762,9 @@ InModuleScope LabBuilder {
         Mock Get-VM
 
         $Config = Get-LabConfiguration -Path $Global:TestConfigOKPath
-        [Array]$Switches = Get-LabSwitches -Configuration $Config
-        [Array]$Templates = Get-LabVMTemplates -Configuration $Config
-        [Array]$VMs = Get-LabVMs -Configuration $Config -VMTemplates $Templates -Switches $Switches
+        [Array]$Switches = Get-LabSwitch -Config $Config
+        [Array]$Templates = Get-LabVMTemplate -Config $Config
+        [Array]$VMs = Get-LabVM -Config $Config -VMTemplates $Templates -Switches $Switches
 
     }
 
@@ -1427,14 +1776,14 @@ InModuleScope LabBuilder {
 
         Context 'Valid Parameters Passed' {
             $Config = Get-LabConfiguration -Path $Global:TestConfigOKPath
-            [Array]$Switches = Get-LabSwitches -Configuration $Config
-            [Array]$Templates = Get-LabVMTemplates -Configuration $Config
-            [Array]$VMs = Get-LabVMs -Configuration $Config -VMTemplates $Templates -Switches $Switches
-            [String]$UnattendFile = Get-LabUnattendFile -Configuration $Config -VM $VMs[0]
-            Set-Content -Path "$($Global:ArtifactPath)\UnattendFile.xml" -Value $UnattendFile -Encoding UTF8 -NoNewLine
+            [Array]$Switches = Get-LabSwitch -Config $Config
+            [Array]$Templates = Get-LabVMTemplate -Config $Config
+            [Array]$VMs = Get-LabVM -Config $Config -VMTemplates $Templates -Switches $Switches
+            [String]$UnattendFile = Get-LabUnattendFile -Config $Config -VM $VMs[0]
+            Set-Content -Path "$($Global:ArtifactPath)\ExpectedUnattendFile.xml" -Value $UnattendFile -Encoding UTF8 -NoNewLine
             It 'Returns Expected File Content' {
                 $UnattendFile | Should Be $True
-                $ExpectedUnattendFile = Get-Content -Path "$Global:TestConfigPath\ExpectedUnattendFile.xml" -Raw
+                $ExpectedUnattendFile = Get-Content -Path "$Global:ExpectedContentPath\ExpectedUnattendFile.xml" -Raw
                 [String]::Compare($UnattendFile,$ExpectedUnattendFile,$true) | Should Be 0
             }
         }
@@ -1459,12 +1808,12 @@ InModuleScope LabBuilder {
             New-Item -Path $Config.labbuilderconfig.settings.vmpath -ItemType Directory -Force -ErrorAction SilentlyContinue
             New-Item -Path $Config.labbuilderconfig.settings.vhdparentpath -ItemType Directory -Force -ErrorAction SilentlyContinue
 
-            [Array]$Templates = Get-LabVMTemplates -Configuration $Config
-            [Array]$Switches = Get-LabSwitches -Configuration $Config
-            [Array]$VMs = Get-LabVMs -Configuration $Config -VMTemplates $Templates -Switches $Switches
+            [Array]$Templates = Get-LabVMTemplate -Config $Config
+            [Array]$Switches = Get-LabSwitch -Config $Config
+            [Array]$VMs = Get-LabVM -Config $Config -VMTemplates $Templates -Switches $Switches
                     
             It 'Returns True' {
-                Set-LabVMInitializationFiles -Configuration $Config -VM $VMs[0] -VMBootDiskPath 'c:\Dummy\' | Should Be $True
+                Set-LabVMInitializationFiles -Config $Config -VM $VMs[0] -VMBootDiskPath 'c:\Dummy\' | Should Be $True
             }
             It 'Calls Mocked commands' {
                 Assert-MockCalled Mount-WindowsImage -Exactly 1
@@ -1482,7 +1831,7 @@ InModuleScope LabBuilder {
 
 
 
-    Describe 'Get-LabVMs' {
+    Describe 'Get-LabVM' {
 
         #region mocks
         Mock Get-VM
@@ -1492,23 +1841,23 @@ InModuleScope LabBuilder {
             It 'Throw VMNameError Exception' {
                 $Config = Get-LabConfiguration -Path $Global:TestConfigOKPath
                 $Config.labbuilderconfig.vms.vm.RemoveAttribute('name')
-                [Array]$Switches = Get-LabSwitches -Configuration $Config
-                [array]$Templates = Get-LabVMTemplates -Configuration $Config
+                [Array]$Switches = Get-LabSwitch -Config $Config
+                [array]$Templates = Get-LabVMTemplate -Config $Config
                 $ExceptionParameters = @{
                     errorId = 'VMNameError'
                     errorCategory = 'InvalidArgument'
                     errorMessage = $($LocalizedData.VMNameError)
                 }
                 $Exception = New-Exception @ExceptionParameters
-                { Get-LabVMs -Configuration $Config -VMTemplates $Templates -Switches $Switches } | Should Throw $Exception
+                { Get-LabVM -Config $Config -VMTemplates $Templates -Switches $Switches } | Should Throw $Exception
             }
         }
         Context 'Configuration passed with VM missing Template.' {
             It 'Throw VMTemplateNameEmptyError Exception' {
                 $Config = Get-LabConfiguration -Path $Global:TestConfigOKPath
                 $Config.labbuilderconfig.vms.vm.RemoveAttribute('template')
-                [Array]$Switches = Get-LabSwitches -Configuration $Config
-                [array]$Templates = Get-LabVMTemplates -Configuration $Config
+                [Array]$Switches = Get-LabSwitch -Config $Config
+                [array]$Templates = Get-LabVMTemplate -Config $Config
                 $ExceptionParameters = @{
                     errorId = 'VMTemplateNameEmptyError'
                     errorCategory = 'InvalidArgument'
@@ -1516,15 +1865,15 @@ InModuleScope LabBuilder {
                         -f $Config.labbuilderconfig.vms.vm.name)
                 }
                 $Exception = New-Exception @ExceptionParameters
-                { Get-LabVMs -Configuration $Config -VMTemplates $Templates -Switches $Switches } | Should Throw $Exception
+                { Get-LabVM -Config $Config -VMTemplates $Templates -Switches $Switches } | Should Throw $Exception
             }
         }
         Context 'Configuration passed with VM invalid Template Name.' {
             It 'Throw VMTemplateNotFoundError Exception' {
                 $Config = Get-LabConfiguration -Path $Global:TestConfigOKPath
                 $Config.labbuilderconfig.vms.vm.template = 'BadTemplate'
-                [Array]$Switches = Get-LabSwitches -Configuration $Config
-                [array]$Templates = Get-LabVMTemplates -Configuration $Config
+                [Array]$Switches = Get-LabSwitch -Config $Config
+                [array]$Templates = Get-LabVMTemplate -Config $Config
                 $ExceptionParameters = @{
                     errorId = 'VMTemplateNotFoundError'
                     errorCategory = 'InvalidArgument'
@@ -1532,15 +1881,15 @@ InModuleScope LabBuilder {
                         -f $Config.labbuilderconfig.vms.vm.name,'BadTemplate')
                 }
                 $Exception = New-Exception @ExceptionParameters
-                { Get-LabVMs -Configuration $Config -VMTemplates $Templates -Switches $Switches } | Should Throw $Exception
+                { Get-LabVM -Config $Config -VMTemplates $Templates -Switches $Switches } | Should Throw $Exception
             }
         }
         Context 'Configuration passed with VM missing adapter name.' {
             It 'Throw VMAdapterNameError Exception' {
                 $Config = Get-LabConfiguration -Path $Global:TestConfigOKPath
                 $Config.labbuilderconfig.vms.vm.adapters.adapter[0].RemoveAttribute('name')
-                [Array]$Switches = Get-LabSwitches -Configuration $Config
-                [array]$Templates = Get-LabVMTemplates -Configuration $Config
+                [Array]$Switches = Get-LabSwitch -Config $Config
+                [array]$Templates = Get-LabVMTemplate -Config $Config
                 $ExceptionParameters = @{
                     errorId = 'VMAdapterNameError'
                     errorCategory = 'InvalidArgument'
@@ -1548,15 +1897,15 @@ InModuleScope LabBuilder {
                         -f $Config.labbuilderconfig.vms.vm.name)
                 }
                 $Exception = New-Exception @ExceptionParameters
-                { Get-LabVMs -Configuration $Config -VMTemplates $Templates -Switches $Switches } | Should Throw $Exception
+                { Get-LabVM -Config $Config -VMTemplates $Templates -Switches $Switches } | Should Throw $Exception
             }
         }
         Context 'Configuration passed with VM missing adapter switch name.' {
             It 'Throw VMAdapterSwitchNameError Exception' {
                 $Config = Get-LabConfiguration -Path $Global:TestConfigOKPath
                 $Config.labbuilderconfig.vms.vm.adapters.adapter[0].RemoveAttribute('switchname')
-                [Array]$Switches = Get-LabSwitches -Configuration $Config
-                [array]$Templates = Get-LabVMTemplates -Configuration $Config
+                [Array]$Switches = Get-LabSwitch -Config $Config
+                [array]$Templates = Get-LabVMTemplate -Config $Config
                 $ExceptionParameters = @{
                     errorId = 'VMAdapterSwitchNameError'
                     errorCategory = 'InvalidArgument'
@@ -1564,15 +1913,15 @@ InModuleScope LabBuilder {
                         -f $Config.labbuilderconfig.vms.vm.name,$Config.labbuilderconfig.vms.vm.adapters.adapter[0].name)
                 }
                 $Exception = New-Exception @ExceptionParameters
-                { Get-LabVMs -Configuration $Config -VMTemplates $Templates -Switches $Switches } | Should Throw $Exception
+                { Get-LabVM -Config $Config -VMTemplates $Templates -Switches $Switches } | Should Throw $Exception
             }
         }
         Context 'Configuration passed with VM Data Disk with empty VHD.' {
             It 'Throw VMDataDiskVHDEmptyError Exception' {
                 $Config = Get-LabConfiguration -Path $Global:TestConfigOKPath
                 $Config.labbuilderconfig.vms.vm.datavhds.datavhd[0].vhd = ''
-                [Array]$Switches = Get-LabSwitches -Configuration $Config
-                [array]$Templates = Get-LabVMTemplates -Configuration $Config
+                [Array]$Switches = Get-LabSwitch -Config $Config
+                [array]$Templates = Get-LabVMTemplate -Config $Config
                 $ExceptionParameters = @{
                     errorId = 'VMDataDiskVHDEmptyError'
                     errorCategory = 'InvalidArgument'
@@ -1580,15 +1929,15 @@ InModuleScope LabBuilder {
                         -f $Config.labbuilderconfig.vms.vm.name)
                 }
                 $Exception = New-Exception @ExceptionParameters
-                { Get-LabVMs -Configuration $Config -VMTemplates $Templates -Switches $Switches } | Should Throw $Exception
+                { Get-LabVM -Config $Config -VMTemplates $Templates -Switches $Switches } | Should Throw $Exception
             }
         }
         Context "Configuration passed with VM Data Disk where ParentVHD can't be found." {
             It 'Throw VMDataDiskParentVHDNotFoundError Exception' {
                 $Config = Get-LabConfiguration -Path $Global:TestConfigOKPath
                 $Config.labbuilderconfig.vms.vm.datavhds.datavhd[3].parentvhd = 'c:\ThisFileDoesntExist.vhdx'
-                [Array]$Switches = Get-LabSwitches -Configuration $Config
-                [array]$Templates = Get-LabVMTemplates -Configuration $Config
+                [Array]$Switches = Get-LabSwitch -Config $Config
+                [array]$Templates = Get-LabVMTemplate -Config $Config
                 $ExceptionParameters = @{
                     errorId = 'VMDataDiskParentVHDNotFoundError'
                     errorCategory = 'InvalidArgument'
@@ -1596,15 +1945,15 @@ InModuleScope LabBuilder {
                         -f $Config.labbuilderconfig.vms.vm.name,"c:\ThisFileDoesntExist.vhdx")
                 }
                 $Exception = New-Exception @ExceptionParameters
-                { Get-LabVMs -Configuration $Config -VMTemplates $Templates -Switches $Switches } | Should Throw $Exception
+                { Get-LabVM -Config $Config -VMTemplates $Templates -Switches $Switches } | Should Throw $Exception
             }
         }
         Context "Configuration passed with VM Data Disk where SourceVHD can't be found." {
             It 'Throw VMDataDiskSourceVHDNotFoundError Exception' {
                 $Config = Get-LabConfiguration -Path $Global:TestConfigOKPath
                 $Config.labbuilderconfig.vms.vm.datavhds.datavhd[0].sourcevhd = 'c:\ThisFileDoesntExist.vhdx'
-                [Array]$Switches = Get-LabSwitches -Configuration $Config
-                [array]$Templates = Get-LabVMTemplates -Configuration $Config
+                [Array]$Switches = Get-LabSwitch -Config $Config
+                [array]$Templates = Get-LabVMTemplate -Config $Config
                 $ExceptionParameters = @{
                     errorId = 'VMDataDiskSourceVHDNotFoundError'
                     errorCategory = 'InvalidArgument'
@@ -1612,15 +1961,15 @@ InModuleScope LabBuilder {
                         -f $Config.labbuilderconfig.vms.vm.name,"c:\ThisFileDoesntExist.vhdx")
                 }
                 $Exception = New-Exception @ExceptionParameters
-                { Get-LabVMs -Configuration $Config -VMTemplates $Templates -Switches $Switches } | Should Throw $Exception
+                { Get-LabVM -Config $Config -VMTemplates $Templates -Switches $Switches } | Should Throw $Exception
             }
         }
         Context "Configuration passed with VM Differencing Data Disk with empty ParentVHD." {
             It 'Throw VMDataDiskParentVHDMissingError Exception' {
                 $Config = Get-LabConfiguration -Path $Global:TestConfigOKPath
                 $Config.labbuilderconfig.vms.vm.datavhds.datavhd[3].RemoveAttribute('parentvhd')
-                [Array]$Switches = Get-LabSwitches -Configuration $Config
-                [array]$Templates = Get-LabVMTemplates -Configuration $Config
+                [Array]$Switches = Get-LabSwitch -Config $Config
+                [array]$Templates = Get-LabVMTemplate -Config $Config
                 $ExceptionParameters = @{
                     errorId = 'VMDataDiskParentVHDMissingError'
                     errorCategory = 'InvalidArgument'
@@ -1628,15 +1977,15 @@ InModuleScope LabBuilder {
                         -f $Config.labbuilderconfig.vms.vm.name)
                 }
                 $Exception = New-Exception @ExceptionParameters
-                { Get-LabVMs -Configuration $Config -VMTemplates $Templates -Switches $Switches } | Should Throw $Exception
+                { Get-LabVM -Config $Config -VMTemplates $Templates -Switches $Switches } | Should Throw $Exception
             }
         }
         Context "Configuration passed with VM Data Disk where it is a Differencing type disk but is shared." {
             It 'Throw VMDataDiskSharedDifferencingError Exception' {
                 $Config = Get-LabConfiguration -Path $Global:TestConfigOKPath
                 $Config.labbuilderconfig.vms.vm.datavhds.datavhd[3].SetAttribute('Shared','Y')
-                [Array]$Switches = Get-LabSwitches -Configuration $Config
-                [array]$Templates = Get-LabVMTemplates -Configuration $Config
+                [Array]$Switches = Get-LabSwitch -Config $Config
+                [array]$Templates = Get-LabVMTemplate -Config $Config
                 $ExceptionParameters = @{
                     errorId = 'VMDataDiskSharedDifferencingError'
                     errorCategory = 'InvalidArgument'
@@ -1644,15 +1993,15 @@ InModuleScope LabBuilder {
                         -f $Config.labbuilderconfig.vms.vm.name,"$($Config.labbuilderconfig.settings.vmpath)\$($Config.labbuilderconfig.vms.vm.name)\Virtual Hard Disks\$($Config.labbuilderconfig.vms.vm.datavhds.datavhd[3].vhd)")
                 }
                 $Exception = New-Exception @ExceptionParameters
-                { Get-LabVMs -Configuration $Config -VMTemplates $Templates -Switches $Switches } | Should Throw $Exception
+                { Get-LabVM -Config $Config -VMTemplates $Templates -Switches $Switches } | Should Throw $Exception
             }
         }
         Context "Configuration passed with VM Data Disk where it has an unknown Type." {
             It 'Throw VMDataDiskUnknownTypeError Exception' {
                 $Config = Get-LabConfiguration -Path $Global:TestConfigOKPath
                 $Config.labbuilderconfig.vms.vm.datavhds.datavhd[1].type = 'badtype'
-                [Array]$Switches = Get-LabSwitches -Configuration $Config
-                [array]$Templates = Get-LabVMTemplates -Configuration $Config
+                [Array]$Switches = Get-LabSwitch -Config $Config
+                [array]$Templates = Get-LabVMTemplate -Config $Config
                 $ExceptionParameters = @{
                     errorId = 'VMDataDiskUnknownTypeError'
                     errorCategory = 'InvalidArgument'
@@ -1660,15 +2009,15 @@ InModuleScope LabBuilder {
                         -f $Config.labbuilderconfig.vms.vm.name,"$($Config.labbuilderconfig.settings.vmpath)\$($Config.labbuilderconfig.vms.vm.name)\Virtual Hard Disks\$($Config.labbuilderconfig.vms.vm.datavhds.datavhd[1].vhd)",'badtype')
                 }
                 $Exception = New-Exception @ExceptionParameters
-                { Get-LabVMs -Configuration $Config -VMTemplates $Templates -Switches $Switches } | Should Throw $Exception
+                { Get-LabVM -Config $Config -VMTemplates $Templates -Switches $Switches } | Should Throw $Exception
             }
         }
         Context "Configuration passed with VM Data Disk is not Shared but SupportPR is Y." {
             It 'Throw VMDataDiskSupportPRError Exception' {
                 $Config = Get-LabConfiguration -Path $Global:TestConfigOKPath
                 $Config.labbuilderconfig.vms.vm.datavhds.datavhd[1].supportpr = 'Y'
-                [Array]$Switches = Get-LabSwitches -Configuration $Config
-                [array]$Templates = Get-LabVMTemplates -Configuration $Config
+                [Array]$Switches = Get-LabSwitch -Config $Config
+                [array]$Templates = Get-LabVMTemplate -Config $Config
                 $ExceptionParameters = @{
                     errorId = 'VMDataDiskSupportPRError'
                     errorCategory = 'InvalidArgument'
@@ -1676,15 +2025,15 @@ InModuleScope LabBuilder {
                         -f $Config.labbuilderconfig.vms.vm.name,"$($Config.labbuilderconfig.settings.vmpath)\$($Config.labbuilderconfig.vms.vm.name)\Virtual Hard Disks\$($Config.labbuilderconfig.vms.vm.datavhds.datavhd[1].vhd)")
                 }
                 $Exception = New-Exception @ExceptionParameters
-                { Get-LabVMs -Configuration $Config -VMTemplates $Templates -Switches $Switches } | Should Throw $Exception
+                { Get-LabVM -Config $Config -VMTemplates $Templates -Switches $Switches } | Should Throw $Exception
             }
         }        
         Context "Configuration passed with VM Data Disk that does not exist but Type missing." {
             It 'Throw VMDataDiskCantBeCreatedError Exception' {
                 $Config = Get-LabConfiguration -Path $Global:TestConfigOKPath
                 $Config.labbuilderconfig.vms.vm.datavhds.datavhd[1].RemoveAttribute('type')
-                [Array]$Switches = Get-LabSwitches -Configuration $Config
-                [array]$Templates = Get-LabVMTemplates -Configuration $Config
+                [Array]$Switches = Get-LabSwitch -Config $Config
+                [array]$Templates = Get-LabVMTemplate -Config $Config
                 $ExceptionParameters = @{
                     errorId = 'VMDataDiskCantBeCreatedError'
                     errorCategory = 'InvalidArgument'
@@ -1692,15 +2041,15 @@ InModuleScope LabBuilder {
                         -f $Config.labbuilderconfig.vms.vm.name,"$($Config.labbuilderconfig.settings.vmpath)\$($Config.labbuilderconfig.vms.vm.name)\Virtual Hard Disks\$($Config.labbuilderconfig.vms.vm.datavhds.datavhd[1].vhd)")
                 }
                 $Exception = New-Exception @ExceptionParameters
-                { Get-LabVMs -Configuration $Config -VMTemplates $Templates -Switches $Switches } | Should Throw $Exception
+                { Get-LabVM -Config $Config -VMTemplates $Templates -Switches $Switches } | Should Throw $Exception
             }
         }
         Context "Configuration passed with VM Data Disk that does not exist but Size missing." {
             It 'Throw VMDataDiskCantBeCreatedError Exception' {
                 $Config = Get-LabConfiguration -Path $Global:TestConfigOKPath
                 $Config.labbuilderconfig.vms.vm.datavhds.datavhd[1].RemoveAttribute('size')
-                [Array]$Switches = Get-LabSwitches -Configuration $Config
-                [array]$Templates = Get-LabVMTemplates -Configuration $Config
+                [Array]$Switches = Get-LabSwitch -Config $Config
+                [array]$Templates = Get-LabVMTemplate -Config $Config
                 $ExceptionParameters = @{
                     errorId = 'VMDataDiskCantBeCreatedError'
                     errorCategory = 'InvalidArgument'
@@ -1708,15 +2057,15 @@ InModuleScope LabBuilder {
                         -f $Config.labbuilderconfig.vms.vm.name,"$($Config.labbuilderconfig.settings.vmpath)\$($Config.labbuilderconfig.vms.vm.name)\Virtual Hard Disks\$($Config.labbuilderconfig.vms.vm.datavhds.datavhd[1].vhd)")
                 }
                 $Exception = New-Exception @ExceptionParameters
-                { Get-LabVMs -Configuration $Config -VMTemplates $Templates -Switches $Switches } | Should Throw $Exception
+                { Get-LabVM -Config $Config -VMTemplates $Templates -Switches $Switches } | Should Throw $Exception
             }
         }
         Context "Configuration passed with VM Data Disk that does not exist but SourceVHD missing." {
             It 'Throw VMDataDiskCantBeCreatedError Exception' {
                 $Config = Get-LabConfiguration -Path $Global:TestConfigOKPath
                 $Config.labbuilderconfig.vms.vm.datavhds.datavhd[0].RemoveAttribute('sourcevhd')
-                [Array]$Switches = Get-LabSwitches -Configuration $Config
-                [array]$Templates = Get-LabVMTemplates -Configuration $Config
+                [Array]$Switches = Get-LabSwitch -Config $Config
+                [array]$Templates = Get-LabVMTemplate -Config $Config
                 $ExceptionParameters = @{
                     errorId = 'VMDataDiskCantBeCreatedError'
                     errorCategory = 'InvalidArgument'
@@ -1724,15 +2073,15 @@ InModuleScope LabBuilder {
                         -f $Config.labbuilderconfig.vms.vm.name,"$($Config.labbuilderconfig.settings.vmpath)\$($Config.labbuilderconfig.vms.vm.name)\Virtual Hard Disks\$($Config.labbuilderconfig.vms.vm.datavhds.datavhd[0].vhd)")
                 }
                 $Exception = New-Exception @ExceptionParameters
-                { Get-LabVMs -Configuration $Config -VMTemplates $Templates -Switches $Switches } | Should Throw $Exception
+                { Get-LabVM -Config $Config -VMTemplates $Templates -Switches $Switches } | Should Throw $Exception
             }
         }
         Context "Configuration passed with VM Data Disk that has MoveSourceVHD flag but SourceVHD missing." {
             It 'Throw VMDataDiskSourceVHDIfMoveError Exception' {
                 $Config = Get-LabConfiguration -Path $Global:TestConfigOKPath
                 $Config.labbuilderconfig.vms.vm.datavhds.datavhd[4].RemoveAttribute('sourcevhd')
-                [Array]$Switches = Get-LabSwitches -Configuration $Config
-                [array]$Templates = Get-LabVMTemplates -Configuration $Config
+                [Array]$Switches = Get-LabSwitch -Config $Config
+                [array]$Templates = Get-LabVMTemplate -Config $Config
                 $ExceptionParameters = @{
                     errorId = 'VMDataDiskSourceVHDIfMoveError'
                     errorCategory = 'InvalidArgument'
@@ -1740,15 +2089,15 @@ InModuleScope LabBuilder {
                         -f $Config.labbuilderconfig.vms.vm.name,"$($Config.labbuilderconfig.settings.vmpath)\$($Config.labbuilderconfig.vms.vm.name)\Virtual Hard Disks\$($Config.labbuilderconfig.vms.vm.datavhds.datavhd[4].vhd)")
                 }
                 $Exception = New-Exception @ExceptionParameters
-                { Get-LabVMs -Configuration $Config -VMTemplates $Templates -Switches $Switches } | Should Throw $Exception
+                { Get-LabVM -Config $Config -VMTemplates $Templates -Switches $Switches } | Should Throw $Exception
             }
         }
         Context "Configuration passed with VM unattend file that can't be found." {
             It 'Throw UnattendFileMissingError Exception' {
                 $Config = Get-LabConfiguration -Path $Global:TestConfigOKPath
                 $Config.labbuilderconfig.vms.vm.unattendfile = 'ThisFileDoesntExist.xml'
-                [Array]$Switches = Get-LabSwitches -Configuration $Config
-                [array]$Templates = Get-LabVMTemplates -Configuration $Config
+                [Array]$Switches = Get-LabSwitch -Config $Config
+                [array]$Templates = Get-LabVMTemplate -Config $Config
                 $ExceptionParameters = @{
                     errorId = 'UnattendFileMissingError'
                     errorCategory = 'InvalidArgument'
@@ -1756,15 +2105,15 @@ InModuleScope LabBuilder {
                         -f $Config.labbuilderconfig.vms.vm.name,"$Global:TestConfigPath\ThisFileDoesntExist.xml")
                 }
                 $Exception = New-Exception @ExceptionParameters
-                { Get-LabVMs -Configuration $Config -VMTemplates $Templates -Switches $Switches } | Should Throw $Exception
+                { Get-LabVM -Config $Config -VMTemplates $Templates -Switches $Switches } | Should Throw $Exception
             }
         }
         Context "Configuration passed with VM setup complete file that can't be found." {
             It 'Throw SetupCompleteFileMissingError Exception' {
                 $Config = Get-LabConfiguration -Path $Global:TestConfigOKPath
                 $Config.labbuilderconfig.vms.vm.setupcomplete = 'ThisFileDoesntExist.ps1'
-                [Array]$Switches = Get-LabSwitches -Configuration $Config
-                [array]$Templates = Get-LabVMTemplates -Configuration $Config
+                [Array]$Switches = Get-LabSwitch -Config $Config
+                [array]$Templates = Get-LabVMTemplate -Config $Config
                 $ExceptionParameters = @{
                     errorId = 'SetupCompleteFileMissingError'
                     errorCategory = 'InvalidArgument'
@@ -1772,15 +2121,15 @@ InModuleScope LabBuilder {
                         -f $Config.labbuilderconfig.vms.vm.name,"$Global:TestConfigPath\ThisFileDoesntExist.ps1")
                 }
                 $Exception = New-Exception @ExceptionParameters
-                { Get-LabVMs -Configuration $Config -VMTemplates $Templates -Switches $Switches } | Should Throw $Exception
+                { Get-LabVM -Config $Config -VMTemplates $Templates -Switches $Switches } | Should Throw $Exception
             }
         }
         Context 'Configuration passed with VM setup complete file with an invalid file extension.' {
             It 'Throw SetupCompleteFileBadTypeError Exception' {
                 $Config = Get-LabConfiguration -Path $Global:TestConfigOKPath
                 $Config.labbuilderconfig.vms.vm.setupcomplete = 'ThisFileDoesntExist.abc'
-                [Array]$Switches = Get-LabSwitches -Configuration $Config
-                [array]$Templates = Get-LabVMTemplates -Configuration $Config
+                [Array]$Switches = Get-LabSwitch -Config $Config
+                [array]$Templates = Get-LabVMTemplate -Config $Config
                 $ExceptionParameters = @{
                     errorId = 'SetupCompleteFileBadTypeError'
                     errorCategory = 'InvalidArgument'
@@ -1788,47 +2137,47 @@ InModuleScope LabBuilder {
                         -f $Config.labbuilderconfig.vms.vm.name,"$Global:TestConfigPath\ThisFileDoesntExist.abc")
                 }
                 $Exception = New-Exception @ExceptionParameters
-                { Get-LabVMs -Configuration $Config -VMTemplates $Templates -Switches $Switches } | Should Throw $Exception
+                { Get-LabVM -Config $Config -VMTemplates $Templates -Switches $Switches } | Should Throw $Exception
             }
         }
         Context "Configuration passed with VM DSC Config File that can't be found." {
             It 'Throw DSCConfigFileMissingError Exception' {
                 $Config = Get-LabConfiguration -Path $Global:TestConfigOKPath
                 $Config.labbuilderconfig.vms.vm.dsc.configfile = 'ThisFileDoesntExist.ps1'
-                [Array]$Switches = Get-LabSwitches -Configuration $Config
-                [array]$Templates = Get-LabVMTemplates -Configuration $Config
+                [Array]$Switches = Get-LabSwitch -Config $Config
+                [array]$Templates = Get-LabVMTemplate -Config $Config
                 $ExceptionParameters = @{
                     errorId = 'DSCConfigFileMissingError'
                     errorCategory = 'InvalidArgument'
                     errorMessage = $($LocalizedData.DSCConfigFileMissingError `
-                        -f $Config.labbuilderconfig.vms.vm.name,"$Global:TestConfigPath\ThisFileDoesntExist.ps1")
+                        -f $Config.labbuilderconfig.vms.vm.name,"$Global:TestConfigPath\DSCLibrary\ThisFileDoesntExist.ps1")
                 }
                 $Exception = New-Exception @ExceptionParameters
-                { Get-LabVMs -Configuration $Config -VMTemplates $Templates -Switches $Switches } | Should Throw $Exception
+                { Get-LabVM -Config $Config -VMTemplates $Templates -Switches $Switches } | Should Throw $Exception
             }
         }
         Context 'Configuration passed with VM DSC Config File with an invalid file extension.' {
             It 'Throw DSCConfigFileBadTypeError Exception' {
                 $Config = Get-LabConfiguration -Path $Global:TestConfigOKPath
                 $Config.labbuilderconfig.vms.vm.dsc.configfile = 'FileWithBadType.xyz'
-                [Array]$Switches = Get-LabSwitches -Configuration $Config
-                [array]$Templates = Get-LabVMTemplates -Configuration $Config
+                [Array]$Switches = Get-LabSwitch -Config $Config
+                [array]$Templates = Get-LabVMTemplate -Config $Config
                 $ExceptionParameters = @{
                     errorId = 'DSCConfigFileBadTypeError'
                     errorCategory = 'InvalidArgument'
                     errorMessage = $($LocalizedData.DSCConfigFileBadTypeError `
-                        -f $Config.labbuilderconfig.vms.vm.name,"$Global:TestConfigPath\FileWithBadType.xyz")
+                        -f $Config.labbuilderconfig.vms.vm.name,"$Global:TestConfigPath\DSCLibrary\FileWithBadType.xyz")
                 }
                 $Exception = New-Exception @ExceptionParameters
-                { Get-LabVMs -Configuration $Config -VMTemplates $Templates -Switches $Switches } | Should Throw $Exception
+                { Get-LabVM -Config $Config -VMTemplates $Templates -Switches $Switches } | Should Throw $Exception
             }
         }
         Context 'Configuration passed with VM DSC Config File but no DSC Name.' {
             It 'Throw DSCConfigNameIsEmptyError Exception' {
                 $Config = Get-LabConfiguration -Path $Global:TestConfigOKPath
                 $Config.labbuilderconfig.vms.vm.dsc.configname = ''
-                [Array]$Switches = Get-LabSwitches -Configuration $Config
-                [Array]$Templates = Get-LabVMTemplates -Configuration $Config
+                [Array]$Switches = Get-LabSwitch -Config $Config
+                [Array]$Templates = Get-LabVMTemplate -Config $Config
                 $ExceptionParameters = @{
                     errorId = 'DSCConfigNameIsEmptyError'
                     errorCategory = 'InvalidArgument'
@@ -1836,96 +2185,114 @@ InModuleScope LabBuilder {
                         -f $Config.labbuilderconfig.vms.vm.name)
                 }
                 $Exception = New-Exception @ExceptionParameters
-                { Get-LabVMs -Configuration $Config -VMTemplates $Templates -Switches $Switches } | Should Throw $Exception
+                { Get-LabVM -Config $Config -VMTemplates $Templates -Switches $Switches } | Should Throw $Exception
             }
         }
         Context 'Valid configuration is passed with VM Data Disk with rooted VHD path.' {
             $Config = Get-LabConfiguration -Path $Global:TestConfigOKPath
-            $Config.labbuilderconfig.vms.vm.datavhds.datavhd[0].vhd = "$Global:TestConfigPath\DataDisk.vhdx"
-            [Array]$Switches = Get-LabSwitches -Configuration $Config
-            [Array]$Templates = Get-LabVMTemplates -Configuration $Config
-            [Array]$VMs = Get-LabVMs -Configuration $Config -VMTemplates $Templates -Switches $Switches
+            $Config.labbuilderconfig.vms.vm.datavhds.datavhd[0].vhd = "$Global:TestConfigPath\VhdFiles\DataDisk.vhdx"
+            [Array]$Switches = Get-LabSwitch -Config $Config
+            [Array]$Templates = Get-LabVMTemplate -Config $Config
+            [Array]$VMs = Get-LabVM -Config $Config -VMTemplates $Templates -Switches $Switches
             It 'Returns Template Object containing VHD with correct rooted path' {
-                $VMs[0].DataVhds[0].vhd | Should Be "$Global:TestConfigPath\DataDisk.vhdx"
+                $VMs[0].DataVhds[0].vhd | Should Be "$Global:TestConfigPath\VhdFiles\DataDisk.vhdx"
             }
         }
         Context 'Valid configuration is passed with VM Data Disk with non-rooted VHD path.' {
             $Config = Get-LabConfiguration -Path $Global:TestConfigOKPath
             $Config.labbuilderconfig.vms.vm.datavhds.datavhd[0].vhd = "DataDisk.vhdx"
-            [Array]$Switches = Get-LabSwitches -Configuration $Config
-            [Array]$Templates = Get-LabVMTemplates -Configuration $Config
-            [Array]$VMs = Get-LabVMs -Configuration $Config -VMTemplates $Templates -Switches $Switches
+            [Array]$Switches = Get-LabSwitch -Config $Config
+            [Array]$Templates = Get-LabVMTemplate -Config $Config
+            [Array]$VMs = Get-LabVM -Config $Config -VMTemplates $Templates -Switches $Switches
             It 'Returns Template Object containing VHD with correct rooted path' {
                 $VMs[0].DataVhds[0].vhd | Should Be "$($Config.labbuilderconfig.settings.vmpath)\$($Config.labbuilderconfig.vms.vm.name)\Virtual Hard Disks\DataDisk.vhdx"
             }
         }
         Context 'Valid configuration is passed with VM Data Disk with rooted Parent VHD path.' {
             $Config = Get-LabConfiguration -Path $Global:TestConfigOKPath
-            $Config.labbuilderconfig.vms.vm.datavhds.datavhd[3].parentvhd = "$Global:TestConfigPath\DataDisk.vhdx"
-            [Array]$Switches = Get-LabSwitches -Configuration $Config
-            [Array]$Templates = Get-LabVMTemplates -Configuration $Config
-            [Array]$VMs = Get-LabVMs -Configuration $Config -VMTemplates $Templates -Switches $Switches
+            $Config.labbuilderconfig.vms.vm.datavhds.datavhd[3].parentvhd = "$Global:TestConfigPath\VhdFiles\DataDisk.vhdx"
+            [Array]$Switches = Get-LabSwitch -Config $Config
+            [Array]$Templates = Get-LabVMTemplate -Config $Config
+            [Array]$VMs = Get-LabVM -Config $Config -VMTemplates $Templates -Switches $Switches
             It 'Returns Template Object containing Parent VHD with correct rooted path' {
-                $VMs[0].DataVhds[3].parentvhd | Should Be "$Global:TestConfigPath\DataDisk.vhdx"
+                $VMs[0].DataVhds[3].parentvhd | Should Be "$Global:TestConfigPath\VhdFiles\DataDisk.vhdx"
             }
         }
         Context 'Valid configuration is passed with VM Data Disk with non-rooted Parent VHD path.' {
             Mock Test-Path -MockWith { $true }
             $Config = Get-LabConfiguration -Path $Global:TestConfigOKPath
-            $Config.labbuilderconfig.vms.vm.datavhds.datavhd[3].parentvhd = "DataDisk.vhdx"
-            [Array]$Switches = Get-LabSwitches -Configuration $Config
-            [Array]$Templates = Get-LabVMTemplates -Configuration $Config
-            [Array]$VMs = Get-LabVMs -Configuration $Config -VMTemplates $Templates -Switches $Switches
+            $Config.labbuilderconfig.vms.vm.datavhds.datavhd[3].parentvhd = "VhdFiles\DataDisk.vhdx"
+            [Array]$Switches = Get-LabSwitch -Config $Config
+            [Array]$Templates = Get-LabVMTemplate -Config $Config
+            [Array]$VMs = Get-LabVM -Config $Config -VMTemplates $Templates -Switches $Switches
             It 'Returns Template Object containing Parent VHD with correct rooted path' {
-                $VMs[0].DataVhds[3].parentvhd | Should Be "$Global:TestConfigPath\DataDisk.vhdx"
+                $VMs[0].DataVhds[3].parentvhd | Should Be "$Global:TestConfigPath\VhdFiles\DataDisk.vhdx"
             }
         }
         Context 'Valid configuration is passed with VM Data Disk with rooted Source VHD path.' {
             $Config = Get-LabConfiguration -Path $Global:TestConfigOKPath
-            $Config.labbuilderconfig.vms.vm.datavhds.datavhd[0].sourcevhd = "$Global:TestConfigPath\DataDisk.vhdx"
-            [Array]$Switches = Get-LabSwitches -Configuration $Config
-            [Array]$Templates = Get-LabVMTemplates -Configuration $Config
-            [Array]$VMs = Get-LabVMs -Configuration $Config -VMTemplates $Templates -Switches $Switches
+            $Config.labbuilderconfig.vms.vm.datavhds.datavhd[0].sourcevhd = "$Global:TestConfigPath\VhdFiles\DataDisk.vhdx"
+            [Array]$Switches = Get-LabSwitch -Config $Config
+            [Array]$Templates = Get-LabVMTemplate -Config $Config
+            [Array]$VMs = Get-LabVM -Config $Config -VMTemplates $Templates -Switches $Switches
             It 'Returns Template Object containing Source VHD with correct rooted path' {
-                $VMs[0].DataVhds[0].sourcevhd | Should Be "$Global:TestConfigPath\DataDisk.vhdx"
+                $VMs[0].DataVhds[0].sourcevhd | Should Be "$Global:TestConfigPath\VhdFiles\DataDisk.vhdx"
             }
         }
         Context 'Valid configuration is passed with VM Data Disk with non-rooted Source VHD path.' {
             Mock Test-Path -MockWith { $true }
             $Config = Get-LabConfiguration -Path $Global:TestConfigOKPath
-            $Config.labbuilderconfig.vms.vm.datavhds.datavhd[0].sourcevhd = "DataDisk.vhdx"
-            [Array]$Switches = Get-LabSwitches -Configuration $Config
-            [Array]$Templates = Get-LabVMTemplates -Configuration $Config
-            [Array]$VMs = Get-LabVMs -Configuration $Config -VMTemplates $Templates -Switches $Switches
+            $Config.labbuilderconfig.vms.vm.datavhds.datavhd[0].sourcevhd = "VhdFiles\DataDisk.vhdx"
+            [Array]$Switches = Get-LabSwitch -Config $Config
+            [Array]$Templates = Get-LabVMTemplate -Config $Config
+            [Array]$VMs = Get-LabVM -Config $Config -VMTemplates $Templates -Switches $Switches
             It 'Returns Template Object containing Source VHD with correct rooted path' {
-                $VMs[0].DataVhds[0].sourcevhd | Should Be "$Global:TestConfigPath\DataDisk.vhdx"
+                $VMs[0].DataVhds[0].sourcevhd | Should Be "$Global:TestConfigPath\VhdFiles\DataDisk.vhdx"
             }
         }
-        Context 'Valid configuration is passed' {
+        Context 'Valid configuration is passed but switches and VMTemplates not passed' {
             $Config = Get-LabConfiguration -Path $Global:TestConfigOKPath
-            [Array]$Switches = Get-LabSwitches -Configuration $Config
-            [Array]$Templates = Get-LabVMTemplates -Configuration $Config
-            [Array]$VMs = Get-LabVMs -Configuration $Config -VMTemplates $Templates -Switches $Switches
+            [Array]$VMs = Get-LabVM -Config $Config
             # Remove the Source VHD and Parent VHD values for any data disks because they
             # will usually be relative to the test folder and won't exist
             foreach ($DataVhd in $VMs[0].DataVhds)
             {
-                $DataVhd.ParentVHD = ''
-                $DataVhd.SourceVHD = ''
+                $DataVhd.ParentVHD = 'Intentionally Removed'
+                $DataVhd.SourceVHD = 'Intentionally Removed'
             }
             # Remove the DSCConfigFile path as this will be relative as well
             $VMs[0].DSCConfigFile = ''
             It 'Returns Template Object that matches Expected Object' {
                 Set-Content -Path "$Global:ArtifactPath\ExpectedVMs.json" -Value ($VMs | ConvertTo-Json -Depth 6)
-                $ExpectedVMs = Get-Content -Path "$Global:TestConfigPath\ExpectedVMs.json"
+                $ExpectedVMs = Get-Content -Path "$Global:ExpectedContentPath\ExpectedVMs.json"
                 [String]::Compare((Get-Content -Path "$Global:ArtifactPath\ExpectedVMs.json"),$ExpectedVMs,$true) | Should Be 0
             }
-        }        
+        }
+        Context 'Valid configuration is passed' {
+            $Config = Get-LabConfiguration -Path $Global:TestConfigOKPath
+            [Array]$Switches = Get-LabSwitch -Config $Config
+            [Array]$Templates = Get-LabVMTemplate -Config $Config
+            [Array]$VMs = Get-LabVM -Config $Config -VMTemplates $Templates -Switches $Switches
+            # Remove the Source VHD and Parent VHD values for any data disks because they
+            # will usually be relative to the test folder and won't exist
+            foreach ($DataVhd in $VMs[0].DataVhds)
+            {
+                $DataVhd.ParentVHD = 'Intentionally Removed'
+                $DataVhd.SourceVHD = 'Intentionally Removed'
+            }
+            # Remove the DSCConfigFile path as this will be relative as well
+            $VMs[0].DSCConfigFile = ''
+            It 'Returns Template Object that matches Expected Object' {
+                Set-Content -Path "$Global:ArtifactPath\ExpectedVMs.json" -Value ($VMs | ConvertTo-Json -Depth 6)
+                $ExpectedVMs = Get-Content -Path "$Global:ExpectedContentPath\ExpectedVMs.json"
+                [String]::Compare((Get-Content -Path "$Global:ArtifactPath\ExpectedVMs.json"),$ExpectedVMs,$true) | Should Be 0
+            }
+        }
     }
 
 
 
-    Describe 'Get-LabVMSelfSignedCert' -Tags 'Incomplete' {
+    Describe 'Get-LabVMelfSignedCert' -Tags 'Incomplete' {
     }
 
 
@@ -1936,7 +2303,7 @@ InModuleScope LabBuilder {
         Mock Get-VM -ParameterFilter { $Name -eq 'pester template *' }
         Mock Start-VM
         Mock Wait-LabVMInit -MockWith { $True }
-        Mock Get-LabVMSelfSignedCert -MockWith { $True }
+        Mock Get-LabVMelfSignedCert -MockWith { $True }
         Mock Initialize-LabVMDSC
         Mock Start-LabVMDSC
         #endregion
@@ -1946,19 +2313,19 @@ InModuleScope LabBuilder {
             New-Item -Path $Config.labbuilderconfig.settings.vmpath -ItemType Directory -Force -ErrorAction SilentlyContinue
             New-Item -Path $Config.labbuilderconfig.settings.vhdparentpath -ItemType Directory -Force -ErrorAction SilentlyContinue
 
-            [Array]$Templates = Get-LabVMTemplates -Configuration $Config
-            [Array]$Switches = Get-LabSwitches -Configuration $Config
-            [Array]$VMs = Get-LabVMs -Configuration $Config -VMTemplates $Templates -Switches $Switches
+            [Array]$Templates = Get-LabVMTemplate -Config $Config
+            [Array]$Switches = Get-LabSwitch -Config $Config
+            [Array]$VMs = Get-LabVM -Config $Config -VMTemplates $Templates -Switches $Switches
                     
             It 'Returns True' {
-                Start-LabVM -Configuration $Config -VM $VMs[0] | Should Be $True
+                Start-LabVM -Config $Config -VM $VMs[0] | Should Be $True
             }
             It 'Calls Mocked commands' {
                 Assert-MockCalled Get-VM -ParameterFilter { $Name -eq 'PESTER01' } -Exactly 1
                 Assert-MockCalled Get-VM -ParameterFilter { $Name -eq 'pester template *' } -Exactly 1
                 Assert-MockCalled Start-VM -Exactly 1
                 Assert-MockCalled Wait-LabVMInit -Exactly 1
-                Assert-MockCalled Get-LabVMSelfSignedCert -Exactly 1
+                Assert-MockCalled Get-LabVMelfSignedCert -Exactly 1
                 Assert-MockCalled Initialize-LabVMDSC -Exactly 1
                 Assert-MockCalled Start-LabVMDSC -Exactly 1
             }
@@ -1970,7 +2337,7 @@ InModuleScope LabBuilder {
 
 
 
-    Describe 'Update-LabVMDataDisk' -Tags 'InProcess' {
+    Describe 'Update-LabVMDataDisk' {
         #region Mocks
         Mock Get-VM
         Mock Get-VHD
@@ -1987,14 +2354,14 @@ InModuleScope LabBuilder {
         # The same VM will be used for all tests, but a different
         # DataVHds array will be created/assigned for each test.
         $Config = Get-LabConfiguration -Path $Global:TestConfigOKPath
-        [Array]$Templates = Get-LabVMTemplates -Configuration $Config
-        [Array]$Switches = Get-LabSwitches -Configuration $Config
-        [Array]$VMs = Get-LabVMs -Configuration $Config -VMTemplates $Templates -Switches $Switches
+        [Array]$Templates = Get-LabVMTemplate -Config $Config
+        [Array]$Switches = Get-LabSwitch -Config $Config
+        [Array]$VMs = Get-LabVM -Config $Config -VMTemplates $Templates -Switches $Switches
 
         Context 'Valid configuration is passed with no DataVHDs' {
             $VMs[0].DataVHDs = @()
             It 'Does not throw an Exception' {
-                { Update-LabVMDataDisk -Configuration $Config -VM $VMs[0] } | Should Not Throw 
+                { Update-LabVMDataDisk -Config $Config -VM $VMs[0] } | Should Not Throw 
             }
             It 'Calls Mocked commands' {
                 Assert-MockCalled Get-VHD -Exactly 0
@@ -2024,7 +2391,7 @@ InModuleScope LabBuilder {
                         -f $VMs[0].Name,$VMs[0].DataVHDs.Vhd,$VMs[0].DataVHDs.Type)
                 }
                 $Exception = New-Exception @ExceptionParameters
-                { Update-LabVMDataDisk -Configuration $Config -VM $VMs[0] } | Should Throw 
+                { Update-LabVMDataDisk -Config $Config -VM $VMs[0] } | Should Throw 
             }
             It 'Calls Mocked commands' {
                 Assert-MockCalled Get-VHD -Exactly 1
@@ -2054,7 +2421,7 @@ InModuleScope LabBuilder {
                         -f $VMs[0].Name,$VMs[0].DataVHDs[0].Vhd,$VMs[0].DataVHDs[0].Size)
                 }
                 $Exception = New-Exception @ExceptionParameters
-                { Update-LabVMDataDisk -Configuration $Config -VM $VMs[0] } | Should Throw $Exception
+                { Update-LabVMDataDisk -Config $Config -VM $VMs[0] } | Should Throw $Exception
             }
             It 'Calls Mocked commands' {
                 Assert-MockCalled Get-VHD -Exactly 1
@@ -2077,7 +2444,7 @@ InModuleScope LabBuilder {
                 Size = 20GB
             } }
             It 'Does not throw an Exception' {
-                { Update-LabVMDataDisk -Configuration $Config -VM $VMs[0] } | Should Not Throw
+                { Update-LabVMDataDisk -Config $Config -VM $VMs[0] } | Should Not Throw
             }
             It 'Calls Mocked commands' {
                 Assert-MockCalled Get-VHD -Exactly 1
@@ -2105,7 +2472,7 @@ InModuleScope LabBuilder {
                         -f $VMs[0].Name,$VMs[0].DataVHDs[0].SourceVhd)
                 }
                 $Exception = New-Exception @ExceptionParameters
-                { Update-LabVMDataDisk -Configuration $Config -VM $VMs[0] } | Should Throw $Exception
+                { Update-LabVMDataDisk -Config $Config -VM $VMs[0] } | Should Throw $Exception
             }
             It 'Calls Mocked commands' {
                 Assert-MockCalled Get-VHD -Exactly 0
@@ -2123,7 +2490,7 @@ InModuleScope LabBuilder {
                 SourceVhd = 'DoesExist.Vhdx'
             } )
             It 'Does not throw an Exception' {
-                { Update-LabVMDataDisk -Configuration $Config -VM $VMs[0] } | Should Not Throw
+                { Update-LabVMDataDisk -Config $Config -VM $VMs[0] } | Should Not Throw
             }
             It 'Calls Mocked commands' {
                 Assert-MockCalled Get-VHD -Exactly 0
@@ -2142,7 +2509,7 @@ InModuleScope LabBuilder {
                 MoveSourceVHD = $true
             } )
             It 'Does not throw an Exception' {
-                { Update-LabVMDataDisk -Configuration $Config -VM $VMs[0] } | Should Not Throw
+                { Update-LabVMDataDisk -Config $Config -VM $VMs[0] } | Should Not Throw
             }
             It 'Calls Mocked commands' {
                 Assert-MockCalled Get-VHD -Exactly 0
@@ -2161,7 +2528,7 @@ InModuleScope LabBuilder {
                 Size = 10GB
             } )
             It 'Does not throw an Exception' {
-                { Update-LabVMDataDisk -Configuration $Config -VM $VMs[0] } | Should Not Throw
+                { Update-LabVMDataDisk -Config $Config -VM $VMs[0] } | Should Not Throw
             }
             It 'Calls Mocked commands' {
                 Assert-MockCalled Get-VHD -Exactly 0
@@ -2180,7 +2547,7 @@ InModuleScope LabBuilder {
                 Size = 10GB
             } )
             It 'Does not throw an Exception' {
-                { Update-LabVMDataDisk -Configuration $Config -VM $VMs[0] } | Should Not Throw
+                { Update-LabVMDataDisk -Config $Config -VM $VMs[0] } | Should Not Throw
             }
             It 'Calls Mocked commands' {
                 Assert-MockCalled Get-VHD -Exactly 0
@@ -2206,7 +2573,7 @@ InModuleScope LabBuilder {
                         -f $VMs[0].Name)
                 }
                 $Exception = New-Exception @ExceptionParameters
-                { Update-LabVMDataDisk -Configuration $Config -VM $VMs[0] } | Should Throw $Exception
+                { Update-LabVMDataDisk -Config $Config -VM $VMs[0] } | Should Throw $Exception
             }
             It 'Calls Mocked commands' {
                 Assert-MockCalled Get-VHD -Exactly 0
@@ -2233,7 +2600,7 @@ InModuleScope LabBuilder {
                         -f $VMs[0].Name,$VMs[0].DataVHDs[0].ParentVhd)
                 }
                 $Exception = New-Exception @ExceptionParameters
-                { Update-LabVMDataDisk -Configuration $Config -VM $VMs[0] } | Should Throw $Exception
+                { Update-LabVMDataDisk -Config $Config -VM $VMs[0] } | Should Throw $Exception
             }
             It 'Calls Mocked commands' {
                 Assert-MockCalled Get-VHD -Exactly 0
@@ -2253,7 +2620,7 @@ InModuleScope LabBuilder {
                 ParentVHD = 'DoesExist.vhdx'
             } )
             It 'Does not throw an Exception' {
-                { Update-LabVMDataDisk -Configuration $Config -VM $VMs[0] } | Should Not Throw
+                { Update-LabVMDataDisk -Config $Config -VM $VMs[0] } | Should Not Throw
             }
             It 'Calls Mocked commands' {
                 Assert-MockCalled Get-VHD -Exactly 0
@@ -2279,7 +2646,7 @@ InModuleScope LabBuilder {
                         -f $VMs[0].Name,$VMs[0].DataVHDs[0].Vhd,$VMs[0].DataVHDs[0].Type)
                 }
                 $Exception = New-Exception @ExceptionParameters
-                { Update-LabVMDataDisk -Configuration $Config -VM $VMs[0] } | Should Throw $Exception
+                { Update-LabVMDataDisk -Config $Config -VM $VMs[0] } | Should Throw $Exception
             }
             It 'Calls Mocked commands' {
                 Assert-MockCalled Get-VHD -Exactly 0
@@ -2305,7 +2672,7 @@ InModuleScope LabBuilder {
                 Size = 10GB
             } )
             It 'Does not throw an Exception' {
-                { Update-LabVMDataDisk -Configuration $Config -VM $VMs[0] } | Should Not Throw
+                { Update-LabVMDataDisk -Config $Config -VM $VMs[0] } | Should Not Throw
             }
             It 'Calls Mocked commands' {
                 Assert-MockCalled Get-VHD -Exactly 1
@@ -2317,12 +2684,80 @@ InModuleScope LabBuilder {
                 Assert-MockCalled Add-VMHardDiskDrive -Exactly 0
             }
         }
-
     }
 
 
+    Describe 'Update-LabVMIntegrationService' {
+        #region Mocks
+        Mock Get-VMIntegrationService -MockWith { @(
+            @{ Name = 'Guest Service Interface'; Enabled = $False }
+            @{ Name = 'Heartbeat'; Enabled = $True }
+            @{ Name = 'Key-Value Pair Exchange'; Enabled = $True }
+            @{ Name = 'Shutdown'; Enabled = $True }
+            @{ Name = 'Time Synchronization'; Enabled = $True }
+            @{ Name = 'VSS'; Enabled = $True }                             
+        ) }
+        Mock Enable-VMIntegrationService
+        Mock Disable-VMIntegrationService
+        #endregion
 
-    Describe 'Initialize-LabVMs'  -Tags 'Incomplete' {
+        $Config = Get-LabConfiguration -Path $Global:TestConfigOKPath
+        [Array]$Templates = Get-LabVMTemplate -Config $Config
+        [Array]$Switches = Get-LabSwitch -Config $Config
+
+        Context 'Valid configuration is passed with null Integration Services' {
+            [Array]$VMs = Get-LabVM -Config $Config -VMTemplates $Templates -Switches $Switches
+            $VMs[0].Remove('IntegrationServices')
+            It 'Does not throw an Exception' {
+                { Update-LabVMIntegrationService -VM $VMs[0] } | Should Not Throw 
+            }
+            It 'Calls Mocked commands' {
+                Assert-MockCalled Get-VMIntegrationService -Exactly 1
+                Assert-MockCalled Enable-VMIntegrationService -Exactly 1
+                Assert-MockCalled Disable-VMIntegrationService -Exactly 0
+            }
+        }
+
+        Context 'Valid configuration is passed with blank Integration Services' {
+            [Array]$VMs = Get-LabVM -Config $Config -VMTemplates $Templates -Switches $Switches
+            $VMs[0].IntegrationServices = ''
+            It 'Does not throw an Exception' {
+                { Update-LabVMIntegrationService -VM $VMs[0] } | Should Not Throw 
+            }
+            It 'Calls Mocked commands' {
+                Assert-MockCalled Get-VMIntegrationService -Exactly 1
+                Assert-MockCalled Enable-VMIntegrationService -Exactly 0 
+                Assert-MockCalled Disable-VMIntegrationService -Exactly 5
+            }
+        }
+
+        Context 'Valid configuration is passed with VSS only enabled' {
+            [Array]$VMs = Get-LabVM -Config $Config -VMTemplates $Templates -Switches $Switches
+            $VMs[0].IntegrationServices = 'VSS'
+            It 'Does not throw an Exception' {
+                { Update-LabVMIntegrationService -VM $VMs[0] } | Should Not Throw 
+            }
+            It 'Calls Mocked commands' {
+                Assert-MockCalled Get-VMIntegrationService -Exactly 1
+                Assert-MockCalled Enable-VMIntegrationService -Exactly 0 
+                Assert-MockCalled Disable-VMIntegrationService -Exactly 4
+            }
+        }
+        Context 'Valid configuration is passed with Guest Service Interface only enabled' {
+            [Array]$VMs = Get-LabVM -Config $Config -VMTemplates $Templates -Switches $Switches
+            $VMs[0].IntegrationServices = 'Guest Service Interface'
+            It 'Does not throw an Exception' {
+                { Update-LabVMIntegrationService -VM $VMs[0] } | Should Not Throw 
+            }
+            It 'Calls Mocked commands' {
+                Assert-MockCalled Get-VMIntegrationService -Exactly 1
+                Assert-MockCalled Enable-VMIntegrationService -Exactly 1 
+                Assert-MockCalled Disable-VMIntegrationService -Exactly 5
+            }
+        }
+    }
+    
+    Describe 'Initialize-LabVM'  -Tags 'Incomplete' {
         #region Mocks
         Mock New-VHD
         Mock New-VM
@@ -2334,7 +2769,7 @@ InModuleScope LabBuilder {
         Mock Add-VMNetworkAdapter
         Mock Start-VM
         Mock Wait-LabVMInit -MockWith { $True }
-        Mock Get-LabVMSelfSignedCert
+        Mock Get-LabVMelfSignedCert
         Mock Initialize-LabVMDSC
         Mock Start-LabVMDSC
         #endregion
@@ -2344,12 +2779,12 @@ InModuleScope LabBuilder {
             New-Item -Path $Config.labbuilderconfig.settings.vmpath -ItemType Directory -Force -ErrorAction SilentlyContinue
             New-Item -Path $Config.labbuilderconfig.settings.vhdparentpath -ItemType Directory -Force -ErrorAction SilentlyContinue
 
-            [Array]$Templates = Get-LabVMTemplates -Configuration $Config
-            [Array]$Switches = Get-LabSwitches -Configuration $Config
-            [Array]$VMs = Get-LabVMs -Configuration $Config -VMTemplates $Templates -Switches $Switches
+            [Array]$Templates = Get-LabVMTemplate -Config $Config
+            [Array]$Switches = Get-LabSwitch -Config $Config
+            [Array]$VMs = Get-LabVM -Config $Config -VMTemplates $Templates -Switches $Switches
                     
             It 'Returns True' {
-                Initialize-LabVMs -Configuration $Config -VMs $VMs | Should Be $True
+                Initialize-LabVM -Config $Config -VMs $VMs | Should Be $True
             }
             It 'Calls Mocked commands' {
                 Assert-MockCalled New-VHD -Exactly 1
@@ -2361,7 +2796,7 @@ InModuleScope LabBuilder {
                 Assert-MockCalled Add-VMNetworkAdapter -Exactly 4
                 Assert-MockCalled Start-VM -Exactly 1
                 Assert-MockCalled Wait-LabVMInit -Exactly 1
-                Assert-MockCalled Get-LabVMSelfSignedCert -Exactly 1
+                Assert-MockCalled Get-LabVMelfSignedCert -Exactly 1
                 Assert-MockCalled Initialize-LabVMDSC -Exactly 1
                 Assert-MockCalled Start-LabVMDSC -Exactly 1
             }
@@ -2373,7 +2808,7 @@ InModuleScope LabBuilder {
 
 
 
-    Describe 'Remove-LabVMs' {
+    Describe 'Remove-LabVM' {
         #region Mocks
         Mock Get-VM -MockWith { [PSObject]@{ Name = 'PESTER01'; State = 'Running'; } }
         Mock Stop-VM
@@ -2384,16 +2819,49 @@ InModuleScope LabBuilder {
 
         Context 'Valid configuration is passed' {	
             $Config = Get-LabConfiguration -Path $Global:TestConfigOKPath
-            [Array]$Templates = Get-LabVMTemplates -Configuration $Config
-            [Array]$Switches = Get-LabSwitches -Configuration $Config
-            [Array]$VMs = Get-LabVMs -Configuration $Config -VMTemplates $Templates -Switches $Switches
+            [Array]$Templates = Get-LabVMTemplate -Config $Config
+            [Array]$Switches = Get-LabSwitch -Config $Config
+            [Array]$VMs = Get-LabVM -Config $Config -VMTemplates $Templates -Switches $Switches
 
-            # Create the dummy VM's that the Remove-LabVMs function 
+            # Create the dummy VM's that the Remove-LabVM function 
             It 'Returns True' {
-                Remove-LabVMs -Configuration $Config -VMs $VMs | Should Be $True
+                Remove-LabVM -Config $Config -VMs $VMs | Should Be $True
             }
             It 'Calls Mocked commands' {
-                Assert-MockCalled Get-VM -Exactly 4
+                Assert-MockCalled Get-VM -Exactly 3
+                Assert-MockCalled Stop-VM -Exactly 1
+                Assert-MockCalled Wait-LabVMOff -Exactly 1
+                Assert-MockCalled Get-VMHardDiskDrive -Exactly 0
+                Assert-MockCalled Remove-VM -Exactly 1
+            }
+        }
+        Context 'Valid configuration is passed but VMs not passed' {	
+            $Config = Get-LabConfiguration -Path $Global:TestConfigOKPath
+
+            # Create the dummy VM's that the Remove-LabVM function 
+            It 'Returns True' {
+                Remove-LabVM -Config $Config | Should Be $True
+            }
+            It 'Calls Mocked commands' {
+                Assert-MockCalled Get-VM -Exactly 3
+                Assert-MockCalled Stop-VM -Exactly 1
+                Assert-MockCalled Wait-LabVMOff -Exactly 1
+                Assert-MockCalled Get-VMHardDiskDrive -Exactly 0
+                Assert-MockCalled Remove-VM -Exactly 1
+            }
+        }
+        Context 'Valid configuration is passed with RemoveVHDs switch' {	
+            $Config = Get-LabConfiguration -Path $Global:TestConfigOKPath
+            [Array]$Templates = Get-LabVMTemplate -Config $Config
+            [Array]$Switches = Get-LabSwitch -Config $Config
+            [Array]$VMs = Get-LabVM -Config $Config -VMTemplates $Templates -Switches $Switches
+
+            # Create the dummy VM's that the Remove-LabVM function 
+            It 'Returns True' {
+                Remove-LabVM -Config $Config -VMs $VMs -RemoveVHDs | Should Be $True
+            }
+            It 'Calls Mocked commands' {
+                Assert-MockCalled Get-VM -Exactly 3
                 Assert-MockCalled Stop-VM -Exactly 1
                 Assert-MockCalled Wait-LabVMOff -Exactly 1
                 Assert-MockCalled Get-VMHardDiskDrive -Exactly 1

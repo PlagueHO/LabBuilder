@@ -3,68 +3,75 @@
     "DSCParameters":  "\r\n          Dummy = \"Dummy\"\r\n        ",
     "Name":  "PESTER01",
     "SetupComplete":  "",
+    "IntegrationServices":  "Guest Service Interface,Heartbeat,Key-Value Pair Exchange,Shutdown,Time Synchronization,VSS",
     "OSType":  "Server",
     "DSCConfigName":  "STANDALONE_DEFAULT",
     "DataVHDs":  [
                      {
-                         "size":  0,
                          "type":  "",
-                         "moveorcopy":  null,
-                         "supportPR":  false,
+                         "size":  0,
+                         "CopyFolder":  "",
+                         "parentvhd":  "Intentionally Removed",
                          "shared":  false,
+                         "moveSourceVHD":  false,
+                         "sourcevhd":  "Intentionally Removed",
                          "vhd":  "C:\\Pester Lab\\PESTER01\\Virtual Hard Disks\\DataDiskCopy.vhdx",
-                         "parentvhd":  "",
-                         "sourcevhd":  ""
+                         "supportPR":  false
                      },
                      {
-                         "size":  10737418240,
                          "type":  "fixed",
-                         "moveorcopy":  null,
-                         "supportPR":  false,
+                         "size":  10737418240,
+                         "CopyFolder":  "",
+                         "parentvhd":  "Intentionally Removed",
                          "shared":  false,
+                         "moveSourceVHD":  false,
+                         "sourcevhd":  "Intentionally Removed",
                          "vhd":  "C:\\Pester Lab\\PESTER01\\Virtual Hard Disks\\DataDiskFixed.vhdx",
-                         "parentvhd":  "",
-                         "sourcevhd":  ""
+                         "supportPR":  false
                      },
                      {
-                         "size":  10737418240,
                          "type":  "dynamic",
-                         "moveorcopy":  null,
-                         "supportPR":  false,
+                         "size":  10737418240,
+                         "CopyFolder":  "",
+                         "parentvhd":  "Intentionally Removed",
                          "shared":  false,
+                         "moveSourceVHD":  false,
+                         "sourcevhd":  "Intentionally Removed",
                          "vhd":  "C:\\Pester Lab\\PESTER01\\Virtual Hard Disks\\DataDiskDynamic.vhdx",
-                         "parentvhd":  "",
-                         "sourcevhd":  ""
+                         "supportPR":  false
                      },
                      {
-                         "size":  10737418240,
                          "type":  "differencing",
-                         "moveorcopy":  null,
-                         "supportPR":  false,
-                         "shared":  false,
-                         "vhd":  "C:\\Pester Lab\\PESTER01\\Virtual Hard Disks\\DataDiskDifferencing.vhdx",
-                         "parentvhd":  "",
-                         "sourcevhd":  ""
-                     },
-                     {
-                         "size":  0,
-                         "type":  "",
-                         "moveorcopy":  null,
-                         "supportPR":  false,
-                         "shared":  false,
-                         "vhd":  "C:\\Pester Lab\\PESTER01\\Virtual Hard Disks\\DataDiskMove.vhdx",
-                         "parentvhd":  "",
-                         "sourcevhd":  ""
-                     },
-                     {
                          "size":  10737418240,
+                         "CopyFolder":  "",
+                         "parentvhd":  "Intentionally Removed",
+                         "shared":  false,
+                         "moveSourceVHD":  false,
+                         "sourcevhd":  "Intentionally Removed",
+                         "vhd":  "C:\\Pester Lab\\PESTER01\\Virtual Hard Disks\\DataDiskDifferencing.vhdx",
+                         "supportPR":  false
+                     },
+                     {
+                         "type":  "",
+                         "size":  0,
+                         "CopyFolder":  "",
+                         "parentvhd":  "Intentionally Removed",
+                         "shared":  false,
+                         "moveSourceVHD":  true,
+                         "sourcevhd":  "Intentionally Removed",
+                         "vhd":  "C:\\Pester Lab\\PESTER01\\Virtual Hard Disks\\DataDiskMove.vhdx",
+                         "supportPR":  false
+                     },
+                     {
                          "type":  "fixed",
-                         "moveorcopy":  null,
-                         "supportPR":  false,
+                         "size":  10737418240,
+                         "CopyFolder":  "",
+                         "parentvhd":  "Intentionally Removed",
                          "shared":  true,
+                         "moveSourceVHD":  false,
+                         "sourcevhd":  "Intentionally Removed",
                          "vhd":  "C:\\Pester Lab\\PESTER01\\Virtual Hard Disks\\DataDiskShared.vhdx",
-                         "parentvhd":  "",
-                         "sourcevhd":  ""
+                         "supportPR":  false
                      }
                  ],
     "TemplateVHD":  "C:\\Pester Lab\\Virtual Hard Disk Templates\\Windows Server 2012 R2 Datacenter Full.vhdx",
