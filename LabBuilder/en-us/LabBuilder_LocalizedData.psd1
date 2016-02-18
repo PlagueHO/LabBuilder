@@ -1,5 +1,6 @@
 # culture="en-US"
 ConvertFrom-StringData -StringData @'
+    FileNotFoundError=The {0} file '{1}' was not found.
     FileDownloadError=Error downloading {0} from '{1}'; {2}.
     FileExtractError=Error extracting {0}; {1}.
     ConfigurationFileNotFoundError=Configuration file {0} is not found.
@@ -66,7 +67,7 @@ ConvertFrom-StringData -StringData @'
     VMDataDiskVHDConvertError=The Data Disk '{1}' in VM '{0}' cannot be converted to a {2} type.
     VMDataDiskVHDShrinkError=The Data Disk '{1}' in VM '{0}' cannot be shrunk to {2}.
     DownloadFolderDoesNotExistError=The folder '{0}' to download '{1}' to does not exist.
-
+    
     InstallingHyperVComponentsMesage=Installing {0} Hyper-V Components.
     InitializingHyperVComponentsMesage=Initializing Hyper-V Components.
     DownloadingFileMessage=Downloading File '{0}' from '{1}' to '{2}'.

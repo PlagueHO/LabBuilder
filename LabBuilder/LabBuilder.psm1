@@ -244,6 +244,183 @@ function New-Credential()
     return $Credential
 } # New-Credential
 ####################################################################################################
+<#
+.SYNOPSIS
+    This function mount the VHDx passed and enure it is OK to be writen to.
+
+    It checks that the disk has been paritioned and that it contains a volume
+    that has been formatted.
+    
+    This function will work for the following situations:
+    0. VHDx is not mounted.
+    1. VHDx is not initialized.
+    2. VHDx is initialized but has 0 partitions
+    3. VHDx has 1 partition but 0 volumes
+    4. VHDx has 1 partition and 1 volume that is unformatted
+    5. VHDx has 1 partition and 1 volume that is formatted
+    
+    If the VHDx is any other state an exception will be thrown.
+    
+    If the FileSystemLabel passed is different to the current label then it will
+    be updated.
+    
+    This function will not changed the File System and/or Partition Type on the VHDx
+    if it is different to the values provided.
+.OUTPUTS
+    It will return the Volume object that can then be mounted to a Drive Letter
+    or path.
+#>
+function Initialize-Vhd
+{
+    [OutputType([Microsoft.Management.Infrastructure.CimInstance])]
+    [CmdletBinding()]
+    Param (
+        [Parameter(Mandatory=$True)]
+        [ValidateNotNullOrEmpty()]	
+        [String] $VHDPath,
+
+        [Parameter(Mandatory=$True)]
+        [ValidateSet('GPT','MBR')]	
+        [String] $PartitionStyle = 'GPT',
+
+        [Parameter(Mandatory=$True)]
+        [ValidateSet('FAT','FAT32','exFAT','NTFS','REFS')]	
+        [String] $FileSystem = 'NTFS',
+        
+        [ValidateNotNullOrEmpty()]	
+        [String] $FileSystemLabel,
+        
+        [ValidateNotNullOrEmpty()]	
+        [String] $AssignDriveLetter,
+        
+        [ValidateNotNullOrEmpty()]	
+        [String] $AccessPath
+    )
+
+    # Check file exists
+    if (-not (Test-Path -Path $VHDPath))
+    {
+        $ExceptionParameters = @{
+            errorId = 'FileNotFoundError'
+            errorCategory = 'InvalidArgument'
+            errorMessage = $($LocalizedData.FileNotFoundError `
+            -f "VHD",$VHDPath)
+        }
+        New-LabException @ExceptionParameters
+    }
+
+    # Check disk is not already mounted
+    $VHD = Get-VHD `
+        -Path $VHDPath
+    if (-not $VHD.Attached)
+    {
+        $null = Mount-VHD `
+            -ImagePath $VHDPath `
+            -ErrorAction Stop
+        $VHD = Get-VHD `
+            -Path $VHDPath
+    }
+
+    # Check partition style
+    $DiskNumber = $VHD.DiskNumber 
+    if ((Get-Disk -Number $DiskNumber).PartitionStyle -eq 'RAW')
+    {
+        Initialize-Disk `
+            -Number $DiskNumber `
+            -PartitionStyle $PartitionStyle `
+            -ErrorAction Stop
+    }
+
+    # Check for a partition
+    $Partitions = @(Get-Partition `
+        -DiskNumber $DiskNumber `
+        -ErrorAction SilentlyContinue)
+    if (-not ($Partitions))
+    {
+        $Partitions = @(New-Partition `
+            -DiskNumber $DiskNumber `
+            -UseMaximumSize `
+            -ErrorAction Stop)
+    } 
+    if ($Partitions.Count -gt 1)
+    {
+        # If there are more than one partition on this drive
+        # then we can't safely continue.
+        $ExceptionParameters = @{
+            errorId = 'InitializeVHDFailed'
+            errorCategory = 'InvalidArgument'
+            errorMessage = $($LocalizedData.InitializeVHDFailed `
+            -f $VHDPath,'more than one partition already exists on VHD')
+        }
+        New-LabException @ExceptionParameters        
+    }
+    
+    # Check for volume
+    $Volumes = @(Get-Volume `
+        -Partition $Partitions[0])
+    if ($Volumes.Count -gt 1)
+    {
+        # If there are more than one partition on this drive
+        # then we can't safely continue.
+        $ExceptionParameters = @{
+            errorId = 'InitializeVHDFailed'
+            errorCategory = 'InvalidArgument'
+            errorMessage = $($LocalizedData.InitializeVHDFailed `
+            -f $VHDPath,'more than one volume already exists in partition on VHD')
+        }
+        New-LabException @ExceptionParameters        
+    }
+    
+    # Check for file system
+    if ($Volumes[0].FileSystemType -eq 'Unknown')
+    {
+        $Volumes = @(Format-Volume `
+            -InputObject $Volumes[0] `
+            -FileSystem $FileSystem `
+            -ErrorAction Stop)
+    }
+    
+    # Check the File System Label
+    if (($FileSystemLabel) -and `
+        ($Volumes[0].FileSystemLabel -ne $FileSystemLabel))
+    {
+        $Volumes = @(Set-Volume `
+            -InputObject $Volumes[0]
+            -NewFileSystemLabel $FileSystemLabel `
+            -ErrorAction Stop)
+    } 
+
+    # Assign an access path or Drive letter
+    if ($AssignDriveLetter -or $AccessPath)
+    {
+        if ($AssignDriveLetter)
+        {
+            
+            $Params = @{
+                AssignDriveLetter = $AssignDriveLetter
+            }
+        }
+        else
+        {
+            if (-not (Test-Path -Path $AccessPath))
+            {
+                
+            }
+            $Params = @{
+                AssignDriveLetter = $AccessPath
+            }            
+        }
+        Add-PartitionAccessPath `
+            -DiskNumber $DiskNumber `
+            -PartitionNumber 1 `
+            @Params `
+            -ErrorAction Stop
+        $Volumes = @(Get-Volume `
+            -InputObject $Volumes[0])
+    }
+    Return $Volumes[0] 
+} # Initialize-Vhd
+####################################################################################################
 
 ####################################################################################################
 # Main CmdLets
