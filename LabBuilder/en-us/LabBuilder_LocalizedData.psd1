@@ -138,4 +138,5 @@ ConvertFrom-StringData -StringData @'
     MountingVMTemplateVHDMessage=Mounting the VHD '{1}' VM Template VHD '{0}'.
     DismountingVMTemplateVHDMessage=Dismounting the VHD '{1}' VM Template VHD '{0}'.
     AddingPackageToVMTemplateVHDMessage=Adding Package VHD '{1}' to VM Template VHD '{0}'.
+    FolderCopyToVHDFailedServiceMessage=The '{1}' Folder could not be found and can't be copied into the Data VHD '{2}' for VM '{0}'.
 '@
