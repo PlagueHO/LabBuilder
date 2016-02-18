@@ -101,56 +101,6 @@ InModuleScope LabBuilder {
 
 
 
-    Describe 'Download-ConvertWindowsImage' {
-        Context 'Convert-WindowsImage.ps1 File Exists' {
-            It 'Does not throw an Exception' {
-                Mock Test-Path -MockWith { $true }
-                Mock Invoke-WebRequest
-
-                { Download-ConvertWindowsImage } | Should Not Throw
-            }
-            It 'Calls appropriate mocks' {
-                Assert-MockCalled Test-Path -Exactly 1
-                Assert-MockCalled Invoke-WebRequest -Exactly 0
-            }
-        }
-
-        Context 'Convert-WindowsImage.ps1 File Does Not Exist' {
-            It 'Does not throw an Exception' {
-                Mock Test-Path -MockWith { $false }
-                Mock Invoke-WebRequest
-
-                { Download-ConvertWindowsImage } | Should Not Throw
-            }
-            It 'Calls appropriate mocks' {
-                Assert-MockCalled Test-Path -Exactly 1
-                Assert-MockCalled Invoke-WebRequest -Exactly 1
-            }
-        }
-
-        Context 'Convert-WindowsImage.ps1 File Does Not Exist and Fails Downloading' {
-            It 'Throws a FileDownloadError Exception' {
-                Mock Test-Path -MockWith { $false }
-                Mock Invoke-WebRequest { Throw ('Download Error') }
-
-                $ExceptionParameters = @{
-                    errorId = 'FileDownloadError'
-                    errorCategory = 'InvalidArgument'
-                    errorMessage = $($LocalizedData.FileDownloadError `
-                        -f 'Convert-WindowsImage script','https://gallery.technet.microsoft.com/scriptcenter/Convert-WindowsImageps1-0fe23a8f/file/59237/7/Convert-WindowsImage.ps1','Download Error')
-                }
-                $Exception = New-Exception @ExceptionParameters
-
-                { Download-ConvertWindowsImage } | Should Throw $Exception
-            }
-            It 'Calls appropriate mocks' {
-                Assert-MockCalled Test-Path -Exactly 1
-                Assert-MockCalled Invoke-WebRequest -Exactly 1
-            }
-        }
-    }
-
-
     Describe 'Download-CertGenerator' {
         Context 'Certificate Generator Zip File and PS1 File Exists' {
             It 'Does not throw an Exception' {
@@ -1232,6 +1182,20 @@ InModuleScope LabBuilder {
                 { Get-LabVMTemplateVHD -Config $Config } | Should Throw $Exception
             }
         }
+        Context 'Valid configuration is passed missing TemplateVHDs Node' {
+            $Config = Get-LabConfiguration -Path $Global:TestConfigOKPath
+            $Config.labbuilderconfig.RemoveChild($Config.labbuilderconfig.templatevhds)
+            It 'Returns null' {
+                Get-LabVMTemplateVHD -Config $Config  | Should Be $null
+            }
+        }
+        Context 'Valid configuration is passed with no TemplateVHD Nodes' {
+            $Config = Get-LabConfiguration -Path $Global:TestConfigOKPath
+            $Config.labbuilderconfig.templatevhds.IsEmpty = $true
+            It 'Returns null' {
+                Get-LabVMTemplateVHD -Config $Config | Should Be $null
+            }
+        }
         Context 'Valid configuration is passed and template VHD ISOs are found' {
             It 'Returns VMTemplateVHDs array that matches Expected array' {
                 $Config = Get-LabConfiguration -Path $Global:TestConfigOKPath
@@ -1254,19 +1218,35 @@ InModuleScope LabBuilder {
 
 
     Describe 'Initialize-LabVMTemplateVHD' -Tag 'Incomplete' {
-
-        $Config = Get-LabConfiguration -Path $Global:TestConfigOKPath
-
-        Context 'Valid configuration is passed without VMTemplates or VMTemplateVHDs' {	
+        Mock Mount-DiskImage
+        Mock Dismount-DiskImage
+        Mock Get-WindowsImage
+        Mock Copy-Item
+        Mock Rename-Item
+        Mock New-Item
+        Mock Remove-Item
+        Mock Mount-WindowsImage
+        Mock Add-WindowsPackage
+        Mock Dismount-WindowsImage
+        
+        Context 'Configuration passed with no VMtemplateVHDs' {
             It 'Does not throw an Exception' {
-                { Initialize-LabVMTemplate -Config $Config } | Should Not Throw
+                $Config = Get-LabConfiguration -Path $Global:TestConfigOKPath
+                $Config.labbuilderconfig.RemoveChild($Config.labbuilderconfig.templatevhds)
+                { Initialize-LabVMTemplateVHD -Config $Config } | Should Not Throw
             }
-            It 'Calls Mocked commands' {
-                Assert-MockCalled Copy-Item -Exactly 3
-                Assert-MockCalled Set-ItemProperty -Exactly 3 -ParameterFilter { ($Name -eq 'IsReadOnly') -and ($Value -eq $True) }
-                Assert-MockCalled Set-ItemProperty -Exactly 3 -ParameterFilter { ($Name -eq 'IsReadOnly') -and ($Value -eq $False) }
-                Assert-MockCalled Optimize-VHD -Exactly 3
-            }
+            It 'Calls expected mocks commands' {
+                Assert-MockCalled Mount-DiskImage -Exactly 0
+                Assert-MockCalled Dismount-DiskImage -Exactly 0
+                Assert-MockCalled Get-WindowsImage -Exactly 0
+                Assert-MockCalled Copy-Item -Exactly 0
+                Assert-MockCalled Rename-Item -Exactly 0
+                Assert-MockCalled New-Item -Exactly 0
+                Assert-MockCalled Remove-Item -Exactly 0
+                Assert-MockCalled Mount-WindowsImage -Exactly 0
+                Assert-MockCalled Add-WindowsPackage -Exactly 0
+                Assert-MockCalled Dismount-WindowsImage -Exactly 0
+            }            
         }
     }
 
