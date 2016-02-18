@@ -66,7 +66,7 @@
                  vhdsize="25GB" />
   </templatevhds>
 
-  <templates fromvm="template *">
+  <templates>
     <template name="Template Windows Server 2012 R2 Datacenter Full"
               memorystartupbytes="1GB"
               processorcount="1"

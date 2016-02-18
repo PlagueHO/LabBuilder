@@ -66,19 +66,19 @@
   </templatevhds>
   
   <templates>
-    <template name="Windows Server 2016 TP4 Datacenter FULL"
+    <template name="Template Windows Server 2016 TP4 Datacenter FULL"
               memorystartupbytes="1GB"
               processorcount="1"
               administratorpassword="P@ssword!1"
               timezone="New Zealand Standard Time" 
               ostype="Server" />
-    <template name="Windows Server 2016 TP4 Datacenter CORE"
+    <template name="Template Windows Server 2016 TP4 Datacenter CORE"
               memorystartupbytes="1GB"
               processorcount="1"
               administratorpassword="P@ssword!1"
               timezone="New Zealand Standard Time" 
               ostype="Server" />
-    <template name="Nano Server 2016 TP4 Basic"
+    <template name="Template Nano Server 2016 TP4 Basic"
               memorystartupbytes="2GB"
               processorcount="1"
               administratorpassword="P@ssword!1"
