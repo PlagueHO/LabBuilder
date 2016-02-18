@@ -1674,8 +1674,6 @@ function Initialize-LabVMTemplateVHD
             
             # Call the Convert-WindowsImage script
             & $Script:SupportConvertWindowsImagePath @ConvertParams
-            
-            Remove-Item -Path Function:\Convert-WindowsImage
         } # endfor
     } 
     catch [System.Exception]
