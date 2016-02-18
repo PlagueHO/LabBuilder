@@ -1,5 +1,5 @@
 ﻿[String]$Script:ModulePath = "$PSScriptRoot\..\LabBuilder.psd1"
-[String]$Script:ConfigPath = "$PSScriptRoot\..\Samples\Sample_DomainComplete.xml"
+[String]$Script:ConfigPath = "$PSScriptRoot\..\Samples\Sample_WS2012R2_Simple.xml"
 ##########################################################################################################################################
 Function Test-StartLabVM {
     Param (
@@ -30,6 +30,6 @@ Function Test-LabBuilderLoadModule {
 ##########################################################################################################################################
 Test-LabBuilderLoadModule
 Test-LabBuilderInstall
-# Test-StartLabVM -StartVMs 'SA-FS1'
+# Test-StartLabVM -StartVMs 'SA-DEFAULT'
 # Sleep 30 # Wait 30 seconds for everything to finish building
 # Test-LabBuilderUninstall

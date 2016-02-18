@@ -17,19 +17,11 @@ Import-LocalizedData `
 ####################################################################################################
 # Module Variables
 ####################################################################################################
-# This is the URL to the WMF 5.0 RTM
 [String] $Script:WorkingFolder = $ENV:Temp
 
 # Supporting files
-[String] $Script:WMF5DownloadURL = 'https://download.microsoft.com/download/2/C/6/2C6E1B4A-EBE5-48A6-B225-2D2058A9CEFB/W2K12R2-KB3094174-x64.msu'
-[String] $Script:WMF5InstallerFilename = ($Script:WMF5DownloadURL).Substring(($Script:WMF5DownloadURL).LastIndexOf('/') + 1)
-[String] $Script:WMF5InstallerPath = Join-Path -Path $Script:WorkingFolder -ChildPath $Script:WMF5InstallerFilename
 [String] $Script:SupportConvertWindowsImagePath = Join-Path -Path $PSScriptRoot -ChildPath 'Support\Convert-WindowsImage.ps1'
-[String] $Script:CertGenDownloadURL = 'https://gallery.technet.microsoft.com/scriptcenter/Self-signed-certificate-5920a7c6/file/101251/1/New-SelfSignedCertificateEx.zip'
-[String] $Script:CertGenZipFilename = ($Script:CertGenDownloadURL).Substring(($Script:CertGenDownloadURL).LastIndexOf('/') + 1)
-[String] $Script:CertGenZipPath = Join-Path -Path $Script:WorkingFolder -ChildPath $Script:CertGenZipFilename
-[String] $Script:CertGenPS1Filename = 'New-SelfSignedCertificateEx.ps1'
-[String] $Script:CertGenPS1Path = Join-Path -Path $Script:WorkingFolder -ChildPath $Script:CertGenPS1Filename
+[String] $Script:SupportGertGenPath = Join-Path -Path $PSScriptRoot -ChildPath 'Support\New-SelfSignedCertificateEx.ps1'
 
 # Virtual Networking Parameters
 [Int] $Script:DefaultManagementVLan = 99
@@ -67,7 +59,7 @@ Import-LocalizedData `
 )
 
 ####################################################################################################
-# Helper functions that aren't exported
+# Helper functions that aren't exported - Don't obey Verb-Noun naming
 ####################################################################################################
 <#
 .SYNOPSIS
@@ -88,85 +80,103 @@ function Test-Admin()
 ####################################################################################################
 <#
 .SYNOPSIS
-   Download the latest Windows Management Framework 5.0 Installer to the Working Folder
+   Download the a file to a folder and optionally unzip it.
+   
+   If the file is a zip file the file will be downloaded to a temporary
+   working folder and then unzipped to the destination, otherwise it
+   will be downloaded straight to the destination folder.
 #>
-function Download-WMF5Installer()
+function DownloadAndUnzipFile()
 {
     [CmdletBinding()]
-    Param ()
+    Param
+    (
+        [Parameter(Mandatory=$True)]
+        [ValidateNotNullOrEmpty()]	
+        [String] $URL,
+        
+        [Parameter(Mandatory=$True)]
+        [ValidateNotNullOrEmpty()]
+        [String] $DestinationPath
+    )
+        
+    $FileName = $URL.Substring($URL.LastIndexOf('/') + 1)
 
-    # Only downloads for Win8.1/WS2K12R2
-    if (-not (Test-Path -Path $Script:WMF5InstallerPath))
+    if (-not (Test-Path -Path $DestinationPath))
     {
-        try
-        {
-            Invoke-WebRequest `
-                -Uri $Script:WMF5DownloadURL `
-                -OutFile $Script:WMF5InstallerPath `
-                -ErrorAction Stop
+        $ExceptionParameters = @{
+            errorId = 'DownloadFolderDoesNotExistError'
+            errorCategory = 'InvalidArgument'
+            errorMessage = $($LocalizedData.DownloadFolderDoesNotExistError `
+            -f $DestinationPath,$Filename)
         }
-        catch
-        {
-            $ExceptionParameters = @{
-                errorId = 'FileDownloadError'
-                errorCategory = 'InvalidOperation'
-                errorMessage = $($LocalizedData.FileDownloadError `
-                    -f 'WMF 5.0 Installer',$Script:WMF5DownloadURL,$_.Exception.Message)
-            }
-            New-LabException @ExceptionParameters
-        }
+        New-LabException @ExceptionParameters            
     }
-} # Download-WMF5Installer
-####################################################################################################
-<#
-.SYNOPSIS
-   Download the Certificate Generator script from TechNet Script Center to the Working Folder
-#>
-function Download-CertGenerator()
-{
-    [CmdletBinding()]
-    Param ()
-    if (-not (Test-Path -Path $Script:CertGenZipPath))
+
+    $Extension = [System.IO.Path]::GetExtension($Filename)
+    if ($Extension -eq '.zip')
     {
-        try
-        {
-            Invoke-WebRequest `
-                -Uri $Script:CertGenDownloadURL `
-                -OutFile $Script:CertGenZipPath `
-                -ErrorAction Stop
-        }
-        catch
-        {
-            $ExceptionParameters = @{
-                errorId = 'FileDownloadError'
-                errorCategory = 'InvalidOperation'
-                errorMessage = $($LocalizedData.FileDownloadError `
-                    -f 'Certificate Generator',$Script:CertGenDownloadURL,$_.Exception.Message)
-            }
-            New-LabException @ExceptionParameters
-        }
-    } # If
-    if (-not (Test-Path -Path $Script:CertGenPS1Path))
+        # Download to a temp folder and unzip
+        $DownloadPath = Join-Path -Path $Script:WorkingFolder -ChildPath $FileName
+    }
+    else
     {
-        try	
+        # Download to a temp folder and unzip
+        $DownloadPath = Join-Path -Path $DestinationPath -ChildPath $FileName
+    }
+
+    Write-Verbose -Message ($LocalizedData.DownloadingFileMessage `
+        -f $Filename,$URL,$DownloadPath)
+
+    Try
+    {
+        Invoke-WebRequest `
+            -Uri $URL `
+            -OutFile $DownloadPath `
+            -ErrorAction Stop
+    }
+    Catch
+    {
+        $ExceptionParameters = @{
+            errorId = 'FileDownloadError'
+            errorCategory = 'InvalidOperation'
+            errorMessage = $($LocalizedData.FileDownloadError `
+                -f $Filename,$URL,$_.Exception.Message)
+        }
+        New-LabException @ExceptionParameters
+    } # Try
+    
+    if ($Extension -eq '.zip')
+    {        
+        Write-Verbose -Message ($LocalizedData.ExtractingFileMessage `
+            -f $Filename,$DownloadPath)
+
+        # Extract this to the destination folder
+        Try
         {
             Expand-Archive `
-                -Path $Script:CertGenZipPath `
-                -DestinationPath $Script:WorkingFolder `
+                -Path $DownloadPath `
+                -DestinationPath $DestinationPath `
+                -Force `
                 -ErrorAction Stop
         }
-        catch
+        Catch
         {
             $ExceptionParameters = @{
                 errorId = 'FileExtractError'
-                errorCategory = 'InvalidOperation'
+                errorCategory = 'InvalidArgument'
                 errorMessage = $($LocalizedData.FileExtractError `
-                    -f 'Certificate Generator',$_.Exception.Message)
+                -f $Filename,$_.Exception.Message)
             }
             New-LabException @ExceptionParameters
         }
-    } # If
-} # Download-CertGenerator
+        finally
+        {
+            # Remove the downloaded zip file
+            Remove-Item -Path $DownloadPath
+        } # Try
+    }
+} # DownloadAndUnzipFile
 ####################################################################################################
 <#
 .SYNOPSIS
@@ -530,12 +540,6 @@ function Initialize-LabConfiguration {
             -Access `
             -VlanId $ManagementVlan
     }
-    # Download the New-SelfSignedCertificateEx.ps1 script
-    Download-CertGenerator
-
-    # Download WMF 5.0 in case any VMs need it	
-    Download-WMF5Installer
-
     # Download any other resources required by this lab
     Download-LabResources -Config $Config	
 
@@ -2341,7 +2345,7 @@ function Set-LabVMDSCMOFFile {
     Set-Content -Path $ConfigFile -Value $ConfigData
         
     # Generate the MOF file from the configuration
-    $null = & "$DSCConfigName" -OutputPath $($ENV:Temp) -ConfigData $ConfigFile
+    $null = & "$DSCConfigName" -OutputPath $($ENV:Temp) -ConfigurationData $ConfigFile
     if (-not (Test-Path -Path $DSCMOFFile))
     {
         $ExceptionParameters = @{
@@ -3343,11 +3347,6 @@ function Initialize-LabVMImage {
         -ImagePath $VMBootDiskPath `
         -Path $MountPoint `
         -Index 1
-
-    # Copy the WMF 5.0 Installer to the VM in case it is needed
-    # Write-Verbose -Message $($LocalizedData.ApplyingVMBootDiskFileMessage `
-    #    -f $VM.Name,'MSU','WMF 5.0')
-    # $null = Add-WindowsPackage -PackagePath $Script:WMF5InstallerPath -Path $MountPoint
 
     # Apply any additional MSU Updates
     foreach ($URL in $VM.InstallMSU)
