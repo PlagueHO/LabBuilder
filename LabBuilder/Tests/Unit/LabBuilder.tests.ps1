@@ -150,6 +150,54 @@ InModuleScope LabBuilder {
 
 
 
+    Describe 'Initialize-Vhd' -Tag 'Incomplete' {
+        $Parameters = @{
+            VHDPath = 'c:\DataVHDx.vhdx'
+            PartitionStyle = 'GPT'
+            FileSystem = 'NTFS'
+            FileSystemLabel = 'Test'
+        }
+        Mock Test-Path -MockWith { $False } 
+        Mock Get-VHD
+        Mock Mount-VHD
+        Mock Get-Disk
+        Mock Initialize-Disk
+        Mock Get-Partition
+        Mock New-Partition
+        Mock Get-Volume
+        Mock Format-Volume
+        Mock Set-Volume
+        Mock Add-PartitionAccessPath
+        Context 'VHDx file does not exist' {
+            It 'Throws a FileExtractError Exception' {
+                $Splat = $Parameters.Clone()
+                $ExceptionParameters = @{
+                    errorId = 'FileNotFoundError'
+                    errorCategory = 'InvalidArgument'
+                    errorMessage = $($LocalizedData.FileNotFoundError `
+                        -f "VHD",$Splat.VHDPath)
+                }
+                $Exception = New-Exception @ExceptionParameters
+
+                { Initialize-Vhd @Splat } | Should Throw $Exception
+            }
+            It 'Calls appropriate mocks' {
+                Assert-MockCalled Get-VHD -Exactly 0
+                Assert-MockCalled Mount-VHD -Exactly 0
+                Assert-MockCalled Get-Disk -Exactly 0
+                Assert-MockCalled Initialize-Disk -Exactly 0
+                Assert-MockCalled Get-Partition -Exactly 0
+                Assert-MockCalled New-Partition -Exactly 0
+                Assert-MockCalled Get-Volume -Exactly 0
+                Assert-MockCalled Format-Volume -Exactly 0
+                Assert-MockCalled Set-Volume -Exactly 0
+                Assert-MockCalled Add-PartitionAccessPath -Exactly 0
+            }
+        }
+    }
+
+
+
     Describe 'Get-ModulesInDSCConfig' {
         Context 'Called with Test DSC Resource File' {
             $Modules = Get-ModulesInDSCConfig `
