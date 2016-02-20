@@ -476,23 +476,35 @@ function Initialize-Vhd
         # Format the volume
         Write-Verbose -Message ($LocalizedData.InitializeVHDFormatVolumeMessage `
             -f $Path,$FileSystem,$PartitionNumber)
+        $FormatProperties = @{
+            InputObject = $Volume
+            FileSystem = $FileSystem
+        }
+        if ($FileSystemLabel)
+        {
+            $FormatProperties += @{
+                NewFileSystemLabel = $FileSystemLabel
+            }            
+        }
         $Volume = Format-Volume `
-            -InputObject $Volume `
-            -FileSystem $FileSystem `
+            @FormatProperties `
             -ErrorAction Stop
     }
-    
-    # Check the File System Label
-    if (($FileSystemLabel) -and `
-        ($Volume.FileSystemLabel -ne $FileSystemLabel))
+    else
     {
-        Write-Verbose -Message ($LocalizedData.InitializeVHDSetLabelVolumeMessage `
-            -f $Path,$FileSystemLabel)
-        $Volume = Set-Volume `
-            -InputObject $Volume `
-            -NewFileSystemLabel $FileSystemLabel `
-            -ErrorAction Stop
-    } 
+        # Check the File System Label
+        if (($FileSystemLabel) -and `
+            ($Volume.FileSystemLabel -ne $FileSystemLabel))
+        {
+            Write-Verbose -Message ($LocalizedData.InitializeVHDSetLabelVolumeMessage `
+                -f $Path,$FileSystemLabel)
+            $Volume = Set-Volume `
+                -InputObject $Volume `
+                -NewFileSystemLabel $FileSystemLabel `
+                -ErrorAction Stop
+        }         
+    }
+    
 
     # Assign an access path or Drive letter
     if ($DriveLetter -or $AccessPath)
