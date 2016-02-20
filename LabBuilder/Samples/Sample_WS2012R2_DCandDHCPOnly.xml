@@ -71,21 +71,18 @@
               memorystartupbytes="1GB"
               processorcount="1"
               administratorpassword="P@ssword!1"
-              productkey="AAAAA-AAAAA-AAAAA-AAAAA-AAAAA"
               timezone="New Zealand Standard Time" 
               ostype="Server" />
     <template name="Template Windows Server 2012 R2 Datacenter Core"
               memorystartupbytes="1GB"
               processorcount="1"
               administratorpassword="P@ssword!1"
-              productkey="AAAAA-AAAAA-AAAAA-AAAAA-AAAAA"
               timezone="New Zealand Standard Time" 
               ostype="Server" />
     <template name="Template Windows 10 Enterprise"
               memorystartupbytes="2GB"
               processorcount="1"
               administratorpassword="P@ssword!1"
-              productkey="BBBBB-BBBBB-BBBBB-BBBBB-BBBBB"
               timezone="New Zealand Standard Time" 
               ostype="Client" />
   </templates>

@@ -1,5 +1,9 @@
 # culture="en-US"
 ConvertFrom-StringData -StringData @'
+    FileNotFoundError=The {0} file '{1}' was not found.
+    InitializeVHDNotInitializedError=The VHD '{0}' failed to initialize because a Partition Style was not provided.
+    InitializeVHDNotFormattedError=The VHD '{0}' failed to format because a File System was not provided.
+    InitializeVHDAccessPathNotFoundError=The VHD '{0}' could not be assigned to the access path '{1}' because it does not exist.
     FileDownloadError=Error downloading {0} from '{1}'; {2}.
     FileExtractError=Error extracting {0}; {1}.
     ConfigurationFileNotFoundError=Configuration file {0} is not found.
@@ -66,9 +70,21 @@ ConvertFrom-StringData -StringData @'
     VMDataDiskVHDConvertError=The Data Disk '{1}' in VM '{0}' cannot be converted to a {2} type.
     VMDataDiskVHDShrinkError=The Data Disk '{1}' in VM '{0}' cannot be shrunk to {2}.
     DownloadFolderDoesNotExistError=The folder '{0}' to download '{1}' to does not exist.
-
+    VMDataDiskPartitionStyleError='{2}' is not a valid partition style for the Data Disk '{1}' in VM '{0}'.
+    VMDataDiskFileSystemError='{2}' is not a valid file system for the Data Disk '{1}' in VM '{0}'.
+    VMDataDiskPartitionStyleMissingError=The Data Disk '{1}' in VM '{0}' does not have a partition style definied.
+    VMDataDiskFileSystemMissingError=The Data Disk '{1}' in VM '{0}' does not have a file format definied.
+    VMDataDiskCopyFolderMissingError=The CopyFolder '{2}' that should be copied to Data Disk '{1}' in VM '{0}' does not exist.
+    
     InstallingHyperVComponentsMesage=Installing {0} Hyper-V Components.
     InitializingHyperVComponentsMesage=Initializing Hyper-V Components.
+    InitializeVHDMountingMessage=Mounting VHD {0} for Initialization.
+    InitializeVHDInitializingMessage=Initializing {1} partition table on VHD {0}.
+    InitializeVHDCreatePartitionMessage=Creating partition on VHD {0}.
+    InitializeVHDFormatVolumeMessage=Formatting volume on partition {2} as {1} on VHD {0}.
+    InitializeVHDSetLabelVolumeMessage=Setting volume label to {1} on VHD {0}.
+    InitializeVHDDriveLetterMessage=Assigning drive letter {1}: to VHD {0}.
+    InitializeVHDAccessPathMessage=Assigning access path {1} to VHD {0}.
     DownloadingFileMessage=Downloading File '{0}' from '{1}' to '{2}'.
     ExtractingFileMessage=Extracting downloaded File '{0}' to '{1}'.
     DownloadingLabResourcesMessage=Downloading Lab Resources.
@@ -106,6 +122,10 @@ ConvertFrom-StringData -StringData @'
     VMDiskAlreadyExistsMessage={2} disk '{1}' for VM '{0}' already exists.
     ExpandingVMDiskMessage=Expanding {2} disk '{1}' for VM '{0}' to {3}.
     AddingVMDiskMessage=Adding {2} disk '{1}' to VM '{0}'.
+    CopyingFoldersToVMDiskMessage=Copying folder '{2}' to VM Disk '{1}' for VM '{0}'.
+    InitializingVMDiskMessage=Initializing VM Disk '{1}' for VM '{0}'.
+    MountingVMDiskMessage=Mounting VM Disk '{1}' for VM '{0}' to '{2}'.
+    DismountingVMDiskMessage=Dismounting VM Disk '{1}' for VM '{0}'.
     DeletingVMAllDisksMessage=Deleting all disks from VM '{0}'.
     AddingVMNetworkAdapterMessage=Adding {2} network adapter {1} to VM '{0}'.
     SettingVMNetworkAdapterVlanMessage=Setting VLAN on {2} network adapter {1} in VM '{0}' to {3}.

@@ -42,12 +42,18 @@ Install-Lab -Path 'c:\Lab01\Config.xml'
 
 Versions
 --------
+### 0.3.2.0
+* Added Initialize-VHD function.
+* Added support for formatting Data VHDs.
+* Added support for copying multiple folders to DataVHDs.
+
 ### 0.3.1.0
 * Disable 'Access Denied' test when connecting to new VM because this error is reported by VM that is still booting up.
 * Correct Verbose message shown when Integration Services enabled.
 * Added Verbose message to indicate creation of VM Initialization files.
 * Correct Verbose message not appearing when mounting VM boot disk image file.
 * Moved DSC Config message into Localization data.
+* Disabled automatic module push to PSGallery till version 1.0.0.0 or greater.
 
 ### 0.3.0.0
 * Fix to Module detection regex.
