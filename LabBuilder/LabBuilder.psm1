@@ -189,12 +189,12 @@ function DownloadAndUnzipFile()
 .PARAMETER DSCConfigFile
     Contains the path to the DSC Config file to extract resource module names from
 .EXAMPLE
-    Get-ModulesInDSCConfig -DSCConfigFile c:\mydsc\Server01.ps1
+    GetModulesInDSCConfig -DSCConfigFile c:\mydsc\Server01.ps1
     Return the DSC Resource module list from file c:\mydsc\server01.ps1
 .OUTPUTS
     An array of strings containing resource module names
 #>
-function Get-ModulesInDSCConfig()
+function GetModulesInDSCConfig()
 {
     [CmdletBinding()]
     [OutputType([String[]])]
@@ -218,13 +218,13 @@ function Get-ModulesInDSCConfig()
     # Add the xNetworking DSC Resource because it is always used
     $Modules += 'xNetworking'
     Return $Modules
-} # Get-ModulesInDSCConfig
+} # GetModulesInDSCConfig
 ####################################################################################################
 <#
 .SYNOPSIS
     Generates a credential object from a username and password.
 #>
-function New-Credential()
+function CreateCredential()
 {
     [CmdletBinding()]
     [OutputType([PSCredential])]
@@ -242,7 +242,7 @@ function New-Credential()
         -TypeName System.Management.Automation.PSCredential `
         -ArgumentList ($Username, (ConvertTo-SecureString $Password -AsPlainText -Force))
     return $Credential
-} # New-Credential
+} # CreateCredential
 ####################################################################################################
 <#
 .SYNOPSIS
@@ -504,7 +504,6 @@ function Initialize-Vhd
                 -ErrorAction Stop
         }         
     }
-    
 
     # Assign an access path or Drive letter
     if ($DriveLetter -or $AccessPath)
@@ -2450,7 +2449,7 @@ function Set-LabVMDSCMOFFile {
     Write-Verbose -Message $($LocalizedData.DSCConfigIdentifyModulesMessage `
         -f $VM.DSCConfigFile,$VM.Name)
 
-    $DSCModules = Get-ModulesInDSCConfig -DSCConfigFile $($VM.DSCConfigFile)
+    $DSCModules = GetModulesInDSCConfig -DSCConfigFile $($VM.DSCConfigFile)
     foreach ($ModuleName in $DSCModules)
     {
         if (($InstalledModules | Where-Object -Property Name -EQ $ModuleName).Count -eq 0)
@@ -3038,7 +3037,7 @@ function Start-LabVMDSC {
             -and ($Session.State -eq 'Opened') `
             -and (-not $ModuleCopyComplete))
         {
-            $DSCModules = Get-ModulesInDSCConfig -DSCConfigFile $($VM.DSCConfigFile)
+            $DSCModules = GetModulesInDSCConfig -DSCConfigFile $($VM.DSCConfigFile)
             foreach ($ModuleName in $DSCModules)
             {
                 try
@@ -6154,7 +6153,7 @@ function Connect-LabVM
 
     [DateTime] $StartTime = Get-Date
     [System.Management.Automation.Runspaces.PSSession] $Session = $null
-    [PSCredential] $AdminCredential = New-Credential `
+    [PSCredential] $AdminCredential = CreateCredential `
         -Username '.\Administrator' `
         -Password $VM.AdministratorPassword
     [Boolean] $FatalException = $False

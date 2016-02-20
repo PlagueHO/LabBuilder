@@ -183,6 +183,22 @@ InModuleScope LabBuilder {
                     Type = 'Basic'
                     PartitionNumber = 2
                 }
+        $Volume1 = New-CimInstance `
+                -ClassName 'MSFT_Volume' `
+                -Namespace ROOT/Microsoft/Windows/Storage `
+                -ClientOnly `
+                -Property @{
+                    FileSystem = 'FAT32'
+                    FileSystemLabel = 'Volume1'
+             }
+        $Volume2 = New-CimInstance `
+                -ClassName 'MSFT_Volume' `
+                -Namespace ROOT/Microsoft/Windows/Storage `
+                -ClientOnly `
+                -Property @{
+                    FileSystem = 'NTFS'
+                    FileSystemLabel = 'Volume2'
+             }
         $NewVolume = New-CimInstance `
                 -ClassName 'MSFT_Volume' `
                 -Namespace ROOT/Microsoft/Windows/Storage `
@@ -279,7 +295,8 @@ InModuleScope LabBuilder {
         }
         Mock Get-Disk -MockWith { @{ PartitionStyle = $VHDLabel.PartitionStyle } }
         Mock Get-Partition -MockWith { @( $Partition1 ) }
-        Mock Get-Volume -MockWith { $NewVolume }
+        Mock Get-Volume -MockWith { $NewVolume } -ParameterFilter { $Partition -eq $Partition1 }
+        Mock Get-Volume -MockWith { $Volume2 } -ParameterFilter { $Partition -eq $Partition2 }
         Mock Set-Volume -MockWith { $RenamedVolume }
         Context 'VHDx file exists is not mounted, is initialized, has 1 partition the volume FileSystemLabel is different' {
             It 'Returns Expected Volume' {
@@ -302,10 +319,34 @@ InModuleScope LabBuilder {
                 Assert-MockCalled Add-PartitionAccessPath -Exactly 0
             }
         }
+        Mock Get-Partition -MockWith { @( $Partition1,$Partition2 ) }
+        Mock Get-Volume -MockWith { $Volume1 } -ParameterFilter { $Partition -eq $Partition1 }
+        Mock Get-Volume -MockWith { $Volume2 } -ParameterFilter { $Partition -eq $Partition2 }
+        Context 'VHDx file exists is not mounted, is initialized, has 2 partitions' {
+            It 'Returns Expected Volume' {
+                $Splat = $VHDLabel.Clone()
+                $Splat.FileSystemLabel = 'Different'
+
+                Initialize-Vhd @Splat | Should Be $RenamedVolume
+            }
+            It 'Calls appropriate mocks' {
+                Assert-MockCalled Get-VHD -Exactly 2
+                Assert-MockCalled Mount-VHD -Exactly 1
+                Assert-MockCalled Get-Disk -Exactly 1
+                Assert-MockCalled Initialize-Disk -Exactly 0
+                Assert-MockCalled Get-Partition -Exactly 1
+                Assert-MockCalled New-Partition -Exactly 0
+                Assert-MockCalled Get-Volume -Exactly 3
+                Assert-MockCalled Format-Volume -Exactly 0
+                Assert-MockCalled Set-Volume -Exactly 1
+                Assert-MockCalled Set-Partition -Exactly 0
+                Assert-MockCalled Add-PartitionAccessPath -Exactly 0
+            }
+        }        
         Mock Get-Disk -MockWith { @{ PartitionStyle = 'RAW' } }
         Mock Get-Partition 
         Mock New-Partition -MockWith { @( $Partition1 ) }
-        Mock Get-Volume -MockWith { @( $UnformattedVolume ) }
+        Mock Get-Volume -MockWith { $UnformattedVolume } -ParameterFilter { $Partition -eq $Partition1 }
         Mock Format-Volume -MockWith { @( $NewVolume ) }
         Context 'VHDx file exists is not mounted, is not initialized and label is passed' {
             It 'Returns Expected Volume' {
@@ -403,9 +444,9 @@ InModuleScope LabBuilder {
 
 
 
-    Describe 'Get-ModulesInDSCConfig' {
+    Describe 'GetModulesInDSCConfig' {
         Context 'Called with Test DSC Resource File' {
-            $Modules = Get-ModulesInDSCConfig `
+            $Modules = GetModulesInDSCConfig `
                 -DSCConfigFile (Join-Path -Path $Global:TestConfigPath -ChildPath 'dsclibrary\PesterTest.DSC.ps1')
             It 'Should Return Expected Modules' {
                 @(Compare-Object -ReferenceObject $Modules `
@@ -1755,7 +1796,7 @@ InModuleScope LabBuilder {
         
         Mock Create-LabVMPath
         Mock Get-Module
-        Mock Get-ModulesInDSCConfig -MockWith { @('TestModule') }
+        Mock GetModulesInDSCConfig -MockWith { @('TestModule') }
 
         Context 'Empty DSC Config' {
             $VM = $VMS[0].Clone()
@@ -1787,7 +1828,7 @@ InModuleScope LabBuilder {
             It 'Calls Mocked commands' {
                 Assert-MockCalled Create-LabVMPath -Exactly 1
                 Assert-MockCalled Get-Module -Exactly 1
-                Assert-MockCalled Get-ModulesInDSCConfig -Exactly 1
+                Assert-MockCalled GetModulesInDSCConfig -Exactly 1
                 Assert-MockCalled Find-Module -Exactly 1
             }
         }
@@ -1811,7 +1852,7 @@ InModuleScope LabBuilder {
             It 'Calls Mocked commands' {
                 Assert-MockCalled Create-LabVMPath -Exactly 1
                 Assert-MockCalled Get-Module -Exactly 1
-                Assert-MockCalled Get-ModulesInDSCConfig -Exactly 1
+                Assert-MockCalled GetModulesInDSCConfig -Exactly 1
                 Assert-MockCalled Find-Module -Exactly 1
             }
         }
@@ -1837,7 +1878,7 @@ InModuleScope LabBuilder {
             It 'Calls Mocked commands' {
                 Assert-MockCalled Create-LabVMPath -Exactly 1
                 Assert-MockCalled Get-Module -Exactly 1
-                Assert-MockCalled Get-ModulesInDSCConfig -Exactly 1
+                Assert-MockCalled GetModulesInDSCConfig -Exactly 1
                 Assert-MockCalled Find-Module -Exactly 1
                 Assert-MockCalled Install-Module -Exactly 1
             }
@@ -1865,7 +1906,7 @@ InModuleScope LabBuilder {
             It 'Calls Mocked commands' {
                 Assert-MockCalled Create-LabVMPath -Exactly 1
                 Assert-MockCalled Get-Module -Exactly 1
-                Assert-MockCalled Get-ModulesInDSCConfig -Exactly 1
+                Assert-MockCalled GetModulesInDSCConfig -Exactly 1
                 Assert-MockCalled Find-Module -Exactly 1
                 Assert-MockCalled Install-Module -Exactly 1
                 Assert-MockCalled Copy-Item -Exactly 1
@@ -1900,7 +1941,7 @@ InModuleScope LabBuilder {
             It 'Calls Mocked commands' {
                 Assert-MockCalled Create-LabVMPath -Exactly 1
                 Assert-MockCalled Get-Module -Exactly 1
-                Assert-MockCalled Get-ModulesInDSCConfig -Exactly 1
+                Assert-MockCalled GetModulesInDSCConfig -Exactly 1
                 Assert-MockCalled Find-Module -Exactly 1
                 Assert-MockCalled Install-Module -Exactly 1
                 Assert-MockCalled Copy-Item -Exactly 1
@@ -3017,7 +3058,7 @@ InModuleScope LabBuilder {
                 Assert-MockCalled New-VHD -Exactly 1
                 Assert-MockCalled Get-VMHardDiskDrive -Exactly 1
                 Assert-MockCalled Add-VMHardDiskDrive -Exactly 1
-                Assert-MockCalled Initialize-VHD -Exactly 0
+                Assert-MockCalled Initialize-VHD -Exactly 1
                 Assert-MockCalled Mount-VHD -Exactly 0
                 Assert-MockCalled Dismount-VHD -Exactly 1
                 Assert-MockCalled New-Item -Exactly 1
