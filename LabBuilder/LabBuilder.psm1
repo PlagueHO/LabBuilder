@@ -2316,7 +2316,8 @@ function Set-LabVMDSCMOFFile {
 
     [String] $DSCConfigName = $VM.DSCConfigName
     
-	Write-Verbose "DSC Config name = $DSCConfigname"
+    Write-Verbose -Message $($LocalizedData.DSCConfigPrepareMessage `
+        -f $DSCConfigname,$VM.Name)
 
     # Generate the Configuration Nodes data that always gets passed to the DSC configuration.
     [String] $ConfigData = @"
@@ -3274,6 +3275,9 @@ Add-Content ``
     $null = Set-Content `
         -Path (Join-Path -Path $VMLabBuilderFiles -ChildPath 'SetupComplete.ps1') `
         -Value $SetupCompletePs -Force
+
+    Write-Verbose -Message $($LocalizedData.CreatedVMInitializationFiles `
+        -f $VM.Name)
 
 } # Set-LabVMInitializationFiles
 ####################################################################################################
@@ -5036,7 +5040,7 @@ function Update-LabVMIntegrationService {
                     -Name $ExistingIntegrationService.Name 
 
                 Write-Verbose -Message $($LocalizedData.EnableVMIntegrationServiceMessage `
-                    -f $VM.Name,$IntegrationService.Name)
+                    -f $VM.Name,$ExistingIntegrationService.Name)
             } # if
         }
         else
@@ -5663,9 +5667,6 @@ function Wait-LabVMOff {
    If the connection fails, it will be retried until the ConnectTimeout is reached. If the
    ConnectTimeout is reached and a connection has not been established then a ConnectionError 
    exception will be thrown.
-   
-   If the connection is attempted but an Access Denied error occurs a ConnectionError exception
-   will be thrown immediately and the connection will not be retried. 
 .EXAMPLE
    $Config = Get-LabConfiguration -Path c:\mylab\config.xml
    $VMs = Get-LabVM -Config $Config
@@ -5734,26 +5735,17 @@ function Connect-LabVM
         }
         catch
         {
-            if ($_.Exception.ErrorCode -eq 5)
+            if (-not $IPAddress)
             {
-                Write-Verbose -Message $($LocalizedData.ConnectingVMAccessDeniedMessage `
-                    -f $VM.Name)
-                $FatalException = $True
+                Write-Verbose -Message $($LocalizedData.WaitingForIPAddressAssignedMessage `
+                    -f $VM.Name,$Script:RetryConnectSeconds)                                
             }
             else
             {
-                if (-not $IPAddress)
-                {
-                    Write-Verbose -Message $($LocalizedData.WaitingForIPAddressAssignedMessage `
-                        -f $VM.Name,$Script:RetryConnectSeconds)                                
-                }
-                else
-                {
-                    Write-Verbose -Message $($LocalizedData.ConnectingVMFailedMessage `
-                        -f $VM.Name,$Script:RetryConnectSeconds,$_.Exception.Message)
-                }
-                Start-Sleep -Seconds $Script:RetryConnectSeconds
+                Write-Verbose -Message $($LocalizedData.ConnectingVMFailedMessage `
+                    -f $VM.Name,$Script:RetryConnectSeconds,$_.Exception.Message)
             }
+            Start-Sleep -Seconds $Script:RetryConnectSeconds
         } # Try
     } # While
     
