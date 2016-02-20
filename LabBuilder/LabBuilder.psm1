@@ -247,9 +247,10 @@ function New-Credential()
 <#
 .SYNOPSIS
     This function mount the VHDx passed and enure it is OK to be writen to.
+.DESCRIPTION
 
-    It checks that the disk has been paritioned and that it contains a volume
-    that has been formatted.
+    The function checks that the disk has been paritioned and that it contains
+    a volume that has been formatted.
     
     This function will work for the following situations:
     0. VHDx is not mounted.
@@ -266,6 +267,39 @@ function New-Credential()
     
     This function will not changed the File System and/or Partition Type on the VHDx
     if it is different to the values provided.
+.PARAMETER VHDPath
+    This is the path to the VHD/VHDx file to mount and initialize.
+.PARAMETER PartitionStyle
+    The Partition Style to set an uninitialized VHD/VHDx to. It can be MBR or GPT.
+.PARAMETER FileSystem
+    The File System to format the new parition with on an VHD/VHDx. It can be
+    FAT, FAT32, exFAT, NTFS, ReFS.
+.PARAMETER FileSystemLabel
+   This parameter will allow the File System Label of the disk to be changed to this
+   value.
+.PARAMETER AssignDriveLetter
+   Setting this parameter to a drive letter that is not in use will cause the VHD
+   to be assigned to this drive letter.
+.PARAMETER AccessPath
+   Setting this parameter to an existing folder will cause the VHD to be assigned
+   to the AccessPath defined. The folder must already exist otherwise an exception
+   will be thrown.
+.EXAMPLE
+   Initialize-Vhd -VHDPath c:\VMs\Tools.VHDx -PartitionStyle GPT -FileSystem NTFS
+   The VHDx c:\VMs\Tools.VHDx will be mounted and initialized with GPT if not already
+   initialized. It will also be partitioned and formatted with NTFS if no partitions
+   already exist.
+.EXAMPLE
+   Initialize-Vhd `
+    -VHDPath c:\VMs\Tools.VHDx `
+    -PartitionStyle GPT `
+    -FileSystem NTFS `
+    -FileSystemLabel ToolsDisk
+    -AssignDriveLetter X
+   The VHDx c:\VMs\Tools.VHDx will be mounted and initialized with GPT if not already
+   initialized. It will also be partitioned and formatted with NTFS if no partitions
+   already exist. The File System label will also be set to ToolsDisk and the disk
+   will be mounted to X drive.
 .OUTPUTS
     It will return the Volume object that can then be mounted to a Drive Letter
     or path.
@@ -281,11 +315,11 @@ function Initialize-Vhd
 
         [Parameter(Mandatory=$True)]
         [ValidateSet('GPT','MBR')]	
-        [String] $PartitionStyle = 'GPT',
+        [String] $PartitionStyle,
 
         [Parameter(Mandatory=$True)]
         [ValidateSet('FAT','FAT32','exFAT','NTFS','REFS')]	
-        [String] $FileSystem = 'NTFS',
+        [String] $FileSystem,
         
         [ValidateNotNullOrEmpty()]	
         [String] $FileSystemLabel,
