@@ -277,7 +277,7 @@ function New-Credential()
 .PARAMETER FileSystemLabel
    This parameter will allow the File System Label of the disk to be changed to this
    value.
-.PARAMETER AssignDriveLetter
+.PARAMETER DriveLetter
    Setting this parameter to a drive letter that is not in use will cause the VHD
    to be assigned to this drive letter.
 .PARAMETER AccessPath
@@ -295,7 +295,7 @@ function New-Credential()
     -PartitionStyle GPT `
     -FileSystem NTFS `
     -FileSystemLabel ToolsDisk
-    -AssignDriveLetter X
+    -DriveLetter X
    The VHDx c:\VMs\Tools.VHDx will be mounted and initialized with GPT if not already
    initialized. It will also be partitioned and formatted with NTFS if no partitions
    already exist. The File System label will also be set to ToolsDisk and the disk
@@ -324,9 +324,9 @@ function Initialize-Vhd
         [ValidateNotNullOrEmpty()]	
         [String] $FileSystemLabel,
         
-        [Parameter(ParameterSetName = 'AssignDriveLetter')]
+        [Parameter(ParameterSetName = 'DriveLetter')]
         [ValidateNotNullOrEmpty()]	
-        [String] $AssignDriveLetter,
+        [String] $DriveLetter,
         
         [Parameter(ParameterSetName = 'AccessPath')]
         [ValidateNotNullOrEmpty()]	
@@ -354,7 +354,7 @@ function Initialize-Vhd
             -f $VHDPath)
 
         $null = Mount-VHD `
-            -ImagePath $VHDPath `
+            -Path $VHDPath `
             -ErrorAction Stop
         $VHD = Get-VHD `
             -Path $VHDPath
@@ -421,11 +421,10 @@ function Initialize-Vhd
     }
     
     # Check for file system
-    if ($Volumes[0].FileSystemType -eq 'Unknown')
+    if ([String]::IsNullOrWhitespace($Volumes[0].FileSystem))
     {
         Write-Verbose -Message ($LocalizedData.InitializeVHDFormatVolumeMessage `
             -f $VHDPath,$FileSystem)
-
         $Volumes = @(Format-Volume `
             -InputObject $Volumes[0] `
             -FileSystem $FileSystem `
@@ -438,29 +437,35 @@ function Initialize-Vhd
     {
         Write-Verbose -Message ($LocalizedData.InitializeVHDSetLabelVolumeMessage `
             -f $VHDPath,$FileSystemLabel)
-
         $Volumes = @(Set-Volume `
-            -InputObject $Volumes[0]
+            -InputObject $Volumes[0] `
             -NewFileSystemLabel $FileSystemLabel `
             -ErrorAction Stop)
     } 
 
     # Assign an access path or Drive letter
-    if ($AssignDriveLetter -or $AccessPath)
+    if ($DriveLetter -or $AccessPath)
     {
         switch ($PSCmdlet.ParameterSetName)
         {
-            'AssignDriveLetter'
-                {
-                $Params = @{
-                    AssignDriveLetter = $AssignDriveLetter
-                }
+            'DriveLetter'
+            {
+                # Mount the partition to a Drive Letter
+                $Volumes = @(Set-Partition `
+                    -DiskNumber $Disknumber `
+                    -PartitionNumber 1 `
+                    -NewDriveLetter $DriveLetter `
+                    -ErrorAction Stop)
 
-                Write-Verbose -Message ($LocalizedData.InitializeVHDAssignDriveLetterMessage `
-                    -f $VHDPath,$AssignDriveLetter.ToUpper())
+                $Volumes = @(Get-Volume `
+                    -Partition $Partitions[0])
+
+                Write-Verbose -Message ($LocalizedData.InitializeVHDDriveLetterMessage `
+                    -f $VHDPath,$DriveLetter.ToUpper())
             }
             'AccessPath'
             {
+                # Check the Access folder exists
                 if (-not (Test-Path -Path $AccessPath -Type Container))
                 {
                     $ExceptionParameters = @{
@@ -471,23 +476,18 @@ function Initialize-Vhd
                     }
                     New-LabException @ExceptionParameters        
                 }
-                $Params = @{
-                    AssignDriveLetter = $AccessPath
-                }            
+
+                # Add the Partition Access Path
+                Add-PartitionAccessPath `
+                    -DiskNumber $DiskNumber `
+                    -PartitionNumber 1 `
+                    -AccessPath $AccessPath `
+                    -ErrorAction Stop
 
                 Write-Verbose -Message ($LocalizedData.InitializeVHDAccessPathMessage `
                     -f $VHDPath,$AccessPath)
             }
         }
-
-        # Add the Partition Access Path or Disk Letter
-        Add-PartitionAccessPath `
-            -DiskNumber $DiskNumber `
-            -PartitionNumber 1 `
-            @Params `
-            -ErrorAction Stop
-        $Volumes = @(Get-Volume `
-            -InputObject $Volumes[0])
     }
     # Return the Volume to the pipeline
     Return $Volumes[0] 

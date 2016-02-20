@@ -82,7 +82,7 @@ ConvertFrom-StringData -StringData @'
     InitializeVHDCreatePartitionMessage=Creating partition on VHD {0}.
     InitializeVHDFormatVolumeMessage=Formatting volume as {1} on VHD {0}.
     InitializeVHDSetLabelVolumeMessage=Setting volume label to {1} on VHD {0}.
-    InitializeVHDAssignDriveLetterMessage=Assigning drive letter {1}: to VHD {0}.
+    InitializeVHDDriveLetterMessage=Assigning drive letter {1}: to VHD {0}.
     InitializeVHDAccessPathMessage=Assigning access path {1} to VHD {0}.
     DownloadingFileMessage=Downloading File '{0}' from '{1}' to '{2}'.
     ExtractingFileMessage=Extracting downloaded File '{0}' to '{1}'.

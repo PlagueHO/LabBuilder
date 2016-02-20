@@ -167,9 +167,10 @@ InModuleScope LabBuilder {
         Mock Get-Volume
         Mock Format-Volume
         Mock Set-Volume
+        Mock Set-Partition
         Mock Add-PartitionAccessPath
         Context 'VHDx file does not exist' {
-            It 'Throws a FileExtractError Exception' {
+            It 'Throws a FileNotFoundError Exception' {
                 $Splat = $Parameters.Clone()
                 $ExceptionParameters = @{
                     errorId = 'FileNotFoundError'
@@ -191,6 +192,255 @@ InModuleScope LabBuilder {
                 Assert-MockCalled Get-Volume -Exactly 0
                 Assert-MockCalled Format-Volume -Exactly 0
                 Assert-MockCalled Set-Volume -Exactly 0
+                Assert-MockCalled Set-Partition -Exactly 0
+                Assert-MockCalled Add-PartitionAccessPath -Exactly 0
+            }
+        }
+        Mock Test-Path -MockWith { $True } 
+        Mock Get-VHD -MockWith { @{ Attached = $False; DiskNumber = 9 } }
+        Mock Get-Disk -MockWith { @{ PartitionStyle = $Parameters.PartitionStyle } }
+        Mock Get-Partition -MockWith { @(@{ PartitionNumber = 1 },@{ PartitionNumber = 2 }) }       
+        Context 'VHDx file exists is not mounted, is initialized and has 2 partitions' {
+            It 'Throws a InitializeVHDPartitionFailedError Exception' {
+                $Splat = $Parameters.Clone()
+                $ExceptionParameters = @{
+                    errorId = 'InitializeVHDPartitionFailedError'
+                    errorCategory = 'InvalidArgument'
+                    errorMessage = $($LocalizedData.InitializeVHDPartitionFailedError `
+                        -f$Splat.VHDPath)
+                }
+                $Exception = New-Exception @ExceptionParameters
+
+                { Initialize-Vhd @Splat } | Should Throw $Exception
+            }
+            It 'Calls appropriate mocks' {
+                Assert-MockCalled Get-VHD -Exactly 2
+                Assert-MockCalled Mount-VHD -Exactly 1
+                Assert-MockCalled Get-Disk -Exactly 1
+                Assert-MockCalled Initialize-Disk -Exactly 0
+                Assert-MockCalled Get-Partition -Exactly 1
+                Assert-MockCalled New-Partition -Exactly 0
+                Assert-MockCalled Get-Volume -Exactly 0
+                Assert-MockCalled Format-Volume -Exactly 0
+                Assert-MockCalled Set-Volume -Exactly 0
+                Assert-MockCalled Set-Partition -Exactly 0
+                Assert-MockCalled Add-PartitionAccessPath -Exactly 0
+            }
+        }
+        Mock Get-Partition -MockWith { @(
+            New-CimInstance `
+                -ClassName 'MSFT_Partition' `
+                -Namespace ROOT/Microsoft/Windows/Storage `
+                -ClientOnly `
+                -Property @{
+                    DiskNumber = 9
+                    Type = 'Basic'
+                    PartitionNumber = 1
+                }
+        ) }
+        Mock Get-Volume -MockWith { @(@{ FileSystem = 'NTFS' },@{ FileSystem = 'NTFS' }) }
+        Context 'VHDx file exists is not mounted, is initialized, has 1 partition and has 2 volumes' {
+            It 'Throws a InitializeVHDVolumeFailedError Exception' {
+                $Splat = $Parameters.Clone()
+                $ExceptionParameters = @{
+                    errorId = 'InitializeVHDVolumeFailedError'
+                    errorCategory = 'InvalidArgument'
+                    errorMessage = $($LocalizedData.InitializeVHDVolumeFailedError `
+                        -f$Splat.VHDPath)
+                }
+                $Exception = New-Exception @ExceptionParameters
+
+                { Initialize-Vhd @Splat } | Should Throw $Exception
+            }
+            It 'Calls appropriate mocks' {
+                Assert-MockCalled Get-VHD -Exactly 2
+                Assert-MockCalled Mount-VHD -Exactly 1
+                Assert-MockCalled Get-Disk -Exactly 1
+                Assert-MockCalled Initialize-Disk -Exactly 0
+                Assert-MockCalled Get-Partition -Exactly 1
+                Assert-MockCalled New-Partition -Exactly 0
+                Assert-MockCalled Get-Volume -Exactly 1
+                Assert-MockCalled Format-Volume -Exactly 0
+                Assert-MockCalled Set-Volume -Exactly 0
+                Assert-MockCalled Set-Partition -Exactly 0
+                Assert-MockCalled Add-PartitionAccessPath -Exactly 0
+            }
+        }
+        
+        Mock Get-Volume -MockWith { @(
+            New-CimInstance `
+                -ClassName 'MSFT_Volume' `
+                -Namespace ROOT/Microsoft/Windows/Storage `
+                -ClientOnly `
+                -Property @{
+                    FileSystem = $Parameters.FileSystem
+                    FileSystemLabel = $Parameters.FileSystemLabel
+             }
+        ) }
+        $NewVolume = New-CimInstance `
+                -ClassName 'MSFT_Volume' `
+                -Namespace ROOT/Microsoft/Windows/Storage `
+                -ClientOnly `
+                -Property @{
+                    FileSystem = $Parameters.FileSystem
+                    FileSystemLabel = $Parameters.FileSystemLabel
+             }
+        $RenamedVolume = New-CimInstance `
+                -ClassName 'MSFT_Volume' `
+                -Namespace ROOT/Microsoft/Windows/Storage `
+                -ClientOnly `
+                -Property @{
+                    FileSystem = $Parameters.FileSystem
+                    FileSystemLabel = 'Different'
+             }
+        Mock Set-Volume -MockWith { @( $RenamedVolume ) }
+        Context 'VHDx file exists is not mounted, is initialized, has 1 partition and has 1 volume and FileSystemLabel is different' {
+            It 'Returns Expected Volume' {
+                $Splat = $Parameters.Clone()
+                $Splat.FileSystemLabel = 'Different'
+
+                Initialize-Vhd @Splat | Should Be $RenamedVolume
+            }
+            It 'Calls appropriate mocks' {
+                Assert-MockCalled Get-VHD -Exactly 2
+                Assert-MockCalled Mount-VHD -Exactly 1
+                Assert-MockCalled Get-Disk -Exactly 1
+                Assert-MockCalled Initialize-Disk -Exactly 0
+                Assert-MockCalled Get-Partition -Exactly 1
+                Assert-MockCalled New-Partition -Exactly 0
+                Assert-MockCalled Get-Volume -Exactly 1
+                Assert-MockCalled Format-Volume -Exactly 0
+                Assert-MockCalled Set-Volume -Exactly 1
+                Assert-MockCalled Set-Partition -Exactly 0
+                Assert-MockCalled Add-PartitionAccessPath -Exactly 0
+            }
+        }
+        Mock Get-Disk -MockWith { @{ PartitionStyle = 'RAW' } }
+        Mock Get-Partition 
+        Mock New-Partition -MockWith { @(
+            New-CimInstance `
+                -ClassName 'MSFT_Partition' `
+                -Namespace ROOT/Microsoft/Windows/Storage `
+                -ClientOnly `
+                -Property @{
+                    DiskNumber = 9
+                    Type = 'Basic'
+                    PartitionNumber = 1
+                }
+        ) }
+        $UnformattedVolume = New-CimInstance `
+                -ClassName 'MSFT_Volume' `
+                -Namespace ROOT/Microsoft/Windows/Storage `
+                -ClientOnly `
+                -Property @{
+                    FileSystem = ''
+                    FileSystemLabel = $Parameters.FileSystemLabel
+             }
+
+        Mock Get-Volume -MockWith { @( $UnformattedVolume ) }
+        Mock Format-Volume -MockWith { @(
+            New-CimInstance `
+                -ClassName 'MSFT_Volume' `
+                -Namespace ROOT/Microsoft/Windows/Storage `
+                -ClientOnly `
+                -Property @{
+                    FileSystem = $Parameters.FileSystem
+                    FileSystemLabel = $Parameters.FileSystemLabel
+             }
+        ) }
+        Context 'VHDx file exists is not mounted, is not initialized' {
+            It 'Returns Expected Volume' {
+                $Splat = $Parameters.Clone()
+                $Splat.FileSystemLabel = 'Different'
+
+                Initialize-Vhd @Splat | Should Be $RenamedVolume
+            }
+            It 'Calls appropriate mocks' {
+                Assert-MockCalled Get-VHD -Exactly 2
+                Assert-MockCalled Mount-VHD -Exactly 1
+                Assert-MockCalled Get-Disk -Exactly 1
+                Assert-MockCalled Initialize-Disk -Exactly 1
+                Assert-MockCalled Get-Partition -Exactly 1
+                Assert-MockCalled New-Partition -Exactly 1
+                Assert-MockCalled Get-Volume -Exactly 1
+                Assert-MockCalled Format-Volume -Exactly 1
+                Assert-MockCalled Set-Volume -Exactly 1
+                Assert-MockCalled Set-Partition -Exactly 0
+                Assert-MockCalled Add-PartitionAccessPath -Exactly 0
+            }
+        }
+        Context 'VHDx file exists is not mounted, is not initialized and DriveLetter passed' {
+            It 'Returns Expected Volume' {
+                $Splat = $Parameters.Clone()
+                $Splat.FileSystemLabel = 'Different'
+                $Splat.DriveLetter = 'X'
+
+                Initialize-Vhd @Splat | Should Be $UnformattedVolume
+            }
+            It 'Calls appropriate mocks' {
+                Assert-MockCalled Get-VHD -Exactly 2
+                Assert-MockCalled Mount-VHD -Exactly 1
+                Assert-MockCalled Get-Disk -Exactly 1
+                Assert-MockCalled Initialize-Disk -Exactly 1
+                Assert-MockCalled Get-Partition -Exactly 1
+                Assert-MockCalled New-Partition -Exactly 1
+                Assert-MockCalled Get-Volume -Exactly 2
+                Assert-MockCalled Format-Volume -Exactly 1
+                Assert-MockCalled Set-Volume -Exactly 1
+                Assert-MockCalled Set-Partition -Exactly 1
+                Assert-MockCalled Add-PartitionAccessPath -Exactly 0
+            }
+        }
+        Context 'VHDx file exists is not mounted, is not initialized and AccessPath passed' {
+            It 'Returns Expected Volume' {
+                $Splat = $Parameters.Clone()
+                $Splat.FileSystemLabel = 'Different'
+                $Splat.AccessPath = 'c:\Exists'
+
+                Initialize-Vhd @Splat | Should Be $RenamedVolume
+            }
+            It 'Calls appropriate mocks' {
+                Assert-MockCalled Get-VHD -Exactly 2
+                Assert-MockCalled Mount-VHD -Exactly 1
+                Assert-MockCalled Get-Disk -Exactly 1
+                Assert-MockCalled Initialize-Disk -Exactly 1
+                Assert-MockCalled Get-Partition -Exactly 1
+                Assert-MockCalled New-Partition -Exactly 1
+                Assert-MockCalled Get-Volume -Exactly 1
+                Assert-MockCalled Format-Volume -Exactly 1
+                Assert-MockCalled Set-Volume -Exactly 1
+                Assert-MockCalled Set-Partition -Exactly 0
+                Assert-MockCalled Add-PartitionAccessPath -Exactly 1
+            }
+        }
+        Mock Test-Path -ParameterFilter { $Path -eq 'c:\DoesNotExist' } -MockWith { $false }
+        Context 'VHDx file exists is not mounted, is not initialized and AccessPath passed' {
+            It 'Throws a InitializeVHDAccessPathNotFoundError Exception' {
+                $Splat = $Parameters.Clone()
+                $Splat.FileSystemLabel = 'Different'
+                $Splat.AccessPath = 'c:\DoesNotExist'
+
+                $ExceptionParameters = @{
+                    errorId = 'InitializeVHDAccessPathNotFoundError'
+                    errorCategory = 'InvalidArgument'
+                    errorMessage = $($LocalizedData.InitializeVHDAccessPathNotFoundError `
+                        -f$Splat.VHDPath,'c:\DoesNotExist')
+                }
+                $Exception = New-Exception @ExceptionParameters
+
+                { Initialize-Vhd @Splat } | Should Throw $Exception
+            }
+            It 'Calls appropriate mocks' {
+                Assert-MockCalled Get-VHD -Exactly 2
+                Assert-MockCalled Mount-VHD -Exactly 1
+                Assert-MockCalled Get-Disk -Exactly 1
+                Assert-MockCalled Initialize-Disk -Exactly 1
+                Assert-MockCalled Get-Partition -Exactly 1
+                Assert-MockCalled New-Partition -Exactly 1
+                Assert-MockCalled Get-Volume -Exactly 1
+                Assert-MockCalled Format-Volume -Exactly 1
+                Assert-MockCalled Set-Volume -Exactly 1
+                Assert-MockCalled Set-Partition -Exactly 0
                 Assert-MockCalled Add-PartitionAccessPath -Exactly 0
             }
         }
