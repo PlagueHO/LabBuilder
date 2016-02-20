@@ -267,7 +267,7 @@ function New-Credential()
     
     This function will not changed the File System and/or Partition Type on the VHDx
     if it is different to the values provided.
-.PARAMETER VHDPath
+.PARAMETER Path
     This is the path to the VHD/VHDx file to mount and initialize.
 .PARAMETER PartitionStyle
     The Partition Style to set an uninitialized VHD/VHDx to. It can be MBR or GPT.
@@ -285,13 +285,13 @@ function New-Credential()
    to the AccessPath defined. The folder must already exist otherwise an exception
    will be thrown.
 .EXAMPLE
-   Initialize-Vhd -VHDPath c:\VMs\Tools.VHDx -PartitionStyle GPT -FileSystem NTFS
+   Initialize-Vhd -Path c:\VMs\Tools.VHDx -PartitionStyle GPT -FileSystem NTFS
    The VHDx c:\VMs\Tools.VHDx will be mounted and initialized with GPT if not already
    initialized. It will also be partitioned and formatted with NTFS if no partitions
    already exist.
 .EXAMPLE
    Initialize-Vhd `
-    -VHDPath c:\VMs\Tools.VHDx `
+    -Path c:\VMs\Tools.VHDx `
     -PartitionStyle GPT `
     -FileSystem NTFS `
     -FileSystemLabel ToolsDisk
@@ -311,7 +311,7 @@ function Initialize-Vhd
     Param (
         [Parameter(Mandatory=$True)]
         [ValidateNotNullOrEmpty()]	
-        [String] $VHDPath,
+        [String] $Path,
 
         [Parameter(Mandatory=$True)]
         [ValidateSet('GPT','MBR')]	
@@ -334,30 +334,30 @@ function Initialize-Vhd
     )
 
     # Check file exists
-    if (-not (Test-Path -Path $VHDPath))
+    if (-not (Test-Path -Path $Path))
     {
         $ExceptionParameters = @{
             errorId = 'FileNotFoundError'
             errorCategory = 'InvalidArgument'
             errorMessage = $($LocalizedData.FileNotFoundError `
-            -f "VHD",$VHDPath)
+            -f "VHD",$Path)
         }
         New-LabException @ExceptionParameters
     }
 
     # Check disk is not already mounted
     $VHD = Get-VHD `
-        -Path $VHDPath
+        -Path $Path
     if (-not $VHD.Attached)
     {
         Write-Verbose -Message ($LocalizedData.InitializeVHDMountingMessage `
-            -f $VHDPath)
+            -f $Path)
 
         $null = Mount-VHD `
-            -Path $VHDPath `
+            -Path $Path `
             -ErrorAction Stop
         $VHD = Get-VHD `
-            -Path $VHDPath
+            -Path $Path
     }
 
     # Check partition style
@@ -365,7 +365,7 @@ function Initialize-Vhd
     if ((Get-Disk -Number $DiskNumber).PartitionStyle -eq 'RAW')
     {
         Write-Verbose -Message ($LocalizedData.InitializeVHDInitializingMessage `
-            -f $VHDPath,$PartitionStyle)
+            -f $Path,$PartitionStyle)
 
         Initialize-Disk `
             -Number $DiskNumber `
@@ -380,7 +380,7 @@ function Initialize-Vhd
     if (-not ($Partitions))
     {
         Write-Verbose -Message ($LocalizedData.InitializeVHDCreatePartitionMessage `
-            -f $VHDPath)
+            -f $Path)
 
         $Partitions = @(New-Partition `
             -DiskNumber $DiskNumber `
@@ -395,7 +395,7 @@ function Initialize-Vhd
             errorId = 'InitializeVHDPartitionFailedError'
             errorCategory = 'InvalidArgument'
             errorMessage = $($LocalizedData.InitializeVHDPartitionFailedError `
-            -f $VHDPath)
+            -f $Path)
         }
         New-LabException @ExceptionParameters        
     }
@@ -415,7 +415,7 @@ function Initialize-Vhd
             errorId = 'InitializeVHDVolumeFailedError'
             errorCategory = 'InvalidArgument'
             errorMessage = $($LocalizedData.InitializeVHDVolumeFailedError `
-            -f $VHDPath)
+            -f $Path)
         }
         New-LabException @ExceptionParameters        
     }
@@ -424,7 +424,7 @@ function Initialize-Vhd
     if ([String]::IsNullOrWhitespace($Volumes[0].FileSystem))
     {
         Write-Verbose -Message ($LocalizedData.InitializeVHDFormatVolumeMessage `
-            -f $VHDPath,$FileSystem)
+            -f $Path,$FileSystem)
         $Volumes = @(Format-Volume `
             -InputObject $Volumes[0] `
             -FileSystem $FileSystem `
@@ -436,7 +436,7 @@ function Initialize-Vhd
         ($Volumes[0].FileSystemLabel -ne $FileSystemLabel))
     {
         Write-Verbose -Message ($LocalizedData.InitializeVHDSetLabelVolumeMessage `
-            -f $VHDPath,$FileSystemLabel)
+            -f $Path,$FileSystemLabel)
         $Volumes = @(Set-Volume `
             -InputObject $Volumes[0] `
             -NewFileSystemLabel $FileSystemLabel `
@@ -461,7 +461,7 @@ function Initialize-Vhd
                     -Partition $Partitions[0])
 
                 Write-Verbose -Message ($LocalizedData.InitializeVHDDriveLetterMessage `
-                    -f $VHDPath,$DriveLetter.ToUpper())
+                    -f $Path,$DriveLetter.ToUpper())
             }
             'AccessPath'
             {
@@ -472,7 +472,7 @@ function Initialize-Vhd
                         errorId = 'InitializeVHDAccessPathNotFoundError'
                         errorCategory = 'InvalidArgument'
                         errorMessage = $($LocalizedData.InitializeVHDAccessPathNotFoundError `
-                        -f $VHDPath,$AccessPath)
+                        -f $Path,$AccessPath)
                     }
                     New-LabException @ExceptionParameters        
                 }
@@ -485,7 +485,7 @@ function Initialize-Vhd
                     -ErrorAction Stop
 
                 Write-Verbose -Message ($LocalizedData.InitializeVHDAccessPathMessage `
-                    -f $VHDPath,$AccessPath)
+                    -f $Path,$AccessPath)
             }
         }
     }
@@ -4104,28 +4104,31 @@ function Get-LabVM {
             }
 
             # Get the Folder to copy and check it exists if passed
-            Remove-Variable -Name CopyFolder -ErrorAction SilentlyContinue
-            if ($VMDataVhd.CopyFolder)
+            Remove-Variable -Name CopyFolders -ErrorAction SilentlyContinue
+            if ($VMDataVhd.CopyFolders)
             {
-                [String]$CopyFolder = $VMDataVhd.CopyFolder
-                # Adjust the path to be relative to the working directory folder 
-                # if it doesn't contain a root (e.g. c:\)
-                if (! [System.IO.Path]::IsPathRooted($CopyFolder))
+                [String]$CopyFolders = $VMDataVhd.CopyFolders
+                foreach ($CopyFolder in ($CopyFolders -Split ','))
                 {
-                    $CopyFolder = Join-Path `
-                        -Path $Configuration.labbuilderconfig.settings.fullconfigpath `
-                        -ChildPath $CopyFolder
-                }
-                if (! (Test-Path -Path $CopyFolder))
-                {
-                   $ExceptionParameters = @{
-                       errorId = 'FolderCopyToVHDFailedServiceMessage'
-                       errorCategory = 'InvalidArgument'
-                       errorMessage = $($LocalizedData.FolderCopyToVHDFailedServiceMessage `
-                           -f $VM.Name,$CopyFolder,$VHD)
+                    # Adjust the path to be relative to the configuration folder 
+                    # if it doesn't contain a root (e.g. c:\)
+                    if (-not [System.IO.Path]::IsPathRooted($CopyFolder))
+                    {
+                        $CopyFolder = Join-Path `
+                            -Path $Config.labbuilderconfig.settings.fullconfigpath `
+                            -ChildPath $CopyFolder
                     }
-                New-LabException @ExceptionParameters 
-                }                   
+                    if (-not (Test-Path -Path $CopyFolder -Type Container))
+                    {
+                    $ExceptionParameters = @{
+                        errorId = 'VMDataDiskCopyFolderMissingError'
+                        errorCategory = 'InvalidArgument'
+                        errorMessage = $($LocalizedData.VMDataDiskCopyFolderMissingError `
+                            -f $VM.Name,$VHD,$CopyFolder)
+                        }
+                    New-LabException @ExceptionParameters 
+                    }                   
+                }
             } 
             
             # Should the Source VHD be moved rather than copied
@@ -4169,7 +4172,7 @@ function Get-LabVM {
                 shared = $Shared;
                 supportPR = $SupportPR;
                 moveSourceVHD = $MoveSourceVHD;
-                CopyFolder = $CopyFolder;
+                copyfolders = $CopyFolders;
                 partitionstyle = $PartitionStyle;
                 filesystem = $FileSystem;
                 filesystemlabel = $FileSystemLabel;
@@ -5214,41 +5217,92 @@ function Update-LabVMDataDisk {
                         New-LabException @ExceptionParameters                        
                     } # default
                 } # switch
+            } # if     
+            
+            # Do folders need to be copied to this Data Disk?
+            if ($DataVhd.CopyFolders -ne $null)
+            {
+                # Files need to be copied to this Data VHD so
+                # set up a mount folder for it to be mounted to.
+                [String] $MountPoint = Join-Path `
+                    -Path $VMLabBuilderFiles `
+                    -ChildPath 'Mount'
+
+                if (! (Test-Path -Path $MountPoint -PathType Container))
+                {
+                    $null = New-Item `
+                        -Path $MountPoint `
+                        -ItemType Directory
+                }
+                # Do we need to initialize/format the new disk?
+                if ($DataVHD.PartitionStyle -and $DataVHD.FileSystem)
+                {
+                    # Yes, initialize the disk (or check it is)
+                    $InitializeVHDParams = @{
+                        VHD = $VHD
+                        PartitionStyle = $DataVHD.PartitionStyle
+                        FileSystem = $DataVHD.FileSystem
+                        AccessPath = $MountPoint                        
+                    }
+                    if ($DataVHD.FileSystemLabel)
+                    {
+                        $InitializeVHDParams += @{
+                            FileSystemLabel = $DataVHD.FileSystemLabel
+                        }
+                    }
+                    Initialize-VHD `
+                        @InitializeVHDParams `
+                        -ErrorAction Stop
+                }
+                else
+                {
+                    # No, we assume the disk is already intialized
+                    # So just mount it
+                    Mount-VHD `
+                        -Path $VHD
+                }
+                
+                foreach ($CopyFolder in @($DataVHD.CopyFolders))
+                {                    
+                    Write-Verbose -Message $($LocalizedData.CopyingFoldersToVMDiskMessage `
+                        -f $VM.Name,$VHD,$CopyFolder)
+
+                    Copy-item `
+                        -Path $CopyFolder `
+                        -Destination $MountFolder `
+                        -Recurse `
+                        -Force
+                }
+                Dismount-VHD `
+                    -ErrorAction Stop
+                    -Path $VHD 
+            }
+            else
+            {
+                # Do we need to initialize/format the new disk?
+                if ($DataVHD.PartitionStyle -and $DataVHD.FileSystem)
+                {
+                    $InitializeVHDParams = @{
+                        VHD = $VHD
+                        PartitionStyle = $DataVHD.PartitionStyle
+                        FileSystem = $DataVHD.FileSystem
+                    }
+                    if ($DataVHD.FileSystemLabel)
+                    {
+                        $InitializeVHDParams += @{
+                            FileSystemLabel = $DataVHD.FileSystemLabel
+                        }
+                    } # if
+                    Initialize-VHD `
+                        @InitializeVHDParams `
+                        -ErrorAction Stop
+                    Dismount-VHD `
+                        -VHD $VHD `
+                        -ErrorAction Stop
+                } # if
             } # if
         } # if
-        
-         if ($DataVhd.CopyFolder -ne $Null)
-        {
-              if($DataVHD.SourceVHD -ne $Null)  # if we used a source VHD assuming it already has a file system
-              {
-                  [String]$DriveLetter = (Mount-VHD -Path $VHD `
-                        -passthru | `
-                        get-partition | `
-                        get-volume).DriveLetter
-              } Else {
-              
-              Write-Verbose -Message "Mounting VHD $VHD to copy Folder $($DataVHD.CopyFolder)"
-              
-	          [String]$DriveLetter = (Mount-VHD -Path $VHD -Passthru | `
-                    get-disk -number {$_.DiskNumber} | `
-                    Initialize-Disk -PartitionStyle GPT `
-                    -PassThru | New-Partition -UseMaximumSize `
-                    -AssignDriveLetter:$False | `
-                    Format-Volume -Confirm:$false -FileSystem NTFS -force | `
-                    get-partition | `
-                    Add-PartitionAccessPath -AssignDriveLetter -PassThru | `
-                    get-volume).DriveLetter 
-              }
-	         $MountVHD = "$([string]$DriveLetter):\"
 
-	         $null = Get-PSDrive -PSProvider FileSystem # Work around an issue with script not seeing the drive 
-             
-             Copy-item -path "$($DataVHD.CopyFolder)" -Destination $MountVHD -Recurse -Force
-             
-             Dismount-VHD -Path $VHD 
-
-           }# if
-        
         # Get a list of disks attached to the VM
         $VMHardDiskDrives = Get-VMHardDiskDrive `
             -VMName $VM.Name

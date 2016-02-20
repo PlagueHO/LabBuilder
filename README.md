@@ -45,6 +45,7 @@ Versions
 ### 0.3.2.0
 * Added Initialize-VHD function.
 * Added support for formatting Data VHDs.
+* Added support for copying multiple folders to DataVHDs.
 
 ### 0.3.1.0
 * Disable 'Access Denied' test when connecting to new VM because this error is reported by VM that is still booting up.

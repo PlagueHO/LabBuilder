@@ -150,9 +150,9 @@ InModuleScope LabBuilder {
 
 
 
-    Describe 'Initialize-Vhd' -Tag 'Incomplete' {
+    Describe 'Initialize-Vhd' {
         $Parameters = @{
-            VHDPath = 'c:\DataVHDx.vhdx'
+            Path = 'c:\DataVHDx.vhdx'
             PartitionStyle = 'GPT'
             FileSystem = 'NTFS'
             FileSystemLabel = 'Test'
@@ -176,7 +176,7 @@ InModuleScope LabBuilder {
                     errorId = 'FileNotFoundError'
                     errorCategory = 'InvalidArgument'
                     errorMessage = $($LocalizedData.FileNotFoundError `
-                        -f "VHD",$Splat.VHDPath)
+                        -f "VHD",$Splat.Path)
                 }
                 $Exception = New-Exception @ExceptionParameters
 
@@ -207,7 +207,7 @@ InModuleScope LabBuilder {
                     errorId = 'InitializeVHDPartitionFailedError'
                     errorCategory = 'InvalidArgument'
                     errorMessage = $($LocalizedData.InitializeVHDPartitionFailedError `
-                        -f$Splat.VHDPath)
+                        -f$Splat.Path)
                 }
                 $Exception = New-Exception @ExceptionParameters
 
@@ -246,7 +246,7 @@ InModuleScope LabBuilder {
                     errorId = 'InitializeVHDVolumeFailedError'
                     errorCategory = 'InvalidArgument'
                     errorMessage = $($LocalizedData.InitializeVHDVolumeFailedError `
-                        -f$Splat.VHDPath)
+                        -f$Splat.Path)
                 }
                 $Exception = New-Exception @ExceptionParameters
 
@@ -424,7 +424,7 @@ InModuleScope LabBuilder {
                     errorId = 'InitializeVHDAccessPathNotFoundError'
                     errorCategory = 'InvalidArgument'
                     errorMessage = $($LocalizedData.InitializeVHDAccessPathNotFoundError `
-                        -f$Splat.VHDPath,'c:\DoesNotExist')
+                        -f$Splat.Path,'c:\DoesNotExist')
                 }
                 $Exception = New-Exception @ExceptionParameters
 
@@ -2402,6 +2402,22 @@ InModuleScope LabBuilder {
                     errorCategory = 'InvalidArgument'
                     errorMessage = $($LocalizedData.VMDataDiskPartitionStyleMissingError `
                         -f $Config.labbuilderconfig.vms.vm.name,"$($Config.labbuilderconfig.settings.vmpath)\$($Config.labbuilderconfig.vms.vm.name)\Virtual Hard Disks\$($Config.labbuilderconfig.vms.vm.datavhds.datavhd[2].vhd)")
+                }
+                $Exception = New-Exception @ExceptionParameters
+                { Get-LabVM -Config $Config -VMTemplates $Templates -Switches $Switches } | Should Throw $Exception
+            }
+        }
+        Context "Configuration passed with VM Data Disk that exists with CopyFolders set to a folder that does not exist." {
+            It 'Throw VMDataDiskCopyFolderMissingError Exception' {
+                $Config = Get-LabConfiguration -Path $Global:TestConfigOKPath
+                $Config.labbuilderconfig.vms.vm.datavhds.datavhd[0].CopyFolders='c:\doesnotexist'
+                [Array]$Switches = Get-LabSwitch -Config $Config
+                [array]$Templates = Get-LabVMTemplate -Config $Config
+                $ExceptionParameters = @{
+                    errorId = 'VMDataDiskCopyFolderMissingError'
+                    errorCategory = 'InvalidArgument'
+                    errorMessage = $($LocalizedData.VMDataDiskCopyFolderMissingError `
+                        -f $Config.labbuilderconfig.vms.vm.name,"$($Config.labbuilderconfig.settings.vmpath)\$($Config.labbuilderconfig.vms.vm.name)\Virtual Hard Disks\$($Config.labbuilderconfig.vms.vm.datavhds.datavhd[0].vhd)",'c:\doesnotexist')
                 }
                 $Exception = New-Exception @ExceptionParameters
                 { Get-LabVM -Config $Config -VMTemplates $Templates -Switches $Switches } | Should Throw $Exception

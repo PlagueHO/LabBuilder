@@ -158,8 +158,8 @@
         setupcomplete="" 
         integrationservices="Guest Service Interface,Heartbeat,Key-Value Pair Exchange,Shutdown,Time Synchronization,VSS" >
       <datavhds>
-        <datavhd vhd="DataDiskCopy.vhdx" sourcevhd="VhdFiles\DataDisk.vhdx"/>
-        <datavhd vhd="DataDiskFixed.vhdx" type="fixed" size="10GB" supportpr="N" partitionstyle="MBR" filesystem="NTFS"/>
+        <datavhd vhd="DataDiskCopy.vhdx" sourcevhd="VhdFiles\DataDisk.vhdx" copyfolders="isofiles" />
+        <datavhd vhd="DataDiskFixed.vhdx" type="fixed" size="10GB" supportpr="N" partitionstyle="MBR" filesystem="NTFS" />
         <datavhd vhd="DataDiskDynamic.vhdx" type="dynamic" size="10GB" partitionstyle="GPT" filesystem="NTFS" filesystemlabel="ToolsDisk" />
         <datavhd vhd="DataDiskDifferencing.vhdx" type="differencing" size="10GB" parentvhd="VhdFiles\DataDisk.vhdx" />
         <datavhd vhd="DataDiskMove.vhdx" sourcevhd="VhdFiles\DataDisk.vhdx" movesourcevhd="Y" />

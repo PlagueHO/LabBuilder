@@ -10,8 +10,8 @@
                      {
                          "vhd":  "C:\\Pester Lab\\PESTER01\\Virtual Hard Disks\\DataDiskCopy.vhdx",
                          "type":  null,
+                         "copyfolders":  "isofiles",
                          "partitionstyle":  null,
-                         "CopyFolder":  null,
                          "filesystem":  null,
                          "filesystemlabel":  null,
                          "moveSourceVHD":  null,
@@ -24,8 +24,8 @@
                      {
                          "vhd":  "C:\\Pester Lab\\PESTER01\\Virtual Hard Disks\\DataDiskFixed.vhdx",
                          "type":  "fixed",
+                         "copyfolders":  null,
                          "partitionstyle":  "MBR",
-                         "CopyFolder":  null,
                          "filesystem":  "NTFS",
                          "filesystemlabel":  null,
                          "moveSourceVHD":  null,
@@ -38,8 +38,8 @@
                      {
                          "vhd":  "C:\\Pester Lab\\PESTER01\\Virtual Hard Disks\\DataDiskDynamic.vhdx",
                          "type":  "dynamic",
+                         "copyfolders":  null,
                          "partitionstyle":  "GPT",
-                         "CopyFolder":  null,
                          "filesystem":  "NTFS",
                          "filesystemlabel":  "ToolsDisk",
                          "moveSourceVHD":  null,
@@ -52,8 +52,8 @@
                      {
                          "vhd":  "C:\\Pester Lab\\PESTER01\\Virtual Hard Disks\\DataDiskDifferencing.vhdx",
                          "type":  "differencing",
+                         "copyfolders":  null,
                          "partitionstyle":  null,
-                         "CopyFolder":  null,
                          "filesystem":  null,
                          "filesystemlabel":  null,
                          "moveSourceVHD":  null,
@@ -66,8 +66,8 @@
                      {
                          "vhd":  "C:\\Pester Lab\\PESTER01\\Virtual Hard Disks\\DataDiskMove.vhdx",
                          "type":  null,
+                         "copyfolders":  null,
                          "partitionstyle":  null,
-                         "CopyFolder":  null,
                          "filesystem":  null,
                          "filesystemlabel":  null,
                          "moveSourceVHD":  true,
@@ -80,8 +80,8 @@
                      {
                          "vhd":  "C:\\Pester Lab\\PESTER01\\Virtual Hard Disks\\DataDiskShared.vhdx",
                          "type":  "fixed",
+                         "copyfolders":  null,
                          "partitionstyle":  null,
-                         "CopyFolder":  null,
                          "filesystem":  null,
                          "filesystemlabel":  null,
                          "moveSourceVHD":  null,
