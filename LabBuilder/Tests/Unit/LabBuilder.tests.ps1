@@ -2744,6 +2744,11 @@ InModuleScope LabBuilder {
         Mock Add-VMHardDiskDrive
         Mock Test-Path -ParameterFilter { $Path -eq 'DoesNotExist.Vhdx' } -MockWith { $False }        
         Mock Test-Path -ParameterFilter { $Path -eq 'DoesExist.Vhdx' } -MockWith { $True }        
+        Mock Initialize-VHD
+        Mock Mount-VHD
+        Mock Dismount-VHD
+        Mock Copy-Item
+        Mock New-Item
         #endregion
 
         # The same VM will be used for all tests, but a different
@@ -2766,6 +2771,10 @@ InModuleScope LabBuilder {
                 Assert-MockCalled New-VHD -Exactly 0
                 Assert-MockCalled Get-VMHardDiskDrive -Exactly 0
                 Assert-MockCalled Add-VMHardDiskDrive -Exactly 0
+                Assert-MockCalled Initialize-VHD -Exactly 0
+                Assert-MockCalled Mount-VHD -Exactly 0
+                Assert-MockCalled Dismount-VHD -Exactly 0
+                Assert-MockCalled New-Item -Exactly 0
             }
         }
         Context 'Valid configuration is passed with a DataVHD that exists but has different type' {
@@ -2796,6 +2805,10 @@ InModuleScope LabBuilder {
                 Assert-MockCalled New-VHD -Exactly 0
                 Assert-MockCalled Get-VMHardDiskDrive -Exactly 0
                 Assert-MockCalled Add-VMHardDiskDrive -Exactly 0
+                Assert-MockCalled Initialize-VHD -Exactly 0
+                Assert-MockCalled Mount-VHD -Exactly 0
+                Assert-MockCalled Dismount-VHD -Exactly 0
+                Assert-MockCalled New-Item -Exactly 0
             }
         }
         Context 'Valid configuration is passed with a DataVHD that exists but has smaller size' {
@@ -2826,6 +2839,10 @@ InModuleScope LabBuilder {
                 Assert-MockCalled New-VHD -Exactly 0
                 Assert-MockCalled Get-VMHardDiskDrive -Exactly 0
                 Assert-MockCalled Add-VMHardDiskDrive -Exactly 0
+                Assert-MockCalled Initialize-VHD -Exactly 0
+                Assert-MockCalled Mount-VHD -Exactly 0
+                Assert-MockCalled Dismount-VHD -Exactly 0
+                Assert-MockCalled New-Item -Exactly 0
             }
         }
         Context 'Valid configuration is passed with a DataVHD that exists but has larger size' {
@@ -2849,12 +2866,14 @@ InModuleScope LabBuilder {
                 Assert-MockCalled New-VHD -Exactly 0
                 Assert-MockCalled Get-VMHardDiskDrive -Exactly 1
                 Assert-MockCalled Add-VMHardDiskDrive -Exactly 1
+                Assert-MockCalled Initialize-VHD -Exactly 0
+                Assert-MockCalled Mount-VHD -Exactly 0
+                Assert-MockCalled Dismount-VHD -Exactly 0
+                Assert-MockCalled New-Item -Exactly 0
             }
         }
-        
         Mock Get-VHD
-        
-        Context 'Valid configuration is passed with a SourceVHD and DataVHD that do not exist' {
+        Context 'Valid configuration is passed with a SourceVHD and DataVHD that does not exist' {
             $VMs[0].DataVHDs = @( @{
                 Vhd = 'DoesNotExist.vhdx'
                 SourceVhd = 'DoesNotExist.Vhdx'
@@ -2877,9 +2896,13 @@ InModuleScope LabBuilder {
                 Assert-MockCalled New-VHD -Exactly 0
                 Assert-MockCalled Get-VMHardDiskDrive -Exactly 0
                 Assert-MockCalled Add-VMHardDiskDrive -Exactly 0
+                Assert-MockCalled Initialize-VHD -Exactly 0
+                Assert-MockCalled Mount-VHD -Exactly 0
+                Assert-MockCalled Dismount-VHD -Exactly 0
+                Assert-MockCalled New-Item -Exactly 0
             }
         }
-        Context 'Valid configuration is passed with a SourceVHD that exists and DataVHD that do not exist' {
+        Context 'Valid configuration is passed with a SourceVHD that exists and DataVHD that does not exist' {
             $VMs[0].DataVHDs = @( @{
                 Vhd = 'DoesNotExist.vhdx'
                 SourceVhd = 'DoesExist.Vhdx'
@@ -2895,6 +2918,10 @@ InModuleScope LabBuilder {
                 Assert-MockCalled New-VHD -Exactly 0
                 Assert-MockCalled Get-VMHardDiskDrive -Exactly 1
                 Assert-MockCalled Add-VMHardDiskDrive -Exactly 1
+                Assert-MockCalled Initialize-VHD -Exactly 0
+                Assert-MockCalled Mount-VHD -Exactly 0
+                Assert-MockCalled Dismount-VHD -Exactly 0
+                Assert-MockCalled New-Item -Exactly 0
             }
         }
         Context 'Valid configuration is passed with a SourceVHD that exists and DataVHD that do not exist and MoveSourceVHD set' {
@@ -2914,6 +2941,10 @@ InModuleScope LabBuilder {
                 Assert-MockCalled New-VHD -Exactly 0
                 Assert-MockCalled Get-VMHardDiskDrive -Exactly 1
                 Assert-MockCalled Add-VMHardDiskDrive -Exactly 1
+                Assert-MockCalled Initialize-VHD -Exactly 0
+                Assert-MockCalled Mount-VHD -Exactly 0
+                Assert-MockCalled Dismount-VHD -Exactly 0
+                Assert-MockCalled New-Item -Exactly 0
             }
         }
         Context 'Valid configuration is passed with a 10GB Fixed DataVHD that does not exist' {
@@ -2933,6 +2964,10 @@ InModuleScope LabBuilder {
                 Assert-MockCalled New-VHD -Exactly 1
                 Assert-MockCalled Get-VMHardDiskDrive -Exactly 1
                 Assert-MockCalled Add-VMHardDiskDrive -Exactly 1
+                Assert-MockCalled Initialize-VHD -Exactly 0
+                Assert-MockCalled Mount-VHD -Exactly 0
+                Assert-MockCalled Dismount-VHD -Exactly 0
+                Assert-MockCalled New-Item -Exactly 0
             }
         }
         Context 'Valid configuration is passed with a 10GB Dynamic DataVHD that does not exist' {
@@ -2952,6 +2987,61 @@ InModuleScope LabBuilder {
                 Assert-MockCalled New-VHD -Exactly 1
                 Assert-MockCalled Get-VMHardDiskDrive -Exactly 1
                 Assert-MockCalled Add-VMHardDiskDrive -Exactly 1
+                Assert-MockCalled Initialize-VHD -Exactly 0
+                Assert-MockCalled Mount-VHD -Exactly 0
+                Assert-MockCalled Dismount-VHD -Exactly 0
+                Assert-MockCalled New-Item -Exactly 0
+            }
+        }
+        Context 'Valid configuration is passed with a 10GB Dynamic DataVHD that does not exist and PartitionStyle and FileSystem is set' {
+            $VMs[0].DataVHDs = @( @{
+                Vhd = 'DoesNotExist.vhdx'
+                Type = 'Dynamic'
+                Size = 10GB
+                PartitionStyle = 'GPT'
+                FileSystem = 'NTFS'
+            } )
+            It 'Does not throw an Exception' {
+                { Update-LabVMDataDisk -Config $Config -VM $VMs[0] } | Should Not Throw
+            }
+            It 'Calls Mocked commands' {
+                Assert-MockCalled Get-VHD -Exactly 0
+                Assert-MockCalled Resize-VHD -Exactly 0
+                Assert-MockCalled Move-Item -Exactly 0
+                Assert-MockCalled Copy-Item -Exactly 0
+                Assert-MockCalled New-VHD -Exactly 1
+                Assert-MockCalled Get-VMHardDiskDrive -Exactly 1
+                Assert-MockCalled Add-VMHardDiskDrive -Exactly 1
+                Assert-MockCalled Initialize-VHD -Exactly 1
+                Assert-MockCalled Mount-VHD -Exactly 0
+                Assert-MockCalled Dismount-VHD -Exactly 1
+                Assert-MockCalled New-Item -Exactly 0
+            }
+        }
+        Context 'Valid configuration is passed with a 10GB Dynamic DataVHD that does not exist and PartitionStyle, FileSystem and CopyFolders is set' {
+            $VMs[0].DataVHDs = @( @{
+                Vhd = 'DoesNotExist.vhdx'
+                Type = 'Dynamic'
+                Size = 10GB
+                PartitionStyle = 'GPT'
+                FileSystem = 'NTFS'
+                CopyFolders = "$Global:TestConfigPath\ExpectedContent"
+            } )
+            It 'Does not throw an Exception' {
+                { Update-LabVMDataDisk -Config $Config -VM $VMs[0] } | Should Not Throw
+            }
+            It 'Calls Mocked commands' {
+                Assert-MockCalled Get-VHD -Exactly 0
+                Assert-MockCalled Resize-VHD -Exactly 0
+                Assert-MockCalled Move-Item -Exactly 0
+                Assert-MockCalled Copy-Item -Exactly 1
+                Assert-MockCalled New-VHD -Exactly 1
+                Assert-MockCalled Get-VMHardDiskDrive -Exactly 1
+                Assert-MockCalled Add-VMHardDiskDrive -Exactly 1
+                Assert-MockCalled Initialize-VHD -Exactly 1
+                Assert-MockCalled Mount-VHD -Exactly 0
+                Assert-MockCalled Dismount-VHD -Exactly 1
+                Assert-MockCalled New-Item -Exactly 1
             }
         }
         Context 'Valid configuration is passed with a 10GB Differencing DataVHD that does not exist where ParentVHD is not set' {
@@ -2978,6 +3068,10 @@ InModuleScope LabBuilder {
                 Assert-MockCalled New-VHD -Exactly 0
                 Assert-MockCalled Get-VMHardDiskDrive -Exactly 0
                 Assert-MockCalled Add-VMHardDiskDrive -Exactly 0
+                Assert-MockCalled Initialize-VHD -Exactly 0
+                Assert-MockCalled Mount-VHD -Exactly 0
+                Assert-MockCalled Dismount-VHD -Exactly 0
+                Assert-MockCalled New-Item -Exactly 0
             }
         }
         Context 'Valid configuration is passed with a 10GB Differencing DataVHD that does not exist where ParentVHD does not exist' {
@@ -3005,6 +3099,10 @@ InModuleScope LabBuilder {
                 Assert-MockCalled New-VHD -Exactly 0
                 Assert-MockCalled Get-VMHardDiskDrive -Exactly 0
                 Assert-MockCalled Add-VMHardDiskDrive -Exactly 0
+                Assert-MockCalled Initialize-VHD -Exactly 0
+                Assert-MockCalled Mount-VHD -Exactly 0
+                Assert-MockCalled Dismount-VHD -Exactly 0
+                Assert-MockCalled New-Item -Exactly 0
             }
         }
         Context 'Valid configuration is passed with a 10GB Differencing DataVHD that does not exist' {
@@ -3025,6 +3123,10 @@ InModuleScope LabBuilder {
                 Assert-MockCalled New-VHD -Exactly 1
                 Assert-MockCalled Get-VMHardDiskDrive -Exactly 1
                 Assert-MockCalled Add-VMHardDiskDrive -Exactly 1
+                Assert-MockCalled Initialize-VHD -Exactly 0
+                Assert-MockCalled Mount-VHD -Exactly 0
+                Assert-MockCalled Dismount-VHD -Exactly 0
+                Assert-MockCalled New-Item -Exactly 0
             }
         }
         Context 'Valid configuration is passed with a DataVHD that does not exist and an unknown Type' {
@@ -3051,14 +3153,16 @@ InModuleScope LabBuilder {
                 Assert-MockCalled New-VHD -Exactly 0
                 Assert-MockCalled Get-VMHardDiskDrive -Exactly 0
                 Assert-MockCalled Add-VMHardDiskDrive -Exactly 0
+                Assert-MockCalled Initialize-VHD -Exactly 0
+                Assert-MockCalled Mount-VHD -Exactly 0
+                Assert-MockCalled Dismount-VHD -Exactly 0
+                Assert-MockCalled New-Item -Exactly 0
             }
         }
-
         Mock Get-VHD -MockWith { @{
             VhdType =  'Fixed'
             Size = 10GB
         } }
-
         Context 'Valid configuration is passed with a 10GB Fixed DataVHD that exists and is already added to VM' {
             Mock Get-VMHardDiskDrive -MockWith { @{ Path = 'DoesExist.vhdx' } }
             $VMs[0].DataVHDs = @( @{
@@ -3077,6 +3181,10 @@ InModuleScope LabBuilder {
                 Assert-MockCalled New-VHD -Exactly 0
                 Assert-MockCalled Get-VMHardDiskDrive -Exactly 1
                 Assert-MockCalled Add-VMHardDiskDrive -Exactly 0
+                Assert-MockCalled Initialize-VHD -Exactly 0
+                Assert-MockCalled Mount-VHD -Exactly 0
+                Assert-MockCalled Dismount-VHD -Exactly 0
+                Assert-MockCalled New-Item -Exactly 0
             }
         }
     }

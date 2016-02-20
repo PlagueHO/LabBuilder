@@ -123,6 +123,9 @@ ConvertFrom-StringData -StringData @'
     ExpandingVMDiskMessage=Expanding {2} disk '{1}' for VM '{0}' to {3}.
     AddingVMDiskMessage=Adding {2} disk '{1}' to VM '{0}'.
     CopyingFoldersToVMDiskMessage=Copying folder '{2}' to VM Disk '{1}' for VM '{0}'.
+    InitializingVMDiskMessage=Initializing VM Disk '{1}' for VM '{0}' as {2} with {3} File System.
+    MountingVMDiskMessage=Mounting VM Disk '{1}' for VM '{0}' to '{2}'.
+    DismountingVMDiskMessage=Dismounting VM Disk '{1}' for VM '{0}'.
     DeletingVMAllDisksMessage=Deleting all disks from VM '{0}'.
     AddingVMNetworkAdapterMessage=Adding {2} network adapter {1} to VM '{0}'.
     SettingVMNetworkAdapterVlanMessage=Setting VLAN on {2} network adapter {1} in VM '{0}' to {3}.

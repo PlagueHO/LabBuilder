@@ -5224,11 +5224,16 @@ function Update-LabVMDataDisk {
             {
                 # Files need to be copied to this Data VHD so
                 # set up a mount folder for it to be mounted to.
+                # Get Path to LabBuilder files
+                [String] $VMLabBuilderFiles = Get-LabVMFilesPath `
+                    -Config $Config `
+                    -VM $VM
+
                 [String] $MountPoint = Join-Path `
                     -Path $VMLabBuilderFiles `
-                    -ChildPath 'Mount'
+                    -ChildPath 'VHDMount'
 
-                if (! (Test-Path -Path $MountPoint -PathType Container))
+                if (-not (Test-Path -Path $MountPoint -PathType Container))
                 {
                     $null = New-Item `
                         -Path $MountPoint `
@@ -5239,7 +5244,7 @@ function Update-LabVMDataDisk {
                 {
                     # Yes, initialize the disk (or check it is)
                     $InitializeVHDParams = @{
-                        VHD = $VHD
+                        Path = $VHD
                         PartitionStyle = $DataVHD.PartitionStyle
                         FileSystem = $DataVHD.FileSystem
                         AccessPath = $MountPoint                        
@@ -5250,6 +5255,9 @@ function Update-LabVMDataDisk {
                             FileSystemLabel = $DataVHD.FileSystemLabel
                         }
                     }
+                    Write-Verbose -Message $($LocalizedData.InitializingVMDiskMessage `
+                        -f $VM.Name,$VHD,$DataVHD.PartitionStyle,$DataVHD.FileSystem)
+
                     Initialize-VHD `
                         @InitializeVHDParams `
                         -ErrorAction Stop
@@ -5259,9 +5267,14 @@ function Update-LabVMDataDisk {
                     # No, we assume the disk is already intialized
                     # So just mount it
                     Mount-VHD `
-                        -Path $VHD
+                        -Path $VHD `
+                        -ErrorAction Stop
+                    
+                        
+                    
                 }
                 
+                # Copy each folder to the VM Data Disk
                 foreach ($CopyFolder in @($DataVHD.CopyFolders))
                 {                    
                     Write-Verbose -Message $($LocalizedData.CopyingFoldersToVMDiskMessage `
@@ -5273,17 +5286,23 @@ function Update-LabVMDataDisk {
                         -Recurse `
                         -Force
                 }
+                
+                # Dismount the VM Data Disk
+                Write-Verbose -Message $($LocalizedData.DismountingVMDiskMessage `
+                    -f $VM.Name,$VHD)
+
                 Dismount-VHD `
+                    -Path $VHD `
                     -ErrorAction Stop
-                    -Path $VHD 
             }
             else
             {
-                # Do we need to initialize/format the new disk?
+                # No folders need to be copied but check if we
+                # need to initialize the new disk.
                 if ($DataVHD.PartitionStyle -and $DataVHD.FileSystem)
                 {
                     $InitializeVHDParams = @{
-                        VHD = $VHD
+                        Path = $VHD
                         PartitionStyle = $DataVHD.PartitionStyle
                         FileSystem = $DataVHD.FileSystem
                     }
@@ -5293,11 +5312,20 @@ function Update-LabVMDataDisk {
                             FileSystemLabel = $DataVHD.FileSystemLabel
                         }
                     } # if
+
+                    Write-Verbose -Message $($LocalizedData.InitializingVMDiskMessage `
+                        -f $VM.Name,$VHD,$DataVHD.PartitionStyle,$DataVHD.FileSystem)
+
                     Initialize-VHD `
                         @InitializeVHDParams `
                         -ErrorAction Stop
+
+                    # Dismount the VM Data Disk
+                    Write-Verbose -Message $($LocalizedData.DismountingVMDiskMessage `
+                        -f $VM.Name,$VHD)
+
                     Dismount-VHD `
-                        -VHD $VHD `
+                        -Path $VHD `
                         -ErrorAction Stop
                 } # if
             } # if
