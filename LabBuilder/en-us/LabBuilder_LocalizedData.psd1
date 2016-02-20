@@ -70,6 +70,10 @@ ConvertFrom-StringData -StringData @'
     VMDataDiskVHDConvertError=The Data Disk '{1}' in VM '{0}' cannot be converted to a {2} type.
     VMDataDiskVHDShrinkError=The Data Disk '{1}' in VM '{0}' cannot be shrunk to {2}.
     DownloadFolderDoesNotExistError=The folder '{0}' to download '{1}' to does not exist.
+    VMDataDiskPartitionStyleError='{2}' is not a valid partition style for the Data Disk '{1}' in VM '{0}'.
+    VMDataDiskFileSystemError='{2}' is not a valid file system for the Data Disk '{1}' in VM '{0}'.
+    VMDataDiskPartitionStyleMissingError=The Data Disk '{1}' in VM '{0}' does not have a partition style definied.
+    VMDataDiskFileSystemMissingError=The Data Disk '{1}' in VM '{0}' does not have a file format definied.
     
     InstallingHyperVComponentsMesage=Installing {0} Hyper-V Components.
     InitializingHyperVComponentsMesage=Initializing Hyper-V Components.

@@ -2076,6 +2076,87 @@ InModuleScope LabBuilder {
                 { Get-LabVM -Config $Config -VMTemplates $Templates -Switches $Switches } | Should Throw $Exception
             }
         }        
+        Context "Configuration passed with VM Data Disk that has an invalid Partition Style." {
+            It 'Throw VMDataDiskPartitionStyleError Exception' {
+                $Config = Get-LabConfiguration -Path $Global:TestConfigOKPath
+                $Config.labbuilderconfig.vms.vm.datavhds.datavhd[1].PartitionStyle='Bad'
+                [Array]$Switches = Get-LabSwitch -Config $Config
+                [array]$Templates = Get-LabVMTemplate -Config $Config
+                $ExceptionParameters = @{
+                    errorId = 'VMDataDiskPartitionStyleError'
+                    errorCategory = 'InvalidArgument'
+                    errorMessage = $($LocalizedData.VMDataDiskPartitionStyleError `
+                        -f $Config.labbuilderconfig.vms.vm.name,"$($Config.labbuilderconfig.settings.vmpath)\$($Config.labbuilderconfig.vms.vm.name)\Virtual Hard Disks\$($Config.labbuilderconfig.vms.vm.datavhds.datavhd[1].vhd)",'Bad')
+                }
+                $Exception = New-Exception @ExceptionParameters
+                { Get-LabVM -Config $Config -VMTemplates $Templates -Switches $Switches } | Should Throw $Exception
+            }
+        }
+        Context "Configuration passed with VM Data Disk that has an invalid File System." {
+            It 'Throw VMDataDiskFileSystemError Exception' {
+                $Config = Get-LabConfiguration -Path $Global:TestConfigOKPath
+                $Config.labbuilderconfig.vms.vm.datavhds.datavhd[1].FileSystem='Bad'
+                [Array]$Switches = Get-LabSwitch -Config $Config
+                [array]$Templates = Get-LabVMTemplate -Config $Config
+                $ExceptionParameters = @{
+                    errorId = 'VMDataDiskFileSystemError'
+                    errorCategory = 'InvalidArgument'
+                    errorMessage = $($LocalizedData.VMDataDiskFileSystemError `
+                        -f $Config.labbuilderconfig.vms.vm.name,"$($Config.labbuilderconfig.settings.vmpath)\$($Config.labbuilderconfig.vms.vm.name)\Virtual Hard Disks\$($Config.labbuilderconfig.vms.vm.datavhds.datavhd[1].vhd)",'Bad')
+                }
+                $Exception = New-Exception @ExceptionParameters
+                { Get-LabVM -Config $Config -VMTemplates $Templates -Switches $Switches } | Should Throw $Exception
+            }
+        }
+        Context "Configuration passed with VM Data Disk that has a File System set but not a Partition Style." {
+            It 'Throw VMDataDiskPartitionStyleMissingError Exception' {
+                $Config = Get-LabConfiguration -Path $Global:TestConfigOKPath
+                $Config.labbuilderconfig.vms.vm.datavhds.datavhd[1].RemoveAttribute('partitionstyle')
+                [Array]$Switches = Get-LabSwitch -Config $Config
+                [array]$Templates = Get-LabVMTemplate -Config $Config
+                $ExceptionParameters = @{
+                    errorId = 'VMDataDiskPartitionStyleMissingError'
+                    errorCategory = 'InvalidArgument'
+                    errorMessage = $($LocalizedData.VMDataDiskPartitionStyleMissingError `
+                        -f $Config.labbuilderconfig.vms.vm.name,"$($Config.labbuilderconfig.settings.vmpath)\$($Config.labbuilderconfig.vms.vm.name)\Virtual Hard Disks\$($Config.labbuilderconfig.vms.vm.datavhds.datavhd[1].vhd)")
+                }
+                $Exception = New-Exception @ExceptionParameters
+                { Get-LabVM -Config $Config -VMTemplates $Templates -Switches $Switches } | Should Throw $Exception
+            }
+        }
+        Context "Configuration passed with VM Data Disk that has a Partition Style set but not a File System." {
+            It 'Throw VMDataDiskFileSystemMissingError Exception' {
+                $Config = Get-LabConfiguration -Path $Global:TestConfigOKPath
+                $Config.labbuilderconfig.vms.vm.datavhds.datavhd[1].RemoveAttribute('filesystem')
+                [Array]$Switches = Get-LabSwitch -Config $Config
+                [array]$Templates = Get-LabVMTemplate -Config $Config
+                $ExceptionParameters = @{
+                    errorId = 'VMDataDiskFileSystemMissingError'
+                    errorCategory = 'InvalidArgument'
+                    errorMessage = $($LocalizedData.VMDataDiskFileSystemMissingError `
+                        -f $Config.labbuilderconfig.vms.vm.name,"$($Config.labbuilderconfig.settings.vmpath)\$($Config.labbuilderconfig.vms.vm.name)\Virtual Hard Disks\$($Config.labbuilderconfig.vms.vm.datavhds.datavhd[1].vhd)")
+                }
+                $Exception = New-Exception @ExceptionParameters
+                { Get-LabVM -Config $Config -VMTemplates $Templates -Switches $Switches } | Should Throw $Exception
+            }
+        }
+        Context "Configuration passed with VM Data Disk that has a File System Label set but not a Partition Style or File System." {
+            It 'Throw VMDataDiskPartitionStyleMissingError Exception' {
+                $Config = Get-LabConfiguration -Path $Global:TestConfigOKPath
+                $Config.labbuilderconfig.vms.vm.datavhds.datavhd[2].RemoveAttribute('partitionstyle')
+                $Config.labbuilderconfig.vms.vm.datavhds.datavhd[2].RemoveAttribute('filesystem')
+                [Array]$Switches = Get-LabSwitch -Config $Config
+                [array]$Templates = Get-LabVMTemplate -Config $Config
+                $ExceptionParameters = @{
+                    errorId = 'VMDataDiskPartitionStyleMissingError'
+                    errorCategory = 'InvalidArgument'
+                    errorMessage = $($LocalizedData.VMDataDiskPartitionStyleMissingError `
+                        -f $Config.labbuilderconfig.vms.vm.name,"$($Config.labbuilderconfig.settings.vmpath)\$($Config.labbuilderconfig.vms.vm.name)\Virtual Hard Disks\$($Config.labbuilderconfig.vms.vm.datavhds.datavhd[2].vhd)")
+                }
+                $Exception = New-Exception @ExceptionParameters
+                { Get-LabVM -Config $Config -VMTemplates $Templates -Switches $Switches } | Should Throw $Exception
+            }
+        }
         Context "Configuration passed with VM Data Disk that does not exist but Type missing." {
             It 'Throw VMDataDiskCantBeCreatedError Exception' {
                 $Config = Get-LabConfiguration -Path $Global:TestConfigOKPath

@@ -446,6 +446,7 @@ function Initialize-Vhd
             }
         }
 
+        # Add the Partition Access Path or Disk Letter
         Add-PartitionAccessPath `
             -DiskNumber $DiskNumber `
             -PartitionNumber 1 `
@@ -454,6 +455,7 @@ function Initialize-Vhd
         $Volumes = @(Get-Volume `
             -InputObject $Volumes[0])
     }
+    # Return the Volume to the pipeline
     Return $Volumes[0] 
 } # Initialize-Vhd
 ####################################################################################################
@@ -3878,9 +3880,10 @@ function Get-LabVM {
             $Exists = Test-Path -Path $Vhd
 
             # Get the Parent VHD and check it exists if passed
-            [String] $ParentVhd = $VMDataVhd.ParentVHD
-            if ($ParentVhd)
+            Remove-Variable -Name ParentVhd -ErrorAction SilentlyContinue
+            if ($VMDataVhd.ParentVHD)
             {
+                [String] $ParentVhd = $VMDataVhd.ParentVHD
                 # Adjust the path to be relative to the Virtual Hard Disks folder of the VM
                 # if it doesn't contain a root (e.g. c:\)
                 if (! [System.IO.Path]::IsPathRooted($ParentVhd))
@@ -3902,9 +3905,10 @@ function Get-LabVM {
             }
 
             # Get the Source VHD and check it exists if passed
-            [String] $SourceVhd = $VMDataVhd.SourceVHD
-            if ($SourceVhd)
+            Remove-Variable -Name SourceVhd -ErrorAction SilentlyContinue
+            if ($VMDataVhd.SourceVHD)
             {
+                [String] $SourceVhd = $VMDataVhd.SourceVHD
                 # Adjust the path to be relative to the Virtual Hard Disks folder of the VM
                 # if it doesn't contain a root (e.g. c:\)
                 if (! [System.IO.Path]::IsPathRooted($SourceVhd))
@@ -3926,7 +3930,7 @@ function Get-LabVM {
             }
 
             # Get the disk size if provided
-            [Int64] $Size = $null
+            Remove-Variable -Name Size -ErrorAction SilentlyContinue
             if ($VMDataVhd.Size)
             {
                 $Size = (Invoke-Expression $VMDataVhd.size)         
@@ -3935,9 +3939,10 @@ function Get-LabVM {
             [Boolean] $Shared = ($VMDataVhd.shared -eq 'Y')
 
             # Validate the data disk type specified
-            [String] $Type = $VMDataVhd.type
-            if ($type)
+            Remove-Variable -Name Type -ErrorAction SilentlyContinue
+            if ($VMDataVhd.type)
             {
+                [String] $Type = $VMDataVhd.type
                 switch ($type)
                 {
                     'fixed'
@@ -3983,6 +3988,7 @@ function Get-LabVM {
                     }
                 }
             }
+
             # Get the Support Persistent Reservations
             [Boolean] $SupportPR = ($VMDataVhd.supportPR -eq 'Y')
             if ($SupportPR -and -not $Shared)
@@ -3996,10 +4002,78 @@ function Get-LabVM {
                 New-LabException @ExceptionParameters
             }
 
-            # Get the Folder to copy and check it exists if passed
-            [String]$CopyFolder = $VMDataVhd.CopyFolder
-            if ($CopyFolder)
+            # Get Partition Style for the new disk.
+            Remove-Variable -Name PartitionStyle -ErrorAction SilentlyContinue
+            if ($VMDataVhd.partitionstyle)
             {
+                [String] $PartitionStyle = $VMDataVhd.partitionstyle
+                if ($PartitionStyle -and ($PartitionStyle -notin 'MBR','GPT'))
+                {
+                    $ExceptionParameters = @{
+                        errorId = 'VMDataDiskPartitionStyleError'
+                        errorCategory = 'InvalidArgument'
+                        errorMessage = $($LocalizedData.VMDataDiskPartitionStyleError `
+                            -f $VM.Name,$VHD,$PartitionStyle)
+                    }
+                    New-LabException @ExceptionParameters
+                }
+            }
+
+            # Get file system for the new disk.
+            Remove-Variable -Name FileSystem -ErrorAction SilentlyContinue
+            if ($VMDataVhd.filesystem)
+            {
+                [String] $FileSystem = $VMDataVhd.filesystem
+                if ($FileSystem -notin 'FAT','FAT32','exFAT','NTFS','ReFS')
+                {
+                    $ExceptionParameters = @{
+                        errorId = 'VMDataDiskFileSystemError'
+                        errorCategory = 'InvalidArgument'
+                        errorMessage = $($LocalizedData.VMDataDiskFileSystemError `
+                            -f $VM.Name,$VHD,$FileSystem)
+                    }
+                    New-LabException @ExceptionParameters
+                }
+            }
+
+            # Has a file system label been provided?
+            Remove-Variable -Name FileSystemLabel -ErrorAction SilentlyContinue
+            if ($VMDataVhd.filesystemlabel)
+            {
+                [String] $FileSystemLabel = $VMDataVhd.filesystemlabel
+            }
+            
+            # If the Partition Style, File System or File System Label has been
+            # provided then ensure Partition Style and File System are set.
+            if ($PartitionStyle -or $FileSystem -or $FileSystemLabel)
+            {
+                if (-not $PartitionStyle)
+                {
+                    $ExceptionParameters = @{
+                        errorId = 'VMDataDiskPartitionStyleMissingError'
+                        errorCategory = 'InvalidArgument'
+                        errorMessage = $($LocalizedData.VMDataDiskPartitionStyleMissingError `
+                            -f $VM.Name,$VHD)
+                    }
+                    New-LabException @ExceptionParameters
+                }
+                if (-not $FileSystem)
+                {
+                    $ExceptionParameters = @{
+                        errorId = 'VMDataDiskFileSystemMissingError'
+                        errorCategory = 'InvalidArgument'
+                        errorMessage = $($LocalizedData.VMDataDiskFileSystemMissingError `
+                            -f $VM.Name,$VHD)
+                    }
+                    New-LabException @ExceptionParameters
+                }
+            }
+
+            # Get the Folder to copy and check it exists if passed
+            Remove-Variable -Name CopyFolder -ErrorAction SilentlyContinue
+            if ($VMDataVhd.CopyFolder)
+            {
+                [String]$CopyFolder = $VMDataVhd.CopyFolder
                 # Adjust the path to be relative to the working directory folder 
                 # if it doesn't contain a root (e.g. c:\)
                 if (! [System.IO.Path]::IsPathRooted($CopyFolder))
@@ -4018,15 +4092,13 @@ function Get-LabVM {
                     }
                 New-LabException @ExceptionParameters 
                 }                   
-            }
-
-
-            
+            } 
             
             # Should the Source VHD be moved rather than copied
-            [Boolean] $MoveSourceVHD = ($VMDataVhd.MoveSourceVHD -eq 'Y')
-            if ($MoveSourceVHD)
+            Remove-Variable -Name MoveSourceVHD -ErrorAction SilentlyContinue
+            if ($VMDataVhd.MoveSourceVHD)
             {
+                [Boolean] $MoveSourceVHD = ($VMDataVhd.MoveSourceVHD -eq 'Y')
                 if (! $SourceVHD)
                 {
                     $ExceptionParameters = @{
@@ -4052,7 +4124,8 @@ function Get-LabVM {
                 }
                 New-LabException @ExceptionParameters                    
             }
-            
+                        
+            # Write the values to the array
             $DataVhds += @{
                 vhd = $Vhd;
                 type = $Type;
@@ -4062,7 +4135,10 @@ function Get-LabVM {
                 shared = $Shared;
                 supportPR = $SupportPR;
                 moveSourceVHD = $MoveSourceVHD;
-                CopyFolder = $CopyFolder
+                CopyFolder = $CopyFolder;
+                partitionstyle = $PartitionStyle;
+                filesystem = $FileSystem;
+                filesystemlabel = $FileSystemLabel;
             }
         } # Foreach
 

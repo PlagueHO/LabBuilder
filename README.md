@@ -42,6 +42,10 @@ Install-Lab -Path 'c:\Lab01\Config.xml'
 
 Versions
 --------
+### 0.3.2.0
+* Added Initialize-VHD function.
+* Added support for formatting Data VHDs.
+
 ### 0.3.1.0
 * Disable 'Access Denied' test when connecting to new VM because this error is reported by VM that is still booting up.
 * Correct Verbose message shown when Integration Services enabled.
