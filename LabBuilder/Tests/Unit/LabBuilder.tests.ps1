@@ -198,6 +198,35 @@ InModuleScope LabBuilder {
         }
         Mock Test-Path -MockWith { $True } 
         Mock Get-VHD -MockWith { @{ Attached = $False; DiskNumber = 9 } }
+        Mock Get-Disk -MockWith { @{ PartitionStyle = 'RAW' } }
+        Context 'VHDx file exists is not mounted, is not initialized and partition style is not passed' {
+            It 'Throws a InitializeVHDNotInitializedError Exception' {
+                $Splat = $Parameters.Clone()
+                $Splat.Remove('PartitionStyle')
+                $ExceptionParameters = @{
+                    errorId = 'InitializeVHDNotInitializedError'
+                    errorCategory = 'InvalidArgument'
+                    errorMessage = $($LocalizedData.InitializeVHDNotInitializedError `
+                        -f$Splat.Path)
+                }
+                $Exception = New-Exception @ExceptionParameters
+
+                { Initialize-Vhd @Splat } | Should Throw $Exception
+            }
+            It 'Calls appropriate mocks' {
+                Assert-MockCalled Get-VHD -Exactly 2
+                Assert-MockCalled Mount-VHD -Exactly 1
+                Assert-MockCalled Get-Disk -Exactly 1
+                Assert-MockCalled Initialize-Disk -Exactly 0
+                Assert-MockCalled Get-Partition -Exactly 0
+                Assert-MockCalled New-Partition -Exactly 0
+                Assert-MockCalled Get-Volume -Exactly 0
+                Assert-MockCalled Format-Volume -Exactly 0
+                Assert-MockCalled Set-Volume -Exactly 0
+                Assert-MockCalled Set-Partition -Exactly 0
+                Assert-MockCalled Add-PartitionAccessPath -Exactly 0
+            }
+        }
         Mock Get-Disk -MockWith { @{ PartitionStyle = $Parameters.PartitionStyle } }
         Mock Get-Partition -MockWith { @(@{ PartitionNumber = 1 },@{ PartitionNumber = 2 }) }       
         Context 'VHDx file exists is not mounted, is initialized and has 2 partitions' {
@@ -3039,6 +3068,30 @@ InModuleScope LabBuilder {
                 Assert-MockCalled Get-VMHardDiskDrive -Exactly 1
                 Assert-MockCalled Add-VMHardDiskDrive -Exactly 1
                 Assert-MockCalled Initialize-VHD -Exactly 1
+                Assert-MockCalled Mount-VHD -Exactly 0
+                Assert-MockCalled Dismount-VHD -Exactly 1
+                Assert-MockCalled New-Item -Exactly 1
+            }
+        }
+        Context 'Valid configuration is passed with a 10GB Dynamic DataVHD that does not exist and CopyFolders is set' {
+            $VMs[0].DataVHDs = @( @{
+                Vhd = 'DoesNotExist.vhdx'
+                Type = 'Dynamic'
+                Size = 10GB
+                CopyFolders = "$Global:TestConfigPath\ExpectedContent"
+            } )
+            It 'Does not throw an Exception' {
+                { Update-LabVMDataDisk -Config $Config -VM $VMs[0] } | Should Not Throw
+            }
+            It 'Calls Mocked commands' {
+                Assert-MockCalled Get-VHD -Exactly 0
+                Assert-MockCalled Resize-VHD -Exactly 0
+                Assert-MockCalled Move-Item -Exactly 0
+                Assert-MockCalled Copy-Item -Exactly 1
+                Assert-MockCalled New-VHD -Exactly 1
+                Assert-MockCalled Get-VMHardDiskDrive -Exactly 1
+                Assert-MockCalled Add-VMHardDiskDrive -Exactly 1
+                Assert-MockCalled Initialize-VHD -Exactly 0
                 Assert-MockCalled Mount-VHD -Exactly 0
                 Assert-MockCalled Dismount-VHD -Exactly 1
                 Assert-MockCalled New-Item -Exactly 1

@@ -248,17 +248,16 @@ function New-Credential()
 .SYNOPSIS
     This function mount the VHDx passed and enure it is OK to be writen to.
 .DESCRIPTION
-
     The function checks that the disk has been paritioned and that it contains
     a volume that has been formatted.
     
     This function will work for the following situations:
     0. VHDx is not mounted.
-    1. VHDx is not initialized.
-    2. VHDx is initialized but has 0 partitions
-    3. VHDx has 1 partition but 0 volumes
-    4. VHDx has 1 partition and 1 volume that is unformatted
-    5. VHDx has 1 partition and 1 volume that is formatted
+    1. VHDx is not initialized and PartitionStyle is passed.
+    2. VHDx is initialized but has 0 partitions and FileSystem is passed.
+    3. VHDx has 1 partition but 0 volumes and FileSystem is passed.
+    4. VHDx has 1 partition and 1 volume that is unformatted and FileSystem is passed.
+    5. VHDx has 1 partition and 1 volume that is formatted.
     
     If the VHDx is any other state an exception will be thrown.
     
@@ -271,9 +270,13 @@ function New-Credential()
     This is the path to the VHD/VHDx file to mount and initialize.
 .PARAMETER PartitionStyle
     The Partition Style to set an uninitialized VHD/VHDx to. It can be MBR or GPT.
+    If it is not passed and the VHD is not initialized then an exception will be
+    thrown.
 .PARAMETER FileSystem
     The File System to format the new parition with on an VHD/VHDx. It can be
     FAT, FAT32, exFAT, NTFS, ReFS.
+    If it is not passed and the VHD does not contain any formatted volumes then
+    an exception will be thrown.
 .PARAMETER FileSystemLabel
    This parameter will allow the File System Label of the disk to be changed to this
    value.
@@ -284,6 +287,10 @@ function New-Credential()
    Setting this parameter to an existing folder will cause the VHD to be assigned
    to the AccessPath defined. The folder must already exist otherwise an exception
    will be thrown.
+.EXAMPLE
+   Initialize-Vhd -Path c:\VMs\Tools.VHDx -AccessPath c:\mount
+   The VHDx c:\VMs\Tools.VHDx will be mounted and and assigned to the c:\mount folder
+   if it is initialized and contains a formatted partition.
 .EXAMPLE
    Initialize-Vhd -Path c:\VMs\Tools.VHDx -PartitionStyle GPT -FileSystem NTFS
    The VHDx c:\VMs\Tools.VHDx will be mounted and initialized with GPT if not already
@@ -313,11 +320,9 @@ function Initialize-Vhd
         [ValidateNotNullOrEmpty()]	
         [String] $Path,
 
-        [Parameter(Mandatory=$True)]
         [ValidateSet('GPT','MBR')]	
         [String] $PartitionStyle,
 
-        [Parameter(Mandatory=$True)]
         [ValidateSet('FAT','FAT32','exFAT','NTFS','REFS')]	
         [String] $FileSystem,
         
@@ -364,6 +369,16 @@ function Initialize-Vhd
     $DiskNumber = $VHD.DiskNumber 
     if ((Get-Disk -Number $DiskNumber).PartitionStyle -eq 'RAW')
     {
+        if (-not $PartitionStyle)
+        {
+            $ExceptionParameters = @{
+                errorId = 'InitializeVHDNotInitializedError'
+                errorCategory = 'InvalidArgument'
+                errorMessage = $($LocalizedData.InitializeVHDNotInitializedError `
+                -f $Path)
+            }
+            New-LabException @ExceptionParameters                    
+        }
         Write-Verbose -Message ($LocalizedData.InitializeVHDInitializingMessage `
             -f $Path,$PartitionStyle)
 
@@ -387,60 +402,96 @@ function Initialize-Vhd
             -UseMaximumSize `
             -ErrorAction Stop)
     } 
-    if ($Partitions.Count -gt 1)
+    
+    # Find the best partition to work with
+    # This will usually be the one just created if it was
+    # Otherwise we'll try and match by FileSystem and then
+    # format and failing that the first partition.
+    foreach ($Partition in $Partitions)
     {
-        # If there are more than one partition on this drive
-        # then we can't safely continue.
-        $ExceptionParameters = @{
-            errorId = 'InitializeVHDPartitionFailedError'
-            errorCategory = 'InvalidArgument'
-            errorMessage = $($LocalizedData.InitializeVHDPartitionFailedError `
-            -f $Path)
+        $VolumeFileSystem = (Get-Volume `
+            -Partition $Partition).FileSystem
+        if ($FileSystem)
+        {
+            if (-not [String]::IsNullOrWhitespace($VolumeFileSystem))
+            {
+                # Found a formatted partition
+                $FoundFormattedPartition = $Partition
+            } # if
+            if ($FileSystem -eq $VolumeFileSystem)
+            {
+                # Found a parition with a matching file system
+                $FoundPartition = $Partition
+                break
+            } # if           
         }
-        New-LabException @ExceptionParameters        
+        else
+        {
+            if (-not [String]::IsNullOrWhitespace($VolumeFileSystem))
+            {
+                # Found an formatted partition
+                $FoundFormattedPartition = $Partition
+                break
+            } # if
+        } # if
+    } # foreach
+    if ($FoundPartition)
+    {
+        # Use the formatted partition
+        $Partition = $FoundPartition
     }
+    elseif ($FoundFormattedPartition)
+    {
+        # An unformatted partition was found
+        $Partition = $FoundFormattedPartition            
+    }
+    else
+    {
+        # There are no formatted partitions so use the first one
+        $Partition = $Partitions[0]
+    } # if
+    
+    $PartitionNumber = $Partition.PartitionNumber
     
     # Check for volume
-    $Volumes = @(Get-Volume `
-        -Partition $Partitions[0])
-    
-    # When partitioned there is always at least one volume on a drive
-    # So we don't need to create one.
-
-    if ($Volumes.Count -gt 1)
-    {
-        # If there are more than one partition on this drive
-        # then we can't safely continue.
-        $ExceptionParameters = @{
-            errorId = 'InitializeVHDVolumeFailedError'
-            errorCategory = 'InvalidArgument'
-            errorMessage = $($LocalizedData.InitializeVHDVolumeFailedError `
-            -f $Path)
-        }
-        New-LabException @ExceptionParameters        
-    }
-    
+    $Volume = Get-Volume `
+        -Partition $Partition
+        
     # Check for file system
-    if ([String]::IsNullOrWhitespace($Volumes[0].FileSystem))
+    if ([String]::IsNullOrWhitespace($Volume.FileSystem))
     {
+        # This volume is not formatted
+        if (-not $FileSystem)
+        {
+            # A File System wasn't specified so can't continue
+            $ExceptionParameters = @{
+                errorId = 'InitializeVHDNotFormattedError'
+                errorCategory = 'InvalidArgument'
+                errorMessage = $($LocalizedData.InitializeVHDNotFormattedError `
+                -f $Path)
+            }
+            New-LabException @ExceptionParameters                    
+        }
+
+        # Format the volume
         Write-Verbose -Message ($LocalizedData.InitializeVHDFormatVolumeMessage `
-            -f $Path,$FileSystem)
-        $Volumes = @(Format-Volume `
-            -InputObject $Volumes[0] `
+            -f $Path,$FileSystem,$PartitionNumber)
+        $Volume = Format-Volume `
+            -InputObject $Volume `
             -FileSystem $FileSystem `
-            -ErrorAction Stop)
+            -ErrorAction Stop
     }
     
     # Check the File System Label
     if (($FileSystemLabel) -and `
-        ($Volumes[0].FileSystemLabel -ne $FileSystemLabel))
+        ($Volume.FileSystemLabel -ne $FileSystemLabel))
     {
         Write-Verbose -Message ($LocalizedData.InitializeVHDSetLabelVolumeMessage `
             -f $Path,$FileSystemLabel)
-        $Volumes = @(Set-Volume `
-            -InputObject $Volumes[0] `
+        $Volume = Set-Volume `
+            -InputObject $Volume `
             -NewFileSystemLabel $FileSystemLabel `
-            -ErrorAction Stop)
+            -ErrorAction Stop
     } 
 
     # Assign an access path or Drive letter
@@ -451,14 +502,14 @@ function Initialize-Vhd
             'DriveLetter'
             {
                 # Mount the partition to a Drive Letter
-                $Volumes = @(Set-Partition `
+                $null = Set-Partition `
                     -DiskNumber $Disknumber `
                     -PartitionNumber 1 `
                     -NewDriveLetter $DriveLetter `
-                    -ErrorAction Stop)
+                    -ErrorAction Stop
 
-                $Volumes = @(Get-Volume `
-                    -Partition $Partitions[0])
+                $Volume = Get-Volume `
+                    -Partition $Partition
 
                 Write-Verbose -Message ($LocalizedData.InitializeVHDDriveLetterMessage `
                     -f $Path,$DriveLetter.ToUpper())
@@ -490,7 +541,7 @@ function Initialize-Vhd
         }
     }
     # Return the Volume to the pipeline
-    Return $Volumes[0] 
+    Return $Volume 
 } # Initialize-Vhd
 ####################################################################################################
 
@@ -5239,40 +5290,33 @@ function Update-LabVMDataDisk {
                         -Path $MountPoint `
                         -ItemType Directory
                 }
-                # Do we need to initialize/format the new disk?
+                # Yes, initialize the disk (or check it is)
+                $InitializeVHDParams = @{
+                    Path = $VHD
+                    AccessPath = $MountPoint                        
+                }
+                # Are we allowed to initialize/format the disk?
                 if ($DataVHD.PartitionStyle -and $DataVHD.FileSystem)
                 {
-                    # Yes, initialize the disk (or check it is)
-                    $InitializeVHDParams = @{
-                        Path = $VHD
+                    # Yes, initialize the disk
+                    $InitializeVHDParams += @{
                         PartitionStyle = $DataVHD.PartitionStyle
                         FileSystem = $DataVHD.FileSystem
-                        AccessPath = $MountPoint                        
                     }
+                    # Set a FileSystemLabel too?
                     if ($DataVHD.FileSystemLabel)
                     {
                         $InitializeVHDParams += @{
                             FileSystemLabel = $DataVHD.FileSystemLabel
                         }
                     }
-                    Write-Verbose -Message $($LocalizedData.InitializingVMDiskMessage `
-                        -f $VM.Name,$VHD,$DataVHD.PartitionStyle,$DataVHD.FileSystem)
+                }
+                Write-Verbose -Message $($LocalizedData.InitializingVMDiskMessage `
+                    -f $VM.Name,$VHD)
 
-                    Initialize-VHD `
-                        @InitializeVHDParams `
-                        -ErrorAction Stop
-                }
-                else
-                {
-                    # No, we assume the disk is already intialized
-                    # So just mount it
-                    Mount-VHD `
-                        -Path $VHD `
-                        -ErrorAction Stop
-                    
-                        
-                    
-                }
+                Initialize-VHD `
+                    @InitializeVHDParams `
+                    -ErrorAction Stop
                 
                 # Copy each folder to the VM Data Disk
                 foreach ($CopyFolder in @($DataVHD.CopyFolders))
@@ -5314,7 +5358,7 @@ function Update-LabVMDataDisk {
                     } # if
 
                     Write-Verbose -Message $($LocalizedData.InitializingVMDiskMessage `
-                        -f $VM.Name,$VHD,$DataVHD.PartitionStyle,$DataVHD.FileSystem)
+                        -f $VM.Name,$VHD)
 
                     Initialize-VHD `
                         @InitializeVHDParams `

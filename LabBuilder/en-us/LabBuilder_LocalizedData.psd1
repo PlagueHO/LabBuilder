@@ -1,8 +1,8 @@
 # culture="en-US"
 ConvertFrom-StringData -StringData @'
     FileNotFoundError=The {0} file '{1}' was not found.
-    InitializeVHDPartitionFailedError=The VHD '{0}' failed to initialize because more than one partition already exists on VHD.
-    InitializeVHDVolumeFailedError=The VHD '{0}' failed to initialize because more than one volume already exists in partition on VHD.
+    InitializeVHDNotInitializedError=The VHD '{0}' failed to initialize because a Partition Style was not provided.
+    InitializeVHDNotFormattedError=The VHD '{0}' failed to format because a File System was not provided.
     InitializeVHDAccessPathNotFoundError=The VHD '{0}' could not be assigned to the access path '{1}' because it does not exist.
     FileDownloadError=Error downloading {0} from '{1}'; {2}.
     FileExtractError=Error extracting {0}; {1}.
@@ -81,7 +81,7 @@ ConvertFrom-StringData -StringData @'
     InitializeVHDMountingMessage=Mounting VHD {0} for Initialization.
     InitializeVHDInitializingMessage=Initializing {1} partition table on VHD {0}.
     InitializeVHDCreatePartitionMessage=Creating partition on VHD {0}.
-    InitializeVHDFormatVolumeMessage=Formatting volume as {1} on VHD {0}.
+    InitializeVHDFormatVolumeMessage=Formatting volume on partition {2} as {1} on VHD {0}.
     InitializeVHDSetLabelVolumeMessage=Setting volume label to {1} on VHD {0}.
     InitializeVHDDriveLetterMessage=Assigning drive letter {1}: to VHD {0}.
     InitializeVHDAccessPathMessage=Assigning access path {1} to VHD {0}.
