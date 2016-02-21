@@ -84,6 +84,9 @@ To use this Module you will require on your Lab Host:
   
 Versions
 --------
+### 0.3.3.0
+* Changed Get-LabSwitch Unit tests to use PesterTestConfig.OK.xml.
+
 ### 0.3.2.0
 * Added Initialize-VHD function.
 * Added support for formatting Data VHDs.
