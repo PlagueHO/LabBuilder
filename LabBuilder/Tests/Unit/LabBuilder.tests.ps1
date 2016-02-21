@@ -1583,14 +1583,14 @@ InModuleScope LabBuilder {
                 { Initialize-LabVMTemplateVHD -Config $Config } | Should Not Throw
             }
             It 'Calls expected mocks commands' {
-                Assert-MockCalled Mount-DiskImage -Exactly 3
-                Assert-MockCalled Get-Diskimage -Exactly 3
-                Assert-MockCalled Get-Volume -Exactly 3
-                Assert-MockCalled Dismount-DiskImage -Exactly 3
-                Assert-MockCalled Get-WindowsImage -Exactly 1
-                Assert-MockCalled Copy-Item -Exactly 1
-                Assert-MockCalled Rename-Item -Exactly 1
-                Assert-MockCalled Convert-WindowsImage -Exactly 3
+                Assert-MockCalled Mount-DiskImage -Exactly 2
+                Assert-MockCalled Get-Diskimage -Exactly 2
+                Assert-MockCalled Get-Volume -Exactly 2
+                Assert-MockCalled Dismount-DiskImage -Exactly 2
+                Assert-MockCalled Get-WindowsImage -Exactly 0
+                Assert-MockCalled Copy-Item -Exactly 0
+                Assert-MockCalled Rename-Item -Exactly 0
+                Assert-MockCalled Convert-WindowsImage -Exactly 2
             }            
         }
     }
@@ -1718,6 +1718,7 @@ InModuleScope LabBuilder {
     Describe 'Initialize-LabVMTemplate' {
 
         $Config = Get-LabConfiguration -Path $Global:TestConfigOKPath
+        $TemplateCount = $Config.labbuilderconfig.templates.template.count
 
         Mock Copy-Item
         Mock Set-ItemProperty -ParameterFilter { ($Name -eq 'IsReadOnly') -and ($Value -eq $True) }
@@ -1753,10 +1754,10 @@ InModuleScope LabBuilder {
                 { Initialize-LabVMTemplate -Config $Config -VMTemplates $VMTemplates } | Should Not Throw
             }
             It 'Calls Mocked commands' {
-                Assert-MockCalled Copy-Item -Exactly 3
-                Assert-MockCalled Set-ItemProperty -Exactly 3 -ParameterFilter { ($Name -eq 'IsReadOnly') -and ($Value -eq $True) }
-                Assert-MockCalled Set-ItemProperty -Exactly 3 -ParameterFilter { ($Name -eq 'IsReadOnly') -and ($Value -eq $False) }
-                Assert-MockCalled Optimize-VHD -Exactly 3
+                Assert-MockCalled Copy-Item -Exactly $TemplateCount
+                Assert-MockCalled Set-ItemProperty -Exactly $TemplateCount -ParameterFilter { ($Name -eq 'IsReadOnly') -and ($Value -eq $True) }
+                Assert-MockCalled Set-ItemProperty -Exactly $TemplateCount -ParameterFilter { ($Name -eq 'IsReadOnly') -and ($Value -eq $False) }
+                Assert-MockCalled Optimize-VHD -Exactly $TemplateCount
             }
         }
         Context 'Valid configuration is passed without VMTemplates or VMTemplateVHDs' {	
@@ -1764,10 +1765,10 @@ InModuleScope LabBuilder {
                 { Initialize-LabVMTemplate -Config $Config } | Should Not Throw
             }
             It 'Calls Mocked commands' {
-                Assert-MockCalled Copy-Item -Exactly 3
-                Assert-MockCalled Set-ItemProperty -Exactly 3 -ParameterFilter { ($Name -eq 'IsReadOnly') -and ($Value -eq $True) }
-                Assert-MockCalled Set-ItemProperty -Exactly 3 -ParameterFilter { ($Name -eq 'IsReadOnly') -and ($Value -eq $False) }
-                Assert-MockCalled Optimize-VHD -Exactly 3
+                Assert-MockCalled Copy-Item -Exactly $TemplateCount
+                Assert-MockCalled Set-ItemProperty -Exactly $TemplateCount -ParameterFilter { ($Name -eq 'IsReadOnly') -and ($Value -eq $True) }
+                Assert-MockCalled Set-ItemProperty -Exactly $TemplateCount -ParameterFilter { ($Name -eq 'IsReadOnly') -and ($Value -eq $False) }
+                Assert-MockCalled Optimize-VHD -Exactly $TemplateCount
             }
         }
     }
@@ -1777,6 +1778,7 @@ InModuleScope LabBuilder {
     Describe 'Remove-LabVMTemplate' {
 
         $Config = Get-LabConfiguration -Path $Global:TestConfigOKPath
+        $TemplateCount = $Config.labbuilderconfig.templates.template.count
 
         Mock Set-ItemProperty -ParameterFilter { ($Name -eq 'IsReadOnly') -and ($Value -eq $False) }
         Mock Remove-Item
@@ -1790,8 +1792,8 @@ InModuleScope LabBuilder {
                 { Remove-LabVMTemplate -Config $Config -VMTemplates $Templates } | Should Not Throw
             }
             It 'Calls Mocked commands' {
-                Assert-MockCalled Set-ItemProperty -Exactly 3 -ParameterFilter { ($Name -eq 'IsReadOnly') -and ($Value -eq $False) }
-                Assert-MockCalled Remove-Item -Exactly 3
+                Assert-MockCalled Set-ItemProperty -Exactly $TemplateCount -ParameterFilter { ($Name -eq 'IsReadOnly') -and ($Value -eq $False) }
+                Assert-MockCalled Remove-Item -Exactly $TemplateCount
             }
         }
     }

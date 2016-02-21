@@ -1,8 +1,9 @@
 [
     {
+        "Packages":  null,
         "vhd":  "Windows Server 2012 R2 Datacenter Full.vhdx",
         "name":  "Pester Windows Server 2012 R2 Datacenter Full",
-        "ProductKey":  "AAAAA-AAAAA-AAAAA-AAAAA-AAAAA",
+        "ProcessorCount":  "1",
         "InstallISO":  null,
         "IntegrationServices":  "Guest Service Interface,Heartbeat,Key-Value Pair Exchange,Shutdown,Time Synchronization,VSS",
         "OSType":  "Server",
@@ -12,11 +13,12 @@
         "AdministratorPassword":  "None",
         "DynamicMemoryEnabled":  "Y",
         "MemoryStartupBytes":  1073741824,
-        "ProcessorCount":  "1",
+        "ProductKey":  "AAAAA-AAAAA-AAAAA-AAAAA-AAAAA",
         "TimeZone":  "Pacific Standard Time",
         "sourcevhd":  "Intentionally Removed"
     },
     {
+        "Packages":  null,
         "vhd":  "Windows Server 2012 R2 Datacenter Core.vhdx",
         "name":  "Pester Windows Server 2012 R2 Datacenter Core",
         "ProductKey":  "BBBBB-BBBBB-BBBBB-BBBBB-BBBBB",
@@ -35,19 +37,38 @@
         "ExposeVirtualizationExtensions":  "Y"
     },
     {
+        "Packages":  null,
         "vhd":  "Windows 10 Enterprise.vhdx",
-        "AdministratorPassword":  "None",
+        "name":  "Pester Windows 10 Enterprise",
         "ProcessorCount":  "1",
         "InstallISO":  null,
         "IntegrationServices":  "Guest Service Interface,Heartbeat,Key-Value Pair Exchange,Shutdown,Time Synchronization,VSS",
         "OSType":  "Client",
-        "name":  "Pester Windows 10 Enterprise",
         "templatevhd":  "C:\\Pester Lab\\Virtual Hard Disk Templates\\Windows 10 Enterprise.vhdx",
         "AllowCreate":  "Y",
         "Edition":  null,
+        "AdministratorPassword":  "None",
+        "DynamicMemoryEnabled":  "Y",
         "MemoryStartupBytes":  2147483648,
         "ProductKey":  "CCCCC-CCCCC-CCCCC-CCCCC-CCCCC",
         "TimeZone":  "Pacific Standard Time",
         "sourcevhd":  "Intentionally Removed"
+    },
+    {
+        "Packages":  "Storage",
+        "VHD":  "Nano Server 2016 TP4 Basic.vhdx",
+        "AdministratorPassword":  "None",
+        "name":  "Pester Nano Server",
+        "InstallISO":  null,
+        "IntegrationServices":  "Guest Service Interface,Heartbeat,Key-Value Pair Exchange,Shutdown,Time Synchronization,VSS",
+        "OSType":  "Nano",
+        "TemplateVHD":  "C:\\Pester Lab\\Virtual Hard Disk Templates\\Nano Server 2016 TP4 Basic.vhdx",
+        "AllowCreate":  "Y",
+        "TimeZone":  "Pacific Standard Time",
+        "Edition":  null,
+        "DynamicMemoryEnabled":  "Y",
+        "MemoryStartupBytes":  1073741824,
+        "ProcessorCount":  "1",
+        "SourceVHD":  "Intentionally Removed"
     }
 ]
