@@ -1,6 +1,7 @@
 {
     "Template":  "Pester Windows Server 2012 R2 Datacenter Full",
     "DSCParameters":  "\r\n          Dummy = \"Dummy\"\r\n        ",
+    "Packages":  "Containers",
     "Name":  "PESTER01",
     "SetupComplete":  "",
     "IntegrationServices":  "Guest Service Interface,Heartbeat,Key-Value Pair Exchange,Shutdown,Time Synchronization,VSS",

@@ -4301,112 +4301,123 @@ function Get-LabVM {
             # Correct any LFs into CRLFs to ensure the new line format is the same when
             # pulled from the XML.
             $DSCParameters = ($VM.DSC.Parameters -replace "`r`n","`n") -replace "`n","`r`n"
-        } # If
+        } # if
 
         # Load the DSC Parameters
         [Boolean] $DSCLogging = $False
         if ($VM.DSC.Logging -eq 'Y')
         {
             $DSCLogging = $True
-        } # If
+        } # if
 
         # Get the Memory Startup Bytes (from the template or VM)
         [Int64] $MemoryStartupBytes = 1GB
-        if ($VMTemplate.memorystartupbytes)
-        {
-            $MemoryStartupBytes = $VMTemplate.memorystartupbytes
-        } # If
         if ($VM.memorystartupbytes)
         {
             $MemoryStartupBytes = (Invoke-Expression $VM.memorystartupbytes)
-        } # If
+        }
+        elseif ($VMTemplate.memorystartupbytes)
+        {
+            $MemoryStartupBytes = $VMTemplate.memorystartupbytes
+        } # if
 
         # Get the Dynamic Memory Enabled flag
         [String] $DynamicMemoryEnabled = ''
-        if ($VMTemplate.DynamicMemoryEnabled)
-        {
-            $DynamicMemoryEnabled = $VMTemplate.DynamicMemoryEnabled
-        }
         if ($VM.DynamicMemoryEnabled)
         {
             $DynamicMemoryEnabled = $VM.DynamicMemoryEnabled
-        } # If        
+        }        
+        elseif ($VMTemplate.DynamicMemoryEnabled)
+        {
+            $DynamicMemoryEnabled = $VMTemplate.DynamicMemoryEnabled
+        } #if
         
         # Get the Memory Startup Bytes (from the template or VM)
         [Int] $ProcessorCount = 1
-        if ($VMTemplate.processorcount) 
-		{
-            $ProcessorCount = $VMTemplate.processorcount
-        } # If
         if ($VM.processorcount) 
 		{
             $ProcessorCount = (Invoke-Expression $VM.processorcount)
-        } # If
+        }
+        elseif ($VMTemplate.processorcount) 
+		{
+            $ProcessorCount = $VMTemplate.processorcount
+        } # if
 
         # Get the Expose Virtualization Extensions flag
         [String] $ExposeVirtualizationExtensions = $null
-        if ($VMTemplate.ExposeVirtualizationExtensions)
-			{
-			$ExposeVirtualizationExtensions=$VMTemplate.ExposeVirtualizationExtensions
-			} # If
-
         if ($VM.ExposeVirtualizationExtensions)
         {
             $ExposeVirtualizationExtensions = $VM.ExposeVirtualizationExtensions
-        } # If
+        }
+        elseif ($VMTemplate.ExposeVirtualizationExtensions)
+		{
+            $ExposeVirtualizationExtensions=$VMTemplate.ExposeVirtualizationExtensions
+        } # if
         
         # Get the Integration Services flags
-        if ($VMTemplate.IntegrationServices -ne $null)
-        {
-            $IntegrationServices = $VMTemplate.IntegrationServices
-        }
         if ($VM.IntegrationServices -ne $null)
         {
             $IntegrationServices = $VM.IntegrationServices
-        } # If
+        } 
+        elseif ($VMTemplate.IntegrationServices -ne $null)
+        {
+            $IntegrationServices = $VMTemplate.IntegrationServices
+        } # if
         
         # Get the Administrator password (from the template or VM)
         [String] $AdministratorPassword = ''
-        if ($VMTemplate.administratorpassword) 
-		{
-            $AdministratorPassword = $VMTemplate.administratorpassword
-        } # If
         if ($VM.administratorpassword) 
 		{
             $AdministratorPassword = $VM.administratorpassword
-        } # If
+        }
+        elseif ($VMTemplate.administratorpassword) 
+		{
+            $AdministratorPassword = $VMTemplate.administratorpassword
+        } # if
 
         # Get the Product Key (from the template or VM)
         [String] $ProductKey = ''
-        if ($VMTemplate.productkey) 
-		{
-            $ProductKey = $VMTemplate.productkey
-        } # If
         if ($VM.productkey) 
 		{
             $ProductKey = $VM.productkey
+        }
+        elseif ($VMTemplate.productkey) 
+		{
+            $ProductKey = $VMTemplate.productkey
         } # If
 
         # Get the Timezone (from the template or VM)
         [String] $Timezone = 'Pacific Standard Time'
-        if ($VMTemplate.timezone) 
-		{
-            $Timezone = $VMTemplate.timezone
-        } # If
         if ($VM.timezone) 
 		{
             $Timezone = $VM.timezone
+        }
+        elseif ($VMTemplate.timezone) 
+		{
+            $Timezone = $VMTemplate.timezone
         } # If
 
         # Get the OS Type
-        if ($VMTemplate.ostype) 
+        [String] $OSType = 'Server'
+        if ($VM.ostype) 
+		{
+            $OSType = $VM.ostype
+        }
+        elseif ($VMTemplate.ostype) 
 		{
             $OSType = $VMTemplate.ostype
-        } 
-		Else 
+        } # if 
+
+        # Get the Packages
+        [String] $Packages = $null
+        if ($VM.packages) 
 		{
-            $OSType = 'Server'
-        } # If
+            $Packages = $VM.packages
+        }
+        elseif ($VMTemplate.packages) 
+		{
+            $Packages = $VMTemplate.packages
+        } # if 
 
         # Do we have any MSU files that are listed as needing to be applied to the OS before
         # first boot up?
@@ -4439,6 +4450,7 @@ function Get-LabVM {
             DSCParameters = $DSCParameters;
             DSCLogging = $DSCLogging;
             OSType = $OSType;
+            Packages = $Packages;
             InstallMSU = $InstallMSU;
         }
     } # Foreach        
