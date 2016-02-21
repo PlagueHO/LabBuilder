@@ -4,7 +4,7 @@
 RootModule = 'LabBuilder.psm1'
 
 # Version number of this module.
-ModuleVersion = '0.3.1.0'
+ModuleVersion = '0.3.2.0'
 
 # ID used to uniquely identify this module
 GUID = 'e229850e-7a90-4123-9a30-37814119d3a3'
