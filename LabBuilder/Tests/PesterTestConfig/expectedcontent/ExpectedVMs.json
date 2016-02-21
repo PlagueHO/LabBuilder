@@ -12,6 +12,7 @@
     "ProcessorCount":  1,
     "ProductKey":  "DDDDD-DDDDD-DDDDD-DDDDD-DDDDD",
     "UseDifferencingDisk":  "Y",
+    "ParentVHD":  "C:\\Pester Lab\\Virtual Hard Disk Templates\\Windows Server 2012 R2 Datacenter Full.vhdx",
     "DSCConfigFile":  "",
     "UnattendFile":  "",
     "Adapters":  [
@@ -101,7 +102,6 @@
     "DynamicMemoryEnabled":  "N",
     "MemoryStartupBytes":  2147483648,
     "LabBuilderFilesPath":  "C:\\Pester Lab\\PESTER01\\LabBuilder Files",
-    "TemplateVHD":  "C:\\Pester Lab\\Virtual Hard Disk Templates\\Windows Server 2012 R2 Datacenter Full.vhdx",
     "DSCConfigName":  "STANDALONE_DEFAULT",
     "DataVHDs":  [
                      {
