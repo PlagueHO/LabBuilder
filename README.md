@@ -96,6 +96,7 @@ Versions
 * Removed MAC Address minimum/maximum value settings from configuration.
 * Fix bug with Wait-LabInitVM failing to copy InitialSetupComplete.txt file.
 * Added VMRootPath and LabBuilderFilesPath properties Get-LabVM array containing path where VM and LabBuilder files should be stored respectively.
+* Added TemplateVHD in templates/template config node for specifying the template VHD. 
 
 ### 0.3.2.0
 * Added Initialize-VHD function.
