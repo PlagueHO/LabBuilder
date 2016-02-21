@@ -8,8 +8,6 @@
             email="tester@pester.local"
             labpath="C:\Pester Lab"
             vhdparentpath="C:\Pester Lab\Virtual Hard Disk Templates"
-            macaddressminimum="001122334400"
-            macaddressmaximum="0011223344FF" 
             dsclibrarypath="DSCLibrary" />
 
   <resources>

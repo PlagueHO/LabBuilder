@@ -628,7 +628,6 @@ InModuleScope LabBuilder {
         $Config = Get-LabConfiguration -Path $Global:TestConfigOKPath
 
         Mock Download-LabResources
-        Mock Set-VMHost
         Mock Get-VMSwitch
         Mock New-VMSwitch
         Mock Get-VMNetworkAdapter -MockWith { @{ Name = 'LabBuilder Management PesterTestConfig' } }
@@ -641,7 +640,6 @@ InModuleScope LabBuilder {
             }
             It 'Calls appropriate mocks' {
                 Assert-MockCalled Download-LabResources -Exactly 1
-                Assert-MockCalled Set-VMHost -Exactly 1
                 Assert-MockCalled Get-VMSwitch -Exactly 1
                 Assert-MockCalled New-VMSwitch -Exactly 1
                 Assert-MockCalled Get-VMNetworkAdapter -Exactly 1
