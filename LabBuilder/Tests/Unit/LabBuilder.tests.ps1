@@ -1045,6 +1045,8 @@ InModuleScope LabBuilder {
     Describe 'Get-LabSwitch' {
         Context 'Configuration passed with switch missing Switch Name.' {
             It 'Throws a SwitchNameIsEmptyError Exception' {
+                $Config = Get-LabConfiguration -Path $Global:TestConfigOKPath
+                $Config.labbuilderconfig.switches.switch[0].RemoveAttribute('name')
                 $ExceptionParameters = @{
                     errorId = 'SwitchNameIsEmptyError'
                     errorCategory = 'InvalidArgument'
@@ -1052,46 +1054,52 @@ InModuleScope LabBuilder {
                 }
                 $Exception = New-Exception @ExceptionParameters
 
-                { Get-LabSwitch -Config (Get-LabConfiguration -Path "$Global:TestConfigPath\PesterTestConfig.SwitchFail.NoName.xml") } | Should Throw $Exception
+                { Get-LabSwitch -Config $Config } | Should Throw $Exception
             }
         }
         Context 'Configuration passed with switch missing Switch Type.' {
             It 'Throws a UnknownSwitchTypeError Exception' {
+                $Config = Get-LabConfiguration -Path $Global:TestConfigOKPath
+                $Config.labbuilderconfig.switches.switch[0].RemoveAttribute('type')
                 $ExceptionParameters = @{
                     errorId = 'UnknownSwitchTypeError'
                     errorCategory = 'InvalidArgument'
                     errorMessage = $($LocalizedData.UnknownSwitchTypeError `
-                        -f '','Pester Switch Fail')
+                        -f '','Pester Test External')
                 }
                 $Exception = New-Exception @ExceptionParameters
 
-                { Get-LabSwitch -Config (Get-LabConfiguration -Path "$Global:TestConfigPath\PesterTestConfig.SwitchFail.NoType.xml") } | Should Throw $Exception
+                { Get-LabSwitch -Config $Config } | Should Throw $Exception
             }
         }
         Context 'Configuration passed with switch invalid Switch Type.' {
             It 'Throws a UnknownSwitchTypeError Exception' {
+                $Config = Get-LabConfiguration -Path $Global:TestConfigOKPath
+                $Config.labbuilderconfig.switches.switch[0].type='BadType'
                 $ExceptionParameters = @{
                     errorId = 'UnknownSwitchTypeError'
                     errorCategory = 'InvalidArgument'
                     errorMessage = $($LocalizedData.UnknownSwitchTypeError `
-                        -f 'BadType','Pester Switch Fail')
+                        -f 'BadType','Pester Test External')
                 }
                 $Exception = New-Exception @ExceptionParameters
 
-                { Get-LabSwitch -Config (Get-LabConfiguration -Path "$Global:TestConfigPath\PesterTestConfig.SwitchFail.BadType.xml") } | Should Throw $Exception
+                { Get-LabSwitch -Config $Config } | Should Throw $Exception
             }
         }
         Context 'Configuration passed with switch containing adapters but is not External type.' {
+            $Config = Get-LabConfiguration -Path $Global:TestConfigOKPath
+            $Config.labbuilderconfig.switches.switch[0].type='Private'
             It 'Throws a AdapterSpecifiedError Exception' {
                 $ExceptionParameters = @{
                     errorId = 'AdapterSpecifiedError'
                     errorCategory = 'InvalidArgument'
                     errorMessage = $($LocalizedData.AdapterSpecifiedError `
-                        -f 'Private','Pester Switch Fail')
+                        -f 'Private','Pester Test External')
                 }
                 $Exception = New-Exception @ExceptionParameters
 
-                { Get-LabSwitch -Config (Get-LabConfiguration -Path "$Global:TestConfigPath\PesterTestConfig.SwitchFail.AdaptersSet.xml") } | Should Throw $Exception
+                { Get-LabSwitch -Config $Config } | Should Throw $Exception
             }
         }
         Context 'Valid configuration is passed' {
