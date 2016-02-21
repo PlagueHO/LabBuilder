@@ -46,6 +46,7 @@ Versions
 * Added Initialize-VHD function.
 * Added support for formatting Data VHDs.
 * Added support for copying multiple folders to DataVHDs.
+* Changed name of Settings\VMPath attribute to LabPath. 
 
 ### 0.3.1.0
 * Disable 'Access Denied' test when connecting to new VM because this error is reported by VM that is still booting up.
