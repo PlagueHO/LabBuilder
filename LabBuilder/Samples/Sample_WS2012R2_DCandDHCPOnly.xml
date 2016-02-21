@@ -53,38 +53,23 @@
                  vhdtype="dynamic" 
                  generation="2" 
                  vhdsize="25GB" />
-    <templatevhd name="Windows 10 Enterprise"
-                 iso="10586.0.151029-1700.TH2_RELEASE_CLIENTENTERPRISEEVAL_OEMRET_X64FRE_EN-US.ISO"
-                 url="https://www.microsoft.com/en-us/evalcenter/evaluate-windows-10-enterprise"
-                 vhd="Windows 10 Enterprise.vhdx"
-                 edition="Windows 10 Enterprise"
-                 ostype="Client"
-                 features=""
-                 vhdformat="vhdx" 
-                 vhdtype="dynamic" 
-                 generation="2"
-                 vhdsize="25GB" />
   </templatevhds>
 
   <templates>
     <template name="Template Windows Server 2012 R2 Datacenter Full"
+              templatevhd="Windows Server 2012 R2 Datacenter FULL"
               memorystartupbytes="1GB"
               processorcount="1"
               administratorpassword="P@ssword!1"
               timezone="New Zealand Standard Time" 
               ostype="Server" />
     <template name="Template Windows Server 2012 R2 Datacenter Core"
+              templatevhd="Windows Server 2012 R2 Datacenter CORE"
               memorystartupbytes="1GB"
               processorcount="1"
               administratorpassword="P@ssword!1"
               timezone="New Zealand Standard Time" 
               ostype="Server" />
-    <template name="Template Windows 10 Enterprise"
-              memorystartupbytes="2GB"
-              processorcount="1"
-              administratorpassword="P@ssword!1"
-              timezone="New Zealand Standard Time" 
-              ostype="Client" />
   </templates>
 
   <vms>
