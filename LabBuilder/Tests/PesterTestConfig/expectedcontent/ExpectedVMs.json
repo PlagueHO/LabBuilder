@@ -4,6 +4,7 @@
     "Packages":  "Containers",
     "Name":  "PESTER01",
     "SetupComplete":  "",
+    "TimeZone":  "Pacific Standard Time",
     "IntegrationServices":  "Guest Service Interface,Heartbeat,Key-Value Pair Exchange,Shutdown,Time Synchronization,VSS",
     "OSType":  "Server",
     "DSCConfigName":  "STANDALONE_DEFAULT",
@@ -93,10 +94,9 @@
                          "sourcevhd":  "Intentionally Removed"
                      }
                  ],
-    "TemplateVHD":  "C:\\Pester Lab\\Virtual Hard Disk Templates\\Windows Server 2012 R2 Datacenter Full.vhdx",
     "ProductKey":  "DDDDD-DDDDD-DDDDD-DDDDD-DDDDD",
     "DSCConfigFile":  "",
-    "TimeZone":  "Pacific Standard Time",
+    "ParentVHD":  "C:\\Pester Lab\\Virtual Hard Disk Templates\\Windows Server 2012 R2 Datacenter Full.vhdx",
     "Adapters":  [
                      {
                          "IPv4":  {

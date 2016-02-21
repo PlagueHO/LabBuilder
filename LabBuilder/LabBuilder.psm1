@@ -1951,6 +1951,10 @@ function Initialize-LabVMTemplateVHD
    Initialize-LabVMTemplate.
 .PARAMETER Configuration
    Contains the Lab Builder configuration object that was loaded by the Get-LabConfiguration object.
+.PARAMETER VMTemplateVHDs
+   The array of VMTemplateVHDs pulled from the Lab Configuration file using Get-LabVMTemplateVHD
+   
+   If not provided it will attempt to pull the list from the configuration file.
 .EXAMPLE
    $Config = Get-LabConfiguration -Path c:\mylab\config.xml
    $VMTemplates = Get-LabVMTemplate -Config $Config
@@ -1965,11 +1969,19 @@ function Get-LabVMTemplate {
     (
         [Parameter(Mandatory)]
         [ValidateNotNullOrEmpty()]
-        [XML] $Config
+        [XML] $Config,
+        
+        [System.Collections.Hashtable[]] $VMTemplateVHDs        
     )
 
     [System.Collections.Hashtable[]] $VMTemplates = @()
     [String] $VHDParentPath = $Config.labbuilderconfig.SelectNodes('settings').vhdparentpath
+    
+    # If VMTeplateVHDs array not passed, pull it from config.
+    if (-not $VMTemplateVHDs)
+    {
+        $VMTemplateVHDs = Get-LabVMTemplateVHD -Config $Config
+    }
     
     # Get a list of all templates in the Hyper-V system matching the phrase found in the fromvm
     # config setting
@@ -1985,7 +1997,7 @@ function Get-LabVMTemplate {
                 name = $Template.Name
                 vhd = $VHDFilename
                 sourcevhd = $VHDFilepath
-                templatevhd = "$VHDParentPath\$VHDFilename"
+                parentvhd = (Join-Path -Path $VHDParentPath -ChildPath $VHDFilename)
             }
         } # foreach
     } # if
@@ -2007,8 +2019,46 @@ function Get-LabVMTemplate {
             New-LabException @ExceptionParameters
         } # if
         [String] $SourceVHD = $Template.SourceVHD
-        if ($SourceVHD)
+        [String] $TemplateVHD = $Template.TemplateVHD
+
+        # Throw an error if both a TemplateVHD and SourceVHD
+        # are provided
+        if ($TemplateVHD -and $SourceVHD)
         {
+            $ExceptionParameters = @{
+                errorId = 'TemplateSourceVHDAndTemplateVHDConflictError'
+                errorCategory = 'InvalidArgument'
+                errorMessage = $($LocalizedData.TemplateSourceVHDAndTemplateVHDConflictError `
+                    -f $Template.Name)
+            }
+            New-LabException @ExceptionParameters            
+        }
+        
+        if ($TemplateVHD)
+        {
+            # A Template VHD was provided so look it up.
+            $VMTemplateVHD = `
+                $VMTemplateVHDs | Where-Object -Property Name -EQ $TemplateVHD
+            if ($VMTemplateVHD)
+            {
+                # The Template VHD was found
+                $SourceVHD = $VMTemplateVHD.VHDPath
+            }
+            else
+            {
+                # The Template VHD could not be found
+                $ExceptionParameters = @{
+                    errorId = 'TemplateTemplateVHDNotFoundError'
+                    errorCategory = 'InvalidArgument'
+                    errorMessage = $($LocalizedData.TemplateTemplateVHDNotFoundError `
+                        -f $Template.Name,$TemplateVHD)
+                }
+                New-LabException @ExceptionParameters
+            }
+        }
+        elseif ($SourceVHD)
+        {
+            # A Source VHD was provided so use that.
             # If this is a relative path, add it to the config path
             if (-not [System.IO.Path]::IsPathRooted($SourceVHD))
             {
@@ -2063,8 +2113,8 @@ function Get-LabVMTemplate {
         # Update the VHD path if provided
         if ($Template.VHD)
         {
-            $VMTemplate.VHD = $Template.VHD
-            $VMTemplate.TemplateVHD = Join-Path `
+            $VMTemplate.vhd = $Template.VHD
+            $VMTemplate.parentvhd = Join-Path `
                 -Path $VHDParentPath `
                 -ChildPath ([System.IO.Path]::GetFileName($Template.VHD))
         } # if
@@ -2073,44 +2123,31 @@ function Get-LabVMTemplate {
         if (-not $VMTemplate.VHD)
         {
             $ExceptionParameters = @{
-                errorId = 'EmptyTemplateVHDError'
+                errorId = 'EmptyParentVHDError'
                 errorCategory = 'InvalidArgument'
-                errorMessage = $($LocalizedData.EmptyTemplateVHDError `
+                errorMessage = $($LocalizedData.EmptyParentVHDError `
                     -f $Template.Name)
             }
             New-LabException @ExceptionParameters
         } # If
 
-        # Check that we do end up with a VHD filename in the template
-        if (-not $VMTemplate.VHD)
-        {
-            $ExceptionParameters = @{
-                errorId = 'EmptyTemplateVHDError'
-                errorCategory = 'InvalidArgument'
-                errorMessage = $($LocalizedData.EmptyTemplateVHDError `
-                    -f $VMTemplate.Name)
-            }
-            New-LabException @ExceptionParameters
-        } # if                
         if ($SourceVHD)
         {
-            $VMTemplate.SourceVHD = $SourceVHD
+            $VMTemplate.sourcevhd = $SourceVHD
         } # if
-        $VMTemplate.InstallISO = $Template.InstallISO
-        $VMTemplate.Edition = $Template.Edition
-        $VMTemplate.AllowCreate = $Template.AllowCreate
+        $VMTemplate.allowcreate = $Template.AllowCreate
         # Write any template specific default VM attributes
         if ($MemoryStartupBytes)
         {
-            $VMTemplate.MemoryStartupBytes = $MemoryStartupBytes
+            $VMTemplate.memorystartupbytes = $MemoryStartupBytes
         } # if
         if ($Template.DynamicMemoryEnabled)
         {
-            $VMTemplate.DynamicMemoryEnabled = $Template.DynamicMemoryEnabled
+            $VMTemplate.dynamicmemoryenabled = $Template.DynamicMemoryEnabled
         }
         elseif (-not $VMTemplate.DynamicMemoryEnabled)
         {
-            $VMTemplate.DynamicMemoryEnabled = 'Y'
+            $VMTemplate.dynamicmemoryenabled = 'Y'
         }
          # if
         if ($Template.ProcessorCount)
@@ -2119,44 +2156,44 @@ function Get-LabVMTemplate {
         } # if
         if ($Template.ExposeVirtualizationExtensions)
         {
-            $VMTemplate.ExposeVirtualizationExtensions = $Template.ExposeVirtualizationExtensions
+            $VMTemplate.exposevirtualizationextensions = $Template.ExposeVirtualizationExtensions
         } 
         # if
         if ($Template.AdministratorPassword)
         {
-            $VMTemplate.AdministratorPassword = $Template.AdministratorPassword
+            $VMTemplate.administratorpassword = $Template.AdministratorPassword
         } # if
         if ($Template.ProductKey)
         {
-            $VMTemplate.ProductKey = $Template.ProductKey
+            $VMTemplate.productkey = $Template.ProductKey
         } # if
         if ($Template.TimeZone)
         {
-            $VMTemplate.TimeZone = $Template.TimeZone
+            $VMTemplate.timezone = $Template.TimeZone
         } # if
         if ($Template.OSType)
         {
-            $VMTemplate.OSType = $Template.OSType
+            $VMTemplate.ostype = $Template.OSType
         }
         elseif (-not $VMTemplate.OSType)
         {
-            $VMTemplate.OSType = 'Server'
+            $VMTemplate.ostype = 'Server'
         } # if
         if ($Template.IntegrationServices)
         {
-            $VMTemplate.IntegrationServices = $Template.IntegrationServices
+            $VMTemplate.integrationservices = $Template.IntegrationServices
         }
         else
         {
-            $VMTemplate.IntegrationServices = $null
+            $VMTemplate.integrationservices = $null
         } # if
         if ($Template.Packages)
         {
-            $VMTemplate.Packages = $Template.Packages
+            $VMTemplate.packages = $Template.Packages
         }
         else
         {
-            $VMTemplate.Packages = $null
+            $VMTemplate.packages = $null
         } # if
     } # Foreach
     Return $VMTemplates
@@ -2215,14 +2252,14 @@ function Initialize-LabVMTemplate {
             -Config $Config
     }
     
-    # Check each template exists in the templates folder for the
+    # Check each Parent VHD exists in the Parent VHDs folder for the
     # Lab. If it isn't, try and copy it from the SourceVHD
     # Location.
     foreach ($VMTemplate in $VMTemplates)
     {
-        if (-not (Test-Path $VMTemplate.templatevhd))
+        if (-not (Test-Path $VMTemplate.parentvhd))
         {
-            # The template VHD isn't in the VHD Parent folder
+            # The Parent VHD isn't in the VHD Parent folder
             # so copy it there, optimize it and mark it read-only.
             if (-not (Test-Path $VMTemplate.sourcevhd))
             {  
@@ -2237,20 +2274,20 @@ function Initialize-LabVMTemplate {
 			}
             
 			Write-Verbose -Message $($LocalizedData.CopyingTemplateSourceVHDMessage `
-                -f $VMTemplate.sourcevhd,$VMTemplate.templatevhd)
-            Copy-Item -Path $VMTemplate.sourcevhd -Destination $VMTemplate.templatevhd
-            Write-Verbose -Message $($LocalizedData.OptimizingTemplateVHDMessage `
-                -f $VMTemplate.templatevhd)
-            Set-ItemProperty -Path $VMTemplate.templatevhd -Name IsReadOnly -Value $False
-            Optimize-VHD -Path $VMTemplate.templatevhd -Mode Full
-            Write-Verbose -Message $($LocalizedData.SettingTemplateVHDReadonlyMessage `
-                -f $VMTemplate.templatevhd)
-            Set-ItemProperty -Path $VMTemplate.templatevhd -Name IsReadOnly -Value $True
+                -f $VMTemplate.sourcevhd,$VMTemplate.parentvhd)
+            Copy-Item -Path $VMTemplate.sourcevhd -Destination $VMTemplate.parentvhd
+            Write-Verbose -Message $($LocalizedData.OptimizingParentVHDMessage `
+                -f $VMTemplate.parentvhd)
+            Set-ItemProperty -Path $VMTemplate.parentvhd -Name IsReadOnly -Value $False
+            Optimize-VHD -Path $VMTemplate.parentvhd -Mode Full
+            Write-Verbose -Message $($LocalizedData.SettingParentVHDReadonlyMessage `
+                -f $VMTemplate.parentvhd)
+            Set-ItemProperty -Path $VMTemplate.parentvhd -Name IsReadOnly -Value $True
         }
         Else
         {
-            Write-Verbose -Message $($LocalizedData.SkipTemplateVHDFileMessage `
-                -f $VMTemplate.Name,$VMTemplate.templatevhd)
+            Write-Verbose -Message $($LocalizedData.SkipParentVHDFileMessage `
+                -f $VMTemplate.Name,$VMTemplate.parentvhd)
         }
     }
 } # Initialize-LabVMTemplate
@@ -2305,12 +2342,12 @@ function Remove-LabVMTemplate {
     }    
     foreach ($VMTemplate in $VMTemplates)
     {
-        if (Test-Path $VMTemplate.templatevhd)
+        if (Test-Path $VMTemplate.parentvhd)
         {
-            Set-ItemProperty -Path $VMTemplate.templatevhd -Name IsReadOnly -Value $False
-            Write-Verbose -Message $($LocalizedData.DeletingTemplateVHDMessage `
-                -f $VMTemplate.templatevhd)
-            Remove-Item -Path $VMTemplate.templatevhd -Confirm:$false -Force
+            Set-ItemProperty -Path $VMTemplate.parentvhd -Name IsReadOnly -Value $False
+            Write-Verbose -Message $($LocalizedData.DeletingParentVHDMessage `
+                -f $VMTemplate.parentvhd)
+            Remove-Item -Path $VMTemplate.parentvhd -Confirm:$false -Force
         }
     }
 } # Remove-LabVMTemplate
@@ -3800,11 +3837,11 @@ function Get-LabVM {
         } # If
 
         # Find the template that this VM uses and get the VHD Path
-        [String] $TemplateVHDPath =''
+        [String] $ParentVHDPath =''
         [Boolean] $Found = $false
         foreach ($VMTemplate in $VMTemplates) {
             if ($VMTemplate.Name -eq $VM.Template) {
-                $TemplateVHDPath = $VMTemplate.templatevhd
+                $ParentVHDPath = $VMTemplate.parentVHD
                 $Found = $true
                 Break
             } # If
@@ -4454,7 +4491,7 @@ function Get-LabVM {
             Name = $VM.name;
             ComputerName = $VM.ComputerName;
             Template = $VM.template;
-            TemplateVHD = $TemplateVHDPath;
+            ParentVHD = $ParentVHDPath;
             UseDifferencingDisk = $VM.usedifferencingbootdisk;
             MemoryStartupBytes = $MemoryStartupBytes;
             DynamicMemoryEnabled = $DynamicMemoryEnabled;
@@ -5655,7 +5692,7 @@ function Initialize-LabVM {
                     Write-Verbose -Message $($LocalizedData.CreatingVMDiskMessage `
                         -f $VM.Name,$VMBootDiskPath,'Differencing Boot')
 
-                    $Null = New-VHD -Differencing -Path $VMBootDiskPath -ParentPath $VM.TemplateVHD
+                    $Null = New-VHD -Differencing -Path $VMBootDiskPath -ParentPath $VM.ParentVHD
                 }
                 else
                 {
@@ -5663,7 +5700,7 @@ function Initialize-LabVM {
                         -f $VM.Name,$VMBootDiskPath,'Boot')
 
                     $Null = Copy-Item `
-                        -Path $VM.TemplateVHD `
+                        -Path $VM.ParentVHD `
                         -Destination $VMBootDiskPath
                 }
 

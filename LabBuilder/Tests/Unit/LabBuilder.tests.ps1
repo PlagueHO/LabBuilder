@@ -1614,13 +1614,13 @@ InModuleScope LabBuilder {
             }
         }
         Context 'Configuration passed with template VHD empty.' {
-            It 'Throws a EmptyTemplateVHDError Exception' {
+            It 'Throws a EmptyParentVHDError Exception' {
                 $Config = Get-LabConfiguration -Path $Global:TestConfigOKPath
                 $Config.labbuilderconfig.templates.template[0].RemoveAttribute('vhd')
                 $ExceptionParameters = @{
-                    errorId = 'EmptyTemplateVHDError'
+                    errorId = 'EmptyParentVHDError'
                     errorCategory = 'InvalidArgument'
-                    errorMessage = $($LocalizedData.EmptyTemplateVHDError `
+                    errorMessage = $($LocalizedData.EmptyParentVHDError `
                         -f $Config.labbuilderconfig.templates.template[0].name)
                 }
                 $Exception = New-Exception @ExceptionParameters
@@ -1658,6 +1658,36 @@ InModuleScope LabBuilder {
                 { Get-LabVMTemplate -Config $Config } | Should Throw $Exception
             }
         }
+        Context 'Configuration passed with template with Source VHD and Template VHD.' {
+            It 'Throws a TemplateSourceVHDAndTemplateVHDConflictError Exception' {
+                $Config = Get-LabConfiguration -Path $Global:TestConfigOKPath
+                $Config.labbuilderconfig.templates.template[0].SetAttribute('TemplateVHD','Windows Server 2012 R2 Datacenter FULL')
+                $ExceptionParameters = @{
+                    errorId = 'TemplateSourceVHDAndTemplateVHDConflictError'
+                    errorCategory = 'InvalidArgument'
+                    errorMessage = $($LocalizedData.TemplateSourceVHDAndTemplateVHDConflictError `
+                        -f $Config.labbuilderconfig.templates.template[0].name)
+                }
+                $Exception = New-Exception @ExceptionParameters
+
+                { Get-LabVMTemplate -Config $Config } | Should Throw $Exception
+            }
+        }
+        Context 'Configuration passed with template with Template VHD that does not exist.' {
+            It 'Throws a TemplateSourceVHDAndTemplateVHDConflictError Exception' {
+                $Config = Get-LabConfiguration -Path $Global:TestConfigOKPath
+                $Config.labbuilderconfig.templates.template[1].TemplateVHD='Template VHD Does Not Exist'
+                $ExceptionParameters = @{
+                    errorId = 'TemplateTemplateVHDNotFoundError'
+                    errorCategory = 'InvalidArgument'
+                    errorMessage = $($LocalizedData.TemplateTemplateVHDNotFoundError `
+                        -f $Config.labbuilderconfig.templates.template[1].name,'Template VHD Does Not Exist')
+                }
+                $Exception = New-Exception @ExceptionParameters
+
+                { Get-LabVMTemplate -Config $Config } | Should Throw $Exception
+            }
+        }
         Context 'Valid configuration is passed but no templates found' {
             It 'Returns Template Object that matches Expected Object' {
                 $Config = Get-LabConfiguration -Path $Global:TestConfigOKPath
@@ -1689,7 +1719,7 @@ InModuleScope LabBuilder {
         Mock Get-VMHardDiskDrive -ParameterFilter { $VMName -eq 'Pester Windows 10 Enterprise' } `
             -MockWith { @{ path = 'Pester Windows 10 Enterprise.vhdx' } }
 
-        Context 'Valid configuration is passed and templates are found' {
+        Context 'Valid configuration is passed and some templates are found' {
             It 'Returns Template Object that matches Expected Object' {
                 $Config = Get-LabConfiguration -Path $Global:TestConfigOKPath
                 $Config.labbuilderconfig.templates.SetAttribute('fromvm','Pester *')
@@ -1728,7 +1758,7 @@ InModuleScope LabBuilder {
         Context 'Valid Template Array with non-existent VHD source file' {
             [array]$Templates = @( @{
                 name = 'Bad VHD'
-                templatevhd = 'This File Doesnt Exist.vhdx' 
+                parentvhd = 'This File Doesnt Exist.vhdx' 
                 sourcevhd = 'This File Doesnt Exist.vhdx'
             } )
 
