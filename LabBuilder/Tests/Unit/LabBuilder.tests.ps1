@@ -1613,21 +1613,6 @@ InModuleScope LabBuilder {
                 { Get-LabVMTemplate -Config $Config } | Should Throw $Exception
             }
         }
-        Context 'Configuration passed with template VHD empty.' {
-            It 'Throws a EmptyTemplateVHDError Exception' {
-                $Config = Get-LabConfiguration -Path $Global:TestConfigOKPath
-                $Config.labbuilderconfig.templates.template[0].RemoveAttribute('vhd')
-                $ExceptionParameters = @{
-                    errorId = 'EmptyTemplateVHDError'
-                    errorCategory = 'InvalidArgument'
-                    errorMessage = $($LocalizedData.EmptyTemplateVHDError `
-                        -f $Config.labbuilderconfig.templates.template[0].name)
-                }
-                $Exception = New-Exception @ExceptionParameters
-
-                { Get-LabVMTemplate -Config $Config } | Should Throw $Exception
-            }
-        }
         Context 'Configuration passed with template with Source VHD set to relative non-existent file.' {
             It 'Throws a TemplateSourceVHDNotFoundError Exception' {
                 $Config = Get-LabConfiguration -Path $Global:TestConfigOKPath
@@ -1652,6 +1637,52 @@ InModuleScope LabBuilder {
                     errorCategory = 'InvalidArgument'
                     errorMessage = $($LocalizedData.TemplateSourceVHDNotFoundError `
                         -f $Config.labbuilderconfig.templates.template[0].name,"c:\This File Doesnt Exist.vhdx")
+                }
+                $Exception = New-Exception @ExceptionParameters
+
+                { Get-LabVMTemplate -Config $Config } | Should Throw $Exception
+            }
+        }
+        Context 'Configuration passed with template with Source VHD and Template VHD.' {
+            It 'Throws a TemplateSourceVHDAndTemplateVHDConflictError Exception' {
+                $Config = Get-LabConfiguration -Path $Global:TestConfigOKPath
+                $Config.labbuilderconfig.templates.template[0].SetAttribute('templatevhd','Windows Server 2012 R2 Datacenter FULL')
+                $ExceptionParameters = @{
+                    errorId = 'TemplateSourceVHDAndTemplateVHDConflictError'
+                    errorCategory = 'InvalidArgument'
+                    errorMessage = $($LocalizedData.TemplateSourceVHDAndTemplateVHDConflictError `
+                        -f $Config.labbuilderconfig.templates.template[0].name)
+                }
+                $Exception = New-Exception @ExceptionParameters
+
+                { Get-LabVMTemplate -Config $Config } | Should Throw $Exception
+            }
+        }
+        Context 'Configuration passed with template with no Source VHD and no Template VHD.' {
+            It 'Throws a TemplateSourceVHDandTemplateVHDMissingError Exception' {
+                $Config = Get-LabConfiguration -Path $Global:TestConfigOKPath
+                $Config.labbuilderconfig.templates.template[0].RemoveAttribute('sourcevhd')
+                $ExceptionParameters = @{
+                    errorId = 'TemplateSourceVHDandTemplateVHDMissingError'
+                    errorCategory = 'InvalidArgument'
+                    errorMessage = $($LocalizedData.TemplateSourceVHDandTemplateVHDMissingError `
+                        -f $Config.labbuilderconfig.templates.template[0].name)
+                }
+                $Exception = New-Exception @ExceptionParameters
+
+                { Get-LabVMTemplate -Config $Config } | Should Throw $Exception
+            }
+        }
+
+        Context 'Configuration passed with template with Template VHD that does not exist.' {
+            It 'Throws a TemplateSourceVHDAndTemplateVHDConflictError Exception' {
+                $Config = Get-LabConfiguration -Path $Global:TestConfigOKPath
+                $Config.labbuilderconfig.templates.template[1].TemplateVHD='Template VHD Does Not Exist'
+                $ExceptionParameters = @{
+                    errorId = 'TemplateTemplateVHDNotFoundError'
+                    errorCategory = 'InvalidArgument'
+                    errorMessage = $($LocalizedData.TemplateTemplateVHDNotFoundError `
+                        -f $Config.labbuilderconfig.templates.template[1].name,'Template VHD Does Not Exist')
                 }
                 $Exception = New-Exception @ExceptionParameters
 
@@ -1689,7 +1720,7 @@ InModuleScope LabBuilder {
         Mock Get-VMHardDiskDrive -ParameterFilter { $VMName -eq 'Pester Windows 10 Enterprise' } `
             -MockWith { @{ path = 'Pester Windows 10 Enterprise.vhdx' } }
 
-        Context 'Valid configuration is passed and templates are found' {
+        Context 'Valid configuration is passed and some templates are found' {
             It 'Returns Template Object that matches Expected Object' {
                 $Config = Get-LabConfiguration -Path $Global:TestConfigOKPath
                 $Config.labbuilderconfig.templates.SetAttribute('fromvm','Pester *')
@@ -1728,7 +1759,7 @@ InModuleScope LabBuilder {
         Context 'Valid Template Array with non-existent VHD source file' {
             [array]$Templates = @( @{
                 name = 'Bad VHD'
-                templatevhd = 'This File Doesnt Exist.vhdx' 
+                parentvhd = 'This File Doesnt Exist.vhdx' 
                 sourcevhd = 'This File Doesnt Exist.vhdx'
             } )
 
