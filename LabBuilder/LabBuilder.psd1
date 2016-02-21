@@ -24,7 +24,7 @@
     PrivateData = @{
         PSData = @{
             Tags = @('Hyper-V','Lab','Desired State Configuration','DSC')
-            LicenseUri = https://github.com/PlagueHO/LabBuilder/blob/master/LICENSE
+            # LicenseUri = https://github.com/PlagueHO/LabBuilder/blob/master/LICENSE
             ProjectUri = 'https://github.com/PlagueHO/LabBuilder'
             # IconUri = ''
             # ReleaseNotes = ''
