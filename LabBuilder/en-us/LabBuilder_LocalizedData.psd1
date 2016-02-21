@@ -92,7 +92,6 @@ ConvertFrom-StringData -StringData @'
     UpdatingLabManagementSwitchMessage=Updating Lab Management Switch {0} to Vlan {1}.
     ModuleNotInstalledMessage=Module {0} ({1}) is not installed.
     DownloadingLabResourceWebMessage=Downloading Module {0} ({1}) from '{2}'.
-    InstallingLabResourceWebMessage=Installing Module {0} ({1}) to Modules Folder '{2}'.
     InstalledLabResourceWebMessage=Installed Module {0} ({1}) to '{2}'.
     CreatingVirtualSwitchMessage=Creating {0} Virtual Switch '{1}'.
     DeleteingVirtualSwitchMessage=Deleting {0} Virtual Switch '{1}'.
