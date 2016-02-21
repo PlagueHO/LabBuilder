@@ -6,7 +6,7 @@
 
   <settings domainname="LABBUILDER.COM"
             email="daniel@LABBUILDER.COM"
-            vmpath="c:\vm\LABBUILDER.COM"
+            labpath="c:\vm\LABBUILDER.COM"
             vhdparentpath="c:\vm\LABBUILDER.COM\Virtual Hard Disk Templates"
             dsclibrarypath="..\DSCLibrary\" />
 
@@ -71,21 +71,18 @@
               memorystartupbytes="1GB"
               processorcount="1"
               administratorpassword="P@ssword!1"
-              productkey="W3GGN-FT8W3-Y4M27-J84CP-Q3VJ9"
               timezone="New Zealand Standard Time" 
               ostype="Server" />
     <template name="Template Windows Server 2012 R2 Datacenter Core"
               memorystartupbytes="1GB"
               processorcount="1"
               administratorpassword="P@ssword!1"
-              productkey="W3GGN-FT8W3-Y4M27-J84CP-Q3VJ9"
               timezone="New Zealand Standard Time" 
               ostype="Server" />
     <template name="Template Windows 10 Enterprise"
               memorystartupbytes="2GB"
               processorcount="1"
               administratorpassword="P@ssword!1"
-              productkey="KK86J-6TNXJ-MHJ2M-GYMJG-BP2JR"
               timezone="New Zealand Standard Time" 
               ostype="Client" />
   </templates>
