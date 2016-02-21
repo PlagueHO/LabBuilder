@@ -93,6 +93,7 @@ Versions
 ### 0.3.3.0
 * Changed Get-LabSwitch Unit tests to use PesterTestConfig.OK.xml.
 * Added support for configuring Nano Server packages for each VM.
+* Removed MAC Address minimum/maximum value settings from configuration.
 
 ### 0.3.2.0
 * Added Initialize-VHD function.

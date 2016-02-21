@@ -26,8 +26,6 @@ Import-LocalizedData `
 
 # Virtual Networking Parameters
 [Int] $Script:DefaultManagementVLan = 99
-[String] $Script:DefaultMacAddressMinimum = '00155D010600'
-[String] $Script:DefaultMacAddressMaximum = '00155D0106FF'
 
 # Self-signed Certificate Parameters
 [Int] $Script:SelfSignedCertKeyLength = 2048
@@ -800,20 +798,6 @@ function Initialize-LabConfiguration {
     # Install Hyper-V Components
     Write-Verbose -Message ($LocalizedData.InitializingHyperVComponentsMesage)
     
-    [String] $MacAddressMinimum = $Config.labbuilderconfig.settings.macaddressminimum
-    if (-not $MacAddressMinimum)
-    {
-        $MacAddressMinimum = $Script:DefaultMacAddressMinimum
-    }
-
-    [String] $MacAddressMaximum = $Config.labbuilderconfig.settings.macaddressmaximum
-    if (-not $MacAddressMaximum)
-    {
-        $MacAddressMaximum = $Script:DefaultMacAddressMaximum
-    }
-
-    Set-VMHost -MacAddressMinimum $MacAddressMinimum -MacAddressMaximum $MacAddressMaximum
-
     # Create the LabBuilder Management Network switch and assign VLAN
     # Used by host to communicate with Lab VMs
     [String] $ManagementSwitchName = ('LabBuilder Management {0}' `
