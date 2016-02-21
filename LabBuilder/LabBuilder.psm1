@@ -2359,19 +2359,15 @@ function Set-LabVMDSCMOFFile {
     [String] $DSCMOFMetaFile = ''
   
     # Get the root path of the VM
-    [String] $VMRootPath = Get-LabVMRootPath `
-        -Config $Config `
-        -VM $VM
+    [String] $VMRootPath = $VM.VMRootPath
+
+    # Get Path to LabBuilder files
+    [String] $VMLabBuilderFiles = $VM.LabBuilderFilesPath
 
     # Make sure the appropriate folders exist
     Initialize-LabVMPath `
         -VMPath $VMRootPath
     
-    # Get Path to LabBuilder files
-    [String] $VMLabBuilderFiles = Get-LabVMFilesPath `
-        -Config $Config `
-        -VM $VM
-
     if (-not $VM.DSCConfigFile)
     {
         # This VM doesn't have a DSC Configuration
@@ -2688,9 +2684,8 @@ function Set-LabVMDSCStartFile {
     [String] $DSCStartPs = ''
 
     # Get Path to LabBuilder files
-    [String] $VMLabBuilderFiles = Get-LabVMFilesPath `
-        -Config $Config `
-        -VM $VM
+    [String] $VMLabBuilderFiles = $VM.LabBuilderFilesPath
+
     # Relabel the Network Adapters so that they match what the DSC Networking config will use
     # This is because unfortunately the Hyper-V Device Naming feature doesn't work.
     [String] $ManagementSwitchName = `
@@ -2868,9 +2863,7 @@ function Start-LabVMDSC {
     [Boolean] $ModuleCopyComplete = $False
     
     # Get Path to LabBuilder files
-    [String] $VMLabBuilderFiles = Get-LabVMFilesPath `
-        -Config $Config `
-        -VM $VM
+    [String] $VMLabBuilderFiles = $VM.LabBuilderFilesPath
 
     While ((-not $Complete) `
         -and (((Get-Date) - $StartTime).TotalSeconds) -lt $TimeOut)
@@ -3433,9 +3426,7 @@ function Set-LabVMInitializationFiles {
     )
 
     # Get Path to LabBuilder files
-    [String] $VMLabBuilderFiles = Get-LabVMFilesPath `
-        -Config $Config `
-        -VM $VM
+    [String] $VMLabBuilderFiles = $VM.LabBuilderFilesPath 
     
     # Generate an unattended setup file
     [String] $UnattendFile = Get-LabUnattendFile -Config $Config -VM $VM       
@@ -3573,10 +3564,8 @@ function Initialize-LabVMImage {
     )
 
     # Get Path to LabBuilder files
-    [String] $VMLabBuilderFiles = Get-LabVMFilesPath `
-        -Config $Config `
-        -VM $VM
-
+    [String] $VMLabBuilderFiles = $VM.LabBuilderFilesPath
+    
     # Mount the VMs Boot VHD so that files can be loaded into it
     Write-Verbose -Message $($LocalizedData.MountingVMBootDiskMessage `
         -f $VM.Name,$VMBootDiskPath)
@@ -4475,6 +4464,8 @@ function Get-LabVM {
             OSType = $OSType;
             Packages = $Packages;
             InstallMSU = $InstallMSU;
+            VMRootPath = (Join-Path -Path $LabPath -ChildPath $VM.name);
+            LabBuilderFilesPath = (Join-Path -Path $LabPath -ChildPath "$($VM.name)\LabBuilder Files");
         }
     } # Foreach        
 
@@ -4529,15 +4520,10 @@ function Get-LabVMelfSignedCert
     [Boolean] $Complete = $False
 
     # Load path variables
-    [String] $VMRootPath = Join-Path `
-        -Path $LabPath `
-        -ChildPath $VM.Name
+    [String] $VMRootPath = $VM.VMRootPath
 
     # Get Path to LabBuilder files
-    [String] $VMLabBuilderFiles = Join-Path `
-        -Path $VMRootPath `
-        -ChildPath 'LabBuilder Files'
-
+    [String] $VMLabBuilderFiles = $VM.LabBuilderFilesPath
 
     while ((-not $Complete) `
         -and (((Get-Date) - $StartTime).TotalSeconds) -lt $TimeOut)
@@ -4661,14 +4647,10 @@ function New-LabVMSelfSignedCert
     [Boolean] $Complete = $False
 
     # Load path variables
-    [String] $VMRootPath = Join-Path `
-        -Path $LabPath `
-        -ChildPath $VM.Name
+    [String] $VMRootPath = $VM.VMRootPath
 
     # Get Path to LabBuilder files
-    [String] $VMLabBuilderFiles = Join-Path `
-        -Path $VMRootPath `
-        -ChildPath 'LabBuilder Files'
+    [String] $VMLabBuilderFiles = $VM.LabBuilderFilesPath
 
     # Ensure the certificate generation script has been created
     [String] $GetCertPs = Get-LabGetCertificatePs `
@@ -4864,82 +4846,6 @@ function Get-LabVMManagementIPAddress {
 ####################################################################################################
 <#
 .SYNOPSIS
-   Gets the path to the LabBuilder root folder that a VM uses.
-.DESCRIPTION
-   This function will return the path where all files can be found
-   for the specified VM.
-.PARAMETER Configuration
-   Contains the Lab Builder configuration object that was loaded by the Get-LabConfiguration
-   object.
-.PARAMETER VM
-   A Virtual Machine object pulled from the Lab Configuration file using Get-LabVM
-.EXAMPLE
-   $Config = Get-LabConfiguration -Path c:\mylab\config.xml
-   $VMs = Get-LabVM -Config $Config
-   $Path = Get-LabVMRootPath -Config $Config -VM $VM[0]
-.OUTPUTS
-   The Path to the LabBuilder Files.
-#>
-function Get-LabVMRootPath {
-    [CmdLetBinding()]
-    [OutputType([String])]
-    param (
-        [Parameter(Mandatory)]
-        [XML] $Config,
-
-        [Parameter(Mandatory)]
-        [System.Collections.Hashtable] $VM
-    )
-    [String] $LabPath = $Config.labbuilderconfig.settings.labpath 
-    [String] $VMRootPath = Join-Path `
-        -Path $LabPath `
-        -ChildPath $VM.Name
-    return $VMRootPath
-} # Get-LabVMRootPath
-####################################################################################################
-
-####################################################################################################
-<#
-.SYNOPSIS
-   Gets the path to the LabBuilder files folder that a VM uses.
-.DESCRIPTION
-   This function will return the path that LabBuilder specific files can be found
-   for the specified VM.
-.PARAMETER Configuration
-   Contains the Lab Builder configuration object that was loaded by the Get-LabConfiguration
-   object.
-.PARAMETER VM
-   A Virtual Machine object pulled from the Lab Configuration file using Get-LabVM.
-.EXAMPLE
-   $Config = Get-LabConfiguration -Path c:\mylab\config.xml
-   $VMs = Get-LabVM -Config $Config
-   $Path = Get-LabVMFilesPath -Config $Config -VM $VM[0]
-.OUTPUTS
-   The Path to the LabBuilder Files.
-#>
-function Get-LabVMFilesPath {
-    [CmdLetBinding()]
-    [OutputType([String])]
-    param (
-        [Parameter(Mandatory)]
-        [XML] $Config,
-
-        [Parameter(Mandatory)]
-        [System.Collections.Hashtable] $VM
-    )
-    [String] $VMRootPath = Get-LabVMRootPath `
-        -Config $Config `
-        -VM $VM
-    [String] $VMFilesPath = Join-Path `
-        -Path $VMRootPath `
-        -ChildPath 'LabBuilder Files'
-    return $VMFilesPath
-} # Get-LabVMFilesPath
-####################################################################################################
-
-####################################################################################################
-<#
-.SYNOPSIS
    Short description
 .DESCRIPTION
    Long description
@@ -5047,7 +4953,6 @@ function Start-LabVM {
 .EXAMPLE
    $Config = Get-LabConfiguration -Path c:\mylab\config.xml
    $VMs = Get-LabVM -Config $Config
-   $Path = Get-LabVMRootPath -Config $Config -VM $VM[0]
    Update-LabVMDataDisk -Config $Config -VM VM[0]
    This will update the data disks for the first VM in the configuration file c:\mylab\config.xml.
 .PARAMETER Configuration
@@ -5082,9 +4987,7 @@ function Update-LabVMDataDisk {
     }
 
     # Get the root path of the VM
-    [String] $VMRootPath = Get-LabVMRootPath `
-        -Config $Config `
-        -VM $VM
+    [String] $VMRootPath = $VM.VMRootPath
 
     # Get the Virtual Hard Disk Path
     [String] $VHDPath = Join-Path `
@@ -5271,9 +5174,7 @@ function Update-LabVMDataDisk {
                 # Files need to be copied to this Data VHD so
                 # set up a mount folder for it to be mounted to.
                 # Get Path to LabBuilder files
-                [String] $VMLabBuilderFiles = Get-LabVMFilesPath `
-                    -Config $Config `
-                    -VM $VM
+                [String] $VMLabBuilderFiles = $VM.LabBuilderFilesPath
 
                 [String] $MountPoint = Join-Path `
                     -Path $VMLabBuilderFiles `
@@ -5442,7 +5343,6 @@ function Update-LabVMDataDisk {
 .EXAMPLE
    $Config = Get-LabConfiguration -Path c:\mylab\config.xml
    $VMs = Get-LabVM -Config $Config
-   $Path = Get-LabVMRootPath -Config $Config -VM $VM[0]
    Update-LabVMIntegrationService -VM VM[0]
    This will update the Integration Services for the first VM in the configuration file c:\mylab\config.xml.
 .PARAMETER VM
@@ -5618,9 +5518,7 @@ function Initialize-LabVM {
     foreach ($VM in $VMs)
     {
         # Get the root path of the VM
-        [String] $VMRootPath = Get-LabVMRootPath `
-            -Config $Config `
-            -VM $VM
+        [String] $VMRootPath = $VM.VMRootPath
 
         # Get the Virtual Machine Path
         [String] $VMPath = Join-Path `
@@ -5633,9 +5531,7 @@ function Initialize-LabVM {
             -ChildPath 'Virtual Hard Disks'
 
         # Get Path to LabBuilder files
-        [String] $VMLabBuilderFiles = Join-Path `
-            -Path $VMRootPath `
-            -ChildPath 'LabBuilder Files'
+        [String] $VMLabBuilderFiles = $VM.LabBuilderFilesPath
 
         if (($CurrentVMs | Where-Object -Property Name -eq $VM.Name).Count -eq 0)
         {
@@ -5941,24 +5837,22 @@ function Wait-LabVMInit
     )
 
     [DateTime] $StartTime = Get-Date
-    [Boolean] $Found = $False
     [System.Management.Automation.Runspaces.PSSession] $Session = $null
     [Boolean] $Complete = $False
 
-    # Load path variables
-    [String] $VMRootPath = Join-Path `
-        -Path $VMPath `
-        -ChildPath $VM.Name
+    # Get the root path of the VM
+    [String] $VMRootPath = $VM.VMRootPath
 
     # Get Path to LabBuilder files
-    [String] $VMLabBuilderFiles = Join-Path `
-        -Path $VMRootPath `
-        -ChildPath 'LabBuilder Files'
+    [String] $VMLabBuilderFiles = $VM.LabBuilderFilesPath
 
     # Make sure the VM has started
     Wait-LabVMStart -VM $VM
     
-    [String] $InitialSetupCompletePath = Join-Path -Path $VMLabBuilderFiles -ChildPath 'InitialSetupCompleted.txt'
+    [String] $InitialSetupCompletePath = Join-Path `
+        -Path $VMLabBuilderFiles `
+        -ChildPath 'InitialSetupCompleted.txt'
+
     # Check the initial setup on this VM hasn't already completed
     if (Test-Path -Path $InitialSetupCompletePath)
     {
@@ -5971,7 +5865,9 @@ function Wait-LabVMInit
         -and (((Get-Date) - $StartTime).TotalSeconds) -lt $TimeOut)
     {
         # Connect to the VM
-        $Session = Connect-LabVM -VM $VM -ErrorAction Continue
+        $Session = Connect-LabVM `
+            -VM $VM `
+            -ErrorAction Continue
 
         # Failed to connnect to the VM
         if (! $Session)
@@ -6008,7 +5904,8 @@ function Wait-LabVMInit
                 {
                     Write-Verbose -Message $($LocalizedData.WaitingForInitialSetupCompleteMessage `
                         -f $VM.Name,$Script:RetryConnectSeconds)                                
-                    Start-Sleep -Seconds $Script:RetryConnectSeconds
+                    Start-Sleep `
+                        -Seconds $Script:RetryConnectSeconds
                 } # Try
             } # While
         } # If
@@ -6019,7 +5916,8 @@ function Wait-LabVMInit
         {
             if ($Session)
             {
-                Remove-PSSession -Session $Session
+                Remove-PSSession `
+                    -Session $Session
             }
 
             $ExceptionParameters = @{
@@ -6035,7 +5933,8 @@ function Wait-LabVMInit
         if (($Session) `
             -and ($Session.State -eq 'Opened'))
         {
-            Remove-PSSession -Session $Session
+            Remove-PSSession `
+                -Session $Session
         } # If
     } # While
     return $InitialSetupCompletePath

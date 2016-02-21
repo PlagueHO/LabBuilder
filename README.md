@@ -94,6 +94,8 @@ Versions
 * Changed Get-LabSwitch Unit tests to use PesterTestConfig.OK.xml.
 * Added support for configuring Nano Server packages for each VM.
 * Removed MAC Address minimum/maximum value settings from configuration.
+* Fix bug with Wait-LabInitVM failing to copy InitialSetupComplete.txt file.
+* Added VMRootPath and LabBuilderFilesPath properties Get-LabVM array containing path where VM and LabBuilder files should be stored respectively.
 
 ### 0.3.2.0
 * Added Initialize-VHD function.
