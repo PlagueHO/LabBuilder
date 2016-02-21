@@ -1804,7 +1804,7 @@ function Initialize-LabVMTemplateVHD
         # Mount the ISO so we can read the files.
         Write-Verbose -Message ($LocalizedData.MountingVMTemplateVHDISOMessage `
                 -f $Name,$ISOPath)
-
+                
         $null = Mount-DiskImage `
             -ImagePath $ISOPath `
             -StorageType ISO `
@@ -1878,9 +1878,6 @@ function Initialize-LabVMTemplateVHD
                 -Path $VHDPath `
                 -Parent
 
-            [String] $PackagesFolder = Join-Path `
-                -Path $VHDFolder `
-                -ChildPath 'NanoServerPackages'
             if (-not (Test-Path -Path $PackagesFolder -Type Container))
             {
                 Copy-Item `
@@ -1890,9 +1887,13 @@ function Initialize-LabVMTemplateVHD
                     -Force
                 Rename-Item `
                     -Path "$VHDFolder\Packages" `
-                    -NewName $PackagesFolder
+                    -NewName 'NanoServerPackages'
             }
-
+            
+            [String] $PackagesFolder = Join-Path `
+                -Path $VHDFolder `
+                -ChildPath 'NanoServerPackages'
+                
             # Now specify the Nano Server packages to add.
             if (-not [String]::IsNullOrWhitespace($VMTemplateVHD.Packages))
             {
