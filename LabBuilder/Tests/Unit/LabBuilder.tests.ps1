@@ -150,9 +150,303 @@ InModuleScope LabBuilder {
 
 
 
-    Describe 'Get-ModulesInDSCConfig' {
+    Describe 'Initialize-Vhd' {
+        $VHD = @{
+            Path = 'c:\DataVHDx.vhdx'
+        }
+        $VHDCreate = @{
+            Path = $VHD.Path
+            PartitionStyle = 'GPT'
+            FileSystem = 'NTFS'
+        }
+        $VHDLabel = @{
+            Path = $VHD.Path
+            PartitionStyle = 'GPT'
+            FileSystem = 'NTFS'
+            FileSystemLabel = 'New'
+        }
+        $Partition1 = New-CimInstance `
+                -ClassName 'MSFT_Partition' `
+                -Namespace ROOT/Microsoft/Windows/Storage `
+                -ClientOnly `
+                -Property @{
+                    DiskNumber = 9
+                    Type = 'Basic'
+                    PartitionNumber = 1
+                }
+        $Partition2 = New-CimInstance `
+                -ClassName 'MSFT_Partition' `
+                -Namespace ROOT/Microsoft/Windows/Storage `
+                -ClientOnly `
+                -Property @{
+                    DiskNumber = 9
+                    Type = 'Basic'
+                    PartitionNumber = 2
+                }
+        $Volume1 = New-CimInstance `
+                -ClassName 'MSFT_Volume' `
+                -Namespace ROOT/Microsoft/Windows/Storage `
+                -ClientOnly `
+                -Property @{
+                    FileSystem = 'FAT32'
+                    FileSystemLabel = 'Volume1'
+             }
+        $Volume2 = New-CimInstance `
+                -ClassName 'MSFT_Volume' `
+                -Namespace ROOT/Microsoft/Windows/Storage `
+                -ClientOnly `
+                -Property @{
+                    FileSystem = 'NTFS'
+                    FileSystemLabel = 'Volume2'
+             }
+        $NewVolume = New-CimInstance `
+                -ClassName 'MSFT_Volume' `
+                -Namespace ROOT/Microsoft/Windows/Storage `
+                -ClientOnly `
+                -Property @{
+                    FileSystem = $VHDLabel.FileSystem
+                    FileSystemLabel = $VHDLabel.FileSystemLabel
+             }
+        $RenamedVolume = New-CimInstance `
+                -ClassName 'MSFT_Volume' `
+                -Namespace ROOT/Microsoft/Windows/Storage `
+                -ClientOnly `
+                -Property @{
+                    FileSystem = $VHDLabel.FileSystem
+                    FileSystemLabel = 'Different'
+             }        
+        $UnformattedVolume = New-CimInstance `
+                -ClassName 'MSFT_Volume' `
+                -Namespace ROOT/Microsoft/Windows/Storage `
+                -ClientOnly `
+                -Property @{
+                    FileSystem = ''
+                    FileSystemLabel = $VHDLabel.FileSystemLabel
+             }
+        
+        Mock Test-Path -MockWith { $False } 
+        Mock Get-VHD
+        Mock Mount-VHD
+        Mock Get-Disk
+        Mock Initialize-Disk
+        Mock Get-Partition
+        Mock New-Partition
+        Mock Get-Volume
+        Mock Format-Volume
+        Mock Set-Volume
+        Mock Set-Partition
+        Mock Add-PartitionAccessPath
+        Context 'VHDx file does not exist' {
+            It 'Throws a FileNotFoundError Exception' {
+                $Splat = $VHD.Clone()
+                $ExceptionParameters = @{
+                    errorId = 'FileNotFoundError'
+                    errorCategory = 'InvalidArgument'
+                    errorMessage = $($LocalizedData.FileNotFoundError `
+                        -f "VHD",$Splat.Path)
+                }
+                $Exception = New-Exception @ExceptionParameters
+
+                { Initialize-Vhd @Splat } | Should Throw $Exception
+            }
+            It 'Calls appropriate mocks' {
+                Assert-MockCalled Get-VHD -Exactly 0
+                Assert-MockCalled Mount-VHD -Exactly 0
+                Assert-MockCalled Get-Disk -Exactly 0
+                Assert-MockCalled Initialize-Disk -Exactly 0
+                Assert-MockCalled Get-Partition -Exactly 0
+                Assert-MockCalled New-Partition -Exactly 0
+                Assert-MockCalled Get-Volume -Exactly 0
+                Assert-MockCalled Format-Volume -Exactly 0
+                Assert-MockCalled Set-Volume -Exactly 0
+                Assert-MockCalled Set-Partition -Exactly 0
+                Assert-MockCalled Add-PartitionAccessPath -Exactly 0
+            }
+        }
+        Mock Test-Path -MockWith { $True } 
+        Mock Get-VHD -MockWith { @{ Attached = $False; DiskNumber = 9 } }
+        Mock Get-Disk -MockWith { @{ PartitionStyle = 'RAW' } }
+        Context 'VHDx file exists is not mounted, is not initialized and partition style is not passed' {
+            It 'Throws a InitializeVHDNotInitializedError Exception' {
+                $Splat = $VHD.Clone()
+                $ExceptionParameters = @{
+                    errorId = 'InitializeVHDNotInitializedError'
+                    errorCategory = 'InvalidArgument'
+                    errorMessage = $($LocalizedData.InitializeVHDNotInitializedError `
+                        -f$Splat.Path)
+                }
+                $Exception = New-Exception @ExceptionParameters
+
+                { Initialize-Vhd @Splat } | Should Throw $Exception
+            }
+            It 'Calls appropriate mocks' {
+                Assert-MockCalled Get-VHD -Exactly 2
+                Assert-MockCalled Mount-VHD -Exactly 1
+                Assert-MockCalled Get-Disk -Exactly 1
+                Assert-MockCalled Initialize-Disk -Exactly 0
+                Assert-MockCalled Get-Partition -Exactly 0
+                Assert-MockCalled New-Partition -Exactly 0
+                Assert-MockCalled Get-Volume -Exactly 0
+                Assert-MockCalled Format-Volume -Exactly 0
+                Assert-MockCalled Set-Volume -Exactly 0
+                Assert-MockCalled Set-Partition -Exactly 0
+                Assert-MockCalled Add-PartitionAccessPath -Exactly 0
+            }
+        }
+        Mock Get-Disk -MockWith { @{ PartitionStyle = $VHDLabel.PartitionStyle } }
+        Mock Get-Partition -MockWith { @( $Partition1 ) }
+        Mock Get-Volume -MockWith { $NewVolume } -ParameterFilter { $Partition -eq $Partition1 }
+        Mock Get-Volume -MockWith { $Volume2 } -ParameterFilter { $Partition -eq $Partition2 }
+        Mock Set-Volume -MockWith { $RenamedVolume }
+        Context 'VHDx file exists is not mounted, is initialized, has 1 partition the volume FileSystemLabel is different' {
+            It 'Returns Expected Volume' {
+                $Splat = $VHDLabel.Clone()
+                $Splat.FileSystemLabel = 'Different'
+
+                Initialize-Vhd @Splat | Should Be $RenamedVolume
+            }
+            It 'Calls appropriate mocks' {
+                Assert-MockCalled Get-VHD -Exactly 2
+                Assert-MockCalled Mount-VHD -Exactly 1
+                Assert-MockCalled Get-Disk -Exactly 1
+                Assert-MockCalled Initialize-Disk -Exactly 0
+                Assert-MockCalled Get-Partition -Exactly 1
+                Assert-MockCalled New-Partition -Exactly 0
+                Assert-MockCalled Get-Volume -Exactly 2
+                Assert-MockCalled Format-Volume -Exactly 0
+                Assert-MockCalled Set-Volume -Exactly 1
+                Assert-MockCalled Set-Partition -Exactly 0
+                Assert-MockCalled Add-PartitionAccessPath -Exactly 0
+            }
+        }
+        Mock Get-Partition -MockWith { @( $Partition1,$Partition2 ) }
+        Mock Get-Volume -MockWith { $Volume1 } -ParameterFilter { $Partition -eq $Partition1 }
+        Mock Get-Volume -MockWith { $Volume2 } -ParameterFilter { $Partition -eq $Partition2 }
+        Context 'VHDx file exists is not mounted, is initialized, has 2 partitions' {
+            It 'Returns Expected Volume' {
+                $Splat = $VHDLabel.Clone()
+                $Splat.FileSystemLabel = 'Different'
+
+                Initialize-Vhd @Splat | Should Be $RenamedVolume
+            }
+            It 'Calls appropriate mocks' {
+                Assert-MockCalled Get-VHD -Exactly 2
+                Assert-MockCalled Mount-VHD -Exactly 1
+                Assert-MockCalled Get-Disk -Exactly 1
+                Assert-MockCalled Initialize-Disk -Exactly 0
+                Assert-MockCalled Get-Partition -Exactly 1
+                Assert-MockCalled New-Partition -Exactly 0
+                Assert-MockCalled Get-Volume -Exactly 3
+                Assert-MockCalled Format-Volume -Exactly 0
+                Assert-MockCalled Set-Volume -Exactly 1
+                Assert-MockCalled Set-Partition -Exactly 0
+                Assert-MockCalled Add-PartitionAccessPath -Exactly 0
+            }
+        }        
+        Mock Get-Disk -MockWith { @{ PartitionStyle = 'RAW' } }
+        Mock Get-Partition 
+        Mock New-Partition -MockWith { @( $Partition1 ) }
+        Mock Get-Volume -MockWith { $UnformattedVolume } -ParameterFilter { $Partition -eq $Partition1 }
+        Mock Format-Volume -MockWith { @( $NewVolume ) }
+        Context 'VHDx file exists is not mounted, is not initialized and label is passed' {
+            It 'Returns Expected Volume' {
+                $Splat = $VHDLabel.Clone()
+
+                Initialize-Vhd @Splat | Should Be $NewVolume
+            }
+            It 'Calls appropriate mocks' {
+                Assert-MockCalled Get-VHD -Exactly 2
+                Assert-MockCalled Mount-VHD -Exactly 1
+                Assert-MockCalled Get-Disk -Exactly 1
+                Assert-MockCalled Initialize-Disk -Exactly 1
+                Assert-MockCalled Get-Partition -Exactly 1
+                Assert-MockCalled New-Partition -Exactly 1
+                Assert-MockCalled Get-Volume -Exactly 2
+                Assert-MockCalled Format-Volume -Exactly 1
+                Assert-MockCalled Set-Volume -Exactly 0
+                Assert-MockCalled Set-Partition -Exactly 0
+                Assert-MockCalled Add-PartitionAccessPath -Exactly 0
+            }
+        }
+        Context 'VHDx file exists is not mounted, is not initialized and label and DriveLetter passed' {
+            It 'Returns Expected Volume' {
+                $Splat = $VHDLabel.Clone()
+                $Splat.DriveLetter = 'X'
+
+                Initialize-Vhd @Splat | Should Be $UnformattedVolume # would be NewVolume but Get-Volume is mocked to this.
+            }
+            It 'Calls appropriate mocks' {
+                Assert-MockCalled Get-VHD -Exactly 2
+                Assert-MockCalled Mount-VHD -Exactly 1
+                Assert-MockCalled Get-Disk -Exactly 1
+                Assert-MockCalled Initialize-Disk -Exactly 1
+                Assert-MockCalled Get-Partition -Exactly 1
+                Assert-MockCalled New-Partition -Exactly 1
+                Assert-MockCalled Get-Volume -Exactly 3
+                Assert-MockCalled Format-Volume -Exactly 1
+                Assert-MockCalled Set-Volume -Exactly 0
+                Assert-MockCalled Set-Partition -Exactly 1
+                Assert-MockCalled Add-PartitionAccessPath -Exactly 0
+            }
+        }
+        Context 'VHDx file exists is not mounted, is not initialized and label and AccessPath passed' {
+            It 'Returns Expected Volume' {
+                $Splat = $VHDLabel.Clone()
+                $Splat.AccessPath = 'c:\Exists'
+
+                Initialize-Vhd @Splat | Should Be $NewVolume
+            }
+            It 'Calls appropriate mocks' {
+                Assert-MockCalled Get-VHD -Exactly 2
+                Assert-MockCalled Mount-VHD -Exactly 1
+                Assert-MockCalled Get-Disk -Exactly 1
+                Assert-MockCalled Initialize-Disk -Exactly 1
+                Assert-MockCalled Get-Partition -Exactly 1
+                Assert-MockCalled New-Partition -Exactly 1
+                Assert-MockCalled Get-Volume -Exactly 2
+                Assert-MockCalled Format-Volume -Exactly 1
+                Assert-MockCalled Set-Volume -Exactly 0
+                Assert-MockCalled Set-Partition -Exactly 0
+                Assert-MockCalled Add-PartitionAccessPath -Exactly 1
+            }
+        }
+        Mock Test-Path -ParameterFilter { $Path -eq 'c:\DoesNotExist' } -MockWith { $false }
+        Context 'VHDx file exists is not mounted, is not initialized and invalid AccessPath passed' {
+            It 'Throws a InitializeVHDAccessPathNotFoundError Exception' {
+                $Splat = $VHDLabel.Clone()
+                $Splat.AccessPath = 'c:\DoesNotExist'
+
+                $ExceptionParameters = @{
+                    errorId = 'InitializeVHDAccessPathNotFoundError'
+                    errorCategory = 'InvalidArgument'
+                    errorMessage = $($LocalizedData.InitializeVHDAccessPathNotFoundError `
+                        -f$Splat.Path,'c:\DoesNotExist')
+                }
+                $Exception = New-Exception @ExceptionParameters
+
+                { Initialize-Vhd @Splat } | Should Throw $Exception
+            }
+            It 'Calls appropriate mocks' {
+                Assert-MockCalled Get-VHD -Exactly 2
+                Assert-MockCalled Mount-VHD -Exactly 1
+                Assert-MockCalled Get-Disk -Exactly 1
+                Assert-MockCalled Initialize-Disk -Exactly 1
+                Assert-MockCalled Get-Partition -Exactly 1
+                Assert-MockCalled New-Partition -Exactly 1
+                Assert-MockCalled Get-Volume -Exactly 2
+                Assert-MockCalled Format-Volume -Exactly 1
+                Assert-MockCalled Set-Volume -Exactly 0
+                Assert-MockCalled Set-Partition -Exactly 0
+                Assert-MockCalled Add-PartitionAccessPath -Exactly 0
+            }
+        }
+    }
+
+
+
+    Describe 'GetModulesInDSCConfig' {
         Context 'Called with Test DSC Resource File' {
-            $Modules = Get-ModulesInDSCConfig `
+            $Modules = GetModulesInDSCConfig `
                 -DSCConfigFile (Join-Path -Path $Global:TestConfigPath -ChildPath 'dsclibrary\PesterTest.DSC.ps1')
             It 'Should Return Expected Modules' {
                 @(Compare-Object -ReferenceObject $Modules `
@@ -220,23 +514,23 @@ InModuleScope LabBuilder {
 
         Context 'Valid Configuration is provided and all paths exist' {
             It 'Returns True' {
-                $Config.labbuilderconfig.settings.vmpath = 'c:\exists\'
+                $Config.labbuilderconfig.settings.labpath = 'c:\exists\'
                 $Config.labbuilderconfig.settings.vhdparentpath = 'c:\exists\'
 
                 Test-LabConfiguration -Config $Config | Should Be $True
             }
         }
 
-        Context 'Valid Configuration is provided and VMPath is empty' {
+        Context 'Valid Configuration is provided and LabPath is empty' {
             It 'Throws ConfigurationMissingElementError Exception' {
-                $Config.labbuilderconfig.settings.vmpath = ''
+                $Config.labbuilderconfig.settings.labpath = ''
                 $Config.labbuilderconfig.settings.vhdparentpath = 'c:\exists\'
 
                 $ExceptionParameters = @{
                     errorId = 'ConfigurationMissingElementError'
                     errorCategory = 'InvalidArgument'
                     errorMessage = $($LocalizedData.ConfigurationMissingElementError `
-                        -f '<settings>\<vmpath>')
+                        -f '<settings>\<labpath>')
                 }
                 $Exception = New-Exception @ExceptionParameters
 
@@ -244,16 +538,16 @@ InModuleScope LabBuilder {
             }
         }
 
-        Context 'Valid Configuration is provided and VMPath folder does not exist' {
+        Context 'Valid Configuration is provided and LabPath folder does not exist' {
             It 'Throws PathNotFoundError Exception' {
-                $Config.labbuilderconfig.settings.vmpath = 'c:\doesnotexist\'
+                $Config.labbuilderconfig.settings.labpath = 'c:\doesnotexist\'
                 $Config.labbuilderconfig.settings.vhdparentpath = 'c:\exists\'
             
                 $ExceptionParameters = @{
                     errorId = 'PathNotFoundError'
                     errorCategory = 'InvalidArgument'
                     errorMessage = $($LocalizedData.PathNotFoundError `
-                        -f '<settings>\<vmpath>','c:\doesnotexist\')
+                        -f '<settings>\<labpath>','c:\doesnotexist\')
                 }
                 $Exception = New-Exception @ExceptionParameters
 
@@ -263,7 +557,7 @@ InModuleScope LabBuilder {
         
         Context 'Valid Configuration is provided and VHDParentPath is empty' {
             It 'Throws ConfigurationMissingElementError Exception' {
-                $Config.labbuilderconfig.settings.vmpath = 'c:\exists\'
+                $Config.labbuilderconfig.settings.labpath = 'c:\exists\'
                 $Config.labbuilderconfig.settings.vhdparentpath = ''
 
                 $ExceptionParameters = @{
@@ -280,7 +574,7 @@ InModuleScope LabBuilder {
 
         Context 'Valid Configuration is provided and VHDParentPath folder does not exist' {
             It 'Throws PathNotFoundError Exception' {
-                $Config.labbuilderconfig.settings.vmpath = 'c:\exists\'
+                $Config.labbuilderconfig.settings.labpath = 'c:\exists\'
                 $Config.labbuilderconfig.settings.vhdparentpath = 'c:\doesnotexist\'
                 
                 $ExceptionParameters = @{
@@ -366,7 +660,8 @@ InModuleScope LabBuilder {
         Mock Invoke-WebRequest
         Mock Expand-Archive
         Mock Rename-Item
-        Mock Test-Path -MockWith { $false }
+        Mock Test-Path -MockWith { $false } -ParameterFilter { $Path -eq "$($ENV:ProgramFiles)\WindowsPowerShell\Modules\xNetworking" }
+        Mock Test-Path -MockWith { $true } -ParameterFilter { $Path -eq "$($ENV:ProgramFiles)\WindowsPowerShell\Modules\" }
         Mock Remove-Item
         Mock Get-PackageProvider
         Mock Install-Module
@@ -385,7 +680,8 @@ InModuleScope LabBuilder {
                 Assert-MockCalled Invoke-WebRequest -Exactly 0
                 Assert-MockCalled Expand-Archive -Exactly 0
                 Assert-MockCalled Rename-Item -Exactly 0
-                Assert-MockCalled Test-Path -Exactly 0
+                Assert-MockCalled Test-Path -ParameterFilter { $Path -eq "$($ENV:ProgramFiles)\WindowsPowerShell\Modules\xNetworking" } -Exactly 0
+                Assert-MockCalled Test-Path -ParameterFilter { $Path -eq $Path -eq "$($ENV:ProgramFiles)\WindowsPowerShell\Modules\" } -Exactly 0
                 Assert-MockCalled Remove-Item -Exactly 0
                 Assert-MockCalled Get-PackageProvider -Exactly 0
                 Assert-MockCalled Install-Module -Exactly 0
@@ -408,8 +704,9 @@ InModuleScope LabBuilder {
                 Assert-MockCalled Invoke-WebRequest -Exactly 1
                 Assert-MockCalled Expand-Archive -Exactly 1
                 Assert-MockCalled Rename-Item -Exactly 1
-                Assert-MockCalled Test-Path -Exactly 1
-                Assert-MockCalled Remove-Item -Exactly 0
+                Assert-MockCalled Test-Path -ParameterFilter { $Path -eq "$($ENV:ProgramFiles)\WindowsPowerShell\Modules\xNetworking" } -Exactly 1
+                Assert-MockCalled Test-Path -ParameterFilter { $Path -eq $Path -eq "$($ENV:ProgramFiles)\WindowsPowerShell\Modules\" } -Exactly 1
+                Assert-MockCalled Remove-Item -Exactly 1
                 Assert-MockCalled Get-PackageProvider -Exactly 0
                 Assert-MockCalled Install-Module -Exactly 0
             }
@@ -451,8 +748,9 @@ InModuleScope LabBuilder {
                 Assert-MockCalled Invoke-WebRequest -Exactly 1
                 Assert-MockCalled Expand-Archive -Exactly 1
                 Assert-MockCalled Rename-Item -Exactly 1
-                Assert-MockCalled Test-Path -Exactly 1
-                Assert-MockCalled Remove-Item -Exactly 0
+                Assert-MockCalled Test-Path -ParameterFilter { $Path -eq "$($ENV:ProgramFiles)\WindowsPowerShell\Modules\xNetworking" } -Exactly 1
+                Assert-MockCalled Test-Path -ParameterFilter { $Path -eq $Path -eq "$($ENV:ProgramFiles)\WindowsPowerShell\Modules\" } -Exactly 1
+                Assert-MockCalled Remove-Item -Exactly 1
                 Assert-MockCalled Get-PackageProvider -Exactly 0
                 Assert-MockCalled Install-Module -Exactly 0
             }
@@ -535,8 +833,9 @@ InModuleScope LabBuilder {
                 Assert-MockCalled Invoke-WebRequest -Exactly 1
                 Assert-MockCalled Expand-Archive -Exactly 1
                 Assert-MockCalled Rename-Item -Exactly 1
-                Assert-MockCalled Test-Path -Exactly 1
-                Assert-MockCalled Remove-Item -Exactly 0
+                Assert-MockCalled Test-Path -ParameterFilter { $Path -eq "$($ENV:ProgramFiles)\WindowsPowerShell\Modules\xNetworking" } -Exactly 1
+                Assert-MockCalled Test-Path -ParameterFilter { $Path -eq $Path -eq "$($ENV:ProgramFiles)\WindowsPowerShell\Modules\" } -Exactly 1
+                Assert-MockCalled Remove-Item -Exactly 1
                 Assert-MockCalled Get-PackageProvider -Exactly 0
                 Assert-MockCalled Install-Module -Exactly 0
             }
@@ -613,7 +912,7 @@ InModuleScope LabBuilder {
                     errorId = 'FileDownloadError'
                     errorCategory = 'InvalidOperation'
                     errorMessage = $($LocalizedData.FileDownloadError `
-                        -f 'Module Resource xNetworking',$URL,'Download Error')
+                        -f 'dev.zip',$URL,'Download Error')
                 }
                 $Exception = New-Exception @ExceptionParameters
 
@@ -629,7 +928,7 @@ InModuleScope LabBuilder {
                 Assert-MockCalled Invoke-WebRequest -Exactly 1
                 Assert-MockCalled Expand-Archive -Exactly 0
                 Assert-MockCalled Rename-Item -Exactly 0
-                Assert-MockCalled Test-Path -Exactly 0
+                Assert-MockCalled Test-Path -Exactly 1
                 Assert-MockCalled Remove-Item -Exactly 0
                 Assert-MockCalled Get-PackageProvider -Exactly 0
                 Assert-MockCalled Install-Module -Exactly 0
@@ -1500,9 +1799,9 @@ InModuleScope LabBuilder {
         [Array]$Templates = Get-LabVMTemplate -Config $Config
         [Array]$VMs = Get-LabVM -Config $Config -VMTemplates $Templates -Switches $Switches
         
-        Mock Create-LabVMPath
+        Mock Create-LabPath
         Mock Get-Module
-        Mock Get-ModulesInDSCConfig -MockWith { @('TestModule') }
+        Mock GetModulesInDSCConfig -MockWith { @('TestModule') }
 
         Context 'Empty DSC Config' {
             $VM = $VMS[0].Clone()
@@ -1511,7 +1810,7 @@ InModuleScope LabBuilder {
                 { Set-LabVMDSCMOFFile -Config $Config -VM $VM } | Should Not Throw
             }
             It 'Calls Mocked commands' {
-                Assert-MockCalled Create-LabVMPath -Exactly 1
+                Assert-MockCalled Create-LabPath -Exactly 1
                 Assert-MockCalled Get-Module -Exactly 0
             }
         }
@@ -1532,9 +1831,9 @@ InModuleScope LabBuilder {
                 { Set-LabVMDSCMOFFile -Config $Config -VM $VM } | Should Throw $Exception
             }
             It 'Calls Mocked commands' {
-                Assert-MockCalled Create-LabVMPath -Exactly 1
+                Assert-MockCalled Create-LabPath -Exactly 1
                 Assert-MockCalled Get-Module -Exactly 1
-                Assert-MockCalled Get-ModulesInDSCConfig -Exactly 1
+                Assert-MockCalled GetModulesInDSCConfig -Exactly 1
                 Assert-MockCalled Find-Module -Exactly 1
             }
         }
@@ -1556,9 +1855,9 @@ InModuleScope LabBuilder {
                 { Set-LabVMDSCMOFFile -Config $Config -VM $VM } | Should Throw $Exception
             }
             It 'Calls Mocked commands' {
-                Assert-MockCalled Create-LabVMPath -Exactly 1
+                Assert-MockCalled Create-LabPath -Exactly 1
                 Assert-MockCalled Get-Module -Exactly 1
-                Assert-MockCalled Get-ModulesInDSCConfig -Exactly 1
+                Assert-MockCalled GetModulesInDSCConfig -Exactly 1
                 Assert-MockCalled Find-Module -Exactly 1
             }
         }
@@ -1582,9 +1881,9 @@ InModuleScope LabBuilder {
                 { Set-LabVMDSCMOFFile -Config $Config -VM $VM } | Should Throw $Exception
             }
             It 'Calls Mocked commands' {
-                Assert-MockCalled Create-LabVMPath -Exactly 1
+                Assert-MockCalled Create-LabPath -Exactly 1
                 Assert-MockCalled Get-Module -Exactly 1
-                Assert-MockCalled Get-ModulesInDSCConfig -Exactly 1
+                Assert-MockCalled GetModulesInDSCConfig -Exactly 1
                 Assert-MockCalled Find-Module -Exactly 1
                 Assert-MockCalled Install-Module -Exactly 1
             }
@@ -1610,9 +1909,9 @@ InModuleScope LabBuilder {
                 { Set-LabVMDSCMOFFile -Config $Config -VM $VM } | Should Throw $Exception
             }
             It 'Calls Mocked commands' {
-                Assert-MockCalled Create-LabVMPath -Exactly 1
+                Assert-MockCalled Create-LabPath -Exactly 1
                 Assert-MockCalled Get-Module -Exactly 1
-                Assert-MockCalled Get-ModulesInDSCConfig -Exactly 1
+                Assert-MockCalled GetModulesInDSCConfig -Exactly 1
                 Assert-MockCalled Find-Module -Exactly 1
                 Assert-MockCalled Install-Module -Exactly 1
                 Assert-MockCalled Copy-Item -Exactly 1
@@ -1645,9 +1944,9 @@ InModuleScope LabBuilder {
                 { Set-LabVMDSCMOFFile -Config $Config -VM $VM } | Should Throw $Exception
             }
             It 'Calls Mocked commands' {
-                Assert-MockCalled Create-LabVMPath -Exactly 1
+                Assert-MockCalled Create-LabPath -Exactly 1
                 Assert-MockCalled Get-Module -Exactly 1
-                Assert-MockCalled Get-ModulesInDSCConfig -Exactly 1
+                Assert-MockCalled GetModulesInDSCConfig -Exactly 1
                 Assert-MockCalled Find-Module -Exactly 1
                 Assert-MockCalled Install-Module -Exactly 1
                 Assert-MockCalled Copy-Item -Exactly 1
@@ -1805,7 +2104,7 @@ InModuleScope LabBuilder {
 
         Context 'Valid configuration is passed' {	
             $Config = Get-LabConfiguration -Path $Global:TestConfigOKPath
-            New-Item -Path $Config.labbuilderconfig.settings.vmpath -ItemType Directory -Force -ErrorAction SilentlyContinue
+            New-Item -Path $Config.labbuilderconfig.settings.labpath -ItemType Directory -Force -ErrorAction SilentlyContinue
             New-Item -Path $Config.labbuilderconfig.settings.vhdparentpath -ItemType Directory -Force -ErrorAction SilentlyContinue
 
             [Array]$Templates = Get-LabVMTemplate -Config $Config
@@ -1824,7 +2123,7 @@ InModuleScope LabBuilder {
                 Assert-MockCalled Copy-Item -Exactly 1
             }
 
-            Remove-Item -Path $Config.labbuilderconfig.settings.vmpath -Recurse -Force -ErrorAction SilentlyContinue
+            Remove-Item -Path $Config.labbuilderconfig.settings.labpath -Recurse -Force -ErrorAction SilentlyContinue
             Remove-Item -Path $Config.labbuilderconfig.settings.vhdparentpath -Recurse -Force -ErrorAction SilentlyContinue
         }
     }
@@ -1990,7 +2289,7 @@ InModuleScope LabBuilder {
                     errorId = 'VMDataDiskSharedDifferencingError'
                     errorCategory = 'InvalidArgument'
                     errorMessage = $($LocalizedData.VMDataDiskSharedDifferencingError `
-                        -f $Config.labbuilderconfig.vms.vm.name,"$($Config.labbuilderconfig.settings.vmpath)\$($Config.labbuilderconfig.vms.vm.name)\Virtual Hard Disks\$($Config.labbuilderconfig.vms.vm.datavhds.datavhd[3].vhd)")
+                        -f $Config.labbuilderconfig.vms.vm.name,"$($Config.labbuilderconfig.settings.labpath)\$($Config.labbuilderconfig.vms.vm.name)\Virtual Hard Disks\$($Config.labbuilderconfig.vms.vm.datavhds.datavhd[3].vhd)")
                 }
                 $Exception = New-Exception @ExceptionParameters
                 { Get-LabVM -Config $Config -VMTemplates $Templates -Switches $Switches } | Should Throw $Exception
@@ -2006,7 +2305,7 @@ InModuleScope LabBuilder {
                     errorId = 'VMDataDiskUnknownTypeError'
                     errorCategory = 'InvalidArgument'
                     errorMessage = $($LocalizedData.VMDataDiskUnknownTypeError `
-                        -f $Config.labbuilderconfig.vms.vm.name,"$($Config.labbuilderconfig.settings.vmpath)\$($Config.labbuilderconfig.vms.vm.name)\Virtual Hard Disks\$($Config.labbuilderconfig.vms.vm.datavhds.datavhd[1].vhd)",'badtype')
+                        -f $Config.labbuilderconfig.vms.vm.name,"$($Config.labbuilderconfig.settings.labpath)\$($Config.labbuilderconfig.vms.vm.name)\Virtual Hard Disks\$($Config.labbuilderconfig.vms.vm.datavhds.datavhd[1].vhd)",'badtype')
                 }
                 $Exception = New-Exception @ExceptionParameters
                 { Get-LabVM -Config $Config -VMTemplates $Templates -Switches $Switches } | Should Throw $Exception
@@ -2022,12 +2321,109 @@ InModuleScope LabBuilder {
                     errorId = 'VMDataDiskSupportPRError'
                     errorCategory = 'InvalidArgument'
                     errorMessage = $($LocalizedData.VMDataDiskSupportPRError `
-                        -f $Config.labbuilderconfig.vms.vm.name,"$($Config.labbuilderconfig.settings.vmpath)\$($Config.labbuilderconfig.vms.vm.name)\Virtual Hard Disks\$($Config.labbuilderconfig.vms.vm.datavhds.datavhd[1].vhd)")
+                        -f $Config.labbuilderconfig.vms.vm.name,"$($Config.labbuilderconfig.settings.labpath)\$($Config.labbuilderconfig.vms.vm.name)\Virtual Hard Disks\$($Config.labbuilderconfig.vms.vm.datavhds.datavhd[1].vhd)")
                 }
                 $Exception = New-Exception @ExceptionParameters
                 { Get-LabVM -Config $Config -VMTemplates $Templates -Switches $Switches } | Should Throw $Exception
             }
         }        
+        Context "Configuration passed with VM Data Disk that has an invalid Partition Style." {
+            It 'Throw VMDataDiskPartitionStyleError Exception' {
+                $Config = Get-LabConfiguration -Path $Global:TestConfigOKPath
+                $Config.labbuilderconfig.vms.vm.datavhds.datavhd[1].PartitionStyle='Bad'
+                [Array]$Switches = Get-LabSwitch -Config $Config
+                [array]$Templates = Get-LabVMTemplate -Config $Config
+                $ExceptionParameters = @{
+                    errorId = 'VMDataDiskPartitionStyleError'
+                    errorCategory = 'InvalidArgument'
+                    errorMessage = $($LocalizedData.VMDataDiskPartitionStyleError `
+                        -f $Config.labbuilderconfig.vms.vm.name,"$($Config.labbuilderconfig.settings.labpath)\$($Config.labbuilderconfig.vms.vm.name)\Virtual Hard Disks\$($Config.labbuilderconfig.vms.vm.datavhds.datavhd[1].vhd)",'Bad')
+                }
+                $Exception = New-Exception @ExceptionParameters
+                { Get-LabVM -Config $Config -VMTemplates $Templates -Switches $Switches } | Should Throw $Exception
+            }
+        }
+        Context "Configuration passed with VM Data Disk that has an invalid File System." {
+            It 'Throw VMDataDiskFileSystemError Exception' {
+                $Config = Get-LabConfiguration -Path $Global:TestConfigOKPath
+                $Config.labbuilderconfig.vms.vm.datavhds.datavhd[1].FileSystem='Bad'
+                [Array]$Switches = Get-LabSwitch -Config $Config
+                [array]$Templates = Get-LabVMTemplate -Config $Config
+                $ExceptionParameters = @{
+                    errorId = 'VMDataDiskFileSystemError'
+                    errorCategory = 'InvalidArgument'
+                    errorMessage = $($LocalizedData.VMDataDiskFileSystemError `
+                        -f $Config.labbuilderconfig.vms.vm.name,"$($Config.labbuilderconfig.settings.labpath)\$($Config.labbuilderconfig.vms.vm.name)\Virtual Hard Disks\$($Config.labbuilderconfig.vms.vm.datavhds.datavhd[1].vhd)",'Bad')
+                }
+                $Exception = New-Exception @ExceptionParameters
+                { Get-LabVM -Config $Config -VMTemplates $Templates -Switches $Switches } | Should Throw $Exception
+            }
+        }
+        Context "Configuration passed with VM Data Disk that has a File System set but not a Partition Style." {
+            It 'Throw VMDataDiskPartitionStyleMissingError Exception' {
+                $Config = Get-LabConfiguration -Path $Global:TestConfigOKPath
+                $Config.labbuilderconfig.vms.vm.datavhds.datavhd[1].RemoveAttribute('partitionstyle')
+                [Array]$Switches = Get-LabSwitch -Config $Config
+                [array]$Templates = Get-LabVMTemplate -Config $Config
+                $ExceptionParameters = @{
+                    errorId = 'VMDataDiskPartitionStyleMissingError'
+                    errorCategory = 'InvalidArgument'
+                    errorMessage = $($LocalizedData.VMDataDiskPartitionStyleMissingError `
+                        -f $Config.labbuilderconfig.vms.vm.name,"$($Config.labbuilderconfig.settings.labpath)\$($Config.labbuilderconfig.vms.vm.name)\Virtual Hard Disks\$($Config.labbuilderconfig.vms.vm.datavhds.datavhd[1].vhd)")
+                }
+                $Exception = New-Exception @ExceptionParameters
+                { Get-LabVM -Config $Config -VMTemplates $Templates -Switches $Switches } | Should Throw $Exception
+            }
+        }
+        Context "Configuration passed with VM Data Disk that has a Partition Style set but not a File System." {
+            It 'Throw VMDataDiskFileSystemMissingError Exception' {
+                $Config = Get-LabConfiguration -Path $Global:TestConfigOKPath
+                $Config.labbuilderconfig.vms.vm.datavhds.datavhd[1].RemoveAttribute('filesystem')
+                [Array]$Switches = Get-LabSwitch -Config $Config
+                [array]$Templates = Get-LabVMTemplate -Config $Config
+                $ExceptionParameters = @{
+                    errorId = 'VMDataDiskFileSystemMissingError'
+                    errorCategory = 'InvalidArgument'
+                    errorMessage = $($LocalizedData.VMDataDiskFileSystemMissingError `
+                        -f $Config.labbuilderconfig.vms.vm.name,"$($Config.labbuilderconfig.settings.labpath)\$($Config.labbuilderconfig.vms.vm.name)\Virtual Hard Disks\$($Config.labbuilderconfig.vms.vm.datavhds.datavhd[1].vhd)")
+                }
+                $Exception = New-Exception @ExceptionParameters
+                { Get-LabVM -Config $Config -VMTemplates $Templates -Switches $Switches } | Should Throw $Exception
+            }
+        }
+        Context "Configuration passed with VM Data Disk that has a File System Label set but not a Partition Style or File System." {
+            It 'Throw VMDataDiskPartitionStyleMissingError Exception' {
+                $Config = Get-LabConfiguration -Path $Global:TestConfigOKPath
+                $Config.labbuilderconfig.vms.vm.datavhds.datavhd[2].RemoveAttribute('partitionstyle')
+                $Config.labbuilderconfig.vms.vm.datavhds.datavhd[2].RemoveAttribute('filesystem')
+                [Array]$Switches = Get-LabSwitch -Config $Config
+                [array]$Templates = Get-LabVMTemplate -Config $Config
+                $ExceptionParameters = @{
+                    errorId = 'VMDataDiskPartitionStyleMissingError'
+                    errorCategory = 'InvalidArgument'
+                    errorMessage = $($LocalizedData.VMDataDiskPartitionStyleMissingError `
+                        -f $Config.labbuilderconfig.vms.vm.name,"$($Config.labbuilderconfig.settings.labpath)\$($Config.labbuilderconfig.vms.vm.name)\Virtual Hard Disks\$($Config.labbuilderconfig.vms.vm.datavhds.datavhd[2].vhd)")
+                }
+                $Exception = New-Exception @ExceptionParameters
+                { Get-LabVM -Config $Config -VMTemplates $Templates -Switches $Switches } | Should Throw $Exception
+            }
+        }
+        Context "Configuration passed with VM Data Disk that exists with CopyFolders set to a folder that does not exist." {
+            It 'Throw VMDataDiskCopyFolderMissingError Exception' {
+                $Config = Get-LabConfiguration -Path $Global:TestConfigOKPath
+                $Config.labbuilderconfig.vms.vm.datavhds.datavhd[0].CopyFolders='c:\doesnotexist'
+                [Array]$Switches = Get-LabSwitch -Config $Config
+                [array]$Templates = Get-LabVMTemplate -Config $Config
+                $ExceptionParameters = @{
+                    errorId = 'VMDataDiskCopyFolderMissingError'
+                    errorCategory = 'InvalidArgument'
+                    errorMessage = $($LocalizedData.VMDataDiskCopyFolderMissingError `
+                        -f $Config.labbuilderconfig.vms.vm.name,"$($Config.labbuilderconfig.settings.labpath)\$($Config.labbuilderconfig.vms.vm.name)\Virtual Hard Disks\$($Config.labbuilderconfig.vms.vm.datavhds.datavhd[0].vhd)",'c:\doesnotexist')
+                }
+                $Exception = New-Exception @ExceptionParameters
+                { Get-LabVM -Config $Config -VMTemplates $Templates -Switches $Switches } | Should Throw $Exception
+            }
+        }
         Context "Configuration passed with VM Data Disk that does not exist but Type missing." {
             It 'Throw VMDataDiskCantBeCreatedError Exception' {
                 $Config = Get-LabConfiguration -Path $Global:TestConfigOKPath
@@ -2038,7 +2434,7 @@ InModuleScope LabBuilder {
                     errorId = 'VMDataDiskCantBeCreatedError'
                     errorCategory = 'InvalidArgument'
                     errorMessage = $($LocalizedData.VMDataDiskCantBeCreatedError `
-                        -f $Config.labbuilderconfig.vms.vm.name,"$($Config.labbuilderconfig.settings.vmpath)\$($Config.labbuilderconfig.vms.vm.name)\Virtual Hard Disks\$($Config.labbuilderconfig.vms.vm.datavhds.datavhd[1].vhd)")
+                        -f $Config.labbuilderconfig.vms.vm.name,"$($Config.labbuilderconfig.settings.labpath)\$($Config.labbuilderconfig.vms.vm.name)\Virtual Hard Disks\$($Config.labbuilderconfig.vms.vm.datavhds.datavhd[1].vhd)")
                 }
                 $Exception = New-Exception @ExceptionParameters
                 { Get-LabVM -Config $Config -VMTemplates $Templates -Switches $Switches } | Should Throw $Exception
@@ -2054,7 +2450,7 @@ InModuleScope LabBuilder {
                     errorId = 'VMDataDiskCantBeCreatedError'
                     errorCategory = 'InvalidArgument'
                     errorMessage = $($LocalizedData.VMDataDiskCantBeCreatedError `
-                        -f $Config.labbuilderconfig.vms.vm.name,"$($Config.labbuilderconfig.settings.vmpath)\$($Config.labbuilderconfig.vms.vm.name)\Virtual Hard Disks\$($Config.labbuilderconfig.vms.vm.datavhds.datavhd[1].vhd)")
+                        -f $Config.labbuilderconfig.vms.vm.name,"$($Config.labbuilderconfig.settings.labpath)\$($Config.labbuilderconfig.vms.vm.name)\Virtual Hard Disks\$($Config.labbuilderconfig.vms.vm.datavhds.datavhd[1].vhd)")
                 }
                 $Exception = New-Exception @ExceptionParameters
                 { Get-LabVM -Config $Config -VMTemplates $Templates -Switches $Switches } | Should Throw $Exception
@@ -2070,7 +2466,7 @@ InModuleScope LabBuilder {
                     errorId = 'VMDataDiskCantBeCreatedError'
                     errorCategory = 'InvalidArgument'
                     errorMessage = $($LocalizedData.VMDataDiskCantBeCreatedError `
-                        -f $Config.labbuilderconfig.vms.vm.name,"$($Config.labbuilderconfig.settings.vmpath)\$($Config.labbuilderconfig.vms.vm.name)\Virtual Hard Disks\$($Config.labbuilderconfig.vms.vm.datavhds.datavhd[0].vhd)")
+                        -f $Config.labbuilderconfig.vms.vm.name,"$($Config.labbuilderconfig.settings.labpath)\$($Config.labbuilderconfig.vms.vm.name)\Virtual Hard Disks\$($Config.labbuilderconfig.vms.vm.datavhds.datavhd[0].vhd)")
                 }
                 $Exception = New-Exception @ExceptionParameters
                 { Get-LabVM -Config $Config -VMTemplates $Templates -Switches $Switches } | Should Throw $Exception
@@ -2086,7 +2482,7 @@ InModuleScope LabBuilder {
                     errorId = 'VMDataDiskSourceVHDIfMoveError'
                     errorCategory = 'InvalidArgument'
                     errorMessage = $($LocalizedData.VMDataDiskSourceVHDIfMoveError `
-                        -f $Config.labbuilderconfig.vms.vm.name,"$($Config.labbuilderconfig.settings.vmpath)\$($Config.labbuilderconfig.vms.vm.name)\Virtual Hard Disks\$($Config.labbuilderconfig.vms.vm.datavhds.datavhd[4].vhd)")
+                        -f $Config.labbuilderconfig.vms.vm.name,"$($Config.labbuilderconfig.settings.labpath)\$($Config.labbuilderconfig.vms.vm.name)\Virtual Hard Disks\$($Config.labbuilderconfig.vms.vm.datavhds.datavhd[4].vhd)")
                 }
                 $Exception = New-Exception @ExceptionParameters
                 { Get-LabVM -Config $Config -VMTemplates $Templates -Switches $Switches } | Should Throw $Exception
@@ -2205,7 +2601,7 @@ InModuleScope LabBuilder {
             [Array]$Templates = Get-LabVMTemplate -Config $Config
             [Array]$VMs = Get-LabVM -Config $Config -VMTemplates $Templates -Switches $Switches
             It 'Returns Template Object containing VHD with correct rooted path' {
-                $VMs[0].DataVhds[0].vhd | Should Be "$($Config.labbuilderconfig.settings.vmpath)\$($Config.labbuilderconfig.vms.vm.name)\Virtual Hard Disks\DataDisk.vhdx"
+                $VMs[0].DataVhds[0].vhd | Should Be "$($Config.labbuilderconfig.settings.labpath)\$($Config.labbuilderconfig.vms.vm.name)\Virtual Hard Disks\DataDisk.vhdx"
             }
         }
         Context 'Valid configuration is passed with VM Data Disk with rooted Parent VHD path.' {
@@ -2310,7 +2706,7 @@ InModuleScope LabBuilder {
 
         Context 'Valid configuration is passed' {	
             $Config = Get-LabConfiguration -Path $Global:TestConfigOKPath
-            New-Item -Path $Config.labbuilderconfig.settings.vmpath -ItemType Directory -Force -ErrorAction SilentlyContinue
+            New-Item -Path $Config.labbuilderconfig.settings.labpath -ItemType Directory -Force -ErrorAction SilentlyContinue
             New-Item -Path $Config.labbuilderconfig.settings.vhdparentpath -ItemType Directory -Force -ErrorAction SilentlyContinue
 
             [Array]$Templates = Get-LabVMTemplate -Config $Config
@@ -2330,7 +2726,7 @@ InModuleScope LabBuilder {
                 Assert-MockCalled Start-LabVMDSC -Exactly 1
             }
             
-            Remove-Item -Path $Config.labbuilderconfig.settings.vmpath -Recurse -Force -ErrorAction SilentlyContinue
+            Remove-Item -Path $Config.labbuilderconfig.settings.labpath -Recurse -Force -ErrorAction SilentlyContinue
             Remove-Item -Path $Config.labbuilderconfig.settings.vhdparentpath -Recurse -Force -ErrorAction SilentlyContinue
         }
     }
@@ -2349,6 +2745,11 @@ InModuleScope LabBuilder {
         Mock Add-VMHardDiskDrive
         Mock Test-Path -ParameterFilter { $Path -eq 'DoesNotExist.Vhdx' } -MockWith { $False }        
         Mock Test-Path -ParameterFilter { $Path -eq 'DoesExist.Vhdx' } -MockWith { $True }        
+        Mock Initialize-VHD
+        Mock Mount-VHD
+        Mock Dismount-VHD
+        Mock Copy-Item
+        Mock New-Item
         #endregion
 
         # The same VM will be used for all tests, but a different
@@ -2371,6 +2772,10 @@ InModuleScope LabBuilder {
                 Assert-MockCalled New-VHD -Exactly 0
                 Assert-MockCalled Get-VMHardDiskDrive -Exactly 0
                 Assert-MockCalled Add-VMHardDiskDrive -Exactly 0
+                Assert-MockCalled Initialize-VHD -Exactly 0
+                Assert-MockCalled Mount-VHD -Exactly 0
+                Assert-MockCalled Dismount-VHD -Exactly 0
+                Assert-MockCalled New-Item -Exactly 0
             }
         }
         Context 'Valid configuration is passed with a DataVHD that exists but has different type' {
@@ -2401,6 +2806,10 @@ InModuleScope LabBuilder {
                 Assert-MockCalled New-VHD -Exactly 0
                 Assert-MockCalled Get-VMHardDiskDrive -Exactly 0
                 Assert-MockCalled Add-VMHardDiskDrive -Exactly 0
+                Assert-MockCalled Initialize-VHD -Exactly 0
+                Assert-MockCalled Mount-VHD -Exactly 0
+                Assert-MockCalled Dismount-VHD -Exactly 0
+                Assert-MockCalled New-Item -Exactly 0
             }
         }
         Context 'Valid configuration is passed with a DataVHD that exists but has smaller size' {
@@ -2431,6 +2840,10 @@ InModuleScope LabBuilder {
                 Assert-MockCalled New-VHD -Exactly 0
                 Assert-MockCalled Get-VMHardDiskDrive -Exactly 0
                 Assert-MockCalled Add-VMHardDiskDrive -Exactly 0
+                Assert-MockCalled Initialize-VHD -Exactly 0
+                Assert-MockCalled Mount-VHD -Exactly 0
+                Assert-MockCalled Dismount-VHD -Exactly 0
+                Assert-MockCalled New-Item -Exactly 0
             }
         }
         Context 'Valid configuration is passed with a DataVHD that exists but has larger size' {
@@ -2454,12 +2867,14 @@ InModuleScope LabBuilder {
                 Assert-MockCalled New-VHD -Exactly 0
                 Assert-MockCalled Get-VMHardDiskDrive -Exactly 1
                 Assert-MockCalled Add-VMHardDiskDrive -Exactly 1
+                Assert-MockCalled Initialize-VHD -Exactly 0
+                Assert-MockCalled Mount-VHD -Exactly 0
+                Assert-MockCalled Dismount-VHD -Exactly 0
+                Assert-MockCalled New-Item -Exactly 0
             }
         }
-        
         Mock Get-VHD
-        
-        Context 'Valid configuration is passed with a SourceVHD and DataVHD that do not exist' {
+        Context 'Valid configuration is passed with a SourceVHD and DataVHD that does not exist' {
             $VMs[0].DataVHDs = @( @{
                 Vhd = 'DoesNotExist.vhdx'
                 SourceVhd = 'DoesNotExist.Vhdx'
@@ -2482,9 +2897,13 @@ InModuleScope LabBuilder {
                 Assert-MockCalled New-VHD -Exactly 0
                 Assert-MockCalled Get-VMHardDiskDrive -Exactly 0
                 Assert-MockCalled Add-VMHardDiskDrive -Exactly 0
+                Assert-MockCalled Initialize-VHD -Exactly 0
+                Assert-MockCalled Mount-VHD -Exactly 0
+                Assert-MockCalled Dismount-VHD -Exactly 0
+                Assert-MockCalled New-Item -Exactly 0
             }
         }
-        Context 'Valid configuration is passed with a SourceVHD that exists and DataVHD that do not exist' {
+        Context 'Valid configuration is passed with a SourceVHD that exists and DataVHD that does not exist' {
             $VMs[0].DataVHDs = @( @{
                 Vhd = 'DoesNotExist.vhdx'
                 SourceVhd = 'DoesExist.Vhdx'
@@ -2500,6 +2919,10 @@ InModuleScope LabBuilder {
                 Assert-MockCalled New-VHD -Exactly 0
                 Assert-MockCalled Get-VMHardDiskDrive -Exactly 1
                 Assert-MockCalled Add-VMHardDiskDrive -Exactly 1
+                Assert-MockCalled Initialize-VHD -Exactly 0
+                Assert-MockCalled Mount-VHD -Exactly 0
+                Assert-MockCalled Dismount-VHD -Exactly 0
+                Assert-MockCalled New-Item -Exactly 0
             }
         }
         Context 'Valid configuration is passed with a SourceVHD that exists and DataVHD that do not exist and MoveSourceVHD set' {
@@ -2519,6 +2942,10 @@ InModuleScope LabBuilder {
                 Assert-MockCalled New-VHD -Exactly 0
                 Assert-MockCalled Get-VMHardDiskDrive -Exactly 1
                 Assert-MockCalled Add-VMHardDiskDrive -Exactly 1
+                Assert-MockCalled Initialize-VHD -Exactly 0
+                Assert-MockCalled Mount-VHD -Exactly 0
+                Assert-MockCalled Dismount-VHD -Exactly 0
+                Assert-MockCalled New-Item -Exactly 0
             }
         }
         Context 'Valid configuration is passed with a 10GB Fixed DataVHD that does not exist' {
@@ -2538,6 +2965,10 @@ InModuleScope LabBuilder {
                 Assert-MockCalled New-VHD -Exactly 1
                 Assert-MockCalled Get-VMHardDiskDrive -Exactly 1
                 Assert-MockCalled Add-VMHardDiskDrive -Exactly 1
+                Assert-MockCalled Initialize-VHD -Exactly 0
+                Assert-MockCalled Mount-VHD -Exactly 0
+                Assert-MockCalled Dismount-VHD -Exactly 0
+                Assert-MockCalled New-Item -Exactly 0
             }
         }
         Context 'Valid configuration is passed with a 10GB Dynamic DataVHD that does not exist' {
@@ -2557,6 +2988,85 @@ InModuleScope LabBuilder {
                 Assert-MockCalled New-VHD -Exactly 1
                 Assert-MockCalled Get-VMHardDiskDrive -Exactly 1
                 Assert-MockCalled Add-VMHardDiskDrive -Exactly 1
+                Assert-MockCalled Initialize-VHD -Exactly 0
+                Assert-MockCalled Mount-VHD -Exactly 0
+                Assert-MockCalled Dismount-VHD -Exactly 0
+                Assert-MockCalled New-Item -Exactly 0
+            }
+        }
+        Context 'Valid configuration is passed with a 10GB Dynamic DataVHD that does not exist and PartitionStyle and FileSystem is set' {
+            $VMs[0].DataVHDs = @( @{
+                Vhd = 'DoesNotExist.vhdx'
+                Type = 'Dynamic'
+                Size = 10GB
+                PartitionStyle = 'GPT'
+                FileSystem = 'NTFS'
+            } )
+            It 'Does not throw an Exception' {
+                { Update-LabVMDataDisk -Config $Config -VM $VMs[0] } | Should Not Throw
+            }
+            It 'Calls Mocked commands' {
+                Assert-MockCalled Get-VHD -Exactly 0
+                Assert-MockCalled Resize-VHD -Exactly 0
+                Assert-MockCalled Move-Item -Exactly 0
+                Assert-MockCalled Copy-Item -Exactly 0
+                Assert-MockCalled New-VHD -Exactly 1
+                Assert-MockCalled Get-VMHardDiskDrive -Exactly 1
+                Assert-MockCalled Add-VMHardDiskDrive -Exactly 1
+                Assert-MockCalled Initialize-VHD -Exactly 1
+                Assert-MockCalled Mount-VHD -Exactly 0
+                Assert-MockCalled Dismount-VHD -Exactly 1
+                Assert-MockCalled New-Item -Exactly 0
+            }
+        }
+        Context 'Valid configuration is passed with a 10GB Dynamic DataVHD that does not exist and PartitionStyle, FileSystem and CopyFolders is set' {
+            $VMs[0].DataVHDs = @( @{
+                Vhd = 'DoesNotExist.vhdx'
+                Type = 'Dynamic'
+                Size = 10GB
+                PartitionStyle = 'GPT'
+                FileSystem = 'NTFS'
+                CopyFolders = "$Global:TestConfigPath\ExpectedContent"
+            } )
+            It 'Does not throw an Exception' {
+                { Update-LabVMDataDisk -Config $Config -VM $VMs[0] } | Should Not Throw
+            }
+            It 'Calls Mocked commands' {
+                Assert-MockCalled Get-VHD -Exactly 0
+                Assert-MockCalled Resize-VHD -Exactly 0
+                Assert-MockCalled Move-Item -Exactly 0
+                Assert-MockCalled Copy-Item -Exactly 1
+                Assert-MockCalled New-VHD -Exactly 1
+                Assert-MockCalled Get-VMHardDiskDrive -Exactly 1
+                Assert-MockCalled Add-VMHardDiskDrive -Exactly 1
+                Assert-MockCalled Initialize-VHD -Exactly 1
+                Assert-MockCalled Mount-VHD -Exactly 0
+                Assert-MockCalled Dismount-VHD -Exactly 1
+                Assert-MockCalled New-Item -Exactly 1
+            }
+        }
+        Context 'Valid configuration is passed with a 10GB Dynamic DataVHD that does not exist and CopyFolders is set' {
+            $VMs[0].DataVHDs = @( @{
+                Vhd = 'DoesNotExist.vhdx'
+                Type = 'Dynamic'
+                Size = 10GB
+                CopyFolders = "$Global:TestConfigPath\ExpectedContent"
+            } )
+            It 'Does not throw an Exception' {
+                { Update-LabVMDataDisk -Config $Config -VM $VMs[0] } | Should Not Throw
+            }
+            It 'Calls Mocked commands' {
+                Assert-MockCalled Get-VHD -Exactly 0
+                Assert-MockCalled Resize-VHD -Exactly 0
+                Assert-MockCalled Move-Item -Exactly 0
+                Assert-MockCalled Copy-Item -Exactly 1
+                Assert-MockCalled New-VHD -Exactly 1
+                Assert-MockCalled Get-VMHardDiskDrive -Exactly 1
+                Assert-MockCalled Add-VMHardDiskDrive -Exactly 1
+                Assert-MockCalled Initialize-VHD -Exactly 1
+                Assert-MockCalled Mount-VHD -Exactly 0
+                Assert-MockCalled Dismount-VHD -Exactly 1
+                Assert-MockCalled New-Item -Exactly 1
             }
         }
         Context 'Valid configuration is passed with a 10GB Differencing DataVHD that does not exist where ParentVHD is not set' {
@@ -2583,6 +3093,10 @@ InModuleScope LabBuilder {
                 Assert-MockCalled New-VHD -Exactly 0
                 Assert-MockCalled Get-VMHardDiskDrive -Exactly 0
                 Assert-MockCalled Add-VMHardDiskDrive -Exactly 0
+                Assert-MockCalled Initialize-VHD -Exactly 0
+                Assert-MockCalled Mount-VHD -Exactly 0
+                Assert-MockCalled Dismount-VHD -Exactly 0
+                Assert-MockCalled New-Item -Exactly 0
             }
         }
         Context 'Valid configuration is passed with a 10GB Differencing DataVHD that does not exist where ParentVHD does not exist' {
@@ -2610,6 +3124,10 @@ InModuleScope LabBuilder {
                 Assert-MockCalled New-VHD -Exactly 0
                 Assert-MockCalled Get-VMHardDiskDrive -Exactly 0
                 Assert-MockCalled Add-VMHardDiskDrive -Exactly 0
+                Assert-MockCalled Initialize-VHD -Exactly 0
+                Assert-MockCalled Mount-VHD -Exactly 0
+                Assert-MockCalled Dismount-VHD -Exactly 0
+                Assert-MockCalled New-Item -Exactly 0
             }
         }
         Context 'Valid configuration is passed with a 10GB Differencing DataVHD that does not exist' {
@@ -2630,6 +3148,10 @@ InModuleScope LabBuilder {
                 Assert-MockCalled New-VHD -Exactly 1
                 Assert-MockCalled Get-VMHardDiskDrive -Exactly 1
                 Assert-MockCalled Add-VMHardDiskDrive -Exactly 1
+                Assert-MockCalled Initialize-VHD -Exactly 0
+                Assert-MockCalled Mount-VHD -Exactly 0
+                Assert-MockCalled Dismount-VHD -Exactly 0
+                Assert-MockCalled New-Item -Exactly 0
             }
         }
         Context 'Valid configuration is passed with a DataVHD that does not exist and an unknown Type' {
@@ -2656,14 +3178,16 @@ InModuleScope LabBuilder {
                 Assert-MockCalled New-VHD -Exactly 0
                 Assert-MockCalled Get-VMHardDiskDrive -Exactly 0
                 Assert-MockCalled Add-VMHardDiskDrive -Exactly 0
+                Assert-MockCalled Initialize-VHD -Exactly 0
+                Assert-MockCalled Mount-VHD -Exactly 0
+                Assert-MockCalled Dismount-VHD -Exactly 0
+                Assert-MockCalled New-Item -Exactly 0
             }
         }
-
         Mock Get-VHD -MockWith { @{
             VhdType =  'Fixed'
             Size = 10GB
         } }
-
         Context 'Valid configuration is passed with a 10GB Fixed DataVHD that exists and is already added to VM' {
             Mock Get-VMHardDiskDrive -MockWith { @{ Path = 'DoesExist.vhdx' } }
             $VMs[0].DataVHDs = @( @{
@@ -2682,6 +3206,10 @@ InModuleScope LabBuilder {
                 Assert-MockCalled New-VHD -Exactly 0
                 Assert-MockCalled Get-VMHardDiskDrive -Exactly 1
                 Assert-MockCalled Add-VMHardDiskDrive -Exactly 0
+                Assert-MockCalled Initialize-VHD -Exactly 0
+                Assert-MockCalled Mount-VHD -Exactly 0
+                Assert-MockCalled Dismount-VHD -Exactly 0
+                Assert-MockCalled New-Item -Exactly 0
             }
         }
     }
@@ -2776,7 +3304,7 @@ InModuleScope LabBuilder {
 
         Context 'Valid configuration is passed' {	
             $Config = Get-LabConfiguration -Path $Global:TestConfigOKPath
-            New-Item -Path $Config.labbuilderconfig.settings.vmpath -ItemType Directory -Force -ErrorAction SilentlyContinue
+            New-Item -Path $Config.labbuilderconfig.settings.labpath -ItemType Directory -Force -ErrorAction SilentlyContinue
             New-Item -Path $Config.labbuilderconfig.settings.vhdparentpath -ItemType Directory -Force -ErrorAction SilentlyContinue
 
             [Array]$Templates = Get-LabVMTemplate -Config $Config
@@ -2801,7 +3329,7 @@ InModuleScope LabBuilder {
                 Assert-MockCalled Start-LabVMDSC -Exactly 1
             }
             
-            Remove-Item -Path $Config.labbuilderconfig.settings.vmpath -Recurse -Force -ErrorAction SilentlyContinue
+            Remove-Item -Path $Config.labbuilderconfig.settings.labpath -Recurse -Force -ErrorAction SilentlyContinue
             Remove-Item -Path $Config.labbuilderconfig.settings.vhdparentpath -Recurse -Force -ErrorAction SilentlyContinue
         }
     }
