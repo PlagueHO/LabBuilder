@@ -3637,6 +3637,43 @@ function Initialize-LabVMImage {
 			-Path $MountPoint
     } # Foreach
 
+    # If this is a Nano Server, add any packages specifed in the VM
+    if ($VM.OSType -eq 'Nano')
+    {
+        # Now specify the Nano Server packages to add.
+        if (-not [String]::IsNullOrWhitespace($VM.Packages))
+        {
+            [String] $VHDFolder = Split-Path `
+                -Path $VMBootDiskPath `
+                -Parent
+            [String] $PackagesFolder = Join-Path `
+                -Path $VHDFolder `
+                -ChildPath 'NanoServerPackages'
+            $NanoPackages = @($VM.Packages -split ',')
+
+            foreach ($Package in $Script:NanoServerPackageList) 
+            {
+                if ($Package.Name -in $NanoPackages) 
+                {
+                    # Add the package
+                    $PackagePath = Join-Path `
+                        -Path $PackagesFolder `
+                        -ChildPath $Package.Filename
+                    Add-WindowsPackage `
+                        -PackagePath $PackagePath `
+                        -Path $MountPoint
+                    # Add the localization package
+                    $PackagePath = Join-Path `
+                        -Path $PackagesFolder `
+                        -ChildPath "en-us\$($Package.Filename)"
+                    Add-WindowsPackage `
+                        -PackagePath $PackagePath `
+                        -Path $MountPoint
+                } # if
+            } # foreach
+        } # if        
+    } # if
+    
     # Create the scripts folder where setup scripts will be put
     $null = New-Item `
 		-Path "$MountPoint\Windows\Setup\Scripts" `
