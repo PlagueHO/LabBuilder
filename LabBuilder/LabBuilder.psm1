@@ -2003,8 +2003,8 @@ function Get-LabVMTemplate {
                 sourcevhd = $VHDFilepath
                 templatevhd = "$VHDParentPath\$VHDFilename"
             }
-        } # Foreach
-    } # If
+        } # foreach
+    } # if
     
     # Read the list of templates from the configuration file
     $Templates = $Config.labbuilderconfig.SelectNodes('templates').template
@@ -2021,7 +2021,7 @@ function Get-LabVMTemplate {
                 errorMessage = $($LocalizedData.EmptyTemplateNameError)
             }
             New-LabException @ExceptionParameters
-        } # If
+        } # if
         [String] $SourceVHD = $Template.SourceVHD
         if ($SourceVHD)
         {
@@ -2043,8 +2043,8 @@ function Get-LabVMTemplate {
                         -f $Template.Name,$SourceVHD)
                 }
                 New-LabException @ExceptionParameters
-            } # If
-        } # If
+            } # if
+        } # if
         
         # Get the Template Default Startup Bytes
         [Int64] $MemoryStartupBytes = 0
@@ -2059,137 +2059,121 @@ function Get-LabVMTemplate {
         {
             if ($VMTemplate.Name -eq $Template.Name)
             {
-                # The template already exists - so don't add it again, but update the VHD path
-                # if provided
-                if ($Template.VHD)
-                {
-                    $VMTemplate.VHD = $Template.VHD
-                    $VMTemplate.TemplateVHD = `
-                        "$VHDParentPath\$([System.IO.Path]::GetFileName($Template.VHD))"
-                } # If
-                # Check that we do end up with a VHD filename in the template
-                if (-not $VMTemplate.VHD)
-                {
-                    $ExceptionParameters = @{
-                        errorId = 'EmptyTemplateVHDError'
-                        errorCategory = 'InvalidArgument'
-                        errorMessage = $($LocalizedData.EmptyTemplateVHDError `
-                            -f $VMTemplate.Name)
-                    }
-                    New-LabException @ExceptionParameters
-                } # If
-                
-                if ($SourceVHD)
-                {
-                    $VMTemplate.SourceVHD = $SourceVHD
-                }
-                $VMTemplate.InstallISO = $Template.InstallISO
-                $VMTemplate.Edition = $Template.Edition
-                $VMTemplate.AllowCreate = $Template.AllowCreate
-                # Write any template specific default VM attributes
-                if ($MemoryStartupBytes)
-                {
-                    $VMTemplate.MemoryStartupBytes = $MemoryStartupBytes
-                } # If
-                if ($Template.DynamicMemoryEnabled)
-                {
-                    $VMTemplate.DynamicMemoryEnabled = $Template.DynamicMemoryEnabled
-                }
-                if ($Template.ProcessorCount)
-                {
-                    $VMTemplate.ProcessorCount = $Template.ProcessorCount
-                } # If
-                if ($Template.ExposeVirtualizationExtensions)
-                {
-                    $VMTemplate.ExposeVirtualizationExtensions = $Template.ExposeVirtualizationExtensions
-                }
-                if ($Template.IntegrationServices)
-                {
-                    $VMTemplate.IntegrationServices = $Template.IntegrationServices
-                }
-                else
-                {
-                    $VMTemplate.IntegrationServices = $null
-                }
-                if ($Template.AdministratorPassword)
-                {
-                    $VMTemplate.AdministratorPassword = $Template.AdministratorPassword
-                } # If
-                if ($Template.ProductKey)
-                {
-                    $VMTemplate.ProductKey = $Template.ProductKey
-                } # If
-                if ($Template.TimeZone)
-                {
-                    $VMTemplate.TimeZone = $Template.TimeZone
-                } # If
-                if ($Template.OSType)
-                {
-                    $VMTemplate.OSType = $Template.OSType
-                }
-                Else
-                {
-                    $VMTemplate.OSType = 'Server'
-                }
-
+                # The template already exists - so don't add it again,
                 $Found = $True
                 Break
             } # If
         } # Foreach
+
         if (-not $Found)
         {
-            # Check that we do end up with a VHD filename in the template
-            if (-not $Template.VHD)
-            {
-                $ExceptionParameters = @{
-                    errorId = 'EmptyTemplateVHDError'
-                    errorCategory = 'InvalidArgument'
-                    errorMessage = $($LocalizedData.EmptyTemplateVHDError `
-                        -f $Template.Name)
-                }
-                New-LabException @ExceptionParameters
-            } # If
-
             # The template wasn't found in the list of templates so add it
-            $VMTemplates += @{
+            $VMTemplate = @{
                 name = $Template.Name;
-                vhd = $Template.VHD;
-                sourcevhd = $SourceVHD;
-                templatevhd = "$VHDParentPath\$([System.IO.Path]::GetFileName($Template.VHD))";
-                edition = $Template.Edition;
-                allowcreate = $Template.AllowCreate;
-                memorystartupbytes = $MemoryStartupBytes;
-                dynamicmemoryenabled = if ($Template.DynamicMemoryEnabled)
-                    {
-                        $Template.DynamicMemoryEnabled
-                    }
-                    else
-                    {
-                        'Y'
-                    };
-                processorcount = $Template.ProcessorCount;
-                exposevirtualizationextensions = if ($Template.ExposeVirtualizationExtensions)
-                    {
-						$Template.ExposeVirtualizationExtensions
-					}
-                    else
-                    {
-                        $null
-                    };
-                administratorpassword = $Template.AdministratorPassword;
-                productkey = $Template.ProductKey;
-                timezone = $Template.TimeZone;
-                ostype = if ($Template.OSType)
-                    {
-                        $Template.OSType
-                    }
-                    else
-                    {
-                        'Server'
-                    };
-                 integrationservices = $Template.IntegrationServices;
             }
+            $VMTemplates += $VMTemplate
+        } # if
+        
+        # Populate the properties of the new/existing VM Template
+        
+        # Update the VHD path if provided
+        if ($Template.VHD)
+        {
+            $VMTemplate.VHD = $Template.VHD
+            $VMTemplate.TemplateVHD = Join-Path `
+                -Path $VHDParentPath `
+                -ChildPath ([System.IO.Path]::GetFileName($Template.VHD))
+        } # if
+
+        # Check that we do end up with a VHD filename in the template
+        if (-not $VMTemplate.VHD)
+        {
+            $ExceptionParameters = @{
+                errorId = 'EmptyTemplateVHDError'
+                errorCategory = 'InvalidArgument'
+                errorMessage = $($LocalizedData.EmptyTemplateVHDError `
+                    -f $Template.Name)
+            }
+            New-LabException @ExceptionParameters
         } # If
+
+        # Check that we do end up with a VHD filename in the template
+        if (-not $VMTemplate.VHD)
+        {
+            $ExceptionParameters = @{
+                errorId = 'EmptyTemplateVHDError'
+                errorCategory = 'InvalidArgument'
+                errorMessage = $($LocalizedData.EmptyTemplateVHDError `
+                    -f $VMTemplate.Name)
+            }
+            New-LabException @ExceptionParameters
+        } # if                
+        if ($SourceVHD)
+        {
+            $VMTemplate.SourceVHD = $SourceVHD
+        } # if
+        $VMTemplate.InstallISO = $Template.InstallISO
+        $VMTemplate.Edition = $Template.Edition
+        $VMTemplate.AllowCreate = $Template.AllowCreate
+        # Write any template specific default VM attributes
+        if ($MemoryStartupBytes)
+        {
+            $VMTemplate.MemoryStartupBytes = $MemoryStartupBytes
+        } # if
+        if ($Template.DynamicMemoryEnabled)
+        {
+            $VMTemplate.DynamicMemoryEnabled = $Template.DynamicMemoryEnabled
+        }
+        elseif (-not $VMTemplate.DynamicMemoryEnabled)
+        {
+            $VMTemplate.DynamicMemoryEnabled = 'Y'
+        }
+         # if
+        if ($Template.ProcessorCount)
+        {
+            $VMTemplate.ProcessorCount = $Template.ProcessorCount
+        } # if
+        if ($Template.ExposeVirtualizationExtensions)
+        {
+            $VMTemplate.ExposeVirtualizationExtensions = $Template.ExposeVirtualizationExtensions
+        } 
+        # if
+        if ($Template.AdministratorPassword)
+        {
+            $VMTemplate.AdministratorPassword = $Template.AdministratorPassword
+        } # if
+        if ($Template.ProductKey)
+        {
+            $VMTemplate.ProductKey = $Template.ProductKey
+        } # if
+        if ($Template.TimeZone)
+        {
+            $VMTemplate.TimeZone = $Template.TimeZone
+        } # if
+        if ($Template.OSType)
+        {
+            $VMTemplate.OSType = $Template.OSType
+        }
+        elseif (-not $VMTemplate.OSType)
+        {
+            $VMTemplate.OSType = 'Server'
+        } # if
+        if ($Template.IntegrationServices)
+        {
+            $VMTemplate.IntegrationServices = $Template.IntegrationServices
+        }
+        else
+        {
+            $VMTemplate.IntegrationServices = $null
+        } # if
+        if ($Template.Packages)
+        {
+            $VMTemplate.Packages = $Template.Packages
+        }
+        else
+        {
+            $VMTemplate.Packages = $null
+        } # if
     } # Foreach
     Return $VMTemplates
 } # Get-LabVMTemplate
@@ -3613,16 +3597,19 @@ function Initialize-LabVMImage {
     Write-Verbose -Message $($LocalizedData.MountingVMBootDiskMessage `
         -f $VM.Name,$VMBootDiskPath)
       
+    # Create a mount point for mounting the Boot VHD
     [String] $MountPoint = Join-Path `
         -Path $VMLabBuilderFiles `
         -ChildPath 'Mount'
 
-    if (! (Test-Path -Path $MountPoint -PathType Container))
+    if (-not (Test-Path -Path $MountPoint -PathType Container))
     {
         $null = New-Item `
             -Path $MountPoint `
             -ItemType Directory
     }
+
+    # Mount the VHD to the Mount point
     $null = Mount-WindowsImage `
         -ImagePath $VMBootDiskPath `
         -Path $MountPoint `
@@ -3640,10 +3627,10 @@ function Initialize-LabVMImage {
         {
             Write-Verbose -Message $($LocalizedData.DownloadingVMBootDiskFileMessage `
                 -f $VM.Name,'MSU',$URL)
-            Invoke-WebRequest `
-				-Uri $URL `
-				-OutFile $MSUPath
-        } # If
+            DownloadAndUnzipFile `
+                -URL $URL `
+                -DestinationPath $MSUPath
+        } # if
 
         # Once downloaded apply the update
         Write-Verbose -Message $($LocalizedData.ApplyingVMBootDiskFileMessage `
@@ -3651,8 +3638,45 @@ function Initialize-LabVMImage {
         $null = Add-WindowsPackage `
 			-PackagePath $MSUPath `
 			-Path $MountPoint
-    } # Foreach
+    } # foreach
 
+    # If this is a Nano Server, add any packages specifed in the VM
+    if ($VM.OSType -eq 'Nano')
+    {
+        # Now specify the Nano Server packages to add.
+        if (-not [String]::IsNullOrWhitespace($VM.Packages))
+        {
+            [String] $VHDFolder = Split-Path `
+                -Path $VMBootDiskPath `
+                -Parent
+            [String] $PackagesFolder = Join-Path `
+                -Path $VHDFolder `
+                -ChildPath 'NanoServerPackages'
+            $NanoPackages = @($VM.Packages -split ',')
+
+            foreach ($Package in $Script:NanoServerPackageList) 
+            {
+                if ($Package.Name -in $NanoPackages) 
+                {
+                    # Add the package
+                    $PackagePath = Join-Path `
+                        -Path $PackagesFolder `
+                        -ChildPath $Package.Filename
+                    Add-WindowsPackage `
+                        -PackagePath $PackagePath `
+                        -Path $MountPoint
+                    # Add the localization package
+                    $PackagePath = Join-Path `
+                        -Path $PackagesFolder `
+                        -ChildPath "en-us\$($Package.Filename)"
+                    Add-WindowsPackage `
+                        -PackagePath $PackagePath `
+                        -Path $MountPoint
+                } # if
+            } # foreach
+        } # if        
+    } # if
+    
     # Create the scripts folder where setup scripts will be put
     $null = New-Item `
 		-Path "$MountPoint\Windows\Setup\Scripts" `
@@ -3662,7 +3686,7 @@ function Initialize-LabVMImage {
     Write-Verbose -Message $($LocalizedData.ApplyingVMBootDiskFileMessage `
         -f $VM.Name,'Unattend','Unattend.xml')
 
-    if (! (Test-Path -Path "$MountPoint\Windows\Panther" -PathType Container))
+    if (-not (Test-Path -Path "$MountPoint\Windows\Panther" -PathType Container))
     {
         Write-Verbose -Message $($LocalizedData.CreatingVMBootDiskPantherFolderMessage `
             -f $VM.Name)
@@ -3670,7 +3694,7 @@ function Initialize-LabVMImage {
         $null = New-Item `
             -Path "$MountPoint\Windows\Panther" `
             -ItemType Directory
-    }
+    } # if
     $null = Copy-Item `
         -Path (Join-Path -Path $VMLabBuilderFiles -ChildPath 'Unattend.xml') `
         -Destination "$MountPoint\Windows\Panther\Unattend.xml" `
@@ -3691,7 +3715,6 @@ function Initialize-LabVMImage {
         -Path (Join-Path -Path $VMLabBuilderFiles -ChildPath 'SetupComplete.ps1') `
         -Destination "$MountPoint\Windows\Setup\Scripts\SetupComplete.ps1" `
         -Force
-
 
     # Apply the Certificate Generator script
     $CertGenFilename = Split-Path -Path $Script:SupportGertGenPath -Leaf
@@ -4317,112 +4340,123 @@ function Get-LabVM {
             # Correct any LFs into CRLFs to ensure the new line format is the same when
             # pulled from the XML.
             $DSCParameters = ($VM.DSC.Parameters -replace "`r`n","`n") -replace "`n","`r`n"
-        } # If
+        } # if
 
         # Load the DSC Parameters
         [Boolean] $DSCLogging = $False
         if ($VM.DSC.Logging -eq 'Y')
         {
             $DSCLogging = $True
-        } # If
+        } # if
 
         # Get the Memory Startup Bytes (from the template or VM)
         [Int64] $MemoryStartupBytes = 1GB
-        if ($VMTemplate.memorystartupbytes)
-        {
-            $MemoryStartupBytes = $VMTemplate.memorystartupbytes
-        } # If
         if ($VM.memorystartupbytes)
         {
             $MemoryStartupBytes = (Invoke-Expression $VM.memorystartupbytes)
-        } # If
+        }
+        elseif ($VMTemplate.memorystartupbytes)
+        {
+            $MemoryStartupBytes = $VMTemplate.memorystartupbytes
+        } # if
 
         # Get the Dynamic Memory Enabled flag
         [String] $DynamicMemoryEnabled = ''
-        if ($VMTemplate.DynamicMemoryEnabled)
-        {
-            $DynamicMemoryEnabled = $VMTemplate.DynamicMemoryEnabled
-        }
         if ($VM.DynamicMemoryEnabled)
         {
             $DynamicMemoryEnabled = $VM.DynamicMemoryEnabled
-        } # If        
+        }        
+        elseif ($VMTemplate.DynamicMemoryEnabled)
+        {
+            $DynamicMemoryEnabled = $VMTemplate.DynamicMemoryEnabled
+        } #if
         
         # Get the Memory Startup Bytes (from the template or VM)
         [Int] $ProcessorCount = 1
-        if ($VMTemplate.processorcount) 
-		{
-            $ProcessorCount = $VMTemplate.processorcount
-        } # If
         if ($VM.processorcount) 
 		{
             $ProcessorCount = (Invoke-Expression $VM.processorcount)
-        } # If
+        }
+        elseif ($VMTemplate.processorcount) 
+		{
+            $ProcessorCount = $VMTemplate.processorcount
+        } # if
 
         # Get the Expose Virtualization Extensions flag
         [String] $ExposeVirtualizationExtensions = $null
-        if ($VMTemplate.ExposeVirtualizationExtensions)
-			{
-			$ExposeVirtualizationExtensions=$VMTemplate.ExposeVirtualizationExtensions
-			} # If
-
         if ($VM.ExposeVirtualizationExtensions)
         {
             $ExposeVirtualizationExtensions = $VM.ExposeVirtualizationExtensions
-        } # If
+        }
+        elseif ($VMTemplate.ExposeVirtualizationExtensions)
+		{
+            $ExposeVirtualizationExtensions=$VMTemplate.ExposeVirtualizationExtensions
+        } # if
         
         # Get the Integration Services flags
-        if ($VMTemplate.IntegrationServices -ne $null)
-        {
-            $IntegrationServices = $VMTemplate.IntegrationServices
-        }
         if ($VM.IntegrationServices -ne $null)
         {
             $IntegrationServices = $VM.IntegrationServices
-        } # If
+        } 
+        elseif ($VMTemplate.IntegrationServices -ne $null)
+        {
+            $IntegrationServices = $VMTemplate.IntegrationServices
+        } # if
         
         # Get the Administrator password (from the template or VM)
         [String] $AdministratorPassword = ''
-        if ($VMTemplate.administratorpassword) 
-		{
-            $AdministratorPassword = $VMTemplate.administratorpassword
-        } # If
         if ($VM.administratorpassword) 
 		{
             $AdministratorPassword = $VM.administratorpassword
-        } # If
+        }
+        elseif ($VMTemplate.administratorpassword) 
+		{
+            $AdministratorPassword = $VMTemplate.administratorpassword
+        } # if
 
         # Get the Product Key (from the template or VM)
         [String] $ProductKey = ''
-        if ($VMTemplate.productkey) 
-		{
-            $ProductKey = $VMTemplate.productkey
-        } # If
         if ($VM.productkey) 
 		{
             $ProductKey = $VM.productkey
+        }
+        elseif ($VMTemplate.productkey) 
+		{
+            $ProductKey = $VMTemplate.productkey
         } # If
 
         # Get the Timezone (from the template or VM)
         [String] $Timezone = 'Pacific Standard Time'
-        if ($VMTemplate.timezone) 
-		{
-            $Timezone = $VMTemplate.timezone
-        } # If
         if ($VM.timezone) 
 		{
             $Timezone = $VM.timezone
+        }
+        elseif ($VMTemplate.timezone) 
+		{
+            $Timezone = $VMTemplate.timezone
         } # If
 
         # Get the OS Type
-        if ($VMTemplate.ostype) 
+        [String] $OSType = 'Server'
+        if ($VM.ostype) 
+		{
+            $OSType = $VM.ostype
+        }
+        elseif ($VMTemplate.ostype) 
 		{
             $OSType = $VMTemplate.ostype
-        } 
-		Else 
+        } # if 
+
+        # Get the Packages
+        [String] $Packages = $null
+        if ($VM.packages) 
 		{
-            $OSType = 'Server'
-        } # If
+            $Packages = $VM.packages
+        }
+        elseif ($VMTemplate.packages) 
+		{
+            $Packages = $VMTemplate.packages
+        } # if 
 
         # Do we have any MSU files that are listed as needing to be applied to the OS before
         # first boot up?
@@ -4455,6 +4489,7 @@ function Get-LabVM {
             DSCParameters = $DSCParameters;
             DSCLogging = $DSCLogging;
             OSType = $OSType;
+            Packages = $Packages;
             InstallMSU = $InstallMSU;
         }
     } # Foreach        

@@ -81,11 +81,18 @@ To use this Module you will require on your Lab Host:
  3. To use labs that contain Nested Hyper-V hosts only Windows 10 built 10586 or later and Windows Server 2016 TP3 or later are supported.
  4. Copies of the Windows installation media for any Operating Systems that will be used in your Labs.
     * Note: Many Lab configuration files can contain a URL where the relevant trial media can be downloaded from.
-  
+
+
+Configuration XML
+-----------------
+
+
+
 Versions
 --------
 ### 0.3.3.0
 * Changed Get-LabSwitch Unit tests to use PesterTestConfig.OK.xml.
+* Added support for configuring Nano Server packages for each VM.
 
 ### 0.3.2.0
 * Added Initialize-VHD function.
