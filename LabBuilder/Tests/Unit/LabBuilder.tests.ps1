@@ -628,7 +628,6 @@ InModuleScope LabBuilder {
         $Config = Get-LabConfiguration -Path $Global:TestConfigOKPath
 
         Mock Download-LabResources
-        Mock Set-VMHost
         Mock Get-VMSwitch
         Mock New-VMSwitch
         Mock Get-VMNetworkAdapter -MockWith { @{ Name = 'LabBuilder Management PesterTestConfig' } }
@@ -641,7 +640,6 @@ InModuleScope LabBuilder {
             }
             It 'Calls appropriate mocks' {
                 Assert-MockCalled Download-LabResources -Exactly 1
-                Assert-MockCalled Set-VMHost -Exactly 1
                 Assert-MockCalled Get-VMSwitch -Exactly 1
                 Assert-MockCalled New-VMSwitch -Exactly 1
                 Assert-MockCalled Get-VMNetworkAdapter -Exactly 1
@@ -1583,14 +1581,14 @@ InModuleScope LabBuilder {
                 { Initialize-LabVMTemplateVHD -Config $Config } | Should Not Throw
             }
             It 'Calls expected mocks commands' {
-                Assert-MockCalled Mount-DiskImage -Exactly 3
-                Assert-MockCalled Get-Diskimage -Exactly 3
-                Assert-MockCalled Get-Volume -Exactly 3
-                Assert-MockCalled Dismount-DiskImage -Exactly 3
-                Assert-MockCalled Get-WindowsImage -Exactly 1
-                Assert-MockCalled Copy-Item -Exactly 1
-                Assert-MockCalled Rename-Item -Exactly 1
-                Assert-MockCalled Convert-WindowsImage -Exactly 3
+                Assert-MockCalled Mount-DiskImage -Exactly 2
+                Assert-MockCalled Get-Diskimage -Exactly 2
+                Assert-MockCalled Get-Volume -Exactly 2
+                Assert-MockCalled Dismount-DiskImage -Exactly 2
+                Assert-MockCalled Get-WindowsImage -Exactly 0
+                Assert-MockCalled Copy-Item -Exactly 0
+                Assert-MockCalled Rename-Item -Exactly 0
+                Assert-MockCalled Convert-WindowsImage -Exactly 2
             }            
         }
     }
@@ -1718,6 +1716,7 @@ InModuleScope LabBuilder {
     Describe 'Initialize-LabVMTemplate' {
 
         $Config = Get-LabConfiguration -Path $Global:TestConfigOKPath
+        $TemplateCount = $Config.labbuilderconfig.templates.template.count
 
         Mock Copy-Item
         Mock Set-ItemProperty -ParameterFilter { ($Name -eq 'IsReadOnly') -and ($Value -eq $True) }
@@ -1753,10 +1752,10 @@ InModuleScope LabBuilder {
                 { Initialize-LabVMTemplate -Config $Config -VMTemplates $VMTemplates } | Should Not Throw
             }
             It 'Calls Mocked commands' {
-                Assert-MockCalled Copy-Item -Exactly 3
-                Assert-MockCalled Set-ItemProperty -Exactly 3 -ParameterFilter { ($Name -eq 'IsReadOnly') -and ($Value -eq $True) }
-                Assert-MockCalled Set-ItemProperty -Exactly 3 -ParameterFilter { ($Name -eq 'IsReadOnly') -and ($Value -eq $False) }
-                Assert-MockCalled Optimize-VHD -Exactly 3
+                Assert-MockCalled Copy-Item -Exactly $TemplateCount
+                Assert-MockCalled Set-ItemProperty -Exactly $TemplateCount -ParameterFilter { ($Name -eq 'IsReadOnly') -and ($Value -eq $True) }
+                Assert-MockCalled Set-ItemProperty -Exactly $TemplateCount -ParameterFilter { ($Name -eq 'IsReadOnly') -and ($Value -eq $False) }
+                Assert-MockCalled Optimize-VHD -Exactly $TemplateCount
             }
         }
         Context 'Valid configuration is passed without VMTemplates or VMTemplateVHDs' {	
@@ -1764,10 +1763,10 @@ InModuleScope LabBuilder {
                 { Initialize-LabVMTemplate -Config $Config } | Should Not Throw
             }
             It 'Calls Mocked commands' {
-                Assert-MockCalled Copy-Item -Exactly 3
-                Assert-MockCalled Set-ItemProperty -Exactly 3 -ParameterFilter { ($Name -eq 'IsReadOnly') -and ($Value -eq $True) }
-                Assert-MockCalled Set-ItemProperty -Exactly 3 -ParameterFilter { ($Name -eq 'IsReadOnly') -and ($Value -eq $False) }
-                Assert-MockCalled Optimize-VHD -Exactly 3
+                Assert-MockCalled Copy-Item -Exactly $TemplateCount
+                Assert-MockCalled Set-ItemProperty -Exactly $TemplateCount -ParameterFilter { ($Name -eq 'IsReadOnly') -and ($Value -eq $True) }
+                Assert-MockCalled Set-ItemProperty -Exactly $TemplateCount -ParameterFilter { ($Name -eq 'IsReadOnly') -and ($Value -eq $False) }
+                Assert-MockCalled Optimize-VHD -Exactly $TemplateCount
             }
         }
     }
@@ -1777,6 +1776,7 @@ InModuleScope LabBuilder {
     Describe 'Remove-LabVMTemplate' {
 
         $Config = Get-LabConfiguration -Path $Global:TestConfigOKPath
+        $TemplateCount = $Config.labbuilderconfig.templates.template.count
 
         Mock Set-ItemProperty -ParameterFilter { ($Name -eq 'IsReadOnly') -and ($Value -eq $False) }
         Mock Remove-Item
@@ -1790,8 +1790,8 @@ InModuleScope LabBuilder {
                 { Remove-LabVMTemplate -Config $Config -VMTemplates $Templates } | Should Not Throw
             }
             It 'Calls Mocked commands' {
-                Assert-MockCalled Set-ItemProperty -Exactly 3 -ParameterFilter { ($Name -eq 'IsReadOnly') -and ($Value -eq $False) }
-                Assert-MockCalled Remove-Item -Exactly 3
+                Assert-MockCalled Set-ItemProperty -Exactly $TemplateCount -ParameterFilter { ($Name -eq 'IsReadOnly') -and ($Value -eq $False) }
+                Assert-MockCalled Remove-Item -Exactly $TemplateCount
             }
         }
     }
@@ -2039,18 +2039,14 @@ InModuleScope LabBuilder {
 
     Describe 'Initialize-LabVMDSC' {
 
-        Mock Get-VM
-
         $Config = Get-LabConfiguration -Path $Global:TestConfigOKPath
-        [Array]$Switches = Get-LabSwitch -Config $Config
-        [Array]$Templates = Get-LabVMTemplate -Config $Config
-        [Array]$VMs = Get-LabVM -Config $Config -VMTemplates $Templates -Switches $Switches
+        [array] $VMs = Get-LabVM -Config $Config
 
         Mock Set-LabVMDSCMOFFile
         Mock Set-LabVMDSCStartFile
 
         Context 'Valid Configuration Passed' {
-            $VM = $VMS[0].Clone()
+            $VM = $VMs[0].Clone()
             
             It 'Does Not Throw Exception' {
                 { Initialize-LabVMDSC -Config $Config -VM $VM } | Should Not Throw
@@ -2099,45 +2095,73 @@ InModuleScope LabBuilder {
 
 
     Describe 'Set-LabVMInitializationFiles' -Tags 'Incomplete' {
-
-        #region Mocks
-        Mock Get-VM
-        Mock Mount-WindowsImage
-        Mock Dismount-WindowsImage
-        Mock Invoke-WebRequest
-        Mock Add-WindowsPackage
-        Mock Set-Content
-        Mock Copy-Item
-        #endregion
-
-        Context 'Valid configuration is passed' {	
-            $Config = Get-LabConfiguration -Path $Global:TestConfigOKPath
-            New-Item -Path $Config.labbuilderconfig.settings.labpath -ItemType Directory -Force -ErrorAction SilentlyContinue
-            New-Item -Path $Config.labbuilderconfig.settings.vhdparentpath -ItemType Directory -Force -ErrorAction SilentlyContinue
-
-            [Array]$Templates = Get-LabVMTemplate -Config $Config
-            [Array]$Switches = Get-LabSwitch -Config $Config
-            [Array]$VMs = Get-LabVM -Config $Config -VMTemplates $Templates -Switches $Switches
-                    
-            It 'Returns True' {
-                Set-LabVMInitializationFiles -Config $Config -VM $VMs[0] -VMBootDiskPath 'c:\Dummy\' | Should Be $True
-            }
-            It 'Calls Mocked commands' {
-                Assert-MockCalled Mount-WindowsImage -Exactly 1
-                Assert-MockCalled Dismount-WindowsImage -Exactly 1
-                Assert-MockCalled Invoke-WebRequest -Exactly 1
-                Assert-MockCalled Add-WindowsPackage -Exactly 1
-                Assert-MockCalled Set-Content -Exactly 6
-                Assert-MockCalled Copy-Item -Exactly 1
-            }
-
-            Remove-Item -Path $Config.labbuilderconfig.settings.labpath -Recurse -Force -ErrorAction SilentlyContinue
-            Remove-Item -Path $Config.labbuilderconfig.settings.vhdparentpath -Recurse -Force -ErrorAction SilentlyContinue
-        }
     }
 
 
 
+    Describe 'Initialize-LabVMImage' {
+        $Config = Get-LabConfiguration -Path $Global:TestConfigOKPath
+        [array] $VMs = Get-LabVM -Config $Config
+
+        Mock New-Item
+        Mock Mount-WindowsImage
+        Mock DownloadAndUnzipFile
+        Mock Dismount-WindowsImage
+        Mock Add-WindowsPackage
+        Mock Copy-Item
+        Mock Remove-Item
+
+        Context 'Valid Configuration Passed with no install MSU' {	
+            It 'Does Not Throw Exception' {
+                $VM = $VMs[0].Clone()
+                $VM.InstallMSU = ''
+                { Initialize-LabVMImage -Config $Config -VM $VM -VMBootDiskPath 'c:\Dummy\' } | Should Not Throw
+            }
+            It 'Calls Mocked commands' {
+                Assert-MockCalled New-Item -Exactly 3
+                Assert-MockCalled Mount-WindowsImage -Exactly 1
+                Assert-MockCalled DownloadAndUnzipFile -Exactly 0
+                Assert-MockCalled Dismount-WindowsImage -Exactly 1
+                Assert-MockCalled Add-WindowsPackage -Exactly 1
+                Assert-MockCalled Copy-Item -Exactly 4
+                Assert-MockCalled Remove-Item -Exactly 1
+            }
+        }
+        Context 'Valid Configuration Passed with Nano Server VM' {	
+            It 'Does Not Throw Exception' {
+                $VM = $VMs[0].Clone()
+                $VM.OSType = 'Nano'
+                { Initialize-LabVMImage -Config $Config -VM $VM -VMBootDiskPath 'c:\Dummy\' } | Should Not Throw
+            }
+            It 'Calls Mocked commands' {
+                Assert-MockCalled New-Item -Exactly 3
+                Assert-MockCalled Mount-WindowsImage -Exactly 1
+                Assert-MockCalled DownloadAndUnzipFile -Exactly 1
+                Assert-MockCalled Dismount-WindowsImage -Exactly 1
+                Assert-MockCalled Add-WindowsPackage -Exactly 3
+                Assert-MockCalled Copy-Item -Exactly 4
+                Assert-MockCalled Remove-Item -Exactly 1
+            }
+        }
+        Context 'Valid Configuration Passed' {	
+            It 'Does Not Throw Exception' {
+                $VM = $VMs[0].Clone()
+                { Initialize-LabVMImage -Config $Config -VM $VM -VMBootDiskPath 'c:\Dummy\' } | Should Not Throw
+            }
+            It 'Calls Mocked commands' {
+                Assert-MockCalled New-Item -Exactly 3
+                Assert-MockCalled Mount-WindowsImage -Exactly 1
+                Assert-MockCalled DownloadAndUnzipFile -Exactly 1
+                Assert-MockCalled Dismount-WindowsImage -Exactly 1
+                Assert-MockCalled Add-WindowsPackage -Exactly 1
+                Assert-MockCalled Copy-Item -Exactly 4
+                Assert-MockCalled Remove-Item -Exactly 1
+            }
+        }
+    }
+    
+    
+    
     Describe 'Get-LabVM' {
 
         #region mocks

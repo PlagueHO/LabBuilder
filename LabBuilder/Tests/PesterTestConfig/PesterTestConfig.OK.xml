@@ -8,8 +8,6 @@
             email="tester@pester.local"
             labpath="C:\Pester Lab"
             vhdparentpath="C:\Pester Lab\Virtual Hard Disk Templates"
-            macaddressminimum="001122334400"
-            macaddressmaximum="0011223344FF" 
             dsclibrarypath="DSCLibrary" />
 
   <resources>
@@ -141,6 +139,17 @@
               timezone="Pacific Standard Time"
               ostype="Client" 
               integrationservices="Guest Service Interface,Heartbeat,Key-Value Pair Exchange,Shutdown,Time Synchronization,VSS" />
+    <template name="Pester Nano Server"
+              vhd="Nano Server 2016 TP4 Basic.vhdx"
+              sourcevhd="VhdFiles\Nano Server 2016 TP4 Basic.vhdx"
+              allowcreate="Y"
+              memorystartupbytes="1GB"
+              processorcount="1"
+              administratorpassword="None"
+              timezone="Pacific Standard Time"
+              ostype="Nano" 
+              integrationservices="Guest Service Interface,Heartbeat,Key-Value Pair Exchange,Shutdown,Time Synchronization,VSS" 
+              packages="Storage"/>
   </templates>
 
   <vms>
@@ -156,7 +165,8 @@
         timezone="Pacific Standard Time"
         unattendfile=""
         setupcomplete="" 
-        integrationservices="Guest Service Interface,Heartbeat,Key-Value Pair Exchange,Shutdown,Time Synchronization,VSS" >
+        integrationservices="Guest Service Interface,Heartbeat,Key-Value Pair Exchange,Shutdown,Time Synchronization,VSS" 
+        packages="Containers" >
       <datavhds>
         <datavhd vhd="DataDiskCopy.vhdx" sourcevhd="VhdFiles\DataDisk.vhdx" copyfolders="isofiles" />
         <datavhd vhd="DataDiskFixed.vhdx" type="fixed" size="10GB" supportpr="N" partitionstyle="MBR" filesystem="NTFS" />
