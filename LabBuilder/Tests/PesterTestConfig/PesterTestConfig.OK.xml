@@ -129,7 +129,6 @@
               ostype="Server" 
               integrationservices="Guest Service Interface,Heartbeat,Key-Value Pair Exchange,Shutdown,Time Synchronization,VSS" />
     <template name="Pester Windows 10 Enterprise"
-              vhd="Windows 10 Enterprise.vhdx"
               templatevhd="Windows 10 Enterprise"
               allowcreate="Y"
               memorystartupbytes="2GB"
@@ -140,7 +139,7 @@
               ostype="Client" 
               integrationservices="Guest Service Interface,Heartbeat,Key-Value Pair Exchange,Shutdown,Time Synchronization,VSS" />
     <template name="Pester Nano Server"
-              vhd="Nano Server 2016 TP4 Basic.vhdx"
+              vhd="MyNanoServerVHD.vhdx"
               sourcevhd="VhdFiles\Nano Server 2016 TP4 Basic.vhdx"
               allowcreate="Y"
               memorystartupbytes="1GB"

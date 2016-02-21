@@ -1613,21 +1613,6 @@ InModuleScope LabBuilder {
                 { Get-LabVMTemplate -Config $Config } | Should Throw $Exception
             }
         }
-        Context 'Configuration passed with template VHD empty.' {
-            It 'Throws a EmptyParentVHDError Exception' {
-                $Config = Get-LabConfiguration -Path $Global:TestConfigOKPath
-                $Config.labbuilderconfig.templates.template[0].RemoveAttribute('vhd')
-                $ExceptionParameters = @{
-                    errorId = 'EmptyParentVHDError'
-                    errorCategory = 'InvalidArgument'
-                    errorMessage = $($LocalizedData.EmptyParentVHDError `
-                        -f $Config.labbuilderconfig.templates.template[0].name)
-                }
-                $Exception = New-Exception @ExceptionParameters
-
-                { Get-LabVMTemplate -Config $Config } | Should Throw $Exception
-            }
-        }
         Context 'Configuration passed with template with Source VHD set to relative non-existent file.' {
             It 'Throws a TemplateSourceVHDNotFoundError Exception' {
                 $Config = Get-LabConfiguration -Path $Global:TestConfigOKPath
@@ -1661,7 +1646,7 @@ InModuleScope LabBuilder {
         Context 'Configuration passed with template with Source VHD and Template VHD.' {
             It 'Throws a TemplateSourceVHDAndTemplateVHDConflictError Exception' {
                 $Config = Get-LabConfiguration -Path $Global:TestConfigOKPath
-                $Config.labbuilderconfig.templates.template[0].SetAttribute('TemplateVHD','Windows Server 2012 R2 Datacenter FULL')
+                $Config.labbuilderconfig.templates.template[0].SetAttribute('templatevhd','Windows Server 2012 R2 Datacenter FULL')
                 $ExceptionParameters = @{
                     errorId = 'TemplateSourceVHDAndTemplateVHDConflictError'
                     errorCategory = 'InvalidArgument'
@@ -1673,6 +1658,22 @@ InModuleScope LabBuilder {
                 { Get-LabVMTemplate -Config $Config } | Should Throw $Exception
             }
         }
+        Context 'Configuration passed with template with no Source VHD and no Template VHD.' {
+            It 'Throws a TemplateSourceVHDandTemplateVHDMissingError Exception' {
+                $Config = Get-LabConfiguration -Path $Global:TestConfigOKPath
+                $Config.labbuilderconfig.templates.template[0].RemoveAttribute('sourcevhd')
+                $ExceptionParameters = @{
+                    errorId = 'TemplateSourceVHDandTemplateVHDMissingError'
+                    errorCategory = 'InvalidArgument'
+                    errorMessage = $($LocalizedData.TemplateSourceVHDandTemplateVHDMissingError `
+                        -f $Config.labbuilderconfig.templates.template[0].name)
+                }
+                $Exception = New-Exception @ExceptionParameters
+
+                { Get-LabVMTemplate -Config $Config } | Should Throw $Exception
+            }
+        }
+
         Context 'Configuration passed with template with Template VHD that does not exist.' {
             It 'Throws a TemplateSourceVHDAndTemplateVHDConflictError Exception' {
                 $Config = Get-LabConfiguration -Path $Global:TestConfigOKPath

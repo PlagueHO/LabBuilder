@@ -2010,7 +2010,8 @@ function Get-LabVMTemplate {
         # It can't be template because if the name attrib/node is missing the name property on
         # the XML object defaults to the name of the parent. So we can't easily tell if no name
         # was specified or if they actually specified 'template' as the name.
-        if ($Template.Name -eq 'template')
+        $TemplateName = $Template.Name
+        if ($TemplateName -eq 'template')
         {
             $ExceptionParameters = @{
                 errorId = 'EmptyTemplateNameError'
@@ -2019,126 +2020,143 @@ function Get-LabVMTemplate {
             }
             New-LabException @ExceptionParameters
         } # if
-        [String] $SourceVHD = $Template.SourceVHD
-        [String] $TemplateVHD = $Template.TemplateVHD
-
-        # Throw an error if both a TemplateVHD and SourceVHD
-        # are provided
-        if ($TemplateVHD -and $SourceVHD)
-        {
-            $ExceptionParameters = @{
-                errorId = 'TemplateSourceVHDAndTemplateVHDConflictError'
-                errorCategory = 'InvalidArgument'
-                errorMessage = $($LocalizedData.TemplateSourceVHDAndTemplateVHDConflictError `
-                    -f $Template.Name)
-            }
-            New-LabException @ExceptionParameters            
-        }
         
-        if ($TemplateVHD)
-        {
-            # A Template VHD was provided so look it up.
-            $VMTemplateVHD = `
-                $VMTemplateVHDs | Where-Object -Property Name -EQ $TemplateVHD
-            if ($VMTemplateVHD)
-            {
-                # The Template VHD was found
-                $SourceVHD = $VMTemplateVHD.VHDPath
-            }
-            else
-            {
-                # The Template VHD could not be found
-                $ExceptionParameters = @{
-                    errorId = 'TemplateTemplateVHDNotFoundError'
-                    errorCategory = 'InvalidArgument'
-                    errorMessage = $($LocalizedData.TemplateTemplateVHDNotFoundError `
-                        -f $Template.Name,$TemplateVHD)
-                }
-                New-LabException @ExceptionParameters
-            }
-        }
-        elseif ($SourceVHD)
-        {
-            # A Source VHD was provided so use that.
-            # If this is a relative path, add it to the config path
-            if (-not [System.IO.Path]::IsPathRooted($SourceVHD))
-            {
-                $SourceVHD = Join-Path `
-                    -Path $Config.labbuilderconfig.settings.fullconfigpath `
-                    -ChildPath $SourceVHD
-            }
-
-            # A Source VHD file was specified - does it exist?
-            if (-not (Test-Path -Path $SourceVHD))
-            {
-                $ExceptionParameters = @{
-                    errorId = 'TemplateSourceVHDNotFoundError'
-                    errorCategory = 'InvalidArgument'
-                    errorMessage = $($LocalizedData.TemplateSourceVHDNotFoundError `
-                        -f $Template.Name,$SourceVHD)
-                }
-                New-LabException @ExceptionParameters
-            } # if
-        } # if
-        
-        # Get the Template Default Startup Bytes
-        [Int64] $MemoryStartupBytes = 0
-        if ($Template.MemoryStartupBytes)
-        {
-            $MemoryStartupBytes = (Invoke-Expression $Template.MemoryStartupBytes)
-        } # if
-
         # Does the template already exist in the list?
         [Boolean] $Found = $False
         foreach ($VMTemplate in $VMTemplates)
         {
-            if ($VMTemplate.Name -eq $Template.Name)
+            if ($VMTemplate.Name -eq $TemplateName)
             {
                 # The template already exists - so don't add it again,
                 $Found = $True
                 Break
             } # If
         } # Foreach
-
         if (-not $Found)
         {
             # The template wasn't found in the list of templates so add it
             $VMTemplate = @{
-                name = $Template.Name;
+                name = $TemplateName;
             }
             $VMTemplates += $VMTemplate
         } # if
         
-        # Populate the properties of the new/existing VM Template
-        
-        # Update the VHD path if provided
-        if ($Template.VHD)
-        {
-            $VMTemplate.vhd = $Template.VHD
-            $VMTemplate.parentvhd = Join-Path `
-                -Path $VHDParentPath `
-                -ChildPath ([System.IO.Path]::GetFileName($Template.VHD))
-        } # if
+        # Determine the Source VHD, Template VHD and VHD
+        [String] $SourceVHD = $Template.SourceVHD
+        [String] $TemplateVHD = $Template.TemplateVHD
 
-        # Check that we do end up with a VHD filename in the template
-        if (-not $VMTemplate.VHD)
+        # Throw an error if both a TemplateVHD and SourceVHD are provided
+        if ($TemplateVHD -and $SourceVHD)
         {
             $ExceptionParameters = @{
-                errorId = 'EmptyParentVHDError'
+                errorId = 'TemplateSourceVHDAndTemplateVHDConflictError'
                 errorCategory = 'InvalidArgument'
-                errorMessage = $($LocalizedData.EmptyParentVHDError `
-                    -f $Template.Name)
+                errorMessage = $($LocalizedData.TemplateSourceVHDAndTemplateVHDConflictError `
+                    -f $TemplateName)
+            }
+            New-LabException @ExceptionParameters            
+        } # if
+        
+        if ($TemplateVHD)
+        {
+            # A TemplateVHD was provided so look it up.
+            $VMTemplateVHD = `
+                $VMTemplateVHDs | Where-Object -Property Name -EQ $TemplateVHD
+            if ($VMTemplateVHD)
+            {
+                # The TemplateVHD was found
+                $VMTemplate.sourcevhd = $VMTemplateVHD.VHDPath
+
+                # If a VHD filename wasn't specified in the TemplateVHD
+                # Just use the leaf of the SourceVHD
+                if ($VMTemplateVHD.VHD)
+                {
+                    $VMTemplate.vhd = $VMTemplateVHD.VHD
+                }
+                else
+                {
+                    $VMTemplate.vhd = Split-Path `
+                        -Path $VMTemplate.sourcevhd `
+                        -Leaf
+                } # if
+            }
+            else
+            {
+                # The TemplateVHD could not be found in the list
+                $ExceptionParameters = @{
+                    errorId = 'TemplateTemplateVHDNotFoundError'
+                    errorCategory = 'InvalidArgument'
+                    errorMessage = $($LocalizedData.TemplateTemplateVHDNotFoundError `
+                        -f $TemplateName,$TemplateVHD)
+                }
+                New-LabException @ExceptionParameters
+            } # if
+        }
+        elseif ($SourceVHD)
+        {
+            # A Source VHD was provided so use that.
+            # If this is a relative path, add it to the config path
+            if ([System.IO.Path]::IsPathRooted($SourceVHD))
+            {
+                $VMTemplate.sourcevhd = $SourceVHD                
+            }
+            else
+            {
+                $VMTemplate.sourcevhd = Join-Path `
+                    -Path $Config.labbuilderconfig.settings.fullconfigpath `
+                    -ChildPath $SourceVHD
+            }
+
+            # A Source VHD file was specified - does it exist?
+            if (-not (Test-Path -Path $VMTemplate.sourcevhd))
+            {
+                $ExceptionParameters = @{
+                    errorId = 'TemplateSourceVHDNotFoundError'
+                    errorCategory = 'InvalidArgument'
+                    errorMessage = $($LocalizedData.TemplateSourceVHDNotFoundError `
+                        -f $TemplateName,$VMTemplate.sourcevhd)
+                }
+                New-LabException @ExceptionParameters
+            } # if
+            
+            # If a VHD filename wasn't specified in the Template
+            # Just use the leaf of the SourceVHD
+            if ($Template.VHD)
+            {
+                $VMTemplate.vhd = $Template.VHD
+            }
+            else
+            {
+                $VMTemplate.vhd = Split-Path `
+                    -Path $VMTemplate.sourcevhd `
+                    -Leaf
+            } 
+        }
+        else
+        {
+            # Neither a SourceVHD or TemplateVHD was provided
+            # So throw an exception            
+            $ExceptionParameters = @{
+                errorId = 'TemplateSourceVHDandTemplateVHDMissingError'
+                errorCategory = 'InvalidArgument'
+                errorMessage = $($LocalizedData.TemplateSourceVHDandTemplateVHDMissingError `
+                    -f $TemplateName)
             }
             New-LabException @ExceptionParameters
-        } # If
-
-        if ($SourceVHD)
-        {
-            $VMTemplate.sourcevhd = $SourceVHD
         } # if
-        $VMTemplate.allowcreate = $Template.AllowCreate
+                
+        # Ensure the ParentVHD is up-to-date
+        $VMTemplate.parentvhd = Join-Path `
+            -Path $VHDParentPath `
+            -ChildPath ([System.IO.Path]::GetFileName($VMTemplate.vhd))
+
         # Write any template specific default VM attributes
-        if ($MemoryStartupBytes)
+        [Int64] $MemoryStartupBytes = 1GB
+        if ($Template.MemoryStartupBytes)
+        {
+            $MemoryStartupBytes = (Invoke-Expression $Template.MemoryStartupBytes)
+        } # if
+        if ($MemoryStartupBytes -gt 0)
         {
             $VMTemplate.memorystartupbytes = $MemoryStartupBytes
         } # if

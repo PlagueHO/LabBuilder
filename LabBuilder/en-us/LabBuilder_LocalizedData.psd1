@@ -28,8 +28,8 @@ ConvertFrom-StringData -StringData @'
     InvalidVMTemplateVHDVHDTypeError=The VHDType '{1}' in VM template VHD '{0}' is invalid. Valid settings are Dynamic or Fixed.
     InvalidVMTemplateVHDGenerationError=The Generation '{1}' in VM template VHD '{0}' is invalid. Valid settings are 1 or 2.
     EmptyTemplateNameError=Template Name is missing or empty.
-    EmptyParentVHDError=The detected parent VHD for Template '{0}' is empty.
     TemplateSourceVHDAndTemplateVHDConflictError=Both the Template SourceVHD and TemplateVHD parameters are set for Template '{0}'. Only one of these may be set for each Template.
+    TemplateSourceVHDandTemplateVHDMissingError=Either the Template SourceVHD or TemplateVHD parameter must be set in Template '{0}'.
     TemplateTemplateVHDNotFoundError=The Template Template VHD '{1}' in Template '{0}' could not be found.
     TemplateSourceVHDNotFoundError=The Template Source VHD '{1}' in Template '{0}' could not be found.
     DSCModuleDownloadError=Module '{2}' required by DSC Config File '{0}' in VM '{1}' could not be found or downloaded.					
