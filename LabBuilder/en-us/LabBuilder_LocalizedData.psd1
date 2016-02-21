@@ -100,7 +100,7 @@ ConvertFrom-StringData -StringData @'
     CopyingTemplateSourceVHDMessage=Copying template source VHD '{0}' to '{1}'.
     OptimizingParentVHDMessage=Optimizing parent VHD '{0}'.
     SettingParentVHDReadonlyMessage=Setting parent VHD '{0}' as readonly.
-    SkipTemplateVHDFileMessage=Skip copying parent VHD file '{1}' for '{0}' because it already exists.
+    SkipParentVHDFileMessage=Skip copying parent VHD file '{1}' for '{0}' because it already exists.
     SkipVMTemplateVHDFileMessage=Skip building VM template VHD file '{1}' for '{0}' because it already exists.
     DeletingParentVHDMessage=Deleting Parent VHD '{0}'.
     DSCConfigIdentifyModulesMessage=Identifying Modules used by DSC Config File '{0}' in VM '{1}'.
