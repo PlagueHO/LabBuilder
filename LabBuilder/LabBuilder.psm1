@@ -3597,16 +3597,19 @@ function Initialize-LabVMImage {
     Write-Verbose -Message $($LocalizedData.MountingVMBootDiskMessage `
         -f $VM.Name,$VMBootDiskPath)
       
+    # Create a mount point for mounting the Boot VHD
     [String] $MountPoint = Join-Path `
         -Path $VMLabBuilderFiles `
         -ChildPath 'Mount'
 
-    if (! (Test-Path -Path $MountPoint -PathType Container))
+    if (-not (Test-Path -Path $MountPoint -PathType Container))
     {
         $null = New-Item `
             -Path $MountPoint `
             -ItemType Directory
     }
+
+    # Mount the VHD to the Mount point
     $null = Mount-WindowsImage `
         -ImagePath $VMBootDiskPath `
         -Path $MountPoint `
@@ -3624,10 +3627,10 @@ function Initialize-LabVMImage {
         {
             Write-Verbose -Message $($LocalizedData.DownloadingVMBootDiskFileMessage `
                 -f $VM.Name,'MSU',$URL)
-            Invoke-WebRequest `
-				-Uri $URL `
-				-OutFile $MSUPath
-        } # If
+            DownloadAndUnzipFile `
+                -URL $URL `
+                -DestinationPath $MSUPath
+        } # if
 
         # Once downloaded apply the update
         Write-Verbose -Message $($LocalizedData.ApplyingVMBootDiskFileMessage `
@@ -3635,7 +3638,7 @@ function Initialize-LabVMImage {
         $null = Add-WindowsPackage `
 			-PackagePath $MSUPath `
 			-Path $MountPoint
-    } # Foreach
+    } # foreach
 
     # If this is a Nano Server, add any packages specifed in the VM
     if ($VM.OSType -eq 'Nano')
@@ -3683,7 +3686,7 @@ function Initialize-LabVMImage {
     Write-Verbose -Message $($LocalizedData.ApplyingVMBootDiskFileMessage `
         -f $VM.Name,'Unattend','Unattend.xml')
 
-    if (! (Test-Path -Path "$MountPoint\Windows\Panther" -PathType Container))
+    if (-not (Test-Path -Path "$MountPoint\Windows\Panther" -PathType Container))
     {
         Write-Verbose -Message $($LocalizedData.CreatingVMBootDiskPantherFolderMessage `
             -f $VM.Name)
@@ -3691,7 +3694,7 @@ function Initialize-LabVMImage {
         $null = New-Item `
             -Path "$MountPoint\Windows\Panther" `
             -ItemType Directory
-    }
+    } # if
     $null = Copy-Item `
         -Path (Join-Path -Path $VMLabBuilderFiles -ChildPath 'Unattend.xml') `
         -Destination "$MountPoint\Windows\Panther\Unattend.xml" `
@@ -3712,7 +3715,6 @@ function Initialize-LabVMImage {
         -Path (Join-Path -Path $VMLabBuilderFiles -ChildPath 'SetupComplete.ps1') `
         -Destination "$MountPoint\Windows\Setup\Scripts\SetupComplete.ps1" `
         -Force
-
 
     # Apply the Certificate Generator script
     $CertGenFilename = Split-Path -Path $Script:SupportGertGenPath -Leaf
