@@ -6,7 +6,7 @@
 
   <settings domainname="PESTER.LOCAL"
             email="tester@pester.local"
-            vmpath="C:\Pester Lab"
+            labpath="C:\Pester Lab"
             vhdparentpath="C:\Pester Lab\Virtual Hard Disk Templates"
             macaddressminimum="001122334400"
             macaddressmaximum="0011223344FF" 

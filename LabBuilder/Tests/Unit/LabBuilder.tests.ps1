@@ -514,23 +514,23 @@ InModuleScope LabBuilder {
 
         Context 'Valid Configuration is provided and all paths exist' {
             It 'Returns True' {
-                $Config.labbuilderconfig.settings.vmpath = 'c:\exists\'
+                $Config.labbuilderconfig.settings.labpath = 'c:\exists\'
                 $Config.labbuilderconfig.settings.vhdparentpath = 'c:\exists\'
 
                 Test-LabConfiguration -Config $Config | Should Be $True
             }
         }
 
-        Context 'Valid Configuration is provided and VMPath is empty' {
+        Context 'Valid Configuration is provided and LabPath is empty' {
             It 'Throws ConfigurationMissingElementError Exception' {
-                $Config.labbuilderconfig.settings.vmpath = ''
+                $Config.labbuilderconfig.settings.labpath = ''
                 $Config.labbuilderconfig.settings.vhdparentpath = 'c:\exists\'
 
                 $ExceptionParameters = @{
                     errorId = 'ConfigurationMissingElementError'
                     errorCategory = 'InvalidArgument'
                     errorMessage = $($LocalizedData.ConfigurationMissingElementError `
-                        -f '<settings>\<vmpath>')
+                        -f '<settings>\<labpath>')
                 }
                 $Exception = New-Exception @ExceptionParameters
 
@@ -538,16 +538,16 @@ InModuleScope LabBuilder {
             }
         }
 
-        Context 'Valid Configuration is provided and VMPath folder does not exist' {
+        Context 'Valid Configuration is provided and LabPath folder does not exist' {
             It 'Throws PathNotFoundError Exception' {
-                $Config.labbuilderconfig.settings.vmpath = 'c:\doesnotexist\'
+                $Config.labbuilderconfig.settings.labpath = 'c:\doesnotexist\'
                 $Config.labbuilderconfig.settings.vhdparentpath = 'c:\exists\'
             
                 $ExceptionParameters = @{
                     errorId = 'PathNotFoundError'
                     errorCategory = 'InvalidArgument'
                     errorMessage = $($LocalizedData.PathNotFoundError `
-                        -f '<settings>\<vmpath>','c:\doesnotexist\')
+                        -f '<settings>\<labpath>','c:\doesnotexist\')
                 }
                 $Exception = New-Exception @ExceptionParameters
 
@@ -557,7 +557,7 @@ InModuleScope LabBuilder {
         
         Context 'Valid Configuration is provided and VHDParentPath is empty' {
             It 'Throws ConfigurationMissingElementError Exception' {
-                $Config.labbuilderconfig.settings.vmpath = 'c:\exists\'
+                $Config.labbuilderconfig.settings.labpath = 'c:\exists\'
                 $Config.labbuilderconfig.settings.vhdparentpath = ''
 
                 $ExceptionParameters = @{
@@ -574,7 +574,7 @@ InModuleScope LabBuilder {
 
         Context 'Valid Configuration is provided and VHDParentPath folder does not exist' {
             It 'Throws PathNotFoundError Exception' {
-                $Config.labbuilderconfig.settings.vmpath = 'c:\exists\'
+                $Config.labbuilderconfig.settings.labpath = 'c:\exists\'
                 $Config.labbuilderconfig.settings.vhdparentpath = 'c:\doesnotexist\'
                 
                 $ExceptionParameters = @{
@@ -1799,7 +1799,7 @@ InModuleScope LabBuilder {
         [Array]$Templates = Get-LabVMTemplate -Config $Config
         [Array]$VMs = Get-LabVM -Config $Config -VMTemplates $Templates -Switches $Switches
         
-        Mock Create-LabVMPath
+        Mock Create-LabPath
         Mock Get-Module
         Mock GetModulesInDSCConfig -MockWith { @('TestModule') }
 
@@ -1810,7 +1810,7 @@ InModuleScope LabBuilder {
                 { Set-LabVMDSCMOFFile -Config $Config -VM $VM } | Should Not Throw
             }
             It 'Calls Mocked commands' {
-                Assert-MockCalled Create-LabVMPath -Exactly 1
+                Assert-MockCalled Create-LabPath -Exactly 1
                 Assert-MockCalled Get-Module -Exactly 0
             }
         }
@@ -1831,7 +1831,7 @@ InModuleScope LabBuilder {
                 { Set-LabVMDSCMOFFile -Config $Config -VM $VM } | Should Throw $Exception
             }
             It 'Calls Mocked commands' {
-                Assert-MockCalled Create-LabVMPath -Exactly 1
+                Assert-MockCalled Create-LabPath -Exactly 1
                 Assert-MockCalled Get-Module -Exactly 1
                 Assert-MockCalled GetModulesInDSCConfig -Exactly 1
                 Assert-MockCalled Find-Module -Exactly 1
@@ -1855,7 +1855,7 @@ InModuleScope LabBuilder {
                 { Set-LabVMDSCMOFFile -Config $Config -VM $VM } | Should Throw $Exception
             }
             It 'Calls Mocked commands' {
-                Assert-MockCalled Create-LabVMPath -Exactly 1
+                Assert-MockCalled Create-LabPath -Exactly 1
                 Assert-MockCalled Get-Module -Exactly 1
                 Assert-MockCalled GetModulesInDSCConfig -Exactly 1
                 Assert-MockCalled Find-Module -Exactly 1
@@ -1881,7 +1881,7 @@ InModuleScope LabBuilder {
                 { Set-LabVMDSCMOFFile -Config $Config -VM $VM } | Should Throw $Exception
             }
             It 'Calls Mocked commands' {
-                Assert-MockCalled Create-LabVMPath -Exactly 1
+                Assert-MockCalled Create-LabPath -Exactly 1
                 Assert-MockCalled Get-Module -Exactly 1
                 Assert-MockCalled GetModulesInDSCConfig -Exactly 1
                 Assert-MockCalled Find-Module -Exactly 1
@@ -1909,7 +1909,7 @@ InModuleScope LabBuilder {
                 { Set-LabVMDSCMOFFile -Config $Config -VM $VM } | Should Throw $Exception
             }
             It 'Calls Mocked commands' {
-                Assert-MockCalled Create-LabVMPath -Exactly 1
+                Assert-MockCalled Create-LabPath -Exactly 1
                 Assert-MockCalled Get-Module -Exactly 1
                 Assert-MockCalled GetModulesInDSCConfig -Exactly 1
                 Assert-MockCalled Find-Module -Exactly 1
@@ -1944,7 +1944,7 @@ InModuleScope LabBuilder {
                 { Set-LabVMDSCMOFFile -Config $Config -VM $VM } | Should Throw $Exception
             }
             It 'Calls Mocked commands' {
-                Assert-MockCalled Create-LabVMPath -Exactly 1
+                Assert-MockCalled Create-LabPath -Exactly 1
                 Assert-MockCalled Get-Module -Exactly 1
                 Assert-MockCalled GetModulesInDSCConfig -Exactly 1
                 Assert-MockCalled Find-Module -Exactly 1
@@ -2104,7 +2104,7 @@ InModuleScope LabBuilder {
 
         Context 'Valid configuration is passed' {	
             $Config = Get-LabConfiguration -Path $Global:TestConfigOKPath
-            New-Item -Path $Config.labbuilderconfig.settings.vmpath -ItemType Directory -Force -ErrorAction SilentlyContinue
+            New-Item -Path $Config.labbuilderconfig.settings.labpath -ItemType Directory -Force -ErrorAction SilentlyContinue
             New-Item -Path $Config.labbuilderconfig.settings.vhdparentpath -ItemType Directory -Force -ErrorAction SilentlyContinue
 
             [Array]$Templates = Get-LabVMTemplate -Config $Config
@@ -2123,7 +2123,7 @@ InModuleScope LabBuilder {
                 Assert-MockCalled Copy-Item -Exactly 1
             }
 
-            Remove-Item -Path $Config.labbuilderconfig.settings.vmpath -Recurse -Force -ErrorAction SilentlyContinue
+            Remove-Item -Path $Config.labbuilderconfig.settings.labpath -Recurse -Force -ErrorAction SilentlyContinue
             Remove-Item -Path $Config.labbuilderconfig.settings.vhdparentpath -Recurse -Force -ErrorAction SilentlyContinue
         }
     }
@@ -2289,7 +2289,7 @@ InModuleScope LabBuilder {
                     errorId = 'VMDataDiskSharedDifferencingError'
                     errorCategory = 'InvalidArgument'
                     errorMessage = $($LocalizedData.VMDataDiskSharedDifferencingError `
-                        -f $Config.labbuilderconfig.vms.vm.name,"$($Config.labbuilderconfig.settings.vmpath)\$($Config.labbuilderconfig.vms.vm.name)\Virtual Hard Disks\$($Config.labbuilderconfig.vms.vm.datavhds.datavhd[3].vhd)")
+                        -f $Config.labbuilderconfig.vms.vm.name,"$($Config.labbuilderconfig.settings.labpath)\$($Config.labbuilderconfig.vms.vm.name)\Virtual Hard Disks\$($Config.labbuilderconfig.vms.vm.datavhds.datavhd[3].vhd)")
                 }
                 $Exception = New-Exception @ExceptionParameters
                 { Get-LabVM -Config $Config -VMTemplates $Templates -Switches $Switches } | Should Throw $Exception
@@ -2305,7 +2305,7 @@ InModuleScope LabBuilder {
                     errorId = 'VMDataDiskUnknownTypeError'
                     errorCategory = 'InvalidArgument'
                     errorMessage = $($LocalizedData.VMDataDiskUnknownTypeError `
-                        -f $Config.labbuilderconfig.vms.vm.name,"$($Config.labbuilderconfig.settings.vmpath)\$($Config.labbuilderconfig.vms.vm.name)\Virtual Hard Disks\$($Config.labbuilderconfig.vms.vm.datavhds.datavhd[1].vhd)",'badtype')
+                        -f $Config.labbuilderconfig.vms.vm.name,"$($Config.labbuilderconfig.settings.labpath)\$($Config.labbuilderconfig.vms.vm.name)\Virtual Hard Disks\$($Config.labbuilderconfig.vms.vm.datavhds.datavhd[1].vhd)",'badtype')
                 }
                 $Exception = New-Exception @ExceptionParameters
                 { Get-LabVM -Config $Config -VMTemplates $Templates -Switches $Switches } | Should Throw $Exception
@@ -2321,7 +2321,7 @@ InModuleScope LabBuilder {
                     errorId = 'VMDataDiskSupportPRError'
                     errorCategory = 'InvalidArgument'
                     errorMessage = $($LocalizedData.VMDataDiskSupportPRError `
-                        -f $Config.labbuilderconfig.vms.vm.name,"$($Config.labbuilderconfig.settings.vmpath)\$($Config.labbuilderconfig.vms.vm.name)\Virtual Hard Disks\$($Config.labbuilderconfig.vms.vm.datavhds.datavhd[1].vhd)")
+                        -f $Config.labbuilderconfig.vms.vm.name,"$($Config.labbuilderconfig.settings.labpath)\$($Config.labbuilderconfig.vms.vm.name)\Virtual Hard Disks\$($Config.labbuilderconfig.vms.vm.datavhds.datavhd[1].vhd)")
                 }
                 $Exception = New-Exception @ExceptionParameters
                 { Get-LabVM -Config $Config -VMTemplates $Templates -Switches $Switches } | Should Throw $Exception
@@ -2337,7 +2337,7 @@ InModuleScope LabBuilder {
                     errorId = 'VMDataDiskPartitionStyleError'
                     errorCategory = 'InvalidArgument'
                     errorMessage = $($LocalizedData.VMDataDiskPartitionStyleError `
-                        -f $Config.labbuilderconfig.vms.vm.name,"$($Config.labbuilderconfig.settings.vmpath)\$($Config.labbuilderconfig.vms.vm.name)\Virtual Hard Disks\$($Config.labbuilderconfig.vms.vm.datavhds.datavhd[1].vhd)",'Bad')
+                        -f $Config.labbuilderconfig.vms.vm.name,"$($Config.labbuilderconfig.settings.labpath)\$($Config.labbuilderconfig.vms.vm.name)\Virtual Hard Disks\$($Config.labbuilderconfig.vms.vm.datavhds.datavhd[1].vhd)",'Bad')
                 }
                 $Exception = New-Exception @ExceptionParameters
                 { Get-LabVM -Config $Config -VMTemplates $Templates -Switches $Switches } | Should Throw $Exception
@@ -2353,7 +2353,7 @@ InModuleScope LabBuilder {
                     errorId = 'VMDataDiskFileSystemError'
                     errorCategory = 'InvalidArgument'
                     errorMessage = $($LocalizedData.VMDataDiskFileSystemError `
-                        -f $Config.labbuilderconfig.vms.vm.name,"$($Config.labbuilderconfig.settings.vmpath)\$($Config.labbuilderconfig.vms.vm.name)\Virtual Hard Disks\$($Config.labbuilderconfig.vms.vm.datavhds.datavhd[1].vhd)",'Bad')
+                        -f $Config.labbuilderconfig.vms.vm.name,"$($Config.labbuilderconfig.settings.labpath)\$($Config.labbuilderconfig.vms.vm.name)\Virtual Hard Disks\$($Config.labbuilderconfig.vms.vm.datavhds.datavhd[1].vhd)",'Bad')
                 }
                 $Exception = New-Exception @ExceptionParameters
                 { Get-LabVM -Config $Config -VMTemplates $Templates -Switches $Switches } | Should Throw $Exception
@@ -2369,7 +2369,7 @@ InModuleScope LabBuilder {
                     errorId = 'VMDataDiskPartitionStyleMissingError'
                     errorCategory = 'InvalidArgument'
                     errorMessage = $($LocalizedData.VMDataDiskPartitionStyleMissingError `
-                        -f $Config.labbuilderconfig.vms.vm.name,"$($Config.labbuilderconfig.settings.vmpath)\$($Config.labbuilderconfig.vms.vm.name)\Virtual Hard Disks\$($Config.labbuilderconfig.vms.vm.datavhds.datavhd[1].vhd)")
+                        -f $Config.labbuilderconfig.vms.vm.name,"$($Config.labbuilderconfig.settings.labpath)\$($Config.labbuilderconfig.vms.vm.name)\Virtual Hard Disks\$($Config.labbuilderconfig.vms.vm.datavhds.datavhd[1].vhd)")
                 }
                 $Exception = New-Exception @ExceptionParameters
                 { Get-LabVM -Config $Config -VMTemplates $Templates -Switches $Switches } | Should Throw $Exception
@@ -2385,7 +2385,7 @@ InModuleScope LabBuilder {
                     errorId = 'VMDataDiskFileSystemMissingError'
                     errorCategory = 'InvalidArgument'
                     errorMessage = $($LocalizedData.VMDataDiskFileSystemMissingError `
-                        -f $Config.labbuilderconfig.vms.vm.name,"$($Config.labbuilderconfig.settings.vmpath)\$($Config.labbuilderconfig.vms.vm.name)\Virtual Hard Disks\$($Config.labbuilderconfig.vms.vm.datavhds.datavhd[1].vhd)")
+                        -f $Config.labbuilderconfig.vms.vm.name,"$($Config.labbuilderconfig.settings.labpath)\$($Config.labbuilderconfig.vms.vm.name)\Virtual Hard Disks\$($Config.labbuilderconfig.vms.vm.datavhds.datavhd[1].vhd)")
                 }
                 $Exception = New-Exception @ExceptionParameters
                 { Get-LabVM -Config $Config -VMTemplates $Templates -Switches $Switches } | Should Throw $Exception
@@ -2402,7 +2402,7 @@ InModuleScope LabBuilder {
                     errorId = 'VMDataDiskPartitionStyleMissingError'
                     errorCategory = 'InvalidArgument'
                     errorMessage = $($LocalizedData.VMDataDiskPartitionStyleMissingError `
-                        -f $Config.labbuilderconfig.vms.vm.name,"$($Config.labbuilderconfig.settings.vmpath)\$($Config.labbuilderconfig.vms.vm.name)\Virtual Hard Disks\$($Config.labbuilderconfig.vms.vm.datavhds.datavhd[2].vhd)")
+                        -f $Config.labbuilderconfig.vms.vm.name,"$($Config.labbuilderconfig.settings.labpath)\$($Config.labbuilderconfig.vms.vm.name)\Virtual Hard Disks\$($Config.labbuilderconfig.vms.vm.datavhds.datavhd[2].vhd)")
                 }
                 $Exception = New-Exception @ExceptionParameters
                 { Get-LabVM -Config $Config -VMTemplates $Templates -Switches $Switches } | Should Throw $Exception
@@ -2418,7 +2418,7 @@ InModuleScope LabBuilder {
                     errorId = 'VMDataDiskCopyFolderMissingError'
                     errorCategory = 'InvalidArgument'
                     errorMessage = $($LocalizedData.VMDataDiskCopyFolderMissingError `
-                        -f $Config.labbuilderconfig.vms.vm.name,"$($Config.labbuilderconfig.settings.vmpath)\$($Config.labbuilderconfig.vms.vm.name)\Virtual Hard Disks\$($Config.labbuilderconfig.vms.vm.datavhds.datavhd[0].vhd)",'c:\doesnotexist')
+                        -f $Config.labbuilderconfig.vms.vm.name,"$($Config.labbuilderconfig.settings.labpath)\$($Config.labbuilderconfig.vms.vm.name)\Virtual Hard Disks\$($Config.labbuilderconfig.vms.vm.datavhds.datavhd[0].vhd)",'c:\doesnotexist')
                 }
                 $Exception = New-Exception @ExceptionParameters
                 { Get-LabVM -Config $Config -VMTemplates $Templates -Switches $Switches } | Should Throw $Exception
@@ -2434,7 +2434,7 @@ InModuleScope LabBuilder {
                     errorId = 'VMDataDiskCantBeCreatedError'
                     errorCategory = 'InvalidArgument'
                     errorMessage = $($LocalizedData.VMDataDiskCantBeCreatedError `
-                        -f $Config.labbuilderconfig.vms.vm.name,"$($Config.labbuilderconfig.settings.vmpath)\$($Config.labbuilderconfig.vms.vm.name)\Virtual Hard Disks\$($Config.labbuilderconfig.vms.vm.datavhds.datavhd[1].vhd)")
+                        -f $Config.labbuilderconfig.vms.vm.name,"$($Config.labbuilderconfig.settings.labpath)\$($Config.labbuilderconfig.vms.vm.name)\Virtual Hard Disks\$($Config.labbuilderconfig.vms.vm.datavhds.datavhd[1].vhd)")
                 }
                 $Exception = New-Exception @ExceptionParameters
                 { Get-LabVM -Config $Config -VMTemplates $Templates -Switches $Switches } | Should Throw $Exception
@@ -2450,7 +2450,7 @@ InModuleScope LabBuilder {
                     errorId = 'VMDataDiskCantBeCreatedError'
                     errorCategory = 'InvalidArgument'
                     errorMessage = $($LocalizedData.VMDataDiskCantBeCreatedError `
-                        -f $Config.labbuilderconfig.vms.vm.name,"$($Config.labbuilderconfig.settings.vmpath)\$($Config.labbuilderconfig.vms.vm.name)\Virtual Hard Disks\$($Config.labbuilderconfig.vms.vm.datavhds.datavhd[1].vhd)")
+                        -f $Config.labbuilderconfig.vms.vm.name,"$($Config.labbuilderconfig.settings.labpath)\$($Config.labbuilderconfig.vms.vm.name)\Virtual Hard Disks\$($Config.labbuilderconfig.vms.vm.datavhds.datavhd[1].vhd)")
                 }
                 $Exception = New-Exception @ExceptionParameters
                 { Get-LabVM -Config $Config -VMTemplates $Templates -Switches $Switches } | Should Throw $Exception
@@ -2466,7 +2466,7 @@ InModuleScope LabBuilder {
                     errorId = 'VMDataDiskCantBeCreatedError'
                     errorCategory = 'InvalidArgument'
                     errorMessage = $($LocalizedData.VMDataDiskCantBeCreatedError `
-                        -f $Config.labbuilderconfig.vms.vm.name,"$($Config.labbuilderconfig.settings.vmpath)\$($Config.labbuilderconfig.vms.vm.name)\Virtual Hard Disks\$($Config.labbuilderconfig.vms.vm.datavhds.datavhd[0].vhd)")
+                        -f $Config.labbuilderconfig.vms.vm.name,"$($Config.labbuilderconfig.settings.labpath)\$($Config.labbuilderconfig.vms.vm.name)\Virtual Hard Disks\$($Config.labbuilderconfig.vms.vm.datavhds.datavhd[0].vhd)")
                 }
                 $Exception = New-Exception @ExceptionParameters
                 { Get-LabVM -Config $Config -VMTemplates $Templates -Switches $Switches } | Should Throw $Exception
@@ -2482,7 +2482,7 @@ InModuleScope LabBuilder {
                     errorId = 'VMDataDiskSourceVHDIfMoveError'
                     errorCategory = 'InvalidArgument'
                     errorMessage = $($LocalizedData.VMDataDiskSourceVHDIfMoveError `
-                        -f $Config.labbuilderconfig.vms.vm.name,"$($Config.labbuilderconfig.settings.vmpath)\$($Config.labbuilderconfig.vms.vm.name)\Virtual Hard Disks\$($Config.labbuilderconfig.vms.vm.datavhds.datavhd[4].vhd)")
+                        -f $Config.labbuilderconfig.vms.vm.name,"$($Config.labbuilderconfig.settings.labpath)\$($Config.labbuilderconfig.vms.vm.name)\Virtual Hard Disks\$($Config.labbuilderconfig.vms.vm.datavhds.datavhd[4].vhd)")
                 }
                 $Exception = New-Exception @ExceptionParameters
                 { Get-LabVM -Config $Config -VMTemplates $Templates -Switches $Switches } | Should Throw $Exception
@@ -2601,7 +2601,7 @@ InModuleScope LabBuilder {
             [Array]$Templates = Get-LabVMTemplate -Config $Config
             [Array]$VMs = Get-LabVM -Config $Config -VMTemplates $Templates -Switches $Switches
             It 'Returns Template Object containing VHD with correct rooted path' {
-                $VMs[0].DataVhds[0].vhd | Should Be "$($Config.labbuilderconfig.settings.vmpath)\$($Config.labbuilderconfig.vms.vm.name)\Virtual Hard Disks\DataDisk.vhdx"
+                $VMs[0].DataVhds[0].vhd | Should Be "$($Config.labbuilderconfig.settings.labpath)\$($Config.labbuilderconfig.vms.vm.name)\Virtual Hard Disks\DataDisk.vhdx"
             }
         }
         Context 'Valid configuration is passed with VM Data Disk with rooted Parent VHD path.' {
@@ -2706,7 +2706,7 @@ InModuleScope LabBuilder {
 
         Context 'Valid configuration is passed' {	
             $Config = Get-LabConfiguration -Path $Global:TestConfigOKPath
-            New-Item -Path $Config.labbuilderconfig.settings.vmpath -ItemType Directory -Force -ErrorAction SilentlyContinue
+            New-Item -Path $Config.labbuilderconfig.settings.labpath -ItemType Directory -Force -ErrorAction SilentlyContinue
             New-Item -Path $Config.labbuilderconfig.settings.vhdparentpath -ItemType Directory -Force -ErrorAction SilentlyContinue
 
             [Array]$Templates = Get-LabVMTemplate -Config $Config
@@ -2726,7 +2726,7 @@ InModuleScope LabBuilder {
                 Assert-MockCalled Start-LabVMDSC -Exactly 1
             }
             
-            Remove-Item -Path $Config.labbuilderconfig.settings.vmpath -Recurse -Force -ErrorAction SilentlyContinue
+            Remove-Item -Path $Config.labbuilderconfig.settings.labpath -Recurse -Force -ErrorAction SilentlyContinue
             Remove-Item -Path $Config.labbuilderconfig.settings.vhdparentpath -Recurse -Force -ErrorAction SilentlyContinue
         }
     }
@@ -3304,7 +3304,7 @@ InModuleScope LabBuilder {
 
         Context 'Valid configuration is passed' {	
             $Config = Get-LabConfiguration -Path $Global:TestConfigOKPath
-            New-Item -Path $Config.labbuilderconfig.settings.vmpath -ItemType Directory -Force -ErrorAction SilentlyContinue
+            New-Item -Path $Config.labbuilderconfig.settings.labpath -ItemType Directory -Force -ErrorAction SilentlyContinue
             New-Item -Path $Config.labbuilderconfig.settings.vhdparentpath -ItemType Directory -Force -ErrorAction SilentlyContinue
 
             [Array]$Templates = Get-LabVMTemplate -Config $Config
@@ -3329,7 +3329,7 @@ InModuleScope LabBuilder {
                 Assert-MockCalled Start-LabVMDSC -Exactly 1
             }
             
-            Remove-Item -Path $Config.labbuilderconfig.settings.vmpath -Recurse -Force -ErrorAction SilentlyContinue
+            Remove-Item -Path $Config.labbuilderconfig.settings.labpath -Recurse -Force -ErrorAction SilentlyContinue
             Remove-Item -Path $Config.labbuilderconfig.settings.vhdparentpath -Recurse -Force -ErrorAction SilentlyContinue
         }
     }

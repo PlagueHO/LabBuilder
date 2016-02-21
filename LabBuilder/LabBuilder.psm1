@@ -662,25 +662,25 @@ function Test-LabConfiguration {
     }
 
     # Check folders exist
-    [String] $VMPath = $Config.labbuilderconfig.settings.vmpath
-    if (-not $VMPath)
+    [String] $LabPath = $Config.labbuilderconfig.settings.labpath
+    if (-not $LabPath)
     {
         $ExceptionParameters = @{
             errorId = 'ConfigurationMissingElementError'
             errorCategory = 'InvalidArgument'
             errorMessage = $($LocalizedData.ConfigurationMissingElementError `
-                -f '<settings>\<vmpath>')
+                -f '<settings>\<labpath>')
         }
         New-LabException @ExceptionParameters
     }
 
-    if (-not (Test-Path -Path $VMPath))
+    if (-not (Test-Path -Path $LabPath))
     {
         $ExceptionParameters = @{
             errorId = 'PathNotFoundError'
             errorCategory = 'InvalidArgument'
             errorMessage = $($LocalizedData.PathNotFoundError `
-                -f '<settings>\<vmpath>',$VMPath)
+                -f '<settings>\<labpath>',$LabPath)
         }
         New-LabException @ExceptionParameters
     }
@@ -2723,7 +2723,6 @@ function Set-LabVMDSCStartFile {
     [String] $VMLabBuilderFiles = Get-LabVMFilesPath `
         -Config $Config `
         -VM $VM
-        
     # Relabel the Network Adapters so that they match what the DSC Networking config will use
     # This is because unfortunately the Hyper-V Device Naming feature doesn't work.
     [String] $ManagementSwitchName = `
@@ -3768,7 +3767,7 @@ function Get-LabVM {
 
     [System.Collections.Hashtable[]] $LabVMs = @()
     [String] $VHDParentPath = $Config.labbuilderconfig.settings.vhdparentpath
-    [String] $VMPath = $Config.labbuilderconfig.settings.vmpath
+    [String] $LabPath = $Config.labbuilderconfig.settings.labpath
     $VMs = $Config.labbuilderconfig.SelectNodes('vms').vm
 
     foreach ($VM in $VMs) 
@@ -3935,7 +3934,7 @@ function Get-LabVM {
             # if it doesn't contain a root (e.g. c:\)
             if (! [System.IO.Path]::IsPathRooted($Vhd))
             {
-                $Vhd = Join-Path -Path $VMPath -ChildPath "$($VM.Name)\Virtual Hard Disks\$Vhd"
+                $Vhd = Join-Path -Path $LabPath -ChildPath "$($VM.Name)\Virtual Hard Disks\$Vhd"
             }
             
             # Does the VHD already exist?
@@ -4505,14 +4504,14 @@ function Get-LabVMelfSignedCert
 
         [Int] $Timeout = 300
     )
-    [String] $VMPath = $Config.labbuilderconfig.SelectNodes('settings').vmpath
+    [String] $LabPath = $Config.labbuilderconfig.SelectNodes('settings').labpath
     [DateTime] $StartTime = Get-Date
     [System.Management.Automation.Runspaces.PSSession] $Session = $null
     [Boolean] $Complete = $False
 
     # Load path variables
     [String] $VMRootPath = Join-Path `
-        -Path $VMPath `
+        -Path $LabPath `
         -ChildPath $VM.Name
 
     # Get Path to LabBuilder files
@@ -4638,13 +4637,13 @@ function New-LabVMSelfSignedCert
         [Int] $Timeout = 300
     )
     [DateTime] $StartTime = Get-Date
-    [String] $VMPath = $Config.labbuilderconfig.SelectNodes('settings').vmpath
+    [String] $LabPath = $Config.labbuilderconfig.SelectNodes('settings').labpath
     [System.Management.Automation.Runspaces.PSSession] $Session = $null
     [Boolean] $Complete = $False
 
     # Load path variables
     [String] $VMRootPath = Join-Path `
-        -Path $VMPath `
+        -Path $LabPath `
         -ChildPath $VM.Name
 
     # Get Path to LabBuilder files
@@ -4872,9 +4871,9 @@ function Get-LabVMRootPath {
         [Parameter(Mandatory)]
         [System.Collections.Hashtable] $VM
     )
-    [String] $VMPath = $Config.labbuilderconfig.settings.vmpath 
+    [String] $LabPath = $Config.labbuilderconfig.settings.labpath 
     [String] $VMRootPath = Join-Path `
-        -Path $VMPath `
+        -Path $LabPath `
         -ChildPath $VM.Name
     return $VMRootPath
 } # Get-LabVMRootPath
@@ -4949,7 +4948,7 @@ function Start-LabVM {
         $VM
     )
 
-    [String] $VMPath = $Config.labbuilderconfig.settings.vmpath
+    [String] $LabPath = $Config.labbuilderconfig.settings.labpath
 
     # The VM is now ready to be started
     if ((Get-VM -Name $VM.Name).State -eq 'Off')
@@ -4964,7 +4963,7 @@ function Start-LabVM {
     if ($VM.OSType -eq 'Server')
     {
         # Has this VM been initialized before (do we have a cert for it)
-        if (-not (Test-Path "$VMPath\$($VM.Name)\LabBuilder Files\$Script:DSCEncryptionCert"))
+        if (-not (Test-Path "$LabPath\$($VM.Name)\LabBuilder Files\$Script:DSCEncryptionCert"))
         {
             # No, so check it is initialized and download the cert.
             if (Wait-LabVMInit -VM $VM -ErrorAction Continue)
@@ -5838,7 +5837,7 @@ function Remove-LabVM {
     }
     
     $CurrentVMs = Get-VM
-    [String] $VMPath = $Config.labbuilderconfig.settings.vmpath
+    [String] $LabPath = $Config.labbuilderconfig.settings.labpath
     
     foreach ($VM in $VMs)
     {
