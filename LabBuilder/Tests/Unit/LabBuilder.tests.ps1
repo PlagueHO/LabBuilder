@@ -660,7 +660,8 @@ InModuleScope LabBuilder {
         Mock Invoke-WebRequest
         Mock Expand-Archive
         Mock Rename-Item
-        Mock Test-Path -MockWith { $false }
+        Mock Test-Path -MockWith { $false } -ParameterFilter { $Path -eq "$($ENV:ProgramFiles)\WindowsPowerShell\Modules\xNetworking" }
+        Mock Test-Path -MockWith { $true } -ParameterFilter { $Path -eq "$($ENV:ProgramFiles)\WindowsPowerShell\Modules\" }
         Mock Remove-Item
         Mock Get-PackageProvider
         Mock Install-Module
@@ -679,7 +680,8 @@ InModuleScope LabBuilder {
                 Assert-MockCalled Invoke-WebRequest -Exactly 0
                 Assert-MockCalled Expand-Archive -Exactly 0
                 Assert-MockCalled Rename-Item -Exactly 0
-                Assert-MockCalled Test-Path -Exactly 0
+                Assert-MockCalled Test-Path -ParameterFilter { $Path -eq "$($ENV:ProgramFiles)\WindowsPowerShell\Modules\xNetworking" } -Exactly 0
+                Assert-MockCalled Test-Path -ParameterFilter { $Path -eq $Path -eq "$($ENV:ProgramFiles)\WindowsPowerShell\Modules\" } -Exactly 0
                 Assert-MockCalled Remove-Item -Exactly 0
                 Assert-MockCalled Get-PackageProvider -Exactly 0
                 Assert-MockCalled Install-Module -Exactly 0
@@ -702,8 +704,9 @@ InModuleScope LabBuilder {
                 Assert-MockCalled Invoke-WebRequest -Exactly 1
                 Assert-MockCalled Expand-Archive -Exactly 1
                 Assert-MockCalled Rename-Item -Exactly 1
-                Assert-MockCalled Test-Path -Exactly 1
-                Assert-MockCalled Remove-Item -Exactly 0
+                Assert-MockCalled Test-Path -ParameterFilter { $Path -eq "$($ENV:ProgramFiles)\WindowsPowerShell\Modules\xNetworking" } -Exactly 1
+                Assert-MockCalled Test-Path -ParameterFilter { $Path -eq $Path -eq "$($ENV:ProgramFiles)\WindowsPowerShell\Modules\" } -Exactly 1
+                Assert-MockCalled Remove-Item -Exactly 1
                 Assert-MockCalled Get-PackageProvider -Exactly 0
                 Assert-MockCalled Install-Module -Exactly 0
             }
@@ -745,8 +748,9 @@ InModuleScope LabBuilder {
                 Assert-MockCalled Invoke-WebRequest -Exactly 1
                 Assert-MockCalled Expand-Archive -Exactly 1
                 Assert-MockCalled Rename-Item -Exactly 1
-                Assert-MockCalled Test-Path -Exactly 1
-                Assert-MockCalled Remove-Item -Exactly 0
+                Assert-MockCalled Test-Path -ParameterFilter { $Path -eq "$($ENV:ProgramFiles)\WindowsPowerShell\Modules\xNetworking" } -Exactly 1
+                Assert-MockCalled Test-Path -ParameterFilter { $Path -eq $Path -eq "$($ENV:ProgramFiles)\WindowsPowerShell\Modules\" } -Exactly 1
+                Assert-MockCalled Remove-Item -Exactly 1
                 Assert-MockCalled Get-PackageProvider -Exactly 0
                 Assert-MockCalled Install-Module -Exactly 0
             }
@@ -829,8 +833,9 @@ InModuleScope LabBuilder {
                 Assert-MockCalled Invoke-WebRequest -Exactly 1
                 Assert-MockCalled Expand-Archive -Exactly 1
                 Assert-MockCalled Rename-Item -Exactly 1
-                Assert-MockCalled Test-Path -Exactly 1
-                Assert-MockCalled Remove-Item -Exactly 0
+                Assert-MockCalled Test-Path -ParameterFilter { $Path -eq "$($ENV:ProgramFiles)\WindowsPowerShell\Modules\xNetworking" } -Exactly 1
+                Assert-MockCalled Test-Path -ParameterFilter { $Path -eq $Path -eq "$($ENV:ProgramFiles)\WindowsPowerShell\Modules\" } -Exactly 1
+                Assert-MockCalled Remove-Item -Exactly 1
                 Assert-MockCalled Get-PackageProvider -Exactly 0
                 Assert-MockCalled Install-Module -Exactly 0
             }
@@ -907,7 +912,7 @@ InModuleScope LabBuilder {
                     errorId = 'FileDownloadError'
                     errorCategory = 'InvalidOperation'
                     errorMessage = $($LocalizedData.FileDownloadError `
-                        -f 'Module Resource xNetworking',$URL,'Download Error')
+                        -f 'dev.zip',$URL,'Download Error')
                 }
                 $Exception = New-Exception @ExceptionParameters
 
@@ -923,7 +928,7 @@ InModuleScope LabBuilder {
                 Assert-MockCalled Invoke-WebRequest -Exactly 1
                 Assert-MockCalled Expand-Archive -Exactly 0
                 Assert-MockCalled Rename-Item -Exactly 0
-                Assert-MockCalled Test-Path -Exactly 0
+                Assert-MockCalled Test-Path -Exactly 1
                 Assert-MockCalled Remove-Item -Exactly 0
                 Assert-MockCalled Get-PackageProvider -Exactly 0
                 Assert-MockCalled Install-Module -Exactly 0

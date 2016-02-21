@@ -1,4 +1,5 @@
 ﻿#Requires -version 5.0
+#Requires -RunAsAdministrator
 
 ####################################################################################################
 #region localizeddata
@@ -927,60 +928,25 @@ function Download-LabModule {
             Write-Verbose -Message ($LocalizedData.DownloadingLabResourceWebMessage `
                 -f $Name,$VersionMessage,$URL)
 
-            Try
-            {
-                Invoke-WebRequest `
-                    -Uri $($URL) `
-                    -OutFile $FilePath `
-                    -ErrorAction Stop
-            }
-            Catch
-            {
-                $ExceptionParameters = @{
-                    errorId = 'FileDownloadError'
-                    errorCategory = 'InvalidOperation'
-                    errorMessage = $($LocalizedData.FileDownloadError `
-                        -f "Module Resource ${Name}",$URL,$_.Exception.Message)
-                }
-                New-LabException @ExceptionParameters
-            } # Try
-
             [String] $ModulesFolder = "$($ENV:ProgramFiles)\WindowsPowerShell\Modules\"
 
-            Write-Verbose -Message ($LocalizedData.InstallingLabResourceWebMessage `
-                -f $Name,$VersionMessage,$ModulesFolder)
+            DownloadAndUnzipFile `
+                -URL $URL `
+                -DestinationPath $ModulesFolder `
+                -ErrorAction Stop
 
-            # Extract this straight into the modules folder
-            Try
-            {
-                Expand-Archive `
-                    -Path $FilePath `
-                    -DestinationPath $ModulesFolder `
-                    -Force `
-                    -ErrorAction Stop
-            }
-            Catch
-            {
-                $ExceptionParameters = @{
-                    errorId = 'FileExtractError'
-                    errorCategory = 'InvalidArgument'
-                    errorMessage = $($LocalizedData.FileExtractError `
-                    -f "Module Resource ${Name}",$_.Exception.Message)
-                }
-                New-LabException @ExceptionParameters
-            } # Try
             if ($Folder)
             {
                 # This zip file contains a folder that is not the name of the module so it must be
                 # renamed. This is usually the case with source downloaded directly from GitHub
-                $ModulePath = Join-Path -Path $ModulesFolder -ChildPath $($Name)
+                $ModulePath = Join-Path -Path $ModulesFolder -ChildPath $Name
                 if (Test-Path -Path $ModulePath)
                 {
                     Remove-Item -Path $ModulePath -Recurse -Force
                 }
                 Rename-Item `
-                    -Path (Join-Path -Path $ModulesFolder -ChildPath $($Folder)) `
-                    -NewName $($Name) `
+                    -Path (Join-Path -Path $ModulesFolder -ChildPath $Folder) `
+                    -NewName $Name `
                     -Force
             } # If
 
