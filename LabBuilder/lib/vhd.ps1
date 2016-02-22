@@ -42,6 +42,9 @@ function InitializeBootVHD {
         [String] $VMBootDiskPath
     )
 
+    # Get path to Lab
+    [String] $LabPath = $Config.labbuilderconfig.settings.labpath
+
     # Get Path to LabBuilder files
     [String] $VMLabBuilderFiles = $VM.LabBuilderFilesPath
     
@@ -98,12 +101,26 @@ function InitializeBootVHD {
         # Now specify the Nano Server packages to add.
         if (-not [String]::IsNullOrWhitespace($VM.Packages))
         {
-            [String] $VHDFolder = Split-Path `
-                -Path $VMBootDiskPath `
-                -Parent
             [String] $PackagesFolder = Join-Path `
-                -Path $VHDFolder `
+                -Path $LabPath `
                 -ChildPath 'NanoServerPackages'
+            if (-not (Test-Path -Path $PackagesFolder))
+            {
+                # Dismount before throwing the error
+                Write-Verbose -Message $($LocalizedData.DismountingVMBootDiskMessage `
+                    -f $VM.Name,$VMBootDiskPath)
+                $null = Dismount-WindowsImage -Path $MountPoint -Save
+                $null = Remove-Item -Path $MountPoint -Recurse -Force
+
+                $ExceptionParameters = @{
+                    errorId = 'NanoServerPackagesFolderMissingError'
+                    errorCategory = 'InvalidArgument'
+                    errorMessage = $($LocalizedData.NanoServerPackagesFolderMissingError `
+                    -f $PackagesFolder)
+                }
+                ThrowException @ExceptionParameters                
+            }    
+                
             $NanoPackages = @($VM.Packages -split ',')
 
             foreach ($Package in $Script:NanoServerPackageList) 

@@ -1844,35 +1844,35 @@ function Initialize-LabVMTemplate {
                 -Path $VMTemplate.parentvhd `
                 -Name IsReadOnly `
                 -Value $True
-
-            # If this is a Nano Server template, we need to ensure that the
-            # NanoServerPackages folder is copied to our Lab folder
-            if ($VMTemplate.OSType -eq 'Nano')
-            {
-                [String] $VHDPackagesFolder = Join-Path `
-                    -Path (Split-Path -Path $VMTemplate.sourcevhd -Parent)`
-                    -ChildPath 'NanoServerPackages'
-
-                [String] $LabPackagesFolder = Join-Path `
-                    -Path $LabPath `
-                    -ChildPath 'NanoServerPackages'
-
-                if (-not (Test-Path -Path $LabPackagesFolder -Type Container))
-                {
-                    Write-Verbose -Message ($LocalizedData.CachingNanoServerPackagesMessage `
-                            -f $VHDPackagesFolder,$LabPackagesFolder)
-                    Copy-Item `
-                        -Path $VHDPackagesFolder `
-                        -Destination $LabPath `
-                        -Recurse `
-                        -Force
-                }
-            }
         }
         Else
         {
             Write-Verbose -Message $($LocalizedData.SkipParentVHDFileMessage `
                 -f $VMTemplate.Name,$VMTemplate.parentvhd)
+        }
+
+        # If this is a Nano Server template, we need to ensure that the
+        # NanoServerPackages folder is copied to our Lab folder
+        if ($VMTemplate.OSType -eq 'Nano')
+        {
+            [String] $VHDPackagesFolder = Join-Path `
+                -Path (Split-Path -Path $VMTemplate.sourcevhd -Parent)`
+                -ChildPath 'NanoServerPackages'
+
+            [String] $LabPackagesFolder = Join-Path `
+                -Path $LabPath `
+                -ChildPath 'NanoServerPackages'
+
+            if (-not (Test-Path -Path $LabPackagesFolder -Type Container))
+            {
+                Write-Verbose -Message ($LocalizedData.CachingNanoServerPackagesMessage `
+                        -f $VHDPackagesFolder,$LabPackagesFolder)
+                Copy-Item `
+                    -Path $VHDPackagesFolder `
+                    -Destination $LabPath `
+                    -Recurse `
+                    -Force
+            }
         }
     }
 } # Initialize-LabVMTemplate
