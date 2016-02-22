@@ -42,14 +42,36 @@ function CreateVMInitializationFiles {
 
     # Assemble the SetupComplete.* scripts.
     [String] $SetupCompleteCmd = ''
+
     # Write out the CMD Setup Complete File
     if ($VM.OsType -eq 'Nano')
     {
+        # For a Nano Server we also need to create the certificates
+        # to upload to it (because it Nano Server can't generate them)
+        $null = CreateHostSelfSignedCertificate `
+            -Config $Config `
+            -VM $VM
+        
         [String] $SetupCompletePs = @"
 Add-Content ``
     -Path "C:\WINDOWS\Setup\Scripts\SetupComplete.log" ``
     -Value 'SetupComplete.ps1 Script Started...' ``
     -Encoding Ascii
+if (Test-Path -Path `"`$(`$ENV:SystemRoot)\$Script:DSCEncryptionPfxCert`")
+{
+    $CertificatePassword = ConvertTo-SecureString ``
+        -String '$Script:DSCCertificatePassword' ``
+        -Force ``
+        -AsPlainText
+    Import-PfxCertificate ``
+        -Filepath `"`$(`$ENV:SystemRoot)\$Script:DSCEncryptionPfxCert`" ``
+        -Password $CertificatePassword ``
+        -CertStoreLocation Cert:\LocalMachine\My
+    Add-Content ``
+        -Path `"`$(`$ENV:SystemRoot)\Setup\Scripts\SetupComplete.log`" ``
+        -Value 'Importing Encryption Certificate from PFX ...' ``
+        -Encoding Ascii    
+}
 Enable-PSRemoting -SkipNetworkProfileCheck -Force
 Add-Content ``
     -Path `"`$(`$ENV:SystemRoot)\Setup\Scripts\SetupComplete.log`" ``
@@ -59,7 +81,9 @@ Add-Content ``
     }
     else
     {
-        [String] $GetCertPs = GetCertificatePsFileContent -Config $Config -VM $VM
+        [String] $GetCertPs = GetCertificatePsFileContent `
+            -Config $Config `
+            -VM $VM
         [String] $SetupCompletePs = @"
 Add-Content ``
     -Path "C:\WINDOWS\Setup\Scripts\SetupComplete.log" ``
@@ -674,3 +698,101 @@ function RecreateSelfSignedCertificate
     } # While
     return (Get-Item -Path "$VMLabBuilderFiles\$($Script:DSCEncryptionCert)")
 } # RecreateSelfSignedCertificate
+
+
+<#
+.SYNOPSIS
+   Generate a new credential encryption certificate on the Host for a VM.
+.DESCRIPTION
+   This function will create a new self-signed certificate on the host that can be uploaded
+   to the VM that it is created for. The certificate will be created in the LabBuilder files
+   folder for the specified VM.
+.PARAMETER Configuration
+   Contains the Lab Builder configuration object that was loaded by the Get-LabConfiguration
+   object.
+.PARAMETER VM
+   A Virtual Machine object pulled from the Lab Configuration file using Get-LabVM
+.EXAMPLE
+   $Config = Get-LabConfiguration -Path c:\mylab\config.xml
+   $VMs = Get-LabVM -Config $Config
+   CreateHostSelfSignedCertificate -Config $Config -VM $VMs[0]
+   Causes a new self-signed certificate for the VM and stores it to the Labbuilder files folder
+   of th VM.
+.OUTPUTS
+   The path to the certificate file that was created.
+#>
+function CreateHostSelfSignedCertificate
+{
+    [CmdLetBinding()]
+    [OutputType([System.IO.FileInfo])]
+    param
+    (
+        [Parameter(Mandatory)]
+        [XML] $Config,
+
+        [Parameter(Mandatory)]
+        [System.Collections.Hashtable] $VM
+    )
+
+    # Load path variables
+    [String] $VMRootPath = $VM.VMRootPath
+
+    # Get Path to LabBuilder files
+    [String] $VMLabBuilderFiles = $VM.LabBuilderFilesPath
+
+    $CertificateFriendlyName = $Script:DSCCertificateFriendlyName
+    $CertificateSubject = "CN=$($VM.ComputerName)"
+
+    # Create the self-signed certificate for the destination VM
+    . $Script:SupportGertGenPath
+    New-SelfsignedCertificateEx `
+        -Subject $CertificateSubject `
+        -EKU 'Document Encryption','Server Authentication','Client Authentication' `
+        -KeyUsage 'DigitalSignature, KeyEncipherment, DataEncipherment' `
+        -SAN $VM.ComputerName `
+        -FriendlyName $CertificateFriendlyName `
+        -Exportable `
+        -StoreLocation 'LocalMachine' `
+        -StoreName 'My' `
+        -KeyLength $Script:SelfSignedCertKeyLength `
+        -ProviderName $Script:SelfSignedCertProviderName `
+        -AlgorithmName $Script:SelfSignedCertAlgorithmName `
+        -SignatureAlgorithm $Script:SelfSignedCertSignatureAlgorithm `
+        -ErrorAction Stop        
+    
+    # Locate the newly created certificate
+    $Certificate = Get-ChildItem -Path cert:\LocalMachine\My `
+        | Where-Object {
+            ($_.FriendlyName -eq $CertificateFriendlyName) `
+            -and ($_.Subject -eq $CertificateSubject)
+        } | Select-Object -First 1
+
+    # Export the certificate with the Private key in
+    # preparation for upload to the VM
+    $CertificatePassword = ConvertTo-SecureString `
+        -String $Script:DSCCertificatePassword `
+        -Force `
+        -AsPlainText
+    $CertificatePfxDestination = Join-Path `
+        -Path $VMLabBuilderFiles `
+        -ChildPath $Script:DSCEncryptionPfxCert
+    $null = Export-PfxCertificate `
+        -FilePath $CertificatePfxDestination `
+        -Cert $Certificate `
+        -Password $CertificatePassword `
+        -ErrorAction Stop
+    
+    # Export the certificate without a private key
+    $CertificateDestination = Join-Path `
+        -Path $VMLabBuilderFiles `
+        -ChildPath $Script:DSCEncryptionCert
+    $null = Export-Certificate `
+        -Type CERT `
+        -FilePath $CertificateDestination `
+        -Cert $Certificate `
+        -ErrorAction Stop        
+
+    # Remove the certificate from the Local Machine store
+    $Certificate | Remove-Item
+    return (Get-Item -Path $CertificateDestination)
+}

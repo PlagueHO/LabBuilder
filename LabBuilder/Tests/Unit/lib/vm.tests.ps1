@@ -62,4 +62,7 @@ InModuleScope LabBuilder {
     Describe 'RecreateSelfSignedCertificate' -Tags 'Incomplete' {
     }
     
+
+    Describe 'CreateHostSelfSignedCertificate' -Tags 'Incomplete' {
+    }
 }    
