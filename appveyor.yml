@@ -57,6 +57,7 @@ deploy_script:
       $null = Copy-Item -Path (Join-Path -Path $buildFolder -ChildPath 'LabBuilder\DscLibrary') -Destination $VersionFolder -Recurse
       $null = Copy-Item -Path (Join-Path -Path $buildFolder -ChildPath 'LabBuilder\Lib') -Destination $VersionFolder -Recurse
       $null = Copy-Item -Path (Join-Path -Path $buildFolder -ChildPath 'LabBuilder\Support') -Destination $VersionFolder -Recurse
+      $null = Copy-Item -Path (Join-Path -Path $buildFolder -ChildPath 'LabBuilder\en-us') -Destination $VersionFolder -Recurse
 
       # Set version number
       $manifest = Join-Path -Path $VersionFolder -ChildPath "LabBuilder.psd1"
@@ -84,8 +85,7 @@ deploy_script:
       # If this is a build of the Master branch and not a PR push
       # then publish the Module to the PowerShell Gallery.
       if ((! $ENV:APPVEYOR_PULL_REQUEST_NUMBER) `
-        -and ($ENV:APPVEYOR_REPO_BRANCH -eq 'master') `
-        -and ($ENV:APPVEYOR_BUILD_VERSION -ge '1.0.0.0'))
+        -and ($ENV:APPVEYOR_REPO_BRANCH -eq 'master'))
       {
         Write-Host "Publishing Module to PowerShell Gallery"
         Copy-Item -Path $ModuleFolder -Destination ($ENV:PSModulePath -split ';')[0] -Recurse

@@ -57,21 +57,13 @@ Add-Content ``
     -Path "C:\WINDOWS\Setup\Scripts\SetupComplete.log" ``
     -Value 'SetupComplete.ps1 Script Started...' ``
     -Encoding Ascii
-Enable-PSRemoting -SkipNetworkProfileCheck -Force
-Add-Content ``
-    -Path `"`$(`$ENV:SystemRoot)\Setup\Scripts\SetupComplete.log`" ``
-    -Value 'Windows Remoting Enabled ...' ``
-    -Encoding Ascii
 if (Test-Path -Path `"`$(`$ENV:SystemRoot)\$Script:DSCEncryptionPfxCert`")
 {
     `$CertificatePassword = ConvertTo-SecureString ``
         -String '$Script:DSCCertificatePassword' ``
         -Force ``
         -AsPlainText
-    Import-PfxCertificate ``
-        -Filepath `"`$(`$ENV:SystemRoot)\$Script:DSCEncryptionPfxCert`" ``
-        -Password $CertificatePassword ``
-        -CertStoreLocation Cert:\LocalMachine\My
+    & certoc.exe @('-ImportPFX','-p','$Script:DSCCertificatePassword','My',`"`$(`$ENV:SystemRoot)\$Script:DSCEncryptionPfxCert`")
     Add-Content ``
         -Path `"`$(`$ENV:SystemRoot)\Setup\Scripts\SetupComplete.log`" ``
         -Value 'Importing Encryption Certificate from PFX ...' ``

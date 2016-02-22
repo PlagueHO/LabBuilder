@@ -95,6 +95,7 @@ Versions
 * Initialize-LabVMTemplate caches NanoServerPackages from VHD template folder to Lab folder.
 * Fix exception connecting to VM when TrustedHosts is set to '*'.
 * Fix path Lab VM files are created. 
+* Support for creating Certificates for Nano Servers on the host added.
  
 ### 0.3.3.0
 * Changed Get-LabSwitch Unit tests to use PesterTestConfig.OK.xml.
