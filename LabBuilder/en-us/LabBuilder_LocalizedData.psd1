@@ -78,6 +78,7 @@ ConvertFrom-StringData -StringData @'
     VMDataDiskFileSystemMissingError=The Data Disk '{1}' in VM '{0}' does not have a file format definied.
     VMDataDiskCopyFolderMissingError=The CopyFolder '{2}' that should be copied to Data Disk '{1}' in VM '{0}' does not exist.
     
+    ImportingLibFileMessage=Importing function library '{0}'.
     InstallingHyperVComponentsMesage=Installing {0} Hyper-V Components.
     InitializingHyperVComponentsMesage=Initializing Hyper-V Components.
     InitializeVHDMountingMessage=Mounting VHD {0} for Initialization.
