@@ -150,8 +150,20 @@ function Get-LabConfiguration {
     }
     $Config.labbuilderconfig.settings.setattribute('fullconfigpath',$FullConfigPath)
 
-    # Get the VHDParentPath - if it isn't supplied default
+    # Check the LabPath because we need to use it.
     [String] $LabPath = $Config.labbuilderconfig.settings.labpath
+    if (-not $LabPath)
+    {
+        $ExceptionParameters = @{
+            errorId = 'ConfigurationMissingElementError'
+            errorCategory = 'InvalidArgument'
+            errorMessage = $($LocalizedData.ConfigurationMissingElementError `
+                -f '<settings>\<labpath>')
+        }
+        ThrowException @ExceptionParameters
+    }
+
+    # Get the VHDParentPath - if it isn't supplied default
     [String] $VHDParentPath = $Config.labbuilderconfig.settings.vhdparentpath
     if (-not $VHDParentPath)
     {
@@ -167,34 +179,6 @@ function Get-LabConfiguration {
     }    
     $Config.labbuilderconfig.settings.setattribute('vhdparentpath',$VHDParentPath)
 
-    Return $Config
-} # Get-LabConfiguration
-####################################################################################################
-
-####################################################################################################
-<#
-.SYNOPSIS
-    Tests the Lab Builder configuration passed to ensure it is valid and related files can be found.
-.PARAMETER Configuration
-    Contains the Lab Builder configuration object that was loaded by the Get-LabConfiguration
-    object.
-.EXAMPLE
-   $Config = Get-LabConfiguration -Path c:\mylab\config.xml
-   Test-LabConfiguration -Config $Config
-   Loads a Lab Builder configuration and tests it is valid.   
-.OUTPUTS
-   Returns True if the configuration is valid. Throws an error if invalid.
-#>
-function Test-LabConfiguration {
-    [CmdLetBinding()]
-    [OutputType([Boolean])]
-    param
-    (
-        [Parameter(Mandatory)]
-        [ValidateNotNullOrEmpty()]
-        [XML] $Config
-    )
-
     if ((-not $Config.labbuilderconfig) `
         -or (-not $Config.labbuilderconfig.settings))
     {
@@ -205,45 +189,9 @@ function Test-LabConfiguration {
         }
         ThrowException @ExceptionParameters
     }
-
-    # Check folders are defined
-    [String] $LabPath = $Config.labbuilderconfig.settings.labpath
-    if (-not $LabPath)
-    {
-        $ExceptionParameters = @{
-            errorId = 'ConfigurationMissingElementError'
-            errorCategory = 'InvalidArgument'
-            errorMessage = $($LocalizedData.ConfigurationMissingElementError `
-                -f '<settings>\<labpath>')
-        }
-        ThrowException @ExceptionParameters
-    }
-
-    [String] $VHDParentPath = $Config.labbuilderconfig.settings.vhdparentpath
-    if (-not $VHDParentPath)
-    {
-        $ExceptionParameters = @{
-            errorId = 'ConfigurationMissingElementError'
-            errorCategory = 'InvalidArgument'
-            errorMessage = $($LocalizedData.ConfigurationMissingElementError `
-                -f '<settings>\<vhdparentpath>')
-        }
-        ThrowException @ExceptionParameters
-    }
-
-    [String] $FullConfigPath = $Config.labbuilderconfig.settings.fullconfigpath
-    if (-not (Test-Path -Path $FullConfigPath)) 
-    {
-        $ExceptionParameters = @{
-            errorId = 'PathNotFoundError'
-            errorCategory = 'InvalidArgument'
-            errorMessage = $($LocalizedData.PathNotFoundError `
-                -f '<settings>\<fullconfigpath>',$FullConfigPath)
-        }
-        ThrowException @ExceptionParameters
-    }
-    Return $true
-} # Test-LabConfiguration
+    
+    Return $Config
+} # Get-LabConfiguration
 ####################################################################################################
 
 ####################################################################################################
@@ -3945,12 +3893,6 @@ Function Install-Lab {
 
     [XML] $Config = Get-LabConfiguration -Path $Path
     
-    # Make sure everything is OK to install the lab
-    if (-not (Test-LabConfiguration -Config $Config))
-    {
-        return
-    }
-       
     if ($CheckEnvironment)
     {
         Install-LabHyperV
@@ -4019,12 +3961,6 @@ Function Uninstall-Lab {
     ) # Param
 
     [XML] $Config = Get-LabConfiguration -Path $Path
-
-    # Make sure everything is OK to install the lab
-    if (-not (Test-LabConfiguration -Config $Config))
-    {
-        return
-    }
 
     $VMTemplates = Get-LabVMTemplate -Config $Config
 

@@ -63,7 +63,6 @@ InModuleScope LabBuilder {
         }
         Context 'Path is provided but file does not exist' {
             It 'Throws ConfigurationFileNotFoundError Exception' {
-
                 $ExceptionParameters = @{
                     errorId = 'ConfigurationFileNotFoundError'
                     errorCategory = 'InvalidArgument'
@@ -79,7 +78,6 @@ InModuleScope LabBuilder {
         }
         Context 'Path is provided and file exists but is empty' {
             It 'Throws ConfigurationFileEmptyError Exception' {
-
                 $ExceptionParameters = @{
                     errorId = 'ConfigurationFileEmptyError'
                     errorCategory = 'InvalidArgument'
@@ -92,57 +90,6 @@ InModuleScope LabBuilder {
                 Mock Get-Content -MockWith {''}
 
                 { Get-LabConfiguration -Path 'c:\isempty.xml' } | Should Throw $Exception
-            }
-        }
-    }
-
-
-
-    Describe 'Test-LabConfiguration' {
-
-        $Config = Get-LabConfiguration -Path $Global:TestConfigOKPath
-
-        Mock Test-Path -ParameterFilter { $Path -eq 'c:\exists\' } -MockWith { $true }
-        Mock Test-Path -ParameterFilter { $Path -eq 'c:\doesnotexist\' } -MockWith { $false }
-
-        Context 'Valid Configuration is provided and all paths exist' {
-            It 'Returns True' {
-                $Config.labbuilderconfig.settings.labpath = 'c:\exists\'
-                $Config.labbuilderconfig.settings.vhdparentpath = 'c:\exists\'
-
-                Test-LabConfiguration -Config $Config | Should Be $True
-            }
-        }
-        Context 'Valid Configuration is provided and LabPath is empty' {
-            It 'Throws ConfigurationMissingElementError Exception' {
-                $Config.labbuilderconfig.settings.labpath = ''
-                $Config.labbuilderconfig.settings.vhdparentpath = 'c:\exists\'
-
-                $ExceptionParameters = @{
-                    errorId = 'ConfigurationMissingElementError'
-                    errorCategory = 'InvalidArgument'
-                    errorMessage = $($LocalizedData.ConfigurationMissingElementError `
-                        -f '<settings>\<labpath>')
-                }
-                $Exception = GetException @ExceptionParameters
-
-                { Test-LabConfiguration -Config $Config } | Should Throw $Exception
-            }
-        }      
-        Context 'Valid Configuration is provided and VHDParentPath is empty' {
-            It 'Returns True' {
-                $Config.labbuilderconfig.settings.labpath = 'c:\exists\'
-                $Config.labbuilderconfig.settings.vhdparentpath = ''
-
-                $ExceptionParameters = @{
-                    errorId = 'ConfigurationMissingElementError'
-                    errorCategory = 'InvalidArgument'
-                    errorMessage = $($LocalizedData.ConfigurationMissingElementError `
-                        -f '<settings>\<vhdparentpath>')
-                }
-                $Exception = GetException @ExceptionParameters
-
-                { Test-LabConfiguration -Config $Config } | Should Throw $Exception
             }
         }
     }
