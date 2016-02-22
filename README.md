@@ -90,6 +90,12 @@ Configuration XML
 
 Versions
 --------
+### 0.4.0.0
+* Some secondary non-exported functions moved into separate support libraries.
+* Initialize-LabVMTemplate caches NanoServerPackages from VHD template folder to Lab folder.
+* Fix exception connecting to VM when TrustedHosts is set to '*'.
+* Fix path Lab VM files are created. 
+ 
 ### 0.3.3.0
 * Changed Get-LabSwitch Unit tests to use PesterTestConfig.OK.xml.
 * Added support for configuring Nano Server packages for each VM.

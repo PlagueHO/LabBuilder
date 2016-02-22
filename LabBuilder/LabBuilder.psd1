@@ -1,6 +1,6 @@
 @{
     RootModule = 'LabBuilder.psm1'
-    ModuleVersion = '0.3.3.0'
+    ModuleVersion = '0.4.0.0'
     GUID = 'e229850e-7a90-4123-9a30-37814119d3a3'
     Author = 'Daniel Scott-Raynsford'
     CompanyName = ''
@@ -14,7 +14,30 @@
     TypesToProcess = @()
     FormatsToProcess = @()
     # NestedModules = @()
-    # FunctionsToExport = @()
+    FunctionsToExport = @(
+        'Get-LabConfiguration'
+        'Test-LabConfiguration'
+        'Install-LabHyperV'
+        'Initialize-LabConfiguration'
+        'Get-LabSwitch'
+        'Initialize-LabSwitch'
+        'Remove-LabSwitch'
+        'Get-LabVMTemplateVHD'
+        'Initialize-LabVMTemplateVHD'
+        'Remove-LabVMTemplateVHD'
+        'Get-LabVMTemplate'
+        'Initialize-LabVMTemplate'
+        'Remove-LabVMTemplate'
+        'Get-LabVM'
+        'Initialize-LabVM'
+        'Remove-LabVM'
+        'Start-LabVM'
+        'Wait-LabVMStart'
+        'Wait-LabVMOff'
+        'Wait-LabVMInit'
+        'Install-Lab'
+        'Uninstall-Lab'
+    )
     # CmdletsToExport = @()
     VariablesToExport = @()
     AliasesToExport = @()

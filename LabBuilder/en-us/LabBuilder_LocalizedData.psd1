@@ -77,7 +77,9 @@ ConvertFrom-StringData -StringData @'
     VMDataDiskPartitionStyleMissingError=The Data Disk '{1}' in VM '{0}' does not have a partition style definied.
     VMDataDiskFileSystemMissingError=The Data Disk '{1}' in VM '{0}' does not have a file format definied.
     VMDataDiskCopyFolderMissingError=The CopyFolder '{2}' that should be copied to Data Disk '{1}' in VM '{0}' does not exist.
+    NanoServerPackagesFolderMissingError=The NanoServerPackages folder '{0}' does not exist.
     
+    ImportingLibFileMessage=Importing function library '{0}'.
     InstallingHyperVComponentsMesage=Installing {0} Hyper-V Components.
     InitializingHyperVComponentsMesage=Initializing Hyper-V Components.
     InitializeVHDMountingMessage=Mounting VHD {0} for Initialization.
@@ -157,6 +159,7 @@ ConvertFrom-StringData -StringData @'
     ISONotFoundDownloadURLMessage=The ISO '{1}' for VM template VHD '{0}' could not be found. It can be downloaded from '{2}'.
     CreatingMountFolderMessage=Creating a temporary mount folder '{0}'.
     CreatingVMTemplateVHDMessage=Creating the '{0}' VM Template VHD '{1}'.
+    CachingNanoServerPackagesMessage=Caching Nano Server packages from '{0}' to '{1}'.
     ConvertingWIMtoVHDMessage=Converting '{3}' in '{0}' to a bootable {4} {5} {2} '{1}'.
     CreatedVMInitializationFiles=Created Initialization files for VM '{0}'.
     MountingVMTemplateVHDISOMessage=Mounting {1} to use source WIM to create Template VHD {0}
