@@ -131,14 +131,14 @@ function InitializeBootVHD {
                     $PackagePath = Join-Path `
                         -Path $PackagesFolder `
                         -ChildPath $Package.Filename
-                    Add-WindowsPackage `
+                    $null = Add-WindowsPackage `
                         -PackagePath $PackagePath `
                         -Path $MountPoint
                     # Add the localization package
                     $PackagePath = Join-Path `
                         -Path $PackagesFolder `
                         -ChildPath "en-us\$($Package.Filename)"
-                    Add-WindowsPackage `
+                    $null = Add-WindowsPackage `
                         -PackagePath $PackagePath `
                         -Path $MountPoint
                 } # if
