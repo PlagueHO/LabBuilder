@@ -3147,7 +3147,9 @@ function Get-LabVMelfSignedCert
     while ((-not $Complete) `
         -and (((Get-Date) - $StartTime).TotalSeconds) -lt $TimeOut)
     {
-        $Session = Connect-LabVM -VM $VM -ErrorAction Continue
+        $Session = Connect-LabVM `
+            -VM $VM `
+            -ErrorAction Continue
         
         # Failed to connnect to the VM
         if (! $Session)
@@ -3284,7 +3286,9 @@ function New-LabVMSelfSignedCert
     while ((-not $Complete) `
         -and (((Get-Date) - $StartTime).TotalSeconds) -lt $TimeOut)
     {
-        $Session = Connect-LabVM -VM $VM -ErrorAction Continue
+        $Session = Connect-LabVM `
+            -VM $VM `
+            -ErrorAction Continue
 
         # Failed to connnect to the VM
         if (! $Session)
@@ -4123,6 +4127,8 @@ function Initialize-LabVM {
     
     $CurrentVMs = Get-VM
 
+    [String] $LabPath = $Config.labbuilderconfig.settings.labpath
+
     # Figure out the name of the LabBuilder control switch
     $ManagementSwitchName = ('LabBuilder Management {0}' -f $Config.labbuilderconfig.name)
     if ($Config.labbuilderconfig.switches.ManagementVlan)
@@ -4204,7 +4210,7 @@ function Initialize-LabVM {
                 -Name $VM.Name `
                 -MemoryStartupBytes $VM.MemoryStartupBytes `
                 -Generation 2 `
-                -Path $VMPath `
+                -Path $LabPath `
                 -VHDPath $VMBootDiskPath
             # Remove the default network adapter created with the VM because we don't need it
             Remove-VMNetworkAdapter `
@@ -4371,6 +4377,7 @@ function Remove-LabVM {
     }
     
     $CurrentVMs = Get-VM
+
     [String] $LabPath = $Config.labbuilderconfig.settings.labpath
     
     foreach ($VM in $VMs)
@@ -4675,8 +4682,9 @@ function Connect-LabVM
             
             # Add the IP Address to trusted hosts if not already in it
             # This could be avoided if able to use SSL or if PS Direct is used.
+            # Also, don't add if TrustedHosts is already *
             $TrustedHosts = (Get-Item -Path WSMAN::localhost\Client\TrustedHosts).Value
-            if (($TrustedHosts -notlike "*$IPAddress*"))
+            if (($TrustedHosts -notlike "*$IPAddress*") -and ($TrustedHosts -ne '*'))
             {
                 Set-Item `
                     -Path WSMAN::localhost\Client\TrustedHosts `
@@ -4726,10 +4734,6 @@ function Connect-LabVM
     }
     Return $Session
 } # Connect-LabVM
-####################################################################################################
-
-####################################################################################################
-
 ####################################################################################################
 
 ####################################################################################################
