@@ -112,7 +112,7 @@ function Get-LabConfiguration {
             errorMessage = $($LocalizedData.ConfigurationFileNotFoundError `
                 -f $Path)
         }
-        New-LabException @ExceptionParameters
+        ThrowException @ExceptionParameters
     } # If
     $Content = Get-Content -Path $Path -Raw
     if (-not $Content)
@@ -123,7 +123,7 @@ function Get-LabConfiguration {
             errorMessage = $($LocalizedData.ConfigurationFileEmptyError `
                 -f $Path)
         }
-        New-LabException @ExceptionParameters
+        ThrowException @ExceptionParameters
     } # If
     [XML] $Config = New-Object System.Xml.XmlDocument
     $Config.PreserveWhitespace = $true
@@ -182,7 +182,7 @@ function Test-LabConfiguration {
             errorCategory = 'InvalidArgument'
             errorMessage = $($LocalizedData.ConfigurationInvalidError)
         }
-        New-LabException @ExceptionParameters
+        ThrowException @ExceptionParameters
     }
 
     # Check folders exist
@@ -195,7 +195,7 @@ function Test-LabConfiguration {
             errorMessage = $($LocalizedData.ConfigurationMissingElementError `
                 -f '<settings>\<labpath>')
         }
-        New-LabException @ExceptionParameters
+        ThrowException @ExceptionParameters
     }
 
     if (-not (Test-Path -Path $LabPath))
@@ -206,7 +206,7 @@ function Test-LabConfiguration {
             errorMessage = $($LocalizedData.PathNotFoundError `
                 -f '<settings>\<labpath>',$LabPath)
         }
-        New-LabException @ExceptionParameters
+        ThrowException @ExceptionParameters
     }
 
     [String] $VHDParentPath = $Config.labbuilderconfig.settings.vhdparentpath
@@ -218,7 +218,7 @@ function Test-LabConfiguration {
             errorMessage = $($LocalizedData.ConfigurationMissingElementError `
                 -f '<settings>\<vhdparentpath>')
         }
-        New-LabException @ExceptionParameters
+        ThrowException @ExceptionParameters
     }
 
     if (-not (Test-Path -Path $VHDParentPath))
@@ -229,7 +229,7 @@ function Test-LabConfiguration {
             errorMessage = $($LocalizedData.PathNotFoundError `
                 -f '<settings>\<vhdparentpath>',$VHDParentPath)
         }
-        New-LabException @ExceptionParameters
+        ThrowException @ExceptionParameters
     }
 
     [String] $FullConfigPath = $Config.labbuilderconfig.settings.fullconfigpath
@@ -241,7 +241,7 @@ function Test-LabConfiguration {
             errorMessage = $($LocalizedData.PathNotFoundError `
                 -f '<settings>\<fullconfigpath>',$FullConfigPath)
         }
-        New-LabException @ExceptionParameters
+        ThrowException @ExceptionParameters
     }
     Return $true
 } # Test-LabConfiguration
@@ -493,7 +493,7 @@ function Download-LabModule {
                     errorMessage = $($LocalizedData.ModuleNotAvailableError `
                         -f $Name,$VersionMessage,$_.Exception.Message)
                 }
-                New-LabException @ExceptionParameters
+                ThrowException @ExceptionParameters
             }
         } # If
     } # If
@@ -545,7 +545,7 @@ function Download-LabResources {
                     errorCategory = 'InvalidArgument'
                     errorMessage = $($LocalizedData.ResourceModuleNameEmptyError)
                 }
-                New-LabException @ExceptionParameters
+                ThrowException @ExceptionParameters
             } # If
             $Splat = [PSObject] @{ Name = $Module.Name }
             if ($Module.URL)
@@ -611,7 +611,7 @@ function Get-LabSwitch {
                 errorCategory = 'InvalidArgument'
                 errorMessage = $($LocalizedData.SwitchNameIsEmptyError)
             }
-            New-LabException @ExceptionParameters
+            ThrowException @ExceptionParameters
         }
         if ($ConfigSwitch.Type -notin 'Private','Internal','External','NAT')
         {
@@ -621,7 +621,7 @@ function Get-LabSwitch {
                 errorMessage = $($LocalizedData.UnknownSwitchTypeError `
                     -f $ConfigSwitch.Type,$ConfigSwitch.Name)
             }
-            New-LabException @ExceptionParameters
+            ThrowException @ExceptionParameters
         }
         # Assemble the list of Adapters if any are specified for this switch (only if an external
         # switch)
@@ -640,7 +640,7 @@ function Get-LabSwitch {
                     errorMessage = $($LocalizedData.AdapterSpecifiedError `
                         -f $ConfigSwitch.Type,$ConfigSwitch.Name)
                 }
-                New-LabException @ExceptionParameters
+                ThrowException @ExceptionParameters
             }
         }
         Else
@@ -714,7 +714,7 @@ function Initialize-LabSwitch {
                     errorCategory = 'InvalidArgument'
                     errorMessage = $($LocalizedData.SwitchNameIsEmptyError)
                 }
-                New-LabException @ExceptionParameters
+                ThrowException @ExceptionParameters
             }
             [string] $SwitchType = $VMSwitch.Type
             Write-Verbose -Message $($LocalizedData.CreatingVirtualSwitchMessage `
@@ -805,7 +805,7 @@ function Initialize-LabSwitch {
                             errorMessage = $($LocalizedData.NatSubnetAddressEmptyError `
                                 -f $SwitchName)
                         }
-                        New-LabException @ExceptionParameters
+                        ThrowException @ExceptionParameters
                     }
                     $null = New-VMSwitch `
                         -Name $SwitchName `
@@ -824,7 +824,7 @@ function Initialize-LabSwitch {
                         errorMessage = $($LocalizedData.UnknownSwitchTypeError `
                             -f $SwitchType,$SwitchName)
                     }
-                    New-LabException @ExceptionParameters
+                    ThrowException @ExceptionParameters
                 }
             } # Switch
         } # If
@@ -887,7 +887,7 @@ function Remove-LabSwitch {
                     errorCategory = 'InvalidArgument'
                     errorMessage = $($LocalizedData.SwitchNameIsEmptyError)
                 }
-                New-LabException @ExceptionParameters
+                ThrowException @ExceptionParameters
             }
             [string] $SwitchType = $Switch.Type
             Write-Verbose -Message $($LocalizedData.DeleteingVirtualSwitchMessage `
@@ -936,7 +936,7 @@ function Remove-LabSwitch {
                         errorMessage = $($LocalizedData.UnknownSwitchTypeError `
                             -f $SwitchType,$SwitchName)
                     }
-                    New-LabException @ExceptionParameters
+                    ThrowException @ExceptionParameters
                 }
             } # Switch
         } # If
@@ -1008,7 +1008,7 @@ function Get-LabVMTemplateVHD {
             errorMessage = $($LocalizedData.VMTemplateVHDISORootPathNotFoundError `
                 -f $ISORootPath)
         }
-        New-LabException @ExceptionParameters
+        ThrowException @ExceptionParameters
     }
 
     # Determine the VHDRootPath where the VHD files should be put
@@ -1037,7 +1037,7 @@ function Get-LabVMTemplateVHD {
             errorMessage = $($LocalizedData.VMTemplateVHDRootPathNotFoundError `
                 -f $VHDRootPath)
         }
-        New-LabException @ExceptionParameters
+        ThrowException @ExceptionParameters
     }
 
     $TemplatePrefix = $Config.labbuilderconfig.templatevhds.prefix
@@ -1059,7 +1059,7 @@ function Get-LabVMTemplateVHD {
                 errorCategory = 'InvalidArgument'
                 errorMessage = $($LocalizedData.EmptyVMTemplateVHDNameError)
             }
-            New-LabException @ExceptionParameters
+            ThrowException @ExceptionParameters
         } # If
         
         # Get the ISO Path
@@ -1072,7 +1072,7 @@ function Get-LabVMTemplateVHD {
                 errorMessage = $($LocalizedData.EmptyVMTemplateVHDISOPathError `
                     -f $TemplateVHD.Name)
             }
-            New-LabException @ExceptionParameters
+            ThrowException @ExceptionParameters
         }
 
         # Adjust the ISO Path if required
@@ -1100,7 +1100,7 @@ function Get-LabVMTemplateVHD {
                 errorMessage = $($LocalizedData.VMTemplateVHDISOPathNotFoundError `
                     -f $TemplateVHD.Name,$ISOPath)
             }
-            New-LabException @ExceptionParameters            
+            ThrowException @ExceptionParameters            
         }
         
         # Get the VHD Path
@@ -1113,7 +1113,7 @@ function Get-LabVMTemplateVHD {
                 errorMessage = $($LocalizedData.EmptyVMTemplateVHDPathError `
                     -f $TemplateVHD.Name)
             }
-            New-LabException @ExceptionParameters
+            ThrowException @ExceptionParameters
         }
 
         # Adjust the VHD Path if required
@@ -1146,7 +1146,7 @@ function Get-LabVMTemplateVHD {
                 errorMessage = $($LocalizedData.InvalidVMTemplateVHDOSTypeError `
                     -f $TemplateVHD.Name,$OSType)
             }
-            New-LabException @ExceptionParameters            
+            ThrowException @ExceptionParameters            
         }
 
 		# Get the Template Wim Image to use
@@ -1170,7 +1170,7 @@ function Get-LabVMTemplateVHD {
                 errorMessage = $($LocalizedData.InvalidVMTemplateVHDVHDFormatError `
                     -f $TemplateVHD.Name,$VHDFormat)
             }
-            New-LabException @ExceptionParameters            
+            ThrowException @ExceptionParameters            
         }
 
         # Get the Template VHD Type 
@@ -1187,7 +1187,7 @@ function Get-LabVMTemplateVHD {
                 errorMessage = $($LocalizedData.InvalidVMTemplateVHDVHDTypeError `
                     -f $TemplateVHD.Name,$VHDType)
             }
-            New-LabException @ExceptionParameters            
+            ThrowException @ExceptionParameters            
         }
         
         # Get the disk size if provided
@@ -1211,7 +1211,7 @@ function Get-LabVMTemplateVHD {
                 errorMessage = $($LocalizedData.InvalidVMTemplateVHDGenerationError `
                     -f $TemplateVHD.Name,$Generation)
             }
-            New-LabException @ExceptionParameters            
+            ThrowException @ExceptionParameters            
         }
 
         # Get the Template Packages
@@ -1324,7 +1324,7 @@ function Initialize-LabVMTemplateVHD
                 errorMessage = $($LocalizedData.VMTemplateVHDISOPathNotFoundError `
                     -f $Name,$ISOPath)
             }
-            New-LabException @ExceptionParameters            
+            ThrowException @ExceptionParameters            
         }
         
         # Mount the ISO so we can read the files.
@@ -1544,7 +1544,7 @@ function Get-LabVMTemplate {
                 errorCategory = 'InvalidArgument'
                 errorMessage = $($LocalizedData.EmptyTemplateNameError)
             }
-            New-LabException @ExceptionParameters
+            ThrowException @ExceptionParameters
         } # if
         
         # Does the template already exist in the list?
@@ -1580,7 +1580,7 @@ function Get-LabVMTemplate {
                 errorMessage = $($LocalizedData.TemplateSourceVHDAndTemplateVHDConflictError `
                     -f $TemplateName)
             }
-            New-LabException @ExceptionParameters            
+            ThrowException @ExceptionParameters            
         } # if
         
         if ($TemplateVHD)
@@ -1615,7 +1615,7 @@ function Get-LabVMTemplate {
                     errorMessage = $($LocalizedData.TemplateTemplateVHDNotFoundError `
                         -f $TemplateName,$TemplateVHD)
                 }
-                New-LabException @ExceptionParameters
+                ThrowException @ExceptionParameters
             } # if
         }
         elseif ($SourceVHD)
@@ -1642,7 +1642,7 @@ function Get-LabVMTemplate {
                     errorMessage = $($LocalizedData.TemplateSourceVHDNotFoundError `
                         -f $TemplateName,$VMTemplate.sourcevhd)
                 }
-                New-LabException @ExceptionParameters
+                ThrowException @ExceptionParameters
             } # if
             
             # If a VHD filename wasn't specified in the Template
@@ -1668,7 +1668,7 @@ function Get-LabVMTemplate {
                 errorMessage = $($LocalizedData.TemplateSourceVHDandTemplateVHDMissingError `
                     -f $TemplateName)
             }
-            New-LabException @ExceptionParameters
+            ThrowException @ExceptionParameters
         } # if
                 
         # Ensure the ParentVHD is up-to-date
@@ -1815,7 +1815,7 @@ function Initialize-LabVMTemplate {
                     errorMessage = $($LocalizedData.TemplateSourceVHDNotFoundError `
                         -f $VMTemplate.Name,$VMTemplate.sourcevhd)
                 }
-                New-LabException @ExceptionParameters                
+                ThrowException @ExceptionParameters                
 			}
             
 			Write-Verbose -Message $($LocalizedData.CopyingTemplateSourceVHDMessage `
@@ -1896,133 +1896,6 @@ function Remove-LabVMTemplate {
         }
     }
 } # Remove-LabVMTemplate
-####################################################################################################
-
-####################################################################################################
-<#
-.SYNOPSIS
-   Assembles the content of a Unattend XML file that should be used to initialize
-   Windows on the specified VM.
-.DESCRIPTION
-   This function will return the content of a standard Windows Unattend XML file
-   that can be written to an VHD containing a copy of Windows that is still in
-   OOBE mode.
-.PARAMETER Configuration
-   Contains the Lab Builder configuration object that was loaded by the Get-LabConfiguration
-   object.
-.PARAMETER VM
-   A Virtual Machine object pulled from the Lab Configuration file using Get-LabVM
-.EXAMPLE
-   $Config = Get-LabConfiguration -Path c:\mylab\config.xml
-   $VMs = Get-LabVM -Config $Config
-   Get-LabUnattendFile -Config $Config -VM $VMs[0]
-   Returns the content of the Unattend File for the first VM in the Lab c:\mylab\config.xml.
-.OUTPUTS
-   The content of the Unattend File for the VM.
-#>
-function Get-LabUnattendFile {
-    [CmdLetBinding()]
-    [OutputType([String])]
-    param
-    (
-        [Parameter(Mandatory)]
-        [XML] $Config,
-
-        [Parameter(Mandatory)]
-        [System.Collections.Hashtable] $VM
-    )
-    if ($VM.UnattendFile)
-    {
-        [String] $UnattendContent = Get-Content -Path $VM.UnattendFile
-    }
-    Else
-    {
-        [String] $DomainName = $Config.labbuilderconfig.settings.domainname
-        [String] $Email = $Config.labbuilderconfig.settings.email
-        $UnattendContent = [String] @"
-<?xml version="1.0" encoding="utf-8"?>
-<unattend xmlns="urn:schemas-microsoft-com:unattend">
-    <settings pass="offlineServicing">
-        <component name="Microsoft-Windows-LUA-Settings" processorArchitecture="amd64" publicKeyToken="31bf3856ad364e35" language="neutral" versionScope="nonSxS" xmlns:wcm="http://schemas.microsoft.com/WMIConfig/2002/State" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
-            <EnableLUA>false</EnableLUA>
-        </component>
-    </settings>
-    <settings pass="generalize">
-        <component name="Microsoft-Windows-Security-SPP" processorArchitecture="amd64" publicKeyToken="31bf3856ad364e35" language="neutral" versionScope="nonSxS" xmlns:wcm="http://schemas.microsoft.com/WMIConfig/2002/State" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
-            <SkipRearm>1</SkipRearm>
-        </component>
-    </settings>
-    <settings pass="specialize">
-        <component name="Microsoft-Windows-International-Core" processorArchitecture="amd64" publicKeyToken="31bf3856ad364e35" language="neutral" versionScope="nonSxS" xmlns:wcm="http://schemas.microsoft.com/WMIConfig/2002/State" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
-            <InputLocale>0409:00000409</InputLocale>
-            <SystemLocale>en-US</SystemLocale>
-            <UILanguage>en-US</UILanguage>
-            <UILanguageFallback>en-US</UILanguageFallback>
-            <UserLocale>en-US</UserLocale>
-        </component>
-        <component name="Microsoft-Windows-Security-SPP-UX" processorArchitecture="amd64" publicKeyToken="31bf3856ad364e35" language="neutral" versionScope="nonSxS" xmlns:wcm="http://schemas.microsoft.com/WMIConfig/2002/State" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
-            <SkipAutoActivation>true</SkipAutoActivation>
-        </component>
-        <component name="Microsoft-Windows-SQMApi" processorArchitecture="amd64" publicKeyToken="31bf3856ad364e35" language="neutral" versionScope="nonSxS" xmlns:wcm="http://schemas.microsoft.com/WMIConfig/2002/State" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
-            <CEIPEnabled>0</CEIPEnabled>
-        </component>
-        <component name="Microsoft-Windows-Shell-Setup" processorArchitecture="amd64" publicKeyToken="31bf3856ad364e35" language="neutral" versionScope="nonSxS" xmlns:wcm="http://schemas.microsoft.com/WMIConfig/2002/State" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
-            <ComputerName>$($VM.ComputerName)</ComputerName>
-        </component>
-"@
-		
-
-        if ($VM.OSType -eq 'Client')
-        {
-            $UnattendContent += @"
-            <component name="Microsoft-Windows-Deployment" processorArchitecture="x86" publicKeyToken="31bf3856ad364e35" language="neutral" versionScope="nonSxS" xmlns:wcm="http://schemas.microsoft.com/WMIConfig/2002/State" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
-                <RunSynchronous>
-                    <RunSynchronousCommand wcm:action="add">
-                        <Order>1</Order>
-                        <Path>net user administrator /active:yes</Path>
-                    </RunSynchronousCommand>
-                </RunSynchronous>
-            </component>
-
-"@
-        } # If
-        $UnattendContent += @"
-    </settings>
-    <settings pass="oobeSystem">
-        <component name="Microsoft-Windows-Shell-Setup" processorArchitecture="amd64" publicKeyToken="31bf3856ad364e35" language="neutral" versionScope="nonSxS" xmlns:wcm="http://schemas.microsoft.com/WMIConfig/2002/State" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
-            <OOBE>
-                <HideEULAPage>true</HideEULAPage>
-                <HideOEMRegistrationScreen>true</HideOEMRegistrationScreen>
-                <HideOnlineAccountScreens>true</HideOnlineAccountScreens>
-                <HideWirelessSetupInOOBE>true</HideWirelessSetupInOOBE>
-                <NetworkLocation>Work</NetworkLocation>
-                <ProtectYourPC>1</ProtectYourPC>
-                <SkipUserOOBE>true</SkipUserOOBE>
-                <SkipMachineOOBE>true</SkipMachineOOBE>
-            </OOBE>
-            <UserAccounts>
-               <AdministratorPassword>
-                  <Value>$($VM.AdministratorPassword)</Value>
-                  <PlainText>true</PlainText>
-               </AdministratorPassword>
-            </UserAccounts>
-            <RegisteredOrganization>$($DomainName)</RegisteredOrganization>
-            <RegisteredOwner>$($Email)</RegisteredOwner>
-            <DisableAutoDaylightTimeSet>false</DisableAutoDaylightTimeSet>
-            <TimeZone>$($VM.TimeZone)</TimeZone>
-        </component>
-        <component name="Microsoft-Windows-ehome-reg-inf" processorArchitecture="x86" publicKeyToken="31bf3856ad364e35" language="neutral" versionScope="NonSxS" xmlns:wcm="http://schemas.microsoft.com/WMIConfig/2002/State" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
-            <RestartEnabled>true</RestartEnabled>
-        </component>
-        <component name="Microsoft-Windows-ehome-reg-inf" processorArchitecture="amd64" publicKeyToken="31bf3856ad364e35" language="neutral" versionScope="NonSxS" xmlns:wcm="http://schemas.microsoft.com/WMIConfig/2002/State" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
-            <RestartEnabled>true</RestartEnabled>
-        </component>
-    </settings>
-</unattend>
-"@
-    }
-    Return $UnattendContent
-} # Get-LabUnattendFile
 ####################################################################################################
 
 ####################################################################################################
@@ -2274,7 +2147,7 @@ Export-Certificate ``
      2. SetupComplete.cmd - the command file that gets run after the Windows OOBE is complete.
      3. SetupComplete.ps1 - this PowerShell script file that is run at the the end of the
                             SetupComplete.cmd.
-   The files should have already been prepared by the CreateLabVMInitializationFiles function.
+   The files should have already been prepared by the CreateVMInitializationFiles function.
    The VM VHD image should contain an installed copy of Windows still in OOBE mode.
    
    This function also applies downloads and applies and optional MSU update files from
@@ -2521,7 +2394,7 @@ function Get-LabVM {
                 errorCategory = 'InvalidArgument'
                 errorMessage = $($LocalizedData.VMNameError)
             }
-            New-LabException @ExceptionParameters
+            ThrowException @ExceptionParameters
         } # If
         if (-not $VM.Template) 
 		{
@@ -2531,7 +2404,7 @@ function Get-LabVM {
                 errorMessage = $($LocalizedData.VMTemplateNameEmptyError `
                     -f $VM.name)
             }
-            New-LabException @ExceptionParameters
+            ThrowException @ExceptionParameters
         } # If
 
         # Find the template that this VM uses and get the VHD Path
@@ -2553,7 +2426,7 @@ function Get-LabVM {
                 errorMessage = $($LocalizedData.VMTemplateNotFoundError `
                     -f $VM.name,$VM.template)
             }
-            New-LabException @ExceptionParameters
+            ThrowException @ExceptionParameters
         } # If
 
         # Assemble the Network adapters that this VM will use
@@ -2570,7 +2443,7 @@ function Get-LabVM {
                     errorMessage = $($LocalizedData.VMAdapterNameError `
                         -f $VM.name)
                 }
-                New-LabException @ExceptionParameters
+                ThrowException @ExceptionParameters
             }
             if (-not $VMAdapter.SwitchName) 
 			{
@@ -2580,7 +2453,7 @@ function Get-LabVM {
                     errorMessage = $($LocalizedData.VMAdapterSwitchNameError `
                         -f $VM.name,$VMAdapter.name)
                 }
-                New-LabException @ExceptionParameters
+                ThrowException @ExceptionParameters
             }
             # Check the switch is in the switch list
             [Boolean] $Found = $False
@@ -2602,7 +2475,7 @@ function Get-LabVM {
                     errorMessage = $($LocalizedData.VMAdapterSwitchNotFoundError `
                         -f $VM.name,$VMAdapter.name,$VMAdapter.switchname)
                 }
-                New-LabException @ExceptionParameters
+                ThrowException @ExceptionParameters
             } # If
             
             # Figure out the VLan - If defined in the VM use it, otherwise use the one defined in the Switch, otherwise keep blank.
@@ -2670,7 +2543,7 @@ function Get-LabVM {
                     errorMessage = $($LocalizedData.VMDataDiskVHDEmptyError `
                         -f $VM.name)
                 }
-                New-LabException @ExceptionParameters
+                ThrowException @ExceptionParameters
             }
             # Adjust the path to be relative to the Virtual Hard Disks folder of the VM
             # if it doesn't contain a root (e.g. c:\)
@@ -2703,7 +2576,7 @@ function Get-LabVM {
                         errorMessage = $($LocalizedData.VMDataDiskParentVHDNotFoundError `
                             -f $VM.name,$ParentVhd)
                     }
-                    New-LabException @ExceptionParameters
+                    ThrowException @ExceptionParameters
                 }
             }
 
@@ -2728,7 +2601,7 @@ function Get-LabVM {
                         errorMessage = $($LocalizedData.VMDataDiskSourceVHDNotFoundError `
                             -f $VM.name,$SourceVhd)
                     }
-                    New-LabException @ExceptionParameters
+                    ThrowException @ExceptionParameters
                 }
             }
 
@@ -2766,7 +2639,7 @@ function Get-LabVM {
                                 errorMessage = $($LocalizedData.VMDataDiskParentVHDMissingError `
                                     -f $VM.name)
                             }
-                            New-LabException @ExceptionParameters
+                            ThrowException @ExceptionParameters
                         }
                         if ($Shared)
                         {
@@ -2776,7 +2649,7 @@ function Get-LabVM {
                                 errorMessage = $($LocalizedData.VMDataDiskSharedDifferencingError `
                                     -f $VM.Name,$VHD)
                             }
-                            New-LabException @ExceptionParameters                            
+                            ThrowException @ExceptionParameters                            
                         }
                     }
                     Default
@@ -2787,7 +2660,7 @@ function Get-LabVM {
                             errorMessage = $($LocalizedData.VMDataDiskUnknownTypeError `
                                 -f $VM.Name,$VHD,$type)
                         }
-                        New-LabException @ExceptionParameters
+                        ThrowException @ExceptionParameters
                     }
                 }
             }
@@ -2802,7 +2675,7 @@ function Get-LabVM {
                     errorMessage = $($LocalizedData.VMDataDiskSupportPRError `
                         -f $VM.Name,$VHD)
                 }
-                New-LabException @ExceptionParameters
+                ThrowException @ExceptionParameters
             }
 
             # Get Partition Style for the new disk.
@@ -2818,7 +2691,7 @@ function Get-LabVM {
                         errorMessage = $($LocalizedData.VMDataDiskPartitionStyleError `
                             -f $VM.Name,$VHD,$PartitionStyle)
                     }
-                    New-LabException @ExceptionParameters
+                    ThrowException @ExceptionParameters
                 }
             }
 
@@ -2835,7 +2708,7 @@ function Get-LabVM {
                         errorMessage = $($LocalizedData.VMDataDiskFileSystemError `
                             -f $VM.Name,$VHD,$FileSystem)
                     }
-                    New-LabException @ExceptionParameters
+                    ThrowException @ExceptionParameters
                 }
             }
 
@@ -2858,7 +2731,7 @@ function Get-LabVM {
                         errorMessage = $($LocalizedData.VMDataDiskPartitionStyleMissingError `
                             -f $VM.Name,$VHD)
                     }
-                    New-LabException @ExceptionParameters
+                    ThrowException @ExceptionParameters
                 }
                 if (-not $FileSystem)
                 {
@@ -2868,7 +2741,7 @@ function Get-LabVM {
                         errorMessage = $($LocalizedData.VMDataDiskFileSystemMissingError `
                             -f $VM.Name,$VHD)
                     }
-                    New-LabException @ExceptionParameters
+                    ThrowException @ExceptionParameters
                 }
             }
 
@@ -2895,7 +2768,7 @@ function Get-LabVM {
                         errorMessage = $($LocalizedData.VMDataDiskCopyFolderMissingError `
                             -f $VM.Name,$VHD,$CopyFolder)
                         }
-                    New-LabException @ExceptionParameters 
+                    ThrowException @ExceptionParameters 
                     }                   
                 }
             } 
@@ -2913,7 +2786,7 @@ function Get-LabVM {
                         errorMessage = $($LocalizedData.VMDataDiskSourceVHDIfMoveError `
                             -f $VM.Name,$VHD)
                     }
-                    New-LabException @ExceptionParameters                        
+                    ThrowException @ExceptionParameters                        
                 }
             }
 
@@ -2928,7 +2801,7 @@ function Get-LabVM {
                     errorMessage = $($LocalizedData.VMDataDiskCantBeCreatedError `
                         -f $VM.Name,$VHD)
                 }
-                New-LabException @ExceptionParameters                    
+                ThrowException @ExceptionParameters                    
             }
                         
             # Write the values to the array
@@ -2963,7 +2836,7 @@ function Get-LabVM {
                     errorMessage = $($LocalizedData.UnattendFileMissingError `
                         -f $VM.name,$UnattendFile)
                 }
-                New-LabException @ExceptionParameters
+                ThrowException @ExceptionParameters
             } # If
         } # If
         
@@ -2982,7 +2855,7 @@ function Get-LabVM {
                     errorMessage = $($LocalizedData.SetupCompleteFileBadTypeError `
                         -f $VM.name,$SetupComplete)
                 }
-                New-LabException @ExceptionParameters
+                ThrowException @ExceptionParameters
             } # If
             if (-not (Test-Path $SetupComplete))
             {
@@ -2992,7 +2865,7 @@ function Get-LabVM {
                     errorMessage = $($LocalizedData.SetupCompleteFileMissingError `
                         -f $VM.name,$SetupComplete)
                 }
-                New-LabException @ExceptionParameters
+                ThrowException @ExceptionParameters
             } # If
         } # If
 
@@ -3027,7 +2900,7 @@ function Get-LabVM {
                     errorMessage = $($LocalizedData.DSCConfigFileBadTypeError `
                         -f $VM.name,$DSCConfigFile)
                 }
-                New-LabException @ExceptionParameters
+                ThrowException @ExceptionParameters
             }
 
             if (-not (Test-Path $DSCConfigFile))
@@ -3038,7 +2911,7 @@ function Get-LabVM {
                     errorMessage = $($LocalizedData.DSCConfigFileMissingError `
                         -f $VM.name,$DSCConfigFile)
                 }
-                New-LabException @ExceptionParameters
+                ThrowException @ExceptionParameters
             }
             if (-not $VM.DSC.ConfigName)
             {
@@ -3048,7 +2921,7 @@ function Get-LabVM {
                     errorMessage = $($LocalizedData.DSCConfigNameIsEmptyError `
                         -f $VM.name)
                 }
-                New-LabException @ExceptionParameters
+                ThrowException @ExceptionParameters
             }
         }
         
@@ -3285,7 +3158,7 @@ function Get-LabVMelfSignedCert
                 errorMessage = $($LocalizedData.CertificateDownloadError `
                     -f $VM.Name)
             }
-            New-LabException @ExceptionParameters
+            ThrowException @ExceptionParameters
             return
         }
 
@@ -3331,7 +3204,7 @@ function Get-LabVMelfSignedCert
                 errorMessage = $($LocalizedData.CertificateDownloadError `
                     -f $VM.Name)
             }
-            New-LabException @ExceptionParameters
+            ThrowException @ExceptionParameters
         }
 
         # Close the Session if it is opened and the download is complete
@@ -3422,7 +3295,7 @@ function New-LabVMSelfSignedCert
                 errorMessage = $($LocalizedData.CertificateDownloadError `
                     -f $VM.Name)
             }
-            New-LabException @ExceptionParameters
+            ThrowException @ExceptionParameters
             return
         }
 
@@ -3526,7 +3399,7 @@ function New-LabVMSelfSignedCert
                 errorMessage = $($LocalizedData.CertificateDownloadError `
                     -f $VM.Name)
             }
-            New-LabException @ExceptionParameters
+            ThrowException @ExceptionParameters
         }
 
         # Close the Session if it is opened and the download is complete
@@ -3583,7 +3456,7 @@ function Get-LabVMManagementIPAddress {
             errorMessage = $($LocalizedData.ManagmentIPAddressError `
                 -f $ManagementSwitchName,$VM.Name)
         }
-        New-LabException @ExceptionParameters
+        ThrowException @ExceptionParameters
     }
     return $IPAddress
 } # Get-LabVMManagementIPAddress
@@ -3655,7 +3528,7 @@ function Start-LabVM {
                         errorMessage = $($LocalizedData.CertificateDownloadError `
                             -f $VM.name)
                     }
-                    New-LabException @ExceptionParameters
+                    ThrowException @ExceptionParameters
                 } # If
             }
             else
@@ -3666,7 +3539,7 @@ function Start-LabVM {
                     errorMessage = $($LocalizedData.InitializationDidNotCompleteError `
                         -f $VM.name)
                 }
-                New-LabException @ExceptionParameters
+                ThrowException @ExceptionParameters
             } # If
         } # If
 
@@ -3761,7 +3634,7 @@ function Update-LabVMDataDisk {
                     errorMessage = $($LocalizedData.VMDataDiskVHDConvertError `
                         -f $VM.name,$Vhd,$DataVhd.type)
                 }
-                New-LabException @ExceptionParameters                
+                ThrowException @ExceptionParameters                
             }
             
             # Check the size
@@ -3787,7 +3660,7 @@ function Update-LabVMDataDisk {
                         errorMessage = $($LocalizedData.VMDataDiskVHDShrinkError `
                             -f $VM.name,$Vhd,$DataVhd.Size)
                     }
-                    New-LabException @ExceptionParameters
+                    ThrowException @ExceptionParameters
                 } # if
             } # if
         }
@@ -3806,7 +3679,7 @@ function Update-LabVMDataDisk {
                         errorMessage = $($LocalizedData.VMDataDiskSourceVHDNotFoundError `
                             -f $VM.name,$SourceVhd)
                     }
-                    New-LabException @ExceptionParameters                    
+                    ThrowException @ExceptionParameters                    
                 } # if
                 # Should the Source VHD be copied or moved
                 if ($DataVhd.MoveSourceVHD)
@@ -3876,7 +3749,7 @@ function Update-LabVMDataDisk {
                                 errorMessage = $($LocalizedData.VMDataDiskParentVHDMissingError `
                                     -f $VM.name)
                             }
-                            New-LabException @ExceptionParameters                    
+                            ThrowException @ExceptionParameters                    
                         } # if
                         if (-not (Test-Path -Path $ParentVhd))
                         {
@@ -3886,7 +3759,7 @@ function Update-LabVMDataDisk {
                                 errorMessage = $($LocalizedData.VMDataDiskParentVHDNotFoundError `
                                     -f $VM.name,$ParentVhd)
                             }
-                            New-LabException @ExceptionParameters                    
+                            ThrowException @ExceptionParameters                    
                         } # if
                         
                         # Create a new Differencing VHD
@@ -3909,7 +3782,7 @@ function Update-LabVMDataDisk {
                             errorMessage = $($LocalizedData.VMDataDiskUnknownTypeError `
                                 -f $VM.Name,$Vhd,$DataVhd.type)
                         }
-                        New-LabException @ExceptionParameters                        
+                        ThrowException @ExceptionParameters                        
                     } # default
                 } # switch
             } # if     
@@ -4310,7 +4183,7 @@ function Initialize-LabVM {
                 }
 
                 # Create all the required initialization files for this VM
-                CreateLabVMInitializationFiles `
+                CreateVMInitializationFiles `
                     -Config $Config `
                     -VM $VM
 
@@ -4624,7 +4497,7 @@ function Wait-LabVMInit
                 errorMessage = $($LocalizedData.InitialSetupCompleteError `
                     -f $VM.Name)
             }
-            New-LabException @ExceptionParameters
+            ThrowException @ExceptionParameters
             return            
         }
 
@@ -4672,7 +4545,7 @@ function Wait-LabVMInit
                 errorMessage = $($LocalizedData.InitialSetupCompleteError `
                     -f $VM.Name)
             }
-            New-LabException @ExceptionParameters
+            ThrowException @ExceptionParameters
         }
 
         # Close the Session if it is opened
@@ -4849,73 +4722,14 @@ function Connect-LabVM
             errorMessage = $($LocalizedData.RemotingConnectionError `
                 -f $VM.Name)
         }
-        New-LabException @ExceptionParameters
+        ThrowException @ExceptionParameters
     }
     Return $Session
 } # Connect-LabVM
 ####################################################################################################
 
 ####################################################################################################
-<#
-.SYNOPSIS
-   Throws a custom exception.
-.DESCRIPTION
-   This cmdlet throw a terminating or non-terminating exception. 
-.EXAMPLE
-    $ExceptionParameters = @{
-        errorId = 'ConnectionFailure'
-        errorCategory = 'ConnectionError'
-        errorMessage = 'Could not connect'
-    }
-    New-LabException @ExceptionParameters
-    Throw a ConnectionError exception with the message 'Could not connect'.
-.PARAMETER errorId
-   The Id of the exception.
-.PARAMETER errorCategory
-   The category of the exception. It must be a valid [System.Management.Automation.ErrorCategory]
-   value.
-.PARAMETER errorMessage
-   The exception message.
-.PARAMETER terminate
-   THis switch will cause the exception to terminate the cmdlet.
-.OUTPUTS
-   None
-#>
 
-function New-LabException
-{
-    [CmdLetBinding()]
-    param
-    (
-        [Parameter(Mandatory)]
-        [String] $errorId,
-
-        [Parameter(Mandatory)]
-        [System.Management.Automation.ErrorCategory] $errorCategory,
-
-        [Parameter(Mandatory)]
-        [String] $errorMessage,
-        
-        [Switch]
-        $terminate
-    )
-
-    $exception = New-Object -TypeName System.Exception `
-        -ArgumentList $errorMessage
-    $errorRecord = New-Object -TypeName System.Management.Automation.ErrorRecord `
-        -ArgumentList $exception, $errorId, $errorCategory, $null
-
-    if ($Terminate)
-    {
-        # This is a terminating exception.
-        throw $errorRecord
-    }
-    else
-    {
-        # Note: Although this method is called ThrowTerminatingError, it doesn't terminate.
-        $PSCmdlet.ThrowTerminatingError($errorRecord)
-    }
-}
 ####################################################################################################
 
 ####################################################################################################
@@ -4986,7 +4800,7 @@ Function Install-Lab {
     Initialize-LabVM `
         -Config $Config `
         -VMs $VMs 
-} # Build-Lab
+} # Install-Lab
 ####################################################################################################
 
 ####################################################################################################
@@ -5079,29 +4893,3 @@ Configuration ConfigLCM {
 }
 ####################################################################################################
 
-####################################################################################################
-# Export the Module Cmdlets
-Export-ModuleMember -Function `
-    Get-LabConfiguration, `
-    Test-LabConfiguration, `
-    Install-LabHyperV, `
-    Initialize-LabConfiguration, `
-    Get-LabSwitch, `
-    Initialize-LabSwitch, `
-    Remove-LabSwitch, `
-    Get-LabVMTemplateVHD, `
-    Initialize-LabVMTemplateVHD, `
-    Remove-LabVMTemplateVHD, `
-    Get-LabVMTemplate, `
-    Initialize-LabVMTemplate, `
-    Remove-LabVMTemplate, `
-    Get-LabVM, `
-    Initialize-LabVM, `
-    Remove-LabVM, `
-    Start-LabVM, `
-    Wait-LabVMStart, `
-    Wait-LabVMOff, `
-    Wait-LabVMInit, `
-    Install-Lab, `
-    Uninstall-Lab
-####################################################################################################

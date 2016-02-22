@@ -14,7 +14,30 @@
     TypesToProcess = @()
     FormatsToProcess = @()
     # NestedModules = @()
-    # FunctionsToExport = @()
+    FunctionsToExport = @(
+        'Get-LabConfiguration'
+        'Test-LabConfiguration'
+        'Install-LabHyperV'
+        'Initialize-LabConfiguration'
+        'Get-LabSwitch'
+        'Initialize-LabSwitch'
+        'Remove-LabSwitch'
+        'Get-LabVMTemplateVHD'
+        'Initialize-LabVMTemplateVHD'
+        'Remove-LabVMTemplateVHD'
+        'Get-LabVMTemplate'
+        'Initialize-LabVMTemplate'
+        'Remove-LabVMTemplate'
+        'Get-LabVM'
+        'Initialize-LabVM'
+        'Remove-LabVM'
+        'Start-LabVM'
+        'Wait-LabVMStart'
+        'Wait-LabVMOff'
+        'Wait-LabVMInit'
+        'Install-Lab'
+        'Uninstall-Lab'
+    )
     # CmdletsToExport = @()
     VariablesToExport = @()
     AliasesToExport = @()

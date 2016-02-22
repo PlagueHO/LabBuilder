@@ -18,7 +18,7 @@ InModuleScope LabBuilder {
 .SYNOPSIS
    Helper function that just creates an exception record for testing.
 #>
-    function New-Exception
+    function GetException
     {
         [CmdLetBinding()]
         param
@@ -90,7 +90,7 @@ InModuleScope LabBuilder {
                 errorMessage = $($LocalizedData.DSCModuleDownloadError `
                     -f $VM.DSCConfigFile,$VM.Name,'TestModule')
             }
-            $Exception = New-Exception @ExceptionParameters
+            $Exception = GetException @ExceptionParameters
 
             It 'Throws a DSCModuleDownloadError Exception' {
                 { CreateDSCMOFFiles -Config $Config -VM $VM } | Should Throw $Exception
@@ -114,7 +114,7 @@ InModuleScope LabBuilder {
                 errorMessage = $($LocalizedData.DSCModuleDownloadError `
                     -f $VM.DSCConfigFile,$VM.Name,'TestModule')
             }
-            $Exception = New-Exception @ExceptionParameters
+            $Exception = GetException @ExceptionParameters
 
             It 'Throws a DSCModuleDownloadError Exception' {
                 { CreateDSCMOFFiles -Config $Config -VM $VM } | Should Throw $Exception
@@ -140,7 +140,7 @@ InModuleScope LabBuilder {
                 errorMessage = $($LocalizedData.DSCModuleNotFoundError `
                     -f $VM.DSCConfigFile,$VM.Name,'TestModule')
             }
-            $Exception = New-Exception @ExceptionParameters
+            $Exception = GetException @ExceptionParameters
 
             It 'Throws a DSCModuleNotFoundError Exception' {
                 { CreateDSCMOFFiles -Config $Config -VM $VM } | Should Throw $Exception
@@ -168,7 +168,7 @@ InModuleScope LabBuilder {
                 errorMessage = $($LocalizedData.CertificateCreateError `
                     -f $VM.Name)
             }
-            $Exception = New-Exception @ExceptionParameters
+            $Exception = GetException @ExceptionParameters
 
             It 'Throws a CertificateCreateError Exception' {
                 { CreateDSCMOFFiles -Config $Config -VM $VM } | Should Throw $Exception
@@ -203,7 +203,7 @@ InModuleScope LabBuilder {
                 errorMessage = $($LocalizedData.DSCConfigMetaMOFCreateError `
                     -f $VM.Name)
             }
-            $Exception = New-Exception @ExceptionParameters
+            $Exception = GetException @ExceptionParameters
 
             It 'Throws a DSCConfigMetaMOFCreateError Exception' {
                 { CreateDSCMOFFiles -Config $Config -VM $VM } | Should Throw $Exception
@@ -246,7 +246,7 @@ InModuleScope LabBuilder {
                 errorMessage = $($LocalizedData.NetworkAdapterNotFoundError `
                     -f 'DoesNotExist',$VMS[0].Name)
             }
-            $Exception = New-Exception @ExceptionParameters
+            $Exception = GetException @ExceptionParameters
             It 'Throws a NetworkAdapterNotFoundError Exception' {
                 { SetDSCStartFile -Config $Config -VM $VM } | Should Throw $Exception
             }
@@ -266,7 +266,7 @@ InModuleScope LabBuilder {
                 errorMessage = $($LocalizedData.NetworkAdapterBlankMacError `
                     -f 'Exists',$VMS[0].Name)
             }
-            $Exception = New-Exception @ExceptionParameters
+            $Exception = GetException @ExceptionParameters
 
             It 'Throws a NetworkAdapterBlankMacError Exception' {
                 { SetDSCStartFile -Config $Config -VM $VM } | Should Throw $Exception

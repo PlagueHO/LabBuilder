@@ -104,7 +104,7 @@ function InitializeVhd
             errorMessage = $($LocalizedData.FileNotFoundError `
             -f "VHD",$Path)
         }
-        New-LabException @ExceptionParameters
+        ThrowException @ExceptionParameters
     }
 
     # Check disk is not already mounted
@@ -134,7 +134,7 @@ function InitializeVhd
                 errorMessage = $($LocalizedData.InitializeVHDNotInitializedError `
                 -f $Path)
             }
-            New-LabException @ExceptionParameters                    
+            ThrowException @ExceptionParameters                    
         }
         Write-Verbose -Message ($LocalizedData.InitializeVHDInitializingMessage `
             -f $Path,$PartitionStyle)
@@ -227,7 +227,7 @@ function InitializeVhd
                 errorMessage = $($LocalizedData.InitializeVHDNotFormattedError `
                 -f $Path)
             }
-            New-LabException @ExceptionParameters                    
+            ThrowException @ExceptionParameters                    
         }
 
         # Format the volume
@@ -293,7 +293,7 @@ function InitializeVhd
                         errorMessage = $($LocalizedData.InitializeVHDAccessPathNotFoundError `
                         -f $Path,$AccessPath)
                     }
-                    New-LabException @ExceptionParameters        
+                    ThrowException @ExceptionParameters        
                 }
 
                 # Add the Partition Access Path

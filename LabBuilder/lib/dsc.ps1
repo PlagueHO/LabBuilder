@@ -131,7 +131,7 @@ function CreateDSCMOFFiles {
                         errorMessage = $($LocalizedData.DSCModuleDownloadError `
                             -f $VM.DSCConfigFile,$VM.Name,$ModuleName)
                     }
-                    New-LabException @ExceptionParameters
+                    ThrowException @ExceptionParameters
                 }
             }
             Else
@@ -142,7 +142,7 @@ function CreateDSCMOFFiles {
                     errorMessage = $($LocalizedData.DSCModuleDownloadError `
                         -f $VM.DSCConfigFile,$VM.Name,$ModuleName)
                 }
-                New-LabException @ExceptionParameters
+                ThrowException @ExceptionParameters
             }
         } # If
 
@@ -169,7 +169,7 @@ function CreateDSCMOFFiles {
                 errorMessage = $($LocalizedData.DSCModuleNotFoundError `
                     -f $VM.DSCConfigFile,$VM.Name,$ModuleName)
             }
-            New-LabException @ExceptionParameters
+            ThrowException @ExceptionParameters
         }
         Copy-Item `
             -Path $ModulePath `
@@ -185,7 +185,7 @@ function CreateDSCMOFFiles {
             errorMessage = $($LocalizedData.CertificateCreateError `
                 -f $VM.Name)
         }
-        New-LabException @ExceptionParameters
+        ThrowException @ExceptionParameters
     }
     
     # Remove any old self-signed certifcates for this VM
@@ -224,7 +224,7 @@ function CreateDSCMOFFiles {
             errorMessage = $($LocalizedData.DSCConfigMetaMOFCreateError `
                 -f $VM.Name)
         }
-        New-LabException @ExceptionParameters
+        ThrowException @ExceptionParameters
     } # If
 
     # A DSC Config File was provided so create a MOF File out of it.
@@ -267,7 +267,7 @@ function CreateDSCMOFFiles {
                 errorMessage = $($LocalizedData.DSCConfigMoreThanOneNodeError `
                     -f $VM.DSCConfigFile,$VM.Name)
             }
-            New-LabException @ExceptionParameters
+            ThrowException @ExceptionParameters
         } # If
     } # If
     
@@ -321,7 +321,7 @@ function CreateDSCMOFFiles {
             errorMessage = $($LocalizedData.DSCConfigMOFCreateError `
                 -f $VM.DSCConfigFile,$VM.Name)
         }
-        New-LabException @ExceptionParameters
+        ThrowException @ExceptionParameters
     } # If
 
     # Remove the VM Self-Signed Certificate from the Local Machine Store
@@ -428,7 +428,7 @@ function SetDSCStartFile {
                 errorMessage = $($LocalizedData.NetworkAdapterNotFoundError `
                     -f $Adapter,$VM.Name)
             }
-            New-LabException @ExceptionParameters
+            ThrowException @ExceptionParameters
         } # If
         $MacAddress = $NetAdapter.MacAddress
         if (-not $MacAddress)
@@ -439,7 +439,7 @@ function SetDSCStartFile {
                 errorMessage = $($LocalizedData.NetworkAdapterBlankMacError `
                     -f $Adapter,$VM.Name)
             }
-            New-LabException @ExceptionParameters
+            ThrowException @ExceptionParameters
         } # If
         $DSCStartPs += @"
 Get-NetAdapter ``
@@ -602,7 +602,7 @@ function StartDSC {
                 errorMessage = $($LocalizedData.DSCInitializationError `
                     -f $VM.Name)
             }
-            New-LabException @ExceptionParameters            
+            ThrowException @ExceptionParameters            
             return
         }
         
@@ -677,7 +677,7 @@ function StartDSC {
                 errorMessage = $($LocalizedData.DSCInitializationError `
                     -f $VM.Name)
             }
-            New-LabException @ExceptionParameters
+            ThrowException @ExceptionParameters
         } # If
 
         # Upload any required modules to the VM
@@ -729,7 +729,7 @@ function StartDSC {
                 errorMessage = $($LocalizedData.DSCInitializationError `
                     -f $VM.Name)
             }
-            New-LabException @ExceptionParameters
+            ThrowException @ExceptionParameters
         }
 
         # Finally, Start DSC up!

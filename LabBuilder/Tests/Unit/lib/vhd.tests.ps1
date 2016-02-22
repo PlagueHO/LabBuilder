@@ -18,7 +18,7 @@ InModuleScope LabBuilder {
 .SYNOPSIS
    Helper function that just creates an exception record for testing.
 #>
-    function New-Exception
+    function GetException
     {
         [CmdLetBinding()]
         param
@@ -138,7 +138,7 @@ InModuleScope LabBuilder {
                     errorMessage = $($LocalizedData.FileNotFoundError `
                         -f "VHD",$Splat.Path)
                 }
-                $Exception = New-Exception @ExceptionParameters
+                $Exception = GetException @ExceptionParameters
 
                 { InitializeVHD @Splat } | Should Throw $Exception
             }
@@ -168,7 +168,7 @@ InModuleScope LabBuilder {
                     errorMessage = $($LocalizedData.InitializeVHDNotInitializedError `
                         -f$Splat.Path)
                 }
-                $Exception = New-Exception @ExceptionParameters
+                $Exception = GetException @ExceptionParameters
 
                 { InitializeVHD @Splat } | Should Throw $Exception
             }
@@ -315,7 +315,7 @@ InModuleScope LabBuilder {
                     errorMessage = $($LocalizedData.InitializeVHDAccessPathNotFoundError `
                         -f$Splat.Path,'c:\DoesNotExist')
                 }
-                $Exception = New-Exception @ExceptionParameters
+                $Exception = GetException @ExceptionParameters
 
                 { InitializeVHD @Splat } | Should Throw $Exception
             }

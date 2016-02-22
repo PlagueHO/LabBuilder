@@ -18,7 +18,7 @@ InModuleScope LabBuilder {
 .SYNOPSIS
    Helper function that just creates an exception record for testing.
 #>
-    function New-Exception
+    function GetException
     {
         [CmdLetBinding()]
         param
@@ -56,7 +56,7 @@ InModuleScope LabBuilder {
                     errorMessage = $($LocalizedData.DownloadFolderDoesNotExistError `
                         -f 'c:\doesnotexist','LICENSE')
                 }
-                $Exception = New-Exception @ExceptionParameters
+                $Exception = GetException @ExceptionParameters
 
                 { DownloadAndUnzipFile -URL $URL -DestinationPath 'c:\doesnotexist' } | Should Throw $Exception
             }
@@ -78,7 +78,7 @@ InModuleScope LabBuilder {
                     errorMessage = $($LocalizedData.FileDownloadError `
                         -f 'LICENSE',$URL,'Download Error')
                 }
-                $Exception = New-Exception @ExceptionParameters
+                $Exception = GetException @ExceptionParameters
 
                 { DownloadAndUnzipFile -URL $URL -DestinationPath $ENV:Temp } | Should Throw $Exception
             }
@@ -114,7 +114,7 @@ InModuleScope LabBuilder {
                     errorMessage = $($LocalizedData.FileExtractError `
                         -f 'LICENSE.ZIP','Extract Error')
                 }
-                $Exception = New-Exception @ExceptionParameters
+                $Exception = GetException @ExceptionParameters
 
                 { DownloadAndUnzipFile -URL $URL -DestinationPath $ENV:Temp } | Should Throw $Exception
             }

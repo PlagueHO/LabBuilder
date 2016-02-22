@@ -26,7 +26,7 @@ InModuleScope LabBuilder {
 .SYNOPSIS
    Helper function that just creates an exception record for testing.
 #>
-    function New-Exception
+    function GetException
     {
         [CmdLetBinding()]
         param
@@ -71,7 +71,7 @@ InModuleScope LabBuilder {
                     errorMessage = $($LocalizedData.ConfigurationFileNotFoundError `
                         -f 'c:\doesntexist.xml')
                 }
-                $Exception = New-Exception @ExceptionParameters
+                $Exception = GetException @ExceptionParameters
 
                 Mock Test-Path -MockWith { $false }
 
@@ -88,7 +88,7 @@ InModuleScope LabBuilder {
                     errorMessage = $($LocalizedData.ConfigurationFileEmptyError `
                         -f 'c:\isempty.xml')
                 }
-                $Exception = New-Exception @ExceptionParameters
+                $Exception = GetException @ExceptionParameters
 
                 Mock Test-Path -MockWith { $true }
                 Mock Get-Content -MockWith {''}
@@ -127,7 +127,7 @@ InModuleScope LabBuilder {
                     errorMessage = $($LocalizedData.ConfigurationMissingElementError `
                         -f '<settings>\<labpath>')
                 }
-                $Exception = New-Exception @ExceptionParameters
+                $Exception = GetException @ExceptionParameters
 
                 { Test-LabConfiguration -Config $Config } | Should Throw $Exception
             }
@@ -144,7 +144,7 @@ InModuleScope LabBuilder {
                     errorMessage = $($LocalizedData.PathNotFoundError `
                         -f '<settings>\<labpath>','c:\doesnotexist\')
                 }
-                $Exception = New-Exception @ExceptionParameters
+                $Exception = GetException @ExceptionParameters
 
                 { Test-LabConfiguration -Config $Config } | Should Throw $Exception
             }
@@ -161,7 +161,7 @@ InModuleScope LabBuilder {
                     errorMessage = $($LocalizedData.ConfigurationMissingElementError `
                         -f '<settings>\<vhdparentpath>')
                 }
-                $Exception = New-Exception @ExceptionParameters
+                $Exception = GetException @ExceptionParameters
 
                 { Test-LabConfiguration -Config $Config } | Should Throw $Exception
             }
@@ -178,7 +178,7 @@ InModuleScope LabBuilder {
                     errorMessage = $($LocalizedData.PathNotFoundError `
                         -f '<settings>\<vhdparentpath>','c:\doesnotexist\')
                 }
-                $Exception = New-Exception @ExceptionParameters
+                $Exception = GetException @ExceptionParameters
 
                 { Test-LabConfiguration -Config $Config } | Should Throw $Exception
             }
@@ -507,7 +507,7 @@ InModuleScope LabBuilder {
                     errorMessage = $($LocalizedData.FileDownloadError `
                         -f 'dev.zip',$URL,'Download Error')
                 }
-                $Exception = New-Exception @ExceptionParameters
+                $Exception = GetException @ExceptionParameters
 
                 {
                     Download-LabModule `
@@ -538,7 +538,7 @@ InModuleScope LabBuilder {
                     errorMessage = $($LocalizedData.ModuleNotAvailableError `
                         -f 'xDoesNotExist','any version',"No match was found for the specified search criteria and module name 'xDoesNotExist'")
                 }
-                $Exception = New-Exception @ExceptionParameters
+                $Exception = GetException @ExceptionParameters
 
                 {
                     Download-LabModule `
@@ -567,7 +567,7 @@ InModuleScope LabBuilder {
                     errorMessage = $($LocalizedData.ModuleNotAvailableError `
                         -f 'xNetworking','2.5.0.0',"No match was found for the specified search criteria and module name 'xNetworking'" )
                 }
-                $Exception = New-Exception @ExceptionParameters
+                $Exception = GetException @ExceptionParameters
 
                 {
                     Download-LabModule `
@@ -595,7 +595,7 @@ InModuleScope LabBuilder {
                     errorMessage = $($LocalizedData.ModuleNotAvailableError `
                         -f 'xNetworking','min 2.5.0.0',"No match was found for the specified search criteria and module name 'xNetworking'" )
                 }
-                $Exception = New-Exception @ExceptionParameters
+                $Exception = GetException @ExceptionParameters
 
                 {
                     Download-LabModule `
@@ -645,7 +645,7 @@ InModuleScope LabBuilder {
                     errorCategory = 'InvalidArgument'
                     errorMessage = $($LocalizedData.SwitchNameIsEmptyError)
                 }
-                $Exception = New-Exception @ExceptionParameters
+                $Exception = GetException @ExceptionParameters
 
                 { Get-LabSwitch -Config $Config } | Should Throw $Exception
             }
@@ -660,7 +660,7 @@ InModuleScope LabBuilder {
                     errorMessage = $($LocalizedData.UnknownSwitchTypeError `
                         -f '','Pester Test External')
                 }
-                $Exception = New-Exception @ExceptionParameters
+                $Exception = GetException @ExceptionParameters
 
                 { Get-LabSwitch -Config $Config } | Should Throw $Exception
             }
@@ -675,7 +675,7 @@ InModuleScope LabBuilder {
                     errorMessage = $($LocalizedData.UnknownSwitchTypeError `
                         -f 'BadType','Pester Test External')
                 }
-                $Exception = New-Exception @ExceptionParameters
+                $Exception = GetException @ExceptionParameters
 
                 { Get-LabSwitch -Config $Config } | Should Throw $Exception
             }
@@ -690,7 +690,7 @@ InModuleScope LabBuilder {
                     errorMessage = $($LocalizedData.AdapterSpecifiedError `
                         -f 'Private','Pester Test External')
                 }
-                $Exception = New-Exception @ExceptionParameters
+                $Exception = GetException @ExceptionParameters
 
                 { Get-LabSwitch -Config $Config } | Should Throw $Exception
             }
@@ -751,7 +751,7 @@ InModuleScope LabBuilder {
                     errorMessage = $($LocalizedData.UnknownSwitchTypeError `
                         -f 'Invalid',$Switches[0].Name)
                 }
-                $Exception = New-Exception @ExceptionParameters
+                $Exception = GetException @ExceptionParameters
 
                 { Initialize-LabSwitch -Config $Config -Switches $Switches } | Should Throw $Exception
             }
@@ -772,7 +772,7 @@ InModuleScope LabBuilder {
                     errorMessage = $($LocalizedData.NatSubnetAddressEmptyError `
                         -f $Switches[0].Name)
                 }
-                $Exception = New-Exception @ExceptionParameters
+                $Exception = GetException @ExceptionParameters
 
                 { Initialize-LabSwitch -Config $Config -Switches $Switches } | Should Throw $Exception
             }
@@ -793,7 +793,7 @@ InModuleScope LabBuilder {
                     errorCategory = 'InvalidArgument'
                     errorMessage = $($LocalizedData.SwitchNameIsEmptyError)
                 }
-                $Exception = New-Exception @ExceptionParameters
+                $Exception = GetException @ExceptionParameters
 
                 { Initialize-LabSwitch -Config $Config -Switches $Switches } | Should Throw $Exception
             }
@@ -845,7 +845,7 @@ InModuleScope LabBuilder {
                     errorMessage = $($LocalizedData.UnknownSwitchTypeError `
                         -f 'Invalid',$Switches[0].Name)
                 }
-                $Exception = New-Exception @ExceptionParameters
+                $Exception = GetException @ExceptionParameters
 
                 { Remove-LabSwitch -Config $Config -Switches $Switches } | Should Throw $Exception
             }
@@ -864,7 +864,7 @@ InModuleScope LabBuilder {
                     errorCategory = 'InvalidArgument'
                     errorMessage = $($LocalizedData.SwitchNameIsEmptyError)
                 }
-                $Exception = New-Exception @ExceptionParameters
+                $Exception = GetException @ExceptionParameters
 
                 { Remove-LabSwitch -Config $Config -Switches $Switches } | Should Throw $Exception
             }
@@ -889,7 +889,7 @@ InModuleScope LabBuilder {
                     errorMessage = $($LocalizedData.VMTemplateVHDISORootPathNotFoundError `
                         -f "$Global:TestConfigPath\MissingFolder")
                 }
-                $Exception = New-Exception @ExceptionParameters
+                $Exception = GetException @ExceptionParameters
 
                 { Get-LabVMTemplateVHD -Config $Config } | Should Throw $Exception
             }
@@ -904,7 +904,7 @@ InModuleScope LabBuilder {
                     errorMessage = $($LocalizedData.VMTemplateVHDISORootPathNotFoundError `
                         -f "$Global:TestConfigPath\MissingFolder")
                 }
-                $Exception = New-Exception @ExceptionParameters
+                $Exception = GetException @ExceptionParameters
 
                 { Get-LabVMTemplateVHD -Config $Config } | Should Throw $Exception
             }
@@ -919,7 +919,7 @@ InModuleScope LabBuilder {
                     errorMessage = $($LocalizedData.VMTemplateVHDRootPathNotFoundError `
                         -f "$Global:TestConfigPath\MissingFolder")
                 }
-                $Exception = New-Exception @ExceptionParameters
+                $Exception = GetException @ExceptionParameters
 
                 { Get-LabVMTemplateVHD -Config $Config } | Should Throw $Exception
             }
@@ -934,7 +934,7 @@ InModuleScope LabBuilder {
                     errorMessage = $($LocalizedData.VMTemplateVHDRootPathNotFoundError `
                         -f "$Global:TestConfigPath\MissingFolder")
                 }
-                $Exception = New-Exception @ExceptionParameters
+                $Exception = GetException @ExceptionParameters
 
                 { Get-LabVMTemplateVHD -Config $Config } | Should Throw $Exception
             }
@@ -948,7 +948,7 @@ InModuleScope LabBuilder {
                     errorCategory = 'InvalidArgument'
                     errorMessage = $($LocalizedData.EmptyVMTemplateVHDNameError)
                 }
-                $Exception = New-Exception @ExceptionParameters
+                $Exception = GetException @ExceptionParameters
 
                 { Get-LabVMTemplateVHD -Config $Config } | Should Throw $Exception
             }
@@ -963,7 +963,7 @@ InModuleScope LabBuilder {
                     errorMessage = $($LocalizedData.EmptyVMTemplateVHDISOPathError `
                         -f $Config.labbuilderconfig.templatevhds.templatevhd[0].name)
                 }
-                $Exception = New-Exception @ExceptionParameters
+                $Exception = GetException @ExceptionParameters
 
                 { Get-LabVMTemplateVHD -Config $Config } | Should Throw $Exception
             }
@@ -978,7 +978,7 @@ InModuleScope LabBuilder {
                     errorMessage = $($LocalizedData.VMTemplateVHDISOPathNotFoundError `
                         -f $Config.labbuilderconfig.templatevhds.templatevhd[0].name,"$Global:TestConfigPath\MissingFolder\DoesNotExist.iso")
                 }
-                $Exception = New-Exception @ExceptionParameters
+                $Exception = GetException @ExceptionParameters
 
                 { Get-LabVMTemplateVHD -Config $Config } | Should Throw $Exception
             }
@@ -993,7 +993,7 @@ InModuleScope LabBuilder {
                     errorMessage = $($LocalizedData.VMTemplateVHDISOPathNotFoundError `
                         -f $Config.labbuilderconfig.templatevhds.templatevhd[0].name,"$Global:TestConfigPath\ISOFiles\MissingFolder\DoesNotExist.iso")
                 }
-                $Exception = New-Exception @ExceptionParameters
+                $Exception = GetException @ExceptionParameters
 
                 { Get-LabVMTemplateVHD -Config $Config } | Should Throw $Exception
             }
@@ -1008,7 +1008,7 @@ InModuleScope LabBuilder {
                     errorMessage = $($LocalizedData.InvalidVMTemplateVHDOSTypeError `
                         -f $Config.labbuilderconfig.templatevhds.templatevhd[0].name,'invalid')
                 }
-                $Exception = New-Exception @ExceptionParameters
+                $Exception = GetException @ExceptionParameters
 
                 { Get-LabVMTemplateVHD -Config $Config } | Should Throw $Exception
             }
@@ -1023,7 +1023,7 @@ InModuleScope LabBuilder {
                     errorMessage = $($LocalizedData.InvalidVMTemplateVHDVHDFormatError `
                         -f $Config.labbuilderconfig.templatevhds.templatevhd[0].name,'invalid')
                 }
-                $Exception = New-Exception @ExceptionParameters
+                $Exception = GetException @ExceptionParameters
 
                 { Get-LabVMTemplateVHD -Config $Config } | Should Throw $Exception
             }
@@ -1038,7 +1038,7 @@ InModuleScope LabBuilder {
                     errorMessage = $($LocalizedData.InvalidVMTemplateVHDVHDTypeError `
                         -f $Config.labbuilderconfig.templatevhds.templatevhd[0].name,'invalid')
                 }
-                $Exception = New-Exception @ExceptionParameters
+                $Exception = GetException @ExceptionParameters
 
                 { Get-LabVMTemplateVHD -Config $Config } | Should Throw $Exception
             }
@@ -1053,7 +1053,7 @@ InModuleScope LabBuilder {
                     errorMessage = $($LocalizedData.InvalidVMTemplateVHDGenerationError `
                         -f $Config.labbuilderconfig.templatevhds.templatevhd[0].name,'99')
                 }
-                $Exception = New-Exception @ExceptionParameters
+                $Exception = GetException @ExceptionParameters
 
                 { Get-LabVMTemplateVHD -Config $Config } | Should Throw $Exception
             }
@@ -1155,7 +1155,7 @@ InModuleScope LabBuilder {
                     errorMessage = $($LocalizedData.VMTemplateVHDISOPathNotFoundError `
                         -f $Config.labbuilderconfig.templatevhds.templatevhd[0].name,'doesnotexist.iso')
                 }
-                $Exception = New-Exception @ExceptionParameters
+                $Exception = GetException @ExceptionParameters
 
                 { Initialize-LabVMTemplateVHD -Config $Config -VMTemplateVHDs $VMTemplateVHDs } | Should Throw $Exception
             }
@@ -1203,7 +1203,7 @@ InModuleScope LabBuilder {
                     errorCategory = 'InvalidArgument'
                     errorMessage = $($LocalizedData.EmptyTemplateNameError)
                 }
-                $Exception = New-Exception @ExceptionParameters
+                $Exception = GetException @ExceptionParameters
 
                 { Get-LabVMTemplate -Config $Config } | Should Throw $Exception
             }
@@ -1218,7 +1218,7 @@ InModuleScope LabBuilder {
                     errorMessage = $($LocalizedData.TemplateSourceVHDNotFoundError `
                         -f $Config.labbuilderconfig.templates.template[0].name,"$Global:TestConfigPath\This File Doesnt Exist.vhdx")
                 }
-                $Exception = New-Exception @ExceptionParameters
+                $Exception = GetException @ExceptionParameters
 
                 { Get-LabVMTemplate -Config $Config } | Should Throw $Exception
             }
@@ -1233,7 +1233,7 @@ InModuleScope LabBuilder {
                     errorMessage = $($LocalizedData.TemplateSourceVHDNotFoundError `
                         -f $Config.labbuilderconfig.templates.template[0].name,"c:\This File Doesnt Exist.vhdx")
                 }
-                $Exception = New-Exception @ExceptionParameters
+                $Exception = GetException @ExceptionParameters
 
                 { Get-LabVMTemplate -Config $Config } | Should Throw $Exception
             }
@@ -1248,7 +1248,7 @@ InModuleScope LabBuilder {
                     errorMessage = $($LocalizedData.TemplateSourceVHDAndTemplateVHDConflictError `
                         -f $Config.labbuilderconfig.templates.template[0].name)
                 }
-                $Exception = New-Exception @ExceptionParameters
+                $Exception = GetException @ExceptionParameters
 
                 { Get-LabVMTemplate -Config $Config } | Should Throw $Exception
             }
@@ -1263,7 +1263,7 @@ InModuleScope LabBuilder {
                     errorMessage = $($LocalizedData.TemplateSourceVHDandTemplateVHDMissingError `
                         -f $Config.labbuilderconfig.templates.template[0].name)
                 }
-                $Exception = New-Exception @ExceptionParameters
+                $Exception = GetException @ExceptionParameters
 
                 { Get-LabVMTemplate -Config $Config } | Should Throw $Exception
             }
@@ -1279,7 +1279,7 @@ InModuleScope LabBuilder {
                     errorMessage = $($LocalizedData.TemplateTemplateVHDNotFoundError `
                         -f $Config.labbuilderconfig.templates.template[1].name,'Template VHD Does Not Exist')
                 }
-                $Exception = New-Exception @ExceptionParameters
+                $Exception = GetException @ExceptionParameters
 
                 { Get-LabVMTemplate -Config $Config } | Should Throw $Exception
             }
@@ -1365,7 +1365,7 @@ InModuleScope LabBuilder {
                     errorMessage = $($LocalizedData.TemplateSourceVHDNotFoundError `
                         -f 'Bad VHD','This File Doesnt Exist.vhdx')
                 }
-                $Exception = New-Exception @ExceptionParameters
+                $Exception = GetException @ExceptionParameters
 
                 { Initialize-LabVMTemplate -Config $Config -VMTemplates $Templates } | Should Throw $Exception
             }
@@ -1418,27 +1418,6 @@ InModuleScope LabBuilder {
             It 'Calls Mocked commands' {
                 Assert-MockCalled Set-ItemProperty -Exactly $TemplateCount -ParameterFilter { ($Name -eq 'IsReadOnly') -and ($Value -eq $False) }
                 Assert-MockCalled Remove-Item -Exactly $TemplateCount
-            }
-        }
-    }
-
-
-
-    Describe 'Get-LabUnattendFile' -Tags 'Incomplete' {
-
-        Mock Get-VM
-
-        Context 'Valid Parameters Passed' {
-            $Config = Get-LabConfiguration -Path $Global:TestConfigOKPath
-            [Array]$Switches = Get-LabSwitch -Config $Config
-            [Array]$Templates = Get-LabVMTemplate -Config $Config
-            [Array]$VMs = Get-LabVM -Config $Config -VMTemplates $Templates -Switches $Switches
-            [String]$UnattendFile = Get-LabUnattendFile -Config $Config -VM $VMs[0]
-            Set-Content -Path "$($Global:ArtifactPath)\ExpectedUnattendFile.xml" -Value $UnattendFile -Encoding UTF8 -NoNewLine
-            It 'Returns Expected File Content' {
-                $UnattendFile | Should Be $True
-                $ExpectedUnattendFile = Get-Content -Path "$Global:ExpectedContentPath\ExpectedUnattendFile.xml" -Raw
-                [String]::Compare($UnattendFile,$ExpectedUnattendFile,$true) | Should Be 0
             }
         }
     }
@@ -1525,7 +1504,7 @@ InModuleScope LabBuilder {
                     errorCategory = 'InvalidArgument'
                     errorMessage = $($LocalizedData.VMNameError)
                 }
-                $Exception = New-Exception @ExceptionParameters
+                $Exception = GetException @ExceptionParameters
                 { Get-LabVM -Config $Config -VMTemplates $Templates -Switches $Switches } | Should Throw $Exception
             }
         }
@@ -1541,7 +1520,7 @@ InModuleScope LabBuilder {
                     errorMessage = $($LocalizedData.VMTemplateNameEmptyError `
                         -f $Config.labbuilderconfig.vms.vm.name)
                 }
-                $Exception = New-Exception @ExceptionParameters
+                $Exception = GetException @ExceptionParameters
                 { Get-LabVM -Config $Config -VMTemplates $Templates -Switches $Switches } | Should Throw $Exception
             }
         }
@@ -1557,7 +1536,7 @@ InModuleScope LabBuilder {
                     errorMessage = $($LocalizedData.VMTemplateNotFoundError `
                         -f $Config.labbuilderconfig.vms.vm.name,'BadTemplate')
                 }
-                $Exception = New-Exception @ExceptionParameters
+                $Exception = GetException @ExceptionParameters
                 { Get-LabVM -Config $Config -VMTemplates $Templates -Switches $Switches } | Should Throw $Exception
             }
         }
@@ -1573,7 +1552,7 @@ InModuleScope LabBuilder {
                     errorMessage = $($LocalizedData.VMAdapterNameError `
                         -f $Config.labbuilderconfig.vms.vm.name)
                 }
-                $Exception = New-Exception @ExceptionParameters
+                $Exception = GetException @ExceptionParameters
                 { Get-LabVM -Config $Config -VMTemplates $Templates -Switches $Switches } | Should Throw $Exception
             }
         }
@@ -1589,7 +1568,7 @@ InModuleScope LabBuilder {
                     errorMessage = $($LocalizedData.VMAdapterSwitchNameError `
                         -f $Config.labbuilderconfig.vms.vm.name,$Config.labbuilderconfig.vms.vm.adapters.adapter[0].name)
                 }
-                $Exception = New-Exception @ExceptionParameters
+                $Exception = GetException @ExceptionParameters
                 { Get-LabVM -Config $Config -VMTemplates $Templates -Switches $Switches } | Should Throw $Exception
             }
         }
@@ -1605,7 +1584,7 @@ InModuleScope LabBuilder {
                     errorMessage = $($LocalizedData.VMDataDiskVHDEmptyError `
                         -f $Config.labbuilderconfig.vms.vm.name)
                 }
-                $Exception = New-Exception @ExceptionParameters
+                $Exception = GetException @ExceptionParameters
                 { Get-LabVM -Config $Config -VMTemplates $Templates -Switches $Switches } | Should Throw $Exception
             }
         }
@@ -1621,7 +1600,7 @@ InModuleScope LabBuilder {
                     errorMessage = $($LocalizedData.VMDataDiskParentVHDNotFoundError `
                         -f $Config.labbuilderconfig.vms.vm.name,"c:\ThisFileDoesntExist.vhdx")
                 }
-                $Exception = New-Exception @ExceptionParameters
+                $Exception = GetException @ExceptionParameters
                 { Get-LabVM -Config $Config -VMTemplates $Templates -Switches $Switches } | Should Throw $Exception
             }
         }
@@ -1637,7 +1616,7 @@ InModuleScope LabBuilder {
                     errorMessage = $($LocalizedData.VMDataDiskSourceVHDNotFoundError `
                         -f $Config.labbuilderconfig.vms.vm.name,"c:\ThisFileDoesntExist.vhdx")
                 }
-                $Exception = New-Exception @ExceptionParameters
+                $Exception = GetException @ExceptionParameters
                 { Get-LabVM -Config $Config -VMTemplates $Templates -Switches $Switches } | Should Throw $Exception
             }
         }
@@ -1653,7 +1632,7 @@ InModuleScope LabBuilder {
                     errorMessage = $($LocalizedData.VMDataDiskParentVHDMissingError `
                         -f $Config.labbuilderconfig.vms.vm.name)
                 }
-                $Exception = New-Exception @ExceptionParameters
+                $Exception = GetException @ExceptionParameters
                 { Get-LabVM -Config $Config -VMTemplates $Templates -Switches $Switches } | Should Throw $Exception
             }
         }
@@ -1669,7 +1648,7 @@ InModuleScope LabBuilder {
                     errorMessage = $($LocalizedData.VMDataDiskSharedDifferencingError `
                         -f $Config.labbuilderconfig.vms.vm.name,"$($Config.labbuilderconfig.settings.labpath)\$($Config.labbuilderconfig.vms.vm.name)\Virtual Hard Disks\$($Config.labbuilderconfig.vms.vm.datavhds.datavhd[3].vhd)")
                 }
-                $Exception = New-Exception @ExceptionParameters
+                $Exception = GetException @ExceptionParameters
                 { Get-LabVM -Config $Config -VMTemplates $Templates -Switches $Switches } | Should Throw $Exception
             }
         }
@@ -1685,7 +1664,7 @@ InModuleScope LabBuilder {
                     errorMessage = $($LocalizedData.VMDataDiskUnknownTypeError `
                         -f $Config.labbuilderconfig.vms.vm.name,"$($Config.labbuilderconfig.settings.labpath)\$($Config.labbuilderconfig.vms.vm.name)\Virtual Hard Disks\$($Config.labbuilderconfig.vms.vm.datavhds.datavhd[1].vhd)",'badtype')
                 }
-                $Exception = New-Exception @ExceptionParameters
+                $Exception = GetException @ExceptionParameters
                 { Get-LabVM -Config $Config -VMTemplates $Templates -Switches $Switches } | Should Throw $Exception
             }
         }
@@ -1701,7 +1680,7 @@ InModuleScope LabBuilder {
                     errorMessage = $($LocalizedData.VMDataDiskSupportPRError `
                         -f $Config.labbuilderconfig.vms.vm.name,"$($Config.labbuilderconfig.settings.labpath)\$($Config.labbuilderconfig.vms.vm.name)\Virtual Hard Disks\$($Config.labbuilderconfig.vms.vm.datavhds.datavhd[1].vhd)")
                 }
-                $Exception = New-Exception @ExceptionParameters
+                $Exception = GetException @ExceptionParameters
                 { Get-LabVM -Config $Config -VMTemplates $Templates -Switches $Switches } | Should Throw $Exception
             }
         }        
@@ -1717,7 +1696,7 @@ InModuleScope LabBuilder {
                     errorMessage = $($LocalizedData.VMDataDiskPartitionStyleError `
                         -f $Config.labbuilderconfig.vms.vm.name,"$($Config.labbuilderconfig.settings.labpath)\$($Config.labbuilderconfig.vms.vm.name)\Virtual Hard Disks\$($Config.labbuilderconfig.vms.vm.datavhds.datavhd[1].vhd)",'Bad')
                 }
-                $Exception = New-Exception @ExceptionParameters
+                $Exception = GetException @ExceptionParameters
                 { Get-LabVM -Config $Config -VMTemplates $Templates -Switches $Switches } | Should Throw $Exception
             }
         }
@@ -1733,7 +1712,7 @@ InModuleScope LabBuilder {
                     errorMessage = $($LocalizedData.VMDataDiskFileSystemError `
                         -f $Config.labbuilderconfig.vms.vm.name,"$($Config.labbuilderconfig.settings.labpath)\$($Config.labbuilderconfig.vms.vm.name)\Virtual Hard Disks\$($Config.labbuilderconfig.vms.vm.datavhds.datavhd[1].vhd)",'Bad')
                 }
-                $Exception = New-Exception @ExceptionParameters
+                $Exception = GetException @ExceptionParameters
                 { Get-LabVM -Config $Config -VMTemplates $Templates -Switches $Switches } | Should Throw $Exception
             }
         }
@@ -1749,7 +1728,7 @@ InModuleScope LabBuilder {
                     errorMessage = $($LocalizedData.VMDataDiskPartitionStyleMissingError `
                         -f $Config.labbuilderconfig.vms.vm.name,"$($Config.labbuilderconfig.settings.labpath)\$($Config.labbuilderconfig.vms.vm.name)\Virtual Hard Disks\$($Config.labbuilderconfig.vms.vm.datavhds.datavhd[1].vhd)")
                 }
-                $Exception = New-Exception @ExceptionParameters
+                $Exception = GetException @ExceptionParameters
                 { Get-LabVM -Config $Config -VMTemplates $Templates -Switches $Switches } | Should Throw $Exception
             }
         }
@@ -1765,7 +1744,7 @@ InModuleScope LabBuilder {
                     errorMessage = $($LocalizedData.VMDataDiskFileSystemMissingError `
                         -f $Config.labbuilderconfig.vms.vm.name,"$($Config.labbuilderconfig.settings.labpath)\$($Config.labbuilderconfig.vms.vm.name)\Virtual Hard Disks\$($Config.labbuilderconfig.vms.vm.datavhds.datavhd[1].vhd)")
                 }
-                $Exception = New-Exception @ExceptionParameters
+                $Exception = GetException @ExceptionParameters
                 { Get-LabVM -Config $Config -VMTemplates $Templates -Switches $Switches } | Should Throw $Exception
             }
         }
@@ -1782,7 +1761,7 @@ InModuleScope LabBuilder {
                     errorMessage = $($LocalizedData.VMDataDiskPartitionStyleMissingError `
                         -f $Config.labbuilderconfig.vms.vm.name,"$($Config.labbuilderconfig.settings.labpath)\$($Config.labbuilderconfig.vms.vm.name)\Virtual Hard Disks\$($Config.labbuilderconfig.vms.vm.datavhds.datavhd[2].vhd)")
                 }
-                $Exception = New-Exception @ExceptionParameters
+                $Exception = GetException @ExceptionParameters
                 { Get-LabVM -Config $Config -VMTemplates $Templates -Switches $Switches } | Should Throw $Exception
             }
         }
@@ -1798,7 +1777,7 @@ InModuleScope LabBuilder {
                     errorMessage = $($LocalizedData.VMDataDiskCopyFolderMissingError `
                         -f $Config.labbuilderconfig.vms.vm.name,"$($Config.labbuilderconfig.settings.labpath)\$($Config.labbuilderconfig.vms.vm.name)\Virtual Hard Disks\$($Config.labbuilderconfig.vms.vm.datavhds.datavhd[0].vhd)",'c:\doesnotexist')
                 }
-                $Exception = New-Exception @ExceptionParameters
+                $Exception = GetException @ExceptionParameters
                 { Get-LabVM -Config $Config -VMTemplates $Templates -Switches $Switches } | Should Throw $Exception
             }
         }
@@ -1814,7 +1793,7 @@ InModuleScope LabBuilder {
                     errorMessage = $($LocalizedData.VMDataDiskCantBeCreatedError `
                         -f $Config.labbuilderconfig.vms.vm.name,"$($Config.labbuilderconfig.settings.labpath)\$($Config.labbuilderconfig.vms.vm.name)\Virtual Hard Disks\$($Config.labbuilderconfig.vms.vm.datavhds.datavhd[1].vhd)")
                 }
-                $Exception = New-Exception @ExceptionParameters
+                $Exception = GetException @ExceptionParameters
                 { Get-LabVM -Config $Config -VMTemplates $Templates -Switches $Switches } | Should Throw $Exception
             }
         }
@@ -1830,7 +1809,7 @@ InModuleScope LabBuilder {
                     errorMessage = $($LocalizedData.VMDataDiskCantBeCreatedError `
                         -f $Config.labbuilderconfig.vms.vm.name,"$($Config.labbuilderconfig.settings.labpath)\$($Config.labbuilderconfig.vms.vm.name)\Virtual Hard Disks\$($Config.labbuilderconfig.vms.vm.datavhds.datavhd[1].vhd)")
                 }
-                $Exception = New-Exception @ExceptionParameters
+                $Exception = GetException @ExceptionParameters
                 { Get-LabVM -Config $Config -VMTemplates $Templates -Switches $Switches } | Should Throw $Exception
             }
         }
@@ -1846,7 +1825,7 @@ InModuleScope LabBuilder {
                     errorMessage = $($LocalizedData.VMDataDiskCantBeCreatedError `
                         -f $Config.labbuilderconfig.vms.vm.name,"$($Config.labbuilderconfig.settings.labpath)\$($Config.labbuilderconfig.vms.vm.name)\Virtual Hard Disks\$($Config.labbuilderconfig.vms.vm.datavhds.datavhd[0].vhd)")
                 }
-                $Exception = New-Exception @ExceptionParameters
+                $Exception = GetException @ExceptionParameters
                 { Get-LabVM -Config $Config -VMTemplates $Templates -Switches $Switches } | Should Throw $Exception
             }
         }
@@ -1862,7 +1841,7 @@ InModuleScope LabBuilder {
                     errorMessage = $($LocalizedData.VMDataDiskSourceVHDIfMoveError `
                         -f $Config.labbuilderconfig.vms.vm.name,"$($Config.labbuilderconfig.settings.labpath)\$($Config.labbuilderconfig.vms.vm.name)\Virtual Hard Disks\$($Config.labbuilderconfig.vms.vm.datavhds.datavhd[4].vhd)")
                 }
-                $Exception = New-Exception @ExceptionParameters
+                $Exception = GetException @ExceptionParameters
                 { Get-LabVM -Config $Config -VMTemplates $Templates -Switches $Switches } | Should Throw $Exception
             }
         }
@@ -1878,7 +1857,7 @@ InModuleScope LabBuilder {
                     errorMessage = $($LocalizedData.UnattendFileMissingError `
                         -f $Config.labbuilderconfig.vms.vm.name,"$Global:TestConfigPath\ThisFileDoesntExist.xml")
                 }
-                $Exception = New-Exception @ExceptionParameters
+                $Exception = GetException @ExceptionParameters
                 { Get-LabVM -Config $Config -VMTemplates $Templates -Switches $Switches } | Should Throw $Exception
             }
         }
@@ -1894,7 +1873,7 @@ InModuleScope LabBuilder {
                     errorMessage = $($LocalizedData.SetupCompleteFileMissingError `
                         -f $Config.labbuilderconfig.vms.vm.name,"$Global:TestConfigPath\ThisFileDoesntExist.ps1")
                 }
-                $Exception = New-Exception @ExceptionParameters
+                $Exception = GetException @ExceptionParameters
                 { Get-LabVM -Config $Config -VMTemplates $Templates -Switches $Switches } | Should Throw $Exception
             }
         }
@@ -1910,7 +1889,7 @@ InModuleScope LabBuilder {
                     errorMessage = $($LocalizedData.SetupCompleteFileBadTypeError `
                         -f $Config.labbuilderconfig.vms.vm.name,"$Global:TestConfigPath\ThisFileDoesntExist.abc")
                 }
-                $Exception = New-Exception @ExceptionParameters
+                $Exception = GetException @ExceptionParameters
                 { Get-LabVM -Config $Config -VMTemplates $Templates -Switches $Switches } | Should Throw $Exception
             }
         }
@@ -1926,7 +1905,7 @@ InModuleScope LabBuilder {
                     errorMessage = $($LocalizedData.DSCConfigFileMissingError `
                         -f $Config.labbuilderconfig.vms.vm.name,"$Global:TestConfigPath\DSCLibrary\ThisFileDoesntExist.ps1")
                 }
-                $Exception = New-Exception @ExceptionParameters
+                $Exception = GetException @ExceptionParameters
                 { Get-LabVM -Config $Config -VMTemplates $Templates -Switches $Switches } | Should Throw $Exception
             }
         }
@@ -1942,7 +1921,7 @@ InModuleScope LabBuilder {
                     errorMessage = $($LocalizedData.DSCConfigFileBadTypeError `
                         -f $Config.labbuilderconfig.vms.vm.name,"$Global:TestConfigPath\DSCLibrary\FileWithBadType.xyz")
                 }
-                $Exception = New-Exception @ExceptionParameters
+                $Exception = GetException @ExceptionParameters
                 { Get-LabVM -Config $Config -VMTemplates $Templates -Switches $Switches } | Should Throw $Exception
             }
         }
@@ -1958,7 +1937,7 @@ InModuleScope LabBuilder {
                     errorMessage = $($LocalizedData.DSCConfigNameIsEmptyError `
                         -f $Config.labbuilderconfig.vms.vm.name)
                 }
-                $Exception = New-Exception @ExceptionParameters
+                $Exception = GetException @ExceptionParameters
                 { Get-LabVM -Config $Config -VMTemplates $Templates -Switches $Switches } | Should Throw $Exception
             }
         }
@@ -2173,7 +2152,7 @@ InModuleScope LabBuilder {
                     errorMessage = $($LocalizedData.VMDataDiskVHDConvertError `
                         -f $VMs[0].Name,$VMs[0].DataVHDs.Vhd,$VMs[0].DataVHDs.Type)
                 }
-                $Exception = New-Exception @ExceptionParameters
+                $Exception = GetException @ExceptionParameters
                 { Update-LabVMDataDisk -Config $Config -VM $VMs[0] } | Should Throw 
             }
             It 'Calls Mocked commands' {
@@ -2207,7 +2186,7 @@ InModuleScope LabBuilder {
                     errorMessage = $($LocalizedData.VMDataDiskVHDShrinkError `
                         -f $VMs[0].Name,$VMs[0].DataVHDs[0].Vhd,$VMs[0].DataVHDs[0].Size)
                 }
-                $Exception = New-Exception @ExceptionParameters
+                $Exception = GetException @ExceptionParameters
                 { Update-LabVMDataDisk -Config $Config -VM $VMs[0] } | Should Throw $Exception
             }
             It 'Calls Mocked commands' {
@@ -2264,7 +2243,7 @@ InModuleScope LabBuilder {
                     errorMessage = $($LocalizedData.VMDataDiskSourceVHDNotFoundError `
                         -f $VMs[0].Name,$VMs[0].DataVHDs[0].SourceVhd)
                 }
-                $Exception = New-Exception @ExceptionParameters
+                $Exception = GetException @ExceptionParameters
                 { Update-LabVMDataDisk -Config $Config -VM $VMs[0] } | Should Throw $Exception
             }
             It 'Calls Mocked commands' {
@@ -2460,7 +2439,7 @@ InModuleScope LabBuilder {
                     errorMessage = $($LocalizedData.VMDataDiskParentVHDMissingError `
                         -f $VMs[0].Name)
                 }
-                $Exception = New-Exception @ExceptionParameters
+                $Exception = GetException @ExceptionParameters
                 { Update-LabVMDataDisk -Config $Config -VM $VMs[0] } | Should Throw $Exception
             }
             It 'Calls Mocked commands' {
@@ -2491,7 +2470,7 @@ InModuleScope LabBuilder {
                     errorMessage = $($LocalizedData.VMDataDiskParentVHDNotFoundError `
                         -f $VMs[0].Name,$VMs[0].DataVHDs[0].ParentVhd)
                 }
-                $Exception = New-Exception @ExceptionParameters
+                $Exception = GetException @ExceptionParameters
                 { Update-LabVMDataDisk -Config $Config -VM $VMs[0] } | Should Throw $Exception
             }
             It 'Calls Mocked commands' {
@@ -2545,7 +2524,7 @@ InModuleScope LabBuilder {
                     errorMessage = $($LocalizedData.VMDataDiskUnknownTypeError `
                         -f $VMs[0].Name,$VMs[0].DataVHDs[0].Vhd,$VMs[0].DataVHDs[0].Type)
                 }
-                $Exception = New-Exception @ExceptionParameters
+                $Exception = GetException @ExceptionParameters
                 { Update-LabVMDataDisk -Config $Config -VM $VMs[0] } | Should Throw $Exception
             }
             It 'Calls Mocked commands' {

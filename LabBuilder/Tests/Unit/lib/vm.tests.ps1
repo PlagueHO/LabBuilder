@@ -18,7 +18,7 @@ InModuleScope LabBuilder {
 .SYNOPSIS
    Helper function that just creates an exception record for testing.
 #>
-    function New-Exception
+    function GetException
     {
         [CmdLetBinding()]
         param
@@ -43,6 +43,10 @@ InModuleScope LabBuilder {
         return $errorRecord
     }
     
-    Describe 'CreateLabVMInitializationFiles' -Tags 'Incomplete' {
+    Describe 'CreateVMInitializationFiles' -Tags 'Incomplete' {
+    }
+
+
+    Describe 'GetUnattendFileContent' -Tags 'Incomplete' {
     }
 }

@@ -1,5 +1,67 @@
 <#
 .SYNOPSIS
+   Throws a custom exception.
+.DESCRIPTION
+   This cmdlet throw a terminating or non-terminating exception. 
+.EXAMPLE
+    $ExceptionParameters = @{
+        errorId = 'ConnectionFailure'
+        errorCategory = 'ConnectionError'
+        errorMessage = 'Could not connect'
+    }
+    ThrowException @ExceptionParameters
+    Throw a ConnectionError exception with the message 'Could not connect'.
+.PARAMETER errorId
+   The Id of the exception.
+.PARAMETER errorCategory
+   The category of the exception. It must be a valid [System.Management.Automation.ErrorCategory]
+   value.
+.PARAMETER errorMessage
+   The exception message.
+.PARAMETER terminate
+   THis switch will cause the exception to terminate the cmdlet.
+.OUTPUTS
+   None
+#>
+
+function ThrowException
+{
+    [CmdLetBinding()]
+    param
+    (
+        [Parameter(Mandatory)]
+        [String] $errorId,
+
+        [Parameter(Mandatory)]
+        [System.Management.Automation.ErrorCategory] $errorCategory,
+
+        [Parameter(Mandatory)]
+        [String] $errorMessage,
+        
+        [Switch]
+        $terminate
+    )
+
+    $exception = New-Object -TypeName System.Exception `
+        -ArgumentList $errorMessage
+    $errorRecord = New-Object -TypeName System.Management.Automation.ErrorRecord `
+        -ArgumentList $exception, $errorId, $errorCategory, $null
+
+    if ($Terminate)
+    {
+        # This is a terminating exception.
+        throw $errorRecord
+    }
+    else
+    {
+        # Note: Although this method is called ThrowTerminatingError, it doesn't terminate.
+        $PSCmdlet.ThrowTerminatingError($errorRecord)
+    }
+} # ThrowException
+
+
+<#
+.SYNOPSIS
    Returns True if running as Administrator
 #>
 function IsAdmin()
@@ -47,7 +109,7 @@ function DownloadAndUnzipFile()
             errorMessage = $($LocalizedData.DownloadFolderDoesNotExistError `
             -f $DestinationPath,$Filename)
         }
-        New-LabException @ExceptionParameters            
+        ThrowException @ExceptionParameters            
     }
 
     $Extension = [System.IO.Path]::GetExtension($Filename)
@@ -80,7 +142,7 @@ function DownloadAndUnzipFile()
             errorMessage = $($LocalizedData.FileDownloadError `
                 -f $Filename,$URL,$_.Exception.Message)
         }
-        New-LabException @ExceptionParameters
+        ThrowException @ExceptionParameters
     } # Try
     
     if ($Extension -eq '.zip')
@@ -105,7 +167,7 @@ function DownloadAndUnzipFile()
                 errorMessage = $($LocalizedData.FileExtractError `
                 -f $Filename,$_.Exception.Message)
             }
-            New-LabException @ExceptionParameters
+            ThrowException @ExceptionParameters
         }
         finally
         {
