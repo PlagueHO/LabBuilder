@@ -43,6 +43,71 @@ InModuleScope LabBuilder {
         return $errorRecord
     }
     
+
+
+    Describe 'InitializeBootVHD' {
+        $Config = Get-LabConfiguration -Path $Global:TestConfigOKPath
+        [array] $VMs = Get-LabVM -Config $Config
+
+        Mock New-Item
+        Mock Mount-WindowsImage
+        Mock DownloadAndUnzipFile
+        Mock Dismount-WindowsImage
+        Mock Add-WindowsPackage
+        Mock Copy-Item
+        Mock Remove-Item
+
+        Context 'Valid Configuration Passed with no install MSU' {	
+            It 'Does Not Throw Exception' {
+                $VM = $VMs[0].Clone()
+                $VM.InstallMSU = ''
+                { InitializeBootVHD -Config $Config -VM $VM -VMBootDiskPath 'c:\Dummy\' } | Should Not Throw
+            }
+            It 'Calls Mocked commands' {
+                Assert-MockCalled New-Item -Exactly 3
+                Assert-MockCalled Mount-WindowsImage -Exactly 1
+                Assert-MockCalled DownloadAndUnzipFile -Exactly 0
+                Assert-MockCalled Dismount-WindowsImage -Exactly 1
+                Assert-MockCalled Add-WindowsPackage -Exactly 1
+                Assert-MockCalled Copy-Item -Exactly 4
+                Assert-MockCalled Remove-Item -Exactly 1
+            }
+        }
+        Context 'Valid Configuration Passed with Nano Server VM' {	
+            It 'Does Not Throw Exception' {
+                $VM = $VMs[0].Clone()
+                $VM.OSType = 'Nano'
+                { InitializeBootVHD -Config $Config -VM $VM -VMBootDiskPath 'c:\Dummy\' } | Should Not Throw
+            }
+            It 'Calls Mocked commands' {
+                Assert-MockCalled New-Item -Exactly 3
+                Assert-MockCalled Mount-WindowsImage -Exactly 1
+                Assert-MockCalled DownloadAndUnzipFile -Exactly 1
+                Assert-MockCalled Dismount-WindowsImage -Exactly 1
+                Assert-MockCalled Add-WindowsPackage -Exactly 3
+                Assert-MockCalled Copy-Item -Exactly 4
+                Assert-MockCalled Remove-Item -Exactly 1
+            }
+        }
+        Context 'Valid Configuration Passed' {	
+            It 'Does Not Throw Exception' {
+                $VM = $VMs[0].Clone()
+                { InitializeBootVHD -Config $Config -VM $VM -VMBootDiskPath 'c:\Dummy\' } | Should Not Throw
+            }
+            It 'Calls Mocked commands' {
+                Assert-MockCalled New-Item -Exactly 3
+                Assert-MockCalled Mount-WindowsImage -Exactly 1
+                Assert-MockCalled DownloadAndUnzipFile -Exactly 1
+                Assert-MockCalled Dismount-WindowsImage -Exactly 1
+                Assert-MockCalled Add-WindowsPackage -Exactly 1
+                Assert-MockCalled Copy-Item -Exactly 4
+                Assert-MockCalled Remove-Item -Exactly 1
+            }
+        }
+    }
+
+
+
     Describe 'InitializeVHD' {
         $VHD = @{
             Path = 'c:\DataVHDx.vhdx'

@@ -158,6 +158,7 @@ ConvertFrom-StringData -StringData @'
     ISONotFoundDownloadURLMessage=The ISO '{1}' for VM template VHD '{0}' could not be found. It can be downloaded from '{2}'.
     CreatingMountFolderMessage=Creating a temporary mount folder '{0}'.
     CreatingVMTemplateVHDMessage=Creating the '{0}' VM Template VHD '{1}'.
+    CachingNanoServerPackagesMessage=Caching Nano Server packages from '{0}' to '{1}'.
     ConvertingWIMtoVHDMessage=Converting '{3}' in '{0}' to a bootable {4} {5} {2} '{1}'.
     CreatedVMInitializationFiles=Created Initialization files for VM '{0}'.
     MountingVMTemplateVHDISOMessage=Mounting {1} to use source WIM to create Template VHD {0}

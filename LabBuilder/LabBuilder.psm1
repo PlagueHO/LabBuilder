@@ -1295,6 +1295,8 @@ function Initialize-LabVMTemplateVHD
     {
         return
     }
+    
+    [String] $LabPath = $Config.labbuilderconfig.settings.labpath
 
     foreach ($VMTemplateVHD in $VMTemplateVHDs)
     {
@@ -1399,13 +1401,19 @@ function Initialize-LabVMTemplateVHD
         {
             # Make a copy of the all the Nano packages in the VHD root folder
             # So that if any VMs need to add more packages they are accessible
-            # once the ISO has been dismounted
+            # once the ISO has been dismounted.
             [String] $VHDFolder = Split-Path `
                 -Path $VHDPath `
                 -Parent
 
-            if (-not (Test-Path -Path $PackagesFolder -Type Container))
+            [String] $VHDPackagesFolder = Join-Path `
+                -Path $VHDFolder `
+                -ChildPath 'NanoServerPackages'
+            
+            if (-not (Test-Path -Path $VHDPackagesFolder -Type Container))
             {
+                Write-Verbose -Message ($LocalizedData.CachingNanoServerPackagesMessage `
+                        -f "$ISODrive\Nanoserver\Packages",$VHDPackagesFolder)
                 Copy-Item `
                     -Path "$ISODrive\Nanoserver\Packages" `
                     -Destination $VHDFolder `
@@ -1415,11 +1423,7 @@ function Initialize-LabVMTemplateVHD
                     -Path "$VHDFolder\Packages" `
                     -NewName 'NanoServerPackages'
             }
-            
-            [String] $PackagesFolder = Join-Path `
-                -Path $VHDFolder `
-                -ChildPath 'NanoServerPackages'
-                
+                                        
             # Now specify the Nano Server packages to add.
             if (-not [String]::IsNullOrWhitespace($VMTemplateVHD.Packages))
             {
@@ -1430,8 +1434,8 @@ function Initialize-LabVMTemplateVHD
                 {
                     If ($Package.Name -in $NanoPackages) 
                     {
-                        $Packages += @(Join-Path -Path $PackagesFolder -ChildPath $Package.Filename)
-                        $Packages += @(Join-Path -Path $PackagesFolder -ChildPath "en-us\$($Package.Filename)")
+                        $Packages += @(Join-Path -Path $LabPackagesFolder -ChildPath $Package.Filename)
+                        $Packages += @(Join-Path -Path $LabPackagesFolder -ChildPath "en-us\$($Package.Filename)")
                     } # if
                 } # foreach
                 $ConvertParams += @{
@@ -1796,6 +1800,8 @@ function Initialize-LabVMTemplate {
         $VMTemplates = Get-LabVMTemplate `
             -Config $Config
     }
+
+    [String] $LabPath = $Config.labbuilderconfig.settings.labpath
     
     # Check each Parent VHD exists in the Parent VHDs folder for the
     # Lab. If it isn't, try and copy it from the SourceVHD
@@ -1820,14 +1826,48 @@ function Initialize-LabVMTemplate {
             
 			Write-Verbose -Message $($LocalizedData.CopyingTemplateSourceVHDMessage `
                 -f $VMTemplate.sourcevhd,$VMTemplate.parentvhd)
-            Copy-Item -Path $VMTemplate.sourcevhd -Destination $VMTemplate.parentvhd
+            Copy-Item `
+                -Path $VMTemplate.sourcevhd `
+                -Destination $VMTemplate.parentvhd
             Write-Verbose -Message $($LocalizedData.OptimizingParentVHDMessage `
                 -f $VMTemplate.parentvhd)
-            Set-ItemProperty -Path $VMTemplate.parentvhd -Name IsReadOnly -Value $False
-            Optimize-VHD -Path $VMTemplate.parentvhd -Mode Full
+            Set-ItemProperty `
+                -Path $VMTemplate.parentvhd `
+                -Name IsReadOnly `
+                -Value $False
+            Optimize-VHD `
+                -Path $VMTemplate.parentvhd `
+                -Mode Full
             Write-Verbose -Message $($LocalizedData.SettingParentVHDReadonlyMessage `
                 -f $VMTemplate.parentvhd)
-            Set-ItemProperty -Path $VMTemplate.parentvhd -Name IsReadOnly -Value $True
+            Set-ItemProperty `
+                -Path $VMTemplate.parentvhd `
+                -Name IsReadOnly `
+                -Value $True
+
+            # If this is a Nano Server template, we need to ensure that the
+            # NanoServerPackages folder is copied to our Lab folder
+            if ($VMTemplate.OSType -eq 'Nano')
+            {
+                [String] $VHDPackagesFolder = Join-Path `
+                    -Path (Split-Path -Path $VMTemplate.sourcevhd -Parent)`
+                    -ChildPath 'NanoServerPackages'
+
+                [String] $LabPackagesFolder = Join-Path `
+                    -Path $LabPath `
+                    -ChildPath 'NanoServerPackages'
+
+                if (-not (Test-Path -Path $LabPackagesFolder -Type Container))
+                {
+                    Write-Verbose -Message ($LocalizedData.CachingNanoServerPackagesMessage `
+                            -f $VHDPackagesFolder,$LabPackagesFolder)
+                    Copy-Item `
+                        -Path $VHDPackagesFolder `
+                        -Destination $LabPath `
+                        -Recurse `
+                        -Force
+                }
+            }
         }
         Else
         {
@@ -2134,195 +2174,6 @@ Export-Certificate ``
 "@
     Return $CreateCertificatePs
 } # Get-LabGetCertificatePs
-####################################################################################################
-
-####################################################################################################
-<#
-.SYNOPSIS
-   Initialized a VM VHD for first boot by applying any required files to the image.
-.DESCRIPTION
-   This function mounts a VM boot VHD image and applies the following files from the
-   LabBuilder Files folder to it:
-     1. Unattend.xml - a Windows Unattend.xml file.
-     2. SetupComplete.cmd - the command file that gets run after the Windows OOBE is complete.
-     3. SetupComplete.ps1 - this PowerShell script file that is run at the the end of the
-                            SetupComplete.cmd.
-   The files should have already been prepared by the CreateVMInitializationFiles function.
-   The VM VHD image should contain an installed copy of Windows still in OOBE mode.
-   
-   This function also applies downloads and applies and optional MSU update files from
-   a web site if specified in the VM declaration in the configuration.
-.PARAMETER Configuration
-   Contains the Lab Builder configuration object that was loaded by the Get-LabConfiguration
-   object.
-.PARAMETER VM
-   A Virtual Machine object pulled from the Lab Configuration file using Get-LabVM
-.EXAMPLE
-   $Config = Get-LabConfiguration -Path c:\mylab\config.xml
-   $VMs = Get-LabVM -Config $Config
-   Initialize-LabVMImage `
-       -Config $Config `
-       -VM $VMs[0] `
-       -VMBootDiskPath $BootVHD[0]
-   Prepare the boot VHD in for the first VM in the Lab c:\mylab\config.xml for initial boot.
-.OUTPUTS
-   None.
-#>
-
-function Initialize-LabVMImage {
-    [CmdLetBinding()]
-    param (
-        [Parameter(Mandatory)]
-        [XML] $Config,
-
-        [Parameter(Mandatory)]
-        [System.Collections.Hashtable] $VM,
-
-        [Parameter(Mandatory)]
-        [String] $VMBootDiskPath
-    )
-
-    # Get Path to LabBuilder files
-    [String] $VMLabBuilderFiles = $VM.LabBuilderFilesPath
-    
-    # Mount the VMs Boot VHD so that files can be loaded into it
-    Write-Verbose -Message $($LocalizedData.MountingVMBootDiskMessage `
-        -f $VM.Name,$VMBootDiskPath)
-      
-    # Create a mount point for mounting the Boot VHD
-    [String] $MountPoint = Join-Path `
-        -Path $VMLabBuilderFiles `
-        -ChildPath 'Mount'
-
-    if (-not (Test-Path -Path $MountPoint -PathType Container))
-    {
-        $null = New-Item `
-            -Path $MountPoint `
-            -ItemType Directory
-    }
-
-    # Mount the VHD to the Mount point
-    $null = Mount-WindowsImage `
-        -ImagePath $VMBootDiskPath `
-        -Path $MountPoint `
-        -Index 1
-
-    # Apply any additional MSU Updates
-    foreach ($URL in $VM.InstallMSU)
-    {
-        $MSUFilename = $URL.Substring($URL.LastIndexOf('/') + 1)
-        $MSUPath = Join-Path `
-			-Path $Script:WorkingFolder `
-			-ChildPath $MSUFilename
-
-        if (-not (Test-Path -Path $MSUPath))
-        {
-            Write-Verbose -Message $($LocalizedData.DownloadingVMBootDiskFileMessage `
-                -f $VM.Name,'MSU',$URL)
-            DownloadAndUnzipFile `
-                -URL $URL `
-                -DestinationPath $MSUPath
-        } # if
-
-        # Once downloaded apply the update
-        Write-Verbose -Message $($LocalizedData.ApplyingVMBootDiskFileMessage `
-            -f $VM.Name,'MSU',$URL)
-        $null = Add-WindowsPackage `
-			-PackagePath $MSUPath `
-			-Path $MountPoint
-    } # foreach
-
-    # If this is a Nano Server, add any packages specifed in the VM
-    if ($VM.OSType -eq 'Nano')
-    {
-        # Now specify the Nano Server packages to add.
-        if (-not [String]::IsNullOrWhitespace($VM.Packages))
-        {
-            [String] $VHDFolder = Split-Path `
-                -Path $VMBootDiskPath `
-                -Parent
-            [String] $PackagesFolder = Join-Path `
-                -Path $VHDFolder `
-                -ChildPath 'NanoServerPackages'
-            $NanoPackages = @($VM.Packages -split ',')
-
-            foreach ($Package in $Script:NanoServerPackageList) 
-            {
-                if ($Package.Name -in $NanoPackages) 
-                {
-                    # Add the package
-                    $PackagePath = Join-Path `
-                        -Path $PackagesFolder `
-                        -ChildPath $Package.Filename
-                    Add-WindowsPackage `
-                        -PackagePath $PackagePath `
-                        -Path $MountPoint
-                    # Add the localization package
-                    $PackagePath = Join-Path `
-                        -Path $PackagesFolder `
-                        -ChildPath "en-us\$($Package.Filename)"
-                    Add-WindowsPackage `
-                        -PackagePath $PackagePath `
-                        -Path $MountPoint
-                } # if
-            } # foreach
-        } # if        
-    } # if
-    
-    # Create the scripts folder where setup scripts will be put
-    $null = New-Item `
-		-Path "$MountPoint\Windows\Setup\Scripts" `
-		-ItemType Directory
-
-    # Apply an unattended setup file
-    Write-Verbose -Message $($LocalizedData.ApplyingVMBootDiskFileMessage `
-        -f $VM.Name,'Unattend','Unattend.xml')
-
-    if (-not (Test-Path -Path "$MountPoint\Windows\Panther" -PathType Container))
-    {
-        Write-Verbose -Message $($LocalizedData.CreatingVMBootDiskPantherFolderMessage `
-            -f $VM.Name)
-
-        $null = New-Item `
-            -Path "$MountPoint\Windows\Panther" `
-            -ItemType Directory
-    } # if
-    $null = Copy-Item `
-        -Path (Join-Path -Path $VMLabBuilderFiles -ChildPath 'Unattend.xml') `
-        -Destination "$MountPoint\Windows\Panther\Unattend.xml" `
-        -Force
-
-    # Apply the CMD Setup Complete File
-    Write-Verbose -Message $($LocalizedData.ApplyingVMBootDiskFileMessage `
-        -f $VM.Name,'Setup Complete CMD','SetupComplete.cmd')
-    $null = Copy-Item `
-        -Path (Join-Path -Path $VMLabBuilderFiles -ChildPath 'SetupComplete.cmd') `
-        -Destination "$MountPoint\Windows\Setup\Scripts\SetupComplete.cmd" `
-        -Force
-
-    # Apply the PowerShell Setup Complete file
-    Write-Verbose -Message $($LocalizedData.ApplyingVMBootDiskFileMessage `
-        -f $VM.Name,'Setup Complete PowerShell','SetupComplete.ps1')
-    $null = Copy-Item `
-        -Path (Join-Path -Path $VMLabBuilderFiles -ChildPath 'SetupComplete.ps1') `
-        -Destination "$MountPoint\Windows\Setup\Scripts\SetupComplete.ps1" `
-        -Force
-
-    # Apply the Certificate Generator script
-    $CertGenFilename = Split-Path -Path $Script:SupportGertGenPath -Leaf
-    Write-Verbose -Message $($LocalizedData.ApplyingVMBootDiskFileMessage `
-        -f $VM.Name,'Certificate Create Script',$CertGenFilename)
-    $null = Copy-Item `
-        -Path $Script:SupportGertGenPath `
-        -Destination "$MountPoint\Windows\Setup\Scripts\"`
-        -Force
-        
-    # Dismount the VHD in preparation for boot
-    Write-Verbose -Message $($LocalizedData.DismountingVMBootDiskMessage `
-        -f $VM.Name,$VMBootDiskPath)
-    $null = Dismount-WindowsImage -Path $MountPoint -Save
-    $null = Remove-Item -Path $MountPoint -Recurse -Force
-} # Initialize-LabVMImage
 ####################################################################################################
 
 ####################################################################################################
@@ -4187,18 +4038,17 @@ function Initialize-LabVM {
                         -Path $VM.ParentVHD `
                         -Destination $VMBootDiskPath
                 }
-
+                
                 # Create all the required initialization files for this VM
                 CreateVMInitializationFiles `
                     -Config $Config `
                     -VM $VM
 
                 # Because this is a new boot disk apply any required initialization
-                Initialize-LabVMImage `
+                InitializeBootVHD `
                     -Config $Config `
                     -VM $VM `
                     -VMBootDiskPath $VMBootDiskPath
-
             }
             else
             {
@@ -4378,6 +4228,7 @@ function Remove-LabVM {
     
     $CurrentVMs = Get-VM
 
+    # Get the LabPath
     [String] $LabPath = $Config.labbuilderconfig.settings.labpath
     
     foreach ($VM in $VMs)
