@@ -49,4 +49,17 @@ InModuleScope LabBuilder {
 
     Describe 'GetUnattendFileContent' -Tags 'Incomplete' {
     }
-}
+
+
+    Describe 'GetCertificatePsFileContent' -Tags 'Incomplete' {
+    }
+    
+    
+    Describe 'GetSelfSignedCertificate' -Tags 'Incomplete' {
+    }
+    
+    
+    Describe 'RecreateSelfSignedCertificate' -Tags 'Incomplete' {
+    }
+    
+}    
