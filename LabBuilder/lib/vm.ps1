@@ -63,7 +63,7 @@ if (Test-Path -Path `"`$(`$ENV:SystemRoot)\$Script:DSCEncryptionPfxCert`")
         -String '$Script:DSCCertificatePassword' ``
         -Force ``
         -AsPlainText
-    & certoc.exe @('-ImportPFX','-p','$Script:DSCCertificatePassword','My',`"`$(`$ENV:SystemRoot)\$Script:DSCEncryptionPfxCert`")
+    & certoc.exe @('-ImportPFX','-p','$Script:DSCCertificatePassword','root',`"`$(`$ENV:SystemRoot)\$Script:DSCEncryptionPfxCert`")
     Add-Content ``
         -Path `"`$(`$ENV:SystemRoot)\Setup\Scripts\SetupComplete.log`" ``
         -Value 'Importing Encryption Certificate from PFX ...' ``
