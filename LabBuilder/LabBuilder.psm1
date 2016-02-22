@@ -54,7 +54,9 @@ $Libs.Foreach(
 [String] $Script:SelfSignedCertAlgorithmName = 'RSA' # 'ECDH_P256' Or 'ECDH_P384' Or 'ECDH_P521'
 [String] $Script:SelfSignedCertSignatureAlgorithm = 'SHA256' # 'SHA1'
 [String] $Script:DSCEncryptionCert = 'DSCEncryption.cer'
+[String] $Script:DSCEncryptionPfxCert = 'DSCEncryption.pfx'
 [String] $Script:DSCCertificateFriendlyName = 'DSC Credential Encryption'
+[String] $Script:DSCCertificatePassword = 'E3jdNkd903mDn43NEk2nbDENjw'
 [Int] $Script:RetryConnectSeconds = 5
 [Int] $Script:RetryHeartbeatSeconds = 1
 

@@ -95,7 +95,7 @@ function InitializeBootVHD {
 			-Path $MountPoint
     } # foreach
 
-    # If this is a Nano Server, add any packages specifed in the VM
+    # If this is a Nano Server
     if ($VM.OSType -eq 'Nano')
     {
         # Now specify the Nano Server packages to add.
@@ -168,6 +168,22 @@ function InitializeBootVHD {
         -Path (Join-Path -Path $VMLabBuilderFiles -ChildPath 'Unattend.xml') `
         -Destination "$MountPoint\Windows\Panther\Unattend.xml" `
         -Force
+
+    # If a Certificate PFX file is available, copy it into the c:\Windows
+    # folder of the VM.
+    $CertificatePfxPath = Join-Path `
+        -Path $VMLabBuilderFiles `
+        -ChildPath $Script:DSCEncryptionPfxCert
+    if (Test-Path -Path $CertificatePfxPath)
+    {
+        # Apply the CMD Setup Complete File
+        Write-Verbose -Message $($LocalizedData.ApplyingVMBootDiskFileMessage `
+            -f $VM.Name,'Credential Certificate PFX',$Script:DSCEncryptionPfxCert)
+        $null = Copy-Item `
+            -Path $CertificatePfxPath `
+            -Destination "$MountPoint\Windows\$Script:DSCEncryptionPfxCert" `
+            -Force
+    }
 
     # Apply the CMD Setup Complete File
     Write-Verbose -Message $($LocalizedData.ApplyingVMBootDiskFileMessage `
