@@ -90,6 +90,10 @@ Configuration XML
 
 Versions
 --------
+### 0.4.1.0
+* VHDParentPath setting made optional. Defaults to "Virtual Machine Hard Disks" under config.
+* Initialize-LabConfiguration function will create labpath and vhdparentpath folders if not exist.
+
 ### 0.4.0.0
 * Some secondary non-exported functions moved into separate support libraries.
 * Initialize-LabVMTemplate caches NanoServerPackages from VHD template folder to Lab folder.

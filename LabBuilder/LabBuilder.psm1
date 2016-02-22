@@ -130,6 +130,7 @@ function Get-LabConfiguration {
     [XML] $Config = New-Object System.Xml.XmlDocument
     $Config.PreserveWhitespace = $true
     $Config.LoadXML($Content)
+    
     # Figure out the Config path and load it into the XML object (if we can)
     # This path is used to find any additional configuration files that might
     # be provided with config
@@ -148,6 +149,23 @@ function Get-LabConfiguration {
         [String] $FullConfigPath = $ConfigPath
     }
     $Config.labbuilderconfig.settings.setattribute('fullconfigpath',$FullConfigPath)
+
+    # Get the VHDParentPath - if it isn't supplied default
+    [String] $VHDParentPath = $Config.labbuilderconfig.settings.vhdparentpath
+    if (-not $VHDParentPath)
+    {
+        $VHDParentPath = 'Virtual Hard Disk Templates'
+    }
+    # if the resulting parent path is not rooted make the root
+    # the Full config path
+    if (-not ([System.IO.Path]::IsPathRooted($VHDParentPath)))
+    {
+        $VHDParentPath = Join-Path `
+            -Path $FullConfigPath `
+            -ChildPath $VHDParentPath        
+    }    
+    $Config.labbuilderconfig.settings.setattribute('vhdparentpath',$VHDParentPath)
+
     Return $Config
 } # Get-LabConfiguration
 ####################################################################################################
@@ -187,7 +205,7 @@ function Test-LabConfiguration {
         ThrowException @ExceptionParameters
     }
 
-    # Check folders exist
+    # Check folders are defined
     [String] $LabPath = $Config.labbuilderconfig.settings.labpath
     if (-not $LabPath)
     {
@@ -200,17 +218,6 @@ function Test-LabConfiguration {
         ThrowException @ExceptionParameters
     }
 
-    if (-not (Test-Path -Path $LabPath))
-    {
-        $ExceptionParameters = @{
-            errorId = 'PathNotFoundError'
-            errorCategory = 'InvalidArgument'
-            errorMessage = $($LocalizedData.PathNotFoundError `
-                -f '<settings>\<labpath>',$LabPath)
-        }
-        ThrowException @ExceptionParameters
-    }
-
     [String] $VHDParentPath = $Config.labbuilderconfig.settings.vhdparentpath
     if (-not $VHDParentPath)
     {
@@ -219,17 +226,6 @@ function Test-LabConfiguration {
             errorCategory = 'InvalidArgument'
             errorMessage = $($LocalizedData.ConfigurationMissingElementError `
                 -f '<settings>\<vhdparentpath>')
-        }
-        ThrowException @ExceptionParameters
-    }
-
-    if (-not (Test-Path -Path $VHDParentPath))
-    {
-        $ExceptionParameters = @{
-            errorId = 'PathNotFoundError'
-            errorCategory = 'InvalidArgument'
-            errorMessage = $($LocalizedData.PathNotFoundError `
-                -f '<settings>\<vhdparentpath>',$VHDParentPath)
         }
         ThrowException @ExceptionParameters
     }
@@ -323,9 +319,35 @@ function Initialize-LabConfiguration {
         [XML] $Config
     )
     
+    # Check Lab Folder structure
+    Write-Verbose -Message ($LocalizedData.InitializingLabFoldersMesage)
+
+    # Check folders are defined
+    [String] $LabPath = $Config.labbuilderconfig.settings.labpath
+    if (-not (Test-Path -Path $LabPath))
+    {
+        Write-Verbose -Message ($LocalizedData.CreatingLabFolderMessage `
+            -f 'LabPath',$LabPath)
+
+        New-Item `
+            -Path $LabPath `
+            -Type Directory
+    }
+
+    [String] $VHDParentPath = $Config.labbuilderconfig.settings.vhdparentpath
+    if (-not (Test-Path -Path $VHDParentPath))
+    {
+        Write-Verbose -Message ($LocalizedData.CreatingLabFolderMessage `
+            -f 'VHDParentPath',$VHDParentPath)
+
+        New-Item `
+            -Path $VHDParentPath `
+            -Type Directory
+    }
+    
     # Install Hyper-V Components
     Write-Verbose -Message ($LocalizedData.InitializingHyperVComponentsMesage)
-    
+
     # Create the LabBuilder Management Network switch and assign VLAN
     # Used by host to communicate with Lab VMs
     [String] $ManagementSwitchName = ('LabBuilder Management {0}' `
@@ -368,138 +390,6 @@ function Initialize-LabConfiguration {
     Download-LabResources -Config $Config	
 
 } # Initialize-LabConfiguration
-####################################################################################################
-
-####################################################################################################
-<#
-.SYNOPSIS
-   Downloads any resources required by the configuration.
-.DESCRIPTION
-   It will ensure any required modules and files are downloaded.
-.PARAMETER Configuration
-   Contains the Lab Builder configuration object that was loaded by the Get-LabConfiguration object.
-.EXAMPLE
-   $Config = Get-LabConfiguration -Path c:\mylab\config.xml
-   Download-LabResources -Config $Config
-   Loads a Lab Builder configuration and downloads any resources required by it.   
-.OUTPUTS
-   None.
-#>
-function Download-LabModule {
-    [CmdLetBinding()]
-    param
-    (
-        [Parameter(Mandatory)]
-        [ValidateNotNullOrEmpty()]
-        [String] $Name,
-
-        [String] $URL,
-
-        [String] $Folder,
-        
-        [String] $RequiredVersion,
-
-        [String] $MinimumVersion
-    )
-
-    $InstalledModules = @(Get-Module -ListAvailable)
-
-    # Determine a query that will be used to decide if the module is already installed
-    if ($RequiredVersion) {
-        [ScriptBlock] $Query = `
-            { ($_.Name -eq $Name) -and ($_.Version -eq $RequiredVersion) }
-        $VersionMessage = $RequiredVersion                
-    }
-    elseif ($MinimumVersion)
-    {
-        [ScriptBlock] $Query = `
-            { ($_.Name -eq $Name) -and ($_.Version -ge $MinimumVersion) }
-        $VersionMessage = "min ${MinimumVersion}"
-    }
-    else
-    {
-        [ScriptBlock] $Query = `
-            $Query = { $_.Name -eq $Name }
-        $VersionMessage = 'any version'
-    }
-
-    # Is the module installed?
-    if ($InstalledModules.Where($Query).Count -eq 0)
-    {
-        Write-Verbose -Message ($LocalizedData.ModuleNotInstalledMessage `
-            -f $Name,$VersionMessage)
-
-        # If a URL was specified, download this module via HTTP
-        if ($URL)
-        {
-            # The module is not installed - so download it
-            # This is usually for downloading modules directly from github
-            $FileName = $URL.Substring($URL.LastIndexOf('/') + 1)
-            $FilePath = Join-Path -Path $Script:WorkingFolder -ChildPath $FileName
-
-            Write-Verbose -Message ($LocalizedData.DownloadingLabResourceWebMessage `
-                -f $Name,$VersionMessage,$URL)
-
-            [String] $ModulesFolder = "$($ENV:ProgramFiles)\WindowsPowerShell\Modules\"
-
-            DownloadAndUnzipFile `
-                -URL $URL `
-                -DestinationPath $ModulesFolder `
-                -ErrorAction Stop
-
-            if ($Folder)
-            {
-                # This zip file contains a folder that is not the name of the module so it must be
-                # renamed. This is usually the case with source downloaded directly from GitHub
-                $ModulePath = Join-Path -Path $ModulesFolder -ChildPath $Name
-                if (Test-Path -Path $ModulePath)
-                {
-                    Remove-Item -Path $ModulePath -Recurse -Force
-                }
-                Rename-Item `
-                    -Path (Join-Path -Path $ModulesFolder -ChildPath $Folder) `
-                    -NewName $Name `
-                    -Force
-            } # If
-
-            Write-Verbose -Message ($LocalizedData.InstalledLabResourceWebMessage `
-                -f $Name,$VersionMessage,$ModulePath)
-        }
-        else
-        {
-            # Install the package via PowerShellGet from the PowerShellGallery
-            # Make sure the Nuget Package provider is initialized.
-            $null = Get-PackageProvider -name nuget -ForceBootStrap -Force
-
-            # Install the module
-            $Splat = [PSObject] @{ Name = $Name }
-            if ($RequiredVersion)
-            {
-                # Is a specific module version required?
-                $Splat += [PSObject] @{ RequiredVersion = $RequiredVersion }
-            }
-            elseif ($MinimumVersion)
-            {
-                # Is a specific module version minimum version?
-                $Splat += [PSObject] @{ MinimumVersion = $MinimumVersion }
-            }
-            try
-            {
-                Install-Module @Splat -Force -ErrorAction Stop
-            }
-            catch
-            {
-                $ExceptionParameters = @{
-                    errorId = 'ModuleNotAvailableError'
-                    errorCategory = 'InvalidArgument'
-                    errorMessage = $($LocalizedData.ModuleNotAvailableError `
-                        -f $Name,$VersionMessage,$_.Exception.Message)
-                }
-                ThrowException @ExceptionParameters
-            }
-        } # If
-    } # If
-} # Download-LabModule
 ####################################################################################################
 
 ####################################################################################################
@@ -566,7 +456,7 @@ function Download-LabResources {
             {
                 $Splat += [PSObject] @{ MiniumVersion = $Module.MiniumVersion }
             }
-            Download-LabModule @Splat
+            DownloadModule @Splat
         } # Foreach
     } # If
 } # Download-LabResources
@@ -1996,8 +1886,8 @@ function Get-LabVM {
     }
 
     [System.Collections.Hashtable[]] $LabVMs = @()
-    [String] $VHDParentPath = $Config.labbuilderconfig.settings.vhdparentpath
     [String] $LabPath = $Config.labbuilderconfig.settings.labpath
+    [String] $VHDParentPath = $Config.labbuilderconfig.settings.vhdparentpath
     $VMs = $Config.labbuilderconfig.SelectNodes('vms').vm
 
     foreach ($VM in $VMs) 
