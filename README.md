@@ -93,6 +93,7 @@ Versions
 ### 0.4.1.0
 * VHDParentPath setting made optional. Defaults to "Virtual Machine Hard Disks" under config.
 * Initialize-LabConfiguration function will create labpath and vhdparentpath folders if not exist.
+* Test-LabConfiguration no longer checks to ensure labpath and vhdparentpath folders exist.
 
 ### 0.4.0.0
 * Some secondary non-exported functions moved into separate support libraries.
