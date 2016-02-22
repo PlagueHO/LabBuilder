@@ -57,9 +57,14 @@ Add-Content ``
     -Path "C:\WINDOWS\Setup\Scripts\SetupComplete.log" ``
     -Value 'SetupComplete.ps1 Script Started...' ``
     -Encoding Ascii
+Enable-PSRemoting -SkipNetworkProfileCheck -Force
+Add-Content ``
+    -Path `"`$(`$ENV:SystemRoot)\Setup\Scripts\SetupComplete.log`" ``
+    -Value 'Windows Remoting Enabled ...' ``
+    -Encoding Ascii
 if (Test-Path -Path `"`$(`$ENV:SystemRoot)\$Script:DSCEncryptionPfxCert`")
 {
-    $CertificatePassword = ConvertTo-SecureString ``
+    `$CertificatePassword = ConvertTo-SecureString ``
         -String '$Script:DSCCertificatePassword' ``
         -Force ``
         -AsPlainText
@@ -72,11 +77,6 @@ if (Test-Path -Path `"`$(`$ENV:SystemRoot)\$Script:DSCEncryptionPfxCert`")
         -Value 'Importing Encryption Certificate from PFX ...' ``
         -Encoding Ascii    
 }
-Enable-PSRemoting -SkipNetworkProfileCheck -Force
-Add-Content ``
-    -Path `"`$(`$ENV:SystemRoot)\Setup\Scripts\SetupComplete.log`" ``
-    -Value 'Windows Remoting Enabled ...' ``
-    -Encoding Ascii
 "@
     }
     else
