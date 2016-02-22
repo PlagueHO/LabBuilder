@@ -1982,18 +1982,13 @@ InModuleScope LabBuilder {
 
 
 
-    Describe 'Get-LabVMelfSignedCert' -Tags 'Incomplete' {
-    }
-
-
-
     Describe 'Start-LabVM' -Tags 'Incomplete' {
         #region Mocks
         Mock Get-VM -ParameterFilter { $Name -eq 'PESTER01' } -MockWith { [PSObject]@{ Name='PESTER01'; State='Off' } }
         Mock Get-VM -ParameterFilter { $Name -eq 'pester template *' }
         Mock Start-VM
         Mock Wait-LabVMInit -MockWith { $True }
-        Mock Get-LabVMelfSignedCert -MockWith { $True }
+        Mock GetSelfSignedCertificate -MockWith { $True }
         Mock Initialize-LabVMDSC
         Mock Start-LabVMDSC
         #endregion
@@ -2015,7 +2010,7 @@ InModuleScope LabBuilder {
                 Assert-MockCalled Get-VM -ParameterFilter { $Name -eq 'pester template *' } -Exactly 1
                 Assert-MockCalled Start-VM -Exactly 1
                 Assert-MockCalled Wait-LabVMInit -Exactly 1
-                Assert-MockCalled Get-LabVMelfSignedCert -Exactly 1
+                Assert-MockCalled GetSelfSignedCertificate -Exactly 1
                 Assert-MockCalled Initialize-LabVMDSC -Exactly 1
                 Assert-MockCalled Start-LabVMDSC -Exactly 1
             }
@@ -2591,7 +2586,7 @@ InModuleScope LabBuilder {
         Mock Add-VMNetworkAdapter
         Mock Start-VM
         Mock Wait-LabVMInit -MockWith { $True }
-        Mock Get-LabVMelfSignedCert
+        Mock GetSelfSignedCertificate
         Mock Initialize-LabVMDSC
         Mock Start-LabVMDSC
         #endregion
@@ -2618,7 +2613,7 @@ InModuleScope LabBuilder {
                 Assert-MockCalled Add-VMNetworkAdapter -Exactly 4
                 Assert-MockCalled Start-VM -Exactly 1
                 Assert-MockCalled Wait-LabVMInit -Exactly 1
-                Assert-MockCalled Get-LabVMelfSignedCert -Exactly 1
+                Assert-MockCalled GetSelfSignedCertificate -Exactly 1
                 Assert-MockCalled Initialize-LabVMDSC -Exactly 1
                 Assert-MockCalled Start-LabVMDSC -Exactly 1
             }

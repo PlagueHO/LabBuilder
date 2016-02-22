@@ -177,7 +177,7 @@ function CreateDSCMOFFiles {
             -Recurse -Force
     } # Foreach
 
-    if (-not (New-LabVMSelfSignedCert -Config $Config -VM $VM))
+    if (-not (RecreateSelfSignedCertificate -Config $Config -VM $VM))
     {
         $ExceptionParameters = @{
             errorId = 'CertificateCreateError'
