@@ -151,6 +151,7 @@ function Get-LabConfiguration {
     $Config.labbuilderconfig.settings.setattribute('fullconfigpath',$FullConfigPath)
 
     # Get the VHDParentPath - if it isn't supplied default
+    [String] $LabPath = $Config.labbuilderconfig.settings.labpath
     [String] $VHDParentPath = $Config.labbuilderconfig.settings.vhdparentpath
     if (-not $VHDParentPath)
     {
@@ -161,7 +162,7 @@ function Get-LabConfiguration {
     if (-not ([System.IO.Path]::IsPathRooted($VHDParentPath)))
     {
         $VHDParentPath = Join-Path `
-            -Path $FullConfigPath `
+            -Path $LabPath `
             -ChildPath $VHDParentPath        
     }    
     $Config.labbuilderconfig.settings.setattribute('vhdparentpath',$VHDParentPath)
@@ -329,7 +330,7 @@ function Initialize-LabConfiguration {
         Write-Verbose -Message ($LocalizedData.CreatingLabFolderMessage `
             -f 'LabPath',$LabPath)
 
-        New-Item `
+        $null = New-Item `
             -Path $LabPath `
             -Type Directory
     }
@@ -340,7 +341,7 @@ function Initialize-LabConfiguration {
         Write-Verbose -Message ($LocalizedData.CreatingLabFolderMessage `
             -f 'VHDParentPath',$VHDParentPath)
 
-        New-Item `
+        $null = New-Item `
             -Path $VHDParentPath `
             -Type Directory
     }
