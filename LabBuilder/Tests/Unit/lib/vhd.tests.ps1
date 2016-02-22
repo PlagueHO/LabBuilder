@@ -87,7 +87,7 @@ InModuleScope LabBuilder {
                 Assert-MockCalled DownloadAndUnzipFile -Exactly 1
                 Assert-MockCalled Dismount-WindowsImage -Exactly 1
                 Assert-MockCalled Add-WindowsPackage -Exactly 3
-                Assert-MockCalled Copy-Item -Exactly 4
+                Assert-MockCalled Copy-Item -Exactly 3
                 Assert-MockCalled Remove-Item -Exactly 1
             }
         }

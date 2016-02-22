@@ -318,14 +318,9 @@ InModuleScope LabBuilder {
 
 
     Describe 'StartDSC' -Tags 'Incomplete' {
-
-        Mock Get-VM
-
-        $Config = Get-LabConfiguration -Path $Global:TestConfigOKPath
-        [Array]$Switches = Get-LabSwitch -Config $Config
-        [Array]$Templates = Get-LabVMTemplate -Config $Config
-        [Array]$VMs = Get-LabVM -Config $Config -VMTemplates $Templates -Switches $Switches
-
     }
 
+
+    Describe 'GetDSCNetworkingConfig' -Tags 'Incomplete' {
+    }
 }

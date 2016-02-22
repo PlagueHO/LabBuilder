@@ -232,14 +232,14 @@ function CreateDSCMOFFiles {
         -f $VM.DSCConfigFile,$VM.Name)
     
     # Now create the Networking DSC Config file
-    [String] $NetworkingDSCConfig = Get-LabNetworkingDSCFile `
+    [String] $DSCNetworkingConfig = GetDSCNetworkingConfig `
         -Config $Config -VM $VM
     [String] $NetworkingDSCFile = Join-Path `
         -Path $VMLabBuilderFiles `
         -ChildPath 'DSCNetworking.ps1'
     $null = Set-Content `
         -Path $NetworkingDSCFile `
-        -Value $NetworkingDSCConfig
+        -Value $DSCNetworkingConfig
     . $NetworkingDSCFile
     [String] $DSCFile = Join-Path `
         -Path $VMLabBuilderFiles `
@@ -746,3 +746,168 @@ function StartDSC {
         } # If
     } # While
 } # StartDSC
+
+
+<#
+.SYNOPSIS
+   Assemble the content of the Networking DSC config file.
+.DESCRIPTION
+   This function creates the content that will be written to the Networking DSC Config file
+   from the networking details stored in the VM object. 
+.EXAMPLE
+   $Config = Get-LabConfiguration -Path c:\mylab\config.xml
+   $VMs = Get-LabVM -Config $Config
+   $NetworkingDSC = GetDSCNetworkingConfig -Config $Config -VM $VMs[0]
+   Return the Networking DSC for the first VM in the Lab c:\mylab\config.xml for DSC configuration.
+.PARAMETER Configuration
+   Contains the Lab Builder configuration object that was loaded by the Get-LabConfiguration
+   object.
+.PARAMETER VM
+   A Virtual Machine object pulled from the Lab Configuration file using Get-LabVM
+.OUTPUTS
+   A string containing the DSC Networking config.
+#>
+function GetDSCNetworkingConfig {
+    [CmdLetBinding()]
+    [OutputType([String])]
+    param
+    (
+        [Parameter(Mandatory)]
+        [XML] $Config,
+
+        [Parameter(Mandatory)]
+        [System.Collections.Hashtable] $VM
+    )
+    [String] $DSCNetworkingConfig = @"
+Configuration Networking {
+    Import-DscResource -ModuleName xNetworking -ModuleVersion 2.7.0.0  #Current as of 13-Feb-2016
+
+"@
+    [Int] $AdapterCount = 0
+    foreach ($Adapter in $VM.Adapters)
+    {
+        $AdapterCount++
+        if ($Adapter.IPv4)
+        {
+            if ($Adapter.IPv4.Address)
+            {
+$DSCNetworkingConfig += @"
+    xIPAddress IPv4_$AdapterCount {
+        InterfaceAlias = '$($Adapter.Name)'
+        AddressFamily  = 'IPv4'
+        IPAddress      = '$($Adapter.IPv4.Address.Replace(',',"','"))'
+        SubnetMask     = '$($Adapter.IPv4.SubnetMask)'
+    }
+
+"@
+                if ($Adapter.IPv4.DefaultGateway)
+                {
+$DSCNetworkingConfig += @"
+    xDefaultGatewayAddress IPv4G_$AdapterCount {
+        InterfaceAlias = '$($Adapter.Name)'
+        AddressFamily  = 'IPv4'
+        Address        = '$($Adapter.IPv4.DefaultGateway)'
+    }
+
+"@
+                }
+                Else
+                {
+$DSCNetworkingConfig += @"
+    xDefaultGatewayAddress IPv4G_$AdapterCount {
+        InterfaceAlias = '$($Adapter.Name)'
+        AddressFamily  = 'IPv4'
+    }
+
+"@
+                } # If
+            }
+            Else
+            {
+$DSCNetworkingConfig += @"
+    xDhcpClient IPv4DHCP_$AdapterCount {
+        InterfaceAlias = '$($Adapter.Name)'
+        AddressFamily  = 'IPv4'
+        State          = 'Enabled'
+    }
+
+"@
+
+            } # If
+            if ($Adapter.IPv4.DNSServer -ne $null)
+            {
+$DSCNetworkingConfig += @"
+    xDnsServerAddress IPv4D_$AdapterCount {
+        InterfaceAlias = '$($Adapter.Name)'
+        AddressFamily  = 'IPv4'
+        Address        = '$($Adapter.IPv4.DNSServer.Replace(',',"','"))'
+    }
+
+"@
+            } # If
+        } # If
+        if ($Adapter.IPv6)
+        {
+            if ($Adapter.IPv6.Address)
+            {
+$DSCNetworkingConfig += @"
+    xIPAddress IPv6_$AdapterCount {
+        InterfaceAlias = '$($Adapter.Name)'
+        AddressFamily  = 'IPv6'
+        IPAddress      = '$($Adapter.IPv6.Address.Replace(',',"','"))'
+        SubnetMask     = '$($Adapter.IPv6.SubnetMask)'
+    }
+
+"@
+                if ($Adapter.IPv6.DefaultGateway)
+                {
+$DSCNetworkingConfig += @"
+    xDefaultGatewayAddress IPv6G_$AdapterCount {
+        InterfaceAlias = '$($Adapter.Name)'
+        AddressFamily  = 'IPv6'
+        Address        = '$($Adapter.IPv6.DefaultGateway)'
+    }
+
+"@
+                }
+                Else
+                {
+$DSCNetworkingConfig += @"
+    xDefaultGatewayAddress IPv6G_$AdapterCount {
+        InterfaceAlias = '$($Adapter.Name)'
+        AddressFamily  = 'IPv6'
+    }
+
+"@
+                } # If
+            }
+            Else
+            {
+$DSCNetworkingConfig += @"
+    xDhcpClient IPv6DHCP_$AdapterCount {
+        InterfaceAlias = '$($Adapter.Name)'
+        AddressFamily  = 'IPv6'
+        State          = 'Enabled'
+    }
+
+"@
+
+            } # If
+            if ($Adapter.IPv6.DNSServer -ne $null)
+            {
+$DSCNetworkingConfig += @"
+    xDnsServerAddress IPv6D_$AdapterCount {
+        InterfaceAlias = '$($Adapter.Name)'
+        AddressFamily  = 'IPv6'
+        Address        = '$($Adapter.IPv6.DNSServer.Replace(',',"','"))'
+    }
+
+"@
+            } # If
+        } # If
+    } # Endfor
+$DSCNetworkingConfig += @"
+}
+"@
+    Return $DSCNetworkingConfig
+} # GetDSCNetworkingConfig

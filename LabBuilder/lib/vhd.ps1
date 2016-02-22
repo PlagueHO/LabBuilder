@@ -185,15 +185,18 @@ function InitializeBootVHD {
         -Destination "$MountPoint\Windows\Setup\Scripts\SetupComplete.ps1" `
         -Force
 
-    # Apply the Certificate Generator script
-    $CertGenFilename = Split-Path -Path $Script:SupportGertGenPath -Leaf
-    Write-Verbose -Message $($LocalizedData.ApplyingVMBootDiskFileMessage `
-        -f $VM.Name,'Certificate Create Script',$CertGenFilename)
-    $null = Copy-Item `
-        -Path $Script:SupportGertGenPath `
-        -Destination "$MountPoint\Windows\Setup\Scripts\"`
-        -Force
-        
+    # Apply the Certificate Generator script if not a Nano Server
+    if ($VM.OSType -ne 'Nano')
+    {
+        $CertGenFilename = Split-Path -Path $Script:SupportGertGenPath -Leaf
+        Write-Verbose -Message $($LocalizedData.ApplyingVMBootDiskFileMessage `
+            -f $VM.Name,'Certificate Create Script',$CertGenFilename)
+        $null = Copy-Item `
+            -Path $Script:SupportGertGenPath `
+            -Destination "$MountPoint\Windows\Setup\Scripts\"`
+            -Force
+    }
+            
     # Dismount the VHD in preparation for boot
     Write-Verbose -Message $($LocalizedData.DismountingVMBootDiskMessage `
         -f $VM.Name,$VMBootDiskPath)
