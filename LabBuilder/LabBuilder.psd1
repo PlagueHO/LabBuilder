@@ -16,8 +16,8 @@
     # NestedModules = @()
     FunctionsToExport = @(
         'Get-LabConfiguration'
-        'Install-LabHyperV'
         'Initialize-LabConfiguration'
+        'Install-LabHyperV'
         'Get-LabSwitch'
         'Initialize-LabSwitch'
         'Remove-LabSwitch'
@@ -29,11 +29,8 @@
         'Remove-LabVMTemplate'
         'Get-LabVM'
         'Initialize-LabVM'
-        'Remove-LabVM'
         'Start-LabVM'
-        'Wait-LabVMStart'
-        'Wait-LabVMOff'
-        'Wait-LabVMInit'
+        'Remove-LabVM'
         'Install-Lab'
         'Uninstall-Lab'
     )

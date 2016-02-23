@@ -212,7 +212,7 @@ function CreateCredential()
    Contains the Lab Builder configuration object that was loaded by the Get-LabConfiguration object.
 .EXAMPLE
    $Config = Get-LabConfiguration -Path c:\mylab\config.xml
-   Download-LabResources -Config $Config
+   DownloadResources -Config $Config
    Loads a Lab Builder configuration and downloads any resources required by it.   
 .OUTPUTS
    None.
@@ -332,3 +332,119 @@ function DownloadModule {
         } # If
     } # If
 } # DownloadModule
+
+
+<#
+.SYNOPSIS
+   Downloads any resources required by the configuration.
+.DESCRIPTION
+   It will ensure any required modules and files are downloaded.
+.PARAMETER Configuration
+   Contains the Lab Builder configuration object that was loaded by the Get-LabConfiguration object.
+.EXAMPLE
+   $Config = Get-LabConfiguration -Path c:\mylab\config.xml
+   DownloadResources -Config $Config
+   Loads a Lab Builder configuration and downloads any resources required by it.   
+.OUTPUTS
+   None.
+#>
+function DownloadResources {
+    [CmdLetBinding()]
+    param
+    (
+        [Parameter(Mandatory)]
+        [ValidateNotNullOrEmpty()]
+        [XML] $Config
+    )
+        
+    # Downloading Lab Resources
+    Write-Verbose -Message $($LocalizedData.DownloadingLabResourcesMessage)
+
+    # Bootstrap Nuget # This needs to be a test, not a force 
+    # $null = Get-PackageProvider -Name NuGet -ForceBootstrap -Force
+    
+    # Make sure PSGallery is trusted
+    Set-PSRepository -Name PSGallery -InstallationPolicy Trusted    
+    
+    # Download any other resources required by this lab
+    if ($Config.labbuilderconfig.resources) 
+    {
+        foreach ($Module in $Config.labbuilderconfig.resources.module)
+        {
+            if (-not $Module.Name)
+            {
+                $ExceptionParameters = @{
+                    errorId = 'ResourceModuleNameEmptyError'
+                    errorCategory = 'InvalidArgument'
+                    errorMessage = $($LocalizedData.ResourceModuleNameEmptyError)
+                }
+                ThrowException @ExceptionParameters
+            } # If
+            $Splat = [PSObject] @{ Name = $Module.Name }
+            if ($Module.URL)
+            {
+                $Splat += [PSObject] @{ URL = $Module.URL }
+            }
+            if ($Module.Folder)
+            {
+                $Splat += [PSObject] @{ Folder = $Module.Folder }
+            }
+            if ($Module.RequiredVersion)
+            {
+                $Splat += [PSObject] @{ RequiredVersion = $Module.RequiredVersion }
+            }
+            if ($Module.MiniumVersion)
+            {
+                $Splat += [PSObject] @{ MiniumVersion = $Module.MiniumVersion }
+            }
+            DownloadModule @Splat
+        } # Foreach
+    } # If
+} # DownloadResources
+
+
+<#
+.SYNOPSIS
+   Ensures the Hyper-V features are installed onto the system.
+.DESCRIPTION
+   If the Hyper-V features are not installed onto this system they will be installed.
+.EXAMPLE
+   InstallHyperV
+   Installs the appropriate Hyper-V features if they are not currently installed.
+.OUTPUTS
+   None
+#>
+function InstallHyperV {
+    [CmdLetBinding()]
+    Param ()
+
+    # Install Hyper-V Components
+    if ((Get-CimInstance Win32_OperatingSystem).ProductType -eq 1)
+    {
+        # Desktop OS
+        [Array] $Feature = Get-WindowsOptionalFeature -Online -FeatureName '*Hyper-V*' `
+            | Where-Object -Property State -Eq 'Disabled'
+        if ($Feature.Count -gt 0 )
+        {
+            Write-Verbose -Message ($LocalizedData.InstallingHyperVComponentsMesage `
+                -f 'Desktop')
+            $Feature.Foreach( { 
+                Enable-WindowsOptionalFeature -Online -FeatureName $_.FeatureName
+            } )
+        }
+    }
+    Else
+    {
+        # Server OS
+        [Array] $Feature = Get-WindowsFeature -Name Hyper-V `
+            | Where-Object -Property Installed -EQ $false
+        if ($Feature.Count -gt 0 )
+        {
+            Write-Verbose -Message ($LocalizedData.InstallingHyperVComponentsMesage `
+                -f 'Desktop')
+            $Feature.Foreach( {
+                Install-WindowsFeature -IncludeAllSubFeature -IncludeManagementTools -Name $_.Name
+            } )
+        }
+    }
+} # InstallHyperV

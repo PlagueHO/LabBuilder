@@ -43,6 +43,13 @@ InModuleScope LabBuilder {
         return $errorRecord
     }
     
+    
+    
+    Describe 'IsAdmin' -Tag 'Incomplete' {
+    }
+
+
+
     Describe 'DownloadAndUnzipFile' {
         $URL = 'https://raw.githubusercontent.com/PlagueHO/LabBuilder/dev/LICENSE'      
         Context 'Download folder does not exist' {
@@ -137,6 +144,11 @@ InModuleScope LabBuilder {
             }
         }
     }    
+
+
+
+    Describe 'CreateCredential' -Tag 'Incomplete' {
+    }
 
 
 
@@ -486,6 +498,54 @@ InModuleScope LabBuilder {
                 Assert-MockCalled Remove-Item -Exactly 0
                 Assert-MockCalled Get-PackageProvider -Exactly 1
                 Assert-MockCalled Install-Module -Exactly 1
+            }
+        }
+    }
+
+
+
+    Describe 'DownloadResources' -Tags 'Incomplete' {
+        $Config = Get-LabConfiguration -Path $Global:TestConfigOKPath
+
+        Context 'Valid configuration is passed' {
+            Mock DownloadModule
+            It 'Does not throw an Exception' {
+                { DownloadResources -Config $Config } | Should Not Throw
+            }
+            It 'Should call appropriate Mocks' {
+                Assert-MockCalled DownloadModule -Exactly 4
+            }
+        }
+    }
+
+
+
+    Describe 'InstallHyperV' {
+
+        $Config = Get-LabConfiguration -Path $Global:TestConfigOKPath
+
+        If ((Get-CimInstance Win32_OperatingSystem).ProductType -eq 1) {
+            Mock Get-WindowsOptionalFeature { [PSObject]@{ FeatureName = 'Mock'; State = 'Disabled'; } }
+            Mock Enable-WindowsOptionalFeature 
+        } Else {
+            Mock Get-WindowsFeature { [PSObject]@{ Name = 'Mock'; Installed = $false; } }
+            Mock Install-WindowsFeature
+        }
+
+        Context 'The function is called' {
+            It 'Does not throw an Exception' {
+                { InstallHyperV } | Should Not Throw
+            }
+            If ((Get-CimInstance Win32_OperatingSystem).ProductType -eq 1) {
+                It 'Calls appropriate mocks' {
+                    Assert-MockCalled Get-WindowsOptionalFeature -Exactly 1
+                    Assert-MockCalled Enable-WindowsOptionalFeature -Exactly 1
+                }
+            } Else {
+                It 'Calls appropriate mocks' {
+                    Assert-MockCalled Get-WindowsFeature -Exactly 1
+                    Assert-MockCalled Install-WindowsFeature -Exactly 1
+                }
             }
         }
     }

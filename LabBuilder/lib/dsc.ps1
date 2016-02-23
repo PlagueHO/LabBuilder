@@ -89,10 +89,6 @@ function CreateDSCMOFFiles {
     # Get Path to LabBuilder files
     [String] $VMLabBuilderFiles = $VM.LabBuilderFilesPath
 
-    # Make sure the appropriate folders exist
-    Initialize-LabVMPath `
-        -VMPath $VMRootPath
-    
     if (-not $VM.DSCConfigFile)
     {
         # This VM doesn't have a DSC Configuration
@@ -919,3 +915,23 @@ $DSCNetworkingConfig += @"
 "@
     Return $DSCNetworkingConfig
 } # GetDSCNetworkingConfig
+
+
+[DSCLocalConfigurationManager()]
+Configuration ConfigLCM {
+    Param (
+        [String] $ComputerName,
+        [String] $Thumbprint
+    )
+    Node $ComputerName {
+        Settings {
+            RefreshMode = 'Push'
+            ConfigurationMode = 'ApplyAndAutoCorrect'
+            CertificateId = $Thumbprint
+            ConfigurationModeFrequencyMins = 15
+            RefreshFrequencyMins = 30
+            RebootNodeIfNeeded = $True
+            ActionAfterReboot = 'ContinueConfiguration'
+        } 
+    }
+}

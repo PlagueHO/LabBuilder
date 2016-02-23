@@ -97,6 +97,7 @@ Versions
 * Added Disconnect-LabVM function to disconnect from a connect Lab VM.
 * Fixed bug setting TrustedHosts when connecting to Lab VM.
 * Added code to revert TrustedHosts when disconnecting from Lab VM. 
+* All non-exported supporting functions moved into separate support libraries.
 
 ### 0.4.0.0
 * Some secondary non-exported functions moved into separate support libraries.
