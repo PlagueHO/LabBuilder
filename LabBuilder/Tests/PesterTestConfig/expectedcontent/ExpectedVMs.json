@@ -1,11 +1,11 @@
 {
     "AdministratorPassword":  "Something",
     "IntegrationServices":  "Guest Service Interface,Heartbeat,Key-Value Pair Exchange,Shutdown,Time Synchronization,VSS",
-    "VMRootPath":  "C:\\Pester Lab\\PESTER01",
+    "VMRootPath":  "C:\\Pester Lab\\TestLab PESTER01",
     "Template":  "Pester Windows Server 2012 R2 Datacenter Full",
     "SetupComplete":  "",
     "ExposeVirtualizationExtensions":  "Y",
-    "Name":  "PESTER01",
+    "Name":  "TestLab PESTER01",
     "TimeZone":  "Pacific Standard Time",
     "OSType":  "Server",
     "DSCLogging":  false,
@@ -18,13 +18,26 @@
     "Adapters":  [
                      {
                          "IPv4":  {
+
+                                  },
+                         "Name":  "TestLab External",
+                         "SwitchName":  "External",
+                         "VLan":  "",
+                         "IPv6":  {
+
+                                  },
+                         "MACAddressSpoofing":  "Off",
+                         "MACAddress":  "00155D010801"
+                     },
+                     {
+                         "IPv4":  {
                                       "dnsserver":  "192.168.16.1",
                                       "subnetmask":  "24",
                                       "Address":  "192.168.16.1",
                                       "defaultgateway":  ""
                                   },
-                         "Name":  "Pester Test Private Vlan",
-                         "SwitchName":  "Pester Test Private Vlan",
+                         "Name":  "TestLab Private Vlan",
+                         "SwitchName":  "TestLab Private Vlan",
                          "VLan":  "2",
                          "IPv6":  {
                                       "dnsserver":  "fd53:ccc5:895a:0000::1",
@@ -42,8 +55,8 @@
                                       "Address":  "192.168.16.2",
                                       "defaultgateway":  ""
                                   },
-                         "Name":  "Pester Test Internal Vlan",
-                         "SwitchName":  "Pester Test Internal Vlan",
+                         "Name":  "TestLab Internal Vlan",
+                         "SwitchName":  "TestLab Internal Vlan",
                          "VLan":  "3",
                          "IPv6":  {
                                       "dnsserver":  "fd53:ccc5:895a:0000::2",
@@ -61,8 +74,8 @@
                                       "Address":  "192.168.16.3",
                                       "defaultgateway":  ""
                                   },
-                         "Name":  "Pester Test Private",
-                         "SwitchName":  "Pester Test Private",
+                         "Name":  "TestLab Private",
+                         "SwitchName":  "TestLab Private",
                          "VLan":  "3",
                          "IPv6":  {
                                       "dnsserver":  "fd53:ccc5:895a:0000::3",
@@ -80,8 +93,8 @@
                                       "Address":  "192.168.16.4",
                                       "defaultgateway":  ""
                                   },
-                         "Name":  "Pester Test Internal",
-                         "SwitchName":  "Pester Test Internal",
+                         "Name":  "TestLab Internal",
+                         "SwitchName":  "TestLab Internal",
                          "VLan":  "4",
                          "IPv6":  {
                                       "dnsserver":  "fd53:ccc5:895a:0000::4",
@@ -101,11 +114,11 @@
                    ],
     "DynamicMemoryEnabled":  "N",
     "MemoryStartupBytes":  2147483648,
-    "LabBuilderFilesPath":  "C:\\Pester Lab\\PESTER01\\LabBuilder Files",
+    "LabBuilderFilesPath":  "C:\\Pester Lab\\TestLab PESTER01\\LabBuilder Files",
     "DSCConfigName":  "STANDALONE_DEFAULT",
     "DataVHDs":  [
                      {
-                         "vhd":  "C:\\Pester Lab\\PESTER01\\Virtual Hard Disks\\DataDiskCopy.vhdx",
+                         "vhd":  "C:\\Pester Lab\\TestLab PESTER01\\Virtual Hard Disks\\DataDiskCopy.vhdx",
                          "type":  null,
                          "copyfolders":  "isofiles",
                          "partitionstyle":  null,
@@ -119,7 +132,7 @@
                          "sourcevhd":  "Intentionally Removed"
                      },
                      {
-                         "vhd":  "C:\\Pester Lab\\PESTER01\\Virtual Hard Disks\\DataDiskFixed.vhdx",
+                         "vhd":  "C:\\Pester Lab\\TestLab PESTER01\\Virtual Hard Disks\\DataDiskFixed.vhdx",
                          "type":  "fixed",
                          "copyfolders":  null,
                          "partitionstyle":  "MBR",
@@ -133,7 +146,7 @@
                          "sourcevhd":  "Intentionally Removed"
                      },
                      {
-                         "vhd":  "C:\\Pester Lab\\PESTER01\\Virtual Hard Disks\\DataDiskDynamic.vhdx",
+                         "vhd":  "C:\\Pester Lab\\TestLab PESTER01\\Virtual Hard Disks\\DataDiskDynamic.vhdx",
                          "type":  "dynamic",
                          "copyfolders":  null,
                          "partitionstyle":  "GPT",
@@ -147,7 +160,7 @@
                          "sourcevhd":  "Intentionally Removed"
                      },
                      {
-                         "vhd":  "C:\\Pester Lab\\PESTER01\\Virtual Hard Disks\\DataDiskDifferencing.vhdx",
+                         "vhd":  "C:\\Pester Lab\\TestLab PESTER01\\Virtual Hard Disks\\DataDiskDifferencing.vhdx",
                          "type":  "differencing",
                          "copyfolders":  null,
                          "partitionstyle":  null,
@@ -161,7 +174,7 @@
                          "sourcevhd":  "Intentionally Removed"
                      },
                      {
-                         "vhd":  "C:\\Pester Lab\\PESTER01\\Virtual Hard Disks\\DataDiskMove.vhdx",
+                         "vhd":  "C:\\Pester Lab\\TestLab PESTER01\\Virtual Hard Disks\\DataDiskMove.vhdx",
                          "type":  null,
                          "copyfolders":  null,
                          "partitionstyle":  null,
@@ -175,7 +188,7 @@
                          "sourcevhd":  "Intentionally Removed"
                      },
                      {
-                         "vhd":  "C:\\Pester Lab\\PESTER01\\Virtual Hard Disks\\DataDiskShared.vhdx",
+                         "vhd":  "C:\\Pester Lab\\TestLab PESTER01\\Virtual Hard Disks\\DataDiskShared.vhdx",
                          "type":  "fixed",
                          "copyfolders":  null,
                          "partitionstyle":  null,

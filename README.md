@@ -10,6 +10,7 @@ Summary
 -------
 This module will build a multiple machine Hyper-V Lab environment from an XML configuration file and other optional installation scripts.
 
+
 Introduction
 ------------
 While studying for some of my Microsoft certifications I had a need to quickly and easily spin up various Hyper-V Lab environments so that I could experiment with and learn the technologies involved.
@@ -40,6 +41,7 @@ The general goals of this project are:
 + Allow GUI based tools to be easily created to create Lab configurations.
 + Enable new Lab VM machine types to be configured by supplying different DSC library resources.
 
+
 Basic Usage Guide
 -----------------
 The use of this module is fairly simple from a process standpoint with the bulk of the work creating a Lab going into the creation of the configuration XML that defines it. But if there is a Lab configuration already available that fits your needs then there is almost nothing to do.
@@ -66,6 +68,7 @@ Install-Lab -Path 'c:\MyLab\Configuration.xml'
 ```
 
 This will create a new Lab using the c:\MyLab\Configuration.xml file.
+
 
 Requirements
 ------------
@@ -98,6 +101,7 @@ Versions
 * Fixed bug setting TrustedHosts when connecting to Lab VM.
 * Added code to revert TrustedHosts when disconnecting from Lab VM. 
 * All non-exported supporting functions moved into separate support libraries.
+* Add support for LabId setting that gets prepended to Lab resources.
 
 ### 0.4.0.0
 * Some secondary non-exported functions moved into separate support libraries.
@@ -152,11 +156,6 @@ Versions
 ### 0.1.0.0
 * Initial Release.
 
-Functions
----------
-
-Example Usage
--------------
 
 Links
 -----

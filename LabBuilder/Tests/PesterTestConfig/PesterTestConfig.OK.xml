@@ -4,7 +4,8 @@
                   version="1.0">
   <description>Configuration File Used with Pester Tests</description>
 
-  <settings domainname="PESTER.LOCAL"
+  <settings labid="TestLab"
+            domainname="PESTER.LOCAL"
             email="tester@pester.local"
             labpath="C:\Pester Lab"
             vhdparentpath="C:\Pester Lab\Virtual Hard Disk Templates"
@@ -18,7 +19,7 @@
   </resources>
 
   <switches>
-    <switch name="Pester Test External" type="External" >
+    <switch name="External" type="External" >
       <adapters>
         <adapter name="Cluster" macaddress="00155D010701" vlan="5"/>
         <adapter name="Management" macaddress="00155D010702" vlan="6"/>
@@ -26,10 +27,10 @@
         <adapter name="LM" macaddress="00155D010704" />
       </adapters>
     </switch>
-    <switch name="Pester Test Private Vlan" type="Private" vlan="2" />
-    <switch name="Pester Test Private" type="Private" />
-    <switch name="Pester Test Internal Vlan" type="Internal" vlan="3" />
-    <switch name="Pester Test Internal" type="Internal" />
+    <switch name="Private Vlan" type="Private" vlan="2" />
+    <switch name="Private" type="Private" />
+    <switch name="Internal Vlan" type="Internal" vlan="3" />
+    <switch name="Internal" type="Internal" />
   </switches>
 
   <templatevhds isopath="ISOFiles" 
@@ -175,7 +176,8 @@
         <datavhd vhd="DataDiskShared.vhdx" type="fixed" size="10GB" shared="Y" supportsr="Y" />
       </datavhds>
       <adapters>
-        <adapter name="Pester Test Private Vlan" switchname="Pester Test Private Vlan" macaddress="00155D010801" >
+        <adapter name="External" switchname="External" macaddress="00155D010801" />
+        <adapter name="Private Vlan" switchname="Private Vlan" macaddress="00155D010801" >
           <ipv4 address="192.168.16.1"
                 defaultgateway=""
                 subnetmask="24"
@@ -185,7 +187,7 @@
                 subnetmask="64"
                 dnsserver="fd53:ccc5:895a:0000::1"/>
         </adapter>
-        <adapter name="Pester Test Internal Vlan" switchname="Pester Test Internal Vlan" macaddress="00155D010802" >
+        <adapter name="Internal Vlan" switchname="Internal Vlan" macaddress="00155D010802" >
           <ipv4 address="192.168.16.2"
                 defaultgateway=""
                 subnetmask="24"
@@ -195,7 +197,7 @@
                 subnetmask="64"
                 dnsserver="fd53:ccc5:895a:0000::2"/>
         </adapter>
-        <adapter name="Pester Test Private" switchname="Pester Test Private" macaddress="00155D010803" vlan="3" >
+        <adapter name="Private" switchname="Private" macaddress="00155D010803" vlan="3" >
           <ipv4 address="192.168.16.3"
                 defaultgateway=""
                 subnetmask="24"
@@ -205,7 +207,7 @@
                 subnetmask="64"
                 dnsserver="fd53:ccc5:895a:0000::3"/>
         </adapter>
-        <adapter name="Pester Test Internal" switchname="Pester Test Internal" macaddress="00155D010804" vlan="4" >
+        <adapter name="Internal" switchname="Internal" macaddress="00155D010804" vlan="4" >
           <ipv4 address="192.168.16.4"
                 defaultgateway=""
                 subnetmask="24"

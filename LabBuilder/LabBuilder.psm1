@@ -244,8 +244,8 @@ function Initialize-LabConfiguration {
 
     # Create the LabBuilder Management Network switch and assign VLAN
     # Used by host to communicate with Lab VMs
-    [String] $ManagementSwitchName = ('LabBuilder Management {0}' `
-        -f $Config.labbuilderconfig.name)
+    [String] $ManagementSwitchName = GetManagementSwitchName `
+        -Config $Config
     if ($Config.labbuilderconfig.switches.ManagementVlan)
     {
         [Int32] $ManagementVlan = $Config.labbuilderconfig.switches.ManagementVlan
@@ -293,7 +293,7 @@ function Initialize-LabConfiguration {
    Gets an array of switches from a Lab Configuration file.
 .DESCRIPTION
    Takes a provided Lab Configuration file and returns the list of switches required for this Lab.
-   This list is usually passed to Initialize-LabSwitch to configure the swtiches required for this
+   This list is usually passed to Initialize-LabSwitch to configure the switches required for this
    lab.
 .PARAMETER Configuration
    Contains the Lab Builder configuration object that was loaded by the Get-LabConfiguration object.
@@ -314,6 +314,7 @@ function Get-LabSwitch {
         [XML] $Config
     )
 
+    [String] $LabId = $Config.labbuilderconfig.settings.labid 
     [Array] $Switches = @() 
     $ConfigSwitches = $Config.labbuilderconfig.SelectNodes('switches').Switch
     foreach ($ConfigSwitch in $ConfigSwitches)
@@ -321,7 +322,9 @@ function Get-LabSwitch {
         # It can't be switch because if the name attrib/node is missing the name property on the
         # XML object defaults to the name of the parent. So we can't easily tell if no name was
         # specified or if they actually specified 'switch' as the name.
-        if ($ConfigSwitch.Name -eq 'switch')
+        $SwitchName = $ConfigSwitch.Name
+        $SwitchType = $ConfigSwitch.Type
+        if ($SwitchName -eq 'switch')
         {
             $ExceptionParameters = @{
                 errorId = 'SwitchNameIsEmptyError'
@@ -330,47 +333,68 @@ function Get-LabSwitch {
             }
             ThrowException @ExceptionParameters
         }
-        if ($ConfigSwitch.Type -notin 'Private','Internal','External','NAT')
+
+        # if a LabId is set for the lab, prepend it to the Switch name as long as it isn't
+        # an external switch.
+        if ($LabId -and ($SwitchType -ne 'External'))
+        {
+            $SwitchName = "$LabId $SwitchName"
+        } # if
+
+        if ($SwitchType -notin 'Private','Internal','External','NAT')
         {
             $ExceptionParameters = @{
                 errorId = 'UnknownSwitchTypeError'
                 errorCategory = 'InvalidArgument'
                 errorMessage = $($LocalizedData.UnknownSwitchTypeError `
-                    -f $ConfigSwitch.Type,$ConfigSwitch.Name)
+                    -f $SwitchType,$SwitchName)
             }
             ThrowException @ExceptionParameters
-        }
-        # Assemble the list of Adapters if any are specified for this switch (only if an external
-        # switch)
+        } # if
+
+        # Assemble the list of Mangement OS Adapters if any are specified for this switch
+        # Only Intenal and External switches are allowed Management OS adapters.
         if ($ConfigSwitch.Adapters)
         {
             [System.Collections.Hashtable[]] $ConfigAdapters = @()
             foreach ($Adapter in $ConfigSwitch.Adapters.Adapter)
             {
-                $ConfigAdapters += @{ name = $Adapter.Name; macaddress = $Adapter.MacAddress }
-            }
-            if (($ConfigAdapters.Count -gt 0) -and ($ConfigSwitch.Type -ne 'External'))
+                $AdapterName = $Adapter.Name
+                # if a LabId is set for the lab, prepend it to the adapter name.
+                # But only if it is not an External switch.
+                if ($LabId -and ($SwitchType -ne 'External'))
+                {
+                    $AdapterName = "$LabId $AdapterName"
+                }
+
+                $ConfigAdapters += @{
+                    name = $AdapterName
+                    macaddress = $Adapter.MacAddress
+                }
+            } # foreach
+            if (($ConfigAdapters.Count -gt 0) `
+                -and ($SwitchType -notin 'External','Internal'))
             {
                 $ExceptionParameters = @{
                     errorId = 'AdapterSpecifiedError'
                     errorCategory = 'InvalidArgument'
                     errorMessage = $($LocalizedData.AdapterSpecifiedError `
-                        -f $ConfigSwitch.Type,$ConfigSwitch.Name)
+                        -f $SwitchType,$SwitchName)
                 }
                 ThrowException @ExceptionParameters
-            }
+            } # if
         }
-        Else
+        else
         {
             $ConfigAdapters = $null
-        }
+        } # if
         $Switches += [PSObject]@{
-            name = $ConfigSwitch.Name;
+            name = $SwitchName
             type = $ConfigSwitch.Type;
             vlan = $ConfigSwitch.Vlan;
             natsubnetaddress = $ConfigSwitch.NatSubnetAddress;
             adapters = $ConfigAdapters }
-    }
+    } # foreach
     return $Switches
 } # Get-LabSwitch
 
@@ -410,7 +434,7 @@ function Initialize-LabSwitch {
         [Array] $Switches
     )
 
-    # If swtiches was not passed, pull it.
+    # If switches was not passed, pull it.
     if (-not $Switches)
     {
         $Switches = Get-LabSwitch `
@@ -457,8 +481,8 @@ function Initialize-LabSwitch {
                                 $null = Add-VMNetworkAdapter `
                                     -ManagementOS `
                                     -SwitchName $SwitchName `
-                                    -Name $($Adapter.Name) `
-                                    -StaticMacAddress $($Adapter.MacAddress) `
+                                    -Name $Adapter.Name `
+                                    -StaticMacAddress $Adapter.MacAddress `
                                     
                                     -Passthru | `
                                     Set-VMNetworkAdapterVlan -Access -VlanId $($Switch.Vlan)
@@ -468,8 +492,8 @@ function Initialize-LabSwitch {
                                 $null = Add-VMNetworkAdapter `
                                     -ManagementOS `
                                     -SwitchName $SwitchName `
-                                    -Name $($Adapter.Name) `
-                                    -StaticMacAddress $($Adapter.MacAddress)
+                                    -Name $Adapter.Name `
+                                    -StaticMacAddress $Adapter.MacAddress
                             } # If
                         } # Foreach
                     } # If
@@ -582,7 +606,7 @@ function Remove-LabSwitch {
         [System.Collections.Hashtable[]] $Switches
     )
 
-    # If swtiches were not passed so pull them
+    # If switches were not passed so pull them
     if (-not $Switches)
     {
         $Switches = Get-LabSwitch `
@@ -1711,11 +1735,13 @@ function Get-LabVM {
     [System.Collections.Hashtable[]] $LabVMs = @()
     [String] $LabPath = $Config.labbuilderconfig.settings.labpath
     [String] $VHDParentPath = $Config.labbuilderconfig.settings.vhdparentpath
+    [String] $LabId = $Config.labbuilderconfig.settings.labid 
     $VMs = $Config.labbuilderconfig.SelectNodes('vms').vm
 
     foreach ($VM in $VMs) 
 	{
-        if ($VM.Name -eq 'VM')
+        $VMName = $VM.Name
+        if ($VMName -eq 'VM')
 		{
             $ExceptionParameters = @{
                 errorId = 'VMNameError'
@@ -1724,13 +1750,20 @@ function Get-LabVM {
             }
             ThrowException @ExceptionParameters
         } # If
+
+        # if a LabId is set for the lab, prepend it to the VM name.
+        if ($LabId)
+        {
+            $VMName = "$LabId $VMName"
+        }
+        
         if (-not $VM.Template) 
 		{
             $ExceptionParameters = @{
                 errorId = 'VMTemplateNameEmptyError'
                 errorCategory = 'InvalidArgument'
                 errorMessage = $($LocalizedData.VMTemplateNameEmptyError `
-                    -f $VM.name)
+                    -f $VMName)
             }
             ThrowException @ExceptionParameters
         } # If
@@ -1752,7 +1785,7 @@ function Get-LabVM {
                 errorId = 'VMTemplateNotFoundError'
                 errorCategory = 'InvalidArgument'
                 errorMessage = $($LocalizedData.VMTemplateNotFoundError `
-                    -f $VM.name,$VM.template)
+                    -f $VMName,$VM.template)
             }
             ThrowException @ExceptionParameters
         } # If
@@ -1763,37 +1796,59 @@ function Get-LabVM {
         foreach ($VMAdapter in $VM.Adapters.Adapter) 
 		{
             $AdapterCount++
-            if ($VMAdapter.Name -eq 'adapter') 
+            $AdapterName = $VMAdapter.Name 
+            $AdapterSwitchName = $VMAdapter.SwitchName
+            if ($AdapterName -eq 'adapter') 
 			{
                 $ExceptionParameters = @{
                     errorId = 'VMAdapterNameError'
                     errorCategory = 'InvalidArgument'
                     errorMessage = $($LocalizedData.VMAdapterNameError `
-                        -f $VM.name)
+                        -f $VMName)
                 }
                 ThrowException @ExceptionParameters
             }
-            if (-not $VMAdapter.SwitchName) 
+            
+            if (-not $AdapterSwitchName) 
 			{
                 $ExceptionParameters = @{
                     errorId = 'VMAdapterSwitchNameError'
                     errorCategory = 'InvalidArgument'
                     errorMessage = $($LocalizedData.VMAdapterSwitchNameError `
-                        -f $VM.name,$VMAdapter.name)
+                        -f $VMName,$AdapterName)
                 }
                 ThrowException @ExceptionParameters
             }
+
+            # if a LabId is set for the lab, prepend it to the adapter name
+            # name and switch name.
+            if ($LabId)
+            {
+                $AdapterName = "$LabId $AdapterName"
+                $AdapterSwitchName = "$LabId $AdapterSwitchName"
+            }
+
             # Check the switch is in the switch list
             [Boolean] $Found = $False
             foreach ($Switch in $Switches) 
 			{
-                if ($Switch.Name -eq $VMAdapter.SwitchName) 
+                # Match the switch name to the Adapter Switch Name or
+                # the LabId and Adapter Switch Name
+                if ($Switch.Name -eq $AdapterSwitchName) `
 				{
                     # The switch is found in the switch list - record the VLAN (if there is one)
                     $Found = $True
                     $SwitchVLan = $Switch.Vlan
                     Break
                 } # If
+                elseif ($Switch.Name -eq $VMAdapter.SwitchName)
+                {
+                    # The switch is found in the switch list - record the VLAN (if there is one)
+                    $Found = $True
+                    $SwitchVLan = $Switch.Vlan
+                    $AdapterSwitchName = $VMAdapter.SwitchName
+                    Break
+                }
             } # Foreach
             if (-not $Found) 
 			{
@@ -1801,7 +1856,7 @@ function Get-LabVM {
                     errorId = 'VMAdapterSwitchNotFoundError'
                     errorCategory = 'InvalidArgument'
                     errorMessage = $($LocalizedData.VMAdapterSwitchNotFoundError `
-                        -f $VM.name,$VMAdapter.name,$VMAdapter.switchname)
+                        -f $VMName,$AdapterName,$AdapterSwitchName)
                 }
                 ThrowException @ExceptionParameters
             } # If
@@ -1845,8 +1900,8 @@ function Get-LabVM {
             }
 
             $VMAdapters += @{
-                Name = $VMAdapter.Name;
-                SwitchName = $VMAdapter.SwitchName;
+                Name = $AdapterName;
+                SwitchName = $AdapterSwitchName;
                 MACAddress = $VMAdapter.macaddress;
                 MACAddressSpoofing = $MACAddressSpoofing;
                 VLan = $VLan;
@@ -1869,7 +1924,7 @@ function Get-LabVM {
                     errorId = 'VMDataDiskVHDEmptyError'
                     errorCategory = 'InvalidArgument'
                     errorMessage = $($LocalizedData.VMDataDiskVHDEmptyError `
-                        -f $VM.name)
+                        -f $VMName)
                 }
                 ThrowException @ExceptionParameters
             }
@@ -1877,7 +1932,7 @@ function Get-LabVM {
             # if it doesn't contain a root (e.g. c:\)
             if (! [System.IO.Path]::IsPathRooted($Vhd))
             {
-                $Vhd = Join-Path -Path $LabPath -ChildPath "$($VM.Name)\Virtual Hard Disks\$Vhd"
+                $Vhd = Join-Path -Path $LabPath -ChildPath "$($VMName)\Virtual Hard Disks\$Vhd"
             }
             
             # Does the VHD already exist?
@@ -1902,7 +1957,7 @@ function Get-LabVM {
                         errorId = 'VMDataDiskParentVHDNotFoundError'
                         errorCategory = 'InvalidArgument'
                         errorMessage = $($LocalizedData.VMDataDiskParentVHDNotFoundError `
-                            -f $VM.name,$ParentVhd)
+                            -f $VMName,$ParentVhd)
                     }
                     ThrowException @ExceptionParameters
                 }
@@ -1927,7 +1982,7 @@ function Get-LabVM {
                         errorId = 'VMDataDiskSourceVHDNotFoundError'
                         errorCategory = 'InvalidArgument'
                         errorMessage = $($LocalizedData.VMDataDiskSourceVHDNotFoundError `
-                            -f $VM.name,$SourceVhd)
+                            -f $VMName,$SourceVhd)
                     }
                     ThrowException @ExceptionParameters
                 }
@@ -1965,7 +2020,7 @@ function Get-LabVM {
                                 errorId = 'VMDataDiskParentVHDMissingError'
                                 errorCategory = 'InvalidArgument'
                                 errorMessage = $($LocalizedData.VMDataDiskParentVHDMissingError `
-                                    -f $VM.name)
+                                    -f $VMName)
                             }
                             ThrowException @ExceptionParameters
                         }
@@ -1975,7 +2030,7 @@ function Get-LabVM {
                                 errorId = 'VMDataDiskSharedDifferencingError'
                                 errorCategory = 'InvalidArgument'
                                 errorMessage = $($LocalizedData.VMDataDiskSharedDifferencingError `
-                                    -f $VM.Name,$VHD)
+                                    -f $VMName,$VHD)
                             }
                             ThrowException @ExceptionParameters                            
                         }
@@ -1986,7 +2041,7 @@ function Get-LabVM {
                             errorId = 'VMDataDiskUnknownTypeError'
                             errorCategory = 'InvalidArgument'
                             errorMessage = $($LocalizedData.VMDataDiskUnknownTypeError `
-                                -f $VM.Name,$VHD,$type)
+                                -f $VMName,$VHD,$type)
                         }
                         ThrowException @ExceptionParameters
                     }
@@ -2001,7 +2056,7 @@ function Get-LabVM {
                     errorId = 'VMDataDiskSupportPRError'
                     errorCategory = 'InvalidArgument'
                     errorMessage = $($LocalizedData.VMDataDiskSupportPRError `
-                        -f $VM.Name,$VHD)
+                        -f $VMName,$VHD)
                 }
                 ThrowException @ExceptionParameters
             }
@@ -2017,7 +2072,7 @@ function Get-LabVM {
                         errorId = 'VMDataDiskPartitionStyleError'
                         errorCategory = 'InvalidArgument'
                         errorMessage = $($LocalizedData.VMDataDiskPartitionStyleError `
-                            -f $VM.Name,$VHD,$PartitionStyle)
+                            -f $VMName,$VHD,$PartitionStyle)
                     }
                     ThrowException @ExceptionParameters
                 }
@@ -2034,7 +2089,7 @@ function Get-LabVM {
                         errorId = 'VMDataDiskFileSystemError'
                         errorCategory = 'InvalidArgument'
                         errorMessage = $($LocalizedData.VMDataDiskFileSystemError `
-                            -f $VM.Name,$VHD,$FileSystem)
+                            -f $VMName,$VHD,$FileSystem)
                     }
                     ThrowException @ExceptionParameters
                 }
@@ -2057,7 +2112,7 @@ function Get-LabVM {
                         errorId = 'VMDataDiskPartitionStyleMissingError'
                         errorCategory = 'InvalidArgument'
                         errorMessage = $($LocalizedData.VMDataDiskPartitionStyleMissingError `
-                            -f $VM.Name,$VHD)
+                            -f $VMName,$VHD)
                     }
                     ThrowException @ExceptionParameters
                 }
@@ -2067,7 +2122,7 @@ function Get-LabVM {
                         errorId = 'VMDataDiskFileSystemMissingError'
                         errorCategory = 'InvalidArgument'
                         errorMessage = $($LocalizedData.VMDataDiskFileSystemMissingError `
-                            -f $VM.Name,$VHD)
+                            -f $VMName,$VHD)
                     }
                     ThrowException @ExceptionParameters
                 }
@@ -2094,7 +2149,7 @@ function Get-LabVM {
                         errorId = 'VMDataDiskCopyFolderMissingError'
                         errorCategory = 'InvalidArgument'
                         errorMessage = $($LocalizedData.VMDataDiskCopyFolderMissingError `
-                            -f $VM.Name,$VHD,$CopyFolder)
+                            -f $VMName,$VHD,$CopyFolder)
                         }
                     ThrowException @ExceptionParameters 
                     }                   
@@ -2112,7 +2167,7 @@ function Get-LabVM {
                         errorId = 'VMDataDiskSourceVHDIfMoveError'
                         errorCategory = 'InvalidArgument'
                         errorMessage = $($LocalizedData.VMDataDiskSourceVHDIfMoveError `
-                            -f $VM.Name,$VHD)
+                            -f $VMName,$VHD)
                     }
                     ThrowException @ExceptionParameters                        
                 }
@@ -2127,7 +2182,7 @@ function Get-LabVM {
                     errorId = 'VMDataDiskCantBeCreatedError'
                     errorCategory = 'InvalidArgument'
                     errorMessage = $($LocalizedData.VMDataDiskCantBeCreatedError `
-                        -f $VM.Name,$VHD)
+                        -f $VMName,$VHD)
                 }
                 ThrowException @ExceptionParameters                    
             }
@@ -2162,7 +2217,7 @@ function Get-LabVM {
                     errorId = 'UnattendFileMissingError'
                     errorCategory = 'InvalidArgument'
                     errorMessage = $($LocalizedData.UnattendFileMissingError `
-                        -f $VM.name,$UnattendFile)
+                        -f $VMName,$UnattendFile)
                 }
                 ThrowException @ExceptionParameters
             } # If
@@ -2181,7 +2236,7 @@ function Get-LabVM {
                     errorId = 'SetupCompleteFileBadTypeError'
                     errorCategory = 'InvalidArgument'
                     errorMessage = $($LocalizedData.SetupCompleteFileBadTypeError `
-                        -f $VM.name,$SetupComplete)
+                        -f $VMName,$SetupComplete)
                 }
                 ThrowException @ExceptionParameters
             } # If
@@ -2191,7 +2246,7 @@ function Get-LabVM {
                     errorId = 'SetupCompleteFileMissingError'
                     errorCategory = 'InvalidArgument'
                     errorMessage = $($LocalizedData.SetupCompleteFileMissingError `
-                        -f $VM.name,$SetupComplete)
+                        -f $VMName,$SetupComplete)
                 }
                 ThrowException @ExceptionParameters
             } # If
@@ -2226,7 +2281,7 @@ function Get-LabVM {
                     errorId = 'DSCConfigFileBadTypeError'
                     errorCategory = 'InvalidArgument'
                     errorMessage = $($LocalizedData.DSCConfigFileBadTypeError `
-                        -f $VM.name,$DSCConfigFile)
+                        -f $VMName,$DSCConfigFile)
                 }
                 ThrowException @ExceptionParameters
             }
@@ -2237,7 +2292,7 @@ function Get-LabVM {
                     errorId = 'DSCConfigFileMissingError'
                     errorCategory = 'InvalidArgument'
                     errorMessage = $($LocalizedData.DSCConfigFileMissingError `
-                        -f $VM.name,$DSCConfigFile)
+                        -f $VMName,$DSCConfigFile)
                 }
                 ThrowException @ExceptionParameters
             }
@@ -2247,7 +2302,7 @@ function Get-LabVM {
                     errorId = 'DSCConfigNameIsEmptyError'
                     errorCategory = 'InvalidArgument'
                     errorMessage = $($LocalizedData.DSCConfigNameIsEmptyError `
-                        -f $VM.name)
+                        -f $VMName)
                 }
                 ThrowException @ExceptionParameters
             }
@@ -2387,7 +2442,7 @@ function Get-LabVM {
         } # Foreach
 
         $LabVMs += @{
-            Name = $VM.name;
+            Name = $VMName;
             ComputerName = $VM.ComputerName;
             Template = $VM.template;
             ParentVHD = $ParentVHDPath;
@@ -2411,8 +2466,8 @@ function Get-LabVM {
             OSType = $OSType;
             Packages = $Packages;
             InstallMSU = $InstallMSU;
-            VMRootPath = (Join-Path -Path $LabPath -ChildPath $VM.name);
-            LabBuilderFilesPath = (Join-Path -Path $LabPath -ChildPath "$($VM.name)\LabBuilder Files");
+            VMRootPath = (Join-Path -Path $LabPath -ChildPath $VMName);
+            LabBuilderFilesPath = (Join-Path -Path $LabPath -ChildPath "$VMName\LabBuilder Files");
         }
     } # Foreach        
 
@@ -2463,7 +2518,8 @@ function Initialize-LabVM {
     [String] $LabPath = $Config.labbuilderconfig.settings.labpath
 
     # Figure out the name of the LabBuilder control switch
-    $ManagementSwitchName = ('LabBuilder Management {0}' -f $Config.labbuilderconfig.name)
+    $ManagementSwitchName = GetManagementSwitchName `
+        -Config $Config
     if ($Config.labbuilderconfig.switches.ManagementVlan)
     {
         [Int32] $ManagementVlan = $Config.labbuilderconfig.switches.ManagementVlan
@@ -2602,7 +2658,10 @@ function Initialize-LabVM {
             Write-Verbose -Message $($LocalizedData.AddingVMNetworkAdapterMessage `
                 -f $VM.Name,$ManagementSwitchName,'Management')
 
-            Add-VMNetworkAdapter -VMName $VM.Name -SwitchName $ManagementSwitchName -Name $ManagementSwitchName
+            Add-VMNetworkAdapter `
+                -VMName $VM.Name `
+                -SwitchName $ManagementSwitchName `
+                -Name $ManagementSwitchName
         }
         $VMNetworkAdapter = Get-VMNetworkAdapter `
             -VMName $VM.Name `
@@ -3147,7 +3206,7 @@ Function Install-Lab {
 .PARAMETER Path
     The path to the LabBuilder configuration XML file.
 .PARAMETER RemoveSwitches
-    Whether to remove the swtiches defined by this Lab.
+    Whether to remove the switches defined by this Lab.
 .PARAMETER RemoveVMTemplates
     Whether to remove the VM Templates created by this Lab.
 .PARAMETER RemoveVHDs
@@ -3180,7 +3239,7 @@ Function Uninstall-Lab {
 
         [Switch] $RemoveVHDs,
         
-        [Swtich] $RemoveVMTemplateVHDs
+        [Switch] $RemoveVMTemplateVHDs
     ) # Param
 
     # Read the configuration

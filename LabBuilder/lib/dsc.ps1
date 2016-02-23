@@ -408,8 +408,8 @@ function SetDSCStartFile {
 
     # Relabel the Network Adapters so that they match what the DSC Networking config will use
     # This is because unfortunately the Hyper-V Device Naming feature doesn't work.
-    [String] $ManagementSwitchName = `
-        ('LabBuilder Management {0}' -f $Config.labbuilderconfig.name)
+    [String] $ManagementSwitchName = GetManagementSwitchName `
+        -Config $Config
     $Adapters = @(($VM.Adapters).Name)
     $Adapters += @($ManagementSwitchName)
 

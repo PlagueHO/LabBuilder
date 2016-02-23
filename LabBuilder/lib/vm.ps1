@@ -879,8 +879,8 @@ function GetVMManagementIPAddress {
         [Parameter(Mandatory)]
         [System.Collections.Hashtable] $VM
     )
-    [String] $ManagementSwitchName = ('LabBuilder Management {0}' `
-        -f $Config.labbuilderconfig.name)
+    [String] $ManagementSwitchName = GetManagementSwitchName `
+        -Config $Config
     [String] $IPAddress = (Get-VMNetworkAdapter -VMName $VM.Name).`
         Where({$_.SwitchName -eq $ManagementSwitchName}).`
         IPAddresses.Where({$_.Contains('.')})
