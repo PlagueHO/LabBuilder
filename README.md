@@ -94,6 +94,7 @@ Versions
 * VHDParentPath setting made optional. Defaults to "Virtual Machine Hard Disks" under config.
 * Initialize-LabConfiguration function will create labpath and vhdparentpath folders if not exist.
 * Removed Test-LabConfiguration function and tests moved to Get-LabConfiguration.
+* Added Disconnect-LabVM function to disconnect from a connect Lab VM.
 
 ### 0.4.0.0
 * Some secondary non-exported functions moved into separate support libraries.

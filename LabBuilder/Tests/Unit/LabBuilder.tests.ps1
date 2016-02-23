@@ -2240,6 +2240,16 @@ InModuleScope LabBuilder {
 
 
 
+    Describe 'Connect-LabVM' -Tags 'Incomplete'  {
+    }
+
+
+
+    Describe 'Disconnect-LabVM' -Tags 'Incomplete'  {
+    }
+
+
+
     Describe 'Install-Lab' -Tags 'Incomplete'  {
     }
 

@@ -3668,11 +3668,10 @@ function Wait-LabVMInit
         if ((-not $Complete) `
             -and (((Get-Date) - $StartTime).TotalSeconds) -ge $TimeOut)
         {
-            if ($Session)
-            {
-                Remove-PSSession `
-                    -Session $Session
-            }
+            # Disconnect from the VM
+            Disconnect-LabVM `
+                -VM $VM `
+                -ErrorAction Continue
 
             $ExceptionParameters = @{
                 errorId = 'InitialSetupCompleteError'
@@ -3687,8 +3686,10 @@ function Wait-LabVMInit
         if (($Session) `
             -and ($Session.State -eq 'Opened'))
         {
-            Remove-PSSession `
-                -Session $Session
+            # Disconnect from the VM
+            Disconnect-LabVM `
+                -VM $VM `
+                -ErrorAction Continue
         } # If
     } # While
     return $InitialSetupCompletePath
@@ -3768,7 +3769,7 @@ function Wait-LabVMOff {
    $Config = Get-LabConfiguration -Path c:\mylab\config.xml
    $VMs = Get-LabVM -Config $Config
    $Session = Connect-LabVM -VM $VMs[0]
-   Connect to the first VM in the Lab c:\mylab\config.xml for DSC configuration.
+   Connect to the first VM in the Lab c:\mylab\config.xml.
 .PARAMETER VM
    The VM Object referring to the VM to connect to.
 .PARAMETER ConnectTimeout
@@ -3823,10 +3824,11 @@ function Connect-LabVM
             }
         
             Write-Verbose -Message $($LocalizedData.ConnectingVMMessage `
-                -f $VM.Name)
+                -f $VM.Name,$IPAddress)
 
             # TODO: Convert to PS Direct once supported for this cmdlet.
             $Session = New-PSSession `
+                -Name 'LabBuilder' `
                 -ComputerName $IPAddress `
                 -Credential $AdminCredential `
                 -ErrorAction Stop
@@ -3862,6 +3864,94 @@ function Connect-LabVM
     }
     Return $Session
 } # Connect-LabVM
+####################################################################################################
+
+####################################################################################################
+<#
+.SYNOPSIS
+   Disconnects from a running VM.
+.DESCRIPTION
+   This cmdlet will disconnect a session from a running VM using PSRemoting.
+.EXAMPLE
+   $Config = Get-LabConfiguration -Path c:\mylab\config.xml
+   $VMs = Get-LabVM -Config $Config
+   Disconnect-LabVM -VM $VMs[0]
+   Disconnect from the first VM in the Lab c:\mylab\config.xml.
+.PARAMETER VM
+   The VM Object referring to the VM to connect to.
+.OUTPUTS
+   None
+#>
+function Disconnect-LabVM
+{
+    [CmdLetBinding()]
+    param
+    (
+        [Parameter(Mandatory)]
+        [System.Collections.Hashtable] $VM
+    )
+
+    [PSCredential] $AdminCredential = CreateCredential `
+        -Username '.\Administrator' `
+        -Password $VM.AdministratorPassword
+
+    # Get the Management IP Address of the VM
+    $IPAddress = Get-LabVMManagementIPAddress `
+        -Config $Config `
+        -VM $VM
+
+    try
+    {                
+        # Look for the session
+        $Session = Get-PSSession `
+            -Name 'LabBuilder' `
+            -ComputerName $IPAddress `
+            -Credential $AdminCredential `
+            -ErrorAction Stop       
+
+        if (-not $Session)
+        {
+            # No session found to this machine so nothing to do.
+            Write-Verbose -Message $($LocalizedData.VMSessionDoesNotExistMessage `
+                -f $VM.Name)        
+        }
+        else
+        {
+            if ($Session.State -eq 'Opened')
+            {
+                # Disconnect the session
+                $null = $Session | Disconnect-PSSession
+                Write-Verbose -Message $($LocalizedData.DisconnectingVMMessage `
+                    -f $VM.Name,$IPAddress)                    
+            }
+            # Remove the session
+            $null = $Session | Remove-PSSession 
+        }
+    }
+    catch
+    {
+        Throw $_
+    }
+    finally
+    {
+        # Remove the entry from TrustedHosts
+        $TrustedHosts = (Get-Item -Path WSMAN::localhost\Client\TrustedHosts).Value
+        if (($TrustedHosts -like "*$IPAddress*") -and ($TrustedHosts -ne '*'))
+        {
+            # Lazy code to remove IP address if it is in the middle
+            # at the end or the beginning of the TrustedHosts list
+            $TrustedHosts = $TrustedHosts -replace ",$IPAddress,",','
+            $TrustedHosts = $TrustedHosts -replace "$IPAddress,",''
+            $TrustedHosts = $TrustedHosts -replace ",$IPAddress",''
+            Set-Item `
+                -Path WSMAN::localhost\Client\TrustedHosts `
+                -Value $TrustedHosts
+                -Force
+            Write-Verbose -Message $($LocalizedData.RemovingIPAddressFromTrustedHostsMessage `
+                -f $VM.Name,$IPAddress)
+        }
+    } # try
+} # Disconnect-LabVM
 ####################################################################################################
 
 ####################################################################################################
