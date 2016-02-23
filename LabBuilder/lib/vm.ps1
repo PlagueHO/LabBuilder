@@ -427,7 +427,7 @@ function GetSelfSignedCertificate
             -ErrorAction Continue
         
         # Failed to connnect to the VM
-        if (! $Session)
+        if (-not $Session)
         {
             $ExceptionParameters = @{
                 errorId = 'CertificateDownloadError'
@@ -470,10 +470,10 @@ function GetSelfSignedCertificate
         if ((-not $Complete) `
             -and (((Get-Date) - $StartTime).TotalSeconds) -ge $TimeOut)
         {
-            if ($Session)
-            {
-                Remove-PSSession -Session $Session
-            }
+            # Disconnect from the VM
+            Disconnect-LabVM `
+                -VM $VM `
+                -ErrorAction Continue
 
             $ExceptionParameters = @{
                 errorId = 'CertificateDownloadError'
@@ -489,7 +489,10 @@ function GetSelfSignedCertificate
             -and ($Session.State -eq 'Opened') `
             -and ($Complete))
         {
-            Remove-PSSession -Session $Session
+            # Disconnect from the VM
+            Disconnect-LabVM `
+                -VM $VM `
+                -ErrorAction Continue
         } # If
     } # While
     return (Get-Item -Path "$VMLabBuilderFiles\$($Script:DSCEncryptionCert)")        

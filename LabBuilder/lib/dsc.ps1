@@ -591,10 +591,12 @@ function StartDSC {
         -and (((Get-Date) - $StartTime).TotalSeconds) -lt $TimeOut)
     {
         # Connect to the VM
-        $Session = Connect-LabVM -VM $VM -ErrorAction Continue
+        $Session = Connect-LabVM `
+            -VM $VM `
+            -ErrorAction Continue
         
         # Failed to connnect to the VM
-        if (! $Session)
+        if (-not $Session)
         {
             $ExceptionParameters = @{
                 errorId = 'DSCInitializationError'
@@ -666,10 +668,10 @@ function StartDSC {
         if ((-not $ConfigCopyComplete) `
             -and (((Get-Date) - $StartTime).TotalSeconds) -ge $TimeOut)
         {
-            if ($Session)
-            {
-                Remove-PSSession -Session $Session
-            }
+            # Disconnect from the VM
+            Disconnect-LabVM `
+                -VM $VM `
+                -ErrorAction Continue
 
             $ExceptionParameters = @{
                 errorId = 'DSCInitializationError'
@@ -718,10 +720,10 @@ function StartDSC {
         if ((-not $ModuleCopyComplete) `
             -and (((Get-Date) - $StartTime).TotalSeconds) -ge $TimeOut)
         {
-            if ($Session)
-            {
-                Remove-PSSession -Session $Session
-            }
+            # Disconnect from the VM
+            Disconnect-LabVM `
+                -VM $VM `
+                -ErrorAction Continue
 
             $ExceptionParameters = @{
                 errorId = 'DSCInitializationError'
@@ -742,6 +744,12 @@ function StartDSC {
                 -f $VM.Name)
 
             Invoke-Command -Session $Session { c:\windows\setup\scripts\StartDSC.ps1 }
+
+            # Disconnect from the VM
+            Disconnect-LabVM `
+                -VM $VM `
+                -ErrorAction Continue
+
             $Complete = $True
         } # If
     } # While
