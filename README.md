@@ -90,6 +90,22 @@ Configuration XML
 
 Versions
 --------
+### 0.4.1.0
+* VHDParentPath setting made optional. Defaults to "Virtual Machine Hard Disks" under config.
+* Initialize-LabConfiguration function will create labpath and vhdparentpath folders if not exist.
+* Removed Test-LabConfiguration function and tests moved to Get-LabConfiguration.
+* Added Disconnect-LabVM function to disconnect from a connect Lab VM.
+* Fixed bug setting TrustedHosts when connecting to Lab VM.
+* Added code to revert TrustedHosts when disconnecting from Lab VM. 
+* All non-exported supporting functions moved into separate support libraries.
+
+### 0.4.0.0
+* Some secondary non-exported functions moved into separate support libraries.
+* Initialize-LabVMTemplate caches NanoServerPackages from VHD template folder to Lab folder.
+* Fix exception connecting to VM when TrustedHosts is set to '*'.
+* Fix path Lab VM files are created. 
+* Support for creating Certificates for Nano Servers on the host added.
+ 
 ### 0.3.3.0
 * Changed Get-LabSwitch Unit tests to use PesterTestConfig.OK.xml.
 * Added support for configuring Nano Server packages for each VM.

@@ -77,8 +77,12 @@ ConvertFrom-StringData -StringData @'
     VMDataDiskPartitionStyleMissingError=The Data Disk '{1}' in VM '{0}' does not have a partition style definied.
     VMDataDiskFileSystemMissingError=The Data Disk '{1}' in VM '{0}' does not have a file format definied.
     VMDataDiskCopyFolderMissingError=The CopyFolder '{2}' that should be copied to Data Disk '{1}' in VM '{0}' does not exist.
+    NanoServerPackagesFolderMissingError=The NanoServerPackages folder '{0}' does not exist.
     
+    ImportingLibFileMessage=Importing function library '{0}'.
     InstallingHyperVComponentsMesage=Installing {0} Hyper-V Components.
+    InitializingLabFoldersMesage=Initializing Lab Folders.
+    CreatingLabFolderMessage=Creating {0} folder '{1}' for Lab. 
     InitializingHyperVComponentsMesage=Initializing Hyper-V Components.
     InitializeVHDMountingMessage=Mounting VHD {0} for Initialization.
     InitializeVHDInitializingMessage=Initializing {1} partition table on VHD {0}.
@@ -111,7 +115,9 @@ ConvertFrom-StringData -StringData @'
     DSCConfigPrepareMessage=Preparing to compile DSC Config '{0}' for VM '{1}'.
     DSCConfigCreatingMOFMessage=Creating DSC Config file '{0}' in VM '{1}'.
     DSCConfigMOFCreatedMessage=DSC MOF File '{0}' for VM '{1}'. was created successfully.
-    ConnectingVMMessage=Connecting to VM '{0}'.
+    ConnectingVMMessage=Connecting to VM '{0}' on '{1}'.
+    DisconnectingVMMessage=Disconnecting from VM '{0}' on '{1}'.
+    VMSessionDoesNotExistMessage=LabBuilder Remoting Session to VM '{0}' does not exist.
     ConnectingVMFailedMessage=Connection to VM '{0}' failed ({2}), retrying in {1} seconds.
     ConnectingVMAccessDeniedMessage=Access Denied connecting to VM '{0}', the connection will not be retried.
     CopyingFilesToVMMessage=Copying {1} Files to VM '{0}'.
@@ -142,6 +148,7 @@ ConvertFrom-StringData -StringData @'
     CreatingVMBootDiskPantherFolderMessage=Creating Panther folder to VHD Boot Disk for VM '{0}'.
     DismountingVMBootDiskMessage=Dismounting VM '{0}' VHD Boot Disk '{1}'.
     AddingIPAddressToTrustedHostsMessage=Adding IP Address '{1}' to WS-Man Trusted Hosts to allow remoting to '{0}'.
+    RemovingIPAddressFromTrustedHostsMessage=Removing IP Address '{1}' from WS-Man Trusted Hosts.
     WaitingForIPAddressAssignedMessage=Waiting for valid IP Address to be assigned to VM '{0}', retrying in {1} seconds.
     WaitingForInitialSetupCompleteMessage=Waiting for Initial Setup to be complete on VM '{0}', retrying in {1} seconds.
     WaitingForCertificateMessage=Waiting for Certificate file on VM '{0}', retrying in {1} seconds.
@@ -157,6 +164,7 @@ ConvertFrom-StringData -StringData @'
     ISONotFoundDownloadURLMessage=The ISO '{1}' for VM template VHD '{0}' could not be found. It can be downloaded from '{2}'.
     CreatingMountFolderMessage=Creating a temporary mount folder '{0}'.
     CreatingVMTemplateVHDMessage=Creating the '{0}' VM Template VHD '{1}'.
+    CachingNanoServerPackagesMessage=Caching Nano Server packages from '{0}' to '{1}'.
     ConvertingWIMtoVHDMessage=Converting '{3}' in '{0}' to a bootable {4} {5} {2} '{1}'.
     CreatedVMInitializationFiles=Created Initialization files for VM '{0}'.
     MountingVMTemplateVHDISOMessage=Mounting {1} to use source WIM to create Template VHD {0}
