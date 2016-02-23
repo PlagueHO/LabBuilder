@@ -83,8 +83,20 @@ $Libs.Foreach(
 <#
 .SYNOPSIS
     Loads a Lab Builder Configuration file and returns a Configuration object
+.DESCRIPTION
+    Takes the path to a valid LabBuilder Configiration XML file and loads it.
+    
+    It will perform simple validation on the XML file and throw an exception
+    if any of the validation tests fail.
+    
+    At load time it will also add temporary configuration attributes to the in
+    memory configuration that are used by other LabBuilder functions. So loading
+    XML Configurartion without using this function is not advised.
 .PARAMETER Path
     This is the path to the Lab Builder configuration file to load.
+.PARAMETER LabPath
+    This is an optional path that is used to Override the LabPath in the config
+    file passed.
 .EXAMPLE
     $MyLab = Get-LabConfiguration -Path c:\MyLab\LabConfig1.xml
     Loads the LabConfig1.xml configuration into variable MyLab
@@ -98,7 +110,10 @@ function Get-LabConfiguration {
     (
         [parameter(Mandatory)]
         [ValidateNotNullOrEmpty()]
-        [String] $Path
+        [String] $Path,
+        
+        [ValidateNotNullOrEmpty()]
+        [String] $LabPath
     ) # Param
     if (-not (Test-Path -Path $Path))
     {
@@ -143,9 +158,18 @@ function Get-LabConfiguration {
         [String] $FullConfigPath = $ConfigPath
     }
     $Config.labbuilderconfig.settings.setattribute('fullconfigpath',$FullConfigPath)
-
-    # Check the LabPath because we need to use it.
-    [String] $LabPath = $Config.labbuilderconfig.settings.labpath
+    
+    # If the LabPath was passed as a parameter, set it in the config
+    if ($LabPath)
+    {
+        $Config.labbuilderconfig.settings.SetAttribute('labpath',$LabPath)
+    }
+    else
+    {
+        [String] $LabPath = $Config.labbuilderconfig.settings.labpath        
+    }
+    
+    # Check the LabPath is actually set by either the XML or passed in.
     if (-not $LabPath)
     {
         $ExceptionParameters = @{
@@ -3084,7 +3108,7 @@ function Disconnect-LabVM
                     -f $VM.Name,$IPAddress)                    
             }
             # Remove the session
-            $null = $Session | Remove-PSSession 
+            $null = $Session | Remove-PSSession -ErrorAction SilentlyContinue
         }
     }
     catch
@@ -3127,6 +3151,9 @@ function Disconnect-LabVM
     The Hyper-V component can also be optionally installed if it is not.
 .PARAMETER Path
     The path to the LabBuilder configuration XML file.
+.PARAMETER LabPath
+    The optional path to install the Lab to - overrides the LabPath setting in the
+    configuration file.
 .PARAMETER CheckEnvironment
     Whether or not to check if Hyper-V is installed and install it if missing.
 .EXAMPLE
@@ -3140,14 +3167,25 @@ Function Install-Lab {
     param
     (
         [parameter(Mandatory)]
+        [ValidateNotNullOrEmpty()]
+        [ValidateScript({ Test-Path $_ })]
         [String] $Path,
+
+        [ValidateNotNullOrEmpty()]
+        [String] $LabPath,
 
         [Switch] $CheckEnvironment
     ) # Param
 
+    # Remove some PSBoundParameters so we can Splat
+    $null = $PSBoundParameters.Remove('RemoveSwitches')
+    $null = $PSBoundParameters.Remove('RemoveVMTemplates')
+    $null = $PSBoundParameters.Remove('RemoveVHDs')
+    $null = $PSBoundParameters.Remove('RemoveVMTemplateVHDs')
+
     # Read the configuration
     [XML] $Config = Get-LabConfiguration `
-        -Path $Path
+        @PSBoundParameters
     
     if ($CheckEnvironment)
     {
@@ -3205,6 +3243,9 @@ Function Install-Lab {
    VM Template VHDs
 .PARAMETER Path
     The path to the LabBuilder configuration XML file.
+.PARAMETER LabPath
+    The optional path to uninstall the Lab from - overrides the LabPath setting in the
+    configuration file.
 .PARAMETER RemoveSwitches
     Whether to remove the switches defined by this Lab.
 .PARAMETER RemoveVMTemplates
@@ -3231,7 +3272,12 @@ Function Uninstall-Lab {
     param
     (
         [parameter(Mandatory)]
+        [ValidateNotNullOrEmpty()]
+        [ValidateScript({ Test-Path $_ })]
         [String] $Path,
+
+        [ValidateNotNullOrEmpty()]
+        [String] $LabPath,
 
         [Switch] $RemoveSwitches,
 
@@ -3242,9 +3288,15 @@ Function Uninstall-Lab {
         [Switch] $RemoveVMTemplateVHDs
     ) # Param
 
+    # Remove some PSBoundParameters so we can Splat
+    $null = $PSBoundParameters.Remove('RemoveSwitches')
+    $null = $PSBoundParameters.Remove('RemoveVMTemplates')
+    $null = $PSBoundParameters.Remove('RemoveVHDs')
+    $null = $PSBoundParameters.Remove('RemoveVMTemplateVHDs')
+
     # Read the configuration
     [XML] $Config = Get-LabConfiguration `
-        -Path $Path
+        @PSBoundParameters
 
     # Remove the VMs
     $VMSplat = @{} 

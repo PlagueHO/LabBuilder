@@ -6,7 +6,8 @@
 
 $Global:ModuleRoot = Split-Path -Parent (Split-Path -Parent (Split-Path -Parent $Script:MyInvocation.MyCommand.Path))
 
-Set-Location $ModuleRoot
+$OldLocation = Get-Location
+Set-Location -Path $ModuleRoot
 if (Get-Module LabBuilder -All)
 {
     Get-Module LabBuilder -All | Remove-Module
@@ -59,6 +60,14 @@ InModuleScope LabBuilder {
             It 'Returns XmlDocument object with valid content' {
                 $Config = Get-LabConfiguration -Path $Global:TestConfigOKPath
                 $Config.GetType().Name | Should Be 'XmlDocument'
+                $Config.labbuilderconfig | Should Not Be $null
+            }
+        }
+        Context 'Path and LabPath are provided and valid XML file exists' {
+            It 'Returns XmlDocument object with valid content' {
+                $Config = Get-LabConfiguration -Path $Global:TestConfigOKPath -LabPath 'c:\MyLab'
+                $Config.GetType().Name | Should Be 'XmlDocument'
+                $Config.labbuilderconfig.settings.labpath | Should Be 'c:\MyLab'
                 $Config.labbuilderconfig | Should Not Be $null
             }
         }
@@ -1653,3 +1662,5 @@ InModuleScope LabBuilder {
     }
 #endregion    
 }
+
+Set-Location -Path $OldLocation
