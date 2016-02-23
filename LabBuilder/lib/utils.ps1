@@ -201,3 +201,134 @@ function CreateCredential()
         -ArgumentList ($Username, (ConvertTo-SecureString $Password -AsPlainText -Force))
     return $Credential
 } # CreateCredential
+
+
+<#
+.SYNOPSIS
+   Downloads any resources required by the configuration.
+.DESCRIPTION
+   It will ensure any required modules and files are downloaded.
+.PARAMETER Configuration
+   Contains the Lab Builder configuration object that was loaded by the Get-LabConfiguration object.
+.EXAMPLE
+   $Config = Get-LabConfiguration -Path c:\mylab\config.xml
+   Download-LabResources -Config $Config
+   Loads a Lab Builder configuration and downloads any resources required by it.   
+.OUTPUTS
+   None.
+#>
+function DownloadModule {
+    [CmdLetBinding()]
+    param
+    (
+        [Parameter(Mandatory)]
+        [ValidateNotNullOrEmpty()]
+        [String] $Name,
+
+        [String] $URL,
+
+        [String] $Folder,
+        
+        [String] $RequiredVersion,
+
+        [String] $MinimumVersion
+    )
+
+    $InstalledModules = @(Get-Module -ListAvailable)
+
+    # Determine a query that will be used to decide if the module is already installed
+    if ($RequiredVersion) {
+        [ScriptBlock] $Query = `
+            { ($_.Name -eq $Name) -and ($_.Version -eq $RequiredVersion) }
+        $VersionMessage = $RequiredVersion                
+    }
+    elseif ($MinimumVersion)
+    {
+        [ScriptBlock] $Query = `
+            { ($_.Name -eq $Name) -and ($_.Version -ge $MinimumVersion) }
+        $VersionMessage = "min ${MinimumVersion}"
+    }
+    else
+    {
+        [ScriptBlock] $Query = `
+            $Query = { $_.Name -eq $Name }
+        $VersionMessage = 'any version'
+    }
+
+    # Is the module installed?
+    if ($InstalledModules.Where($Query).Count -eq 0)
+    {
+        Write-Verbose -Message ($LocalizedData.ModuleNotInstalledMessage `
+            -f $Name,$VersionMessage)
+
+        # If a URL was specified, download this module via HTTP
+        if ($URL)
+        {
+            # The module is not installed - so download it
+            # This is usually for downloading modules directly from github
+            $FileName = $URL.Substring($URL.LastIndexOf('/') + 1)
+            $FilePath = Join-Path -Path $Script:WorkingFolder -ChildPath $FileName
+
+            Write-Verbose -Message ($LocalizedData.DownloadingLabResourceWebMessage `
+                -f $Name,$VersionMessage,$URL)
+
+            [String] $ModulesFolder = "$($ENV:ProgramFiles)\WindowsPowerShell\Modules\"
+
+            DownloadAndUnzipFile `
+                -URL $URL `
+                -DestinationPath $ModulesFolder `
+                -ErrorAction Stop
+
+            if ($Folder)
+            {
+                # This zip file contains a folder that is not the name of the module so it must be
+                # renamed. This is usually the case with source downloaded directly from GitHub
+                $ModulePath = Join-Path -Path $ModulesFolder -ChildPath $Name
+                if (Test-Path -Path $ModulePath)
+                {
+                    Remove-Item -Path $ModulePath -Recurse -Force
+                }
+                Rename-Item `
+                    -Path (Join-Path -Path $ModulesFolder -ChildPath $Folder) `
+                    -NewName $Name `
+                    -Force
+            } # If
+
+            Write-Verbose -Message ($LocalizedData.InstalledLabResourceWebMessage `
+                -f $Name,$VersionMessage,$ModulePath)
+        }
+        else
+        {
+            # Install the package via PowerShellGet from the PowerShellGallery
+            # Make sure the Nuget Package provider is initialized.
+            $null = Get-PackageProvider -name nuget -ForceBootStrap -Force
+
+            # Install the module
+            $Splat = [PSObject] @{ Name = $Name }
+            if ($RequiredVersion)
+            {
+                # Is a specific module version required?
+                $Splat += [PSObject] @{ RequiredVersion = $RequiredVersion }
+            }
+            elseif ($MinimumVersion)
+            {
+                # Is a specific module version minimum version?
+                $Splat += [PSObject] @{ MinimumVersion = $MinimumVersion }
+            }
+            try
+            {
+                Install-Module @Splat -Force -ErrorAction Stop
+            }
+            catch
+            {
+                $ExceptionParameters = @{
+                    errorId = 'ModuleNotAvailableError'
+                    errorCategory = 'InvalidArgument'
+                    errorMessage = $($LocalizedData.ModuleNotAvailableError `
+                        -f $Name,$VersionMessage,$_.Exception.Message)
+                }
+                ThrowException @ExceptionParameters
+            }
+        } # If
+    } # If
+} # DownloadModule

@@ -81,6 +81,8 @@ ConvertFrom-StringData -StringData @'
     
     ImportingLibFileMessage=Importing function library '{0}'.
     InstallingHyperVComponentsMesage=Installing {0} Hyper-V Components.
+    InitializingLabFoldersMesage=Initializing Lab Folders.
+    CreatingLabFolderMessage=Creating {0} folder '{1}' for Lab. 
     InitializingHyperVComponentsMesage=Initializing Hyper-V Components.
     InitializeVHDMountingMessage=Mounting VHD {0} for Initialization.
     InitializeVHDInitializingMessage=Initializing {1} partition table on VHD {0}.
