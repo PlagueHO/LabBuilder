@@ -1,6 +1,7 @@
 $Global:ModuleRoot = Split-Path -Parent (Split-Path -Parent (Split-Path -Parent (Split-Path -Parent $Script:MyInvocation.MyCommand.Path)))
 
-Set-Location $ModuleRoot
+$OldLocation = Get-Location
+Set-Location -Path $ModuleRoot
 if (Get-Module LabBuilder -All)
 {
     Get-Module LabBuilder -All | Remove-Module
@@ -550,3 +551,5 @@ InModuleScope LabBuilder {
         }
     }
 }
+
+Set-Location -Path $OldLocation
