@@ -19,35 +19,35 @@
                          }
                      ],
         "vlan":  null,
-        "name":  "Pester Test External",
+        "name":  "External",
         "natsubnetaddress":  null,
         "type":  "External"
     },
     {
         "adapters":  null,
         "vlan":  "2",
-        "name":  "Pester Test Private Vlan",
+        "name":  "TestLab Private Vlan",
         "natsubnetaddress":  null,
         "type":  "Private"
     },
     {
         "adapters":  null,
         "vlan":  null,
-        "name":  "Pester Test Private",
+        "name":  "TestLab Private",
         "natsubnetaddress":  null,
         "type":  "Private"
     },
     {
         "adapters":  null,
         "vlan":  "3",
-        "name":  "Pester Test Internal Vlan",
+        "name":  "TestLab Internal Vlan",
         "natsubnetaddress":  null,
         "type":  "Internal"
     },
     {
         "adapters":  null,
         "vlan":  null,
-        "name":  "Pester Test Internal",
+        "name":  "TestLab Internal",
         "natsubnetaddress":  null,
         "type":  "Internal"
     }

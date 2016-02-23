@@ -4,17 +4,17 @@
                   version="1.0">
   <description>Sample Windows Server 2016 TP4 Lab Configuration DC and DHCP Only</description>
 
-  <settings domainname="LABBUILDER-WS2016TP4.COM"
-            email="daniel@LABBUILDER-WS2016TP4.COM"
+  <settings labid="LABBUILDER-WS2016TP4.COM"
+            domainname="LABBUILDER-WS2016TP4.COM"
+            email="admin@LABBUILDER-WS2016TP4.COM"
             labpath="c:\vm\LABBUILDER-WS2016TP4.COM"
-            vhdparentpath="c:\vm\LABBUILDER-WS2016TP4.COM\Virtual Hard Disk Templates"
             dsclibrarypath="..\DSCLibrary\" />
 
   <resources>
   </resources>
 
   <switches>
-    <switch name="General Purpose External" type="External">
+    <switch name="External" type="External">
       <adapters>
         <adapter name="Cluster" macaddress="00155D010701" />
         <adapter name="Management" macaddress="00155D010702" />
@@ -90,7 +90,7 @@
   </templates>
 
   <vms>   
-    <vm name="LABBUILDER.COM SA-DC1"
+    <vm name="SA-DC1"
         template="Windows Server 2016 TP4 Datacenter FULL"
         computername="SA-DC1"
         usedifferencingbootdisk="Y">
@@ -102,8 +102,8 @@
         </parameters>
       </dsc>
       <adapters>
-        <adapter name="General Purpose External"
-                 switchname="General Purpose External" />
+        <adapter name="External"
+                 switchname="External" />
         <adapter name="Domain Private Site A"
                  switchname="Domain Private Site A">
           <ipv4 address="192.168.128.10"
@@ -118,7 +118,7 @@
       </adapters>
     </vm>
 
-    <vm name="LABBUILDER.COM SA-DHCP1"
+    <vm name="SA-DHCP1"
         template="Windows Server 2016 TP4 Datacenter CORE"
         computername="SA-DHCP1"
         usedifferencingbootdisk="Y">
@@ -131,8 +131,8 @@
         </parameters>
       </dsc>
       <adapters>
-        <adapter name="General Purpose External"
-                 switchname="General Purpose External" />
+        <adapter name="External"
+                 switchname="External" />
         <adapter name="Domain Private Site A"
                  switchname="Domain Private Site A">
           <ipv4 address="192.168.128.16"
