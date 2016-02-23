@@ -43,6 +43,13 @@ InModuleScope LabBuilder {
         return $errorRecord
     }
     
+    
+    
+    Describe 'IsAdmin' -Tag 'Incomplete' {
+    }
+
+
+
     Describe 'DownloadAndUnzipFile' {
         $URL = 'https://raw.githubusercontent.com/PlagueHO/LabBuilder/dev/LICENSE'      
         Context 'Download folder does not exist' {
@@ -137,6 +144,12 @@ InModuleScope LabBuilder {
             }
         }
     }    
+
+
+
+    Describe 'CreateCredential' -Tag 'Incomplete' {
+    }
+
 
 
     Describe 'DownloadModule' {
@@ -488,6 +501,23 @@ InModuleScope LabBuilder {
             }
         }
     }
+
+
+
+    Describe 'DownloadResources' -Tags 'Incomplete' {
+        $Config = Get-LabConfiguration -Path $Global:TestConfigOKPath
+
+        Context 'Valid configuration is passed' {
+            Mock DownloadModule
+            It 'Does not throw an Exception' {
+                { DownloadResources -Config $Config } | Should Not Throw
+            }
+            It 'Should call appropriate Mocks' {
+                Assert-MockCalled DownloadModule -Exactly 4
+            }
+        }
+    }
+
 
 
     Describe 'InstallHyperV' {

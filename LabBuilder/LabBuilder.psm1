@@ -281,79 +281,10 @@ function Initialize-LabConfiguration {
             -VlanId $ManagementVlan
     }
     # Download any other resources required by this lab
-    Download-LabResources -Config $Config	
+    DownloadResources -Config $Config	
 
 } # Initialize-LabConfiguration
 #endregion
-
-
-<#
-.SYNOPSIS
-   Downloads any resources required by the configuration.
-.DESCRIPTION
-   It will ensure any required modules and files are downloaded.
-.PARAMETER Configuration
-   Contains the Lab Builder configuration object that was loaded by the Get-LabConfiguration object.
-.EXAMPLE
-   $Config = Get-LabConfiguration -Path c:\mylab\config.xml
-   Download-LabResources -Config $Config
-   Loads a Lab Builder configuration and downloads any resources required by it.   
-.OUTPUTS
-   None.
-#>
-function Download-LabResources {
-    [CmdLetBinding()]
-    param
-    (
-        [Parameter(Mandatory)]
-        [ValidateNotNullOrEmpty()]
-        [XML] $Config
-    )
-        
-    # Downloading Lab Resources
-    Write-Verbose -Message $($LocalizedData.DownloadingLabResourcesMessage)
-
-    # Bootstrap Nuget # This needs to be a test, not a force 
-    # $null = Get-PackageProvider -Name NuGet -ForceBootstrap -Force
-    
-    # Make sure PSGallery is trusted
-    Set-PSRepository -Name PSGallery -InstallationPolicy Trusted    
-    
-    # Download any other resources required by this lab
-    if ($Config.labbuilderconfig.resources) 
-    {
-        foreach ($Module in $Config.labbuilderconfig.resources.module)
-        {
-            if (-not $Module.Name)
-            {
-                $ExceptionParameters = @{
-                    errorId = 'ResourceModuleNameEmptyError'
-                    errorCategory = 'InvalidArgument'
-                    errorMessage = $($LocalizedData.ResourceModuleNameEmptyError)
-                }
-                ThrowException @ExceptionParameters
-            } # If
-            $Splat = [PSObject] @{ Name = $Module.Name }
-            if ($Module.URL)
-            {
-                $Splat += [PSObject] @{ URL = $Module.URL }
-            }
-            if ($Module.Folder)
-            {
-                $Splat += [PSObject] @{ Folder = $Module.Folder }
-            }
-            if ($Module.RequiredVersion)
-            {
-                $Splat += [PSObject] @{ RequiredVersion = $Module.RequiredVersion }
-            }
-            if ($Module.MiniumVersion)
-            {
-                $Splat += [PSObject] @{ MiniumVersion = $Module.MiniumVersion }
-            }
-            DownloadModule @Splat
-        } # Foreach
-    } # If
-} # Download-LabResources
 
 
 #region LabSwitchFunctions

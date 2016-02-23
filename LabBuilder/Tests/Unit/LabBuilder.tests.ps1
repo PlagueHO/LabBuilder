@@ -99,7 +99,7 @@ InModuleScope LabBuilder {
     Describe 'Initialize-LabConfiguration' {
         $Config = Get-LabConfiguration -Path $Global:TestConfigOKPath
 
-        Mock Download-LabResources
+        Mock DownloadResources
         Mock Get-VMSwitch
         Mock New-VMSwitch
         Mock Get-VMNetworkAdapter -MockWith { @{ Name = 'LabBuilder Management PesterTestConfig' } }
@@ -111,7 +111,7 @@ InModuleScope LabBuilder {
                 { Initialize-LabConfiguration -Config $Config } | Should Not Throw
             }
             It 'Calls appropriate mocks' {
-                Assert-MockCalled Download-LabResources -Exactly 1
+                Assert-MockCalled DownloadResources -Exactly 1
                 Assert-MockCalled Get-VMSwitch -Exactly 1
                 Assert-MockCalled New-VMSwitch -Exactly 1
                 Assert-MockCalled Get-VMNetworkAdapter -Exactly 1
@@ -121,21 +121,6 @@ InModuleScope LabBuilder {
         }
     }
 #endregion    
-
-
-    Describe 'Download-LabResources' -Tags 'Incomplete' {
-        $Config = Get-LabConfiguration -Path $Global:TestConfigOKPath
-
-        Context 'Valid configuration is passed' {
-            Mock DownloadModule
-            It 'Does not throw an Exception' {
-                { Download-LabResources -Config $Config } | Should Not Throw
-            }
-            It 'Should call appropriate Mocks' {
-                Assert-MockCalled DownloadModule -Exactly 4
-            }
-        }
-    }
 
 
 
