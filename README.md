@@ -102,6 +102,7 @@ Versions
 * Added code to revert TrustedHosts when disconnecting from Lab VM. 
 * All non-exported supporting functions moved into separate support libraries.
 * Add support for LabId setting that gets prepended to Lab resources.
+* Added LabBuilderConfig schema in schema folder.
 
 ### 0.4.0.0
 * Some secondary non-exported functions moved into separate support libraries.

@@ -1,0 +1,181 @@
+<?xml version="1.0" encoding="UTF-8"?>
+   <xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" elementFormDefault="qualified" attributeFormDefault="unqualified">
+         <xs:element name="labbuilderconfig">
+               <xs:complexType>
+                     <xs:sequence>
+                           <xs:element name="description" type="xs:string"></xs:element>
+                           <xs:element name="settings">
+                                 <xs:complexType>
+                                       <xs:attribute name="labid" type="xs:string"></xs:attribute>
+                                       <xs:attribute name="domainname" type="xs:string"></xs:attribute>
+                                       <xs:attribute name="email" type="xs:string"></xs:attribute>
+                                       <xs:attribute name="labpath" type="xs:string"></xs:attribute>
+                                       <xs:attribute name="vhdparentpath" type="xs:string"></xs:attribute>
+                                       <xs:attribute name="dsclibrarypath" type="xs:string"></xs:attribute>
+                                 </xs:complexType>
+                           </xs:element>
+                           <xs:element name="resources">
+                                 <xs:complexType>
+                                       <xs:sequence>
+                                             <xs:element name="module" maxOccurs="unbounded">
+                                                   <xs:complexType>
+                                                         <xs:attribute name="name" type="xs:string"></xs:attribute>
+                                                         <xs:attribute name="url" type="xs:string"></xs:attribute>
+                                                         <xs:attribute name="folder" type="xs:string"></xs:attribute>
+                                                   </xs:complexType>
+                                             </xs:element>
+                                       </xs:sequence>
+                                 </xs:complexType>
+                           </xs:element>
+                           <xs:element name="switches">
+                                 <xs:complexType>
+                                       <xs:sequence>
+                                             <xs:element name="switch" maxOccurs="unbounded">
+                                                   <xs:complexType>
+                                                         <xs:sequence>
+                                                               <xs:element name="adapters">
+                                                                     <xs:complexType>
+                                                                           <xs:sequence>
+                                                                                 <xs:element name="adapter" maxOccurs="unbounded">
+                                                                                       <xs:complexType>
+                                                                                             <xs:attribute name="name" type="xs:string"></xs:attribute>
+                                                                                             <xs:attribute name="macaddress" type="xs:string"></xs:attribute>
+                                                                                             <xs:attribute name="vlan" type="xs:int"></xs:attribute>
+                                                                                       </xs:complexType>
+                                                                                 </xs:element>
+                                                                           </xs:sequence>
+                                                                     </xs:complexType>
+                                                               </xs:element>
+                                                         </xs:sequence>
+                                                         <xs:attribute name="name" type="xs:string"></xs:attribute>
+                                                         <xs:attribute name="type" type="xs:string"></xs:attribute>
+                                                   </xs:complexType>
+                                             </xs:element>
+                                       </xs:sequence>
+                                 </xs:complexType>
+                           </xs:element>
+                           <xs:element name="templatevhds">
+                                 <xs:complexType>
+                                       <xs:sequence>
+                                             <xs:element name="templatevhd" maxOccurs="unbounded">
+                                                   <xs:complexType>
+                                                         <xs:attribute name="name" type="xs:string"></xs:attribute>
+                                                         <xs:attribute name="iso" type="xs:string"></xs:attribute>
+                                                         <xs:attribute name="url" type="xs:string"></xs:attribute>
+                                                         <xs:attribute name="vhd" type="xs:string"></xs:attribute>
+                                                         <xs:attribute name="edition" type="xs:string"></xs:attribute>
+                                                         <xs:attribute name="ostype" type="xs:string"></xs:attribute>
+                                                         <xs:attribute name="features" type="xs:string"></xs:attribute>
+                                                         <xs:attribute name="vhdformat" type="xs:string"></xs:attribute>
+                                                         <xs:attribute name="vhdtype" type="xs:string"></xs:attribute>
+                                                         <xs:attribute name="generation" type="xs:int"></xs:attribute>
+                                                         <xs:attribute name="vhdsize" type="xs:string"></xs:attribute>
+                                                   </xs:complexType>
+                                             </xs:element>
+                                       </xs:sequence>
+                                       <xs:attribute name="isopath" type="xs:string"></xs:attribute>
+                                       <xs:attribute name="vhdpath" type="xs:string"></xs:attribute>
+                                       <xs:attribute name="prefix" type="xs:string"></xs:attribute>
+                                 </xs:complexType>
+                           </xs:element>
+                           <xs:element name="templates">
+                                 <xs:complexType>
+                                       <xs:sequence>
+                                             <xs:element name="template" maxOccurs="unbounded">
+                                                   <xs:complexType>
+                                                         <xs:attribute name="name" type="xs:string"></xs:attribute>
+                                                         <xs:attribute name="vhd" type="xs:string"></xs:attribute>
+                                                         <xs:attribute name="sourcevhd" type="xs:string"></xs:attribute>
+                                                         <xs:attribute name="allowcreate" type="xs:string"></xs:attribute>
+                                                         <xs:attribute name="memorystartupbytes" type="xs:string"></xs:attribute>
+                                                         <xs:attribute name="dynamicmemoryenabled" type="xs:string"></xs:attribute>
+                                                         <xs:attribute name="processorcount" type="xs:int"></xs:attribute>
+                                                         <xs:attribute name="administratorpassword" type="xs:string"></xs:attribute>
+                                                         <xs:attribute name="productkey" type="xs:string"></xs:attribute>
+                                                         <xs:attribute name="timezone" type="xs:string"></xs:attribute>
+                                                         <xs:attribute name="ostype" type="xs:string"></xs:attribute>
+                                                         <xs:attribute name="integrationservices" type="xs:string"></xs:attribute>
+                                                   </xs:complexType>
+                                             </xs:element>
+                                       </xs:sequence>
+                                 </xs:complexType>
+                           </xs:element>
+                           <xs:element name="vms">
+                                 <xs:complexType>
+                                       <xs:sequence>
+                                             <xs:element name="vm">
+                                                   <xs:complexType>
+                                                         <xs:sequence>
+                                                               <xs:element name="datavhds">
+                                                                     <xs:complexType>
+                                                                           <xs:sequence>
+                                                                                 <xs:element name="datavhd" maxOccurs="unbounded">
+                                                                                       <xs:complexType>
+                                                                                             <xs:attribute name="vhd" type="xs:string"></xs:attribute>
+                                                                                             <xs:attribute name="sourcevhd" type="xs:string"></xs:attribute>
+                                                                                             <xs:attribute name="copyfolders" type="xs:string"></xs:attribute>
+                                                                                       </xs:complexType>
+                                                                                 </xs:element>
+                                                                           </xs:sequence>
+                                                                     </xs:complexType>
+                                                               </xs:element>
+                                                               <xs:element name="adapters">
+                                                                     <xs:complexType>
+                                                                           <xs:sequence>
+                                                                                 <xs:element name="adapter" maxOccurs="unbounded">
+                                                                                       <xs:complexType>
+                                                                                             <xs:attribute name="name" type="xs:string"></xs:attribute>
+                                                                                             <xs:attribute name="switchname" type="xs:string"></xs:attribute>
+                                                                                             <xs:attribute name="macaddress" type="xs:string"></xs:attribute>
+                                                                                       </xs:complexType>
+                                                                                 </xs:element>
+                                                                           </xs:sequence>
+                                                                     </xs:complexType>
+                                                               </xs:element>
+                                                               <xs:element name="dsc">
+                                                                     <xs:complexType>
+                                                                           <xs:sequence>
+                                                                                 <xs:element name="parameters" type="xs:string"></xs:element>
+                                                                           </xs:sequence>
+                                                                           <xs:attribute name="configname" type="xs:string"></xs:attribute>
+                                                                           <xs:attribute name="configfile" type="xs:string"></xs:attribute>
+                                                                     </xs:complexType>
+                                                               </xs:element>
+                                                               <xs:element name="install">
+                                                                     <xs:complexType>
+                                                                           <xs:sequence>
+                                                                                 <xs:element name="msu">
+                                                                                       <xs:complexType>
+                                                                                             <xs:attribute name="url" type="xs:string"></xs:attribute>
+                                                                                       </xs:complexType>
+                                                                                 </xs:element>
+                                                                           </xs:sequence>
+                                                                     </xs:complexType>
+                                                               </xs:element>
+                                                         </xs:sequence>
+                                                         <xs:attribute name="name" type="xs:string"></xs:attribute>
+                                                         <xs:attribute name="template" type="xs:string"></xs:attribute>
+                                                         <xs:attribute name="computername" type="xs:string"></xs:attribute>
+                                                         <xs:attribute name="memorystartupbytes" type="xs:string"></xs:attribute>
+                                                         <xs:attribute name="dynamicmemoryenabled" type="xs:string"></xs:attribute>
+                                                         <xs:attribute name="exposevirtualizationextensions" type="xs:string"></xs:attribute>
+                                                         <xs:attribute name="usedifferencingbootdisk" type="xs:string"></xs:attribute>
+                                                         <xs:attribute name="administratorpassword" type="xs:string"></xs:attribute>
+                                                         <xs:attribute name="productkey" type="xs:string"></xs:attribute>
+                                                         <xs:attribute name="timezone" type="xs:string"></xs:attribute>
+                                                         <xs:attribute name="unattendfile" type="xs:string"></xs:attribute>
+                                                         <xs:attribute name="setupcomplete" type="xs:string"></xs:attribute>
+                                                         <xs:attribute name="integrationservices" type="xs:string"></xs:attribute>
+                                                         <xs:attribute name="packages" type="xs:string"></xs:attribute>
+                                                   </xs:complexType>
+                                             </xs:element>
+                                       </xs:sequence>
+                                 </xs:complexType>
+                           </xs:element>
+                     </xs:sequence>
+                     <xs:attribute name="name" type="xs:string"></xs:attribute>
+                     <xs:attribute name="version" type="xs:int"></xs:attribute>
+               </xs:complexType>
+         </xs:element>
+   </xs:schema>
+ 
