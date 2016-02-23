@@ -3815,9 +3815,17 @@ function Connect-LabVM
             $TrustedHosts = (Get-Item -Path WSMAN::localhost\Client\TrustedHosts).Value
             if (($TrustedHosts -notlike "*$IPAddress*") -and ($TrustedHosts -ne '*'))
             {
+                if ([String]::IsNullOrWhitespace($TrustedHosts))
+                {
+                    $TrustedHosts = $IPAddress
+                }
+                else
+                {
+                    $TrustedHosts = "$TrustedHosts,$IPAddress"
+                }
                 Set-Item `
                     -Path WSMAN::localhost\Client\TrustedHosts `
-                    -Value "$TrustedHosts,$IPAddress" `
+                    -Value $TrustedHosts `
                     -Force
                 Write-Verbose -Message $($LocalizedData.AddingIPAddressToTrustedHostsMessage `
                     -f $VM.Name,$IPAddress)
@@ -3945,7 +3953,7 @@ function Disconnect-LabVM
             $TrustedHosts = $TrustedHosts -replace ",$IPAddress",''
             Set-Item `
                 -Path WSMAN::localhost\Client\TrustedHosts `
-                -Value $TrustedHosts
+                -Value $TrustedHosts `
                 -Force
             Write-Verbose -Message $($LocalizedData.RemovingIPAddressFromTrustedHostsMessage `
                 -f $VM.Name,$IPAddress)
