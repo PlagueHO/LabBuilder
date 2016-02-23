@@ -139,7 +139,6 @@ InModuleScope LabBuilder {
     }    
 
 
-
     Describe 'DownloadModule' {
         $URL = 'https://github.com/PowerShell/xNetworking/archive/dev.zip'
         
@@ -486,6 +485,37 @@ InModuleScope LabBuilder {
                 Assert-MockCalled Remove-Item -Exactly 0
                 Assert-MockCalled Get-PackageProvider -Exactly 1
                 Assert-MockCalled Install-Module -Exactly 1
+            }
+        }
+    }
+
+
+    Describe 'InstallHyperV' {
+
+        $Config = Get-LabConfiguration -Path $Global:TestConfigOKPath
+
+        If ((Get-CimInstance Win32_OperatingSystem).ProductType -eq 1) {
+            Mock Get-WindowsOptionalFeature { [PSObject]@{ FeatureName = 'Mock'; State = 'Disabled'; } }
+            Mock Enable-WindowsOptionalFeature 
+        } Else {
+            Mock Get-WindowsFeature { [PSObject]@{ Name = 'Mock'; Installed = $false; } }
+            Mock Install-WindowsFeature
+        }
+
+        Context 'The function is called' {
+            It 'Does not throw an Exception' {
+                { InstallHyperV } | Should Not Throw
+            }
+            If ((Get-CimInstance Win32_OperatingSystem).ProductType -eq 1) {
+                It 'Calls appropriate mocks' {
+                    Assert-MockCalled Get-WindowsOptionalFeature -Exactly 1
+                    Assert-MockCalled Enable-WindowsOptionalFeature -Exactly 1
+                }
+            } Else {
+                It 'Calls appropriate mocks' {
+                    Assert-MockCalled Get-WindowsFeature -Exactly 1
+                    Assert-MockCalled Install-WindowsFeature -Exactly 1
+                }
             }
         }
     }
