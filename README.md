@@ -132,6 +132,9 @@ Versions
 * Added LabPath parameter to Install-Lab, Uninstall-Lab and Get-LabConfiguration.
 * Fix exception in Disconnect-LabVM.
 * Fixed Unit tests to retain current folder location.
+* Added PS ScriptAnalyzer Error tests to unit tests.
+* Display PS ScriptAnalyzer Warnings when unit tests run.
+* Remove-LabVMTemplateVHD function added and will be called from Uninstall-Lab.
 
 ### 0.4.0.0
 * Some secondary non-exported functions moved into separate support libraries.
