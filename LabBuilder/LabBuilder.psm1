@@ -853,7 +853,7 @@ function Get-LabVMTemplateVHD {
             $URL = $TemplateVHD.URL
             if ($URL)
             {
-                Write-Host `
+                Write-Output `
                     -ForegroundColor Yellow `
                     -Object $($LocalizedData.ISONotFoundDownloadURLMessage `
                         -f $TemplateVHD.Name,$ISOPath,$URL)
@@ -1054,7 +1054,7 @@ function Initialize-LabVMTemplateVHD
     }
 
     # If there are no VMTemplateVHDs just return
-    if ($VMTemplateVHDs -eq $null)
+    if ($null -eq $VMTemplateVHDs)
     {
         return
     }
@@ -1143,7 +1143,7 @@ function Initialize-LabVMTemplateVHD
         }
         
         # Set the size
-        if ($VMTemplateVHD.VHDSize -ne $null)
+        if ($null -ne $VMTemplateVHD.VHDSize)
         {
             $ConvertParams += @{
                 sizebytes = $VMTemplateVHD.VHDSize
@@ -2199,7 +2199,7 @@ function Get-LabVM {
 
             # If the data disk file doesn't exist then some basic parameters MUST be provided
             if (-not $Exists `
-                -and ((( $Type -notin ('fixed','dynamic','differencing') ) -or $Size -eq $null -or $Size -eq 0 ) `
+                -and ((( $Type -notin ('fixed','dynamic','differencing') ) -or ($null -eq $Size) -or ($Size -eq 0) ) `
                 -and -not $SourceVhd ))
             {
                 $ExceptionParameters = @{
@@ -2393,11 +2393,11 @@ function Get-LabVM {
         } # if
         
         # Get the Integration Services flags
-        if ($VM.IntegrationServices -ne $null)
+        if ($null -ne $VM.IntegrationServices)
         {
             $IntegrationServices = $VM.IntegrationServices
         } 
-        elseif ($VMTemplate.IntegrationServices -ne $null)
+        elseif ($null -ne $VMTemplate.IntegrationServices)
         {
             $IntegrationServices = $VMTemplate.IntegrationServices
         } # if
@@ -2972,7 +2972,7 @@ function Connect-LabVM
         -Password $VM.AdministratorPassword
     [Boolean] $FatalException = $False
     
-    while (($Session -eq $null) `
+    while (($null -eq $Session) `
         -and (((Get-Date) - $StartTime).TotalSeconds) -lt $ConnectTimeout `
         -and -not $FatalException)
     {
@@ -3035,7 +3035,7 @@ function Connect-LabVM
     
     # If a fatal exception occured or the connection just couldn't be established
     # then throw an exception so it can be caught by the calling code.
-    if ($FatalException -or ($Session -eq $null))
+    if ($FatalException -or ($null -eq $Session))
     {
         # The connection failed so throw an error
         $ExceptionParameters = @{

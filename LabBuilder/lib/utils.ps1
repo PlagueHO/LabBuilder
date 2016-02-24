@@ -267,7 +267,6 @@ function DownloadModule {
             # The module is not installed - so download it
             # This is usually for downloading modules directly from github
             $FileName = $URL.Substring($URL.LastIndexOf('/') + 1)
-            $FilePath = Join-Path -Path $Script:WorkingFolder -ChildPath $FileName
 
             Write-Verbose -Message ($LocalizedData.DownloadingLabResourceWebMessage `
                 -f $Name,$VersionMessage,$URL)
