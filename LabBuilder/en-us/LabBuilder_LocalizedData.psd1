@@ -78,7 +78,9 @@ ConvertFrom-StringData -StringData @'
     VMDataDiskFileSystemMissingError=The Data Disk '{1}' in VM '{0}' does not have a file format definied.
     VMDataDiskCopyFolderMissingError=The CopyFolder '{2}' that should be copied to Data Disk '{1}' in VM '{0}' does not exist.
     NanoServerPackagesFolderMissingError=The NanoServerPackages folder '{0}' does not exist.
-    
+    VMDoesNotExistError=The VM '{0}' does not exist.
+    BootPhaseVMsTimeoutError=One or more Virtual Machines with Bootorder '{0}' failed to start completely in the required time.
+
     ImportingLibFileMessage=Importing function library '{0}'.
     InstallingHyperVComponentsMesage=Installing {0} Hyper-V Components.
     InitializingLabFoldersMesage=Initializing Lab Folders.
@@ -142,6 +144,8 @@ ConvertFrom-StringData -StringData @'
     StoppingVMMessage=Stopping VM '{0}'.
     RemovingVMMessage=Removing VM '{0}'.
     RemovedVMMessage=Removed VM '{0}'.
+    StartingBootPhaseVMsMessage=Starting Virtual Machines with Bootorder '{0}'.    
+    AllBootPhaseVMsStartedMessage=All Virtual Machines with Bootorder '{0}' have started.
     StartingDSCMessage=Starting DSC on VM '{0}'.
     MountingVMBootDiskMessage=Mounting VM '{0}' VHD Boot Disk '{1}'.
     DownloadingVMBootDiskFileMessage=Downloading VM '{0}' {1} file '{2}'.

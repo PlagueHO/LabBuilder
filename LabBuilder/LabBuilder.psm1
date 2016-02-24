@@ -2519,10 +2519,10 @@ function Get-LabVM {
         } # if 
 
         # Get the Bootorder
-        Remove-Variable -Name Bootorder -ErrorAction SilentlyContinue
+        [Byte] $Bootorder = [Byte]::MaxValue
         if ($VM.bootorder) 
 		{
-            [Int] $Bootorder = $VM.bootorder
+            $Bootorder = $VM.bootorder
         } # if 
 
         # Get the Packages
@@ -3422,7 +3422,7 @@ Function Uninstall-Lab {
     This cmdlet will start all the Hyper-V virtual machines definied in a Lab
     configuration.
     
-    It will use the Bootorder attribute (if definted) for any VMs to determine
+    It will use the Bootorder attribute (if defined) for any VMs to determine
     the order they should be booted in. If a Bootorder is not specified for a
     machine, it will be booted after all machines with a defined boot order.
     
@@ -3488,6 +3488,112 @@ Function Start-Lab {
     # Get the VMs
     $VMs = Get-LabVM `
         -Config $Config
+        
+    # Get the bootorders by lowest first and ignoring 0 and call
+    $BootOrders = @( ($VMs |
+        Where-Object -FilterScript { ($_.Bootorder -gt 0) } ).Bootorder )
+    $BootPhases = @( ($Bootorders |
+        Sort-Object -Unique) )
+
+    # Step through each of these "Bootphases" waiting for them to complete
+    foreach ($BootPhase in $BootPhases)
+    {
+        # Process this "Bootphase"
+        Write-Verbose -Message $($LocalizedData.StartingBootPhaseVMsMessage `
+            -f $BootPhase)
+
+        # Get all VMs in this "Bootphase"
+        $BootVMs = @( $VMs |
+            Where-Object -FilterScript { ($_.BootOrder -eq $BootPhase) } )
+        
+        [DateTime] $StartTime = Get-Date
+        [boolean] $PhaseComplete = $false
+        [boolean] $PhaseAllBooted = $true
+        [int] $VMCount = $BootVMs.Count
+        [int] $VMNumber = 0
+        
+        # Loop through all the VMs in this "Bootphase" repeatedly
+        # until timeout occurs or PhaseComplete is marked as complete
+        while (-not $PhaseComplete `
+            -and (((Get-Date) - $StartTime).TotalSeconds) -lt $StartupTimeout)
+        {
+            # Get the VM to boot/check
+            $VM = $BootVMs[$VMNumber]
+            $VMName = $VM.Name
+            
+            # Get the actual Hyper-V VM object
+            $VMObject = Get-VM `
+                -Name $VMName `
+                -ErrorAction SilentlyContinue 
+            if (-not $VMObject)
+            {
+                # If the VM does not exist then throw a non-terminating exception
+                $ExceptionParameters = @{
+                    errorId = 'VMDoesNotExistError'
+                    errorCategory = 'InvalidArgument'
+                    errorMessage = $($LocalizedData.VMDoesNotExistError `
+                        -f $VMName)
+                        
+                }
+                ThrowException @ExceptionParameters
+            } # if
+        
+            # Start the VM if it is off
+            if ($VMObject.State -eq 'Off')
+            {
+                Write-Verbose -Message $($LocalizedData.StartingVMMessage `
+                    -f $VMName)
+                Start-VM `
+                    -VM $VMObject
+            } # if
+            
+            # Use the allocation of a Management IP Address as an indicator
+            # the machine has booted
+            $ManagementIP = GetVMManagementIPAddress `
+                -Config $Config `
+                -VM $VM `
+                -ErrorAction SilentlyContinue
+            if (-not ($ManagementIP))
+            {
+                # It has not booted
+                $PhaseAllBooted = $False
+            } # if
+            $VMNumber++
+            if ($VMNumber -eq $VMCount)
+            {
+                # We have stepped through all VMs in this Phase so check
+                # if all have booted, otherwise reset the loop.
+                $VMNumber = 0
+                if ($PhaseAllBooted)
+                {
+                    # If we have gone through all VMs in this "Bootphase"
+                    # and they're all marked as booted then we can mark
+                    # this phase as complete and allow moving on to the next one
+                    Write-Verbose -Message $($LocalizedData.AllBootPhaseVMsStartedMessage `
+                        -f $BootPhase)
+                    $PhaseComplete = $True
+                }
+                else
+                {
+                    $PhaseAllBooted = $True
+                } # if
+            } # if
+        } # while
+        
+        # Did we timeout?
+        if (-not ($PhaseComplete))
+        {
+            # Yes, throw an exception
+            $ExceptionParameters = @{
+                errorId = 'BootPhaseVMsTimeoutError'
+                errorCategory = 'InvalidArgument'
+                errorMessage = $($LocalizedData.BootPhaseVMsTimeoutMessage `
+                    -f $BootPhase)
+                    
+            }
+            ThrowException @ExceptionParameters
+        }
+    } # foreach
 } # Start-Lab
 
 
@@ -3498,7 +3604,7 @@ Function Start-Lab {
     This cmdlet will stop all the Hyper-V virtual machines definied in a Lab
     configuration.
     
-    It will use the Bootorder attribute (if definted) for any VMs to determine
+    It will use the Bootorder attribute (if defined) for any VMs to determine
     the order they should be shutdown in. If a Bootorder is not specified for a
     machine, it will be shutdown before all machines with a defined boot order.
     
