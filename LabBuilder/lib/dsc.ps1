@@ -89,10 +89,6 @@ function CreateDSCMOFFiles {
     # Get Path to LabBuilder files
     [String] $VMLabBuilderFiles = $VM.LabBuilderFilesPath
 
-    # Make sure the appropriate folders exist
-    Initialize-LabVMPath `
-        -VMPath $VMRootPath
-    
     if (-not $VM.DSCConfigFile)
     {
         # This VM doesn't have a DSC Configuration
@@ -412,8 +408,8 @@ function SetDSCStartFile {
 
     # Relabel the Network Adapters so that they match what the DSC Networking config will use
     # This is because unfortunately the Hyper-V Device Naming feature doesn't work.
-    [String] $ManagementSwitchName = `
-        ('LabBuilder Management {0}' -f $Config.labbuilderconfig.name)
+    [String] $ManagementSwitchName = GetManagementSwitchName `
+        -Config $Config
     $Adapters = @(($VM.Adapters).Name)
     $Adapters += @($ManagementSwitchName)
 
@@ -591,10 +587,12 @@ function StartDSC {
         -and (((Get-Date) - $StartTime).TotalSeconds) -lt $TimeOut)
     {
         # Connect to the VM
-        $Session = Connect-LabVM -VM $VM -ErrorAction Continue
+        $Session = Connect-LabVM `
+            -VM $VM `
+            -ErrorAction Continue
         
         # Failed to connnect to the VM
-        if (! $Session)
+        if (-not $Session)
         {
             $ExceptionParameters = @{
                 errorId = 'DSCInitializationError'
@@ -666,10 +664,10 @@ function StartDSC {
         if ((-not $ConfigCopyComplete) `
             -and (((Get-Date) - $StartTime).TotalSeconds) -ge $TimeOut)
         {
-            if ($Session)
-            {
-                Remove-PSSession -Session $Session
-            }
+            # Disconnect from the VM
+            Disconnect-LabVM `
+                -VM $VM `
+                -ErrorAction Continue
 
             $ExceptionParameters = @{
                 errorId = 'DSCInitializationError'
@@ -718,10 +716,10 @@ function StartDSC {
         if ((-not $ModuleCopyComplete) `
             -and (((Get-Date) - $StartTime).TotalSeconds) -ge $TimeOut)
         {
-            if ($Session)
-            {
-                Remove-PSSession -Session $Session
-            }
+            # Disconnect from the VM
+            Disconnect-LabVM `
+                -VM $VM `
+                -ErrorAction Continue
 
             $ExceptionParameters = @{
                 errorId = 'DSCInitializationError'
@@ -742,6 +740,12 @@ function StartDSC {
                 -f $VM.Name)
 
             Invoke-Command -Session $Session { c:\windows\setup\scripts\StartDSC.ps1 }
+
+            # Disconnect from the VM
+            Disconnect-LabVM `
+                -VM $VM `
+                -ErrorAction Continue
+
             $Complete = $True
         } # If
     } # While
@@ -834,7 +838,7 @@ $DSCNetworkingConfig += @"
 "@
 
             } # If
-            if ($Adapter.IPv4.DNSServer -ne $null)
+            if ($null -ne $Adapter.IPv4.DNSServer)
             {
 $DSCNetworkingConfig += @"
     xDnsServerAddress IPv4D_$AdapterCount {
@@ -893,7 +897,7 @@ $DSCNetworkingConfig += @"
 "@
 
             } # If
-            if ($Adapter.IPv6.DNSServer -ne $null)
+            if ($null -ne $Adapter.IPv6.DNSServer)
             {
 $DSCNetworkingConfig += @"
     xDnsServerAddress IPv6D_$AdapterCount {
@@ -911,3 +915,23 @@ $DSCNetworkingConfig += @"
 "@
     Return $DSCNetworkingConfig
 } # GetDSCNetworkingConfig
+
+
+[DSCLocalConfigurationManager()]
+Configuration ConfigLCM {
+    Param (
+        [String] $ComputerName,
+        [String] $Thumbprint
+    )
+    Node $ComputerName {
+        Settings {
+            RefreshMode = 'Push'
+            ConfigurationMode = 'ApplyAndAutoCorrect'
+            CertificateId = $Thumbprint
+            ConfigurationModeFrequencyMins = 15
+            RefreshFrequencyMins = 30
+            RebootNodeIfNeeded = $True
+            ActionAfterReboot = 'ContinueConfiguration'
+        } 
+    }
+}

@@ -4,17 +4,17 @@
                   version="1.0">
   <description>Sample Windows Server 2012 R2 Lab Configuration Domain Complete</description>
 
-  <settings domainname="LABBUILDER.COM"
-            email="daniel@LABBUILDER.COM"
-            labpath="c:\vm\LABBUILDER.COM"
-            vhdparentpath="c:\vm\LABBUILDER.COM\Virtual Hard Disk Templates"
+  <settings labid="LABBUILDER-DOMAINCOMPLETE.COM"
+            domainname="LABBUILDER-DOMAINCOMPLETE.COM"
+            email="admin@LABBUILDER-DOMAINCOMPLETE.COM"
+            labpath="c:\vm\LABBUILDER-DOMAINCOMPLETE.COM"
             dsclibrarypath="..\DSCLibrary\" />
 
   <resources>
   </resources>
   
-  <switches managementvlan="98">
-    <switch name="General Purpose External" type="External">
+  <switches>
+    <switch name="External" type="External">
       <adapters>
         <adapter name="Cluster" macaddress="00155D010701" />
         <adapter name="Management" macaddress="00155D010702" />
@@ -91,7 +91,7 @@
   </templates>
 
   <vms>
-    <vm name="LABBUILDER.COM SS-ROOTCA"
+    <vm name="SS-ROOTCA"
         template="Template Windows Server 2012 R2 Datacenter CORE"
         computername="SS-ROOTCA"
         usedifferencingbootdisk="Y">
@@ -115,7 +115,7 @@
       </dsc>
     </vm>
 
-    <vm name="LABBUILDER.COM SS-INTERNET"
+    <vm name="SS-INTERNET"
         template="Template Windows Server 2012 R2 Datacenter Full"
         computername="SS-INTERNET"
         usedifferencingbootdisk="Y">
@@ -168,7 +168,7 @@
       </adapters>
     </vm>
 
-    <vm name="LABBUILDER.COM SA-DC1"
+    <vm name="SA-DC1"
         template="Template Windows Server 2012 R2 Datacenter CORE"
         computername="SA-DC1"
         usedifferencingbootdisk="Y">
@@ -194,7 +194,7 @@
       </adapters>
     </vm>
 
-    <vm name="LABBUILDER.COM SA-DC2"
+    <vm name="SA-DC2"
         template="Template Windows Server 2012 R2 Datacenter CORE"
         computername="SA-DC2"
         usedifferencingbootdisk="Y">
@@ -221,7 +221,7 @@
       </adapters>
     </vm>
 
-    <vm name="LABBUILDER.COM SA-RODC1"
+    <vm name="SA-RODC1"
     template="Template Windows Server 2012 R2 Datacenter CORE"
     computername="SA-RODC1"
     usedifferencingbootdisk="Y">
@@ -248,7 +248,7 @@
       </adapters>
     </vm>
 
-    <vm name="LABBUILDER.COM SA-DHCP1"
+    <vm name="SA-DHCP1"
         template="Template Windows Server 2012 R2 Datacenter CORE"
         computername="SA-DHCP1"
         usedifferencingbootdisk="Y">
@@ -370,7 +370,7 @@
       </adapters>
     </vm>
 
-    <vm name="LABBUILDER.COM SA-DHCP2"
+    <vm name="SA-DHCP2"
       template="Template Windows Server 2012 R2 Datacenter CORE"
       computername="SA-DHCP2"
       usedifferencingbootdisk="Y">
@@ -412,7 +412,7 @@
       </adapters>
     </vm>
 
-    <vm name="LABBUILDER.COM SA-NPS"
+    <vm name="SA-NPS"
       template="Template Windows Server 2012 R2 Datacenter Full"
       computername="SA-NPS"
       usedifferencingbootdisk="Y">
@@ -439,7 +439,7 @@
       </adapters>
     </vm>
 
-    <vm name="LABBUILDER.COM SA-EDGE1"
+    <vm name="SA-EDGE1"
       template="Template Windows Server 2012 R2 Datacenter CORE"
       computername="SA-EDGE1"
       usedifferencingbootdisk="Y">
@@ -473,7 +473,7 @@
       </adapters>
     </vm>
 
-    <vm name="LABBUILDER.COM SA-EDGE2"
+    <vm name="SA-EDGE2"
       template="Template Windows Server 2012 R2 Datacenter CORE"
       computername="SA-EDGE2"
       usedifferencingbootdisk="Y">
@@ -507,7 +507,7 @@
       </adapters>
     </vm>
 
-    <vm name="LABBUILDER.COM SA-WDS"
+    <vm name="SA-WDS"
       template="Template Windows Server 2012 R2 Datacenter Full"
       computername="SA-WDS"
       usedifferencingbootdisk="Y" >
@@ -537,7 +537,7 @@
       </adapters>
     </vm>
 
-    <vm name="LABBUILDER.COM SA-WSUS"
+    <vm name="SA-WSUS"
       template="Template Windows Server 2012 R2 Datacenter CORE"
       computername="SA-WSUS"
       usedifferencingbootdisk="Y" >
@@ -567,7 +567,7 @@
       </adapters>
     </vm>
 
-    <vm name="LABBUILDER.COM SA-SUBCA"
+    <vm name="SA-SUBCA"
       template="Template Windows Server 2012 R2 Datacenter CORE"
       computername="SA-SUBCA"
       usedifferencingbootdisk="Y">
@@ -603,7 +603,7 @@
       </adapters>
     </vm>
 
-    <vm name="LABBUILDER.COM SA-FS1"
+    <vm name="SA-FS1"
         template="Template Windows Server 2012 R2 Datacenter CORE"
         computername="SA-FS1"
         usedifferencingbootdisk="Y" >
@@ -634,7 +634,7 @@
       </adapters>
     </vm>
 
-    <vm name="LABBUILDER.COM SA-FS2"
+    <vm name="SA-FS2"
         template="Template Windows Server 2012 R2 Datacenter CORE"
         computername="SA-FS2"
         usedifferencingbootdisk="Y" >
@@ -664,7 +664,7 @@
       </adapters>
     </vm>
 
-    <vm name="LABBUILDER.COM DA-IT01"
+    <vm name="DA-IT01"
       template="Template Windows 10 Enterprise"
       computername="DA-IT01"
       usedifferencingbootdisk="Y">

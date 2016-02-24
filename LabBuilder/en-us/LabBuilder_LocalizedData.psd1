@@ -81,6 +81,8 @@ ConvertFrom-StringData -StringData @'
     
     ImportingLibFileMessage=Importing function library '{0}'.
     InstallingHyperVComponentsMesage=Installing {0} Hyper-V Components.
+    InitializingLabFoldersMesage=Initializing Lab Folders.
+    CreatingLabFolderMessage=Creating {0} folder '{1}' for Lab. 
     InitializingHyperVComponentsMesage=Initializing Hyper-V Components.
     InitializeVHDMountingMessage=Mounting VHD {0} for Initialization.
     InitializeVHDInitializingMessage=Initializing {1} partition table on VHD {0}.
@@ -104,6 +106,7 @@ ConvertFrom-StringData -StringData @'
     SettingParentVHDReadonlyMessage=Setting parent VHD '{0}' as readonly.
     SkipParentVHDFileMessage=Skip copying parent VHD file '{1}' for '{0}' because it already exists.
     SkipVMTemplateVHDFileMessage=Skip building VM template VHD file '{1}' for '{0}' because it already exists.
+    DeletingVMTemplateVHDFileMessage=Deleting VM template VHD file '{1}' for '{0}'.
     DeletingParentVHDMessage=Deleting Parent VHD '{0}'.
     DSCConfigIdentifyModulesMessage=Identifying Modules used by DSC Config File '{0}' in VM '{1}'.
     DSCConfigSearchingForModuleMessage=Searching for Module '{2}' required by DSC Config File '{0}' in VM '{1}'.
@@ -113,7 +116,9 @@ ConvertFrom-StringData -StringData @'
     DSCConfigPrepareMessage=Preparing to compile DSC Config '{0}' for VM '{1}'.
     DSCConfigCreatingMOFMessage=Creating DSC Config file '{0}' in VM '{1}'.
     DSCConfigMOFCreatedMessage=DSC MOF File '{0}' for VM '{1}'. was created successfully.
-    ConnectingVMMessage=Connecting to VM '{0}'.
+    ConnectingVMMessage=Connecting to VM '{0}' on '{1}'.
+    DisconnectingVMMessage=Disconnecting from VM '{0}' on '{1}'.
+    VMSessionDoesNotExistMessage=LabBuilder Remoting Session to VM '{0}' does not exist.
     ConnectingVMFailedMessage=Connection to VM '{0}' failed ({2}), retrying in {1} seconds.
     ConnectingVMAccessDeniedMessage=Access Denied connecting to VM '{0}', the connection will not be retried.
     CopyingFilesToVMMessage=Copying {1} Files to VM '{0}'.
@@ -144,6 +149,7 @@ ConvertFrom-StringData -StringData @'
     CreatingVMBootDiskPantherFolderMessage=Creating Panther folder to VHD Boot Disk for VM '{0}'.
     DismountingVMBootDiskMessage=Dismounting VM '{0}' VHD Boot Disk '{1}'.
     AddingIPAddressToTrustedHostsMessage=Adding IP Address '{1}' to WS-Man Trusted Hosts to allow remoting to '{0}'.
+    RemovingIPAddressFromTrustedHostsMessage=Removing IP Address '{1}' from WS-Man Trusted Hosts.
     WaitingForIPAddressAssignedMessage=Waiting for valid IP Address to be assigned to VM '{0}', retrying in {1} seconds.
     WaitingForInitialSetupCompleteMessage=Waiting for Initial Setup to be complete on VM '{0}', retrying in {1} seconds.
     WaitingForCertificateMessage=Waiting for Certificate file on VM '{0}', retrying in {1} seconds.

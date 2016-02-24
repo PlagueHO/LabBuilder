@@ -201,3 +201,249 @@ function CreateCredential()
         -ArgumentList ($Username, (ConvertTo-SecureString $Password -AsPlainText -Force))
     return $Credential
 } # CreateCredential
+
+
+<#
+.SYNOPSIS
+   Downloads any resources required by the configuration.
+.DESCRIPTION
+   It will ensure any required modules and files are downloaded.
+.PARAMETER Configuration
+   Contains the Lab Builder configuration object that was loaded by the Get-LabConfiguration object.
+.EXAMPLE
+   $Config = Get-LabConfiguration -Path c:\mylab\config.xml
+   DownloadResources -Config $Config
+   Loads a Lab Builder configuration and downloads any resources required by it.   
+.OUTPUTS
+   None.
+#>
+function DownloadModule {
+    [CmdLetBinding()]
+    param
+    (
+        [Parameter(Mandatory)]
+        [ValidateNotNullOrEmpty()]
+        [String] $Name,
+
+        [String] $URL,
+
+        [String] $Folder,
+        
+        [String] $RequiredVersion,
+
+        [String] $MinimumVersion
+    )
+
+    $InstalledModules = @(Get-Module -ListAvailable)
+
+    # Determine a query that will be used to decide if the module is already installed
+    if ($RequiredVersion) {
+        [ScriptBlock] $Query = `
+            { ($_.Name -eq $Name) -and ($_.Version -eq $RequiredVersion) }
+        $VersionMessage = $RequiredVersion                
+    }
+    elseif ($MinimumVersion)
+    {
+        [ScriptBlock] $Query = `
+            { ($_.Name -eq $Name) -and ($_.Version -ge $MinimumVersion) }
+        $VersionMessage = "min ${MinimumVersion}"
+    }
+    else
+    {
+        [ScriptBlock] $Query = `
+            $Query = { $_.Name -eq $Name }
+        $VersionMessage = 'any version'
+    }
+
+    # Is the module installed?
+    if ($InstalledModules.Where($Query).Count -eq 0)
+    {
+        Write-Verbose -Message ($LocalizedData.ModuleNotInstalledMessage `
+            -f $Name,$VersionMessage)
+
+        # If a URL was specified, download this module via HTTP
+        if ($URL)
+        {
+            # The module is not installed - so download it
+            # This is usually for downloading modules directly from github
+            $FileName = $URL.Substring($URL.LastIndexOf('/') + 1)
+
+            Write-Verbose -Message ($LocalizedData.DownloadingLabResourceWebMessage `
+                -f $Name,$VersionMessage,$URL)
+
+            [String] $ModulesFolder = "$($ENV:ProgramFiles)\WindowsPowerShell\Modules\"
+
+            DownloadAndUnzipFile `
+                -URL $URL `
+                -DestinationPath $ModulesFolder `
+                -ErrorAction Stop
+
+            if ($Folder)
+            {
+                # This zip file contains a folder that is not the name of the module so it must be
+                # renamed. This is usually the case with source downloaded directly from GitHub
+                $ModulePath = Join-Path -Path $ModulesFolder -ChildPath $Name
+                if (Test-Path -Path $ModulePath)
+                {
+                    Remove-Item -Path $ModulePath -Recurse -Force
+                }
+                Rename-Item `
+                    -Path (Join-Path -Path $ModulesFolder -ChildPath $Folder) `
+                    -NewName $Name `
+                    -Force
+            } # If
+
+            Write-Verbose -Message ($LocalizedData.InstalledLabResourceWebMessage `
+                -f $Name,$VersionMessage,$ModulePath)
+        }
+        else
+        {
+            # Install the package via PowerShellGet from the PowerShellGallery
+            # Make sure the Nuget Package provider is initialized.
+            $null = Get-PackageProvider -name nuget -ForceBootStrap -Force
+
+            # Install the module
+            $Splat = [PSObject] @{ Name = $Name }
+            if ($RequiredVersion)
+            {
+                # Is a specific module version required?
+                $Splat += [PSObject] @{ RequiredVersion = $RequiredVersion }
+            }
+            elseif ($MinimumVersion)
+            {
+                # Is a specific module version minimum version?
+                $Splat += [PSObject] @{ MinimumVersion = $MinimumVersion }
+            }
+            try
+            {
+                Install-Module @Splat -Force -ErrorAction Stop
+            }
+            catch
+            {
+                $ExceptionParameters = @{
+                    errorId = 'ModuleNotAvailableError'
+                    errorCategory = 'InvalidArgument'
+                    errorMessage = $($LocalizedData.ModuleNotAvailableError `
+                        -f $Name,$VersionMessage,$_.Exception.Message)
+                }
+                ThrowException @ExceptionParameters
+            }
+        } # If
+    } # If
+} # DownloadModule
+
+
+<#
+.SYNOPSIS
+   Downloads any resources required by the configuration.
+.DESCRIPTION
+   It will ensure any required modules and files are downloaded.
+.PARAMETER Configuration
+   Contains the Lab Builder configuration object that was loaded by the Get-LabConfiguration object.
+.EXAMPLE
+   $Config = Get-LabConfiguration -Path c:\mylab\config.xml
+   DownloadResources -Config $Config
+   Loads a Lab Builder configuration and downloads any resources required by it.   
+.OUTPUTS
+   None.
+#>
+function DownloadResources {
+    [CmdLetBinding()]
+    param
+    (
+        [Parameter(Mandatory)]
+        [ValidateNotNullOrEmpty()]
+        [XML] $Config
+    )
+        
+    # Downloading Lab Resources
+    Write-Verbose -Message $($LocalizedData.DownloadingLabResourcesMessage)
+
+    # Bootstrap Nuget # This needs to be a test, not a force 
+    # $null = Get-PackageProvider -Name NuGet -ForceBootstrap -Force
+    
+    # Make sure PSGallery is trusted
+    Set-PSRepository -Name PSGallery -InstallationPolicy Trusted    
+    
+    # Download any other resources required by this lab
+    if ($Config.labbuilderconfig.resources) 
+    {
+        foreach ($Module in $Config.labbuilderconfig.resources.module)
+        {
+            if (-not $Module.Name)
+            {
+                $ExceptionParameters = @{
+                    errorId = 'ResourceModuleNameEmptyError'
+                    errorCategory = 'InvalidArgument'
+                    errorMessage = $($LocalizedData.ResourceModuleNameEmptyError)
+                }
+                ThrowException @ExceptionParameters
+            } # If
+            $Splat = [PSObject] @{ Name = $Module.Name }
+            if ($Module.URL)
+            {
+                $Splat += [PSObject] @{ URL = $Module.URL }
+            }
+            if ($Module.Folder)
+            {
+                $Splat += [PSObject] @{ Folder = $Module.Folder }
+            }
+            if ($Module.RequiredVersion)
+            {
+                $Splat += [PSObject] @{ RequiredVersion = $Module.RequiredVersion }
+            }
+            if ($Module.MiniumVersion)
+            {
+                $Splat += [PSObject] @{ MiniumVersion = $Module.MiniumVersion }
+            }
+            DownloadModule @Splat
+        } # Foreach
+    } # If
+} # DownloadResources
+
+
+<#
+.SYNOPSIS
+   Ensures the Hyper-V features are installed onto the system.
+.DESCRIPTION
+   If the Hyper-V features are not installed onto this system they will be installed.
+.EXAMPLE
+   InstallHyperV
+   Installs the appropriate Hyper-V features if they are not currently installed.
+.OUTPUTS
+   None
+#>
+function InstallHyperV {
+    [CmdLetBinding()]
+    Param ()
+
+    # Install Hyper-V Components
+    if ((Get-CimInstance Win32_OperatingSystem).ProductType -eq 1)
+    {
+        # Desktop OS
+        [Array] $Feature = Get-WindowsOptionalFeature -Online -FeatureName '*Hyper-V*' `
+            | Where-Object -Property State -Eq 'Disabled'
+        if ($Feature.Count -gt 0 )
+        {
+            Write-Verbose -Message ($LocalizedData.InstallingHyperVComponentsMesage `
+                -f 'Desktop')
+            $Feature.Foreach( { 
+                Enable-WindowsOptionalFeature -Online -FeatureName $_.FeatureName
+            } )
+        }
+    }
+    Else
+    {
+        # Server OS
+        [Array] $Feature = Get-WindowsFeature -Name Hyper-V `
+            | Where-Object -Property Installed -EQ $false
+        if ($Feature.Count -gt 0 )
+        {
+            Write-Verbose -Message ($LocalizedData.InstallingHyperVComponentsMesage `
+                -f 'Desktop')
+            $Feature.Foreach( {
+                Install-WindowsFeature -IncludeAllSubFeature -IncludeManagementTools -Name $_.Name
+            } )
+        }
+    }
+} # InstallHyperV
