@@ -21,8 +21,8 @@ $Global:ExpectedContentPath = "$Global:TestConfigPath\ExpectedContent"
 $null = New-Item -Path "$Global:ArtifactPath" -ItemType Directory -Force -ErrorAction SilentlyContinue
 
 # Perform PS Script Analyzer tests on module code only
-Set-PackageSource -Name PSGallery -Trusted -Force
-Install-Module -Name 'PSScriptAnalyzer' -Confirm:$False
+$null = Set-PackageSource -Name PSGallery -Trusted -Force
+$null = Install-Module -Name 'PSScriptAnalyzer' -Confirm:$False
 Import-Module -Name 'PSScriptAnalyzer'
 
 Describe 'PSScriptAnalyzer' {
@@ -717,6 +717,42 @@ InModuleScope LabBuilder {
                 Assert-MockCalled Copy-Item -Exactly 0
                 Assert-MockCalled Rename-Item -Exactly 0
                 Assert-MockCalled Convert-WindowsImage -Exactly 2
+            }            
+        }
+    }
+
+
+    Describe 'Remove-LabVMTemplateVHD' {
+        $Config = Get-LabConfiguration -Path $Global:TestConfigOKPath
+        $VMTemplateVHDs = Get-LabVMTemplateVHD -Config $Config
+        Mock Remove-Item                        
+        Mock Test-Path -MockWith { $False }
+        Context 'Configuration passed with VMtemplateVHDs but VHD not found' {
+            It 'Does not throw an Exception' {
+                { Remove-LabVMTemplateVHD -Config $Config -VMTemplateVHDs $VMTemplateVHDs } | Should Not Throw
+            }
+            It 'Calls expected mocks commands' {
+                Assert-MockCalled Test-Path -Exactly $VMTemplateVHDs.Count
+                Assert-MockCalled Remove-Item -Exactly 0
+            }            
+        }
+        Mock Test-Path -MockWith { $True }
+        Context 'Configuration passed with VMtemplateVHDs but VHD found' {
+            It 'Does not throw an Exception' {
+                { Remove-LabVMTemplateVHD -Config $Config -VMTemplateVHDs $VMTemplateVHDs } | Should Not Throw
+            }
+            It 'Calls expected mocks commands' {
+                Assert-MockCalled Test-Path -Exactly $VMTemplateVHDs.Count
+                Assert-MockCalled Remove-Item -Exactly $VMTemplateVHDs.Count
+            }            
+        }
+        Context 'Configuration passed with no VMtemplateVHDs' {
+            It 'Does not throw an Exception' {
+                { Remove-LabVMTemplateVHD -Config $Config -VMTemplateVHDs $null } | Should Not Throw
+            }
+            It 'Calls expected mocks commands' {
+                Assert-MockCalled Test-Path -Exactly 0
+                Assert-MockCalled Remove-Item -Exactly 0
             }            
         }
     }
@@ -1519,47 +1555,7 @@ InModuleScope LabBuilder {
         }
     }
 
-
-
-    Describe 'Start-LabVM' -Tags 'Incomplete' {
-        #region Mocks
-        Mock Get-VM -ParameterFilter { $Name -eq 'PESTER01' } -MockWith { [PSObject]@{ Name='PESTER01'; State='Off' } }
-        Mock Get-VM -ParameterFilter { $Name -eq 'pester template *' }
-        Mock Start-VM
-        Mock WaitVMInitializationComplete -MockWith { $True }
-        Mock GetSelfSignedCertificate -MockWith { $True }
-        Mock Initialize-LabVMDSC
-        Mock Start-LabVMDSC
-        #endregion
-
-        Context 'Valid configuration is passed' {	
-            $Config = Get-LabConfiguration -Path $Global:TestConfigOKPath
-            New-Item -Path $Config.labbuilderconfig.settings.labpath -ItemType Directory -Force -ErrorAction SilentlyContinue
-            New-Item -Path $Config.labbuilderconfig.settings.vhdparentpath -ItemType Directory -Force -ErrorAction SilentlyContinue
-
-            [Array]$Templates = Get-LabVMTemplate -Config $Config
-            [Array]$Switches = Get-LabSwitch -Config $Config
-            [Array]$VMs = Get-LabVM -Config $Config -VMTemplates $Templates -Switches $Switches
-                    
-            It 'Returns True' {
-                Start-LabVM -Config $Config -VM $VMs[0] | Should Be $True
-            }
-            It 'Calls Mocked commands' {
-                Assert-MockCalled Get-VM -ParameterFilter { $Name -eq 'PESTER01' } -Exactly 1
-                Assert-MockCalled Get-VM -ParameterFilter { $Name -eq 'pester template *' } -Exactly 1
-                Assert-MockCalled Start-VM -Exactly 1
-                Assert-MockCalled WaitVMInitializationComplete -Exactly 1
-                Assert-MockCalled GetSelfSignedCertificate -Exactly 1
-                Assert-MockCalled Initialize-LabVMDSC -Exactly 1
-                Assert-MockCalled Start-LabVMDSC -Exactly 1
-            }
-            
-            Remove-Item -Path $Config.labbuilderconfig.settings.labpath -Recurse -Force -ErrorAction SilentlyContinue
-            Remove-Item -Path $Config.labbuilderconfig.settings.vhdparentpath -Recurse -Force -ErrorAction SilentlyContinue
-        }
-    }
-    
-    
+  
     Describe 'Initialize-LabVM'  -Tags 'Incomplete' {
         #region Mocks
         Mock New-VHD
@@ -1608,7 +1604,6 @@ InModuleScope LabBuilder {
             Remove-Item -Path $Config.labbuilderconfig.settings.vhdparentpath -Recurse -Force -ErrorAction SilentlyContinue
         }
     }
-
 
 
     Describe 'Remove-LabVM' {
@@ -1674,7 +1669,45 @@ InModuleScope LabBuilder {
     }
 
 
+    Describe 'Start-LabVM' -Tags 'Incomplete' {
+        #region Mocks
+        Mock Get-VM -ParameterFilter { $Name -eq 'PESTER01' } -MockWith { [PSObject]@{ Name='PESTER01'; State='Off' } }
+        Mock Get-VM -ParameterFilter { $Name -eq 'pester template *' }
+        Mock Start-VM
+        Mock WaitVMInitializationComplete -MockWith { $True }
+        Mock GetSelfSignedCertificate -MockWith { $True }
+        Mock Initialize-LabVMDSC
+        Mock Start-LabVMDSC
+        #endregion
 
+        Context 'Valid configuration is passed' {	
+            $Config = Get-LabConfiguration -Path $Global:TestConfigOKPath
+            New-Item -Path $Config.labbuilderconfig.settings.labpath -ItemType Directory -Force -ErrorAction SilentlyContinue
+            New-Item -Path $Config.labbuilderconfig.settings.vhdparentpath -ItemType Directory -Force -ErrorAction SilentlyContinue
+
+            [Array]$Templates = Get-LabVMTemplate -Config $Config
+            [Array]$Switches = Get-LabSwitch -Config $Config
+            [Array]$VMs = Get-LabVM -Config $Config -VMTemplates $Templates -Switches $Switches
+                    
+            It 'Returns True' {
+                Start-LabVM -Config $Config -VM $VMs[0] | Should Be $True
+            }
+            It 'Calls Mocked commands' {
+                Assert-MockCalled Get-VM -ParameterFilter { $Name -eq 'PESTER01' } -Exactly 1
+                Assert-MockCalled Get-VM -ParameterFilter { $Name -eq 'pester template *' } -Exactly 1
+                Assert-MockCalled Start-VM -Exactly 1
+                Assert-MockCalled WaitVMInitializationComplete -Exactly 1
+                Assert-MockCalled GetSelfSignedCertificate -Exactly 1
+                Assert-MockCalled Initialize-LabVMDSC -Exactly 1
+                Assert-MockCalled Start-LabVMDSC -Exactly 1
+            }
+            
+            Remove-Item -Path $Config.labbuilderconfig.settings.labpath -Recurse -Force -ErrorAction SilentlyContinue
+            Remove-Item -Path $Config.labbuilderconfig.settings.vhdparentpath -Recurse -Force -ErrorAction SilentlyContinue
+        }
+    }
+    
+    
     Describe 'Connect-LabVM' -Tags 'Incomplete'  {
     }
 
