@@ -20,7 +20,41 @@ $Global:ArtifactPath = "$Global:ModuleRoot\Artifacts"
 $Global:ExpectedContentPath = "$Global:TestConfigPath\ExpectedContent"
 $null = New-Item -Path "$Global:ArtifactPath" -ItemType Directory -Force -ErrorAction SilentlyContinue
 
+# Perform PS Script Analyzer tests on module code only
+Set-PackageSource -Name PSGallery -Trusted -Force
+Install-Module -Name 'PSScriptAnalyzer' -Confirm:$False
+Import-Module -Name 'PSScriptAnalyzer'
 
+Describe 'PSScriptAnalyzer' {
+    Context 'LabBuilder Module code and Lib Functions' {
+        It 'Passes Invoke-ScriptAnalyzer' {
+            # Perform PSScriptAnalyzer scan.
+            $PSScriptAnalyzerResult = Invoke-ScriptAnalyzer `
+                -path "$ModuleRoot\LabBuilder.psm1" `
+                -Severity Warning `
+                -ErrorAction SilentlyContinue
+            $PSScriptAnalyzerResult += Invoke-ScriptAnalyzer `
+                -path "$ModuleRoot\Lib\*.ps1" `
+                -excluderule "PSAvoidUsingUserNameAndPassWordParams" `
+                -Severity Warning `
+                -ErrorAction SilentlyContinue
+            $PSScriptAnalyzerErrors = $PSScriptAnalyzerResult | Where-Object { $_.Severity -eq 'Error' }
+            $PSScriptAnalyzerWarnings = $PSScriptAnalyzerResult | Where-Object { $_.Severity -eq 'Warning' }
+            if ($PSScriptAnalyzerErrors -ne $null)
+            {
+                Write-Warning -Message 'There are PSScriptAnalyzer errors that need to be fixed:'
+                @($PSScriptAnalyzerErrors).Foreach( { Write-Warning -Message "$($_.Scriptname) (Line $($_.Line)): $($_.Message)" } )
+                Write-Warning -Message  'For instructions on how to run PSScriptAnalyzer on your own machine, please go to https://github.com/powershell/psscriptAnalyzer/'
+                $PSScriptAnalyzerErrors.Count | Should Be $null
+            }
+            if ($PSScriptAnalyzerWarnings -ne $null)
+            {
+                Write-Warning -Message 'There are PSScriptAnalyzer warnings that should be fixed:'
+                @($PSScriptAnalyzerWarnings).Foreach( { Write-Warning -Message "$($_.Scriptname) (Line $($_.Line)): $($_.Message)" } )
+            }
+        }
+    }
+}
 
 InModuleScope LabBuilder {
 <#
@@ -51,7 +85,6 @@ InModuleScope LabBuilder {
             -ArgumentList $exception, $errorId, $errorCategory, $null
         return $errorRecord
     }
-
 
 
 #region LabConfigurationFunctions

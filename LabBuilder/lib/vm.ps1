@@ -1145,7 +1145,7 @@ function UpdateVMIntegrationServices {
     )
     # Configure the Integration services
     $IntegrationServices = $VM.IntegrationServices
-    if ($IntegrationServices -eq $null)
+    if ($null -eq $IntegrationServices)
     {
         $IntegrationServices = 'Guest Service Interface,Heartbeat,Key-Value Pair Exchange,Shutdown,Time Synchronization,VSS'
     }
@@ -1419,7 +1419,7 @@ function UpdateVMDataDisks {
             } # if     
             
             # Do folders need to be copied to this Data Disk?
-            if ($DataVhd.CopyFolders -ne $null)
+            if ($null -ne $DataVhd.CopyFolders)
             {
                 # Files need to be copied to this Data VHD so
                 # set up a mount folder for it to be mounted to.
