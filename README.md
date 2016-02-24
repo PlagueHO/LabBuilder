@@ -119,6 +119,10 @@ Configuration XML
 
 Versions
 --------
+### 0.4.2.0
+* Add bootorder VM attribute for controlling stop-lab/start-lab order.
+* Added Start-Lab and Stop-Lab cmdlets.
+
 ### 0.4.1.0
 * VHDParentPath setting made optional. Defaults to "Virtual Machine Hard Disks" under config.
 * Initialize-LabConfiguration function will create labpath and vhdparentpath folders if not exist.

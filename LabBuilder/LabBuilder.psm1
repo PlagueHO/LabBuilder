@@ -57,6 +57,8 @@ $Libs.Foreach(
 [String] $Script:DSCCertificatePassword = 'E3jdNkd903mDn43NEk2nbDENjw'
 [Int] $Script:RetryConnectSeconds = 5
 [Int] $Script:RetryHeartbeatSeconds = 1
+[Int] $Script:StartupTimeout = 90
+[Int] $Script:ShutdownTimeout = 30
 
 # The current list of Nano Servers available with TP4.
 [Array] $Script:NanoServerPackageList = @(
@@ -2516,6 +2518,13 @@ function Get-LabVM {
             $OSType = $VMTemplate.ostype
         } # if 
 
+        # Get the Bootorder
+        Remove-Variable -Name Bootorder -ErrorAction SilentlyContinue
+        if ($VM.bootorder) 
+		{
+            [Int] $Bootorder = $VM.bootorder
+        } # if 
+
         # Get the Packages
         [String] $Packages = $null
         if ($VM.packages) 
@@ -2562,6 +2571,7 @@ function Get-LabVM {
             InstallMSU = $InstallMSU;
             VMRootPath = (Join-Path -Path $LabPath -ChildPath $VMName);
             LabBuilderFilesPath = (Join-Path -Path $LabPath -ChildPath "$VMName\LabBuilder Files");
+            Bootorder = $Bootorder;
         }
     } # Foreach        
 
@@ -3213,7 +3223,7 @@ function Disconnect-LabVM
 #region LabInstallationFunctions
 <#
 .SYNOPSIS
-    Install or Update a Lab.
+    Installs or Update a Lab.
 .DESCRIPTION
     This cmdlet will install an entire Hyper-V lab environment defined by the
     LabBuilder configuration file provided.
@@ -3231,7 +3241,7 @@ function Disconnect-LabVM
     Whether or not to check if Hyper-V is installed and install it if missing.
 .EXAMPLE
     Install-Lab -Path c:\mylab\config.xml
-    Install the lab defined in the c:\mylab\config.xml LabBuilder configuraiton file.
+    Install the lab defined in the c:\mylab\config.xml LabBuilder configuration file.
 .OUTPUTS
     None
 #>
@@ -3336,7 +3346,7 @@ Function Install-Lab {
         -RemoveVHDs `
         -RemoveVMTemplateVHDs
     Completely uninstall all components in the lab defined in the
-    c:\mylab\config.xml LabBuilder configuraiton file.
+    c:\mylab\config.xml LabBuilder configuration file.
 .OUTPUTS
    None
 #>
@@ -3403,4 +3413,154 @@ Function Uninstall-Lab {
             -Config $Config
     } # If
 } # Uninstall-Lab
+
+
+<#
+.SYNOPSIS
+    Starts an existing Lab.
+.DESCRIPTION
+    This cmdlet will start all the Hyper-V virtual machines definied in a Lab
+    configuration.
+    
+    It will use the Bootorder attribute (if definted) for any VMs to determine
+    the order they should be booted in. If a Bootorder is not specified for a
+    machine, it will be booted after all machines with a defined boot order.
+    
+    The lower the Bootorder value for a machine the earlier it will be started
+    in the start process.
+    
+    Machines will be booted in series, with each machine starting once the
+    previous machine has completed startup and has a management IP address.
+
+    If a Virtual Machine in the Lab is already running, it will be ignored
+    and the next machine in series will be started.
+    
+    If more than one Virtual Machine shares the same Bootorder value, then
+    these machines will be booted in parallel, with the boot process only
+    continuing onto the next Bootorder when all these machines are booted.
+    
+    If a Virtual Machine specified in the configuration is not found an
+    exception will be thrown.
+    
+    If a Virtual Machine takes longer than the StartupTimeout then an exception
+    will be thown but the Start process will continue.
+
+    If a Bootorder of 0 is specifed then the Virtual Machine will not be booted at
+    all. This is useful for things like Root CA VMs that only need to started when
+    the Lab is created.
+.PARAMETER Path
+    The path to the LabBuilder configuration XML file.
+.PARAMETER LabPath
+    The optional path to install the Lab to - overrides the LabPath setting in the
+    configuration file.
+.PARAMETER StartupTimeout
+    The maximum number of seconds that the process will wait for a VM to startup.
+    Defaults to 90 seconds.
+.EXAMPLE
+    Start-Lab -Path c:\mylab\config.xml
+    Start the lab defined in the c:\mylab\config.xml LabBuilder configuration file.
+.OUTPUTS
+    None
+#>
+Function Start-Lab {
+    [CmdLetBinding()]
+    param
+    (
+        [parameter(Mandatory)]
+        [ValidateNotNullOrEmpty()]
+        [ValidateScript({ Test-Path $_ })]
+        [String] $Path,
+
+        [ValidateNotNullOrEmpty()]
+        [String] $LabPath,
+        
+        [Int] $StartupTimeout = $Script:StartupTimeout
+    ) # Param
+    
+    # Read the configuration
+    [XML] $Config = Get-LabConfiguration `
+        @PSBoundParameters
+    
+    # Initialize the Lab Config
+    Initialize-LabConfiguration `
+        -Config $Config
+
+    # Get the VMs
+    $VMs = Get-LabVM `
+        -Config $Config
+} # Start-Lab
+
+
+<#
+.SYNOPSIS
+    Stop an existing Lab.
+.DESCRIPTION
+    This cmdlet will stop all the Hyper-V virtual machines definied in a Lab
+    configuration.
+    
+    It will use the Bootorder attribute (if definted) for any VMs to determine
+    the order they should be shutdown in. If a Bootorder is not specified for a
+    machine, it will be shutdown before all machines with a defined boot order.
+    
+    The higher the Bootorder value for a machine the earlier it will be shutdown
+    in the stop process.
+
+    The Virtual Machines will be shutdown in REVERSE Bootorder.
+    
+    Machines will be shutdown in series, with each machine shutting down once the
+    previous machine has completed shutdown.
+    
+    If a Virtual Machine in the Lab is already shutdown, it will be ignored
+    and the next machine in series will be shutdown.
+    
+    If more than one Virtual Machine shares the same Bootorder value, then
+    these machines will be shutdown in parallel, with the shutdown process only
+    continuing onto the next Bootorder when all these machines are shutdown.
+
+    If a Virtual Machine specified in the configuration is not found an
+    exception will be thrown.
+    
+    If a Virtual Machine takes longer than the ShutdownTimeout then an exception
+    will be thown but the Stop process will continue.
+.PARAMETER Path
+    The path to the LabBuilder configuration XML file.
+.PARAMETER LabPath
+    The optional path to install the Lab to - overrides the LabPath setting in the
+    configuration file.
+.PARAMETER ShutdownTimeout
+    The maximum number of seconds that the process will wait for a VM to shutdown.
+    Defaults to 30 seconds.
+.EXAMPLE
+    Stop-Lab -Path c:\mylab\config.xml
+    Stop the lab defined in the c:\mylab\config.xml LabBuilder configuration file.
+.OUTPUTS
+    None
+#>
+Function Stop-Lab {
+    [CmdLetBinding()]
+    param
+    (
+        [parameter(Mandatory)]
+        [ValidateNotNullOrEmpty()]
+        [ValidateScript({ Test-Path $_ })]
+        [String] $Path,
+
+        [ValidateNotNullOrEmpty()]
+        [String] $LabPath,
+        
+        [Int] $ShutdownTimeout = $Script:ShutdownTimeout
+    ) # Param
+    
+    # Read the configuration
+    [XML] $Config = Get-LabConfiguration `
+        @PSBoundParameters
+    
+    # Initialize the Lab Config
+    Initialize-LabConfiguration `
+        -Config $Config
+
+    # Get the VMs
+    $VMs = Get-LabVM `
+        -Config $Config
+} # Stop-Lab
 #endregion
