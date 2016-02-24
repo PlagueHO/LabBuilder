@@ -56,18 +56,44 @@ A Lab consists of the following items:
 There are a library of DSC configuration files for various machine types already defined and available for you to use in the **DSCLibrary** folder.
 
 Once these files are available the process of setting up the Lab is simple.
- 1. Make a folder where all your Lab files will go - e.g. c:\MyLab
+ 1. Make a folder where all your Lab files will go (e.g. VMs, VHDs, ISOs, scripts) - e.g. c:\MyLab
  2. Copy your the Lab Configuration XML file into that folder (try one of the sample configurations in the **Samples** folder).
  3. Edit the Lab Configuration XML file and customize the Settings to suit (specifically the LabPath setting). 
  4. Make a folder in your Lab folder for your Windows ISO files called **isofiles** - e.g. c:\MyLab\ISOFiles
  5. Copy any ISO files into this folder that your lab will use.
- 6. Run the following commands in an Administrative PowerShell window:
+ 6. Make a folder in your Lab folder for your VHD boot templates (converted from the ISO files) **vhdfiles** - e.g. c:\MyLab\VHDFiles
+ 7. Run the following commands in an Administrative PowerShell window:
 ```powershell
 Import-Module LabBuilder
 Install-Lab -Path 'c:\MyLab\Configuration.xml'
 ```
 
 This will create a new Lab using the c:\MyLab\Configuration.xml file.
+
+
+ISO Files
+---------
+During the Install process of a Lab, if the template VHD files to use as boot disks for your VMs, LabBuilder will attempt to convert the required ISO files into VHD boot disks for you.
+This will only occur if the ISO files required to build a specific VHD file are found in the ISO folder specified by the Lab.
+
+By default LabBuilder will look in the **isofiles** subfolder of your Lab folder for any ISO files it needs.
+You can change the folder that a Lab looks in for the ISO files by changing/setting the _isopath_ attribute of the _<templatevhds>_ node in the configuration
+If it can't find an ISO file it needs, you will be notified of an official download location for trial or preview editions of the ISO files (as long as the LabBuilder configuration you're using contains the download URLs).
+
+Some common ISO download locations:  
+ - Windows Server 2012 R2: https://www.microsoft.com/en-us/evalcenter/evaluate-windows-server-2012-r2
+ - Windows 10 Enterprise: https://www.microsoft.com/en-us/evalcenter/evaluate-windows-10-enterprise
+ - Windows Server 2016 TP4: https://www.microsoft.com/en-us/evalcenter/evaluate-windows-server-technical-preview
+
+Multiple VHD templates may use the same ISO file in a Lab.
+For example, if multiple editions of an Operating system are used in the same lab.
+
+Once an ISO has been converted to an VHD, it will be stored in the VHDFiles folder in your lab folder.
+However, if you are using multiple Labs on the same machine you might want to share these VHD files between mutlpile Lab projects to save having to build and store copies for each Lab.
+In that case, you can set the _vhdpath_ attribute of the _<templatevhds>_ node in the configuration to a different relative or absolute path.
+
+The conversion process for a single ISO to VHD can take 10-20 minutes depending on your machine.
+For this reason multiple Labs can be configured to use the same path to store these VHDs by changing the _vhdpath_ attribute of the _<templatevhds>_ node in the configuration. 
 
 
 Requirements
@@ -102,6 +128,13 @@ Versions
 * Added code to revert TrustedHosts when disconnecting from Lab VM. 
 * All non-exported supporting functions moved into separate support libraries.
 * Add support for LabId setting that gets prepended to Lab resources.
+* Added LabBuilderConfig schema in schema folder.
+* Added LabPath parameter to Install-Lab, Uninstall-Lab and Get-LabConfiguration.
+* Fix exception in Disconnect-LabVM.
+* Fixed Unit tests to retain current folder location.
+* Added PS ScriptAnalyzer Error tests to unit tests.
+* Display PS ScriptAnalyzer Warnings when unit tests run.
+* Remove-LabVMTemplateVHD function added and will be called from Uninstall-Lab.
 
 ### 0.4.0.0
 * Some secondary non-exported functions moved into separate support libraries.

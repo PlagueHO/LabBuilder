@@ -838,7 +838,7 @@ $DSCNetworkingConfig += @"
 "@
 
             } # If
-            if ($Adapter.IPv4.DNSServer -ne $null)
+            if ($null -ne $Adapter.IPv4.DNSServer)
             {
 $DSCNetworkingConfig += @"
     xDnsServerAddress IPv4D_$AdapterCount {
@@ -897,7 +897,7 @@ $DSCNetworkingConfig += @"
 "@
 
             } # If
-            if ($Adapter.IPv6.DNSServer -ne $null)
+            if ($null -ne $Adapter.IPv6.DNSServer)
             {
 $DSCNetworkingConfig += @"
     xDnsServerAddress IPv6D_$AdapterCount {

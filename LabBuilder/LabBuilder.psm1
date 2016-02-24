@@ -83,8 +83,20 @@ $Libs.Foreach(
 <#
 .SYNOPSIS
     Loads a Lab Builder Configuration file and returns a Configuration object
+.DESCRIPTION
+    Takes the path to a valid LabBuilder Configiration XML file and loads it.
+    
+    It will perform simple validation on the XML file and throw an exception
+    if any of the validation tests fail.
+    
+    At load time it will also add temporary configuration attributes to the in
+    memory configuration that are used by other LabBuilder functions. So loading
+    XML Configurartion without using this function is not advised.
 .PARAMETER Path
     This is the path to the Lab Builder configuration file to load.
+.PARAMETER LabPath
+    This is an optional path that is used to Override the LabPath in the config
+    file passed.
 .EXAMPLE
     $MyLab = Get-LabConfiguration -Path c:\MyLab\LabConfig1.xml
     Loads the LabConfig1.xml configuration into variable MyLab
@@ -98,7 +110,10 @@ function Get-LabConfiguration {
     (
         [parameter(Mandatory)]
         [ValidateNotNullOrEmpty()]
-        [String] $Path
+        [String] $Path,
+        
+        [ValidateNotNullOrEmpty()]
+        [String] $LabPath
     ) # Param
     if (-not (Test-Path -Path $Path))
     {
@@ -143,9 +158,18 @@ function Get-LabConfiguration {
         [String] $FullConfigPath = $ConfigPath
     }
     $Config.labbuilderconfig.settings.setattribute('fullconfigpath',$FullConfigPath)
-
-    # Check the LabPath because we need to use it.
-    [String] $LabPath = $Config.labbuilderconfig.settings.labpath
+    
+    # If the LabPath was passed as a parameter, set it in the config
+    if ($LabPath)
+    {
+        $Config.labbuilderconfig.settings.SetAttribute('labpath',$LabPath)
+    }
+    else
+    {
+        [String] $LabPath = $Config.labbuilderconfig.settings.labpath        
+    }
+    
+    # Check the LabPath is actually set by either the XML or passed in.
     if (-not $LabPath)
     {
         $ExceptionParameters = @{
@@ -829,7 +853,7 @@ function Get-LabVMTemplateVHD {
             $URL = $TemplateVHD.URL
             if ($URL)
             {
-                Write-Host `
+                Write-Output `
                     -ForegroundColor Yellow `
                     -Object $($LocalizedData.ISONotFoundDownloadURLMessage `
                         -f $TemplateVHD.Name,$ISOPath,$URL)
@@ -1024,13 +1048,14 @@ function Initialize-LabVMTemplateVHD
     )
 
     # If VMTeplateVHDs array not passed, pull it from config.
-    if (-not $VMTemplateVHDs)
+    if (-not $PSBoundParameters.ContainsKey('VMTemplateVHDs'))
     {
-        $VMTemplateVHDs = Get-LabVMTemplateVHD -Config $Config        
+        $VMTemplateVHDs = Get-LabVMTemplateVHD `
+            -Config $Config        
     }
 
     # If there are no VMTemplateVHDs just return
-    if ($VMTemplateVHDs -eq $null)
+    if ($null -eq $VMTemplateVHDs)
     {
         return
     }
@@ -1119,7 +1144,7 @@ function Initialize-LabVMTemplateVHD
         }
         
         # Set the size
-        if ($VMTemplateVHD.VHDSize -ne $null)
+        if ($null -ne $VMTemplateVHD.VHDSize)
         {
             $ConvertParams += @{
                 sizebytes = $VMTemplateVHD.VHDSize
@@ -1213,6 +1238,74 @@ function Initialize-LabVMTemplateVHD
 
 <#
 .SYNOPSIS
+	Scans through a list of VM Template VHDs and removes them if they exist.
+.DESCRIPTION
+	This function will take a list of VM Template VHDs from a configuration file or it will
+    extract the list itself if it is not provided and remove the VHD file if it exists.
+.PARAMETER Configuration
+   Contains the Lab Builder configuration object that was loaded by the Get-LabConfiguration object.
+.PARAMETER VMTemplateVHDs
+   The array of VMTemplateVHDs pulled from the Lab Configuration file using Get-LabVMTemplateVHD
+   
+   If not provided it will attempt to pull the list from the configuration file.
+.EXAMPLE
+   $Config = Get-LabConfiguration -Path c:\mylab\config.xml
+   $VMTemplateVHDs = Get-LabVMTemplateVHD -Config $Config
+   Remove-LabVMTemplateVHD -Config $Config -VMTemplateVHDs $VMTemplateVHDs
+   Loads a Lab Builder configuration and pulls the array of VM Template VHDs from it and then
+   ensures all the VM template VHDs are deleted.
+.EXAMPLE
+   $Config = Get-LabConfiguration -Path c:\mylab\config.xml
+   Remove-LabVMTemplateVHD -Config $Config
+   Loads a Lab Builder configuration and then ensures the VM template VHDs are deleted.
+.OUTPUTS
+    None. 
+#>
+function Remove-LabVMTemplateVHD
+{
+   param
+   (
+        [Parameter (Mandatory)]
+        [ValidateNotNullOrEmpty()]
+        [XML] $Config,
+
+	    [System.Collections.Hashtable[]] $VMTemplateVHDs
+    )
+
+    # If VMTeplateVHDs array not passed, pull it from config.
+    if (-not $PSBoundParameters.ContainsKey('VMTemplateVHDs'))
+    {
+        $VMTemplateVHDs = Get-LabVMTemplateVHD `
+            -Config $Config        
+    }
+
+    # If there are no VMTemplateVHDs just return
+    if ($null -eq $VMTemplateVHDs)
+    {
+        return
+    }
+    
+    [String] $LabPath = $Config.labbuilderconfig.settings.labpath
+
+    foreach ($VMTemplateVHD in $VMTemplateVHDs)
+    {
+        [String] $Name = $VMTemplateVHD.Name
+        [String] $VHDPath = $VMTemplateVHD.VHDPath
+        
+        if (Test-Path -Path ($VHDPath))
+        {
+            Remove-Item `
+                -Path $VHDPath `
+                -Force
+            Write-Verbose -Message ($LocalizedData.DeletingVMTemplateVHDFileMessage `
+                -f $Name,$VHDPath)
+        }
+    } # endfor
+} # Remove-LabVMTemplateVHD
+
+
+<#
+.SYNOPSIS
    Gets an Array of VM Templates for a Lab configuration.
 .DESCRIPTION
    Takes the provided Lab Configuration file and returns the list of Virtul Machine template machines
@@ -1243,14 +1336,15 @@ function Get-LabVMTemplate {
         [System.Collections.Hashtable[]] $VMTemplateVHDs        
     )
 
+    # If VMTeplateVHDs array not passed, pull it from config.
+    if (-not $PSBoundParameters.ContainsKey('VMTemplateVHDs'))
+    {
+        $VMTemplateVHDs = Get-LabVMTemplateVHD `
+            -Config $Config
+    }
+    
     [System.Collections.Hashtable[]] $VMTemplates = @()
     [String] $VHDParentPath = $Config.labbuilderconfig.SelectNodes('settings').vhdparentpath
-    
-    # If VMTeplateVHDs array not passed, pull it from config.
-    if (-not $VMTemplateVHDs)
-    {
-        $VMTemplateVHDs = Get-LabVMTemplateVHD -Config $Config
-    }
     
     # Get a list of all templates in the Hyper-V system matching the phrase found in the fromvm
     # config setting
@@ -1533,8 +1627,8 @@ function Initialize-LabVMTemplate {
         [System.Collections.Hashtable[]] $VMTemplates
     )
     
-    # Get the VM Templates if they weren't passed
-    if (-not $VMTemplates)
+    # If VMTeplates array not passed, pull it from config.
+    if (-not $PSBoundParameters.ContainsKey('VMTemplates'))
     {
         $VMTemplates = Get-LabVMTemplate `
             -Config $Config
@@ -1657,8 +1751,8 @@ function Remove-LabVMTemplate {
         [System.Collections.Hashtable[]] $VMTemplates
     )
 
-    # The VMTemplates were not passed so pull them
-    if (-not $VMTemplates)
+    # If VMTeplates array not passed, pull it from config.
+    if (-not $PSBoundParameters.ContainsKey('VMTemplates'))
     {
         $VMTemplates = Get-LabVMTemplate `
             -Config $Config
@@ -1713,23 +1807,23 @@ function Get-LabVM {
         [ValidateNotNullOrEmpty()]
         [XML] $Config,
 
-        [ValidateNotNullOrEmpty()]
         [System.Collections.Hashtable[]] $VMTemplates,
 
-        [ValidateNotNullOrEmpty()]
         [System.Collections.Hashtable[]] $Switches
     )
 
-    # If the list of VMTemplates was not passed so pull it
-    if (-not $VMTemplates)
+    # If VMTeplates array not passed, pull it from config.
+    if (-not $PSBoundParameters.ContainsKey('VMTemplates'))
     {
-        $VMTemplates = Get-LabVMTemplate -Config $Config
+        $VMTemplates = Get-LabVMTemplate `
+            -Config $Config
     }
 
-    # If the list of Switches was not passed so pull it
-    if (-not $Switches)
+    # If Switches array not passed, pull it from config.
+    if (-not $PSBoundParameters.ContainsKey('Switches'))
     {
-        $Switches = Get-LabSwitch -Config $Config
+        $Switches = Get-LabSwitch `
+            -Config $Config
     }
 
     [System.Collections.Hashtable[]] $LabVMs = @()
@@ -2175,7 +2269,7 @@ function Get-LabVM {
 
             # If the data disk file doesn't exist then some basic parameters MUST be provided
             if (-not $Exists `
-                -and ((( $Type -notin ('fixed','dynamic','differencing') ) -or $Size -eq $null -or $Size -eq 0 ) `
+                -and ((( $Type -notin ('fixed','dynamic','differencing') ) -or ($null -eq $Size) -or ($Size -eq 0) ) `
                 -and -not $SourceVhd ))
             {
                 $ExceptionParameters = @{
@@ -2369,11 +2463,11 @@ function Get-LabVM {
         } # if
         
         # Get the Integration Services flags
-        if ($VM.IntegrationServices -ne $null)
+        if ($null -ne $VM.IntegrationServices)
         {
             $IntegrationServices = $VM.IntegrationServices
         } 
-        elseif ($VMTemplate.IntegrationServices -ne $null)
+        elseif ($null -ne $VMTemplate.IntegrationServices)
         {
             $IntegrationServices = $VMTemplate.IntegrationServices
         } # if
@@ -2501,10 +2595,11 @@ function Initialize-LabVM {
         [System.Collections.Hashtable[]] $VMs
     )
     
-    # If the VMs list was not passed pull it
-    if (-not $VMs)
+    # If VMs array not passed, pull it from config.
+    if (-not $PSBoundParameters.ContainsKey('VMs'))
     {
-        $VMs = Get-LabVM -Config $Config
+        $VMs = Get-LabVM `
+            -Config $Config
     }
     
     # If there are not VMs just return
@@ -2745,6 +2840,92 @@ function Initialize-LabVM {
 .NOTES
    General notes
 #>
+function Remove-LabVM {
+    [CmdLetBinding()]
+    [OutputType([Boolean])]
+    param
+    (
+        [Parameter(Mandatory)]
+        [ValidateNotNullOrEmpty()]
+        [XML] $Config,
+
+        [System.Collections.Hashtable[]] $VMs,
+
+        [Switch] $RemoveVHDs
+    )
+    
+    # If VMs array not passed, pull it from config.
+    if (-not $PSBoundParameters.ContainsKey('VMs'))
+    {
+        $VMs = Get-LabVM `
+            -Config $Config
+    }
+
+    $CurrentVMs = Get-VM
+
+    # Get the LabPath
+    [String] $LabPath = $Config.labbuilderconfig.settings.labpath
+    
+    foreach ($VM in $VMs)
+    {
+        if (($CurrentVMs | Where-Object -Property Name -eq $VM.Name).Count -ne 0)
+        {
+            # If the VM is running we need to shut it down.
+            if ((Get-VM -Name $VM.Name).State -eq 'Running')
+            {
+                Write-Verbose -Message $($LocalizedData.StoppingVMMessage `
+                    -f $VM.Name)
+
+                Stop-VM -Name $VM.Name
+                # Wait for it to completely shut down and report that it is off.
+                WaitVMOff -VM $VM
+            }
+
+            Write-Verbose -Message $($LocalizedData.RemovingVMMessage `
+                -f $VM.Name)
+
+            # Should we also delete the VHDs from the VM?
+            if ($RemoveVHDs)
+            {
+                Write-Verbose -Message $($LocalizedData.DeletingVMAllDisksMessage `
+                    -f $VM.Name)
+
+                $null = Get-VMHardDiskDrive -VMName $VM.Name | Select-Object -Property Path | Remove-Item
+            }
+            
+            # Now delete the actual VM
+            Get-VM -Name $VM.Name | Remove-VM -Confirm:$false
+
+            Write-Verbose -Message $($LocalizedData.RemovedVMMessage `
+                -f $VM.Name)
+        }
+        else
+        {
+            Write-Verbose -Message $($LocalizedData.VMNotFoundMessage `
+                -f $VM.Name)
+        }
+    }
+    Return $true
+} # Remove-LabVM
+
+
+
+<#
+.SYNOPSIS
+   Short description
+.DESCRIPTION
+   Long description
+.EXAMPLE
+   Example of how to use this cmdlet
+.EXAMPLE
+   Another example of how to use this cmdlet
+.INPUTS
+   Inputs to this cmdlet (if any)
+.OUTPUTS
+   Output from this cmdlet (if any)
+.NOTES
+   General notes
+#>
 function Start-LabVM {
     [CmdLetBinding()]
     param
@@ -2822,90 +3003,6 @@ function Start-LabVM {
 } # Start-LabVM
 
 
-<#
-.SYNOPSIS
-   Short description
-.DESCRIPTION
-   Long description
-.EXAMPLE
-   Example of how to use this cmdlet
-.EXAMPLE
-   Another example of how to use this cmdlet
-.INPUTS
-   Inputs to this cmdlet (if any)
-.OUTPUTS
-   Output from this cmdlet (if any)
-.NOTES
-   General notes
-#>
-function Remove-LabVM {
-    [CmdLetBinding()]
-    [OutputType([Boolean])]
-    param
-    (
-        [Parameter(Mandatory)]
-        [ValidateNotNullOrEmpty()]
-        [XML] $Config,
-
-        [ValidateNotNullOrEmpty()]
-        [System.Collections.Hashtable[]] $VMs,
-
-        [Switch] $RemoveVHDs
-    )
-    
-    # If VMs not passed then pull them from the config
-    if (-not $VMs)
-    {
-        $VMs = Get-LabVM -Config $Config
-    }
-    
-    $CurrentVMs = Get-VM
-
-    # Get the LabPath
-    [String] $LabPath = $Config.labbuilderconfig.settings.labpath
-    
-    foreach ($VM in $VMs)
-    {
-        if (($CurrentVMs | Where-Object -Property Name -eq $VM.Name).Count -ne 0)
-        {
-            # If the VM is running we need to shut it down.
-            if ((Get-VM -Name $VM.Name).State -eq 'Running')
-            {
-                Write-Verbose -Message $($LocalizedData.StoppingVMMessage `
-                    -f $VM.Name)
-
-                Stop-VM -Name $VM.Name
-                # Wait for it to completely shut down and report that it is off.
-                WaitVMOff -VM $VM
-            }
-
-            Write-Verbose -Message $($LocalizedData.RemovingVMMessage `
-                -f $VM.Name)
-
-            # Should we also delete the VHDs from the VM?
-            if ($RemoveVHDs)
-            {
-                Write-Verbose -Message $($LocalizedData.DeletingVMAllDisksMessage `
-                    -f $VM.Name)
-
-                $null = Get-VMHardDiskDrive -VMName $VM.Name | Select-Object -Property Path | Remove-Item
-            }
-            
-            # Now delete the actual VM
-            Get-VM -Name $VM.Name | Remove-VM -Confirm:$false
-
-            Write-Verbose -Message $($LocalizedData.RemovedVMMessage `
-                -f $VM.Name)
-        }
-        else
-        {
-            Write-Verbose -Message $($LocalizedData.VMNotFoundMessage `
-                -f $VM.Name)
-        }
-    }
-    Return $true
-} # Remove-LabVM
-
 
 <#
 .SYNOPSIS
@@ -2948,7 +3045,7 @@ function Connect-LabVM
         -Password $VM.AdministratorPassword
     [Boolean] $FatalException = $False
     
-    while (($Session -eq $null) `
+    while (($null -eq $Session) `
         -and (((Get-Date) - $StartTime).TotalSeconds) -lt $ConnectTimeout `
         -and -not $FatalException)
     {
@@ -3011,7 +3108,7 @@ function Connect-LabVM
     
     # If a fatal exception occured or the connection just couldn't be established
     # then throw an exception so it can be caught by the calling code.
-    if ($FatalException -or ($Session -eq $null))
+    if ($FatalException -or ($null -eq $Session))
     {
         # The connection failed so throw an error
         $ExceptionParameters = @{
@@ -3084,7 +3181,7 @@ function Disconnect-LabVM
                     -f $VM.Name,$IPAddress)                    
             }
             # Remove the session
-            $null = $Session | Remove-PSSession 
+            $null = $Session | Remove-PSSession -ErrorAction SilentlyContinue
         }
     }
     catch
@@ -3127,6 +3224,9 @@ function Disconnect-LabVM
     The Hyper-V component can also be optionally installed if it is not.
 .PARAMETER Path
     The path to the LabBuilder configuration XML file.
+.PARAMETER LabPath
+    The optional path to install the Lab to - overrides the LabPath setting in the
+    configuration file.
 .PARAMETER CheckEnvironment
     Whether or not to check if Hyper-V is installed and install it if missing.
 .EXAMPLE
@@ -3140,14 +3240,25 @@ Function Install-Lab {
     param
     (
         [parameter(Mandatory)]
+        [ValidateNotNullOrEmpty()]
+        [ValidateScript({ Test-Path $_ })]
         [String] $Path,
+
+        [ValidateNotNullOrEmpty()]
+        [String] $LabPath,
 
         [Switch] $CheckEnvironment
     ) # Param
 
+    # Remove some PSBoundParameters so we can Splat
+    $null = $PSBoundParameters.Remove('RemoveSwitches')
+    $null = $PSBoundParameters.Remove('RemoveVMTemplates')
+    $null = $PSBoundParameters.Remove('RemoveVHDs')
+    $null = $PSBoundParameters.Remove('RemoveVMTemplateVHDs')
+
     # Read the configuration
     [XML] $Config = Get-LabConfiguration `
-        -Path $Path
+        @PSBoundParameters
     
     if ($CheckEnvironment)
     {
@@ -3205,6 +3316,9 @@ Function Install-Lab {
    VM Template VHDs
 .PARAMETER Path
     The path to the LabBuilder configuration XML file.
+.PARAMETER LabPath
+    The optional path to uninstall the Lab from - overrides the LabPath setting in the
+    configuration file.
 .PARAMETER RemoveSwitches
     Whether to remove the switches defined by this Lab.
 .PARAMETER RemoveVMTemplates
@@ -3231,7 +3345,12 @@ Function Uninstall-Lab {
     param
     (
         [parameter(Mandatory)]
+        [ValidateNotNullOrEmpty()]
+        [ValidateScript({ Test-Path $_ })]
         [String] $Path,
+
+        [ValidateNotNullOrEmpty()]
+        [String] $LabPath,
 
         [Switch] $RemoveSwitches,
 
@@ -3242,9 +3361,15 @@ Function Uninstall-Lab {
         [Switch] $RemoveVMTemplateVHDs
     ) # Param
 
+    # Remove some PSBoundParameters so we can Splat
+    $null = $PSBoundParameters.Remove('RemoveSwitches')
+    $null = $PSBoundParameters.Remove('RemoveVMTemplates')
+    $null = $PSBoundParameters.Remove('RemoveVHDs')
+    $null = $PSBoundParameters.Remove('RemoveVMTemplateVHDs')
+
     # Read the configuration
     [XML] $Config = Get-LabConfiguration `
-        -Path $Path
+        @PSBoundParameters
 
     # Remove the VMs
     $VMSplat = @{} 
@@ -3274,7 +3399,8 @@ Function Uninstall-Lab {
     # Remove the VM Template VHDs
     if ($RemoveVMTemplateVHDs)
     {
-        # TODO: Requires Remove-LabVMTemplateVHD function
+        $null = Remove-LabVMTemplateVHDs `
+            -Config $Config
     } # If
 } # Uninstall-Lab
 #endregion
