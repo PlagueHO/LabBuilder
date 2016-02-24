@@ -2573,7 +2573,7 @@ function Get-LabVM {
             LabBuilderFilesPath = (Join-Path -Path $LabPath -ChildPath "$VMName\LabBuilder Files");
             Bootorder = $Bootorder;
         }
-    } # Foreach        
+    } # Foreach
 
     Return $LabVMs
 } # Get-LabVM
