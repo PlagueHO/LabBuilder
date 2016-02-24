@@ -21,6 +21,7 @@ $Global:ExpectedContentPath = "$Global:TestConfigPath\ExpectedContent"
 $null = New-Item -Path "$Global:ArtifactPath" -ItemType Directory -Force -ErrorAction SilentlyContinue
 
 # Perform PS Script Analyzer tests on module code only
+Set-PackageSource -Name PSGallery -Trusted -Force
 Install-Module -Name 'PSScriptAnalyzer' -Confirm:$False
 Import-Module -Name 'PSScriptAnalyzer'
 
