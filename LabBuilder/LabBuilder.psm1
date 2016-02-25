@@ -57,6 +57,8 @@ $Libs.Foreach(
 [String] $Script:DSCCertificatePassword = 'E3jdNkd903mDn43NEk2nbDENjw'
 [Int] $Script:RetryConnectSeconds = 5
 [Int] $Script:RetryHeartbeatSeconds = 1
+[Int] $Script:StartupTimeout = 90
+[Int] $Script:ShutdownTimeout = 30
 
 # The current list of Nano Servers available with TP4.
 [Array] $Script:NanoServerPackageList = @(
@@ -2516,6 +2518,13 @@ function Get-LabVM {
             $OSType = $VMTemplate.ostype
         } # if 
 
+        # Get the Bootorder
+        [Byte] $Bootorder = [Byte]::MaxValue
+        if ($VM.bootorder) 
+		{
+            $Bootorder = $VM.bootorder
+        } # if 
+
         # Get the Packages
         [String] $Packages = $null
         if ($VM.packages) 
@@ -2562,8 +2571,9 @@ function Get-LabVM {
             InstallMSU = $InstallMSU;
             VMRootPath = (Join-Path -Path $LabPath -ChildPath $VMName);
             LabBuilderFilesPath = (Join-Path -Path $LabPath -ChildPath "$VMName\LabBuilder Files");
+            Bootorder = $Bootorder;
         }
-    } # Foreach        
+    } # Foreach
 
     Return $LabVMs
 } # Get-LabVM
@@ -3213,7 +3223,7 @@ function Disconnect-LabVM
 #region LabInstallationFunctions
 <#
 .SYNOPSIS
-    Install or Update a Lab.
+    Installs or Update a Lab.
 .DESCRIPTION
     This cmdlet will install an entire Hyper-V lab environment defined by the
     LabBuilder configuration file provided.
@@ -3231,7 +3241,7 @@ function Disconnect-LabVM
     Whether or not to check if Hyper-V is installed and install it if missing.
 .EXAMPLE
     Install-Lab -Path c:\mylab\config.xml
-    Install the lab defined in the c:\mylab\config.xml LabBuilder configuraiton file.
+    Install the lab defined in the c:\mylab\config.xml LabBuilder configuration file.
 .OUTPUTS
     None
 #>
@@ -3299,6 +3309,9 @@ Function Install-Lab {
     Initialize-LabVM `
         -Config $Config `
         -VMs $VMs 
+
+    Write-Verbose -Message $($LocalizedData.LabInstallCompleteMessage `
+        -f $Config.labbuilderconfig.name,$Config.labbuilderconfig.settings.fullconfigpath)        
 } # Install-Lab
 
 
@@ -3336,7 +3349,7 @@ Function Install-Lab {
         -RemoveVHDs `
         -RemoveVMTemplateVHDs
     Completely uninstall all components in the lab defined in the
-    c:\mylab\config.xml LabBuilder configuraiton file.
+    c:\mylab\config.xml LabBuilder configuration file.
 .OUTPUTS
    None
 #>
@@ -3402,5 +3415,373 @@ Function Uninstall-Lab {
         $null = Remove-LabVMTemplateVHDs `
             -Config $Config
     } # If
+    
+    Write-Verbose -Message $($LocalizedData.LabUninstallCompleteMessage `
+        -f $Config.labbuilderconfig.name,$Config.labbuilderconfig.settings.fullconfigpath)        
 } # Uninstall-Lab
+
+
+<#
+.SYNOPSIS
+    Starts an existing Lab.
+.DESCRIPTION
+    This cmdlet will start all the Hyper-V virtual machines definied in a Lab
+    configuration.
+    
+    It will use the Bootorder attribute (if defined) for any VMs to determine
+    the order they should be booted in. If a Bootorder is not specified for a
+    machine, it will be booted after all machines with a defined boot order.
+    
+    The lower the Bootorder value for a machine the earlier it will be started
+    in the start process.
+    
+    Machines will be booted in series, with each machine starting once the
+    previous machine has completed startup and has a management IP address.
+
+    If a Virtual Machine in the Lab is already running, it will be ignored
+    and the next machine in series will be started.
+    
+    If more than one Virtual Machine shares the same Bootorder value, then
+    these machines will be booted in parallel, with the boot process only
+    continuing onto the next Bootorder when all these machines are booted.
+    
+    If a Virtual Machine specified in the configuration is not found an
+    exception will be thrown.
+    
+    If a Virtual Machine takes longer than the StartupTimeout then an exception
+    will be thown but the Start process will continue.
+
+    If a Bootorder of 0 is specifed then the Virtual Machine will not be booted at
+    all. This is useful for things like Root CA VMs that only need to started when
+    the Lab is created.
+.PARAMETER Path
+    The path to the LabBuilder configuration XML file.
+.PARAMETER LabPath
+    The optional path to install the Lab to - overrides the LabPath setting in the
+    configuration file.
+.PARAMETER StartupTimeout
+    The maximum number of seconds that the process will wait for a VM to startup.
+    Defaults to 90 seconds.
+.EXAMPLE
+    Start-Lab -Path c:\mylab\config.xml
+    Start the lab defined in the c:\mylab\config.xml LabBuilder configuration file.
+.OUTPUTS
+    None
+#>
+Function Start-Lab {
+    [CmdLetBinding()]
+    param
+    (
+        [parameter(Mandatory)]
+        [ValidateNotNullOrEmpty()]
+        [ValidateScript({ Test-Path $_ })]
+        [String] $Path,
+
+        [ValidateNotNullOrEmpty()]
+        [String] $LabPath,
+        
+        [Int] $StartupTimeout = $Script:StartupTimeout
+    ) # Param
+    
+    # Read the configuration
+    [XML] $Config = Get-LabConfiguration `
+        @PSBoundParameters
+    
+    # Initialize the Lab Config
+    Initialize-LabConfiguration `
+        -Config $Config
+
+    # Get the VMs
+    $VMs = Get-LabVM `
+        -Config $Config
+        
+    # Get the bootorders by lowest first and ignoring 0 and call
+    $BootOrders = @( ($VMs |
+        Where-Object -FilterScript { ($_.Bootorder -gt 0) } ).Bootorder )
+    $BootPhases = @( ($Bootorders |
+        Sort-Object -Unique) )
+
+    # Step through each of these "Bootphases" waiting for them to complete
+    foreach ($BootPhase in $BootPhases)
+    {
+        # Process this "Bootphase"
+        Write-Verbose -Message $($LocalizedData.StartingBootPhaseVMsMessage `
+            -f $BootPhase)
+
+        # Get all VMs in this "Bootphase"
+        $BootVMs = @( $VMs |
+            Where-Object -FilterScript { ($_.BootOrder -eq $BootPhase) } )
+        
+        [DateTime] $StartTime = Get-Date
+        [boolean] $PhaseComplete = $false
+        [boolean] $PhaseAllBooted = $true
+        [int] $VMCount = $BootVMs.Count
+        [int] $VMNumber = 0
+        
+        # Loop through all the VMs in this "Bootphase" repeatedly
+        # until timeout occurs or PhaseComplete is marked as complete
+        while (-not $PhaseComplete `
+            -and (((Get-Date) - $StartTime).TotalSeconds) -lt $StartupTimeout)
+        {
+            # Get the VM to boot/check
+            $VM = $BootVMs[$VMNumber]
+            $VMName = $VM.Name
+            
+            # Get the actual Hyper-V VM object
+            $VMObject = Get-VM `
+                -Name $VMName `
+                -ErrorAction SilentlyContinue 
+            if (-not $VMObject)
+            {
+                # If the VM does not exist then throw a non-terminating exception
+                $ExceptionParameters = @{
+                    errorId = 'VMDoesNotExistError'
+                    errorCategory = 'InvalidArgument'
+                    errorMessage = $($LocalizedData.VMDoesNotExistError `
+                        -f $VMName)
+                        
+                }
+                ThrowException @ExceptionParameters
+            } # if
+        
+            # Start the VM if it is off
+            if ($VMObject.State -eq 'Off')
+            {
+                Write-Verbose -Message $($LocalizedData.StartingVMMessage `
+                    -f $VMName)
+                Start-VM `
+                    -VM $VMObject
+            } # if
+            
+            # Use the allocation of a Management IP Address as an indicator
+            # the machine has booted
+            $ManagementIP = GetVMManagementIPAddress `
+                -Config $Config `
+                -VM $VM `
+                -ErrorAction SilentlyContinue
+            if (-not ($ManagementIP))
+            {
+                # It has not booted
+                $PhaseAllBooted = $False
+            } # if
+            $VMNumber++
+            if ($VMNumber -eq $VMCount)
+            {
+                # We have stepped through all VMs in this Phase so check
+                # if all have booted, otherwise reset the loop.
+                if ($PhaseAllBooted)
+                {
+                    # If we have gone through all VMs in this "Bootphase"
+                    # and they're all marked as booted then we can mark
+                    # this phase as complete and allow moving on to the next one
+                    Write-Verbose -Message $($LocalizedData.AllBootPhaseVMsStartedMessage `
+                        -f $BootPhase)
+                    $PhaseComplete = $True
+                }
+                else
+                {
+                    $PhaseAllBooted = $True
+                } # if
+                # Reset the VM Loop
+                $VMNumber = 0
+            } # if
+        } # while
+        
+        # Did we timeout?
+        if (-not ($PhaseComplete))
+        {
+            # Yes, throw an exception
+            $ExceptionParameters = @{
+                errorId = 'BootPhaseVMsTimeoutError'
+                errorCategory = 'InvalidArgument'
+                errorMessage = $($LocalizedData.BootPhaseStartVMsTimeoutError `
+                    -f $BootPhase)
+                    
+            }
+            ThrowException @ExceptionParameters
+        }
+    } # foreach
+
+    Write-Verbose -Message $($LocalizedData.LabStartCompleteMessage `
+        -f $Config.labbuilderconfig.name,$Config.labbuilderconfig.settings.fullconfigpath)    
+} # Start-Lab
+
+
+<#
+.SYNOPSIS
+    Stop an existing Lab.
+.DESCRIPTION
+    This cmdlet will stop all the Hyper-V virtual machines definied in a Lab
+    configuration.
+    
+    It will use the Bootorder attribute (if defined) for any VMs to determine
+    the order they should be shutdown in. If a Bootorder is not specified for a
+    machine, it will be shutdown before all machines with a defined boot order.
+    
+    The higher the Bootorder value for a machine the earlier it will be shutdown
+    in the stop process.
+
+    The Virtual Machines will be shutdown in REVERSE Bootorder.
+    
+    Machines will be shutdown in series, with each machine shutting down once the
+    previous machine has completed shutdown.
+    
+    If a Virtual Machine in the Lab is already shutdown, it will be ignored
+    and the next machine in series will be shutdown.
+    
+    If more than one Virtual Machine shares the same Bootorder value, then
+    these machines will be shutdown in parallel, with the shutdown process only
+    continuing onto the next Bootorder when all these machines are shutdown.
+
+    If a Virtual Machine specified in the configuration is not found an
+    exception will be thrown.
+    
+    If a Virtual Machine takes longer than the ShutdownTimeout then an exception
+    will be thown but the Stop process will continue.
+.PARAMETER Path
+    The path to the LabBuilder configuration XML file.
+.PARAMETER LabPath
+    The optional path to install the Lab to - overrides the LabPath setting in the
+    configuration file.
+.PARAMETER ShutdownTimeout
+    The maximum number of seconds that the process will wait for a VM to shutdown.
+    Defaults to 30 seconds.
+.EXAMPLE
+    Stop-Lab -Path c:\mylab\config.xml
+    Stop the lab defined in the c:\mylab\config.xml LabBuilder configuration file.
+.OUTPUTS
+    None
+#>
+Function Stop-Lab {
+    [CmdLetBinding()]
+    param
+    (
+        [parameter(Mandatory)]
+        [ValidateNotNullOrEmpty()]
+        [ValidateScript({ Test-Path $_ })]
+        [String] $Path,
+
+        [ValidateNotNullOrEmpty()]
+        [String] $LabPath,
+        
+        [Int] $ShutdownTimeout = $Script:ShutdownTimeout
+    ) # Param
+    
+    # Read the configuration
+    [XML] $Config = Get-LabConfiguration `
+        @PSBoundParameters
+    
+    # Initialize the Lab Config
+    Initialize-LabConfiguration `
+        -Config $Config
+
+    # Get the VMs
+    $VMs = Get-LabVM `
+        -Config $Config
+
+    # Get the bootorders by highest first and ignoring 0
+    $BootOrders = @( ($VMs |
+        Where-Object -FilterScript { ($_.Bootorder -gt 0) } ).Bootorder )
+    $BootPhases = @( ($Bootorders |
+        Sort-Object -Unique -Descending) )
+
+    # Step through each of these "Bootphases" waiting for them to complete
+    foreach ($BootPhase in $BootPhases)
+    {
+        # Process this "Bootphase"
+        Write-Verbose -Message $($LocalizedData.StoppingBootPhaseVMsMessage `
+            -f $BootPhase)
+
+        # Get all VMs in this "Bootphase"
+        $BootVMs = @( $VMs |
+            Where-Object -FilterScript { ($_.BootOrder -eq $BootPhase) } )
+        
+        [DateTime] $StartTime = Get-Date
+        [boolean] $PhaseComplete = $false
+        [boolean] $PhaseAllStopped = $true
+        [int] $VMCount = $BootVMs.Count
+        [int] $VMNumber = 0
+        
+        # Loop through all the VMs in this "Bootphase" repeatedly
+        # until timeout occurs or PhaseComplete is marked as complete
+        while (-not $PhaseComplete `
+            -and (((Get-Date) - $StartTime).TotalSeconds) -lt $ShutdownTimeout)
+        {
+            # Get the VM to boot/check
+            $VM = $BootVMs[$VMNumber]
+            $VMName = $VM.Name
+            
+            # Get the actual Hyper-V VM object
+            $VMObject = Get-VM `
+                -Name $VMName `
+                -ErrorAction SilentlyContinue 
+            if (-not $VMObject)
+            {
+                # If the VM does not exist then throw a non-terminating exception
+                $ExceptionParameters = @{
+                    errorId = 'VMDoesNotExistError'
+                    errorCategory = 'InvalidArgument'
+                    errorMessage = $($LocalizedData.VMDoesNotExistError `
+                        -f $VMName)
+                        
+                }
+                ThrowException @ExceptionParameters
+            } # if
+        
+            # Shutodwn the VM if it is off
+            if ($VMObject.State -eq 'Running')
+            {
+                Write-Verbose -Message $($LocalizedData.StoppingVMMessage `
+                    -f $VMName)
+                Stop-VM `
+                    -VM $VMObject
+            } # if
+            
+            # Determine if the VM has stopped.
+            if ((Get-VM -VMName $VMName).State -ne 'Off')
+            {
+                # It has not stopped
+                $PhaseAllStopped = $False
+            } # if
+            $VMNumber++
+            if ($VMNumber -eq $VMCount)
+            {
+                # We have stepped through all VMs in this Phase so check
+                # if all have stopped, otherwise reset the loop.
+                if ($PhaseAllStopped)
+                {
+                    # If we have gone through all VMs in this "Bootphase"
+                    # and they're all marked as booted then we can mark
+                    # this phase as complete and allow moving on to the next one
+                    Write-Verbose -Message $($LocalizedData.AllBootPhaseVMsStoppedMessage `
+                        -f $BootPhase)
+                    $PhaseComplete = $True
+                }
+                else
+                {
+                    $PhaseAllStopped = $True
+                } # if
+                # Reset the VM Loop
+                $VMNumber = 0
+            } # if
+        } # while
+        
+        # Did we timeout?
+        if (-not ($PhaseComplete))
+        {
+            # Yes, throw an exception
+            $ExceptionParameters = @{
+                errorId = 'BootPhaseStopVMsTimeoutError'
+                errorCategory = 'InvalidArgument'
+                errorMessage = $($LocalizedData.BootPhaseStopVMsTimeoutError `
+                    -f $BootPhase)
+                    
+            }
+            ThrowException @ExceptionParameters
+        }
+    } # foreach
+
+    Write-Verbose -Message $($LocalizedData.LabStopCompleteMessage `
+        -f $Config.labbuilderconfig.name,$Config.labbuilderconfig.settings.fullconfigpath)    
+} # Stop-Lab
 #endregion

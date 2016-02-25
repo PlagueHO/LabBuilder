@@ -94,7 +94,8 @@
     <vm name="SA-DC1"
         template="Template Windows Server 2012 R2 Datacenter CORE"
         computername="SA-DC1"
-        usedifferencingbootdisk="Y">
+        usedifferencingbootdisk="Y"
+        bootorder="1">
       <dsc configname="DC_FORESTPRIMARY"
            configfile="DC_FORESTPRIMARY.DSC.ps1">
         <parameters>
@@ -120,7 +121,8 @@
     <vm name="SA-DC2"
         template="Template Windows Server 2012 R2 Datacenter CORE"
         computername="SA-DC2"
-        usedifferencingbootdisk="Y">
+        usedifferencingbootdisk="Y"
+        bootorder="1">
       <dsc configname="DC_SECONDARY"
            configfile="DC_SECONDARY.DSC.ps1">
         <parameters>
@@ -147,7 +149,8 @@
     <vm name="SA-DHCP1"
         template="Template Windows Server 2012 R2 Datacenter CORE"
         computername="SA-DHCP1"
-        usedifferencingbootdisk="Y">
+        usedifferencingbootdisk="Y"
+        bootorder="2">
       <dsc configname="MEMBER_DHCP"
            configfile="MEMBER_DHCP.DSC.ps1">
         <parameters>
@@ -275,7 +278,8 @@
     <vm name="SA-EDGE1"
       template="Template Windows Server 2012 R2 Datacenter CORE"
       computername="SA-EDGE1"
-      usedifferencingbootdisk="Y">
+      usedifferencingbootdisk="Y"
+      bootorder="3">
       <dsc configname="MEMBER_REMOTEACCESS"
            configfile="MEMBER_REMOTEACCESS.DSC.ps1">
         <parameters>
@@ -304,7 +308,8 @@
     <vm name="SA-ROOTCA"
       template="Template Windows Server 2012 R2 Datacenter CORE"
       computername="SA-ROOTCA"
-      usedifferencingbootdisk="Y">
+      usedifferencingbootdisk="Y"
+      bootorder="3">
       <dsc configname="MEMBER_ROOTCA"
            configfile="MEMBER_ROOTCA.DSC.ps1"
            logging="Y">
@@ -345,7 +350,8 @@
     <vm name="SA-FS1"
         template="Template Windows Server 2012 R2 Datacenter CORE"
         computername="SA-FS1"
-        usedifferencingbootdisk="Y" >
+        usedifferencingbootdisk="Y"
+        bootorder="4">
       <datavhds>
         <datavhd vhd="LABBUILDER.COM SA-FS1 Data Disk.vhdx" size="40GB" type="dynamic" />
       </datavhds>
@@ -407,7 +413,8 @@
     <vm name="SA-NLB1"
         template="Template Windows Server 2012 R2 Datacenter CORE"
         computername="SA-NLB1"
-        usedifferencingbootdisk="Y" >
+        usedifferencingbootdisk="Y"
+        bootorder="5">
       <dsc configname="MEMBER_NLB"
            configfile="MEMBER_NLB.DSC.ps1"
            logging="Y">
@@ -447,7 +454,8 @@
     <vm name="SA-NLB2"
         template="Template Windows Server 2012 R2 Datacenter CORE"
         computername="SA-NLB2"
-        usedifferencingbootdisk="Y" >
+        usedifferencingbootdisk="Y"
+        bootorder="5">
       <dsc configname="MEMBER_NLB"
            configfile="MEMBER_NLB.DSC.ps1"
            logging="Y">
@@ -487,7 +495,8 @@
     <vm name="SA-FOC1"
         template="Template Windows Server 2012 R2 Datacenter CORE"
         computername="SA-FOC1"
-        usedifferencingbootdisk="Y" >
+        usedifferencingbootdisk="Y"
+        bootorder="6">
       <dsc configname="MEMBER_FAILOVERCLUSTER_FS"
            configfile="MEMBER_FAILOVERCLUSTER_FS.DSC.ps1"
            logging="Y">
@@ -532,7 +541,8 @@
     <vm name="SA-FOC2"
         template="Template Windows Server 2012 R2 Datacenter CORE"
         computername="SA-FOC2"
-        usedifferencingbootdisk="Y" >
+        usedifferencingbootdisk="Y"
+        bootorder="6">
       <dsc configname="MEMBER_FAILOVERCLUSTER_FS"
            configfile="MEMBER_FAILOVERCLUSTER_FS.DSC.ps1"
            logging="Y">
@@ -577,7 +587,8 @@
     <vm name="SA-FOC3"
         template="Template Windows Server 2012 R2 Datacenter CORE"
         computername="SA-FOC3"
-        usedifferencingbootdisk="Y" >
+        usedifferencingbootdisk="Y"
+        bootorder="6">
       <dsc configname="MEMBER_FAILOVERCLUSTER_FS"
            configfile="MEMBER_FAILOVERCLUSTER_FS.DSC.ps1"
            logging="Y">
@@ -625,7 +636,8 @@
         memorystartupbytes="4GB"
         dynamicmemoryenabled="N"
         exposevirtualizationextensions="Y"
-        usedifferencingbootdisk="Y" >
+        usedifferencingbootdisk="Y"
+        bootorder="0">
       <dsc configname="MEMBER_FAILOVERCLUSTER_HV"
            configfile="MEMBER_FAILOVERCLUSTER_HV.DSC.ps1"
            logging="Y">
@@ -671,7 +683,8 @@
         memorystartupbytes="4GB"
         dynamicmemoryenabled="N"
         exposevirtualizationextensions="Y"
-        usedifferencingbootdisk="Y" >
+        usedifferencingbootdisk="Y"
+        bootorder="0">
       <dsc configname="MEMBER_FAILOVERCLUSTER_HV"
            configfile="MEMBER_FAILOVERCLUSTER_HV.DSC.ps1"
            logging="Y">
@@ -714,7 +727,8 @@
     <vm name="DA-IT01"
       template="Template Windows 10 Enterprise"
       computername="DA-IT01"
-      usedifferencingbootdisk="Y">
+      usedifferencingbootdisk="Y"
+      bootorder="3">
       <adapters>
         <adapter name="Domain Private Site A"
                  switchname="Domain Private Site A" />
@@ -723,7 +737,6 @@
         <msu url="http://download.microsoft.com/download/1/D/8/1D8B5022-5477-4B9A-8104-6A71FF9D98AB/WindowsTH-KB2693643-x64.msu" />
       </install>
     </vm>
-
   </vms>
 
 </labbuilderconfig>

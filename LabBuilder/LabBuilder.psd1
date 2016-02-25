@@ -1,6 +1,6 @@
 @{
     RootModule = 'LabBuilder.psm1'
-    ModuleVersion = '0.4.1.0'
+    ModuleVersion = '0.4.2.0'
     GUID = 'e229850e-7a90-4123-9a30-37814119d3a3'
     Author = 'Daniel Scott-Raynsford'
     CompanyName = ''
@@ -33,6 +33,8 @@
         'Remove-LabVM'
         'Install-Lab'
         'Uninstall-Lab'
+        'Start-Lab'
+        'Stop-Lab'
     )
     # CmdletsToExport = @()
     VariablesToExport = @()
