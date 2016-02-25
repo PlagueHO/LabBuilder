@@ -31,6 +31,7 @@
         'Remove-LabVM'
         'Get-Lab'
         'Install-Lab'
+        'Update-Lab'
         'Uninstall-Lab'
         'Start-Lab'
         'Stop-Lab'

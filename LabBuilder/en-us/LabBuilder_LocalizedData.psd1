@@ -177,6 +177,7 @@ ConvertFrom-StringData -StringData @'
     CreatedVMInitializationFiles=Created Initialization files for VM '{0}'.
     MountingVMTemplateVHDISOMessage=Mounting {1} to use source WIM to create Template VHD {0}
     LabInstallCompleteMessage=The Lab '{0}' has been installed into folder '{1}'.
+    LabUpdateCompleteMessage=The Lab '{0}' in folder '{1}' has been updated.
     LabUninstallCompleteMessage=The Lab '{0}' has been uninstalled from folder '{1}'.
     LabStartCompleteMessage=The Lab '{0}' in folder '{1}' has been started.
     LabStopCompleteMessage=The Lab '{0}' in folder '{1}' has been stopped.

@@ -3184,10 +3184,7 @@ Function Install-Lab {
     begin
     {
         # Remove some PSBoundParameters so we can Splat
-        $null = $PSBoundParameters.Remove('RemoveSwitch')
-        $null = $PSBoundParameters.Remove('RemoveVMTemplate')
-        $null = $PSBoundParameters.Remove('RemoveVHD')
-        $null = $PSBoundParameters.Remove('RemoveVMTemplateVHD')
+        $null = $PSBoundParameters.Remove('CheckEnvironment')
     
         if ($CheckEnvironment)
         {
@@ -3274,7 +3271,8 @@ Function Install-Lab {
                 -VlanId $ManagementVlan
         }
         # Download any other resources required by this lab
-        DownloadResources -Lab $Lab	
+        DownloadResources `
+            -Lab $Lab	
         
         # Initialize the Switches
         $Switches = Get-LabSwitch `
@@ -3307,12 +3305,81 @@ Function Install-Lab {
             -VMs $VMs 
 
         Write-Verbose -Message $($LocalizedData.LabInstallCompleteMessage `
-            -f $Lab.labbuilderconfig.name,$Lab.labbuilderconfig.settings.fullconfigpath)        
+            -f $Lab.labbuilderconfig.name,$Lab.labbuilderconfig.settings.fullconfigpath)
     } # process
     end 
     {
     } # end
 } # Install-Lab
+
+
+<#
+.SYNOPSIS
+    Update a Lab.
+.DESCRIPTION
+    This cmdlet will update the existing Hyper-V lab environment defined by the
+    LabBuilder configuration file provided.
+    
+    If components of the Lab are missing they will be added.
+    
+    If components of the Lab already exist, they will be updated if they differ
+    from the settings in the Configuration file.
+.PARAMETER ConfigPath
+    The path to the LabBuilder configuration XML file.
+.PARAMETER LabPath
+    The optional path to update the Lab in - overrides the LabPath setting in the
+    configuration file.
+.PARAMETER Lab
+    The Lab object returned by Get-Lab of the lab to update.    
+.EXAMPLE
+    Update-Lab -ConfigPath c:\mylab\config.xml
+    Update the lab defined in the c:\mylab\config.xml LabBuilder configuration file.
+.EXAMPLE
+    Get-Lab -ConfigPath c:\mylab\config.xml | Update-Lab
+    Update the lab defined in the c:\mylab\config.xml LabBuilder configuration file.
+.OUTPUTS
+    None
+#>
+Function Update-Lab {
+    [CmdLetBinding(DefaultParameterSetName="Lab")]
+    param
+    (
+        [parameter(ParameterSetName="File",Mandatory=$true)]
+        [ValidateNotNullOrEmpty()]
+        [String] $ConfigPath,
+
+        [parameter(ParameterSetName="File")]
+        [ValidateNotNullOrEmpty()]
+        [String] $LabPath,
+
+        [Parameter(ParameterSetName="Lab", Mandatory=$true, ValueFromPipeline=$true)]
+        [ValidateNotNullOrEmpty()]
+        $Lab
+    ) # Param
+
+    begin
+    {   
+        if ($PSCmdlet.ParameterSetName -eq 'File')
+        {
+            # Read the configuration
+            $Lab = Get-Lab `
+                @PSBoundParameters             
+        } # if
+    } # begin
+    
+    process
+    {
+        Install-Lab `
+            @PSBoundParameters
+    
+        Write-Verbose -Message $($LocalizedData.LabUpdateCompleteMessage `
+            -f $Lab.labbuilderconfig.name,$Lab.labbuilderconfig.settings.fullconfigpath)
+    } # process
+
+    end 
+    {
+    } # end
+} # Update-Lab
 
 
 <#
@@ -3562,6 +3629,9 @@ Function Start-Lab {
     
     begin
     {
+        # Remove some PSBoundParameters so we can Splat
+        $null = $PSBoundParameters.Remove('StartupTimeout')
+
         if ($PSCmdlet.ParameterSetName -eq 'File')
         {
             # Read the configuration
@@ -3764,6 +3834,9 @@ Function Stop-Lab {
     
     begin
     {
+        # Remove some PSBoundParameters so we can Splat
+        $null = $PSBoundParameters.Remove('ShutdownTimeout')
+
         if ($PSCmdlet.ParameterSetName -eq 'File')
         {
             # Read the configuration
