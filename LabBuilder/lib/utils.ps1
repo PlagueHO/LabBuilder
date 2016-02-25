@@ -208,11 +208,11 @@ function CreateCredential()
    Downloads any resources required by the configuration.
 .DESCRIPTION
    It will ensure any required modules and files are downloaded.
-.PARAMETER Configuration
-   Contains the Lab Builder configuration object that was loaded by the Get-LabConfiguration object.
+.PARAMETER Lab
+   Contains the Lab object that was produced by the Get-Lab cmdlet.
 .EXAMPLE
-   $Config = Get-LabConfiguration -Path c:\mylab\config.xml
-   DownloadResources -Config $Config
+   $Lab = Get-Lab -ConfigPath c:\mylab\config.xml
+   DownloadResources -Lab $Lab
    Loads a Lab Builder configuration and downloads any resources required by it.   
 .OUTPUTS
    None.
@@ -338,11 +338,11 @@ function DownloadModule {
    Downloads any resources required by the configuration.
 .DESCRIPTION
    It will ensure any required modules and files are downloaded.
-.PARAMETER Configuration
-   Contains the Lab Builder configuration object that was loaded by the Get-LabConfiguration object.
+.PARAMETER Lab
+   Contains the Lab object that was produced by the Get-Lab cmdlet.
 .EXAMPLE
-   $Config = Get-LabConfiguration -Path c:\mylab\config.xml
-   DownloadResources -Config $Config
+   $Lab = Get-Lab -ConfigPath c:\mylab\config.xml
+   DownloadResources -Lab $Lab
    Loads a Lab Builder configuration and downloads any resources required by it.   
 .OUTPUTS
    None.
@@ -353,7 +353,7 @@ function DownloadResources {
     (
         [Parameter(Mandatory)]
         [ValidateNotNullOrEmpty()]
-        [XML] $Config
+        $Lab
     )
         
     # Downloading Lab Resources
@@ -366,9 +366,9 @@ function DownloadResources {
     Set-PSRepository -Name PSGallery -InstallationPolicy Trusted    
     
     # Download any other resources required by this lab
-    if ($Config.labbuilderconfig.resources) 
+    if ($Lab.labbuilderconfig.resources) 
     {
-        foreach ($Module in $Config.labbuilderconfig.resources.module)
+        foreach ($Module in $Lab.labbuilderconfig.resources.module)
         {
             if (-not $Module.Name)
             {

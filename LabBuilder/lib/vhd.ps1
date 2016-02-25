@@ -13,16 +13,15 @@
    
    This function also applies downloads and applies and optional MSU update files from
    a web site if specified in the VM declaration in the configuration.
-.PARAMETER Configuration
-   Contains the Lab Builder configuration object that was loaded by the Get-LabConfiguration
-   object.
+.PARAMETER Lab
+   Contains the Lab object that was produced by the Get-Lab cmdlet.
 .PARAMETER VM
    A Virtual Machine object pulled from the Lab Configuration file using Get-LabVM
 .EXAMPLE
-   $Config = Get-LabConfiguration -Path c:\mylab\config.xml
-   $VMs = Get-LabVM -Config $Config
+   $Lab = Get-Lab -ConfigPath c:\mylab\config.xml
+   $VMs = Get-LabVM -Lab $Lab
    InitializeBootVHD `
-       -Config $Config `
+       -Lab $Lab `
        -VM $VMs[0] `
        -VMBootDiskPath $BootVHD[0]
    Prepare the boot VHD in for the first VM in the Lab c:\mylab\config.xml for initial boot.
@@ -33,7 +32,7 @@ function InitializeBootVHD {
     [CmdLetBinding()]
     param (
         [Parameter(Mandatory)]
-        [XML] $Config,
+        $Lab,
 
         [Parameter(Mandatory)]
         [System.Collections.Hashtable] $VM,
@@ -43,7 +42,7 @@ function InitializeBootVHD {
     )
 
     # Get path to Lab
-    [String] $LabPath = $Config.labbuilderconfig.settings.labpath
+    [String] $LabPath = $Lab.labbuilderconfig.settings.labpath
 
     # Get Path to LabBuilder files
     [String] $VMLabBuilderFiles = $VM.LabBuilderFilesPath

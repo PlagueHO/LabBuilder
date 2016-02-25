@@ -506,12 +506,12 @@ InModuleScope LabBuilder {
 
 
     Describe 'DownloadResources' -Tags 'Incomplete' {
-        $Config = Get-LabConfiguration -Path $Global:TestConfigOKPath
+        $Lab = Get-Lab -ConfigPath $Global:TestConfigOKPath
 
         Context 'Valid configuration is passed' {
             Mock DownloadModule
             It 'Does not throw an Exception' {
-                { DownloadResources -Config $Config } | Should Not Throw
+                { DownloadResources -Lab $Lab } | Should Not Throw
             }
             It 'Should call appropriate Mocks' {
                 Assert-MockCalled DownloadModule -Exactly 4
@@ -523,7 +523,7 @@ InModuleScope LabBuilder {
 
     Describe 'InstallHyperV' {
 
-        $Config = Get-LabConfiguration -Path $Global:TestConfigOKPath
+        $Lab = Get-Lab -ConfigPath $Global:TestConfigOKPath
 
         If ((Get-CimInstance Win32_OperatingSystem).ProductType -eq 1) {
             Mock Get-WindowsOptionalFeature { [PSObject]@{ FeatureName = 'Mock'; State = 'Disabled'; } }

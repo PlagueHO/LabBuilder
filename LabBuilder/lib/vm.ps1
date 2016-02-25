@@ -65,15 +65,14 @@ function InitializeVMPaths {
      2. SetupComplete.cmd - the command file that gets run after the Windows OOBE is complete.
      3. SetupComplete.ps1 - this PowerShell script file that is run at the the end of the
                             SetupComplete.cmd.
-.PARAMETER Configuration
-   Contains the Lab Builder configuration object that was loaded by the Get-LabConfiguration
-   object.
+.PARAMETER Lab
+   Contains the Lab object that was produced by the Get-Lab cmdlet.
 .PARAMETER VM
    A Virtual Machine object pulled from the Lab Configuration file using Get-LabVM
 .EXAMPLE
-   $Config = Get-LabConfiguration -Path c:\mylab\config.xml
-   $VMs = Get-LabVM -Config $Config
-   CreateVMInitializationFiles -Config $Config -VM $VMs[0]
+   $Lab = Get-Lab -ConfigPath c:\mylab\config.xml
+   $VMs = Get-LabVM -Lab $Lab
+   CreateVMInitializationFiles -Lab $Lab -VM $VMs[0]
    Prepare the first VM in the Lab c:\mylab\config.xml for initial boot.
 .OUTPUTS
    None.
@@ -82,7 +81,7 @@ function CreateVMInitializationFiles {
     [CmdLetBinding()]
     param (
         [Parameter(Mandatory)]
-        [XML] $Config,
+        $Lab,
 
         [Parameter(Mandatory)]
         [System.Collections.Hashtable] $VM
@@ -92,7 +91,7 @@ function CreateVMInitializationFiles {
     [String] $VMLabBuilderFiles = $VM.LabBuilderFilesPath 
     
     # Generate an unattended setup file
-    [String] $UnattendFile = GetUnattendFileContent -Config $Config -VM $VM       
+    [String] $UnattendFile = GetUnattendFileContent -Lab $Lab -VM $VM       
     $null = Set-Content `
         -Path (Join-Path -Path $VMLabBuilderFiles -ChildPath 'Unattend.xml') `
         -Value $UnattendFile -Force
@@ -106,7 +105,7 @@ function CreateVMInitializationFiles {
         # For a Nano Server we also need to create the certificates
         # to upload to it (because it Nano Server can't generate them)
         $null = CreateHostSelfSignedCertificate `
-            -Config $Config `
+            -Lab $Lab `
             -VM $VM
         
         [String] $SetupCompletePs = @"
@@ -131,7 +130,7 @@ if (Test-Path -Path `"`$(`$ENV:SystemRoot)\$Script:DSCEncryptionPfxCert`")
     else
     {
         [String] $GetCertPs = GetCertificatePsFileContent `
-            -Config $Config `
+            -Lab $Lab `
             -VM $VM
         [String] $SetupCompletePs = @"
 Add-Content ``
@@ -236,15 +235,14 @@ Add-Content ``
    This function will return the content of a standard Windows Unattend XML file
    that can be written to an VHD containing a copy of Windows that is still in
    OOBE mode.
-.PARAMETER Configuration
-   Contains the Lab Builder configuration object that was loaded by the Get-LabConfiguration
-   object.
+.PARAMETER Lab
+   Contains the Lab object that was produced by the Get-Lab cmdlet.
 .PARAMETER VM
    A Virtual Machine object pulled from the Lab Configuration file using Get-LabVM
 .EXAMPLE
-   $Config = Get-LabConfiguration -Path c:\mylab\config.xml
-   $VMs = Get-LabVM -Config $Config
-   GetUnattendFileContent -Config $Config -VM $VMs[0]
+   $Lab = Get-Lab -ConfigPath c:\mylab\config.xml
+   $VMs = Get-LabVM -Lab $Lab
+   GetUnattendFileContent -Lab $Lab -VM $VMs[0]
    Returns the content of the Unattend File for the first VM in the Lab c:\mylab\config.xml.
 .OUTPUTS
    The content of the Unattend File for the VM.
@@ -255,7 +253,7 @@ function GetUnattendFileContent {
     param
     (
         [Parameter(Mandatory)]
-        [XML] $Config,
+        $Lab,
 
         [Parameter(Mandatory)]
         [System.Collections.Hashtable] $VM
@@ -266,8 +264,8 @@ function GetUnattendFileContent {
     }
     Else
     {
-        [String] $DomainName = $Config.labbuilderconfig.settings.domainname
-        [String] $Email = $Config.labbuilderconfig.settings.email
+        [String] $DomainName = $Lab.labbuilderconfig.settings.domainname
+        [String] $Email = $Lab.labbuilderconfig.settings.email
         $UnattendContent = [String] @"
 <?xml version="1.0" encoding="utf-8"?>
 <unattend xmlns="urn:schemas-microsoft-com:unattend">
@@ -361,14 +359,13 @@ function GetUnattendFileContent {
    This function creates the content that can be written into a PS1 file to create a self-signed
    certificate.
 .EXAMPLE
-   $Config = Get-LabConfiguration -Path c:\mylab\config.xml
-   $VMs = Get-LabVM -Config $Config
-   $CertificatePS = GetCertificatePsFileContent -Config $Config -VM $VMs[0]
+   $Lab = Get-Lab -ConfigPath c:\mylab\config.xml
+   $VMs = Get-LabVM -Lab $Lab
+   $CertificatePS = GetCertificatePsFileContent -Lab $Lab -VM $VMs[0]
    Return the Create Self-Signed Certificate script for the first VM in the
    Lab c:\mylab\config.xml for DSC configuration.
-.PARAMETER Configuration
-   Contains the Lab Builder configuration object that was loaded by the Get-LabConfiguration
-   object.
+.PARAMETER Lab
+   Contains the Lab object that was produced by the Get-Lab cmdlet.
 .PARAMETER VM
    A Virtual Machine object pulled from the Lab Configuration file using Get-LabVM
 .OUTPUTS
@@ -382,7 +379,7 @@ function GetCertificatePsFileContent {
     param
     (
         [Parameter(Mandatory)]
-        [XML] $Config,
+        $Lab,
 
         [Parameter(Mandatory)]
         [System.Collections.Hashtable] $VM
@@ -433,9 +430,8 @@ Export-Certificate ``
    Self-Signed certificate file that was written to the c:\windows folder of the guest operating
    system by the SetupComplete.ps1 script on the. The certificate will be downloaded to the VM's
    Labbuilder files folder.
-.PARAMETER Configuration
-   Contains the Lab Builder configuration object that was loaded by the Get-LabConfiguration
-   object.
+.PARAMETER Lab
+   Contains the Lab object that was produced by the Get-Lab cmdlet.
 .PARAMETER VM
    A Virtual Machine object pulled from the Lab Configuration file using Get-LabVM
 .PARAMETER Timeout
@@ -443,9 +439,9 @@ Export-Certificate ``
    If the timeout is reached before the process is complete an error will be thrown.
    The timeout defaults to 300 seconds.
 .EXAMPLE
-   $Config = Get-LabConfiguration -Path c:\mylab\config.xml
-   $VMs = Get-LabVM -Config $Config
-   GetSelfSignedCertificate -Config $Config -VM $VMs[0]
+   $Lab = Get-Lab -ConfigPath c:\mylab\config.xml
+   $VMs = Get-LabVM -Lab $Lab
+   GetSelfSignedCertificate -Lab $Lab -VM $VMs[0]
    Downloads the existing Self-signed certificate for the VM to the Labbuilder files folder of the
    VM.
 .OUTPUTS
@@ -458,14 +454,14 @@ function GetSelfSignedCertificate
     param
     (
         [Parameter(Mandatory)]
-        [XML] $Config,
+        $Lab,
 
         [Parameter(Mandatory)]
         [System.Collections.Hashtable] $VM,
 
         [Int] $Timeout = 300
     )
-    [String] $LabPath = $Config.labbuilderconfig.SelectNodes('settings').labpath
+    [String] $LabPath = $Lab.labbuilderconfig.SelectNodes('settings').labpath
     [DateTime] $StartTime = Get-Date
     [System.Management.Automation.Runspaces.PSSession] $Session = $null
     [Boolean] $Complete = $False
@@ -564,9 +560,8 @@ function GetSelfSignedCertificate
    script and then run it. This wil create a new self-signed certificate that is written to the
    c:\windows folder of the guest operating system. The certificate will be downloaded to the VM's
    Labbuilder files folder.
-.PARAMETER Configuration
-   Contains the Lab Builder configuration object that was loaded by the Get-LabConfiguration
-   object.
+.PARAMETER Lab
+   Contains the Lab object that was produced by the Get-Lab cmdlet.
 .PARAMETER VM
    A Virtual Machine object pulled from the Lab Configuration file using Get-LabVM
 .PARAMETER Timeout
@@ -574,9 +569,9 @@ function GetSelfSignedCertificate
    If the timeout is reached before the process is complete an error will be thrown.
    The timeout defaults to 300 seconds.
 .EXAMPLE
-   $Config = Get-LabConfiguration -Path c:\mylab\config.xml
-   $VMs = Get-LabVM -Config $Config
-   RecreateSelfSignedCertificate -Config $Config -VM $VMs[0]
+   $Lab = Get-Lab -ConfigPath c:\mylab\config.xml
+   $VMs = Get-LabVM -Lab $Lab
+   RecreateSelfSignedCertificate -Lab $Lab -VM $VMs[0]
    Causes a new self-signed certificate on the VM and download it to the Labbuilder files folder
    of th VM.
 .OUTPUTS
@@ -589,7 +584,7 @@ function RecreateSelfSignedCertificate
     param
     (
         [Parameter(Mandatory)]
-        [XML] $Config,
+        $Lab,
 
         [Parameter(Mandatory)]
         [System.Collections.Hashtable] $VM,
@@ -597,7 +592,7 @@ function RecreateSelfSignedCertificate
         [Int] $Timeout = 300
     )
     [DateTime] $StartTime = Get-Date
-    [String] $LabPath = $Config.labbuilderconfig.SelectNodes('settings').labpath
+    [String] $LabPath = $Lab.labbuilderconfig.SelectNodes('settings').labpath
     [System.Management.Automation.Runspaces.PSSession] $Session = $null
     [Boolean] $Complete = $False
 
@@ -609,7 +604,7 @@ function RecreateSelfSignedCertificate
 
     # Ensure the certificate generation script has been created
     [String] $GetCertPs = GetCertificatePsFileContent `
-        -Config $Config `
+        -Lab $Lab `
         -VM $VM
         
     $null = Set-Content `
@@ -759,15 +754,14 @@ function RecreateSelfSignedCertificate
    This function will create a new self-signed certificate on the host that can be uploaded
    to the VM that it is created for. The certificate will be created in the LabBuilder files
    folder for the specified VM.
-.PARAMETER Configuration
-   Contains the Lab Builder configuration object that was loaded by the Get-LabConfiguration
-   object.
+.PARAMETER Lab
+   Contains the Lab object that was produced by the Get-Lab cmdlet.
 .PARAMETER VM
    A Virtual Machine object pulled from the Lab Configuration file using Get-LabVM
 .EXAMPLE
-   $Config = Get-LabConfiguration -Path c:\mylab\config.xml
-   $VMs = Get-LabVM -Config $Config
-   CreateHostSelfSignedCertificate -Config $Config -VM $VMs[0]
+   $Lab = Get-Lab -ConfigPath c:\mylab\config.xml
+   $VMs = Get-LabVM -Lab $Lab
+   CreateHostSelfSignedCertificate -Lab $Lab -VM $VMs[0]
    Causes a new self-signed certificate for the VM and stores it to the Labbuilder files folder
    of th VM.
 .OUTPUTS
@@ -780,7 +774,7 @@ function CreateHostSelfSignedCertificate
     param
     (
         [Parameter(Mandatory)]
-        [XML] $Config,
+        $Lab,
 
         [Parameter(Mandatory)]
         [System.Collections.Hashtable] $VM
@@ -857,15 +851,14 @@ function CreateHostSelfSignedCertificate
    This function will return the IPv4 address assigned to the network adapter that
    is connected to the Management switch for the specified VM. The VM must be
    running, otherwise an error will be thrown.
-.PARAMETER Configuration
-   Contains the Lab Builder configuration object that was loaded by the Get-LabConfiguration
-   object.
+.PARAMETER Lab
+   Contains the Lab object that was produced by the Get-Lab cmdlet.
 .PARAMETER VM
    A Virtual Machine object pulled from the Lab Configuration file using Get-LabVM
 .EXAMPLE
-   $Config = Get-LabConfiguration -Path c:\mylab\config.xml
-   $VMs = Get-LabVM -Config $Config
-   $IPAddress = GetVMManagementIPAddress -Config $Config -VM $VM[0]
+   $Lab = Get-Lab -ConfigPath c:\mylab\config.xml
+   $VMs = Get-LabVM -Lab $Lab
+   $IPAddress = GetVMManagementIPAddress -Lab $Lab -VM $VM[0]
 .OUTPUTS
    The IP Managment IP Address.
 #>
@@ -874,13 +867,13 @@ function GetVMManagementIPAddress {
     [OutputType([String])]
     param (
         [Parameter(Mandatory)]
-        [XML] $Config,
+        $Lab,
 
         [Parameter(Mandatory)]
         [System.Collections.Hashtable] $VM
     )
     [String] $ManagementSwitchName = GetManagementSwitchName `
-        -Config $Config
+        -Lab $Lab
     [String] $IPAddress = (Get-VMNetworkAdapter -VMName $VM.Name).`
         Where({$_.SwitchName -eq $ManagementSwitchName}).`
         IPAddresses.Where({$_.Contains('.')})
@@ -915,8 +908,8 @@ function GetVMManagementIPAddress {
    If the timeout is reached before the process is complete an error will be thrown.
    The timeout defaults to 300 seconds.
 .EXAMPLE
-   $Config = Get-LabConfiguration -Path c:\mylab\config.xml
-   $VMs = Get-LabVM -Config $Config
+   $Lab = Get-Lab -ConfigPath c:\mylab\config.xml
+   $VMs = Get-LabVM -Lab $Lab
    WaitVMInitializationComplete -VM $VMs[0]
    Waits for the initial setup to complete on the first VM in the config.xml.
 .OUTPUTS
@@ -1124,8 +1117,8 @@ function WaitVMOff {
    - Time Synchronization
    - VSS
 .EXAMPLE
-   $Config = Get-LabConfiguration -Path c:\mylab\config.xml
-   $VMs = Get-LabVM -Config $Config
+   $Lab = Get-Lab -ConfigPath c:\mylab\config.xml
+   $VMs = Get-LabVM -Lab $Lab
    UpdateVMIntegrationServices -VM VM[0]
    This will update the Integration Services for the first VM in the configuration file c:\mylab\config.xml.
 .PARAMETER VM
@@ -1201,13 +1194,12 @@ function UpdateVMIntegrationServices {
    If the data disk VHD file exists but is not attached it will be attached to the VM. If the
    data disk VHD file does not exist then it will be created and attached. 
 .EXAMPLE
-   $Config = Get-LabConfiguration -Path c:\mylab\config.xml
-   $VMs = Get-LabVM -Config $Config
-   UpdateVMDataDisks -Config $Config -VM VM[0]
+   $Lab = Get-Lab -ConfigPath c:\mylab\config.xml
+   $VMs = Get-LabVM -Lab $Lab
+   UpdateVMDataDisks -Lab $Lab -VM VM[0]
    This will update the data disks for the first VM in the configuration file c:\mylab\config.xml.
-.PARAMETER Configuration
-   Contains the Lab Builder configuration object that was loaded by the Get-LabConfiguration
-   object.
+.PARAMETER Lab
+   Contains the Lab object that was produced by the Get-Lab cmdlet.
 .PARAMETER VM
    A Virtual Machine object pulled from the Lab Configuration file using Get-LabVM.
 .OUTPUTS
@@ -1221,7 +1213,7 @@ function UpdateVMDataDisks {
             Mandatory,
             Position=0)]
         [ValidateNotNullOrEmpty()]
-        [XML] $Config,
+        $Lab,
 
         [Parameter(
             Mandatory,
