@@ -31,15 +31,15 @@ This had the following advantages:
 
 Goals
 =====
-The general goals of this project are:
-+ Enable "one-click" creation of a Hyper-V Lab environment.
-+ Enable non-developers to easily define Lab environments.
-+ Support multiple Lab environments on the same Hyper-V host.
-+ Allow a Lab environment to span or be installed on a remote Hyper-V host.
-+ Ensure that multiple Lab environments are completely isolated from each other.
-+ Minimize Lab footprint by utilizing Differencing disks where possible.
-+ Allow GUI based tools to be easily created to create Lab configurations.
-+ Enable new Lab VM machine types to be configured by supplying different DSC library resources.
+The general goals of this module are:
++ **One-Click Create**: Enable "one-click" creation of a Hyper-V Lab environment.
++ **Easy Configuration**: Enable non-developers to easily define Lab environments.
++ **Multiple Labs**: Support multiple Lab environments on the same Hyper-V host.
++ **Stretched Labs**: Allow a Lab environment to span or be installed on a remote Hyper-V host.
++ **Lab Isolation**: Ensure that multiple Lab environments are completely isolated from each other.
++ **Minimal Disk Usage**: Minimize Lab footprint by utilizing differencing disks where possible.
++ **Configuration Flexibility**: Allow GUI based tools to be easily created to create Lab configurations.
++ **Extensible**: Enable new Lab VM machine types to be configured by supplying different DSC library resources.
 
 
 Basic Usage Guide
@@ -369,6 +369,7 @@ Versions
 * Remove-LabVM: Removed parameter 'RemoveVHDs'. Added parameter RemoveVMFolder which causes the VM folder and all contents to be deleted.
 * Uninstall-Lab: Renamed "Remove" parameters to be singular names rather than plural.
 * Uninstall-Lab: Added parameter 'RemoveLabFolder' which will cause the entire Lab folder to be deleted.
+* Uninstall-Lab: Added ShouldProcess support to ask user to confirm actions.
  
 ### 0.4.2.0
 * Add bootorder VM attribute for controlling stop-lab/start-lab order.
