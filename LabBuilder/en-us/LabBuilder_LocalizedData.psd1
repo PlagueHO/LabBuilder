@@ -180,4 +180,10 @@ ConvertFrom-StringData -StringData @'
     LabUninstallCompleteMessage=The Lab '{0}' has been uninstalled from folder '{1}'.
     LabStartCompleteMessage=The Lab '{0}' in folder '{1}' has been started.
     LabStopCompleteMessage=The Lab '{0}' in folder '{1}' has been stopped.
+
+    ShouldUninstallLab=Uninstall the Lab '{0}' in folder '{1}'
+    ShouldRemoveVMTemplate=Delete the Parent VM Template VHDs useb by Lab '{0}' in folder '{1}'
+    ShouldRemoveSwitch=Delete the virtual switches used by Lab '{0}'
+    ShouldRemoveVMTemplateVHD=Delete the VM Template VHDs use by Lab '{0}'.
+    ShouldRemoveLabFolder=Delete the folder '{1}' containing Lab '{0}'
 '@
