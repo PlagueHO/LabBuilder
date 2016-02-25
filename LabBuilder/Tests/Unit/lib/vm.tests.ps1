@@ -94,12 +94,12 @@ InModuleScope LabBuilder {
         Mock Disable-VMIntegrationService
         #endregion
 
-        $Config = Get-LabConfiguration -Path $Global:TestConfigOKPath
-        [Array]$Templates = Get-LabVMTemplate -Config $Config
-        [Array]$Switches = Get-LabSwitch -Config $Config
+        $Lab = Get-Lab -ConfigPath $Global:TestConfigOKPath
+        [Array]$Templates = Get-LabVMTemplate -Lab $Lab
+        [Array]$Switches = Get-LabSwitch -Lab $Lab
 
         Context 'Valid configuration is passed with null Integration Services' {
-            [Array]$VMs = Get-LabVM -Config $Config -VMTemplates $Templates -Switches $Switches
+            [Array]$VMs = Get-LabVM -Lab $Lab -VMTemplates $Templates -Switches $Switches
             $VMs[0].Remove('IntegrationServices')
             It 'Does not throw an Exception' {
                 { UpdateVMIntegrationServices -VM $VMs[0] } | Should Not Throw 
@@ -112,7 +112,7 @@ InModuleScope LabBuilder {
         }
 
         Context 'Valid configuration is passed with blank Integration Services' {
-            [Array]$VMs = Get-LabVM -Config $Config -VMTemplates $Templates -Switches $Switches
+            [Array]$VMs = Get-LabVM -Lab $Lab -VMTemplates $Templates -Switches $Switches
             $VMs[0].IntegrationServices = ''
             It 'Does not throw an Exception' {
                 { UpdateVMIntegrationServices -VM $VMs[0] } | Should Not Throw 
@@ -125,7 +125,7 @@ InModuleScope LabBuilder {
         }
 
         Context 'Valid configuration is passed with VSS only enabled' {
-            [Array]$VMs = Get-LabVM -Config $Config -VMTemplates $Templates -Switches $Switches
+            [Array]$VMs = Get-LabVM -Lab $Lab -VMTemplates $Templates -Switches $Switches
             $VMs[0].IntegrationServices = 'VSS'
             It 'Does not throw an Exception' {
                 { UpdateVMIntegrationServices -VM $VMs[0] } | Should Not Throw 
@@ -137,7 +137,7 @@ InModuleScope LabBuilder {
             }
         }
         Context 'Valid configuration is passed with Guest Service Interface only enabled' {
-            [Array]$VMs = Get-LabVM -Config $Config -VMTemplates $Templates -Switches $Switches
+            [Array]$VMs = Get-LabVM -Lab $Lab -VMTemplates $Templates -Switches $Switches
             $VMs[0].IntegrationServices = 'Guest Service Interface'
             It 'Does not throw an Exception' {
                 { UpdateVMIntegrationServices -VM $VMs[0] } | Should Not Throw 
@@ -172,15 +172,15 @@ InModuleScope LabBuilder {
 
         # The same VM will be used for all tests, but a different
         # DataVHds array will be created/assigned for each test.
-        $Config = Get-LabConfiguration -Path $Global:TestConfigOKPath
-        [Array]$Templates = Get-LabVMTemplate -Config $Config
-        [Array]$Switches = Get-LabSwitch -Config $Config
-        [Array]$VMs = Get-LabVM -Config $Config -VMTemplates $Templates -Switches $Switches
+        $Lab = Get-Lab -ConfigPath $Global:TestConfigOKPath
+        [Array]$Templates = Get-LabVMTemplate -Lab $Lab
+        [Array]$Switches = Get-LabSwitch -Lab $Lab
+        [Array]$VMs = Get-LabVM -Lab $Lab -VMTemplates $Templates -Switches $Switches
 
         Context 'Valid configuration is passed with no DataVHDs' {
             $VMs[0].DataVHDs = @()
             It 'Does not throw an Exception' {
-                { UpdateVMDataDisks -Config $Config -VM $VMs[0] } | Should Not Throw 
+                { UpdateVMDataDisks -Lab $Lab -VM $VMs[0] } | Should Not Throw 
             }
             It 'Calls Mocked commands' {
                 Assert-MockCalled Get-VHD -Exactly 0
@@ -214,7 +214,7 @@ InModuleScope LabBuilder {
                         -f $VMs[0].Name,$VMs[0].DataVHDs.Vhd,$VMs[0].DataVHDs.Type)
                 }
                 $Exception = GetException @ExceptionParameters
-                { UpdateVMDataDisks -Config $Config -VM $VMs[0] } | Should Throw 
+                { UpdateVMDataDisks -Lab $Lab -VM $VMs[0] } | Should Throw 
             }
             It 'Calls Mocked commands' {
                 Assert-MockCalled Get-VHD -Exactly 1
@@ -248,7 +248,7 @@ InModuleScope LabBuilder {
                         -f $VMs[0].Name,$VMs[0].DataVHDs[0].Vhd,$VMs[0].DataVHDs[0].Size)
                 }
                 $Exception = GetException @ExceptionParameters
-                { UpdateVMDataDisks -Config $Config -VM $VMs[0] } | Should Throw $Exception
+                { UpdateVMDataDisks -Lab $Lab -VM $VMs[0] } | Should Throw $Exception
             }
             It 'Calls Mocked commands' {
                 Assert-MockCalled Get-VHD -Exactly 1
@@ -275,7 +275,7 @@ InModuleScope LabBuilder {
                 Size = 20GB
             } }
             It 'Does not throw an Exception' {
-                { UpdateVMDataDisks -Config $Config -VM $VMs[0] } | Should Not Throw
+                { UpdateVMDataDisks -Lab $Lab -VM $VMs[0] } | Should Not Throw
             }
             It 'Calls Mocked commands' {
                 Assert-MockCalled Get-VHD -Exactly 1
@@ -305,7 +305,7 @@ InModuleScope LabBuilder {
                         -f $VMs[0].Name,$VMs[0].DataVHDs[0].SourceVhd)
                 }
                 $Exception = GetException @ExceptionParameters
-                { UpdateVMDataDisks -Config $Config -VM $VMs[0] } | Should Throw $Exception
+                { UpdateVMDataDisks -Lab $Lab -VM $VMs[0] } | Should Throw $Exception
             }
             It 'Calls Mocked commands' {
                 Assert-MockCalled Get-VHD -Exactly 0
@@ -327,7 +327,7 @@ InModuleScope LabBuilder {
                 SourceVhd = 'DoesExist.Vhdx'
             } )
             It 'Does not throw an Exception' {
-                { UpdateVMDataDisks -Config $Config -VM $VMs[0] } | Should Not Throw
+                { UpdateVMDataDisks -Lab $Lab -VM $VMs[0] } | Should Not Throw
             }
             It 'Calls Mocked commands' {
                 Assert-MockCalled Get-VHD -Exactly 0
@@ -350,7 +350,7 @@ InModuleScope LabBuilder {
                 MoveSourceVHD = $true
             } )
             It 'Does not throw an Exception' {
-                { UpdateVMDataDisks -Config $Config -VM $VMs[0] } | Should Not Throw
+                { UpdateVMDataDisks -Lab $Lab -VM $VMs[0] } | Should Not Throw
             }
             It 'Calls Mocked commands' {
                 Assert-MockCalled Get-VHD -Exactly 0
@@ -373,7 +373,7 @@ InModuleScope LabBuilder {
                 Size = 10GB
             } )
             It 'Does not throw an Exception' {
-                { UpdateVMDataDisks -Config $Config -VM $VMs[0] } | Should Not Throw
+                { UpdateVMDataDisks -Lab $Lab -VM $VMs[0] } | Should Not Throw
             }
             It 'Calls Mocked commands' {
                 Assert-MockCalled Get-VHD -Exactly 0
@@ -396,7 +396,7 @@ InModuleScope LabBuilder {
                 Size = 10GB
             } )
             It 'Does not throw an Exception' {
-                { UpdateVMDataDisks -Config $Config -VM $VMs[0] } | Should Not Throw
+                { UpdateVMDataDisks -Lab $Lab -VM $VMs[0] } | Should Not Throw
             }
             It 'Calls Mocked commands' {
                 Assert-MockCalled Get-VHD -Exactly 0
@@ -421,7 +421,7 @@ InModuleScope LabBuilder {
                 FileSystem = 'NTFS'
             } )
             It 'Does not throw an Exception' {
-                { UpdateVMDataDisks -Config $Config -VM $VMs[0] } | Should Not Throw
+                { UpdateVMDataDisks -Lab $Lab -VM $VMs[0] } | Should Not Throw
             }
             It 'Calls Mocked commands' {
                 Assert-MockCalled Get-VHD -Exactly 0
@@ -447,7 +447,7 @@ InModuleScope LabBuilder {
                 CopyFolders = "$Global:TestConfigPath\ExpectedContent"
             } )
             It 'Does not throw an Exception' {
-                { UpdateVMDataDisks -Config $Config -VM $VMs[0] } | Should Not Throw
+                { UpdateVMDataDisks -Lab $Lab -VM $VMs[0] } | Should Not Throw
             }
             It 'Calls Mocked commands' {
                 Assert-MockCalled Get-VHD -Exactly 0
@@ -471,7 +471,7 @@ InModuleScope LabBuilder {
                 CopyFolders = "$Global:TestConfigPath\ExpectedContent"
             } )
             It 'Does not throw an Exception' {
-                { UpdateVMDataDisks -Config $Config -VM $VMs[0] } | Should Not Throw
+                { UpdateVMDataDisks -Lab $Lab -VM $VMs[0] } | Should Not Throw
             }
             It 'Calls Mocked commands' {
                 Assert-MockCalled Get-VHD -Exactly 0
@@ -501,7 +501,7 @@ InModuleScope LabBuilder {
                         -f $VMs[0].Name)
                 }
                 $Exception = GetException @ExceptionParameters
-                { UpdateVMDataDisks -Config $Config -VM $VMs[0] } | Should Throw $Exception
+                { UpdateVMDataDisks -Lab $Lab -VM $VMs[0] } | Should Throw $Exception
             }
             It 'Calls Mocked commands' {
                 Assert-MockCalled Get-VHD -Exactly 0
@@ -532,7 +532,7 @@ InModuleScope LabBuilder {
                         -f $VMs[0].Name,$VMs[0].DataVHDs[0].ParentVhd)
                 }
                 $Exception = GetException @ExceptionParameters
-                { UpdateVMDataDisks -Config $Config -VM $VMs[0] } | Should Throw $Exception
+                { UpdateVMDataDisks -Lab $Lab -VM $VMs[0] } | Should Throw $Exception
             }
             It 'Calls Mocked commands' {
                 Assert-MockCalled Get-VHD -Exactly 0
@@ -556,7 +556,7 @@ InModuleScope LabBuilder {
                 ParentVHD = 'DoesExist.vhdx'
             } )
             It 'Does not throw an Exception' {
-                { UpdateVMDataDisks -Config $Config -VM $VMs[0] } | Should Not Throw
+                { UpdateVMDataDisks -Lab $Lab -VM $VMs[0] } | Should Not Throw
             }
             It 'Calls Mocked commands' {
                 Assert-MockCalled Get-VHD -Exactly 0
@@ -586,7 +586,7 @@ InModuleScope LabBuilder {
                         -f $VMs[0].Name,$VMs[0].DataVHDs[0].Vhd,$VMs[0].DataVHDs[0].Type)
                 }
                 $Exception = GetException @ExceptionParameters
-                { UpdateVMDataDisks -Config $Config -VM $VMs[0] } | Should Throw $Exception
+                { UpdateVMDataDisks -Lab $Lab -VM $VMs[0] } | Should Throw $Exception
             }
             It 'Calls Mocked commands' {
                 Assert-MockCalled Get-VHD -Exactly 0
@@ -614,7 +614,7 @@ InModuleScope LabBuilder {
                 Size = 10GB
             } )
             It 'Does not throw an Exception' {
-                { UpdateVMDataDisks -Config $Config -VM $VMs[0] } | Should Not Throw
+                { UpdateVMDataDisks -Lab $Lab -VM $VMs[0] } | Should Not Throw
             }
             It 'Calls Mocked commands' {
                 Assert-MockCalled Get-VHD -Exactly 1

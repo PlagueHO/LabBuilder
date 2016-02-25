@@ -137,7 +137,7 @@ ConvertFrom-StringData -StringData @'
     InitializingVMDiskMessage=Initializing VM Disk '{1}' for VM '{0}'.
     MountingVMDiskMessage=Mounting VM Disk '{1}' for VM '{0}' to '{2}'.
     DismountingVMDiskMessage=Dismounting VM Disk '{1}' for VM '{0}'.
-    DeletingVMAllDisksMessage=Deleting all disks from VM '{0}'.
+    DeletingVMFolderMessage=Deleting folder for VM '{0}'.
     AddingVMNetworkAdapterMessage=Adding {2} network adapter {1} to VM '{0}'.
     SettingVMNetworkAdapterVlanMessage=Setting VLAN on {2} network adapter {1} in VM '{0}' to {3}.
     ClearingVMNetworkAdapterVlanMessage=Clearing VLAN on {2} network adapter {1} in VM '{0}'.
