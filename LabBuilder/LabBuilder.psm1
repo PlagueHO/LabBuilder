@@ -3309,6 +3309,9 @@ Function Install-Lab {
     Initialize-LabVM `
         -Config $Config `
         -VMs $VMs 
+
+    Write-Verbose -Message $($LocalizedData.LabInstallCompleteMessage `
+        -f $Config.labbuilderconfig.name,$Config.labbuilderconfig.settings.fullconfigpath)        
 } # Install-Lab
 
 
@@ -3412,6 +3415,9 @@ Function Uninstall-Lab {
         $null = Remove-LabVMTemplateVHDs `
             -Config $Config
     } # If
+    
+    Write-Verbose -Message $($LocalizedData.LabUninstallCompleteMessage `
+        -f $Config.labbuilderconfig.name,$Config.labbuilderconfig.settings.fullconfigpath)        
 } # Uninstall-Lab
 
 
@@ -3563,7 +3569,6 @@ Function Start-Lab {
             {
                 # We have stepped through all VMs in this Phase so check
                 # if all have booted, otherwise reset the loop.
-                $VMNumber = 0
                 if ($PhaseAllBooted)
                 {
                     # If we have gone through all VMs in this "Bootphase"
@@ -3577,6 +3582,8 @@ Function Start-Lab {
                 {
                     $PhaseAllBooted = $True
                 } # if
+                # Reset the VM Loop
+                $VMNumber = 0
             } # if
         } # while
         
@@ -3587,13 +3594,16 @@ Function Start-Lab {
             $ExceptionParameters = @{
                 errorId = 'BootPhaseVMsTimeoutError'
                 errorCategory = 'InvalidArgument'
-                errorMessage = $($LocalizedData.BootPhaseVMsTimeoutMessage `
+                errorMessage = $($LocalizedData.BootPhaseStartVMsTimeoutError `
                     -f $BootPhase)
                     
             }
             ThrowException @ExceptionParameters
         }
     } # foreach
+
+    Write-Verbose -Message $($LocalizedData.LabStartCompleteMessage `
+        -f $Config.labbuilderconfig.name,$Config.labbuilderconfig.settings.fullconfigpath)    
 } # Start-Lab
 
 
@@ -3668,5 +3678,110 @@ Function Stop-Lab {
     # Get the VMs
     $VMs = Get-LabVM `
         -Config $Config
+
+    # Get the bootorders by highest first and ignoring 0
+    $BootOrders = @( ($VMs |
+        Where-Object -FilterScript { ($_.Bootorder -gt 0) } ).Bootorder )
+    $BootPhases = @( ($Bootorders |
+        Sort-Object -Unique -Descending) )
+
+    # Step through each of these "Bootphases" waiting for them to complete
+    foreach ($BootPhase in $BootPhases)
+    {
+        # Process this "Bootphase"
+        Write-Verbose -Message $($LocalizedData.StoppingBootPhaseVMsMessage `
+            -f $BootPhase)
+
+        # Get all VMs in this "Bootphase"
+        $BootVMs = @( $VMs |
+            Where-Object -FilterScript { ($_.BootOrder -eq $BootPhase) } )
+        
+        [DateTime] $StartTime = Get-Date
+        [boolean] $PhaseComplete = $false
+        [boolean] $PhaseAllStopped = $true
+        [int] $VMCount = $BootVMs.Count
+        [int] $VMNumber = 0
+        
+        # Loop through all the VMs in this "Bootphase" repeatedly
+        # until timeout occurs or PhaseComplete is marked as complete
+        while (-not $PhaseComplete `
+            -and (((Get-Date) - $StartTime).TotalSeconds) -lt $ShutdownTimeout)
+        {
+            # Get the VM to boot/check
+            $VM = $BootVMs[$VMNumber]
+            $VMName = $VM.Name
+            
+            # Get the actual Hyper-V VM object
+            $VMObject = Get-VM `
+                -Name $VMName `
+                -ErrorAction SilentlyContinue 
+            if (-not $VMObject)
+            {
+                # If the VM does not exist then throw a non-terminating exception
+                $ExceptionParameters = @{
+                    errorId = 'VMDoesNotExistError'
+                    errorCategory = 'InvalidArgument'
+                    errorMessage = $($LocalizedData.VMDoesNotExistError `
+                        -f $VMName)
+                        
+                }
+                ThrowException @ExceptionParameters
+            } # if
+        
+            # Shutodwn the VM if it is off
+            if ($VMObject.State -eq 'Running')
+            {
+                Write-Verbose -Message $($LocalizedData.StoppingVMMessage `
+                    -f $VMName)
+                Stop-VM `
+                    -VM $VMObject
+            } # if
+            
+            # Determine if the VM has stopped.
+            if ((Get-VM -VMName $VMName).State -ne 'Off')
+            {
+                # It has not stopped
+                $PhaseAllStopped = $False
+            } # if
+            $VMNumber++
+            if ($VMNumber -eq $VMCount)
+            {
+                # We have stepped through all VMs in this Phase so check
+                # if all have stopped, otherwise reset the loop.
+                if ($PhaseAllStopped)
+                {
+                    # If we have gone through all VMs in this "Bootphase"
+                    # and they're all marked as booted then we can mark
+                    # this phase as complete and allow moving on to the next one
+                    Write-Verbose -Message $($LocalizedData.AllBootPhaseVMsStoppedMessage `
+                        -f $BootPhase)
+                    $PhaseComplete = $True
+                }
+                else
+                {
+                    $PhaseAllStopped = $True
+                } # if
+                # Reset the VM Loop
+                $VMNumber = 0
+            } # if
+        } # while
+        
+        # Did we timeout?
+        if (-not ($PhaseComplete))
+        {
+            # Yes, throw an exception
+            $ExceptionParameters = @{
+                errorId = 'BootPhaseStopVMsTimeoutError'
+                errorCategory = 'InvalidArgument'
+                errorMessage = $($LocalizedData.BootPhaseStopVMsTimeoutError `
+                    -f $BootPhase)
+                    
+            }
+            ThrowException @ExceptionParameters
+        }
+    } # foreach
+
+    Write-Verbose -Message $($LocalizedData.LabStopCompleteMessage `
+        -f $Config.labbuilderconfig.name,$Config.labbuilderconfig.settings.fullconfigpath)    
 } # Stop-Lab
 #endregion
