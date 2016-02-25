@@ -1726,6 +1726,16 @@ InModuleScope LabBuilder {
 
     Describe 'Uninstall-Lab' -Tags 'Incomplete'  {
     }
+
+
+
+    Describe 'Start-Lab' -Tags 'Incomplete'  {
+    }
+    
+    
+    
+    Describe 'Stop-Lab' -Tags 'Incomplete'  {
+    }    
 #endregion    
 }
 

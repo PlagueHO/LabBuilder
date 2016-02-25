@@ -78,7 +78,10 @@ ConvertFrom-StringData -StringData @'
     VMDataDiskFileSystemMissingError=The Data Disk '{1}' in VM '{0}' does not have a file format definied.
     VMDataDiskCopyFolderMissingError=The CopyFolder '{2}' that should be copied to Data Disk '{1}' in VM '{0}' does not exist.
     NanoServerPackagesFolderMissingError=The NanoServerPackages folder '{0}' does not exist.
-    
+    VMDoesNotExistError=The VM '{0}' does not exist.
+    BootPhaseStartVMsTimeoutError=One or more Virtual Machines with Bootorder '{0}' failed to start completely in the required time.
+    BootPhaseStopVMsTimeoutError=One or more Virtual Machines with Bootorder '{0}' failed to stop completely in the required time.
+
     ImportingLibFileMessage=Importing function library '{0}'.
     InstallingHyperVComponentsMesage=Installing {0} Hyper-V Components.
     InitializingLabFoldersMesage=Initializing Lab Folders.
@@ -142,6 +145,10 @@ ConvertFrom-StringData -StringData @'
     StoppingVMMessage=Stopping VM '{0}'.
     RemovingVMMessage=Removing VM '{0}'.
     RemovedVMMessage=Removed VM '{0}'.
+    StartingBootPhaseVMsMessage=Starting Virtual Machines with Bootorder '{0}'.    
+    AllBootPhaseVMsStartedMessage=All Virtual Machines with Bootorder '{0}' have started.
+    StoppingBootPhaseVMsMessage=Stopping Virtual Machines with Bootorder '{0}'.    
+    AllBootPhaseVMsStoppedMessage=All Virtual Machines with Bootorder '{0}' have stopped.
     StartingDSCMessage=Starting DSC on VM '{0}'.
     MountingVMBootDiskMessage=Mounting VM '{0}' VHD Boot Disk '{1}'.
     DownloadingVMBootDiskFileMessage=Downloading VM '{0}' {1} file '{2}'.
@@ -169,4 +176,8 @@ ConvertFrom-StringData -StringData @'
     ConvertingWIMtoVHDMessage=Converting '{3}' in '{0}' to a bootable {4} {5} {2} '{1}'.
     CreatedVMInitializationFiles=Created Initialization files for VM '{0}'.
     MountingVMTemplateVHDISOMessage=Mounting {1} to use source WIM to create Template VHD {0}
+    LabInstallCompleteMessage=The Lab '{0}' has been installed into folder '{1}'.
+    LabUninstallCompleteMessage=The Lab '{0}' has been uninstalled from folder '{1}'.
+    LabStartCompleteMessage=The Lab '{0}' in folder '{1}' has been started.
+    LabStopCompleteMessage=The Lab '{0}' in folder '{1}' has been stopped.
 '@

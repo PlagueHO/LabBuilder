@@ -109,6 +109,7 @@
     "DSCParameters":  "\r\n          Dummy = \"Dummy\"\r\n        ",
     "Packages":  "Containers",
     "ComputerName":  "PESTER01",
+    "Bootorder":  9,
     "InstallMSU":  [
                        "http://download.microsoft.com/download/1/D/8/1D8B5022-5477-4B9A-8104-6A71FF9D98AB/WindowsTH-KB2693643-x64.msu"
                    ],
