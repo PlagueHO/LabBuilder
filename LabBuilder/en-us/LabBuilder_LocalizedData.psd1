@@ -137,7 +137,7 @@ ConvertFrom-StringData -StringData @'
     InitializingVMDiskMessage=Initializing VM Disk '{1}' for VM '{0}'.
     MountingVMDiskMessage=Mounting VM Disk '{1}' for VM '{0}' to '{2}'.
     DismountingVMDiskMessage=Dismounting VM Disk '{1}' for VM '{0}'.
-    DeletingVMAllDisksMessage=Deleting all disks from VM '{0}'.
+    DeletingVMFolderMessage=Deleting folder for VM '{0}'.
     AddingVMNetworkAdapterMessage=Adding {2} network adapter {1} to VM '{0}'.
     SettingVMNetworkAdapterVlanMessage=Setting VLAN on {2} network adapter {1} in VM '{0}' to {3}.
     ClearingVMNetworkAdapterVlanMessage=Clearing VLAN on {2} network adapter {1} in VM '{0}'.
@@ -177,7 +177,14 @@ ConvertFrom-StringData -StringData @'
     CreatedVMInitializationFiles=Created Initialization files for VM '{0}'.
     MountingVMTemplateVHDISOMessage=Mounting {1} to use source WIM to create Template VHD {0}
     LabInstallCompleteMessage=The Lab '{0}' has been installed into folder '{1}'.
+    LabUpdateCompleteMessage=The Lab '{0}' in folder '{1}' has been updated.
     LabUninstallCompleteMessage=The Lab '{0}' has been uninstalled from folder '{1}'.
     LabStartCompleteMessage=The Lab '{0}' in folder '{1}' has been started.
     LabStopCompleteMessage=The Lab '{0}' in folder '{1}' has been stopped.
+
+    ShouldUninstallLab=Uninstall the Lab '{0}' in folder '{1}'
+    ShouldRemoveVMTemplate=Delete the Parent VM Template VHDs useb by Lab '{0}' in folder '{1}'
+    ShouldRemoveSwitch=Delete the virtual switches used by Lab '{0}'
+    ShouldRemoveVMTemplateVHD=Delete the VM Template VHDs use by Lab '{0}'.
+    ShouldRemoveLabFolder=Delete the folder '{1}' containing Lab '{0}'
 '@

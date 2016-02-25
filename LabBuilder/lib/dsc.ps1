@@ -56,15 +56,14 @@ function GetModulesInDSCConfig()
      5. Cause a self-signed cetficiate to be created and downloaded on the Lab VM.
      6. Create a Networking DSC configuration file and ensure the DSC config file calss it.
      7. Create the MOF file from the config and an LCM config.
-.PARAMETER Configuration
-   Contains the Lab Builder configuration object that was loaded by the Get-LabConfiguration
-   object.
+.PARAMETER Lab
+   Contains the Lab object that was produced by the Get-Lab cmdlet.
 .PARAMETER VM
    A Virtual Machine object pulled from the Lab Configuration file using Get-LabVM
 .EXAMPLE
-   $Config = Get-LabConfiguration -Path c:\mylab\config.xml
-   $VMs = Get-LabVM -Config $Config
-   CreateDSCMOFFiless -Config $Config -VM $VMs[0]
+   $Lab = Get-Lab -ConfigPath c:\mylab\config.xml
+   $VMs = Get-LabVM -Lab $Lab
+   CreateDSCMOFFiless -Lab $Lab -VM $VMs[0]
    Prepare the first VM in the Lab c:\mylab\config.xml for DSC configuration.
 .OUTPUTS
    None.
@@ -74,7 +73,7 @@ function CreateDSCMOFFiles {
     param
     (
         [Parameter(Mandatory)]
-        [XML] $Config,
+        $Lab,
 
         [Parameter(Mandatory)]
         [System.Collections.Hashtable] $VM
@@ -173,7 +172,7 @@ function CreateDSCMOFFiles {
             -Recurse -Force
     } # Foreach
 
-    if (-not (RecreateSelfSignedCertificate -Config $Config -VM $VM))
+    if (-not (RecreateSelfSignedCertificate -Lab $Lab -VM $VM))
     {
         $ExceptionParameters = @{
             errorId = 'CertificateCreateError'
@@ -229,7 +228,7 @@ function CreateDSCMOFFiles {
     
     # Now create the Networking DSC Config file
     [String] $DSCNetworkingConfig = GetDSCNetworkingConfig `
-        -Config $Config -VM $VM
+        -Lab $Lab -VM $VM
     [String] $NetworkingDSCFile = Join-Path `
         -Path $VMLabBuilderFiles `
         -ChildPath 'DSCNetworking.ps1'
@@ -377,15 +376,14 @@ function CreateDSCMOFFiles {
      2. Enable/Disable DSC Event Logging.
      3. Apply Configuration to the Local Configuration Manager.
      4. Start DSC.
-.PARAMETER Configuration
-   Contains the Lab Builder configuration object that was loaded by the Get-LabConfiguration
-   object.
+.PARAMETER Lab
+   Contains the Lab object that was produced by the Get-Lab cmdlet.
 .PARAMETER VM
    A Virtual Machine object pulled from the Lab Configuration file using Get-LabVM
 .EXAMPLE
-   $Config = Get-LabConfiguration -Path c:\mylab\config.xml
-   $VMs = Get-LabVM -Config $Config
-   SetDSCStartFile -Config $Config -VM $VMs[0]
+   $Lab = Get-Lab -ConfigPath c:\mylab\config.xml
+   $VMs = Get-LabVM -Lab $Lab
+   SetDSCStartFile -Lab $Lab -VM $VMs[0]
    Prepare the first VM in the Lab c:\mylab\config.xml for DSC start up.
 .OUTPUTS
    None.
@@ -395,7 +393,7 @@ function SetDSCStartFile {
     param
     (
         [Parameter(Mandatory)]
-        [XML] $Config,
+        $Lab,
 
         [Parameter(Mandatory)]
         [System.Collections.Hashtable] $VM
@@ -409,7 +407,7 @@ function SetDSCStartFile {
     # Relabel the Network Adapters so that they match what the DSC Networking config will use
     # This is because unfortunately the Hyper-V Device Naming feature doesn't work.
     [String] $ManagementSwitchName = GetManagementSwitchName `
-        -Config $Config
+        -Lab $Lab
     $Adapters = @(($VM.Adapters).Name)
     $Adapters += @($ManagementSwitchName)
 
@@ -502,15 +500,14 @@ Start-DSCConfiguration ``
      3. DSC Configuration files.
      4. DSC MOF Files for general config and for LCM config.
      5. Start up scripts.
-.PARAMETER Configuration
-   Contains the Lab Builder configuration object that was loaded by the Get-LabConfiguration
-   object.
+.PARAMETER Lab
+   Contains the Lab object that was produced by the Get-Lab cmdlet.
 .PARAMETER VM
    A Virtual Machine object pulled from the Lab Configuration file using Get-LabVM
 .EXAMPLE
-   $Config = Get-LabConfiguration -Path c:\mylab\config.xml
-   $VMs = Get-LabVM -Config $Config
-   InitializeDSC -Config $Config -VM $VMs[0]
+   $Lab = Get-Lab -ConfigPath c:\mylab\config.xml
+   $VMs = Get-LabVM -Lab $Lab
+   InitializeDSC -Lab $Lab -VM $VMs[0]
    Prepares all files required to start up Desired State Configuration for the
    first VM in the Lab c:\mylab\config.xml for DSC start up.
 .OUTPUTS
@@ -520,17 +517,17 @@ function InitializeDSC {
     [CmdLetBinding()]
     param (
         [Parameter(Mandatory)]
-        [XML] $Config,
+        $Lab,
 
         [Parameter(Mandatory)]
         [System.Collections.Hashtable] $VM
     )
 
     # Are there any DSC Settings to manage?
-    CreateDSCMOFFiles -Config $Config -VM $VM
+    CreateDSCMOFFiles -Lab $Lab -VM $VM
 
     # Generate the DSC Start up Script file
-    SetDSCStartFile -Config $Config -VM $VM
+    SetDSCStartFile -Lab $Lab -VM $VM
 } # InitializeDSC
 
 
@@ -546,9 +543,8 @@ function InitializeDSC {
      4. Upload all required modules to the c:\program files\WindowsPowerShell\Modules\ folder
         of the VM.
      5. Invoke the StartDSC.ps1 script on the VM to start DSC processing.
-.PARAMETER Configuration
-   Contains the Lab Builder configuration object that was loaded by the Get-LabConfiguration
-   object.
+.PARAMETER Lab
+   Contains the Lab object that was produced by the Get-Lab cmdlet.
 .PARAMETER VM
    A Virtual Machine object pulled from the Lab Configuration file using Get-LabVM
 .PARAMETER Timeout
@@ -556,9 +552,9 @@ function InitializeDSC {
    If the timeout is reached before the process is complete an error will be thrown.
    The timeout defaults to 300 seconds.   
 .EXAMPLE
-   $Config = Get-LabConfiguration -Path c:\mylab\config.xml
-   $VMs = Get-LabVM -Config $Config
-   StartDSC -Config $Config -VM $VMs[0]
+   $Lab = Get-Lab -ConfigPath c:\mylab\config.xml
+   $VMs = Get-LabVM -Lab $Lab
+   StartDSC -Lab $Lab -VM $VMs[0]
    Starts up Desired State Configuration for the first VM in the Lab c:\mylab\config.xml.
 .OUTPUTS
    None.
@@ -567,7 +563,7 @@ function StartDSC {
     [CmdLetBinding()]
     param (
         [Parameter(Mandatory)]
-        [XML] $Config,
+        $Lab,
 
         [Parameter(Mandatory)]
         [System.Collections.Hashtable] $VM,
@@ -759,13 +755,12 @@ function StartDSC {
    This function creates the content that will be written to the Networking DSC Config file
    from the networking details stored in the VM object. 
 .EXAMPLE
-   $Config = Get-LabConfiguration -Path c:\mylab\config.xml
-   $VMs = Get-LabVM -Config $Config
-   $NetworkingDSC = GetDSCNetworkingConfig -Config $Config -VM $VMs[0]
+   $Lab = Get-Lab -ConfigPath c:\mylab\config.xml
+   $VMs = Get-LabVM -Lab $Lab
+   $NetworkingDSC = GetDSCNetworkingConfig -Lab $Lab -VM $VMs[0]
    Return the Networking DSC for the first VM in the Lab c:\mylab\config.xml for DSC configuration.
-.PARAMETER Configuration
-   Contains the Lab Builder configuration object that was loaded by the Get-LabConfiguration
-   object.
+.PARAMETER Lab
+   Contains the Lab object that was produced by the Get-Lab cmdlet.
 .PARAMETER VM
    A Virtual Machine object pulled from the Lab Configuration file using Get-LabVM
 .OUTPUTS
@@ -777,7 +772,7 @@ function GetDSCNetworkingConfig {
     param
     (
         [Parameter(Mandatory)]
-        [XML] $Config,
+        $Lab,
 
         [Parameter(Mandatory)]
         [System.Collections.Hashtable] $VM

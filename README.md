@@ -31,15 +31,15 @@ This had the following advantages:
 
 Goals
 =====
-The general goals of this project are:
-+ Enable "one-click" creation of a Hyper-V Lab environment.
-+ Enable non-developers to easily define Lab environments.
-+ Support multiple Lab environments on the same Hyper-V host.
-+ Allow a Lab environment to span or be installed on a remote Hyper-V host.
-+ Ensure that multiple Lab environments are completely isolated from each other.
-+ Minimize Lab footprint by utilizing Differencing disks where possible.
-+ Allow GUI based tools to be easily created to create Lab configurations.
-+ Enable new Lab VM machine types to be configured by supplying different DSC library resources.
+The general goals of this module are:
++ **One-Click Create**: Enable "one-click" creation of a Hyper-V Lab environment.
++ **Easy Configuration**: Enable non-developers to easily define Lab environments.
++ **Multiple Labs**: Support multiple Lab environments on the same Hyper-V host.
++ **Stretched Labs**: Allow a Lab environment to span or be installed on a remote Hyper-V host.
++ **Lab Isolation**: Ensure that multiple Lab environments are completely isolated from each other.
++ **Minimal Disk Usage**: Minimize Lab footprint by utilizing differencing disks where possible.
++ **Configuration Flexibility**: Allow GUI based tools to be easily created to create Lab configurations.
++ **Extensible**: Enable new Lab VM machine types to be configured by supplying different DSC library resources.
 
 
 Basic Usage Guide
@@ -65,7 +65,7 @@ Once these files are available the process of setting up the Lab is simple.
  7. Run the following commands in an Administrative PowerShell window:
 ```powershell
 Import-Module LabBuilder
-Install-Lab -Path 'c:\MyLab\Configuration.xml'
+Install-Lab -ConfigPath 'c:\MyLab\Configuration.xml'
 ```
 
 This will create a new Lab using the c:\MyLab\Configuration.xml file.
@@ -133,19 +133,28 @@ from the settings in the Configuration file.
 
 The Hyper-V component can also be optionally installed if it is not.
 
-### PARAMETER Path
+### PARAMETER ConfigPath
 The path to the LabBuilder configuration XML file.
 
 ### PARAMETER LabPath
 The optional path to install the Lab to - overrides the LabPath setting in the
 configuration file.
 
+### PARAMETER Lab
+The Lab object returned by Get-Lab of the lab to install.    
+
 ### PARAMETER CheckEnvironment
 Whether or not to check if Hyper-V is installed and install it if missing.
 
 ### EXAMPLE
 ```powershell
-Install-Lab -Path c:\mylab\config.xml
+Install-Lab -ConfigPath c:\mylab\config.xml
+```
+Install the lab defined in the c:\mylab\config.xml LabBuilder configuration file.
+
+### EXAMPLE
+```powershell
+Get-Lab -ConfigPath c:\mylab\config.xml | Install-Lab
 ```
 Install the lab defined in the c:\mylab\config.xml LabBuilder configuration file.
 
@@ -153,8 +162,48 @@ Install the lab defined in the c:\mylab\config.xml LabBuilder configuration file
 None
 
 
+Update-Lab
+----------
+### SYNOPSIS
+Update a Lab.
+
+### DESCRIPTION
+This cmdlet will update the existing Hyper-V lab environment defined by the
+LabBuilder configuration file provided.
+
+If components of the Lab are missing they will be added.
+
+If components of the Lab already exist, they will be updated if they differ
+from the settings in the Configuration file.
+
+### PARAMETER ConfigPath
+The path to the LabBuilder configuration XML file.
+
+### PARAMETER LabPath
+The optional path to update the Lab in - overrides the LabPath setting in the
+configuration file.
+
+### PARAMETER Lab
+The Lab object returned by Get-Lab of the lab to update.    
+
+### EXAMPLE
+```powershell
+Update-Lab -ConfigPath c:\mylab\config.xml
+```
+Update the lab defined in the c:\mylab\config.xml LabBuilder configuration file.
+
+### EXAMPLE
+```powershell
+Get-Lab -ConfigPath c:\mylab\config.xml | Update-Lab
+```
+Update the lab defined in the c:\mylab\config.xml LabBuilder configuration file.
+
+### OUTPUTS
+None
+
+
 Uninstall-Lab
------------
+-------------
 ### SYNOPSIS
 Uninstall the components of an existing Lab.
 
@@ -168,33 +217,54 @@ Switches
 VM Templates
 VM Template VHDs
 
-### PARAMETER Path
+### PARAMETER ConfigPath
 The path to the LabBuilder configuration XML file.
 
 ### PARAMETER LabPath
 The optional path to uninstall the Lab from - overrides the LabPath setting in the
 configuration file.
 
-### PARAMETER RemoveSwitches
-Whether to remove the switches defined by this Lab.
+### PARAMETER Lab
+The Lab object returned by Get-Lab of the lab to uninstall. 
 
-### PARAMETER RemoveVMTemplates
-Whether to remove the VM Templates created by this Lab.
+### PARAMETER RemoveSwitch
+Causes the switches defined by this to be removed.
 
-### PARAMETER RemoveVHDs
-Whether to remove any VHD files attached to the Lab virtual
-machines.
+### PARAMETER RemoveVMTemplate
+Causes the VM Templates created by this to be be removed. 
 
-### PARAMETER RemoveVMTemplateVHDs
-Whether to remove any created VM Template VHDs.
-.EXAMPLE
+### PARAMETER RemoveVMFolder
+Causes the VM folder created to contain the files for any the
+VMs in this Lab to be removed.
+
+### PARAMETER RemoveVMTemplateVHD
+Causes the VM Template VHDs that are used in this lab to be
+deleted.
+
+### PARAMETER RemoveLabFolder
+Causes the entire folder containing this Lab to be deleted.
+
+### EXAMPLE
 ```powershell
 Uninstall-Lab `
     -Path c:\mylab\config.xml `
-    -RemoveSwitches`
-    -RemoveVMTemplates `
-    -RemoveVHDs `
-    -RemoveVMTemplateVHDs
+    -RemoveSwitch`
+    -RemoveVMTemplate `
+    -RemoveVMFolder `
+    -RemoveVMTemplateVHD `
+    -RemoveLabFolder
+```
+Completely uninstall all components in the lab defined in the
+c:\mylab\config.xml LabBuilder configuration file.
+
+### EXAMPLE
+```powershell
+Get-Lab -ConfigPath c:\mylab\config.xml | Uninstall-Lab `
+    -RemoveSwitch`
+    -RemoveVMTemplate `
+    -RemoveVMFolder `
+    -RemoveVMTemplateVHD `
+    -RemoveLabFolder
 ```
 Completely uninstall all components in the lab defined in the
 c:\mylab\config.xml LabBuilder configuration file.
@@ -239,12 +309,15 @@ If a Bootorder of 0 is specifed then the Virtual Machine will not be booted at
 all. This is useful for things like Root CA VMs that only need to started when
 the Lab is created.
 
-### PARAMETER Path
+### PARAMETER ConfigPath
 The path to the LabBuilder configuration XML file.
 
 ### PARAMETER LabPath
 The optional path to install the Lab to - overrides the LabPath setting in the
 configuration file.
+
+### PARAMETER Lab
+The Lab object returned by Get-Lab of the lab to start.     
 
 ### PARAMETER StartupTimeout
 The maximum number of seconds that the process will wait for a VM to startup.
@@ -252,13 +325,19 @@ Defaults to 90 seconds.
 
 ### EXAMPLE
 ```powershell
-Start-Lab -Path c:\mylab\config.xml
+Start-Lab -ConfigPath c:\mylab\config.xml
+```
+Start the lab defined in the c:\mylab\config.xml LabBuilder configuration file.
+
+### EXAMPLE
+```powershell
+Get-Lab -ConfigPath c:\mylab\config.xml | Start-Lab
 ```
 Start the lab defined in the c:\mylab\config.xml LabBuilder configuration file.
 
 ### OUTPUTS
 None
-
+    
 
 Stop-Lab
 --------
@@ -266,30 +345,43 @@ Stop-Lab
 Stop an existing Lab.
 
 ### DESCRIPTION
-This cmdlet will stop all the Hyper-V virtual machines definied in a Lab configuration.
+This cmdlet will stop all the Hyper-V virtual machines definied in a Lab
+configuration.
 
-It will use the Bootorder attribute (if defined) for any VMs to determine the order they should be shutdown in. If a Bootorder is not specified for a machine, it will be shutdown before all machines with a defined boot order.
+It will use the Bootorder attribute (if defined) for any VMs to determine
+the order they should be shutdown in. If a Bootorder is not specified for a
+machine, it will be shutdown before all machines with a defined boot order.
 
-The higher the Bootorder value for a machine the earlier it will be shutdown in the stop process.
+The higher the Bootorder value for a machine the earlier it will be shutdown
+in the stop process.
 
 The Virtual Machines will be shutdown in REVERSE Bootorder.
 
-Machines will be shutdown in series, with each machine shutting down once the previous machine has completed shutdown.
+Machines will be shutdown in series, with each machine shutting down once the
+previous machine has completed shutdown.
 
-If a Virtual Machine in the Lab is already shutdown, it will be ignored and the next machine in series will be shutdown.
+If a Virtual Machine in the Lab is already shutdown, it will be ignored
+and the next machine in series will be shutdown.
 
-If more than one Virtual Machine shares the same Bootorder value, then these machines will be shutdown in parallel, with the shutdown process only continuing onto the next Bootorder when all these machines are shutdown.
+If more than one Virtual Machine shares the same Bootorder value, then
+these machines will be shutdown in parallel, with the shutdown process only
+continuing onto the next Bootorder when all these machines are shutdown.
 
-If a Virtual Machine specified in the configuration is not found an exception will be thrown.
+If a Virtual Machine specified in the configuration is not found an
+exception will be thrown.
 
-If a Virtual Machine takes longer than the ShutdownTimeout then an exception will be thown but the Stop process will continue.
+If a Virtual Machine takes longer than the ShutdownTimeout then an exception
+will be thown but the Stop process will continue.
 
-### PARAMETER Path
+### PARAMETER ConfigPath
 The path to the LabBuilder configuration XML file.
 
 ### PARAMETER LabPath
 The optional path to install the Lab to - overrides the LabPath setting in the
 configuration file.
+
+### PARAMETER Lab
+The Lab object returned by Get-Lab of the lab to start.     
 
 ### PARAMETER ShutdownTimeout
 The maximum number of seconds that the process will wait for a VM to shutdown.
@@ -297,7 +389,13 @@ Defaults to 30 seconds.
 
 ### EXAMPLE
 ```powershell
-Stop-Lab -Path c:\mylab\config.xml
+Stop-Lab -ConfigPath c:\mylab\config.xml
+```
+Stop the lab defined in the c:\mylab\config.xml LabBuilder configuration file.
+
+### EXAMPLE
+```powershell
+Get-Lab -ConfigPath c:\mylab\config.xml | Stop-Lab
 ```
 Stop the lab defined in the c:\mylab\config.xml LabBuilder configuration file.
 
@@ -307,6 +405,14 @@ None
 
 Versions
 ========
+### 0.5.0.0
+* BREKAING: Renamed Config parameter to Lab parameter to indicate the object is actually an object that also stores Lab state information.
+* Remove-LabVM: Removed parameter 'RemoveVHDs'. Added parameter RemoveVMFolder which causes the VM folder and all contents to be deleted.
+* Uninstall-Lab: Renamed "Remove" parameters to be singular names rather than plural.
+* Uninstall-Lab: Added parameter 'RemoveLabFolder' which will cause the entire Lab folder to be deleted.
+* Uninstall-Lab: Added ShouldProcess support to ask user to confirm actions.
+* Update-Lab: Added function which just calls Install-Lab.
+ 
 ### 0.4.2.0
 * Add bootorder VM attribute for controlling stop-lab/start-lab order.
 * Added Start-Lab and Stop-Lab cmdlets.

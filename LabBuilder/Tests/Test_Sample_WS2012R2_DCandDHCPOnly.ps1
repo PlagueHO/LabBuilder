@@ -5,13 +5,13 @@ Function Test-StartLabVM {
     Param (
         [String[]]$StartVMs
     )
-    $Config = Get-LabConfiguration -Path $Script:ConfigPath
-    [Array]$Templates = Get-LabVMTemplate -Config $Config
-    [Array]$Switches = Get-LabSwitch -Config $Config
-    [Array]$VMs = Get-LabVM -Config $Config -VMTemplates $Templates -Switches $Switches
+    $Lab = Get-Lab -Path $Script:ConfigPath
+    [Array]$Templates = Get-LabVMTemplate -Lab $Lab
+    [Array]$Switches = Get-LabSwitch -Lab $Lab
+    [Array]$VMs = Get-LabVM -Lab $Lab -VMTemplates $Templates -Switches $Switches
     Foreach ($VM in $VMs) {
         If ($VM.ComputerName -in $StartVMs) {
-            Start-LabVM -Config $Config -VM $VM -Verbose
+            Start-LabVM -Lab $Lab -VM $VM -Verbose
         }
     }
 }
@@ -21,7 +21,7 @@ Function Test-LabBuilderInstall {
 } # Function Test-LabBuilderInstall
 ##########################################################################################################################################
 Function Test-LabBuilderUninstall {
-    Uninstall-Lab -Path $Script:ConfigPath -Verbose -RemoveVHDs -RemoveTemplates
+    Uninstall-Lab -Path $Script:ConfigPath -Verbose -RemoveVMFolder -RemoveTemplate
 } # Function Test-LabBuilderUnnstall
 ##########################################################################################################################################
 Function Test-LabBuilderLoadModule {

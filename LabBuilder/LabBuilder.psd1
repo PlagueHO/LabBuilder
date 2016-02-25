@@ -1,6 +1,6 @@
 @{
     RootModule = 'LabBuilder.psm1'
-    ModuleVersion = '0.4.2.0'
+    ModuleVersion = '0.5.0.0'
     GUID = 'e229850e-7a90-4123-9a30-37814119d3a3'
     Author = 'Daniel Scott-Raynsford'
     CompanyName = ''
@@ -15,8 +15,6 @@
     FormatsToProcess = @()
     # NestedModules = @()
     FunctionsToExport = @(
-        'Get-LabConfiguration'
-        'Initialize-LabConfiguration'
         'Install-LabHyperV'
         'Get-LabSwitch'
         'Initialize-LabSwitch'
@@ -31,7 +29,9 @@
         'Initialize-LabVM'
         'Start-LabVM'
         'Remove-LabVM'
+        'Get-Lab'
         'Install-Lab'
+        'Update-Lab'
         'Uninstall-Lab'
         'Start-Lab'
         'Stop-Lab'
