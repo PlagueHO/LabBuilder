@@ -162,10 +162,51 @@ Install the lab defined in the c:\mylab\config.xml LabBuilder configuration file
 None
 
 
+Update-Lab
+----------
+### SYNOPSIS
+Update a Lab.
+
+### DESCRIPTION
+This cmdlet will update the existing Hyper-V lab environment defined by the
+LabBuilder configuration file provided.
+
+If components of the Lab are missing they will be added.
+
+If components of the Lab already exist, they will be updated if they differ
+from the settings in the Configuration file.
+
+### PARAMETER ConfigPath
+The path to the LabBuilder configuration XML file.
+
+### PARAMETER LabPath
+The optional path to update the Lab in - overrides the LabPath setting in the
+configuration file.
+
+### PARAMETER Lab
+The Lab object returned by Get-Lab of the lab to update.    
+
+### EXAMPLE
+```powershell
+Update-Lab -ConfigPath c:\mylab\config.xml
+```
+Update the lab defined in the c:\mylab\config.xml LabBuilder configuration file.
+
+### EXAMPLE
+```powershell
+Get-Lab -ConfigPath c:\mylab\config.xml | Update-Lab
+```
+Update the lab defined in the c:\mylab\config.xml LabBuilder configuration file.
+
+### OUTPUTS
+None
+
+
 Uninstall-Lab
 -------------
 ### SYNOPSIS
 Uninstall the components of an existing Lab.
+
 ### DESCRIPTION
 This function will attempt to remove the components of the lab specified
 in the provided LabBuilder configuration file.
@@ -370,6 +411,7 @@ Versions
 * Uninstall-Lab: Renamed "Remove" parameters to be singular names rather than plural.
 * Uninstall-Lab: Added parameter 'RemoveLabFolder' which will cause the entire Lab folder to be deleted.
 * Uninstall-Lab: Added ShouldProcess support to ask user to confirm actions.
+* Update-Lab: Added function which just calls Install-Lab.
  
 ### 0.4.2.0
 * Add bootorder VM attribute for controlling stop-lab/start-lab order.

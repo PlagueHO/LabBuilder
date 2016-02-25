@@ -1724,6 +1724,11 @@ InModuleScope LabBuilder {
 
 
 
+    Describe 'Update-Lab' -Tags 'Incomplete'  {
+    }
+
+
+
     Describe 'Uninstall-Lab' -Tags 'Incomplete'  {
     }
 
