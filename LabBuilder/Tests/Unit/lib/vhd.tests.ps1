@@ -47,9 +47,9 @@ InModuleScope LabBuilder {
 
 
     Describe 'InitializeBootVHD' {
-        $Config = Get-LabConfiguration -Path $Global:TestConfigOKPath
-        [array] $VMs = Get-LabVM -Config $Config
-        $NanoServerPackagesFolder = Join-Path -Path $Config.labbuilderconfig.settings.labpath -ChildPath 'NanoServerPackages'
+        $Lab = Get-Lab -ConfigPath $Global:TestConfigOKPath
+        [array] $VMs = Get-LabVM -Lab $Lab
+        $NanoServerPackagesFolder = Join-Path -Path $Lab.labbuilderconfig.settings.labpath -ChildPath 'NanoServerPackages'
 
         Mock New-Item
         Mock Mount-WindowsImage
@@ -63,7 +63,7 @@ InModuleScope LabBuilder {
             It 'Does Not Throw Exception' {
                 $VM = $VMs[0].Clone()
                 $VM.InstallMSU = ''
-                { InitializeBootVHD -Config $Config -VM $VM -VMBootDiskPath 'c:\Dummy\' } | Should Not Throw
+                { InitializeBootVHD -Lab $Lab -VM $VM -VMBootDiskPath 'c:\Dummy\' } | Should Not Throw
             }
             It 'Calls Mocked commands' {
                 Assert-MockCalled New-Item -Exactly 3
@@ -80,7 +80,7 @@ InModuleScope LabBuilder {
             It 'Does Not Throw Exception' {
                 $VM = $VMs[0].Clone()
                 $VM.OSType = 'Nano'
-                { InitializeBootVHD -Config $Config -VM $VM -VMBootDiskPath 'c:\Dummy\' } | Should Not Throw
+                { InitializeBootVHD -Lab $Lab -VM $VM -VMBootDiskPath 'c:\Dummy\' } | Should Not Throw
             }
             It 'Calls Mocked commands' {
                 Assert-MockCalled New-Item -Exactly 3
@@ -104,7 +104,7 @@ InModuleScope LabBuilder {
                         -f $NanoServerPackagesFolder)
                 }
                 $Exception = GetException @ExceptionParameters
-                { InitializeBootVHD -Config $Config -VM $VM -VMBootDiskPath 'c:\Dummy\' } | Should Throw $Exception
+                { InitializeBootVHD -Lab $Lab -VM $VM -VMBootDiskPath 'c:\Dummy\' } | Should Throw $Exception
             }
             It 'Calls Mocked commands' {
                 Assert-MockCalled New-Item -Exactly 1
@@ -119,7 +119,7 @@ InModuleScope LabBuilder {
         Context 'Valid Configuration Passed' {	
             It 'Does Not Throw Exception' {
                 $VM = $VMs[0].Clone()
-                { InitializeBootVHD -Config $Config -VM $VM -VMBootDiskPath 'c:\Dummy\' } | Should Not Throw
+                { InitializeBootVHD -Lab $Lab -VM $VM -VMBootDiskPath 'c:\Dummy\' } | Should Not Throw
             }
             It 'Calls Mocked commands' {
                 Assert-MockCalled New-Item -Exactly 3

@@ -506,12 +506,12 @@ InModuleScope LabBuilder {
 
 
     Describe 'DownloadResources' -Tags 'Incomplete' {
-        $Config = Get-LabConfiguration -Path $Global:TestConfigOKPath
+        $Lab = Get-Lab -ConfigPath $Global:TestConfigOKPath
 
         Context 'Valid configuration is passed' {
             Mock DownloadModule
             It 'Does not throw an Exception' {
-                { DownloadResources -Config $Config } | Should Not Throw
+                { DownloadResources -Lab $Lab } | Should Not Throw
             }
             It 'Should call appropriate Mocks' {
                 Assert-MockCalled DownloadModule -Exactly 4
@@ -523,12 +523,14 @@ InModuleScope LabBuilder {
 
     Describe 'InstallHyperV' {
 
-        $Config = Get-LabConfiguration -Path $Global:TestConfigOKPath
+        $Lab = Get-Lab -ConfigPath $Global:TestConfigOKPath
 
-        If ((Get-CimInstance Win32_OperatingSystem).ProductType -eq 1) {
+        if ((Get-CimInstance Win32_OperatingSystem).ProductType -eq 1) {
             Mock Get-WindowsOptionalFeature { [PSObject]@{ FeatureName = 'Mock'; State = 'Disabled'; } }
             Mock Enable-WindowsOptionalFeature 
-        } Else {
+        }
+        else
+        {
             Mock Get-WindowsFeature { [PSObject]@{ Name = 'Mock'; Installed = $false; } }
             Mock Install-WindowsFeature
         }
@@ -537,18 +539,25 @@ InModuleScope LabBuilder {
             It 'Does not throw an Exception' {
                 { InstallHyperV } | Should Not Throw
             }
-            If ((Get-CimInstance Win32_OperatingSystem).ProductType -eq 1) {
+            if ((Get-CimInstance Win32_OperatingSystem).ProductType -eq 1) {
                 It 'Calls appropriate mocks' {
                     Assert-MockCalled Get-WindowsOptionalFeature -Exactly 1
                     Assert-MockCalled Enable-WindowsOptionalFeature -Exactly 1
                 }
-            } Else {
+            }
+            else
+            {
                 It 'Calls appropriate mocks' {
                     Assert-MockCalled Get-WindowsFeature -Exactly 1
                     Assert-MockCalled Install-WindowsFeature -Exactly 1
                 }
             }
         }
+    }
+
+
+
+    Describe 'ValidateConfigurationXMLSchema' -Tag 'Incomplete' {
     }
 }
 

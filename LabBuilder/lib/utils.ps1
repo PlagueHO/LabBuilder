@@ -208,11 +208,11 @@ function CreateCredential()
    Downloads any resources required by the configuration.
 .DESCRIPTION
    It will ensure any required modules and files are downloaded.
-.PARAMETER Configuration
-   Contains the Lab Builder configuration object that was loaded by the Get-LabConfiguration object.
+.PARAMETER Lab
+   Contains the Lab object that was produced by the Get-Lab cmdlet.
 .EXAMPLE
-   $Config = Get-LabConfiguration -Path c:\mylab\config.xml
-   DownloadResources -Config $Config
+   $Lab = Get-Lab -ConfigPath c:\mylab\config.xml
+   DownloadResources -Lab $Lab
    Loads a Lab Builder configuration and downloads any resources required by it.   
 .OUTPUTS
    None.
@@ -338,11 +338,11 @@ function DownloadModule {
    Downloads any resources required by the configuration.
 .DESCRIPTION
    It will ensure any required modules and files are downloaded.
-.PARAMETER Configuration
-   Contains the Lab Builder configuration object that was loaded by the Get-LabConfiguration object.
+.PARAMETER Lab
+   Contains the Lab object that was produced by the Get-Lab cmdlet.
 .EXAMPLE
-   $Config = Get-LabConfiguration -Path c:\mylab\config.xml
-   DownloadResources -Config $Config
+   $Lab = Get-Lab -ConfigPath c:\mylab\config.xml
+   DownloadResources -Lab $Lab
    Loads a Lab Builder configuration and downloads any resources required by it.   
 .OUTPUTS
    None.
@@ -353,7 +353,7 @@ function DownloadResources {
     (
         [Parameter(Mandatory)]
         [ValidateNotNullOrEmpty()]
-        [XML] $Config
+        $Lab
     )
         
     # Downloading Lab Resources
@@ -366,9 +366,9 @@ function DownloadResources {
     Set-PSRepository -Name PSGallery -InstallationPolicy Trusted    
     
     # Download any other resources required by this lab
-    if ($Config.labbuilderconfig.resources) 
+    if ($Lab.labbuilderconfig.resources) 
     {
-        foreach ($Module in $Config.labbuilderconfig.resources.module)
+        foreach ($Module in $Lab.labbuilderconfig.resources.module)
         {
             if (-not $Module.Name)
             {
@@ -447,3 +447,69 @@ function InstallHyperV {
         }
     }
 } # InstallHyperV
+
+
+<#
+.SYNOPSIS
+   Validates the provided configuration XML against the Schema.
+.DESCRIPTION
+   This function will ensure that the provided Configration XML
+   is compatible with the LabBuilderConfig.xsd Schema file.
+.PARAMETER ConfigPath
+   Contains the path to the Configuration XML file
+.EXAMPLE
+   ValidateConfigurationXMLSchema -ConfigPath c:\mylab\config.xml
+   Validates the XML configuration and downloads any resources required by it.   
+.OUTPUTS
+   None. If the XML is invalid an exception will be thrown.
+#>
+function ValidateConfigurationXMLSchema {
+    [CmdLetBinding()]
+    param
+    (
+        [Parameter(Mandatory)]
+        [ValidateNotNullOrEmpty()]
+        [String] $ConfigPath
+    )
+
+    # Define these variables so they are accesible inside the event handler.
+    [int] $Script:XMLErrorCount = 0
+    [string] $Script:XMLFirstError = ''
+    [String] $Script:XMLPath = $ConfigPath 
+    [string] $Script:ConfigurationXMLValidationMessage = $LocalizedData.ConfigurationXMLValidationMessage
+
+    # Perform the XSD Validation
+    $readerSettings = New-Object -TypeName System.Xml.XmlReaderSettings
+    $readerSettings.ValidationType = [System.Xml.ValidationType]::Schema
+    $null = $readerSettings.Schemas.Add("labbuilderconfig", $Script:ConfigurationXMLSchema)
+    $readerSettings.ValidationFlags = [System.Xml.Schema.XmlSchemaValidationFlags]::ProcessInlineSchema -bor [System.Xml.Schema.XmlSchemaValidationFlags]::ProcessSchemaLocation
+    $readerSettings.add_ValidationEventHandler(
+    {
+        # Triggered each time an error is found in the XML file
+        if ([String]::IsNullOrWhitespace($Script:XMLFirstError))
+        {    
+            $Script:XMLFirstError = $_.Message
+        } # if
+        Write-Verbose -Message ($Script:ConfigurationXMLValidationMessage `
+            -f $Script:XMLPath,$_.Message)
+        $Script:XMLErrorCount++
+    });
+    $reader = [System.Xml.XmlReader]::Create([string] $ConfigPath, $readerSettings)
+    while ($reader.Read())
+    {
+    } # while
+    $null = $reader.Close()
+
+    # Verify the results of the XSD validation
+    if($script:XMLErrorCount -gt 0)
+    {
+        # XML is NOT valid
+        $ExceptionParameters = @{
+            errorId = 'ConfigurationXMLValidationError'
+            errorCategory = 'InvalidArgument'
+            errorMessage = $($LocalizedData.ConfigurationXMLValidationError `
+                -f $ConfigPath,$Script:XMLFirstError)
+        }
+        ThrowException @ExceptionParameters
+    } # if
+} # ValidateConfigurationXMLSchema

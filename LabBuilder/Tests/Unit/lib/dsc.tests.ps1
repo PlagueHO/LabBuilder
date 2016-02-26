@@ -60,10 +60,10 @@ InModuleScope LabBuilder {
 
         Mock Get-VM
 
-        $Config = Get-LabConfiguration -Path $Global:TestConfigOKPath
-        [Array]$Switches = Get-LabSwitch -Config $Config
-        [Array]$Templates = Get-LabVMTemplate -Config $Config
-        [Array]$VMs = Get-LabVM -Config $Config -VMTemplates $Templates -Switches $Switches
+        $Lab = Get-Lab -ConfigPath $Global:TestConfigOKPath
+        [Array]$Switches = Get-LabSwitch -Lab $Lab
+        [Array]$Templates = Get-LabVMTemplate -Lab $Lab
+        [Array]$VMs = Get-LabVM -Lab $Lab -VMTemplates $Templates -Switches $Switches
         
         Mock Create-LabPath
         Mock Get-Module
@@ -73,7 +73,7 @@ InModuleScope LabBuilder {
             $VM = $VMS[0].Clone()
             $VM.DSCConfigFile = ''
             It 'Does not throw an Exception' {
-                { CreateDSCMOFFiles -Config $Config -VM $VM } | Should Not Throw
+                { CreateDSCMOFFiles -Lab $Lab -VM $VM } | Should Not Throw
             }
             It 'Calls Mocked commands' {
                 Assert-MockCalled Create-LabPath -Exactly 1
@@ -94,7 +94,7 @@ InModuleScope LabBuilder {
             $Exception = GetException @ExceptionParameters
 
             It 'Throws a DSCModuleDownloadError Exception' {
-                { CreateDSCMOFFiles -Config $Config -VM $VM } | Should Throw $Exception
+                { CreateDSCMOFFiles -Lab $Lab -VM $VM } | Should Throw $Exception
             }
             It 'Calls Mocked commands' {
                 Assert-MockCalled Create-LabPath -Exactly 1
@@ -118,7 +118,7 @@ InModuleScope LabBuilder {
             $Exception = GetException @ExceptionParameters
 
             It 'Throws a DSCModuleDownloadError Exception' {
-                { CreateDSCMOFFiles -Config $Config -VM $VM } | Should Throw $Exception
+                { CreateDSCMOFFiles -Lab $Lab -VM $VM } | Should Throw $Exception
             }
             It 'Calls Mocked commands' {
                 Assert-MockCalled Create-LabPath -Exactly 1
@@ -144,7 +144,7 @@ InModuleScope LabBuilder {
             $Exception = GetException @ExceptionParameters
 
             It 'Throws a DSCModuleNotFoundError Exception' {
-                { CreateDSCMOFFiles -Config $Config -VM $VM } | Should Throw $Exception
+                { CreateDSCMOFFiles -Lab $Lab -VM $VM } | Should Throw $Exception
             }
             It 'Calls Mocked commands' {
                 Assert-MockCalled Create-LabPath -Exactly 1
@@ -172,7 +172,7 @@ InModuleScope LabBuilder {
             $Exception = GetException @ExceptionParameters
 
             It 'Throws a CertificateCreateError Exception' {
-                { CreateDSCMOFFiles -Config $Config -VM $VM } | Should Throw $Exception
+                { CreateDSCMOFFiles -Lab $Lab -VM $VM } | Should Throw $Exception
             }
             It 'Calls Mocked commands' {
                 Assert-MockCalled Create-LabPath -Exactly 1
@@ -207,7 +207,7 @@ InModuleScope LabBuilder {
             $Exception = GetException @ExceptionParameters
 
             It 'Throws a DSCConfigMetaMOFCreateError Exception' {
-                { CreateDSCMOFFiles -Config $Config -VM $VM } | Should Throw $Exception
+                { CreateDSCMOFFiles -Lab $Lab -VM $VM } | Should Throw $Exception
             }
             It 'Calls Mocked commands' {
                 Assert-MockCalled Create-LabPath -Exactly 1
@@ -231,10 +231,10 @@ InModuleScope LabBuilder {
 
         Mock Get-VM
 
-        $Config = Get-LabConfiguration -Path $Global:TestConfigOKPath
-        [Array]$Switches = Get-LabSwitch -Config $Config
-        [Array]$Templates = Get-LabVMTemplate -Config $Config
-        [Array]$VMs = Get-LabVM -Config $Config -VMTemplates $Templates -Switches $Switches
+        $Lab = Get-Lab -ConfigPath $Global:TestConfigOKPath
+        [Array]$Switches = Get-LabSwitch -Lab $Lab
+        [Array]$Templates = Get-LabVMTemplate -Lab $Lab
+        [Array]$VMs = Get-LabVM -Lab $Lab -VMTemplates $Templates -Switches $Switches
 
         Mock Get-VMNetworkAdapter
 
@@ -249,7 +249,7 @@ InModuleScope LabBuilder {
             }
             $Exception = GetException @ExceptionParameters
             It 'Throws a NetworkAdapterNotFoundError Exception' {
-                { SetDSCStartFile -Config $Config -VM $VM } | Should Throw $Exception
+                { SetDSCStartFile -Lab $Lab -VM $VM } | Should Throw $Exception
             }
             It 'Calls Mocked commands' {
                 Assert-MockCalled Get-VMNetworkAdapter -Exactly 1
@@ -270,7 +270,7 @@ InModuleScope LabBuilder {
             $Exception = GetException @ExceptionParameters
 
             It 'Throws a NetworkAdapterBlankMacError Exception' {
-                { SetDSCStartFile -Config $Config -VM $VM } | Should Throw $Exception
+                { SetDSCStartFile -Lab $Lab -VM $VM } | Should Throw $Exception
             }
             It 'Calls Mocked commands' {
                 Assert-MockCalled Get-VMNetworkAdapter -Exactly 1
@@ -284,7 +284,7 @@ InModuleScope LabBuilder {
             $VM = $VMS[0].Clone()
             
             It 'Does Not Throw Exception' {
-                { SetDSCStartFile -Config $Config -VM $VM } | Should Not Throw
+                { SetDSCStartFile -Lab $Lab -VM $VM } | Should Not Throw
             }
             It 'Calls Mocked commands' {
                 Assert-MockCalled Get-VMNetworkAdapter -Exactly ($VM.Adapters.Count+1)
@@ -297,8 +297,8 @@ InModuleScope LabBuilder {
 
     Describe 'InitializeDSC' {
 
-        $Config = Get-LabConfiguration -Path $Global:TestConfigOKPath
-        [array] $VMs = Get-LabVM -Config $Config
+        $Lab = Get-Lab -ConfigPath $Global:TestConfigOKPath
+        [array] $VMs = Get-LabVM -Lab $Lab
 
         Mock CreateDSCMOFFiles
         Mock SetDSCStartFile
@@ -307,7 +307,7 @@ InModuleScope LabBuilder {
             $VM = $VMs[0].Clone()
             
             It 'Does Not Throw Exception' {
-                { InitializeDSC -Config $Config -VM $VM } | Should Not Throw
+                { InitializeDSC -Lab $Lab -VM $VM } | Should Not Throw
             }
             It 'Calls Mocked commands' {
                 Assert-MockCalled CreateDSCMOFFiles -Exactly 1

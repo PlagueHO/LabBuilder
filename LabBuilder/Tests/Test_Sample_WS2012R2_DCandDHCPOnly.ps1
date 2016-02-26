@@ -5,23 +5,36 @@ Function Test-StartLabVM {
     Param (
         [String[]]$StartVMs
     )
-    $Config = Get-LabConfiguration -Path $Script:ConfigPath
-    [Array]$Templates = Get-LabVMTemplate -Config $Config
-    [Array]$Switches = Get-LabSwitch -Config $Config
-    [Array]$VMs = Get-LabVM -Config $Config -VMTemplates $Templates -Switches $Switches
+    $Lab = Get-Lab -Path $Script:ConfigPath
+    [Array]$VMs = Get-LabVM `
+        -Lab $Lab `
+        -Name $StartVMs
     Foreach ($VM in $VMs) {
-        If ($VM.ComputerName -in $StartVMs) {
-            Start-LabVM -Config $Config -VM $VM -Verbose
-        }
+        Install-LabVM `
+            -Lab $Lab `
+            -VM $VM `
+            -Verbose
     }
 }
 ##########################################################################################################################################
 Function Test-LabBuilderInstall {
-    Install-Lab -Path $Script:ConfigPath -Verbose
+    Get-Lab -ConfigPath $Script:ConfigPath | Install-Lab -Verbose
+} # Function Test-LabBuilderInstall
+##########################################################################################################################################
+Function Test-LabBuilderUpdate {
+    Get-Lab -ConfigPath $Script:ConfigPath | Update-Lab -Verbose
+} # Function Test-LabBuilderInstall
+##########################################################################################################################################
+Function Test-LabBuilderStart {
+    Get-Lab -ConfigPath $Script:ConfigPath | Start-Lab -Verbose
+} # Function Test-LabBuilderInstall
+##########################################################################################################################################
+Function Test-LabBuilderStop {
+    Get-Lab -ConfigPath $Script:ConfigPath | Stop-Lab -Verbose
 } # Function Test-LabBuilderInstall
 ##########################################################################################################################################
 Function Test-LabBuilderUninstall {
-    Uninstall-Lab -Path $Script:ConfigPath -Verbose -RemoveVHDs -RemoveTemplates
+    Get-Lab -ConfigPath $Script:ConfigPath | Uninstall-Lab -Verbose -RemoveVMFolder -RemoveVMTemplate -RemoveLabFolder
 } # Function Test-LabBuilderUnnstall
 ##########################################################################################################################################
 Function Test-LabBuilderLoadModule {
@@ -30,6 +43,8 @@ Function Test-LabBuilderLoadModule {
 ##########################################################################################################################################
 Test-LabBuilderLoadModule
 Test-LabBuilderInstall
+# Test-LabBuilderUpdate
+# Test-LabBuilderStart
+# Test-LabBuilderStop
 # Test-StartLabVM -StartVMs 'SA-DC1'
-# Sleep 30 # Wait 30 seconds for everything to finish building
 # Test-LabBuilderUninstall
