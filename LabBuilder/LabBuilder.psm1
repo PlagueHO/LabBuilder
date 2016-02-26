@@ -2909,6 +2909,7 @@ function Remove-LabVM {
     # if VMs array not passed, pull it from config.
     if (-not $PSBoundParameters.ContainsKey('VMs'))
     {
+        $null = $PSBoundParameters.Remove('RemoveVMFolder')
         $VMs = Get-LabVM `
             @PSBoundParameters
     } # if
