@@ -447,3 +447,69 @@ function InstallHyperV {
         }
     }
 } # InstallHyperV
+
+
+<#
+.SYNOPSIS
+   Validates the provided configuration XML against the Schema.
+.DESCRIPTION
+   This function will ensure that the provided Configration XML
+   is compatible with the LabBuilderConfig.xsd Schema file.
+.PARAMETER ConfigPath
+   Contains the path to the Configuration XML file
+.EXAMPLE
+   ValidateConfigurationXMLSchema -ConfigPath c:\mylab\config.xml
+   Validates the XML configuration and downloads any resources required by it.   
+.OUTPUTS
+   None. If the XML is invalid an exception will be thrown.
+#>
+function ValidateConfigurationXMLSchema {
+    [CmdLetBinding()]
+    param
+    (
+        [Parameter(Mandatory)]
+        [ValidateNotNullOrEmpty()]
+        [String] $ConfigPath
+    )
+
+    # Define these variables so they are accesible inside the event handler.
+    [int] $Script:XMLErrorCount = 0
+    [string] $Script:XMLFirstError = ''
+    [String] $Script:XMLPath = $ConfigPath 
+    [string] $Script:ConfigurationXMLValidationMessage = $LocalizedData.ConfigurationXMLValidationMessage
+
+    # Perform the XSD Validation
+    $readerSettings = New-Object -TypeName System.Xml.XmlReaderSettings
+    $readerSettings.ValidationType = [System.Xml.ValidationType]::Schema
+    $null = $readerSettings.Schemas.Add("labbuilderconfig", $Script:ConfigurationXMLSchema)
+    $readerSettings.ValidationFlags = [System.Xml.Schema.XmlSchemaValidationFlags]::ProcessInlineSchema -bor [System.Xml.Schema.XmlSchemaValidationFlags]::ProcessSchemaLocation
+    $readerSettings.add_ValidationEventHandler(
+    {
+        # Triggered each time an error is found in the XML file
+        if ([String]::IsNullOrWhitespace($Script:XMLFirstError))
+        {    
+            $Script:XMLFirstError = $_.Message
+        } # if
+        Write-Verbose -Message ($Script:ConfigurationXMLValidationMessage `
+            -f $Script:XMLPath,$_.Message)
+        $Script:XMLErrorCount++
+    });
+    $reader = [System.Xml.XmlReader]::Create([string] $ConfigPath, $readerSettings)
+    while ($reader.Read())
+    {
+    } # while
+    $null = $reader.Close()
+
+    # Verify the results of the XSD validation
+    if($script:XMLErrorCount -gt 0)
+    {
+        # XML is NOT valid
+        $ExceptionParameters = @{
+            errorId = 'ConfigurationXMLValidationError'
+            errorCategory = 'InvalidArgument'
+            errorMessage = $($LocalizedData.ConfigurationXMLValidationError `
+                -f $ConfigPath,$Script:XMLFirstError)
+        }
+        ThrowException @ExceptionParameters
+    } # if
+} # ValidateConfigurationXMLSchema

@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 
-<labbuilderconfig name="PesterTestConfig"
+<labbuilderconfig xmlns="labbuilderconfig"
+                  name="PesterTestConfig"
                   version="1.0">
   <description>Configuration File Used with Pester Tests</description>
 
@@ -107,7 +108,6 @@
     <template name="Pester Windows Server 2012 R2 Datacenter Full"
               vhd="Windows Server 2012 R2 Datacenter Full.vhdx"
               sourcevhd="VhdFiles\Windows Server 2012 R2 Datacenter Full.vhdx"
-              allowcreate="Y"
               memorystartupbytes="1GB"
               dynamicmemoryenabled="Y"
               processorcount="1"
@@ -119,7 +119,6 @@
     <template name="Pester Windows Server 2012 R2 Datacenter Core"
               vhd="Windows Server 2012 R2 Datacenter Core.vhdx"
               templatevhd="Windows Server 2012 R2 Datacenter Core"
-              allowcreate="Y"
               memorystartupbytes="1GB"
               dynamicmemoryenabled="N"
               processorcount="1"
@@ -131,7 +130,6 @@
               integrationservices="Guest Service Interface,Heartbeat,Key-Value Pair Exchange,Shutdown,Time Synchronization,VSS" />
     <template name="Pester Windows 10 Enterprise"
               templatevhd="Windows 10 Enterprise"
-              allowcreate="Y"
               memorystartupbytes="2GB"
               processorcount="1"
               administratorpassword="None"
@@ -142,7 +140,6 @@
     <template name="Pester Nano Server"
               vhd="MyNanoServerVHD.vhdx"
               sourcevhd="VhdFiles\Nano Server 2016 TP4 Basic.vhdx"
-              allowcreate="Y"
               memorystartupbytes="1GB"
               processorcount="1"
               administratorpassword="None"
@@ -178,7 +175,7 @@
       </datavhds>
       <adapters>
         <adapter name="External" switchname="External" macaddress="00155D010801" />
-        <adapter name="Private Vlan" switchname="Private Vlan" macaddress="00155D010801" >
+        <adapter name="Private Vlan" switchname="Private Vlan" macaddress="00155D010801" macaddressspoofing="Y" >
           <ipv4 address="192.168.16.1"
                 defaultgateway=""
                 subnetmask="24"
@@ -220,7 +217,8 @@
         </adapter>
       </adapters>
       <dsc configname="STANDALONE_DEFAULT"
-           configfile="PesterTest.DSC.ps1">
+           configfile="PesterTest.DSC.ps1"
+           logging="Y">
         <parameters>
           Dummy = "Dummy"
         </parameters>

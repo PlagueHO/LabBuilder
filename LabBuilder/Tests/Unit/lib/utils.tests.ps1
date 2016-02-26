@@ -525,10 +525,12 @@ InModuleScope LabBuilder {
 
         $Lab = Get-Lab -ConfigPath $Global:TestConfigOKPath
 
-        If ((Get-CimInstance Win32_OperatingSystem).ProductType -eq 1) {
+        if ((Get-CimInstance Win32_OperatingSystem).ProductType -eq 1) {
             Mock Get-WindowsOptionalFeature { [PSObject]@{ FeatureName = 'Mock'; State = 'Disabled'; } }
             Mock Enable-WindowsOptionalFeature 
-        } Else {
+        }
+        else
+        {
             Mock Get-WindowsFeature { [PSObject]@{ Name = 'Mock'; Installed = $false; } }
             Mock Install-WindowsFeature
         }
@@ -537,18 +539,25 @@ InModuleScope LabBuilder {
             It 'Does not throw an Exception' {
                 { InstallHyperV } | Should Not Throw
             }
-            If ((Get-CimInstance Win32_OperatingSystem).ProductType -eq 1) {
+            if ((Get-CimInstance Win32_OperatingSystem).ProductType -eq 1) {
                 It 'Calls appropriate mocks' {
                     Assert-MockCalled Get-WindowsOptionalFeature -Exactly 1
                     Assert-MockCalled Enable-WindowsOptionalFeature -Exactly 1
                 }
-            } Else {
+            }
+            else
+            {
                 It 'Calls appropriate mocks' {
                     Assert-MockCalled Get-WindowsFeature -Exactly 1
                     Assert-MockCalled Install-WindowsFeature -Exactly 1
                 }
             }
         }
+    }
+
+
+
+    Describe 'ValidateConfigurationXMLSchema' -Tag 'Incomplete' {
     }
 }
 

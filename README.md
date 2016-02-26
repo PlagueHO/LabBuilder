@@ -419,6 +419,9 @@ Versions
 * *-LabVM: Added Name array parameter to allow filtering of VMs to work with.
 * Samples: Updated sample code with additional examples.
 * Help completed for all exported cmdlets.
+* Get-LabVM: XML now validated against labbuilderconfig-schema.xsd in Schemas folder when loaded -unless SkipXMLValidation switch is passed.
+* All sample and test configuration XML files validated against labbuilderconfig-schema.xsd in schemas folder when unit tests run.
+* All sample and test configuration XML files updated with namespace -> xmlns="labbuilderconfig".
  
 ### 0.4.2.0
 * Add bootorder VM attribute for controlling stop-lab/start-lab order.
