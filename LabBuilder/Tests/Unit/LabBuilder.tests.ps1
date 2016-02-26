@@ -87,61 +87,6 @@ InModuleScope LabBuilder {
     }
 
 
-    Describe 'Get-Lab' {
-        Context 'Path is provided and valid XML file exists' {
-            It 'Returns XmlDocument object with valid content' {
-                $Lab = Get-Lab -ConfigPath $Global:TestConfigOKPath
-                $Lab.GetType().Name | Should Be 'XmlDocument'
-                $Lab.labbuilderconfig | Should Not Be $null
-            }
-        }
-        Context 'Path and LabPath are provided and valid XML file exists' {
-            It 'Returns XmlDocument object with valid content' {
-                $Lab = Get-Lab -ConfigPath $Global:TestConfigOKPath -LabPath 'c:\MyLab'
-                $Lab.GetType().Name | Should Be 'XmlDocument'
-                $Lab.labbuilderconfig.settings.labpath | Should Be 'c:\MyLab'
-                $Lab.labbuilderconfig | Should Not Be $null
-            }
-        }
-        Context 'Path is provided but file does not exist' {
-            It 'Throws ConfigurationFileNotFoundError Exception' {
-                $ExceptionParameters = @{
-                    errorId = 'ConfigurationFileNotFoundError'
-                    errorCategory = 'InvalidArgument'
-                    errorMessage = $($LocalizedData.ConfigurationFileNotFoundError `
-                        -f 'c:\doesntexist.xml')
-                }
-                $Exception = GetException @ExceptionParameters
-
-                Mock Test-Path -MockWith { $false }
-
-                { Get-Lab -ConfigPath 'c:\doesntexist.xml' } | Should Throw $Exception
-            }
-        }
-        Context 'Path is provided and file exists but is empty' {
-            It 'Throws ConfigurationFileEmptyError Exception' {
-                $ExceptionParameters = @{
-                    errorId = 'ConfigurationFileEmptyError'
-                    errorCategory = 'InvalidArgument'
-                    errorMessage = $($LocalizedData.ConfigurationFileEmptyError `
-                        -f 'c:\isempty.xml')
-                }
-                $Exception = GetException @ExceptionParameters
-
-                Mock Test-Path -MockWith { $true }
-                Mock Get-Content -MockWith {''}
-
-                { Get-Lab -ConfigPath 'c:\isempty.xml' } | Should Throw $Exception
-            }
-        }
-    }
-
-
-    Describe 'Initialize-LabConfiguration' {
-    }
-#endregion    
-
-
 #region LabSwitchFunctions
     Describe 'Get-LabSwitch' {
 
@@ -204,10 +149,24 @@ InModuleScope LabBuilder {
                 { Get-LabSwitch -Lab $Lab } | Should Throw $Exception
             }
         }
+        Context 'Valid configuration is passed with and Name filter set to matching switch' {
+            It 'Returns a Single Switch object' {
+                $Lab = Get-Lab -ConfigPath $Global:TestConfigOKPath
+                [Array] $Switches = Get-LabSwitch -Lab $Lab -Name $Lab.labbuilderconfig.switches.switch[0].name
+                $Switches.Count | Should Be 1
+            }
+        }
+        Context 'Valid configuration is passed with and Name filter set to non-matching switch' {
+            It 'Returns a Single Switch object' {
+                $Lab = Get-Lab -ConfigPath $Global:TestConfigOKPath
+                [Array] $Switches = Get-LabSwitch -Lab $Lab -Name 'Does Not Exist'
+                $Switches.Count | Should Be 0
+            }
+        }
         Context 'Valid configuration is passed' {
             It 'Returns Switches Object that matches Expected Object' {
                 $Lab = Get-Lab -ConfigPath $Global:TestConfigOKPath
-                [Array]$Switches = Get-LabSwitch -Lab $Lab
+                [Array] $Switches = Get-LabSwitch -Lab $Lab
                 Set-Content -Path "$Global:ArtifactPath\ExpectedSwitches.json" -Value ($Switches | ConvertTo-Json -Depth 4)
                 $ExpectedSwitches = Get-Content -Path "$Global:ExpectedContentPath\ExpectedSwitches.json"
                 [String]::Compare((Get-Content -Path "$Global:ArtifactPath\ExpectedSwitches.json"),$ExpectedSwitches,$true) | Should Be 0
@@ -582,6 +541,20 @@ InModuleScope LabBuilder {
                 Get-LabVMTemplateVHD -Lab $Lab | Should Be $null
             }
         }
+        Context 'Valid configuration is passed with and Name filter set to matching switch' {
+            It 'Returns a Single Switch object' {
+                $Lab = Get-Lab -ConfigPath $Global:TestConfigOKPath
+                [Array] $TemplateVHDs = Get-LabVMTemplateVHD -Lab $Lab -Name $Lab.labbuilderconfig.TemplateVHDs.templateVHD[0].Name
+                $TemplateVHDs.Count | Should Be 1
+            }
+        }
+        Context 'Valid configuration is passed with and Name filter set to non-matching switch' {
+            It 'Returns a Single Switch object' {
+                $Lab = Get-Lab -ConfigPath $Global:TestConfigOKPath
+                [Array] $TemplateVHDs = Get-LabVMTemplateVHD -Lab $Lab -Name 'Does Not Exist'
+                $TemplateVHDs.Count | Should Be 0
+            }
+        }
         Context 'Valid configuration is passed and template VHD ISOs are found' {
             It 'Returns VMTemplateVHDs array that matches Expected array' {
                 $Lab = Get-Lab -ConfigPath $Global:TestConfigOKPath
@@ -862,6 +835,22 @@ InModuleScope LabBuilder {
         Mock Get-VMHardDiskDrive -ParameterFilter { $VMName -eq 'Pester Windows 10 Enterprise' } `
             -MockWith { @{ path = 'Pester Windows 10 Enterprise.vhdx' } }
 
+        Context 'Valid configuration is passed with and Name filter set to matching switch' {
+            It 'Returns a Single Switch object' {
+                $Lab = Get-Lab -ConfigPath $Global:TestConfigOKPath
+                $Lab.labbuilderconfig.templates.SetAttribute('fromvm','Pester *')
+                [Array] $Templates = Get-LabVMTemplate -Lab $Lab -Name $Lab.labbuilderconfig.Templates.template[0].Name
+                $Templates.Count | Should Be 1
+            }
+        }
+        Context 'Valid configuration is passed with and Name filter set to non-matching switch' {
+            It 'Returns a Single Switch object' {
+                $Lab = Get-Lab -ConfigPath $Global:TestConfigOKPath
+                $Lab.labbuilderconfig.templates.SetAttribute('fromvm','Pester *')
+                [Array] $Templates = Get-LabVMTemplate -Lab $Lab -Name 'Does Not Exist'
+                $Templates.Count | Should Be 0
+            }
+        }
         Context 'Valid configuration is passed and some templates are found' {
             It 'Returns Template Object that matches Expected Object' {
                 $Lab = Get-Lab -ConfigPath $Global:TestConfigOKPath
@@ -1492,6 +1481,24 @@ InModuleScope LabBuilder {
                 $VMs[0].DataVhds[0].sourcevhd | Should Be "$Global:TestConfigPath\VhdFiles\DataDisk.vhdx"
             }
         }
+        Context 'Valid configuration is passed with and Name filter set to matching switch' {
+            It 'Returns a Single Switch object' {
+                $Lab = Get-Lab -ConfigPath $Global:TestConfigOKPath
+                [Array]$Switches = Get-LabSwitch -Lab $Lab
+                [Array]$Templates = Get-LabVMTemplate -Lab $Lab
+                [Array]$VMs = Get-LabVM -Lab $Lab -VMTemplates $Templates -Switches $Switches -Name $Lab.labbuilderconfig.VMs.VM.Name
+                $VMs.Count | Should Be 1
+            }
+        }
+        Context 'Valid configuration is passed with and Name filter set to non-matching switch' {
+            It 'Returns a Single Switch object' {
+                $Lab = Get-Lab -ConfigPath $Global:TestConfigOKPath
+                [Array]$Switches = Get-LabSwitch -Lab $Lab
+                [Array]$Templates = Get-LabVMTemplate -Lab $Lab
+                [Array]$VMs = Get-LabVM -Lab $Lab -VMTemplates $Templates -Switches $Switches -Name 'Does Not Exist'
+                $VMs.Count | Should Be 0
+            }
+        }
         Context 'Valid configuration is passed but switches and VMTemplates not passed' {
             $Lab = Get-Lab -ConfigPath $Global:TestConfigOKPath
             [Array]$VMs = Get-LabVM -Lab $Lab
@@ -1547,7 +1554,7 @@ InModuleScope LabBuilder {
         Mock WaitVMInitializationComplete -MockWith { $True }
         Mock GetSelfSignedCertificate
         Mock Initialize-LabVMDSC
-        Mock Start-LabVMDSC
+        Mock Install-LabVMDSC
         #endregion
 
         Context 'Valid configuration is passed' {	
@@ -1574,7 +1581,7 @@ InModuleScope LabBuilder {
                 Assert-MockCalled WaitVMInitializationComplete -Exactly 1
                 Assert-MockCalled GetSelfSignedCertificate -Exactly 1
                 Assert-MockCalled Initialize-LabVMDSC -Exactly 1
-                Assert-MockCalled Start-LabVMDSC -Exactly 1
+                Assert-MockCalled Install-LabVMDSC -Exactly 1
             }
             
             Remove-Item -Path $Lab.labbuilderconfig.settings.labpath -Recurse -Force -ErrorAction SilentlyContinue
@@ -1647,7 +1654,7 @@ InModuleScope LabBuilder {
     }
 
 
-    Describe 'Start-LabVM' -Tags 'Incomplete' {
+    Describe 'Install-LabVM' -Tags 'Incomplete' {
         #region Mocks
         Mock Get-VM -ParameterFilter { $Name -eq 'PESTER01' } -MockWith { [PSObject]@{ Name='PESTER01'; State='Off' } }
         Mock Get-VM -ParameterFilter { $Name -eq 'pester template *' }
@@ -1655,7 +1662,7 @@ InModuleScope LabBuilder {
         Mock WaitVMInitializationComplete -MockWith { $True }
         Mock GetSelfSignedCertificate -MockWith { $True }
         Mock Initialize-LabVMDSC
-        Mock Start-LabVMDSC
+        Mock Install-LabVMDSC
         #endregion
 
         Context 'Valid configuration is passed' {	
@@ -1668,7 +1675,7 @@ InModuleScope LabBuilder {
             [Array]$VMs = Get-LabVM -Lab $Lab -VMTemplates $Templates -Switches $Switches
                     
             It 'Returns True' {
-                Start-LabVM -Lab $Lab -VM $VMs[0] | Should Be $True
+                Install-LabVM -Lab $Lab -VM $VMs[0] | Should Be $True
             }
             It 'Calls Mocked commands' {
                 Assert-MockCalled Get-VM -ParameterFilter { $Name -eq 'PESTER01' } -Exactly 1
@@ -1677,7 +1684,7 @@ InModuleScope LabBuilder {
                 Assert-MockCalled WaitVMInitializationComplete -Exactly 1
                 Assert-MockCalled GetSelfSignedCertificate -Exactly 1
                 Assert-MockCalled Initialize-LabVMDSC -Exactly 1
-                Assert-MockCalled Start-LabVMDSC -Exactly 1
+                Assert-MockCalled Install-LabVMDSC -Exactly 1
             }
             
             Remove-Item -Path $Lab.labbuilderconfig.settings.labpath -Recurse -Force -ErrorAction SilentlyContinue
@@ -1697,6 +1704,57 @@ InModuleScope LabBuilder {
 
 
 #region LabFunctions
+    Describe 'Get-Lab' {
+        Context 'Path is provided and valid XML file exists' {
+            It 'Returns XmlDocument object with valid content' {
+                $Lab = Get-Lab -ConfigPath $Global:TestConfigOKPath
+                $Lab.GetType().Name | Should Be 'XmlDocument'
+                $Lab.labbuilderconfig | Should Not Be $null
+            }
+        }
+        Context 'Path and LabPath are provided and valid XML file exists' {
+            It 'Returns XmlDocument object with valid content' {
+                $Lab = Get-Lab -ConfigPath $Global:TestConfigOKPath -LabPath 'c:\MyLab'
+                $Lab.GetType().Name | Should Be 'XmlDocument'
+                $Lab.labbuilderconfig.settings.labpath | Should Be 'c:\MyLab'
+                $Lab.labbuilderconfig | Should Not Be $null
+            }
+        }
+        Context 'Path is provided but file does not exist' {
+            It 'Throws ConfigurationFileNotFoundError Exception' {
+                $ExceptionParameters = @{
+                    errorId = 'ConfigurationFileNotFoundError'
+                    errorCategory = 'InvalidArgument'
+                    errorMessage = $($LocalizedData.ConfigurationFileNotFoundError `
+                        -f 'c:\doesntexist.xml')
+                }
+                $Exception = GetException @ExceptionParameters
+
+                Mock Test-Path -MockWith { $false }
+
+                { Get-Lab -ConfigPath 'c:\doesntexist.xml' } | Should Throw $Exception
+            }
+        }
+        Context 'Path is provided and file exists but is empty' {
+            It 'Throws ConfigurationFileEmptyError Exception' {
+                $ExceptionParameters = @{
+                    errorId = 'ConfigurationFileEmptyError'
+                    errorCategory = 'InvalidArgument'
+                    errorMessage = $($LocalizedData.ConfigurationFileEmptyError `
+                        -f 'c:\isempty.xml')
+                }
+                $Exception = GetException @ExceptionParameters
+
+                Mock Test-Path -MockWith { $true }
+                Mock Get-Content -MockWith {''}
+
+                { Get-Lab -ConfigPath 'c:\isempty.xml' } | Should Throw $Exception
+            }
+        }
+    }
+    
+    
+    
     Describe 'Install-Lab' -Tags 'Incomplete'  {
         $Lab = Get-Lab -ConfigPath $Global:TestConfigOKPath
 
