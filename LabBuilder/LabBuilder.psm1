@@ -60,6 +60,9 @@ $Libs.Foreach(
 [Int] $Script:StartupTimeout = 90
 [Int] $Script:ShutdownTimeout = 30
 
+# XML Stuff
+[String] $Script:ConfigurationXMLSchema = Join-Path -Path $PSScriptRoot -ChildPath 'schema\labbuilderconfig-schema.xsd'
+
 # The current list of Nano Servers available with TP4.
 [Array] $Script:NanoServerPackageList = @(
     @{ Name = 'Compute'; Filename = 'Microsoft-NanoServer-Compute-Package.cab' },
@@ -121,7 +124,10 @@ function Get-LabSwitch {
 
     [String] $LabId = $Lab.labbuilderconfig.settings.labid 
     [Array] $Switches = @() 
-    $ConfigSwitches = $Lab.labbuilderconfig.SelectNodes('switches').Switch
+#    $XMLNameSpace = New-Object -TypeName System.Xml.XmlNamespaceManager -ArgumentList $Lab.NameTable
+#    $XMLNameSpace.AddNamespace("labbuilderconfig", $Script:ConfigurationXMLSchema)
+    $ConfigSwitches = $Lab.labbuilderconfig.Switches.Switch
+
     foreach ($ConfigSwitch in $ConfigSwitches)
     {
         # It can't be switch because if the name attrib/node is missing the name property on the
@@ -205,6 +211,7 @@ function Get-LabSwitch {
             vlan = $ConfigSwitch.Vlan;
             natsubnetaddress = $ConfigSwitch.NatSubnetAddress;
             adapters = $ConfigAdapters }
+            
     } # foreach
     return $Switches
 } # Get-LabSwitch
@@ -645,7 +652,7 @@ function Get-LabVMTemplateVHD {
     $TemplatePrefix = $Lab.labbuilderconfig.templatevhds.prefix
 
     # Read the list of templateVHD from the configuration file
-    $TemplateVHDs = $Lab.labbuilderconfig.SelectNodes('templatevhds').templatevhd
+    $TemplateVHDs = $Lab.labbuilderconfig.templatevhds.templatevhd
     [System.Collections.Hashtable[]] $VMTemplateVHDs = @()
     foreach ($TemplateVHD in $TemplateVHDs)
     {
@@ -1240,11 +1247,11 @@ function Get-LabVMTemplate {
     }
     
     [System.Collections.Hashtable[]] $VMTemplates = @()
-    [String] $VHDParentPath = $Lab.labbuilderconfig.SelectNodes('settings').vhdparentpath
+    [String] $VHDParentPath = $Lab.labbuilderconfig.settings.vhdparentpath
     
     # Get a list of all templates in the Hyper-V system matching the phrase found in the fromvm
     # config setting
-    [String] $FromVM=$Lab.labbuilderconfig.SelectNodes('templates').fromvm
+    [String] $FromVM=$Lab.labbuilderconfig.templates.fromvm
     if ($FromVM)
     {
         $Templates = @(Get-VM -Name $FromVM)
@@ -1268,7 +1275,7 @@ function Get-LabVMTemplate {
     } # if
     
     # Read the list of templates from the configuration file
-    $Templates = $Lab.labbuilderconfig.SelectNodes('templates').template
+    $Templates = $Lab.labbuilderconfig.templates.template
     foreach ($Template in $Templates)
     {
         # It can't be template because if the name attrib/node is missing the name property on
@@ -1800,7 +1807,7 @@ function Get-LabVM {
     [String] $LabPath = $Lab.labbuilderconfig.settings.labpath
     [String] $VHDParentPath = $Lab.labbuilderconfig.settings.vhdparentpath
     [String] $LabId = $Lab.labbuilderconfig.settings.labid 
-    $VMs = $Lab.labbuilderconfig.SelectNodes('vms').vm
+    $VMs = $Lab.labbuilderconfig.vms.vm
 
     foreach ($VM in $VMs) 
 	{
@@ -3330,7 +3337,11 @@ function Get-Lab {
         [Parameter(
             Position=2)]
         [ValidateNotNullOrEmpty()]
-        [String] $LabPath
+        [String] $LabPath,
+        
+        [Parameter(
+            Position=3)]
+        [Switch] $SkipXMLValidation
     ) # Param
     if (-not (Test-Path -Path $ConfigPath))
     {
@@ -3342,6 +3353,7 @@ function Get-Lab {
         }
         ThrowException @ExceptionParameters
     } # if
+    
     $Content = Get-Content -Path $ConfigPath -Raw
     if (-not $Content)
     {
@@ -3353,6 +3365,16 @@ function Get-Lab {
         }
         ThrowException @ExceptionParameters
     } # if
+    
+    if (-not $SkipXMLValidation)
+    {
+        # Validate the XML
+        ValidateConfigurationXMLSchema `
+            -ConfigPath $ConfigPath `
+            -ErrorAction Stop
+    }
+
+    # The XML passes the Schema check so load it.
     [XML] $Lab = New-Object System.Xml.XmlDocument
     $Lab.PreserveWhitespace = $true
     $Lab.LoadXML($Content)

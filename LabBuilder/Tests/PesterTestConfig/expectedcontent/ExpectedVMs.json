@@ -8,7 +8,7 @@
     "Name":  "TestLab PESTER01",
     "TimeZone":  "Pacific Standard Time",
     "OSType":  "Server",
-    "DSCLogging":  false,
+    "DSCLogging":  true,
     "ProcessorCount":  1,
     "ProductKey":  "DDDDD-DDDDD-DDDDD-DDDDD-DDDDD",
     "UseDifferencingDisk":  "Y",

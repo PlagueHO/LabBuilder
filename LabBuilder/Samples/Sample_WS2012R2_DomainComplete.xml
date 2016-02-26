@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 
-<labbuilderconfig name="Sample_WS2012R2_DomainComplete"
+<labbuilderconfig xmlns="labbuilderconfig"
+                  name="Sample_WS2012R2_DomainComplete"
                   version="1.0">
   <description>Sample Windows Server 2012 R2 Lab Configuration Domain Complete</description>
 
