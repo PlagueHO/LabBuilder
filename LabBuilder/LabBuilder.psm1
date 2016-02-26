@@ -61,7 +61,7 @@ $Libs.Foreach(
 [Int] $Script:ShutdownTimeout = 30
 
 # XML Stuff
-[String] $Script:ConfigurationXMLSchema = Join-Path -Path $PSScriptRoot -ChildPath 'schema\labbuilderconfig-schema.xsd'
+[String] $Script:ConfigurationXMLSchema = Join-Path -Path $PSScriptRoot -ChildPath 'schema\labbuilderconfig.xsd'
 
 # The current list of Nano Servers available with TP4.
 [Array] $Script:NanoServerPackageList = @(
