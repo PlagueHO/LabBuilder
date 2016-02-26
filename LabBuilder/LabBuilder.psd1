@@ -27,7 +27,7 @@
         'Remove-LabVMTemplate'
         'Get-LabVM'
         'Initialize-LabVM'
-        'Start-LabVM'
+        'Install-LabVM'
         'Remove-LabVM'
         'Get-Lab'
         'Install-Lab'
