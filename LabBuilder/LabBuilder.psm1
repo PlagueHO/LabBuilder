@@ -42,6 +42,9 @@ $Libs.Foreach(
 [String] $Script:SupportConvertWindowsImagePath = Join-Path -Path $PSScriptRoot -ChildPath 'Support\Convert-WindowsImage.ps1'
 [String] $Script:SupportGertGenPath = Join-Path -Path $PSScriptRoot -ChildPath 'Support\New-SelfSignedCertificateEx.ps1'
 
+# DSC Library
+[String] $Script:DSCLibraryPath = Join-Path -Path $PSScriptRoot -ChildPath 'DSCLibrary'
+
 # Virtual Networking Parameters
 [Int] $Script:DefaultManagementVLan = 99
 
@@ -62,6 +65,7 @@ $Libs.Foreach(
 
 # XML Stuff
 [String] $Script:ConfigurationXMLSchema = Join-Path -Path $PSScriptRoot -ChildPath 'schema\labbuilderconfig-schema.xsd'
+[String] $Script:ConfigurationXMLTemplate = Join-Path -Path $PSScriptRoot -ChildPath 'template\labbuilderconfig-template.xml'
 
 # The current list of Nano Servers available with TP4.
 [Array] $Script:NanoServerPackageList = @(
@@ -1247,7 +1251,7 @@ function Get-LabVMTemplate {
     }
     
     [System.Collections.Hashtable[]] $VMTemplates = @()
-    [String] $VHDParentPath = $Lab.labbuilderconfig.settings.vhdparentpath
+    [String] $VHDParentPath = $Lab.labbuilderconfig.settings.vhdparentpathfull
     
     # Get a list of all templates in the Hyper-V system matching the phrase found in the fromvm
     # config setting
@@ -1805,7 +1809,7 @@ function Get-LabVM {
 
     [System.Collections.Hashtable[]] $LabVMs = @()
     [String] $LabPath = $Lab.labbuilderconfig.settings.labpath
-    [String] $VHDParentPath = $Lab.labbuilderconfig.settings.vhdparentpath
+    [String] $VHDParentPath = $Lab.labbuilderconfig.settings.vhdparentpathfull
     [String] $LabId = $Lab.labbuilderconfig.settings.labid 
     $VMs = $Lab.labbuilderconfig.vms.vm
 
@@ -2336,25 +2340,10 @@ function Get-LabVM {
         [String] $DSCConfigFile = ''
         if ($VM.DSC.ConfigFile) 
 		{
-            [String] $DSCLibraryPath = $Lab.labbuilderconfig.settings.dsclibrarypath
-            if ($DSCLibraryPath)
-            {
-                if ([System.IO.Path]::IsPathRooted($DSCLibraryPath))
-                {
-                    $DSCConfigFile = Join-Path `
-                        -Path $DSCLibraryPath `
-                        -ChildPath $VM.DSC.ConfigFile
-                }
-                else
-                {
-                    $DSCConfigFile = Join-Path `
-                        -Path $Lab.labbuilderconfig.settings.fullconfigpath `
-                        -ChildPath $DSCLibraryPath
-                    $DSCConfigFile = Join-Path `
-                        -Path $DSCConfigFile `
-                        -ChildPath $VM.DSC.ConfigFile
-                }
-            }
+            $DSCConfigFile = Join-Path `
+                -Path $Lab.labbuilderconfig.settings.dsclibrarypathfull `
+                -ChildPath $VM.DSC.ConfigFile
+
             if ([System.IO.Path]::GetExtension($DSCConfigFile).ToLower() -ne '.ps1' )
             {
                 $ExceptionParameters = @{
@@ -3390,7 +3379,9 @@ function Get-Lab {
         {
             # A relative path was provided in the config path so add the actual path of the
             # XML to it
-            [String] $FullConfigPath = Join-Path -Path $ConfigPath -ChildPath $XMLConfigPath
+            [String] $FullConfigPath = Join-Path `
+                -Path $ConfigPath `
+                -ChildPath $XMLConfigPath
         } # if
     }
     else
@@ -3409,19 +3400,7 @@ function Get-Lab {
         [String] $LabPath = $Lab.labbuilderconfig.settings.labpath        
     }
     
-    # Check the LabPath is actually set by either the XML or passed in.
-    if (-not $LabPath)
-    {
-        $ExceptionParameters = @{
-            errorId = 'ConfigurationMissingElementError'
-            errorCategory = 'InvalidArgument'
-            errorMessage = $($LocalizedData.ConfigurationMissingElementError `
-                -f '<settings>\<labpath>')
-        }
-        ThrowException @ExceptionParameters
-    }
-
-    # Get the VHDParentPath - if it isn't supplied default
+    # Get the VHDParentPathFull - if it isn't supplied default
     [String] $VHDParentPath = $Lab.labbuilderconfig.settings.vhdparentpath
     if (-not $VHDParentPath)
     {
@@ -3434,22 +3413,231 @@ function Get-Lab {
         $VHDParentPath = Join-Path `
             -Path $LabPath `
             -ChildPath $VHDParentPath        
-    }    
-    $Lab.labbuilderconfig.settings.setattribute('vhdparentpath',$VHDParentPath)
-
-    if ((-not $Lab.labbuilderconfig) `
-        -or (-not $Lab.labbuilderconfig.settings))
-    {
-        $ExceptionParameters = @{
-            errorId = 'ConfigurationInvalidError'
-            errorCategory = 'InvalidArgument'
-            errorMessage = $($LocalizedData.ConfigurationInvalidError)
-        }
-        ThrowException @ExceptionParameters
-    }
+    } # if
+    $Lab.labbuilderconfig.settings.setattribute('vhdparentpathfull',$VHDParentPath)
     
+    # Get the DSCLibraryPathFull - if it isn't supplied default
+    [String] $DSCLibraryPath = $Lab.labbuilderconfig.settings.dsclibrarypath
+    if (-not $DSCLibraryPath)
+    {
+        $DSCLibraryPath = 'DSCLibrary'
+    } # if
+    # if the resulting parent path is not rooted make the root
+    # the Full config path
+    if (-not [System.IO.Path]::IsPathRooted($DSCLibraryPath))
+    {
+        $DSCLibraryPath = Join-Path `
+            -Path $Lab.labbuilderconfig.settings.fullconfigpath `
+            -ChildPath $DSCLibraryPath
+    } # if    
+    $Lab.labbuilderconfig.settings.setattribute('dsclibrarypathfull',$DSCLibraryPath)
+
     Return $Lab
 } # Get-Lab
+
+
+<#
+.SYNOPSIS
+    Creates a new Lab Builder Configuration file and Lab folder.
+.DESCRIPTION
+    This function will take a path to a new Lab folder and a path or filename 
+    for a new Lab Configuration file and creates them using the standard XML
+    template.
+    
+    It will also copy the DSCLibrary folder as well as the create an empty
+    ISOFiles and VHDFiles folder in the Lab folder.
+    
+    After running this function the VMs, VMTemplates, Switches and VMTemplateVHDs
+    in the new Lab Configuration file would normally be customized to for the new
+    Lab.
+.PARAMETER ConfigPath
+    This is the path to the Lab Builder configuration file to create. If it is
+    not rooted the configuration file is created in the LabPath folder.
+.PARAMETER LabPath
+    This is a required path of the new Lab to create.
+.PARAMETER Name
+    This is a required name of the Lab that gets added to the new Lab Configration
+    file.
+.PARAMETER Version
+    This is a required version of the Lab that gets added to the new Lab Configration
+    file.
+.PARAMETER Id
+    This is the optional Lab Id that gets set in the new Lab Configuration
+    file.
+.PARAMETER Description
+    This is the optional Lab description that gets set in the new Lab Configuration
+    file.
+.PARAMETER DomainName
+    This is the optional Lab domain name that gets set in the new Lab Configuration
+    file.
+.PARAMETER Email
+    This is the optional Lab email address that gets set in the new Lab Configuration
+    file.
+.EXAMPLE
+    $MyLab = New-Lab `
+        -ConfigPath c:\MyLab\LabConfig1.xml `
+        -LabPath c:\MyLab `
+        -LabName 'MyLab' `
+        -LabVersion '1.2'
+    Creates a new Lab Configration file LabConfig1.xml and also a Lab folder
+    c:\MyLab and populates it with default DSCLibrary file and supporting folders.
+.OUTPUTS
+    The Lab object representing the new Lab Configuration that was created.
+#>
+function New-Lab {
+    [CmdLetBinding(
+        SupportsShouldProcess = $true)]
+    [OutputType([XML])]
+    param
+    (
+        [Parameter(
+            Position=1,
+            Mandatory=$true)]
+        [ValidateNotNullOrEmpty()]
+        [String] $ConfigPath,
+        
+        [Parameter(
+            Position=2,
+            Mandatory=$true)]
+        [ValidateNotNullOrEmpty()]
+        [String] $LabPath,
+        
+        [Parameter(
+            Position=3,
+            Mandatory=$true)]
+        [ValidateNotNullOrEmpty()]
+        [String] $Name,
+
+        [Parameter(
+            Position=4)]
+        [ValidateNotNullOrEmpty()]
+        [String] $Version = '1.0',
+        
+        [Parameter(
+            Position=5)]
+        [ValidateNotNullOrEmpty()]
+        [String] $Id,
+
+        [Parameter(
+            Position=6)]
+        [ValidateNotNullOrEmpty()]
+        [String] $Description,
+        
+        [Parameter(
+            Position=7)]
+        [ValidateNotNullOrEmpty()]
+        [String] $DomainName,
+
+        [Parameter(
+            Position=8)]
+        [ValidateNotNullOrEmpty()]
+        [String] $Email
+    ) # Param
+
+    # Determine the full Lab Path
+    if (-not [System.IO.Path]::IsPathRooted($LabPath))
+    {
+        $LabPath = Join-Path `
+            -Path Get-Location `
+            -ChildPath $LabPath
+    } # if
+    
+    # Does the Lab Path exist?
+    if (Test-Path -Path $LabPath -Type Container)
+    {
+        # It does - exit if the user declines
+        if (-not $PSCmdlet.ShouldProcess( ( $LocalizedData.ShouldOverwriteLab `
+            -f $LabPath )))
+        {
+            return
+        }
+    }
+    else
+    {
+        Write-Verbose -Message ($LocalizedData.CreatingLabFolderMessage `
+            -f 'LabPath',$LabPath)
+
+        New-Item `
+            -Path $LabPath `
+            -Type Directory
+    } # if
+
+    # Determine the full Lab configuration Path
+    if (-not [System.IO.Path]::IsPathRooted($ConfigPath))
+    {
+        $ConfigPath = Join-Path `
+            -Path $LabPath `
+            -ChildPath $ConfigPath
+    } # if
+
+    # Does the lab configuration path already exist?
+    if (Test-Path -Path $ConfigPath)
+    {
+        # It does - exit if the user declines
+        if (-not $PSCmdlet.ShouldProcess( ( $LocalizedData.ShouldOverwriteLabConfig `
+            -f $ConfigPath )))
+        {
+            return
+        }
+    } # if
+    
+    # Get the Config Template into a variable
+    $Content = Get-Content `
+        -Path $Script:ConfigurationXMLTemplate
+
+    # The XML passes the Schema check so load it.
+    [XML] $Lab = New-Object System.Xml.XmlDocument
+    $Lab.PreserveWhitespace = $true
+    $Lab.LoadXML($Content)
+
+    # Populate the Lab Entries
+    $Lab.labbuilderconfig.name = $Name
+    $Lab.labbuilderconfig.version = $Version
+    $Lab.labbuilderconfig.settings.labpath = $LabPath
+    if ($PSBoundParameters.ContainsKey('Id'))
+    {
+        $Lab.labbuilderconfig.settings.SetAttribute('Id',$Id)    
+    } # if
+    if ($PSBoundParameters.ContainsKey('Description'))
+    {
+        $Lab.labbuilderconfig.description = $Description
+    } # if
+    if ($PSBoundParameters.ContainsKey('DomainName'))
+    {
+        $Lab.labbuilderconfig.settings.SetAttribute('DomainName',$DomainName)    
+    } # if
+    if ($PSBoundParameters.ContainsKey('Email'))
+    {
+        $Lab.labbuilderconfig.settings.SetAttribute('Email',$Email)    
+    } # if
+
+    # Save Configiration XML
+    $Lab.Save($ConfigPath)
+   
+    # Create ISOFiles folder
+    New-Item `
+        -Path (Join-Path -Path $LabPath -ChildPath 'ISOFiles')`
+        -Type Directory `
+        -ErrorAction SilentlyContinue 
+        
+    # Create VDFFiles folder
+    New-Item `
+        -Path (Join-Path -Path $LabPath -ChildPath 'VHDFiles')`
+        -Type Directory `
+        -ErrorAction SilentlyContinue 
+        
+    # Copy the DSCLibrary
+    Copy-Item `
+        -Path $Script:DSCLibraryPath `
+        -Destination $LabPath `
+        -Recurse `
+        -Force `
+        -ErrorAction SilentlyContinue
+
+    Return (Get-Lab `
+        -ConfigPath $ConfigPath `
+        -LabPath $LabPath)
+} # New-Lab
 
 
 <#
@@ -3548,7 +3736,7 @@ Function Install-Lab {
                 -Type Directory
         }
 
-        [String] $VHDParentPath = $Lab.labbuilderconfig.settings.vhdparentpath
+        [String] $VHDParentPath = $Lab.labbuilderconfig.settings.vhdparentpathfull
         if (-not (Test-Path -Path $VHDParentPath))
         {
             Write-Verbose -Message ($LocalizedData.CreatingLabFolderMessage `

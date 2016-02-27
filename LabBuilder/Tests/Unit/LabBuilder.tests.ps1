@@ -1775,6 +1775,11 @@ InModuleScope LabBuilder {
     
     
     
+    Describe 'New-Lab' -Tags 'Incomplete'  {
+    }
+
+
+
     Describe 'Install-Lab' -Tags 'Incomplete'  {
         $Lab = Get-Lab -ConfigPath $Global:TestConfigOKPath
 
