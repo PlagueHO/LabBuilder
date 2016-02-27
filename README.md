@@ -412,6 +412,16 @@ Versions
 * Uninstall-Lab: Added parameter 'RemoveLabFolder' which will cause the entire Lab folder to be deleted.
 * Uninstall-Lab: Added ShouldProcess support to ask user to confirm actions.
 * Update-Lab: Added function which just calls Install-Lab.
+* Start-LabVM: Renamed function to Install-LabVM so that it is not confused with Start-VM.
+* *-LabSwitch: Added Name array parameter to allow filtering of switches to work with.
+* *-LabVMTemplateVHD: Added Name array parameter to allow filtering of VM Template VHDs to work with.
+* *-LabVMTemplate: Added Name array parameter to allow filtering of VM Templates to work with.
+* *-LabVM: Added Name array parameter to allow filtering of VMs to work with.
+* Samples: Updated sample code with additional examples.
+* Help completed for all exported cmdlets.
+* Get-LabVM: XML now validated against labbuilderconfig-schema.xsd in Schemas folder when loaded -unless SkipXMLValidation switch is passed.
+* All sample and test configuration XML files validated against labbuilderconfig-schema.xsd in schemas folder when unit tests run.
+* All sample and test configuration XML files updated with namespace -> xmlns="labbuilderconfig".
  
 ### 0.4.2.0
 * Add bootorder VM attribute for controlling stop-lab/start-lab order.

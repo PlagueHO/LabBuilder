@@ -60,6 +60,9 @@ $Libs.Foreach(
 [Int] $Script:StartupTimeout = 90
 [Int] $Script:ShutdownTimeout = 30
 
+# XML Stuff
+[String] $Script:ConfigurationXMLSchema = Join-Path -Path $PSScriptRoot -ChildPath 'schema\labbuilderconfig-schema.xsd'
+
 # The current list of Nano Servers available with TP4.
 [Array] $Script:NanoServerPackageList = @(
     @{ Name = 'Compute'; Filename = 'Microsoft-NanoServer-Compute-Package.cab' },
@@ -84,17 +87,21 @@ $Libs.Foreach(
 #region LabSwitchFunctions
 <#
 .SYNOPSIS
-   Gets an array of switches from a Lab Configuration file.
+   Gets an array of switches from a Lab.
 .DESCRIPTION
-   Takes a provided Lab Configuration file and returns the list of switches required for this Lab.
-   This list is usually passed to Initialize-LabSwitch to configure the switches required for this
-   lab.
-.PARAMETER Configuration
-   Contains the Lab Builder configuration object that was loaded by the Get-Lab object.
+   Takes a provided Lab and returns the list of switches required for this Lab.
+   
+   This list is usually passed to Initialize-LabSwitch to configure the switches required for this lab.
+.PARAMETER Lab
+   Contains the Lab object that was loaded by the Get-Lab object.
+.PARAMETER Name
+   An optional array of Switch names.
+   
+   Only Switches matching names in this list will be pulled into the returned in the array.
 .EXAMPLE
    $Lab = Get-Lab -ConfigPath c:\mylab\config.xml
    $Switches = Get-LabSwitch -Lab $Lab
-   Loads a Lab Builder configuration and pulls the array of switches from it.
+   Loads a Lab and pulls the array of switches from it.
 .OUTPUTS
    Returns an array of switches.
 #>
@@ -103,20 +110,36 @@ function Get-LabSwitch {
     [CmdLetBinding()]
     param
     (
-        [Parameter(Mandatory=$true)]
+        [Parameter(
+            Position=1,
+            Mandatory=$true)]
         [ValidateNotNullOrEmpty()]
-        $Lab
+        $Lab,
+        
+        [Parameter(
+            Position=2)]
+        [ValidateNotNullOrEmpty()]
+        [String[]] $Name
     )
 
     [String] $LabId = $Lab.labbuilderconfig.settings.labid 
     [Array] $Switches = @() 
-    $ConfigSwitches = $Lab.labbuilderconfig.SelectNodes('switches').Switch
+#    $XMLNameSpace = New-Object -TypeName System.Xml.XmlNamespaceManager -ArgumentList $Lab.NameTable
+#    $XMLNameSpace.AddNamespace("labbuilderconfig", $Script:ConfigurationXMLSchema)
+    $ConfigSwitches = $Lab.labbuilderconfig.Switches.Switch
+
     foreach ($ConfigSwitch in $ConfigSwitches)
     {
         # It can't be switch because if the name attrib/node is missing the name property on the
         # XML object defaults to the name of the parent. So we can't easily tell if no name was
         # specified or if they actually specified 'switch' as the name.
         $SwitchName = $ConfigSwitch.Name
+        if ($Name -and ($SwitchName -notin $Name))
+        {
+            # A names list was passed but this swtich wasn't included
+            continue
+        } # if
+        
         $SwitchType = $ConfigSwitch.Type
         if ($SwitchName -eq 'switch')
         {
@@ -188,6 +211,7 @@ function Get-LabSwitch {
             vlan = $ConfigSwitch.Vlan;
             natsubnetaddress = $ConfigSwitch.NatSubnetAddress;
             adapters = $ConfigAdapters }
+            
     } # foreach
     return $Switches
 } # Get-LabSwitch
@@ -197,14 +221,19 @@ function Get-LabSwitch {
 .SYNOPSIS
    Creates Hyper-V Virtual Switches from a provided array.
 .DESCRIPTION
-   Takes an array of switches that were pulled from a Lab Configuration object by calling
-   Get-LabSwitch
-   and ensures that they Hyper-V Virtual Switches on the system are configured to match.
-.PARAMETER Configuration
-   Contains the Lab Builder configuration object that was loaded by the Get-Lab object.
+   Takes an array of switches that were pulled from a Lab object by calling
+   Get-LabSwitch and ensures that they Hyper-V Virtual Switches on the system
+   are configured to match.
+.PARAMETER Lab
+   Contains Lab object that was loaded by the Get-Lab object.
+.PARAMETER Name
+   An optional array of Switch names.
+   
+   Only Switches matching names in this list will be initialized.
 .PARAMETER Switches
-   The array of switches pulled from the Lab Configuration file using Get-LabSwitch.
-   If not provided it will attempt to pull the list from the configuration file.
+   The array of switches pulled from the Lab using Get-LabSwitch.
+
+   If not provided it will attempt to pull the list from the Lab.
 .EXAMPLE
    $Lab = Get-Lab -ConfigPath c:\mylab\config.xml
    $Switches = Get-LabSwitch -Lab $Lab
@@ -221,23 +250,38 @@ function Initialize-LabSwitch {
     [CmdLetBinding()]
     param
     (
-        [Parameter(Mandatory=$true)]
+        [Parameter(
+            Position=1,
+            Mandatory=$true)]
         [ValidateNotNullOrEmpty()]
         $Lab,
+        
+        [Parameter(
+            Position=2)]
+        [ValidateNotNullOrEmpty()]
+        [String[]] $Name,
 
+        [Parameter(
+            Position=3)]
         [Array] $Switches
     )
 
     # if switches was not passed, pull it.
-    if (-not $Switches)
+    if (-not $PSBoundParameters.ContainsKey('switches'))
     {
         $Switches = Get-LabSwitch `
-            -Lab $Lab
+            @PSBoundParameters
     }
     
     # Create Hyper-V Switches
     foreach ($VMSwitch in $Switches)
     {
+        if ($Name -and ($VMSwitch.name -notin $Name))
+        {
+            # A names list was passed but this swtich wasn't included
+            continue
+        } # if
+        
         if ((Get-VMSwitch | Where-Object -Property Name -eq $($VMSwitch.Name)).Count -eq 0)
         {
             [String] $SwitchName = $VMSwitch.Name
@@ -372,11 +416,16 @@ function Initialize-LabSwitch {
 .DESCRIPTION
    This cmdlet is used to remove any Hyper-V Virtual Switches that were created by
    the Initialize-LabSwitch cmdlet.
-.PARAMETER Configuration
-   Contains the Lab Builder configuration object that was loaded by the Get-Lab object.
+.PARAMETER Lab
+   Contains the Lab object that was loaded by the Get-Lab object.
+.PARAMETER Name
+   An optional array of Switch names.
+   
+   Only Switches matching names in this list will be removed.
 .PARAMETER Switches
-   The array of switches pulled from the Lab Configuration file using Get-LabSwitch
-   If not provided it will attempt to pull the list from the configuration file.
+   The array of switches pulled from the Lab using Get-LabSwitch.
+
+   If not provided it will attempt to pull the list from the Lab.
 .EXAMPLE
    $Lab = Get-Lab -ConfigPath c:\mylab\config.xml
    $Switches = Get-LabSwitch -Lab $Lab
@@ -393,23 +442,38 @@ function Remove-LabSwitch {
     [CmdLetBinding()]
     param
     (
-        [Parameter(Mandatory=$true)]
+        [Parameter(
+            Position=1,
+            Mandatory=$true)]
         [ValidateNotNullOrEmpty()]
         $Lab,
 
-        [System.Collections.Hashtable[]] $Switches
+        [Parameter(
+            Position=2)]
+        [ValidateNotNullOrEmpty()]
+        [String[]] $Name,
+
+        [Parameter(
+            Position=3)]
+        [Array] $Switches
     )
 
     # if switches were not passed so pull them
-    if (-not $Switches)
+    if (-not $PSBoundParameters.ContainsKey('switches'))
     {
         $Switches = Get-LabSwitch `
-            -Lab $Lab
+            @PSBoundParameters
     }
 
     # Delete Hyper-V Switches
     foreach ($Switch in $Switches)
     {
+        if ($Name -and ($Switch.name -notin $Name))
+        {
+            # A names list was passed but this swtich wasn't included
+            continue
+        } # if
+
         if ((Get-VMSwitch | Where-Object -Property Name -eq $Switch.Name).Count -ne 0)
         {
             [String] $SwitchName = $Switch.Name
@@ -481,21 +545,25 @@ function Remove-LabSwitch {
 #region LabVMTemplateVHDFunctions
 <#
 .SYNOPSIS
-   Gets an Array of TemplateVHDs for a Lab configuration.
+   Gets an Array of TemplateVHDs for a Lab.
 .DESCRIPTION
-   Takes a provided Lab Configuration file and returns the list of Template Disks
-   that will be used to create the Virtual Machines in this lab. This list is usually passed to
+   Takes a provided Lab and returns the list of Template Disks that will be used to 
+   create the Virtual Machines in this lab. This list is usually passed to
    Initialize-LabVMTemplateVHD.
    
    It will validate the paths to the ISO folder as well as to the ISO files themselves.
    
    If any ISO files references can't be found an exception will be thrown.
-.PARAMETER Configuration
-   Contains the Lab Builder configuration object that was loaded by the Get-Lab object.
+.PARAMETER Lab
+   Contains the Lab object that was loaded by the Get-Lab object.
+.PARAMETER Name
+   An optional array of VM Template VHD names.
+   
+   Only VM Template VHDs matching names in this list will be returned in the array.
 .EXAMPLE
    $Lab = Get-Lab -ConfigPath c:\mylab\config.xml
    $VMTemplateVHDs = Get-LabVMTemplateVHD -Lab $Lab
-   Loads a Lab Builder configuration and pulls the array of TemplateVHDs from it.
+   Loads a Lab and pulls the array of TemplateVHDs from it.
 .OUTPUTS
    Returns an array of TemplateVHDs. It will return Null if the TemplateVHDs node does
    not exist or contains no TemplateVHD nodes.
@@ -505,9 +573,16 @@ function Get-LabVMTemplateVHD {
     [CmdLetBinding()]
     param
     (
-        [Parameter (Mandatory=$true)]
+        [Parameter (
+            Position=1,
+            Mandatory=$true)]
         [ValidateNotNullOrEmpty()]
-        $Lab
+        $Lab,
+
+        [Parameter(
+            Position=2)]
+        [ValidateNotNullOrEmpty()]
+        [String[]] $Name
     )
 
     # return null if the TemplateVHDs node does not exist
@@ -577,16 +652,22 @@ function Get-LabVMTemplateVHD {
     $TemplatePrefix = $Lab.labbuilderconfig.templatevhds.prefix
 
     # Read the list of templateVHD from the configuration file
-    $TemplateVHDs = $Lab.labbuilderconfig.SelectNodes('templatevhds').templatevhd
+    $TemplateVHDs = $Lab.labbuilderconfig.templatevhds.templatevhd
     [System.Collections.Hashtable[]] $VMTemplateVHDs = @()
     foreach ($TemplateVHD in $TemplateVHDs)
     {
         # It can't be template because if the name attrib/node is missing the name property on
         # the XML object defaults to the name of the parent. So we can't easily tell if no name
         # was specified or if they actually specified 'templatevhd' as the name.
-        $Name = $TemplateVHD.Name
-        if (($Name -eq 'TemplateVHD') `
-            -or ([String]::IsNullOrWhiteSpace($Name)))
+        $TemplateVHDName = $TemplateVHD.Name
+        if ($Name -and ($TemplateVHDName -notin $Name))
+        {
+            # A names list was passed but this VM Template VHD wasn't included
+            continue
+        } # if
+
+        if (($TemplateVHDName -eq 'TemplateVHD') `
+            -or ([String]::IsNullOrWhiteSpace($TemplateVHDName)))
         {
             $ExceptionParameters = @{
                 errorId = 'EmptyVMTemplateVHDNameError'
@@ -762,7 +843,7 @@ function Get-LabVMTemplateVHD {
 
 		# Add template VHD to the list
             $VMTemplateVHDs += @{
-                Name = $Name;
+                Name = $TemplateVHDName;
                 ISOPath = $ISOPath;
                 VHDPath = $VHDPath;
                 OSType = $OSType;
@@ -783,26 +864,30 @@ function Get-LabVMTemplateVHD {
 .SYNOPSIS
 	Scans through a list of VM Template VHDs and creates them from the ISO if missing.
 .DESCRIPTION
-	This function will take a list of VM Template VHDs from a configuration file or it will
+	This function will take a list of VM Template VHDs from a Lab or it will
     extract the list itself if it is not provided and ensure that each VHD file is available.
     
     If the VHD file is not available then it will attempt to create it from the ISO.
-.PARAMETER Configuration
-   Contains the Lab Builder configuration object that was loaded by the Get-Lab object.
-.PARAMETER VMTemplateVHDs
-   The array of VMTemplateVHDs pulled from the Lab Configuration file using Get-LabVMTemplateVHD
+.PARAMETER Lab
+   Contains the Lab object that was loaded by the Get-Lab object.
+.PARAMETER Name
+   An optional array of VM Template VHD names.
    
-   If not provided it will attempt to pull the list from the configuration file.
+   Only VM Template VHDs matching names in this list will be initialized.
+.PARAMETER VMTemplateVHDs
+   The array of VMTemplateVHDs pulled from the Lab using Get-LabVMTemplateVHD
+   
+   If not provided it will attempt to pull the list from the Lab.
 .EXAMPLE
    $Lab = Get-Lab -ConfigPath c:\mylab\config.xml
    $VMTemplateVHDs = Get-LabVMTemplateVHD -Lab $Lab
    Initialize-LabVMTemplateVHD -Lab $Lab -VMTemplateVHDs $VMTemplateVHDs
-   Loads a Lab Builder configuration and pulls the array of VM Template VHDs from it and then
+   Loads a Lab and pulls the array of VM Template VHDs from it and then
    ensures all the VHDs are available.
 .EXAMPLE
    $Lab = Get-Lab -ConfigPath c:\mylab\config.xml
    Initialize-LabVMTemplateVHD -Lab $Lab
-   Loads a Lab Builder configuration and then ensures VM Template VHDs all the VHDs are available.
+   Loads a Lab and then ensures VM Template VHDs all the VHDs are available.
 .OUTPUTS
     None. 
 #>
@@ -810,45 +895,60 @@ function Initialize-LabVMTemplateVHD
 {
    param
    (
-        [Parameter (Mandatory=$true)]
+        [Parameter(
+            Position=1,
+            Mandatory=$true)]
         [ValidateNotNullOrEmpty()]
         $Lab,
 
-	    [System.Collections.Hashtable[]] $VMTemplateVHDs
+        [Parameter(
+            Position=2)]
+        [ValidateNotNullOrEmpty()]
+        [String[]] $Name,
+
+        [Parameter(
+            Position=3)]
+	    [Array] $VMTemplateVHDs
     )
 
     # if VMTeplateVHDs array not passed, pull it from config.
     if (-not $PSBoundParameters.ContainsKey('VMTemplateVHDs'))
     {
         $VMTemplateVHDs = Get-LabVMTemplateVHD `
-            -Lab $Lab        
-    }
+            @PSBoundParameters        
+    } # if
 
     # if there are no VMTemplateVHDs just return
     if ($null -eq $VMTemplateVHDs)
     {
         return
-    }
+    } # if
     
     [String] $LabPath = $Lab.labbuilderconfig.settings.labpath
 
     foreach ($VMTemplateVHD in $VMTemplateVHDs)
     {
-        [String] $Name = $VMTemplateVHD.Name
+        [String] $TemplateVHDName = $VMTemplateVHD.Name
+        if ($Name -and ($TemplateVHDName -notin $Name))
+        {
+            # A names list was passed but this VM Template VHD wasn't included
+            continue
+        } # if
+
         [String] $VHDPath = $VMTemplateVHD.VHDPath
         
         if (Test-Path -Path ($VHDPath))
         {
             # The SourceVHD already exists
             Write-Verbose -Message ($LocalizedData.SkipVMTemplateVHDFileMessage `
-                -f $Name,$VHDPath)
+                -f $TemplateVHDName,$VHDPath)
 
             continue
-        }
+        } # if
         
         # Create the VHD
         Write-Verbose -Message ($LocalizedData.CreatingVMTemplateVHDMessage `
-            -f $Name,$VHDPath)
+            -f $TemplateVHDName,$VHDPath)
             
         # Check the ISO exists.
         [String] $ISOPath = $VMTemplateVHD.ISOPath
@@ -858,14 +958,14 @@ function Initialize-LabVMTemplateVHD
                 errorId = 'VMTemplateVHDISOPathNotFoundError'
                 errorCategory = 'InvalidArgument'
                 errorMessage = $($LocalizedData.VMTemplateVHDISOPathNotFoundError `
-                    -f $Name,$ISOPath)
+                    -f $TemplateVHDName,$ISOPath)
             }
             ThrowException @ExceptionParameters            
-        }
+        } # if
         
         # Mount the ISO so we can read the files.
         Write-Verbose -Message ($LocalizedData.MountingVMTemplateVHDISOMessage `
-                -f $Name,$ISOPath)
+                -f $TemplateVHDName,$ISOPath)
                 
         $null = Mount-DiskImage `
             -ImagePath $ISOPath `
@@ -881,7 +981,7 @@ function Initialize-LabVMTemplateVHD
         if ($VMTemplateVHD.OSType -eq 'Nano')
         {
             $SourcePath = "$ISODrive\Nanoserver\NanoServer.WIM"
-        }
+        } # if
 
         # This will have to change depending on the version
         # of Convert-WindowsImage being used. 
@@ -891,7 +991,7 @@ function Initialize-LabVMTemplateVHD
         if ($VMTemplateVHD.Generation -eq 1)
         {
             $VHDDiskLayout = 'BIOS'
-        }
+        } # if
 
         [String] $Edition = $VMTemplateVHD.Edition
         # if edition is not set then use Get-WindowsImage to get the name
@@ -901,7 +1001,7 @@ function Initialize-LabVMTemplateVHD
             $Edition = (Get-WindowsImage `
                 -ImagePath $SourcePath `
                 -Index 1).ImageName
-        }
+        } # if
 
         $ConvertParams = @{
             sourcepath = $SourcePath
@@ -919,7 +1019,7 @@ function Initialize-LabVMTemplateVHD
             $ConvertParams += @{
                 sizebytes = $VMTemplateVHD.VHDSize
             }
-        }
+        } # if
         
         # Are any features specified?
         if (-not [String]::IsNullOrWhitespace($VMTemplateVHD.Features))
@@ -928,7 +1028,7 @@ function Initialize-LabVMTemplateVHD
             $ConvertParams += @{
                 feature = $Features
             }
-        }
+        } # if
         
         # Perform Nano Server package prep
         if ($VMTemplateVHD.OSType -eq 'Nano')
@@ -956,7 +1056,7 @@ function Initialize-LabVMTemplateVHD
                 Rename-Item `
                     -Path "$VHDFolder\Packages" `
                     -NewName 'NanoServerPackages'
-            }
+            } # if
                                         
             # Now specify the Nano Server packages to add.
             if (-not [String]::IsNullOrWhitespace($VMTemplateVHD.Packages))
@@ -990,14 +1090,14 @@ function Initialize-LabVMTemplateVHD
         if (-not (Test-Path -Path Function:Convert-WindowsImage))
         {
             . $Script:SupportConvertWindowsImagePath
-        }
+        } # if
         
         # Call the Convert-WindowsImage script
         Convert-WindowsImage @ConvertParams
 
         # Dismount the ISO.
         Write-Verbose -Message ($LocalizedData.DismountingVMTemplateVHDISOMessage `
-                -f $Name,$ISOPath)
+                -f $TemplateVHDName,$ISOPath)
 
         $null = Dismount-DiskImage `
             -ImagePath $ISOPath
@@ -1010,24 +1110,28 @@ function Initialize-LabVMTemplateVHD
 .SYNOPSIS
 	Scans through a list of VM Template VHDs and removes them if they exist.
 .DESCRIPTION
-	This function will take a list of VM Template VHDs from a configuration file or it will
+	This function will take a list of VM Template VHDs from a Lab or it will
     extract the list itself if it is not provided and remove the VHD file if it exists.
-.PARAMETER Configuration
-   Contains the Lab Builder configuration object that was loaded by the Get-Lab object.
-.PARAMETER VMTemplateVHDs
-   The array of VMTemplateVHDs pulled from the Lab Configuration file using Get-LabVMTemplateVHD
+.PARAMETER Lab
+   Contains the Lab object that was loaded by the Get-Lab object.
+.PARAMETER Name
+   An optional array of VM Template VHD names.
    
-   If not provided it will attempt to pull the list from the configuration file.
+   Only VM Template VHDs matching names in this list will be removed.
+.PARAMETER VMTemplateVHDs
+   The array of VMTemplateVHDs pulled from the Lab using Get-LabVMTemplateVHD.
+   
+   If not provided it will attempt to pull the list from the Lab.
 .EXAMPLE
    $Lab = Get-Lab -ConfigPath c:\mylab\config.xml
    $VMTemplateVHDs = Get-LabVMTemplateVHD -Lab $Lab
    Remove-LabVMTemplateVHD -Lab $Lab -VMTemplateVHDs $VMTemplateVHDs
-   Loads a Lab Builder configuration and pulls the array of VM Template VHDs from it and then
+   Loads a Lab and pulls the array of VM Template VHDs from it and then
    ensures all the VM template VHDs are deleted.
 .EXAMPLE
    $Lab = Get-Lab -ConfigPath c:\mylab\config.xml
    Remove-LabVMTemplateVHD -Lab $Lab
-   Loads a Lab Builder configuration and then ensures the VM template VHDs are deleted.
+   Loads a Lab and then ensures the VM template VHDs are deleted.
 .OUTPUTS
     None. 
 #>
@@ -1035,31 +1139,46 @@ function Remove-LabVMTemplateVHD
 {
    param
    (
-        [Parameter (Mandatory=$true)]
+        [Parameter(
+            Position=1,
+            Mandatory=$true)]
         [ValidateNotNullOrEmpty()]
         $Lab,
 
-	    [System.Collections.Hashtable[]] $VMTemplateVHDs
+        [Parameter(
+            Position=2)]
+        [ValidateNotNullOrEmpty()]
+        [String[]] $Name,
+
+        [Parameter(
+            Position=3)]
+	    [Array] $VMTemplateVHDs
     )
 
     # if VMTeplateVHDs array not passed, pull it from config.
     if (-not $PSBoundParameters.ContainsKey('VMTemplateVHDs'))
     {
         $VMTemplateVHDs = Get-LabVMTemplateVHD `
-            -Lab $Lab        
-    }
+           @PSBoundParameters   
+    } # if
 
     # if there are no VMTemplateVHDs just return
     if ($null -eq $VMTemplateVHDs)
     {
         return
-    }
+    } # if
     
     [String] $LabPath = $Lab.labbuilderconfig.settings.labpath
 
     foreach ($VMTemplateVHD in $VMTemplateVHDs)
     {
-        [String] $Name = $VMTemplateVHD.Name
+        [String] $TemplateVHDName = $VMTemplateVHD.Name
+        if ($Name -and ($TemplateVHDName -notin $Name))
+        {
+            # A names list was passed but this VM Template VHD wasn't included
+            continue
+        } # if
+
         [String] $VHDPath = $VMTemplateVHD.VHDPath
         
         if (Test-Path -Path ($VHDPath))
@@ -1068,29 +1187,34 @@ function Remove-LabVMTemplateVHD
                 -Path $VHDPath `
                 -Force
             Write-Verbose -Message ($LocalizedData.DeletingVMTemplateVHDFileMessage `
-                -f $Name,$VHDPath)
-        }
+                -f $TemplateVHDName,$VHDPath)
+        } # if
     } # endfor
 } # Remove-LabVMTemplateVHD
 
 
 <#
 .SYNOPSIS
-   Gets an Array of VM Templates for a Lab configuration.
+   Gets an Array of VM Templates for a Lab.
 .DESCRIPTION
-   Takes the provided Lab Configuration file and returns the list of Virtul Machine template machines
-   that will be used to create the Virtual Machines in this lab. This list is usually passed to
-   Initialize-LabVMTemplate.
-.PARAMETER Configuration
-   Contains the Lab Builder configuration object that was loaded by the Get-Lab object.
-.PARAMETER VMTemplateVHDs
-   The array of VMTemplateVHDs pulled from the Lab Configuration file using Get-LabVMTemplateVHD
+   Takes the provided Lab and returns the list of Virtul Machine template machines
+   that will be used to create the Virtual Machines in this lab.
    
-   If not provided it will attempt to pull the list from the configuration file.
+   This list is usually passed to Initialize-LabVMTemplate.
+.PARAMETER Lab
+   Contains the Lab object that was loaded by the Get-Lab object.
+.PARAMETER Name
+   An optional array of VM Template names.
+   
+   Only VM Templates matching names in this list will be returned in the array.
+.PARAMETER VMTemplateVHDs
+   The array of VMTemplateVHDs pulled from the Lab using Get-LabVMTemplateVHD.
+   
+   If not provided it will attempt to pull the list from the Lab.
 .EXAMPLE
    $Lab = Get-Lab -ConfigPath c:\mylab\config.xml
    $VMTemplates = Get-LabVMTemplate -Lab $Lab
-   Loads a Lab Builder configuration and pulls the array of VMTemplates from it.
+   Loads a Lab and pulls the array of VMTemplates from it.
 .OUTPUTS
    Returns an array of VM Templates.
 #>
@@ -1099,11 +1223,20 @@ function Get-LabVMTemplate {
     [CmdLetBinding()]
     param
     (
-        [Parameter(Mandatory=$true)]
+        [Parameter(
+            Position=1,
+            Mandatory=$true)]
         [ValidateNotNullOrEmpty()]
         $Lab,
         
-        [System.Collections.Hashtable[]] $VMTemplateVHDs        
+        [Parameter(
+            Position=2)]
+        [ValidateNotNullOrEmpty()]
+        [String[]] $Name,
+        
+        [Parameter(
+            Position=3)]
+        [Array] $VMTemplateVHDs        
     )
 
     # if VMTeplateVHDs array not passed, pull it from config.
@@ -1114,16 +1247,22 @@ function Get-LabVMTemplate {
     }
     
     [System.Collections.Hashtable[]] $VMTemplates = @()
-    [String] $VHDParentPath = $Lab.labbuilderconfig.SelectNodes('settings').vhdparentpath
+    [String] $VHDParentPath = $Lab.labbuilderconfig.settings.vhdparentpath
     
     # Get a list of all templates in the Hyper-V system matching the phrase found in the fromvm
     # config setting
-    [String] $FromVM=$Lab.labbuilderconfig.SelectNodes('templates').fromvm
+    [String] $FromVM=$Lab.labbuilderconfig.templates.fromvm
     if ($FromVM)
     {
         $Templates = @(Get-VM -Name $FromVM)
         foreach ($Template in $Templates)
         {
+            if ($Name -and ($Template.Name -notin $Name))
+            {
+                # A names list was passed but this VM Template wasn't included
+                continue
+            } # if
+
             [String] $VHDFilepath = (Get-VMHardDiskDrive -VMName $Template.Name).Path
             [String] $VHDFilename = [System.IO.Path]::GetFileName($VHDFilepath)
             $VMTemplates += @{
@@ -1136,13 +1275,19 @@ function Get-LabVMTemplate {
     } # if
     
     # Read the list of templates from the configuration file
-    $Templates = $Lab.labbuilderconfig.SelectNodes('templates').template
+    $Templates = $Lab.labbuilderconfig.templates.template
     foreach ($Template in $Templates)
     {
         # It can't be template because if the name attrib/node is missing the name property on
         # the XML object defaults to the name of the parent. So we can't easily tell if no name
         # was specified or if they actually specified 'template' as the name.
         $TemplateName = $Template.Name
+        if ($Name -and ($TemplateName -notin $Name))
+        {
+            # A names list was passed but this VM Template wasn't included
+            continue
+        } # if
+
         if ($TemplateName -eq 'template')
         {
             $ExceptionParameters = @{
@@ -1357,19 +1502,26 @@ function Get-LabVMTemplate {
 .SYNOPSIS
    Initializes the Virtual Machine templates used by a Lab from a provided array.
 .DESCRIPTION
-   Takes an array of Virtual Machine templates that were configured in the Lab Configuration
-   file. The Virtual Machine templates are used to create the Virtual Machines specified in
-   a Lab Configuration. The Virtual Machine template VHD files are copied to a folder where
+   Takes an array of Virtual Machine templates that were configured in the Lab.
+   
+   The Virtual Machine templates are used to create the Virtual Machines specified in
+   a Lab. The Virtual Machine template VHD files are copied to a folder where
    they will be copied to create new Virtual Machines or as parent difference disks for new
    Virtual Machines.
-.PARAMETER Configuration
-   Contains the Lab Builder configuration object that was loaded by the Get-Lab object.
+.PARAMETER Lab
+   Contains the Lab object that was loaded by the Get-Lab object.
+.PARAMETER Name
+   An optional array of VM Template names.
+   
+   Only VM Templates matching names in this list will be initialized.
 .PARAMETER VMTemplates
-   The array of VM Templates pulled from the Lab Configuration file using Get-LabVMTemplate
-   If not provided it will attempt to pull the list from the configuration file.
+   The array of VM Templates pulled from the Lab using Get-LabVMTemplate.
+
+   If not provided it will attempt to pull the list from the Lab.
 .PARAMETER VMTemplateVHDs
-   The array of VM Templates pulled from the Lab Configuration file using Get-LabVMTemplate
-   If not provided it will attempt to pull the list from the configuration file.
+   The array of VM Template VHDs pulled from the Lab using Get-LabVMTemplateVHD.
+
+   If not provided it will attempt to pull the list from the Lab.
 .EXAMPLE
    $Lab = Get-Lab -ConfigPath c:\mylab\config.xml
    $VMTemplates = Get-LabVMTemplate -Lab $Lab
@@ -1390,18 +1542,27 @@ function Initialize-LabVMTemplate {
     [CmdLetBinding()]
     param
     (
-        [Parameter(Mandatory=$true)]
+        [Parameter(
+            Position=1,
+            Mandatory=$true)]
         [ValidateNotNullOrEmpty()]
         $Lab,
 
-        [System.Collections.Hashtable[]] $VMTemplates
+        [Parameter(
+            Position=2)]
+        [ValidateNotNullOrEmpty()]
+        [String[]] $Name,
+        
+        [Parameter(
+            Position=3)]
+        [Array] $VMTemplates
     )
     
     # if VMTeplates array not passed, pull it from config.
     if (-not $PSBoundParameters.ContainsKey('VMTemplates'))
     {
         $VMTemplates = Get-LabVMTemplate `
-            -Lab $Lab
+            @PSBoundParameters
     }
 
     [String] $LabPath = $Lab.labbuilderconfig.settings.labpath
@@ -1411,6 +1572,12 @@ function Initialize-LabVMTemplate {
     # Location.
     foreach ($VMTemplate in $VMTemplates)
     {
+        if ($Name -and ($VMTemplate.Name -notin $Name))
+        {
+            # A names list was passed but this VM Template wasn't included
+            continue
+        } # if
+        
         if (-not (Test-Path $VMTemplate.parentvhd))
         {
             # The Parent VHD isn't in the VHD Parent folder
@@ -1492,12 +1659,14 @@ function Initialize-LabVMTemplate {
    Template VHDs or the Lab is being completely removed. Removing these Template VHDs if
    Lab Virtual Machines are using these templates as differencing disk parents will cause
    the Lab Virtual Hard Drives to become corrupt.
-.PARAMETER Configuration
-   Contains the Lab Builder configuration object that was loaded by the Get-Lab
-   object.
+.PARAMETER Lab
+   Contains the Lab object that was loaded by the Get-Lab object.
+.PARAMETER Name
+   An optional array of VM Template names.
+   
+   Only VM Templates matching names in this list will be removed.
 .PARAMETER VMTemplates
-   The array of Virtual Machine Templates pulled from the Lab Configuration file using
-   Get-LabVMTemplate
+   The array of Virtual Machine Templates pulled from the Lab using Get-LabVMTemplate.
 .EXAMPLE
    $Lab = Get-Lab -ConfigPath c:\mylab\config.xml
    $VMTemplates = Get-LabVMTemplate -Lab $Lab
@@ -1514,21 +1683,36 @@ function Remove-LabVMTemplate {
     [CmdLetBinding()]
     param
     (
-        [Parameter(Mandatory=$true)]
+        [Parameter(
+            Position=1,
+            Mandatory=$true)]
         [ValidateNotNullOrEmpty()]
         $Lab,
 
-        [System.Collections.Hashtable[]] $VMTemplates
+        [Parameter(
+            Position=2)]
+        [ValidateNotNullOrEmpty()]
+        [String[]] $Name,
+
+        [Parameter(
+            Position=3)]
+        [Array] $VMTemplates
     )
 
     # if VMTeplates array not passed, pull it from config.
     if (-not $PSBoundParameters.ContainsKey('VMTemplates'))
     {
         $VMTemplates = Get-LabVMTemplate `
-            -Lab $Lab
-    }    
+           @PSBoundParameters
+    } # if
     foreach ($VMTemplate in $VMTemplates)
     {
+        if ($Name -and ($VMTemplate.Name -notin $Name))
+        {
+            # A names list was passed but this VM Template wasn't included
+            continue
+        } # if
+
         if (Test-Path $VMTemplate.parentvhd)
         {
             Set-ItemProperty `
@@ -1541,8 +1725,8 @@ function Remove-LabVMTemplate {
                 -Path $VMTemplate.parentvhd `
                 -Confirm:$false `
                 -Force
-        }
-    }
+        } # if
+    } # foreach
 } # Remove-LabVMTemplate
 #region
 
@@ -1550,28 +1734,34 @@ function Remove-LabVMTemplate {
 #region LabVMFunctions
 <#
 .SYNOPSIS
-   Gets an Array of VMs from a Lab configuration.
+   Gets an Array of VMs from a Lab.
 .DESCRIPTION
-   Takes the provided Lab Configuration file and returns the list of Virtul Machines
+   Takes the provided Lab and returns the list of Virtul Machines
    that will be created in this lab. This list is usually passed to Initialize-LabVM.
-.PARAMETER Configuration
-   Contains the Lab Builder configuration object that was loaded by the Get-Lab object.
+.PARAMETER Lab
+   Contains the Lab Builder Lab object that was loaded by the Get-Lab object.
+.PARAMETER Name
+   An optional array of VM names.
+   
+   Only VMs matching names in this list will be returned in the array.
 .PARAMETER VMTemplates
-   Contains the array of VM Templates returned by Get-LabVMTemplate from this configuration.
-   If not provided it will attempt to pull the list from the configuration file.
+   Contains the array of VM Templates returned by Get-LabVMTemplate from this Lab.
+
+   If not provided it will attempt to pull the list from the Lab.
 .PARAMETER Switches
-   Contains the array of Virtual Switches returned by Get-LabSwitch from this configuration.
-   If not provided it will attempt to pull the list from the configuration file.
+   Contains the array of Virtual Switches returned by Get-LabSwitch from this Lab.
+
+   If not provided it will attempt to pull the list from the Lab.
 .EXAMPLE
    $Lab = Get-Lab -ConfigPath c:\mylab\config.xml
    $VMTemplates = Get-LabVMTemplate -Lab $Lab
    $Switches = Get-LabSwitch -Lab $Lab
    $VMs = Get-LabVM -Lab $Lab -VMTemplates $VMTemplates -Switches $Switches
-   Loads a Lab Builder configuration and pulls the array of VMs from it.
+   Loads a Lab and pulls the array of VMs from it.
 .EXAMPLE
    $Lab = Get-Lab -ConfigPath c:\mylab\config.xml
    $VMs = Get-LabVM -Lab $Lab
-   Loads a Lab Builder configuration and pulls the array of VMs from it.
+   Loads a Lab and pulls the array of VMs from it.
 .OUTPUTS
    Returns an array of VMs.
 #>
@@ -1579,13 +1769,24 @@ function Get-LabVM {
     [OutputType([System.Collections.Hashtable[]])]
     [CmdLetBinding()]
     param (
-        [Parameter(Mandatory=$true)]
+        [Parameter(
+            Position=1,
+            Mandatory=$true)]
         [ValidateNotNullOrEmpty()]
         $Lab,
 
-        [System.Collections.Hashtable[]] $VMTemplates,
+        [Parameter(
+            Position=2)]
+        [ValidateNotNullOrEmpty()]
+        [String[]] $Name,
+        
+        [Parameter(
+            Position=3)]
+        [Array] $VMTemplates,
 
-        [System.Collections.Hashtable[]] $Switches
+        [Parameter(
+            Position=4)]
+        [Array] $Switches
     )
 
     # if VMTeplates array not passed, pull it from config.
@@ -1606,11 +1807,17 @@ function Get-LabVM {
     [String] $LabPath = $Lab.labbuilderconfig.settings.labpath
     [String] $VHDParentPath = $Lab.labbuilderconfig.settings.vhdparentpath
     [String] $LabId = $Lab.labbuilderconfig.settings.labid 
-    $VMs = $Lab.labbuilderconfig.SelectNodes('vms').vm
+    $VMs = $Lab.labbuilderconfig.vms.vm
 
     foreach ($VM in $VMs) 
 	{
         $VMName = $VM.Name
+        if ($Name -and ($VMName -notin $Name))
+        {
+            # A names list was passed but this VM wasn't included
+            continue
+        } # if
+
         if ($VMName -eq 'VM')
 		{
             $ExceptionParameters = @{
@@ -2358,42 +2565,67 @@ function Get-LabVM {
 
 <#
 .SYNOPSIS
-   Short description
+   Initializes the Virtual Machines used by a Lab from a provided array.
 .DESCRIPTION
-   Long description
-.EXAMPLE
-   Example of how to use this cmdlet
-.PARAMETER Configuration
-   Contains the Lab Builder configuration object that was loaded by the Get-Lab
-   object.
+   Takes an array of Virtual Machines that were configured in the Lab.
+.PARAMETER Lab
+   Contains the Lab object that was loaded by the Get-Lab object.
+.PARAMETER Name
+   An optional array of VMs.
+   
+   Only VMs matching names in this list will be initialized.
 .PARAMETER VMs
-   Array of Virtual Machines pulled from a configuration object.
+   Array of Virtual Machines pulled from a Lab object.
+
+   If not provided it will attempt to pull the list from the Lab.
+.EXAMPLE
+   $Lab = Get-Lab -ConfigPath c:\mylab\config.xml
+   $Switches = Get-LabSwtich -Lab $Lab
+   $VMTemplates = Get-LabVMTemplate -Lab $Lab
+   $VMs = Get-LabVs -Lab $Lab -Switches $Swtiches -VMTemplates $VMTemplates
+   Initialize-LabVM `
+    -Lab $Lab `
+    -VMs $VMs
+   Initializes the Virtual Machines in the configured in the Lab c:\mylab\config.xml
+.EXAMPLE
+   $Lab = Get-Lab -ConfigPath c:\mylab\config.xml
+   Initialize-LabVMs -Lab $Lab
+   Initializes the Virtual Machines in the configured in the Lab c:\mylab\config.xml
 .OUTPUTS
-   None
+   None.
 #>
 function Initialize-LabVM {
     [CmdLetBinding()]
     param
     (
-        [Parameter(Mandatory=$true)]
+        [Parameter(
+            Position=1,
+            Mandatory=$true)]
         [ValidateNotNullOrEmpty()]
         $Lab,
 
-        [System.Collections.Hashtable[]] $VMs
+        [Parameter(
+            Position=2)]
+        [ValidateNotNullOrEmpty()]
+        [String[]] $Name,
+        
+        [Parameter(
+            Position=3)]
+        [Array] $VMs
     )
     
     # if VMs array not passed, pull it from config.
     if (-not $PSBoundParameters.ContainsKey('VMs'))
     {
         $VMs = Get-LabVM `
-            -Lab $Lab
-    }
+            @PSBoundParameters
+    } # if
     
     # if there are not VMs just return
     if (-not $VMs)
     {
         return
-    }
+    } # if
     
     $CurrentVMs = Get-VM
 
@@ -2409,10 +2641,16 @@ function Initialize-LabVM {
     else
     {
         [Int32] $ManagementVlan = $Script:DefaultManagementVLan
-    }
+    } # if
 
     foreach ($VM in $VMs)
     {
+        if ($Name -and ($VM.Name -notin $Name))
+        {
+            # A names list was passed but this VM wasn't included
+            continue
+        } # if
+        
         # Get the root path of the VM
         [String] $VMRootPath = $VM.VMRootPath
 
@@ -2604,7 +2842,7 @@ function Initialize-LabVM {
             }                
         } # foreach
 
-        Start-LabVM `
+        Install-LabVM `
             -Lab $Lab `
             -VM $VM
     } # foreach
@@ -2613,36 +2851,68 @@ function Initialize-LabVM {
 
 <#
 .SYNOPSIS
-   Short description
+   Removes all Lab Virtual Machines.
 .DESCRIPTION
-   Long description
+   This cmdlet is used to remove any Virtual Machines that were created as part of this
+   Lab.
+
+   It can also optionally delete the folder and all files created as part of this Lab
+   Virutal Machine.
 .PARAMETER Lab
+   Contains the Lab object that was loaded by the Get-Lab object.
+.PARAMETER Name
+   An optional array of VM names.
+   
+   Only VMs matching names in this list will be removed.
 .PARAMETER VMs
+   The array of Virtual Machines pulled from the Lab using Get-LabVM.
 .PARAMETER RemoveVMFolder
+   Causes the folder created to contain the Virtual Machine in this lab to be deleted.
 .EXAMPLE
-   Another example of how to use this cmdlet
+   $Lab = Get-Lab -ConfigPath c:\mylab\config.xml
+   $Switches = Get-LabSwtich -Lab $Lab
+   $VMTemplates = Get-LabVMTemplate -Lab $Lab
+   $VMs = Get-LabVs -Lab $Lab -Switches $Swtiches -VMTemplates $VMTemplates
+   Remove-LabVM -Lab $Lab -VMs $VMs
+   Removes any Virtual Machines configured in the Lab c:\mylab\config.xml
+.EXAMPLE
+   $Lab = Get-Lab -ConfigPath c:\mylab\config.xml
+   Remove-LabVM -Lab $Lab
+   Removes any Virtual Machines configured in the Lab c:\mylab\config.xml
 .OUTPUTS
-   None
+   None.
 #>
 function Remove-LabVM {
     [CmdLetBinding()]
     param
     (
-        [Parameter(Mandatory=$true)]
+        [Parameter(
+            Position=1,
+            Mandatory=$true)]
         [ValidateNotNullOrEmpty()]
         $Lab,
 
-        [System.Collections.Hashtable[]] $VMs,
+        [Parameter(
+            Position=2)]
+        [ValidateNotNullOrEmpty()]
+        [String[]] $Name,
+        
+        [Parameter(
+            Position=3)]
+        [Array] $VMs,
 
+        [Parameter(
+            Position=4)]
         [Switch] $RemoveVMFolder
     )
     
     # if VMs array not passed, pull it from config.
     if (-not $PSBoundParameters.ContainsKey('VMs'))
     {
+        $null = $PSBoundParameters.Remove('RemoveVMFolder')
         $VMs = Get-LabVM `
-            -Lab $Lab
-    }
+            @PSBoundParameters
+    } # if
 
     $CurrentVMs = Get-VM
 
@@ -2651,6 +2921,12 @@ function Remove-LabVM {
     
     foreach ($VM in $VMs)
     {
+        if ($Name -and ($VM.Name -notin $Name))
+        {
+            # A names list was passed but this VM wasn't included
+            continue
+        } # if
+
         if (($CurrentVMs | Where-Object -Property Name -eq $VM.Name).Count -ne 0)
         {
             # if the VM is running we need to shut it down.
@@ -2702,31 +2978,41 @@ function Remove-LabVM {
 
 <#
 .SYNOPSIS
-   Short description
+   Starts a Lab VM and ensures it has been Initialized.
 .DESCRIPTION
-   Long description
+   This cmdlet is used to start up a Lab VM for the first time.
+   
+   It will start the VM if it is off.
+   
+   If the VM is a Server OS or Nano Server then it will also perform an initial setup:
+    - It will ensure that initial setup has been completed and a self-signed certificate has
+      been created by the VM and downloaded to the LabBuilder folder.   
+
+    - It will also ensure DSC is configured for the VM.
+.PARAMETER VM
+   The VM Object referring to the VM to start to.
 .EXAMPLE
-   Example of how to use this cmdlet
-.EXAMPLE
-   Another example of how to use this cmdlet
-.INPUTS
-   Inputs to this cmdlet (if any)
+   $Lab = Get-Lab -ConfigPath c:\mylab\config.xml
+   $VMs = Get-LabVM -Lab $Lab
+   $Session = Install-LabVM -VM $VMs[0]
+   Start up the first VM in the Lab c:\mylab\config.xml and initialize it.
 .OUTPUTS
-   Output from this cmdlet (if any)
-.NOTES
-   General notes
+   None.
 #>
-function Start-LabVM {
+function Install-LabVM {
     [CmdLetBinding()]
     param
     (
-        [Parameter(Mandatory=$true)]
+        [Parameter(
+            Position=1,
+            Mandatory=$true)]
         [ValidateNotNullOrEmpty()]
         $Lab,
 
-        [Parameter(Mandatory=$true)]
+        [Parameter(
+            Position=2)]
         [ValidateNotNullOrEmpty()]
-        $VM
+        [Hashtable] $VM
     )
 
     [String] $LabPath = $Lab.labbuilderconfig.settings.labpath
@@ -2741,7 +3027,7 @@ function Start-LabVM {
     } # if
 
     # We only perform this section of VM Initialization (DSC, Cert, etc) with Server OS
-    if ($VM.OSType -eq 'Server')
+    if ($VM.OSType -in ('Server','Nano'))
     {
         # Has this VM been initialized before (do we have a cert for it)
         if (-not (Test-Path "$LabPath\$($VM.Name)\LabBuilder Files\$Script:DSCEncryptionCert"))
@@ -2790,13 +3076,13 @@ function Start-LabVM {
             -Lab $Lab `
             -VM $VM
     } # if
-} # Start-LabVM
+} # Install-LabVM
 
 
 
 <#
 .SYNOPSIS
-   Connects to a running VM.
+   Connects to a running Lab VM.
 .DESCRIPTION
    This cmdlet will connect to a running VM using PSRemoting. A PSSession object will be returned
    if the connection was successful.
@@ -2804,15 +3090,20 @@ function Start-LabVM {
    If the connection fails, it will be retried until the ConnectTimeout is reached. If the
    ConnectTimeout is reached and a connection has not been established then a ConnectionError 
    exception will be thrown.
+   
+   The IP Address to this VM will be added to the WSMan TrustedHosts list if it isn't already
+   added or if it isn't set to '*'.
+.PARAMETER VM
+   The VM Object referring to the VM to connect to.
+.PARAMETER ConnectTimeout
+   The number of seconds the connection will attempt to be established for.
+   
+   Defaults to 300 seconds.
 .EXAMPLE
    $Lab = Get-Lab -ConfigPath c:\mylab\config.xml
    $VMs = Get-LabVM -Lab $Lab
    $Session = Connect-LabVM -VM $VMs[0]
    Connect to the first VM in the Lab c:\mylab\config.xml.
-.PARAMETER VM
-   The VM Object referring to the VM to connect to.
-.PARAMETER ConnectTimeout
-   The number of seconds the connection will attempt to be established for. Defaults to 300 seconds.
 .OUTPUTS
    The PSSession object of the remote connect or null if the connection failed.
 #>
@@ -2822,9 +3113,13 @@ function Connect-LabVM
     [CmdLetBinding()]
     param
     (
-        [Parameter(Mandatory=$true)]
-        [System.Collections.Hashtable] $VM,
+        [Parameter(
+            Position=1,
+            Mandatory=$true)]
+        [Hashtable] $VM,
         
+        [Parameter(
+            Position=2)]
         [Int] $ConnectTimeout = 300
     )
 
@@ -2915,9 +3210,12 @@ function Connect-LabVM
 
 <#
 .SYNOPSIS
-   Disconnects from a running VM.
+   Disconnects from a running Lab VM.
 .DESCRIPTION
    This cmdlet will disconnect a session from a running VM using PSRemoting.
+   
+   The IP Address to this VM will be removed from the WSMan TrustedHosts list 
+   if it exists in it.   
 .PARAMETER VM
    The VM Object referring to the VM to connect to.
 .EXAMPLE
@@ -2933,8 +3231,10 @@ function Disconnect-LabVM
     [CmdLetBinding()]
     param
     (
-        [Parameter(Mandatory=$true)]
-        [System.Collections.Hashtable] $VM
+        [Parameter(
+            Position=1,
+            Mandatory=$true)]
+        [Hashtable] $VM
     )
 
     [PSCredential] $AdminCredential = CreateCredential `
@@ -3029,12 +3329,20 @@ function Get-Lab {
     [OutputType([XML])]
     param
     (
-        [parameter(Mandatory=$true)]
+        [Parameter(
+            Position=1,
+            Mandatory=$true)]
         [ValidateNotNullOrEmpty()]
         [String] $ConfigPath,
         
+        [Parameter(
+            Position=2)]
         [ValidateNotNullOrEmpty()]
-        [String] $LabPath
+        [String] $LabPath,
+        
+        [Parameter(
+            Position=3)]
+        [Switch] $SkipXMLValidation
     ) # Param
     if (-not (Test-Path -Path $ConfigPath))
     {
@@ -3046,6 +3354,7 @@ function Get-Lab {
         }
         ThrowException @ExceptionParameters
     } # if
+    
     $Content = Get-Content -Path $ConfigPath -Raw
     if (-not $Content)
     {
@@ -3057,6 +3366,16 @@ function Get-Lab {
         }
         ThrowException @ExceptionParameters
     } # if
+    
+    if (-not $SkipXMLValidation)
+    {
+        # Validate the XML
+        ValidateConfigurationXMLSchema `
+            -ConfigPath $ConfigPath `
+            -ErrorAction Stop
+    }
+
+    # The XML passes the Schema check so load it.
     [XML] $Lab = New-Object System.Xml.XmlDocument
     $Lab.PreserveWhitespace = $true
     $Lab.LoadXML($Content)
@@ -3166,18 +3485,29 @@ Function Install-Lab {
     [CmdLetBinding(DefaultParameterSetName="Lab")]
     param
     (
-        [parameter(ParameterSetName="File",Mandatory=$true)]
+        [parameter(
+            Position=1,
+            ParameterSetName="File",
+            Mandatory=$true)]
         [ValidateNotNullOrEmpty()]
         [String] $ConfigPath,
 
-        [parameter(ParameterSetName="File")]
+        [parameter(
+            Position=2,
+            ParameterSetName="File")]
         [ValidateNotNullOrEmpty()]
         [String] $LabPath,
 
-        [Parameter(ParameterSetName="Lab", Mandatory=$true, ValueFromPipeline=$true)]
+        [Parameter(
+            Position=3,
+            ParameterSetName="Lab",
+            Mandatory=$true,
+            ValueFromPipeline=$true)]
         [ValidateNotNullOrEmpty()]
         $Lab,
 
+        [Parameter(
+            Position=4)]
         [Switch] $CheckEnvironment
     ) # Param
 
@@ -3344,15 +3674,24 @@ Function Update-Lab {
     [CmdLetBinding(DefaultParameterSetName="Lab")]
     param
     (
-        [parameter(ParameterSetName="File",Mandatory=$true)]
+        [parameter(
+            Position=1,
+            ParameterSetName="File",
+            Mandatory=$true)]
         [ValidateNotNullOrEmpty()]
         [String] $ConfigPath,
 
-        [parameter(ParameterSetName="File")]
+        [parameter(
+            Position=2,
+            ParameterSetName="File")]
         [ValidateNotNullOrEmpty()]
         [String] $LabPath,
 
-        [Parameter(ParameterSetName="Lab", Mandatory=$true, ValueFromPipeline=$true)]
+        [Parameter(
+            Position=3,
+            ParameterSetName="Lab",
+            Mandatory=$true,
+            ValueFromPipeline=$true)]
         [ValidateNotNullOrEmpty()]
         $Lab
     ) # Param
@@ -3441,26 +3780,45 @@ Function Uninstall-Lab {
         ConfirmImpact = 'High')]
     param
     (
-        [parameter(ParameterSetName="File",Mandatory=$true)]
+        [parameter(
+            Position=1,
+            ParameterSetName="File",
+            Mandatory=$true)]
         [ValidateNotNullOrEmpty()]
         [String] $ConfigPath,
 
-        [parameter(ParameterSetName="File")]
+        [parameter(
+            Position=2,
+            ParameterSetName="File")]
         [ValidateNotNullOrEmpty()]
         [String] $LabPath,
 
-        [Parameter(ParameterSetName="Lab", Mandatory=$true, ValueFromPipeline=$true)]
+        [Parameter(
+            Position=3,
+            ParameterSetName="Lab",
+            Mandatory=$true,
+            ValueFromPipeline=$true)]
         [ValidateNotNullOrEmpty()]
         $Lab,
 
+        [Parameter(
+            Position=4)]
         [Switch] $RemoveSwitch,
 
+        [Parameter(
+            Position=5)]
         [Switch] $RemoveVMTemplate,
 
+        [Parameter(
+            Position=6)]
         [Switch] $RemoveVMFolder,
         
+        [Parameter(
+            Position=7)]
         [Switch] $RemoveVMTemplateVHD,
         
+        [Parameter(
+            Position=8)]
         [Switch] $RemoveLabFolder
     ) # Param
 
@@ -3612,18 +3970,29 @@ Function Start-Lab {
     [CmdLetBinding(DefaultParameterSetName="Lab")]
     param
     (
-        [parameter(ParameterSetName="File",Mandatory=$true)]
+        [parameter(
+            Position=1,
+            ParameterSetName="File",
+            Mandatory=$true)]
         [ValidateNotNullOrEmpty()]
         [String] $ConfigPath,
 
-        [parameter(ParameterSetName="File")]
+        [parameter(
+            Position=2,
+            ParameterSetName="File")]
         [ValidateNotNullOrEmpty()]
         [String] $LabPath,
 
-        [Parameter(ParameterSetName="Lab", Mandatory=$true, ValueFromPipeline=$true)]
+        [Parameter(
+            Position=3,
+            ParameterSetName="Lab",
+            Mandatory=$true,
+            ValueFromPipeline=$true)]
         [ValidateNotNullOrEmpty()]
         $Lab,
         
+        [Parameter(
+            Position=4)]
         [Int] $StartupTimeout = $Script:StartupTimeout
     ) # Param
     
@@ -3817,18 +4186,29 @@ Function Stop-Lab {
     [CmdLetBinding(DefaultParameterSetName="Lab")]
     param
     (
-        [parameter(ParameterSetName="File",Mandatory=$true)]
+        [parameter(
+            Position=1,
+            ParameterSetName="File",
+            Mandatory=$true)]
         [ValidateNotNullOrEmpty()]
         [String] $ConfigPath,
 
-        [parameter(ParameterSetName="File")]
+        [parameter(
+            Position=2,
+            ParameterSetName="File")]
         [ValidateNotNullOrEmpty()]
         [String] $LabPath,
 
-        [Parameter(ParameterSetName="Lab", Mandatory=$true, ValueFromPipeline=$true)]
+        [Parameter(
+            Position=3,
+            ParameterSetName="Lab",
+            Mandatory=$true,
+            ValueFromPipeline=$true)]
         [ValidateNotNullOrEmpty()]
         $Lab,
         
+        [Parameter(
+            Position=4)]
         [Int] $ShutdownTimeout = $Script:ShutdownTimeout
     ) # Param
     

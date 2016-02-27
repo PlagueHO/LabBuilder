@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 
-<labbuilderconfig name="Sample_WS2016TP4_DCandDHCPOnly"
+<labbuilderconfig xmlns="labbuilderconfig"
+                  name="Sample_WS2016TP4_DCandDHCPOnly"
                   version="1.0">
   <description>Sample Windows Server 2016 TP4 Lab Configuration DC and DHCP Only</description>
 

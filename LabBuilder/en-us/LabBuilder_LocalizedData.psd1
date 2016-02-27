@@ -81,6 +81,7 @@ ConvertFrom-StringData -StringData @'
     VMDoesNotExistError=The VM '{0}' does not exist.
     BootPhaseStartVMsTimeoutError=One or more Virtual Machines with Bootorder '{0}' failed to start completely in the required time.
     BootPhaseStopVMsTimeoutError=One or more Virtual Machines with Bootorder '{0}' failed to stop completely in the required time.
+    ConfigurationXMLValidationError=Lab Configuration XML '{0}'- {1}.
 
     ImportingLibFileMessage=Importing function library '{0}'.
     InstallingHyperVComponentsMesage=Installing {0} Hyper-V Components.
@@ -181,6 +182,7 @@ ConvertFrom-StringData -StringData @'
     LabUninstallCompleteMessage=The Lab '{0}' has been uninstalled from folder '{1}'.
     LabStartCompleteMessage=The Lab '{0}' in folder '{1}' has been started.
     LabStopCompleteMessage=The Lab '{0}' in folder '{1}' has been stopped.
+    ConfigurationXMLValidationMessage=Lab Configuration XML '{0}'- {1}
 
     ShouldUninstallLab=Uninstall the Lab '{0}' in folder '{1}'
     ShouldRemoveVMTemplate=Delete the Parent VM Template VHDs useb by Lab '{0}' in folder '{1}'

@@ -2,22 +2,22 @@
 <xs:schema attributeFormDefault="unqualified" elementFormDefault="qualified" xmlns:xs="http://www.w3.org/2001/XMLSchema">
   <xs:element name="labbuilderconfig">
     <xs:complexType>
-      <xs:sequence>
-        <xs:element name="description" type="xs:string" />
-        <xs:element name="settings">
+      <xs:all>
+        <xs:element minOccurs="0" maxOccurs="1" name="description" type="xs:string" />
+        <xs:element minOccurs="0" maxOccurs="1" name="settings">
           <xs:complexType>
-            <xs:attribute name="labid" type="xs:string" use="required" />
-            <xs:attribute name="domainname" type="xs:string" use="required" />
-            <xs:attribute name="email" type="xs:string" use="required" />
-            <xs:attribute name="labpath" type="xs:string" use="required" />
-            <xs:attribute name="vhdparentpath" type="xs:string" use="required" />
-            <xs:attribute name="dsclibrarypath" type="xs:string" use="required" />
+            <xs:attribute name="labid" type="xs:string" use="optional" />
+            <xs:attribute name="domainname" type="xs:string" use="optional" />
+            <xs:attribute name="email" type="xs:string" use="optional" />
+            <xs:attribute name="labpath" type="xs:string" use="optional" />
+            <xs:attribute name="vhdparentpath" type="xs:string" use="optional" />
+            <xs:attribute name="dsclibrarypath" type="xs:string" use="optional" />
           </xs:complexType>
         </xs:element>
-        <xs:element name="resources">
+        <xs:element minOccurs="0" maxOccurs="1" name="resources">
           <xs:complexType>
             <xs:sequence>
-              <xs:element maxOccurs="unbounded" name="module">
+              <xs:element minOccurs="0" maxOccurs="unbounded" name="module">
                 <xs:complexType>
                   <xs:attribute name="name" type="xs:string" use="required" />
                   <xs:attribute name="url" type="xs:string" use="optional" />
@@ -29,16 +29,16 @@
             </xs:sequence>
           </xs:complexType>
         </xs:element>
-        <xs:element name="switches">
+        <xs:element minOccurs="0" maxOccurs="1" name="switches">
           <xs:complexType>
             <xs:sequence>
-              <xs:element maxOccurs="unbounded" name="switch">
+              <xs:element minOccurs="0" maxOccurs="unbounded" name="switch">
                 <xs:complexType>
-                  <xs:sequence minOccurs="0">
-                    <xs:element name="adapters">
+                  <xs:sequence>
+                    <xs:element minOccurs="0" maxOccurs="1" name="adapters">
                       <xs:complexType>
                         <xs:sequence>
-                          <xs:element maxOccurs="unbounded" name="adapter">
+                          <xs:element minOccurs="0" maxOccurs="unbounded" name="adapter">
                             <xs:complexType>
                               <xs:attribute name="name" type="xs:string" use="required" />
                               <xs:attribute name="macaddress" type="xs:string" use="required" />
@@ -55,12 +55,13 @@
                 </xs:complexType>
               </xs:element>
             </xs:sequence>
+            <xs:attribute name="managementvlan" type="xs:unsignedByte" use="optional" />
           </xs:complexType>
         </xs:element>
-        <xs:element name="templatevhds">
+        <xs:element minOccurs="0" maxOccurs="1" name="templatevhds">
           <xs:complexType>
             <xs:sequence>
-              <xs:element maxOccurs="unbounded" name="templatevhd">
+              <xs:element minOccurs="0" maxOccurs="unbounded" name="templatevhd">
                 <xs:complexType>
                   <xs:attribute name="name" type="xs:string" use="required" />
                   <xs:attribute name="iso" type="xs:string" use="required" />
@@ -69,10 +70,10 @@
                   <xs:attribute name="edition" type="xs:string" use="optional" />
                   <xs:attribute name="ostype" type="xs:string" use="required" />
                   <xs:attribute name="features" type="xs:string" use="optional" />
-                  <xs:attribute name="vhdformat" type="xs:string" use="required" />
-                  <xs:attribute name="vhdtype" type="xs:string" use="required" />
-                  <xs:attribute name="generation" type="xs:unsignedByte" use="required" />
-                  <xs:attribute name="vhdsize" type="xs:long" use="required" />
+                  <xs:attribute name="vhdformat" type="xs:string" use="optional" />
+                  <xs:attribute name="vhdtype" type="xs:string" use="optional" />
+                  <xs:attribute name="generation" type="xs:unsignedByte" use="optional" />
+                  <xs:attribute name="vhdsize" type="xs:string" use="required" />
                   <xs:attribute name="packages" type="xs:string" use="optional" />
                 </xs:complexType>
               </xs:element>
@@ -82,23 +83,22 @@
             <xs:attribute name="prefix" type="xs:string" use="required" />
           </xs:complexType>
         </xs:element>
-        <xs:element name="templates">
+        <xs:element minOccurs="0" maxOccurs="1" name="templates">
           <xs:complexType>
             <xs:sequence>
-              <xs:element maxOccurs="unbounded" name="template">
+              <xs:element minOccurs="0" maxOccurs="unbounded" name="template">
                 <xs:complexType>
                   <xs:attribute name="name" type="xs:string" use="required" />
                   <xs:attribute name="vhd" type="xs:string" use="optional" />
                   <xs:attribute name="sourcevhd" type="xs:string" use="optional" />
-                  <xs:attribute name="allowcreate" type="xs:string" use="required" />
-                  <xs:attribute name="memorystartupbytes" type="xs:long" use="required" />
+                  <xs:attribute name="memorystartupbytes" type="xs:string" use="optional" />
                   <xs:attribute name="dynamicmemoryenabled" type="xs:string" use="optional" />
-                  <xs:attribute name="processorcount" type="xs:unsignedByte" use="required" />
-                  <xs:attribute name="administratorpassword" type="xs:string" use="required" />
+                  <xs:attribute name="processorcount" type="xs:unsignedByte" use="optional" />
+                  <xs:attribute name="administratorpassword" type="xs:string" use="optional" />
                   <xs:attribute name="productkey" type="xs:string" use="optional" />
-                  <xs:attribute name="timezone" type="xs:string" use="required" />
+                  <xs:attribute name="timezone" type="xs:string" use="optional" />
                   <xs:attribute name="ostype" type="xs:string" use="required" />
-                  <xs:attribute name="integrationservices" type="xs:string" use="required" />
+                  <xs:attribute name="integrationservices" type="xs:string" use="optional" />
                   <xs:attribute name="templatevhd" type="xs:string" use="optional" />
                   <xs:attribute name="exposevirtualizationextensions" type="xs:string" use="optional" />
                   <xs:attribute name="packages" type="xs:string" use="optional" />
@@ -107,22 +107,22 @@
             </xs:sequence>
           </xs:complexType>
         </xs:element>
-        <xs:element name="vms">
+        <xs:element minOccurs="0" maxOccurs="1" name="vms">
           <xs:complexType>
             <xs:sequence>
-              <xs:element name="vm">
+              <xs:element minOccurs="0" maxOccurs="unbounded" name="vm">
                 <xs:complexType>
-                  <xs:sequence>
-                    <xs:element name="datavhds">
+                  <xs:all>
+                    <xs:element minOccurs="0" maxOccurs="1" name="datavhds">
                       <xs:complexType>
                         <xs:sequence>
-                          <xs:element maxOccurs="unbounded" name="datavhd">
+                          <xs:element minOccurs="0" maxOccurs="unbounded" name="datavhd">
                             <xs:complexType>
                               <xs:attribute name="vhd" type="xs:string" use="required" />
                               <xs:attribute name="sourcevhd" type="xs:string" use="optional" />
                               <xs:attribute name="copyfolders" type="xs:string" use="optional" />
                               <xs:attribute name="type" type="xs:string" use="optional" />
-                              <xs:attribute name="size" type="xs:long" use="optional" />
+                              <xs:attribute name="size" type="xs:string" use="optional" />
                               <xs:attribute name="supportpr" type="xs:string" use="optional" />
                               <xs:attribute name="partitionstyle" type="xs:string" use="optional" />
                               <xs:attribute name="filesystem" type="xs:string" use="optional" />
@@ -136,13 +136,13 @@
                         </xs:sequence>
                       </xs:complexType>
                     </xs:element>
-                    <xs:element name="adapters">
+                    <xs:element minOccurs="0" maxOccurs="1" name="adapters">
                       <xs:complexType>
                         <xs:sequence>
-                          <xs:element maxOccurs="unbounded" name="adapter">
+                          <xs:element minOccurs="0" maxOccurs="unbounded" name="adapter">
                             <xs:complexType>
-                              <xs:sequence minOccurs="0">
-                                <xs:element name="ipv4">
+                              <xs:sequence>
+                                <xs:element minOccurs="0" maxOccurs="1" name="ipv4">
                                   <xs:complexType>
                                     <xs:attribute name="address" type="xs:string" use="required" />
                                     <xs:attribute name="defaultgateway" type="xs:string" use="optional" />
@@ -150,7 +150,7 @@
                                     <xs:attribute name="dnsserver" type="xs:string" use="optional" />
                                   </xs:complexType>
                                 </xs:element>
-                                <xs:element name="ipv6">
+                                <xs:element minOccurs="0" maxOccurs="1" name="ipv6">
                                   <xs:complexType>
                                     <xs:attribute name="address" type="xs:string" use="required" />
                                     <xs:attribute name="defaultgateway" type="xs:string" use="optional" />
@@ -163,24 +163,26 @@
                               <xs:attribute name="switchname" type="xs:string" use="required" />
                               <xs:attribute name="macaddress" type="xs:string" use="optional" />
                               <xs:attribute name="vlan" type="xs:unsignedByte" use="optional" />
+                              <xs:attribute name="macaddressspoofing" type="xs:string" use="optional" />
                             </xs:complexType>
                           </xs:element>
                         </xs:sequence>
                       </xs:complexType>
                     </xs:element>
-                    <xs:element name="dsc">
+                    <xs:element minOccurs="0" maxOccurs="1" name="dsc">
                       <xs:complexType>
-                        <xs:sequence>
-                          <xs:element name="parameters" type="xs:string" />
-                        </xs:sequence>
+                        <xs:all>
+                          <xs:element minOccurs="0" maxOccurs="1" name="parameters" type="xs:string" />
+                        </xs:all>
                         <xs:attribute name="configname" type="xs:string" use="required" />
                         <xs:attribute name="configfile" type="xs:string" use="required" />
+                        <xs:attribute name="logging" type="xs:string" use="optional" />
                       </xs:complexType>
                     </xs:element>
-                    <xs:element name="install">
+                    <xs:element minOccurs="0" maxOccurs="1" name="install">
                       <xs:complexType>
                         <xs:sequence>
-                          <xs:element name="msu">
+                          <xs:element minOccurs="0" maxOccurs="unbounded" name="msu">
                             <xs:complexType>
                               <xs:attribute name="url" type="xs:string" use="required" />
                             </xs:complexType>
@@ -188,28 +190,28 @@
                         </xs:sequence>
                       </xs:complexType>
                     </xs:element>
-                  </xs:sequence>
+                  </xs:all>
                   <xs:attribute name="name" type="xs:string" use="required" />
                   <xs:attribute name="template" type="xs:string" use="required" />
                   <xs:attribute name="computername" type="xs:string" use="required" />
-                  <xs:attribute name="memorystartupbytes" type="xs:long" use="required" />
-                  <xs:attribute name="dynamicmemoryenabled" type="xs:string" use="required" />
-                  <xs:attribute name="exposevirtualizationextensions" type="xs:string" use="required" />
-                  <xs:attribute name="usedifferencingbootdisk" type="xs:string" use="required" />
-                  <xs:attribute name="administratorpassword" type="xs:string" use="required" />
-                  <xs:attribute name="productkey" type="xs:string" use="required" />
-                  <xs:attribute name="timezone" type="xs:string" use="required" />
-                  <xs:attribute name="unattendfile" type="xs:string" use="required" />
-                  <xs:attribute name="setupcomplete" type="xs:string" use="required" />
-                  <xs:attribute name="integrationservices" type="xs:string" use="required" />
-                  <xs:attribute name="packages" type="xs:string" use="required" />
-                  <xs:attribute name="bootorder" type="xs:unsignedByte" use="required" />
+                  <xs:attribute name="memorystartupbytes" type="xs:string" use="optional" />
+                  <xs:attribute name="dynamicmemoryenabled" type="xs:string" use="optional" />
+                  <xs:attribute name="exposevirtualizationextensions" type="xs:string" use="optional" />
+                  <xs:attribute name="usedifferencingbootdisk" type="xs:string" use="optional" />
+                  <xs:attribute name="administratorpassword" type="xs:string" use="optional" />
+                  <xs:attribute name="productkey" type="xs:string" use="optional" />
+                  <xs:attribute name="timezone" type="xs:string" use="optional" />
+                  <xs:attribute name="unattendfile" type="xs:string" use="optional" />
+                  <xs:attribute name="setupcomplete" type="xs:string" use="optional" />
+                  <xs:attribute name="integrationservices" type="xs:string" use="optional" />
+                  <xs:attribute name="packages" type="xs:string" use="optional" />
+                  <xs:attribute name="bootorder" type="xs:unsignedByte" use="optional" />
                 </xs:complexType>
               </xs:element>
             </xs:sequence>
           </xs:complexType>
         </xs:element>
-      </xs:sequence>
+      </xs:all>
       <xs:attribute name="name" type="xs:string" use="required" />
       <xs:attribute name="version" type="xs:decimal" use="required" />
     </xs:complexType>
