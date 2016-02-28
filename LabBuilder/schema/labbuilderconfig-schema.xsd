@@ -306,8 +306,20 @@
           </xs:complexType>
         </xs:element>
       </xs:all>
-      <xs:attribute name="name" type="xs:string" use="required" />
-      <xs:attribute name="version" type="xs:decimal" use="required" />
+      <xs:attribute name="name" type="xs:string" use="required">
+        <xs:annotation>
+          <xs:documentation>
+          This required attribute should be used to set a descriptive name for this Lab configuration.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:attribute>
+      <xs:attribute name="version" type="xs:decimal" use="required">
+        <xs:annotation>
+          <xs:documentation>
+          This required attribute should be used to set a version number for this Lab configuration in the format #.#. It should be updated each time the Lab configurtion is changed.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:attribute>
     </xs:complexType>
   </xs:element>
 </xs:schema>
