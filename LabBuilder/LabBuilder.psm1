@@ -1043,14 +1043,14 @@ function Initialize-LabVMTemplateVHD
                 -Path $VHDPath `
                 -Parent
 
-            [String] $VHDPackagesFolder = Join-Path `
+            [String] $LabPackagesFolder = Join-Path `
                 -Path $VHDFolder `
                 -ChildPath 'NanoServerPackages'
             
-            if (-not (Test-Path -Path $VHDPackagesFolder -Type Container))
+            if (-not (Test-Path -Path $LabPackagesFolder -Type Container))
             {
                 Write-Verbose -Message ($LocalizedData.CachingNanoServerPackagesMessage `
-                        -f "$ISODrive\Nanoserver\Packages",$VHDPackagesFolder)
+                        -f "$ISODrive\Nanoserver\Packages",$LabPackagesFolder)
                 Copy-Item `
                     -Path "$ISODrive\Nanoserver\Packages" `
                     -Destination $VHDFolder `

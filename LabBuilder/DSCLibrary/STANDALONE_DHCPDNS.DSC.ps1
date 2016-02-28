@@ -10,8 +10,8 @@ DSC Template Configuration File For use by LabBuilder
 Configuration STANDALONE_DHCPDNS
 {
 	Import-DscResource -ModuleName 'PSDesiredStateConfiguration' -ModuleVersion 1.1
-	Import-DscResource -ModuleName xDNSServer
-	Import-DscResource -ModuleName xDHCPServer
+    Import-DscResource -ModuleName xDNSServer -ModuleVersion 1.5.0.0 # Current as of 8 Feb 2016
+	Import-DscResource -ModuleName xDHCPServer -ModuleVersion 1.3.0.0 # Current as of 8 Feb 2016
 	Node $AllNodes.NodeName {
 		# Assemble the Local Admin Credentials
 		If ($Node.LocalAdminPassword) {

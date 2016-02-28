@@ -14,9 +14,9 @@ DSC Template Configuration File For use by LabBuilder
 Configuration MEMBER_DHCPNPAS
 {
 	Import-DscResource -ModuleName 'PSDesiredStateConfiguration' -ModuleVersion 1.1
-	Import-DscResource -ModuleName xActiveDirectory
-	Import-DscResource -ModuleName xComputerManagement
-	Import-DscResource -ModuleName xDHCPServer
+    Import-DscResource -ModuleName xActiveDirectory -ModuleVersion 2.9.0.0 # Current as of 8 Feb 2016
+	Import-DscResource -ModuleName xComputerManagement -ModuleVersion 1.4.0.0 # Current as of 8 Feb 2016
+	Import-DscResource -ModuleName xDHCPServer -ModuleVersion 1.3.0.0 # Current as of 8 Feb 2016
 	Node $AllNodes.NodeName {
 		# Assemble the Local Admin Credentials
 		If ($Node.LocalAdminPassword) {

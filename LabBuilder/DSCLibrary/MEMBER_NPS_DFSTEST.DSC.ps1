@@ -17,9 +17,9 @@ DSC Template Configuration File For use by LabBuilder
 Configuration MEMBER_NPS_DFSTEST
 {
 	Import-DscResource -ModuleName 'PSDesiredStateConfiguration' -ModuleVersion 1.1
-	Import-DscResource -ModuleName xActiveDirectory
-	Import-DscResource -ModuleName xComputerManagement
-	Import-DscResource -ModuleName cDFS
+    Import-DscResource -ModuleName xActiveDirectory -ModuleVersion 2.9.0.0 # Current as of 8 Feb 2016
+	Import-DscResource -ModuleName xComputerManagement -ModuleVersion 1.4.0.0 # Current as of 8 Feb 2016
+	Import-DscResource -ModuleName cDFS -ModuleVersion 2.1.0.238 # Current as of 28 Feb 2016
 	Node $AllNodes.NodeName {
 		# Assemble the Local Admin Credentials
 		If ($Node.LocalAdminPassword) {
