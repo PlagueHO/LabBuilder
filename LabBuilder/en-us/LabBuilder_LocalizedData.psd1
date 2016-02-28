@@ -8,8 +8,8 @@ ConvertFrom-StringData -StringData @'
     FileExtractError=Error extracting {0}; {1}.
     ConfigurationFileNotFoundError=Configuration file {0} is not found.
     ConfigurationFileEmptyError=Configuration file {0} is empty.
+    ConfigurationFileAlreadyExistsError=Configuration file {0} already exists.
     ConfigurationInvalidError=Configuration is invalid.
-    ConfigurationMissingElementError=Element '{0}' is missing or empty in the configuration.
     PathNotFoundError={0} path '{1}' is not found.
     ResourceModuleNameEmptyError=Resource Module Name is missing or empty.
     ModuleNotAvailableError=Error installing Module '{0}' ({1}); {2}.
@@ -189,4 +189,6 @@ ConvertFrom-StringData -StringData @'
     ShouldRemoveSwitch=Delete the virtual switches used by Lab '{0}'
     ShouldRemoveVMTemplateVHD=Delete the VM Template VHDs use by Lab '{0}'.
     ShouldRemoveLabFolder=Delete the folder '{1}' containing Lab '{0}'
+    ShouldOverwriteLab=Install a new Lab into the existing folder '{0}'
+    ShouldOverwriteLabConfig=Overwrite the existing Lab Configuration file '{0}'
 '@

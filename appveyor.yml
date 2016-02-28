@@ -2,7 +2,7 @@
 #      environment configuration  # 
 #---------------------------------# 
 os: WMF 5
-version: 0.5.0.{build}
+version: 0.6.0.{build}
 environment:
   PowerShellGalleryApiKey:
     secure: 3fXfDuds8yhTa7WTOLIEhytrpsej9kcP+4rPrgLaFVmIhimmc+FgUVxkR4u468LH
@@ -59,10 +59,11 @@ deploy_script:
       $null = Copy-Item -Path (Join-Path -Path $buildFolder -ChildPath 'LabBuilder\support') -Destination $VersionFolder -Recurse
       $null = Copy-Item -Path (Join-Path -Path $buildFolder -ChildPath 'LabBuilder\en-us') -Destination $VersionFolder -Recurse
       $null = Copy-Item -Path (Join-Path -Path $buildFolder -ChildPath 'LabBuilder\schema') -Destination $VersionFolder -Recurse
+      $null = Copy-Item -Path (Join-Path -Path $buildFolder -ChildPath 'LabBuilder\template') -Destination $VersionFolder -Recurse
 
       # Set version number
       $manifest = Join-Path -Path $VersionFolder -ChildPath "LabBuilder.psd1"
-      (Get-Content $manifest -Raw).Replace("0.5.0.0", $env:APPVEYOR_BUILD_VERSION) | Out-File $manifest
+      (Get-Content $manifest -Raw).Replace("0.6.0.0", $env:APPVEYOR_BUILD_VERSION) | Out-File $manifest
       
       # Create zip artifact
       $zipFilePath = Join-Path -Path $buildFolder -ChildPath "${env:APPVEYOR_PROJECT_NAME}_${env:APPVEYOR_BUILD_VERSION}.zip"
