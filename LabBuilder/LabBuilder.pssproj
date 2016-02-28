@@ -73,10 +73,11 @@
     <Compile Include="Samples\Sample_WS2012R2_DomainComplete.xml" />
     <Compile Include="Samples\Sample_WS2012R2_Simple.xml" />
     <Compile Include="Samples\Sample_WS2016TP4_DCandDHCPOnly.xml" />
-    <Compile Include="schema\labbuilderconfig.xsd" />
+    <Compile Include="schema\labbuilderconfig-schema.xsd" />
     <Compile Include="Support\Convert-WindowsImage.ps1" />
     <Compile Include="Support\makecert.exe" />
     <Compile Include="Support\New-SelfSignedCertificateEx.ps1" />
+    <Compile Include="template\labbuilderconfig-template.xml" />
     <Compile Include="Tests\PesterTestConfig\dsclibrary\PesterTest.DSC.ps1" />
     <Compile Include="Tests\PesterTestConfig\expectedcontent\ExpectedSwitches.json" />
     <Compile Include="Tests\PesterTestConfig\expectedcontent\ExpectedTemplates.FromVM.json" />
@@ -114,6 +115,7 @@
     <Folder Include="Samples\vhdfiles\" />
     <Folder Include="schema\" />
     <Folder Include="Support\" />
+    <Folder Include="template\" />
     <Folder Include="Tests\" />
     <Folder Include="Tests\PesterTestConfig\dsclibrary\" />
     <Folder Include="Tests\PesterTestConfig\expectedcontent\" />
