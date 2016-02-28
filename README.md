@@ -495,6 +495,7 @@ Versions
 ### 0.6.0.0
 * New-Lab: Function added for creating a new Lab configuration file and basic folder structure.
 * Get-Lab: Redundant checks for XML valid removed because convered by XSD schema validation.
+* Added Lib\Type.ps1 containing customg LabBuilder Classes and Enumerations.
 
 ### 0.5.0.0
 * BREKAING: Renamed Config parameter to Lab parameter to indicate the object is actually an object that also stores Lab state information.
