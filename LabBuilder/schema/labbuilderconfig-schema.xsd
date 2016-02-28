@@ -3,27 +3,121 @@
   <xs:element name="labbuilderconfig">
     <xs:complexType>
       <xs:all>
-        <xs:element minOccurs="0" maxOccurs="1" name="description" type="xs:string" />
-        <xs:element minOccurs="0" maxOccurs="1" name="settings">
+        <xs:element minOccurs="0" maxOccurs="1" name="description" type="xs:string"> 
+          <xs:annotation>
+            <xs:documentation>
+            This optional element should contain a brief description of this Lab.
+            </xs:documentation>
+          </xs:annotation>
+        </xs:element>
+        <xs:element minOccurs="1" maxOccurs="1" name="settings">
+          <xs:annotation>
+            <xs:documentation>
+            This required element contains settings attributes controlling general settings of this Lab.
+            </xs:documentation>
+          </xs:annotation>
           <xs:complexType>
-            <xs:attribute name="labid" type="xs:string" use="optional" />
-            <xs:attribute name="domainname" type="xs:string" use="optional" />
-            <xs:attribute name="email" type="xs:string" use="optional" />
-            <xs:attribute name="labpath" type="xs:string" use="optional" />
-            <xs:attribute name="vhdparentpath" type="xs:string" use="optional" />
-            <xs:attribute name="dsclibrarypath" type="xs:string" use="optional" />
+            <xs:attribute name="labid" type="xs:string" use="optional">
+              <xs:annotation>
+                <xs:documentation>
+                This optional attribute contains a Lab Identifier for the Lab. This identifier will be prepended to the names of any Virtual Machines, Switches and Network Adapter names created for this Lab.
+                </xs:documentation>
+              </xs:annotation>
+            </xs:attribute>
+            <xs:attribute name="domainname" type="xs:string" use="optional">
+              <xs:annotation>
+                <xs:documentation>
+                This optional attribute contains the Domain Name identifier used by Virtual Machines created in this Lab. It may be used by DSC to configure the Virtual Machines in the Lab.
+                </xs:documentation>
+              </xs:annotation>
+            </xs:attribute>
+            <xs:attribute name="email" type="xs:string" use="optional">
+              <xs:annotation>
+                <xs:documentation>
+                This optional attribute contains an E-mail address of the Administrator of this Lab. It may be used by DSC to configure the Virtual Machines in the Lab.
+                </xs:documentation>
+              </xs:annotation>
+            </xs:attribute>
+            <xs:attribute name="labpath" type="xs:string" use="optional">
+              <xs:annotation>
+                <xs:documentation>
+                This optional attribute contains the full path to the folder that this Lab should be created in. It can be overridden when the Lab is installed. The folder will be created when the Lab is installed if it doesn't already exist. The Virtual Machines, Virtual Hard Disk drives and other Lab related files will be created in this folder.
+                </xs:documentation>
+              </xs:annotation>
+            </xs:attribute>
+            <xs:attribute name="vhdparentpath" type="xs:string" use="optional">
+              <xs:annotation>
+                <xs:documentation>
+                This optional attribute contains the path to the folder that will contain the Parent VHD files used by the Virtual Machines in this Lab. If this folder is not rooted, it will be assumed to be a subfolder of the 'labpath'. The Parent VHD files are used as Parent VHD's to any Lab VM boot disks or cloned to each Virtual Machine folder depending on the 'usedifferencingbootdisk' setting for each Lab VM.
+                </xs:documentation>
+              </xs:annotation>
+            </xs:attribute>
+            <xs:attribute name="dsclibrarypath" type="xs:string" use="optional">
+              <xs:annotation>
+                <xs:documentation>
+                This optional attribute contains the path to the folder that will contain the DSC Library files used by the Virtual Machines in this Lab. If this folder is not rooted, it will be assumed to be a subfolder of the 'labpath'. If this setting is not set it will default to 'dsclibrary' and will therefore be a subfolder of the 'labpath'. Usually the content of this folder will either be provided with the Lab or created by copying the DSCLibrary folder provided with the LabBuilder module.
+                
+                Each Virtual Machine that is set to be configured by DSC requires a DSC configuration file that must be found in this folder.
+                </xs:documentation>
+              </xs:annotation>
+            </xs:attribute>
           </xs:complexType>
         </xs:element>
         <xs:element minOccurs="0" maxOccurs="1" name="resources">
+          <xs:annotation>
+            <xs:documentation>
+            This optional element can contain one or more resources that will be required for this Lab to be installed. These resources may be downloaded from the internet automatically depending on the resource type.
+            
+            There can be different types of Resources that can be containined in the Resources element. Currently the Resource types that are supported are:
+             - Module: A PowerShell (DSC) Module that is downloaded via URL or using PowerShell Get. This can be a DSC or non-DSC PowerShell module.
+            </xs:documentation>
+          </xs:annotation>
           <xs:complexType>
             <xs:sequence>
               <xs:element minOccurs="0" maxOccurs="unbounded" name="module">
+                <xs:annotation>
+                  <xs:documentation>
+                  A PowerShell (DSC) Module that will be downloaded and installed to the Lab Host when this Lab is installed.
+                  
+                  Note: This is not required for any PowerShell DSC Modules that are referenced in a DSC configuration used by a Virtual Machine if the version required is available in the PowerShell Gallery and is just the latest version. This is usually only required if the Lab requires the use of development resources or versions that are either not available on PowerShell Gallery or a specific version is requred.
+                  </xs:documentation>
+                </xs:annotation>
                 <xs:complexType>
-                  <xs:attribute name="name" type="xs:string" use="required" />
-                  <xs:attribute name="url" type="xs:string" use="optional" />
-                  <xs:attribute name="folder" type="xs:string" use="optional" />
-                  <xs:attribute name="minimumversion" type="xs:string" use="optional" />
-                  <xs:attribute name="requiredversion" type="xs:string" use="optional" />
+                  <xs:attribute name="name" type="xs:string" use="required">
+                    <xs:annotation>
+                      <xs:documentation>
+                      The Name of the PowerShell (DSC) Module that this Lab requires. If a URL attribute is not specified, the PowerShell Gallery will be searched for a module with this name and downloaded.
+                      </xs:documentation>
+                    </xs:annotation>
+                  </xs:attribute>
+                  <xs:attribute name="url" type="xs:string" use="optional">
+                    <xs:annotation>
+                      <xs:documentation>
+                      An optional URL that will be used to download the PowerShell (DSC) Module from. Setting this attribute prevent LabBuilder from using PowerShell Get to download the Module if it is missing. This is commonly used to download PowerShell (DSC) Modules directly from GitHub or other repositories.
+                      </xs:documentation>
+                    </xs:annotation>
+                  </xs:attribute>
+                  <xs:attribute name="folder" type="xs:string" use="optional">
+                    <xs:annotation>
+                      <xs:documentation>
+                      This optional attribute only needs to be set if the zip file downloaded by the URL in the URL attribute contains a folder that the PowerShell (DSC) Module is in. This is usually used when the URL specifies a GitHub repository branch, which will cause the downloaded zip file to contain a folder named 'name-branch' (e.g. xNetworking-dev). 
+                      </xs:documentation>
+                    </xs:annotation>
+                  </xs:attribute>
+                  <xs:attribute name="minimumversion" type="xs:string" use="optional">
+                    <xs:annotation>
+                      <xs:documentation>
+                      This optional attribute contains the minimum PowerShell module version that is required by this Lab. If a version of the Module is not found that is at least this version then a newer version will be downloaded using PowerShell Get. This attribute should only be used if URL is not set.    
+                      </xs:documentation>
+                    </xs:annotation>
+                  </xs:attribute>
+                  <xs:attribute name="requiredversion" type="xs:string" use="optional">
+                    <xs:annotation>
+                      <xs:documentation>
+                      This optional attribute contains the specific PowerShell module version that is required by this Lab. If a version of the Module is not found that is exactly this version then this version will be downloaded using PowerShell Get. This attribute should only be used if URL is not set.    
+                      </xs:documentation>
+                    </xs:annotation>
+                  </xs:attribute>
                 </xs:complexType>
               </xs:element>
             </xs:sequence>
