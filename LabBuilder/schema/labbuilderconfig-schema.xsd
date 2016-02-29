@@ -8,6 +8,7 @@
             <xs:documentation>
 This optional element should contain a brief description of this Lab.
             </xs:documentation>
+            <xs:appinfo>&lt;description&gt;This Lab builds two Domain Controllers and two DHCP Servers.&lt;/description&gt;</xs:appinfo>
           </xs:annotation>
         </xs:element>
         <xs:element minOccurs="1" maxOccurs="1" name="settings">
@@ -15,13 +16,15 @@ This optional element should contain a brief description of this Lab.
             <xs:documentation>
 This required element contains settings attributes controlling general settings of this Lab.
             </xs:documentation>
+            <xs:appinfo>&lt;settings /&gt;</xs:appinfo>
           </xs:annotation>
           <xs:complexType>
             <xs:attribute name="labid" type="xs:string" use="optional">
               <xs:annotation>
                 <xs:documentation>
-This optional attribute contains a Lab Identifier for the Lab. This identifier will be prepended to the names of any Virtual Machines, Switches and Network Adapter names created for this Lab.
+This optional attribute contains a Lab Identifier for the Lab. This identifier will be pre-pended to the names of any Virtual Machines, Switches and Network Adapter names created for this Lab.
                 </xs:documentation>
+                <xs:appinfo>labid="WS2012R2-CLUSTER-TEST"</xs:appinfo>
               </xs:annotation>
             </xs:attribute>
             <xs:attribute name="domainname" type="xs:string" use="optional">
@@ -29,6 +32,7 @@ This optional attribute contains a Lab Identifier for the Lab. This identifier w
                 <xs:documentation>
 This optional attribute contains the Domain Name identifier used by Virtual Machines created in this Lab. It may be used by DSC to configure the Virtual Machines in the Lab.
                 </xs:documentation>
+                <xs:appinfo>domainname="CONTOSO.COM"</xs:appinfo>
               </xs:annotation>
             </xs:attribute>
             <xs:attribute name="email" type="xs:string" use="optional">
@@ -36,6 +40,7 @@ This optional attribute contains the Domain Name identifier used by Virtual Mach
                 <xs:documentation>
 This optional attribute contains an E-mail address of the Administrator of this Lab. It may be used by DSC to configure the Virtual Machines in the Lab.
                 </xs:documentation>
+                <xs:appinfo>email="dev@contoso.com"</xs:appinfo>
               </xs:annotation>
             </xs:attribute>
             <xs:attribute name="labpath" type="xs:string" use="optional">
@@ -45,6 +50,7 @@ This optional attribute contains the full path to the folder that this Lab shoul
 The folder will be created when the Lab is installed if it doesn't already exist.
 The Virtual Machines, Virtual Hard Disk drives and other Lab related files will be created in this folder.
                 </xs:documentation>
+                <xs:appinfo>labpath="f:\Labs\WS2012R2-CLUSTER-TEST-01"</xs:appinfo>
               </xs:annotation>
             </xs:attribute>
             <xs:attribute name="vhdparentpath" type="xs:string" use="optional">
@@ -54,6 +60,7 @@ This optional attribute contains the path to the folder that will contain the Pa
 If this folder is not rooted, it will be assumed to be a subfolder of the 'labpath'.
 The Parent VHD files are used as Parent VHD's to any Lab VM boot disks or cloned to each Virtual Machine folder depending on the 'usedifferencingbootdisk' setting for each Lab VM.
                 </xs:documentation>
+                <xs:appinfo>vhdparentpath="f:\Labs\WS2012R2-CLUSTER-TEST-01\ParentVHDs"</xs:appinfo>
               </xs:annotation>
             </xs:attribute>
             <xs:attribute name="dsclibrarypath" type="xs:string" use="optional">
@@ -66,6 +73,7 @@ Usually the content of this folder will either be provided with the Lab or creat
                 
 Each Virtual Machine that is set to be configured by DSC requires a DSC configuration file that must be found in this folder.
                 </xs:documentation>
+                <xs:appinfo>dsclibrarypath="C:\DSC\MyLibrary"</xs:appinfo>
               </xs:annotation>
             </xs:attribute>
           </xs:complexType>
@@ -81,9 +89,10 @@ There can be different types of Resources that can be containined in the Resourc
 Currently the Resource types that are supported are:
  - Module: A PowerShell (DSC) Module that is downloaded via URL or using PowerShell Get. This can be a DSC or non-DSC PowerShell module.
             </xs:documentation>
+            <xs:appinfo>&lt;resources&gt;...&lt;/resources&gt;</xs:appinfo>
           </xs:annotation>
           <xs:complexType>
-            <xs:all>
+            <xs:sequence>
               <xs:element minOccurs="0" maxOccurs="unbounded" name="module">
                 <xs:annotation>
                   <xs:documentation>
@@ -92,6 +101,7 @@ A PowerShell (DSC) Module that will be downloaded and installed to the Lab Host 
 Note: This is not required for any PowerShell DSC Modules that are referenced in a DSC configuration used by a Virtual Machine if the version required is available in the PowerShell Gallery and is just the latest version.
 This is usually only required if the Lab requires the use of development resources or versions that are either not available on PowerShell Gallery or a specific version is requred.
                   </xs:documentation>
+                  <xs:appinfo>&lt;module /&gt;</xs:appinfo>
                 </xs:annotation>
                 <xs:complexType>
                   <xs:attribute name="name" type="xs:string" use="required">
@@ -138,7 +148,7 @@ This attribute should only be used if URL is not set.
                   </xs:attribute>
                 </xs:complexType>
               </xs:element>
-            </xs:all>
+            </xs:sequence>
           </xs:complexType>
         </xs:element>
         <xs:element minOccurs="0" maxOccurs="1" name="switches">
@@ -146,15 +156,16 @@ This attribute should only be used if URL is not set.
             <xs:documentation>
 This optional element contains a collection of zero or more Switch nodes representing the Hyper-V Virtual Switches that are required for this Lab. Any missing switches in this list will be created on the Lab Host when this Lab is installed.
             </xs:documentation>
+            <xs:appinfo>&lt;switches&gt;...&lt;/switches&gt;</xs:appinfo>
           </xs:annotation>
           <xs:complexType>
-            <xs:all>
+            <xs:sequence>
               <xs:element minOccurs="0" maxOccurs="unbounded" name="switch">
                 <xs:complexType>
                   <xs:all>
                     <xs:element minOccurs="0" maxOccurs="1" name="adapters">
                       <xs:complexType>
-                        <xs:all>
+                        <xs:sequence>
                           <xs:element minOccurs="0" maxOccurs="unbounded" name="adapter">
                             <xs:complexType>
                               <xs:attribute name="name" type="xs:string" use="required" />
@@ -162,7 +173,7 @@ This optional element contains a collection of zero or more Switch nodes represe
                               <xs:attribute name="vlan" type="xs:unsignedByte" use="optional" />
                             </xs:complexType>
                           </xs:element>
-                        </xs:all>
+                        </xs:sequence>
                       </xs:complexType>
                     </xs:element>
                   </xs:all>
@@ -171,7 +182,7 @@ This optional element contains a collection of zero or more Switch nodes represe
                   <xs:attribute name="vlan" type="xs:unsignedByte" use="optional" />
                 </xs:complexType>
               </xs:element>
-            </xs:all>
+            </xs:sequence>
             <xs:attribute name="managementvlan" type="xs:unsignedByte" use="optional" />
           </xs:complexType>
         </xs:element>
@@ -181,9 +192,10 @@ This optional element contains a collection of zero or more Switch nodes represe
 This optional element contains a collection of zero or more TemplateVHD nodes representing the Template Virtual Hard Disk files that are required by the Templates and/or Virtual Machines in this Lab.
 These Template VHD files will be created from Windows Install Media ISO files if they can't be found in the specified VHDPath folder during the Lab Install process. 
             </xs:documentation>
+            <xs:appinfo>&lt;templatevhds&gt;...&lt;/templatevhds&gt;</xs:appinfo>
           </xs:annotation>
           <xs:complexType>
-            <xs:all>
+            <xs:sequence>
               <xs:element minOccurs="0" maxOccurs="unbounded" name="templatevhd">
                 <xs:complexType>
                   <xs:attribute name="name" type="xs:string" use="required" />
@@ -200,7 +212,7 @@ These Template VHD files will be created from Windows Install Media ISO files if
                   <xs:attribute name="packages" type="xs:string" use="optional" />
                 </xs:complexType>
               </xs:element>
-            </xs:all>
+            </xs:sequence>
             <xs:attribute name="isopath" type="xs:string" use="required" />
             <xs:attribute name="vhdpath" type="xs:string" use="required" />
             <xs:attribute name="prefix" type="xs:string" use="optional" />
@@ -212,11 +224,12 @@ These Template VHD files will be created from Windows Install Media ISO files if
 This optional element contains a collection of zero or more Template nodes representing the Virtual Machine Templates used to build the Virtual Machines in this Lab.
 The Virtual Machine Templates in this list may refer to a TemplateVHD or define a direct path to a Source VHD file.
 If a TemplateVHD is specified, this TemplateVHD must be found in the TemplateVHDs collection.
-Every Virtual Machine definied in this Lab must refer to a Template in this collection. 
+Every Virtual Machine defined in this Lab must refer to a Template in this collection. 
             </xs:documentation>
+            <xs:appinfo>&lt;templates&gt;...&lt;/templates&gt;</xs:appinfo>
           </xs:annotation>
           <xs:complexType>
-            <xs:all>
+            <xs:sequence>
               <xs:element minOccurs="0" maxOccurs="unbounded" name="template">
                 <xs:complexType>
                   <xs:attribute name="name" type="xs:string" use="required" />
@@ -235,7 +248,7 @@ Every Virtual Machine definied in this Lab must refer to a Template in this coll
                   <xs:attribute name="packages" type="xs:string" use="optional" />
                 </xs:complexType>
               </xs:element>
-            </xs:all>
+            </xs:sequence>
             <xs:attribute name="fromvms" type="xs:string" use="optional" />            
           </xs:complexType>
         </xs:element>
@@ -244,17 +257,18 @@ Every Virtual Machine definied in this Lab must refer to a Template in this coll
             <xs:documentation>
 This optional element contains a collection of zero or more VM nodes, each representing a Virtual Machine that will be created when this Lab is installed.
 Each Virtual Machine will refer back to a Template that is found in the Templates collection.
-If the Template used by this Virtual Machin can not be found, an error will occur when this Lab is installed.
+If the Template used by this Virtual Machine can not be found, an error will occur when this Lab is installed.
             </xs:documentation>
+            <xs:appinfo>&lt;vms&gt;...&lt;/vms&gt;</xs:appinfo>
           </xs:annotation>
           <xs:complexType>
-            <xs:all>
+            <xs:sequence>
               <xs:element minOccurs="0" maxOccurs="unbounded" name="vm">
                 <xs:complexType>
                   <xs:all>
                     <xs:element minOccurs="0" maxOccurs="1" name="datavhds">
                       <xs:complexType>
-                        <xs:all>
+                        <xs:sequence>
                           <xs:element minOccurs="0" maxOccurs="unbounded" name="datavhd">
                             <xs:complexType>
                               <xs:attribute name="vhd" type="xs:string" use="required" />
@@ -272,12 +286,12 @@ If the Template used by this Virtual Machin can not be found, an error will occu
                               <xs:attribute name="supportsr" type="xs:string" use="optional" />
                             </xs:complexType>
                           </xs:element>
-                        </xs:all>
+                        </xs:sequence>
                       </xs:complexType>
                     </xs:element>
                     <xs:element minOccurs="0" maxOccurs="1" name="adapters">
                       <xs:complexType>
-                        <xs:all>
+                        <xs:sequence>
                           <xs:element minOccurs="0" maxOccurs="unbounded" name="adapter">
                             <xs:complexType>
                               <xs:all>
@@ -305,7 +319,7 @@ If the Template used by this Virtual Machin can not be found, an error will occu
                               <xs:attribute name="macaddressspoofing" type="xs:string" use="optional" />
                             </xs:complexType>
                           </xs:element>
-                        </xs:all>
+                        </xs:sequence>
                       </xs:complexType>
                     </xs:element>
                     <xs:element minOccurs="0" maxOccurs="1" name="dsc">
@@ -320,13 +334,13 @@ If the Template used by this Virtual Machin can not be found, an error will occu
                     </xs:element>
                     <xs:element minOccurs="0" maxOccurs="1" name="install">
                       <xs:complexType>
-                        <xs:all>
+                        <xs:sequence>
                           <xs:element minOccurs="0" maxOccurs="unbounded" name="msu">
                             <xs:complexType>
                               <xs:attribute name="url" type="xs:string" use="required" />
                             </xs:complexType>
                           </xs:element>
-                        </xs:all>
+                        </xs:sequence>
                       </xs:complexType>
                     </xs:element>
                   </xs:all>
@@ -347,7 +361,7 @@ If the Template used by this Virtual Machin can not be found, an error will occu
                   <xs:attribute name="bootorder" type="xs:unsignedByte" use="optional" />
                 </xs:complexType>
               </xs:element>
-            </xs:all>
+            </xs:sequence>
           </xs:complexType>
         </xs:element>
       </xs:all>
@@ -356,14 +370,16 @@ If the Template used by this Virtual Machin can not be found, an error will occu
           <xs:documentation>
 This required attribute should be used to set a descriptive name for this Lab configuration.
           </xs:documentation>
+          <xs:appinfo>name="WS2012R2-DOMAIN-CLUSTER"</xs:appinfo>
         </xs:annotation>
       </xs:attribute>
       <xs:attribute name="version" type="xs:decimal" use="required">
         <xs:annotation>
           <xs:documentation>
 This required attribute should be used to set a version number for this Lab configuration in the format #.#.
-It should be updated each time the Lab configurtion is changed.
+It should be updated each time the Lab configuration is changed.
           </xs:documentation>
+          <xs:appinfo>version="2.1"</xs:appinfo>
         </xs:annotation>
       </xs:attribute>
     </xs:complexType>
