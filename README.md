@@ -114,7 +114,7 @@ To use this Module you will require on your Lab Host:
 
 Configuration XML
 =================
-Documentation for the LabBuilder Configuration XML can be found in the file [schema\labbuilderconfig-schema.md](schema\labbuilderconfig-schema.md).
+Documentation for the LabBuilder Configuration XML can be found in the file [schema/labbuilderconfig-schema.md](schema/labbuilderconfig-schema.md).
 
 Cmdlets
 =======
