@@ -542,12 +542,32 @@ If the Template used by this Virtual Machine can not be found, an error will occ
           <xs:complexType>
             <xs:sequence>
               <xs:element minOccurs="0" maxOccurs="unbounded" name="vm">
+                <xs:annotation>
+                  <xs:documentation>
+This optional element represents a Virtual Machine that will be created when this Lab is installed.
+
+All Lab configurations should include at least one Virtual Machine, although an error will not be thrown if no Virtual Machines are defined in a Lab.
+                  </xs:documentation>
+                  <xs:appinfo>&lt;vm&gt;...&lt;/vm&gt;</xs:appinfo>
+                </xs:annotation>
                 <xs:complexType>
                   <xs:all>
                     <xs:element minOccurs="0" maxOccurs="1" name="datavhds">
+                      <xs:annotation>
+                        <xs:documentation>
+This optional element contains a collection of zero or more DataVHD nodes, each representing a Data Virtual Hard Drive that will be created and attached to this Virtual Machine when this Lab is installed.
+                        </xs:documentation>
+                        <xs:appinfo>&lt;datavhds&gt;...&lt;/datavhds&gt;</xs:appinfo>
+                      </xs:annotation>
                       <xs:complexType>
                         <xs:sequence>
                           <xs:element minOccurs="0" maxOccurs="unbounded" name="datavhd">
+                            <xs:annotation>
+                              <xs:documentation>
+This optional element represents a Data Virtual Hard Drive that will be created and attached to the Virtual Machine when the Lab is installed.
+                              </xs:documentation>
+                              <xs:appinfo>&lt;datavhd&gt;...&lt;/datavhd&gt;</xs:appinfo>
+                            </xs:annotation>
                             <xs:complexType>
                               <xs:attribute name="vhd" type="xs:string" use="required" />
                               <xs:attribute name="sourcevhd" type="xs:string" use="optional" />
@@ -568,9 +588,21 @@ If the Template used by this Virtual Machine can not be found, an error will occ
                       </xs:complexType>
                     </xs:element>
                     <xs:element minOccurs="0" maxOccurs="1" name="adapters">
+                      <xs:annotation>
+                        <xs:documentation>
+This optional element contains a collection of zero or more Adapter nodes, each representing a Virtual Network Adapter that will be created, attached to the Virtual Machine and connected to a Virtual Switch when this Lab is installed.
+                        </xs:documentation>
+                        <xs:appinfo>&lt;adapters&gt;...&lt;/adapters&gt;</xs:appinfo>
+                      </xs:annotation>
                       <xs:complexType>
                         <xs:sequence>
                           <xs:element minOccurs="0" maxOccurs="unbounded" name="adapter">
+                            <xs:annotation>
+                              <xs:documentation>
+This optional element represents a Virtual Network Adapter that will be created, attached to the Virtual Machine and connected to a Virtual Switch when the Lab is installed.
+                              </xs:documentation>
+                              <xs:appinfo>&lt;adapter&gt;...&lt;/adapter&gt;</xs:appinfo>
+                            </xs:annotation>
                             <xs:complexType>
                               <xs:all>
                                 <xs:element minOccurs="0" maxOccurs="1" name="ipv4">
