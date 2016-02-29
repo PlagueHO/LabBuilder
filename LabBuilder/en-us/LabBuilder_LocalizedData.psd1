@@ -191,4 +191,5 @@ ConvertFrom-StringData -StringData @'
     ShouldRemoveLabFolder=Delete the folder '{1}' containing Lab '{0}'
     ShouldOverwriteLab=Install a new Lab into the existing folder '{0}'
     ShouldOverwriteLabConfig=Overwrite the existing Lab Configuration file '{0}'
+    DismountingVMTemplateVHDISOMessage=Dismounting {1} used for source WIM to create Template VHD {0}
 '@
