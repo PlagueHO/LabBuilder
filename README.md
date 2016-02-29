@@ -497,6 +497,8 @@ Versions
 * Added Lib\Type.ps1 containing customg LabBuilder Classes and Enumerations.
 * Added functions for converting XSD schema to MD.
 * Configuration Schema updated.
+* DSC Resource Module version number added to all DSC Library configurations to resolve WMF 5.0 issue.
+* Fix to Nano Server Package caching bug.
 
 ### 0.5.0.0
 * BREKAING: Renamed Config parameter to Lab parameter to indicate the object is actually an object that also stores Lab state information.
