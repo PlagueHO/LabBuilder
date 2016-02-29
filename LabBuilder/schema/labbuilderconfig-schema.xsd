@@ -82,9 +82,9 @@ Each Virtual Machine that is set to be configured by DSC requires a DSC configur
           <xs:annotation>
             <xs:documentation>
 This optional element can contain one or more resources that will be required for this Lab to be installed.
-These resources may be downloaded from the internet automatically depending on the resource type.
+These resources may be downloaded from the Internet automatically depending on the resource type.
             
-There can be different types of Resources that can be containined in the Resources element.
+There can be different types of Resources that can be contained in the Resources element.
 
 Currently the Resource types that are supported are:
  - Module: A PowerShell (DSC) Module that is downloaded via URL or using PowerShell Get. This can be a DSC or non-DSC PowerShell module.
@@ -191,8 +191,8 @@ This should element should only be added for External or Private switches.
                           <xs:element minOccurs="0" maxOccurs="unbounded" name="adapter">
                             <xs:annotation>
                               <xs:documentation>
-This optional element represents a Hyper-V Virtual Network Adapter that will be used as a Management Adapter for the Host Operating sytem to connect to this Virtual Switch.
-These Management Adapters are usually used to allow access to the internet by the Virtual Machines in a Lab.
+This optional element represents a Hyper-V Virtual Network Adapter that will be used as a Management Adapter for the Host Operating system to connect to this Virtual Switch.
+These Management Adapters are usually used to allow access to the Internet by the Virtual Machines in a Lab.
                               </xs:documentation>
                               <xs:appinfo>&lt;switch&gt;...&lt;/switch&gt;</xs:appinfo>
                             </xs:annotation>
@@ -202,7 +202,7 @@ These Management Adapters are usually used to allow access to the internet by th
                                   <xs:documentation>
 This required attribute is used to set the Name of the Management Virtual Adapter connected to this Hyper-V Virtual Switch.
 
-Note: If this Lab configuration has got a LabId setting defined, it will be prepended to this value when the Switch is created if the Switch type is a Private, Internal or NAT. 
+Note: If this Lab configuration has got a LabId setting defined, it will be pre-pended to this value when the Switch is created if the Switch type is a Private, Internal or NAT. 
                                   </xs:documentation>
                                   <xs:appinfo>name="Cluster Network"</xs:appinfo>
                                 </xs:annotation>
@@ -234,7 +234,7 @@ This optional attribute is used to set a VLAN ID of the Management Virtual Adapt
                       <xs:documentation>
 This required attribute is used to configure the Name of the Hyper-V Virtual Switch to be created for this Lab. 
 
-Note: If this Lab configuration has got a LabId setting defined, it will be prepended to this value when the Switch is created if the Switch type is a Private, Internal or NAT. 
+Note: If this Lab configuration has got a LabId setting defined, it will be pre-pended to this value when the Switch is created if the Switch type is a Private, Internal or NAT. 
                       </xs:documentation>
                       <xs:appinfo>name="Domain Cluster"</xs:appinfo>
                     </xs:annotation>
@@ -255,7 +255,7 @@ It can be set to:
                   <xs:attribute name="vlan" type="xs:unsignedByte" use="optional">
                     <xs:annotation>
                       <xs:documentation>
-This optional attribute is used to configure the VLAN ID of all Virtual Network Adapters that will connect to this Virtual Swtich. 
+This optional attribute is used to configure the VLAN ID of all Virtual Network Adapters that will connect to this Virtual Switch. 
                       </xs:documentation>
                       <xs:appinfo>vlan="43"</xs:appinfo>
                     </xs:annotation>
@@ -337,7 +337,7 @@ If a relative path is set, it will be relative to the full path of the Lab confi
             <xs:attribute name="prefix" type="xs:string" use="optional">
               <xs:annotation>
                 <xs:documentation>
-This optional attribute can be used to prepend a string to the VHD Template file that is created. 
+This optional attribute can be used to pre-pend a string to the VHD Template file that is created. 
                 </xs:documentation>
                 <xs:appinfo>prefix="Templates "</xs:appinfo>
               </xs:annotation>
@@ -364,24 +364,170 @@ This optional element represents a Virtual Machine Template that will be created
                   <xs:appinfo>&lt;template&gt;...&lt;/template&gt;</xs:appinfo>
                 </xs:annotation>
                 <xs:complexType>
-                  <xs:attribute name="name" type="xs:string" use="required" />
-                  <xs:attribute name="vhd" type="xs:string" use="optional" />
-                  <xs:attribute name="sourcevhd" type="xs:string" use="optional" />
-                  <xs:attribute name="memorystartupbytes" type="xs:string" use="optional" />
-                  <xs:attribute name="dynamicmemoryenabled" type="xs:string" use="optional" />
-                  <xs:attribute name="processorcount" type="xs:unsignedByte" use="optional" />
-                  <xs:attribute name="administratorpassword" type="xs:string" use="optional" />
-                  <xs:attribute name="productkey" type="xs:string" use="optional" />
-                  <xs:attribute name="timezone" type="xs:string" use="optional" />
-                  <xs:attribute name="ostype" type="xs:string" use="required" />
-                  <xs:attribute name="integrationservices" type="xs:string" use="optional" />
-                  <xs:attribute name="templatevhd" type="xs:string" use="optional" />
-                  <xs:attribute name="exposevirtualizationextensions" type="xs:string" use="optional" />
-                  <xs:attribute name="packages" type="xs:string" use="optional" />
+                  <xs:attribute name="name" type="xs:string" use="required">
+                    <xs:annotation>
+                      <xs:documentation>
+This required attribute contains the name of this Virtual Machine Template.
+Virtual Machines will refer to this value if they are going to use this Virtual Machine Template.
+                      </xs:documentation>
+                      <xs:appinfo>name="Windows Server 2012 R2 Datacenter CORE"</xs:appinfo>
+                    </xs:annotation>
+                  </xs:attribute>
+                  <xs:attribute name="vhd" type="xs:string" use="optional">
+                    <xs:annotation>
+                      <xs:documentation>
+This optional attribute contains the file name of the VHD Boot file that will be used for any Virtual Machines using this Template. 
+If this attribute is not set it will default to the filename specified in the SourceVHD attribute or the filename of the Template VHD linked to by the TemplateVHD attribute.
+                      </xs:documentation>
+                      <xs:appinfo>vhd="Windows Server 2012 R2 Datacenter CORE.vhdx"</xs:appinfo>
+                    </xs:annotation>
+                  </xs:attribute>
+                  <xs:attribute name="sourcevhd" type="xs:string" use="optional">
+                    <xs:annotation>
+                      <xs:documentation>
+This optional attribute contains the relative or full path to the VHD file that will be cloned for use as the Boot VHD for any Virtual Machines using this template.
+
+Note: This attribute should not be set if the TemplateVHD attribute is set.
+                      </xs:documentation>
+                      <xs:appinfo>sourcevhd="VhdFiles\Windows Server 2012 R2 Datacenter Full.vhdx"</xs:appinfo>
+                    </xs:annotation>
+                  </xs:attribute>
+                  <xs:attribute name="memorystartupbytes" type="xs:string" use="optional">
+                    <xs:annotation>
+                      <xs:documentation>
+This optional attribute contains the amount of startup memory to assign to Virtual Machines based on this Template. 
+
+Default Value: 1GB.
+Valid Values: PowerShell numeric values (e.g. 2GB, 1TB, 300MB, 160000000).
+                      </xs:documentation>
+                      <xs:appinfo>memorystartupbytes="8GB"</xs:appinfo>
+                    </xs:annotation>
+                  </xs:attribute>
+                  <xs:attribute name="dynamicmemoryenabled" type="xs:string" use="optional">
+                    <xs:annotation>
+                      <xs:documentation>
+This optional attribute contains a flag to enable or disable Dynamic Memory for Virtual Machines based on this Template.
+Note: Disabling this value is usually only used when Nested Virtualization is required.
+
+Default Value: Y.
+Valid Values: Y | N
+                      </xs:documentation>
+                      <xs:appinfo>dynamicmemoryenabled="N"</xs:appinfo>
+                    </xs:annotation>
+                  </xs:attribute>
+                  <xs:attribute name="processorcount" type="xs:unsignedByte" use="optional">
+                    <xs:annotation>
+                      <xs:documentation>
+This optional attribute determines the number of virtual processors assigned to Virtual Machines based on this Template.
+
+Default Value: 1.
+Valid Values: 1-n.
+                      </xs:documentation>
+                      <xs:appinfo>processorcount="2"</xs:appinfo>
+                    </xs:annotation>
+                  </xs:attribute>
+                  <xs:attribute name="administratorpassword" type="xs:string" use="optional">
+                    <xs:annotation>
+                      <xs:documentation>
+This optional attribute specifies the local Administrator password to assign when Virtual Machines based on this Template are installed.
+If this is not defined for the Template it should be defined in the Virtual Machine definition. 
+                      </xs:documentation>
+                      <xs:appinfo>administratorpassword="MyP@ssw0rd!1"</xs:appinfo>
+                    </xs:annotation>
+                  </xs:attribute>
+                  <xs:attribute name="productkey" type="xs:string" use="optional">
+                    <xs:annotation>
+                      <xs:documentation>
+This optional attribute specifies the Windows product key to set on any Virtual Machines based on this Template.
+                      </xs:documentation>
+                      <xs:appinfo>productkey="AAAAA-AAAAA-AAAAA-AAAAA-AAAAA"</xs:appinfo>
+                    </xs:annotation>
+                  </xs:attribute>
+                  <xs:attribute name="timezone" type="xs:string" use="optional">
+                    <xs:annotation>
+                      <xs:documentation>
+This optional attribute sets the timezone assigned to Virtual Machines based on this Template.
+
+Default Value: PST.
+                      </xs:documentation>
+                      <xs:appinfo>timezone="CST"</xs:appinfo>
+                    </xs:annotation>
+                  </xs:attribute>
+                  <xs:attribute name="ostype" type="xs:string" use="required">
+                    <xs:annotation>
+                      <xs:documentation>
+This required attribute sets defines the type of Operating System that this Template contains.
+It is used by LabBuilder to determine how to configure Virtual Machines based on this template.
+
+Default Value: Server.
+Valid Values: Server | Client | Nano
+                      </xs:documentation>
+                      <xs:appinfo>ostype="Server"</xs:appinfo>
+                    </xs:annotation>
+                  </xs:attribute>
+                  <xs:attribute name="integrationservices" type="xs:string" use="optional">
+                    <xs:annotation>
+                      <xs:documentation>
+This optional attribute controls which Integration Services are enabled on any Virtual Machines created using this Template.
+It should contain a comma delimited list of Integration Service names that should be enabled.
+If this attribute is defined but left empty, all Integration Services will be disabled.
+If this attribute is not defined all Integration Services will be enabled.
+
+Default Value: Guest Service Interface,Heartbeat,Key-Value Pair Exchange,Shutdown,Time Synchronization,VSS
+Valid Values: Guest Service Interface | Heartbeat | Key-Value Pair Exchange | Shutdown | Time Synchronization | VSS
+                      </xs:documentation>
+                      <xs:appinfo>ostype="Server"</xs:appinfo>
+                    </xs:annotation>
+                  </xs:attribute>
+                  <xs:attribute name="templatevhd" type="xs:string" use="optional">
+                    <xs:annotation>
+                      <xs:documentation>
+This optional attribute defines a Template VHD that this Virtual Machine Template will use to determine the Boot VHD file.
+If a TemplateVHD with a name matching the value of this attribute can not be found then an error will occur when this Lab is installed.
+If this attribute is defined, the SourceVHD attribute should not be defined.
+                      </xs:documentation>
+                      <xs:appinfo>templatevhd="Windows Server 2012 R2 Datacenter Core"</xs:appinfo>
+                    </xs:annotation>
+                  </xs:attribute>
+                  <xs:attribute name="exposevirtualizationextensions" type="xs:string" use="optional">
+                    <xs:annotation>
+                      <xs:documentation>
+This optional attribute controls whether or not Virtualization Extensions are exposed for Virtual Machines based on this Template.
+This attribute should only be enabled if the Host system this Lab is to be installed on is able to support Nested Virtualziation.
+Currently this is only supported on Windows 10 built 10586 or above and Windows Server 2016 TP4 or above.
+
+Default Value: N.
+Valid Values: Y | N
+                      </xs:documentation>
+                      <xs:appinfo>templatevhd="Windows Server 2012 R2 Datacenter Core"</xs:appinfo>
+                    </xs:annotation>
+                  </xs:attribute>
+                  <xs:attribute name="packages" type="xs:string" use="optional">
+                    <xs:annotation>
+                      <xs:documentation>
+This optional attribute can contain a comma delimited list of packages that should be installed onto any Virtual Machines using this Template. 
+
+Note: Currently, this is only used to install packages on Nano Server Virtual Machines, but may be extended to install MSU packages.
+
+Valid Values (for Nano Server): Compute | OEM-Drivers | Storage | FailoverCluster | ReverseForwarders | Guest | Containers | Defender | DCB | DNS | DSC | IIS | NPDS | SCVMM | SCVMM-Compute
+                      </xs:documentation>
+                      <xs:appinfo>packages="Storage,Guest"</xs:appinfo>
+                    </xs:annotation>
+                  </xs:attribute>
                 </xs:complexType>
               </xs:element>
             </xs:sequence>
-            <xs:attribute name="fromvms" type="xs:string" use="optional" />            
+            <xs:attribute name="fromvms" type="xs:string" use="optional">            
+              <xs:annotation>
+                <xs:documentation>
+This optional attribute enables the list of Template Virtual Machines to be pulled from the Virtual Machines defined in Hyper-V.
+The list of Hyper-V Virtual Machines to use as templates can be specified using a wild card value. E.g. 'Template *'
+If specified, when the Lab is installed the list of available Virtual Machine Templates will be pulled from Hyper-V by matching the names against the FromVMs attribute.
+After the list of Hyper-V Virtual Machines to use a templates is pulled in, any Templates defined in this container will be merged into this list. 
+                </xs:documentation>
+                <xs:appinfo>fromvms="Template *"</xs:appinfo>
+              </xs:annotation>
+            </xs:attribute>
           </xs:complexType>
         </xs:element>
         <xs:element minOccurs="0" maxOccurs="1" name="vms">
