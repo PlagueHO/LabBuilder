@@ -83,7 +83,7 @@ Currently the Resource types that are supported are:
             </xs:documentation>
           </xs:annotation>
           <xs:complexType>
-            <xs:sequence>
+            <xs:all>
               <xs:element minOccurs="0" maxOccurs="unbounded" name="module">
                 <xs:annotation>
                   <xs:documentation>
@@ -138,18 +138,23 @@ This attribute should only be used if URL is not set.
                   </xs:attribute>
                 </xs:complexType>
               </xs:element>
-            </xs:sequence>
+            </xs:all>
           </xs:complexType>
         </xs:element>
         <xs:element minOccurs="0" maxOccurs="1" name="switches">
+          <xs:annotation>
+            <xs:documentation>
+This optional element contains a collection of zero or more Switch nodes representing the Hyper-V Virtual Switches that are required for this Lab. Any missing switches in this list will be created on the Lab Host when this Lab is installed.
+            </xs:documentation>
+          </xs:annotation>
           <xs:complexType>
-            <xs:sequence>
+            <xs:all>
               <xs:element minOccurs="0" maxOccurs="unbounded" name="switch">
                 <xs:complexType>
-                  <xs:sequence>
+                  <xs:all>
                     <xs:element minOccurs="0" maxOccurs="1" name="adapters">
                       <xs:complexType>
-                        <xs:sequence>
+                        <xs:all>
                           <xs:element minOccurs="0" maxOccurs="unbounded" name="adapter">
                             <xs:complexType>
                               <xs:attribute name="name" type="xs:string" use="required" />
@@ -157,22 +162,28 @@ This attribute should only be used if URL is not set.
                               <xs:attribute name="vlan" type="xs:unsignedByte" use="optional" />
                             </xs:complexType>
                           </xs:element>
-                        </xs:sequence>
+                        </xs:all>
                       </xs:complexType>
                     </xs:element>
-                  </xs:sequence>
+                  </xs:all>
                   <xs:attribute name="name" type="xs:string" use="required" />
                   <xs:attribute name="type" type="xs:string" use="required" />
                   <xs:attribute name="vlan" type="xs:unsignedByte" use="optional" />
                 </xs:complexType>
               </xs:element>
-            </xs:sequence>
+            </xs:all>
             <xs:attribute name="managementvlan" type="xs:unsignedByte" use="optional" />
           </xs:complexType>
         </xs:element>
         <xs:element minOccurs="0" maxOccurs="1" name="templatevhds">
+          <xs:annotation>
+            <xs:documentation>
+This optional element contains a collection of zero or more TemplateVHD nodes representing the Template Virtual Hard Disk files that are required by the Templates and/or Virtual Machines in this Lab.
+These Template VHD files will be created from Windows Install Media ISO files if they can't be found in the specified VHDPath folder during the Lab Install process. 
+            </xs:documentation>
+          </xs:annotation>
           <xs:complexType>
-            <xs:sequence>
+            <xs:all>
               <xs:element minOccurs="0" maxOccurs="unbounded" name="templatevhd">
                 <xs:complexType>
                   <xs:attribute name="name" type="xs:string" use="required" />
@@ -189,15 +200,23 @@ This attribute should only be used if URL is not set.
                   <xs:attribute name="packages" type="xs:string" use="optional" />
                 </xs:complexType>
               </xs:element>
-            </xs:sequence>
+            </xs:all>
             <xs:attribute name="isopath" type="xs:string" use="required" />
             <xs:attribute name="vhdpath" type="xs:string" use="required" />
             <xs:attribute name="prefix" type="xs:string" use="optional" />
           </xs:complexType>
         </xs:element>
         <xs:element minOccurs="0" maxOccurs="1" name="templates">
+          <xs:annotation>
+            <xs:documentation>
+This optional element contains a collection of zero or more Template nodes representing the Virtual Machine Templates used to build the Virtual Machines in this Lab.
+The Virtual Machine Templates in this list may refer to a TemplateVHD or define a direct path to a Source VHD file.
+If a TemplateVHD is specified, this TemplateVHD must be found in the TemplateVHDs collection.
+Every Virtual Machine definied in this Lab must refer to a Template in this collection. 
+            </xs:documentation>
+          </xs:annotation>
           <xs:complexType>
-            <xs:sequence>
+            <xs:all>
               <xs:element minOccurs="0" maxOccurs="unbounded" name="template">
                 <xs:complexType>
                   <xs:attribute name="name" type="xs:string" use="required" />
@@ -216,18 +235,26 @@ This attribute should only be used if URL is not set.
                   <xs:attribute name="packages" type="xs:string" use="optional" />
                 </xs:complexType>
               </xs:element>
-            </xs:sequence>
+            </xs:all>
+            <xs:attribute name="fromvms" type="xs:string" use="optional" />            
           </xs:complexType>
         </xs:element>
         <xs:element minOccurs="0" maxOccurs="1" name="vms">
+          <xs:annotation>
+            <xs:documentation>
+This optional element contains a collection of zero or more VM nodes, each representing a Virtual Machine that will be created when this Lab is installed.
+Each Virtual Machine will refer back to a Template that is found in the Templates collection.
+If the Template used by this Virtual Machin can not be found, an error will occur when this Lab is installed.
+            </xs:documentation>
+          </xs:annotation>
           <xs:complexType>
-            <xs:sequence>
+            <xs:all>
               <xs:element minOccurs="0" maxOccurs="unbounded" name="vm">
                 <xs:complexType>
                   <xs:all>
                     <xs:element minOccurs="0" maxOccurs="1" name="datavhds">
                       <xs:complexType>
-                        <xs:sequence>
+                        <xs:all>
                           <xs:element minOccurs="0" maxOccurs="unbounded" name="datavhd">
                             <xs:complexType>
                               <xs:attribute name="vhd" type="xs:string" use="required" />
@@ -245,15 +272,15 @@ This attribute should only be used if URL is not set.
                               <xs:attribute name="supportsr" type="xs:string" use="optional" />
                             </xs:complexType>
                           </xs:element>
-                        </xs:sequence>
+                        </xs:all>
                       </xs:complexType>
                     </xs:element>
                     <xs:element minOccurs="0" maxOccurs="1" name="adapters">
                       <xs:complexType>
-                        <xs:sequence>
+                        <xs:all>
                           <xs:element minOccurs="0" maxOccurs="unbounded" name="adapter">
                             <xs:complexType>
-                              <xs:sequence>
+                              <xs:all>
                                 <xs:element minOccurs="0" maxOccurs="1" name="ipv4">
                                   <xs:complexType>
                                     <xs:attribute name="address" type="xs:string" use="required" />
@@ -270,7 +297,7 @@ This attribute should only be used if URL is not set.
                                     <xs:attribute name="dnsserver" type="xs:string" use="optional" />
                                   </xs:complexType>
                                 </xs:element>
-                              </xs:sequence>
+                              </xs:all>
                               <xs:attribute name="name" type="xs:string" use="required" />
                               <xs:attribute name="switchname" type="xs:string" use="required" />
                               <xs:attribute name="macaddress" type="xs:string" use="optional" />
@@ -278,7 +305,7 @@ This attribute should only be used if URL is not set.
                               <xs:attribute name="macaddressspoofing" type="xs:string" use="optional" />
                             </xs:complexType>
                           </xs:element>
-                        </xs:sequence>
+                        </xs:all>
                       </xs:complexType>
                     </xs:element>
                     <xs:element minOccurs="0" maxOccurs="1" name="dsc">
@@ -293,13 +320,13 @@ This attribute should only be used if URL is not set.
                     </xs:element>
                     <xs:element minOccurs="0" maxOccurs="1" name="install">
                       <xs:complexType>
-                        <xs:sequence>
+                        <xs:all>
                           <xs:element minOccurs="0" maxOccurs="unbounded" name="msu">
                             <xs:complexType>
                               <xs:attribute name="url" type="xs:string" use="required" />
                             </xs:complexType>
                           </xs:element>
-                        </xs:sequence>
+                        </xs:all>
                       </xs:complexType>
                     </xs:element>
                   </xs:all>
@@ -320,7 +347,7 @@ This attribute should only be used if URL is not set.
                   <xs:attribute name="bootorder" type="xs:unsignedByte" use="optional" />
                 </xs:complexType>
               </xs:element>
-            </xs:sequence>
+            </xs:all>
           </xs:complexType>
         </xs:element>
       </xs:all>
