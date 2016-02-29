@@ -27,7 +27,7 @@ $Libs = Get-ChildItem `
     -Recurse
 $Libs.Foreach(
     {
-        Write-Verbose -Message ($LocalizedData.ImportingLibFileMessage `
+        Write-Verbose -Message $($LocalizedData.ImportingLibFileMessage `
             -f $_.Fullname)
         . $_.Fullname    
     }
@@ -943,14 +943,14 @@ function Initialize-LabVMTemplateVHD
         if (Test-Path -Path ($VHDPath))
         {
             # The SourceVHD already exists
-            Write-Verbose -Message ($LocalizedData.SkipVMTemplateVHDFileMessage `
+            Write-Verbose -Message $($LocalizedData.SkipVMTemplateVHDFileMessage `
                 -f $TemplateVHDName,$VHDPath)
 
             continue
         } # if
         
         # Create the VHD
-        Write-Verbose -Message ($LocalizedData.CreatingVMTemplateVHDMessage `
+        Write-Verbose -Message $($LocalizedData.CreatingVMTemplateVHDMessage `
             -f $TemplateVHDName,$VHDPath)
             
         # Check the ISO exists.
@@ -967,7 +967,7 @@ function Initialize-LabVMTemplateVHD
         } # if
         
         # Mount the ISO so we can read the files.
-        Write-Verbose -Message ($LocalizedData.MountingVMTemplateVHDISOMessage `
+        Write-Verbose -Message $($LocalizedData.MountingVMTemplateVHDISOMessage `
                 -f $TemplateVHDName,$ISOPath)
                 
         $null = Mount-DiskImage `
@@ -1043,14 +1043,14 @@ function Initialize-LabVMTemplateVHD
                 -Path $VHDPath `
                 -Parent
 
-            [String] $VHDPackagesFolder = Join-Path `
+            [String] $LabPackagesFolder = Join-Path `
                 -Path $VHDFolder `
                 -ChildPath 'NanoServerPackages'
             
-            if (-not (Test-Path -Path $VHDPackagesFolder -Type Container))
+            if (-not (Test-Path -Path $LabPackagesFolder -Type Container))
             {
-                Write-Verbose -Message ($LocalizedData.CachingNanoServerPackagesMessage `
-                        -f "$ISODrive\Nanoserver\Packages",$VHDPackagesFolder)
+                Write-Verbose -Message $($LocalizedData.CachingNanoServerPackagesMessage `
+                        -f "$ISODrive\Nanoserver\Packages",$LabPackagesFolder)
                 Copy-Item `
                     -Path "$ISODrive\Nanoserver\Packages" `
                     -Destination $VHDFolder `
@@ -1099,7 +1099,7 @@ function Initialize-LabVMTemplateVHD
         Convert-WindowsImage @ConvertParams
 
         # Dismount the ISO.
-        Write-Verbose -Message ($LocalizedData.DismountingVMTemplateVHDISOMessage `
+        Write-Verbose -Message $($LocalizedData.DismountingVMTemplateVHDISOMessage `
                 -f $TemplateVHDName,$ISOPath)
 
         $null = Dismount-DiskImage `
@@ -1189,7 +1189,7 @@ function Remove-LabVMTemplateVHD
             Remove-Item `
                 -Path $VHDPath `
                 -Force
-            Write-Verbose -Message ($LocalizedData.DeletingVMTemplateVHDFileMessage `
+            Write-Verbose -Message $($LocalizedData.DeletingVMTemplateVHDFileMessage `
                 -f $TemplateVHDName,$VHDPath)
         } # if
     } # endfor
@@ -1638,7 +1638,7 @@ function Initialize-LabVMTemplate {
 
             if (-not (Test-Path -Path $LabPackagesFolder -Type Container))
             {
-                Write-Verbose -Message ($LocalizedData.CachingNanoServerPackagesMessage `
+                Write-Verbose -Message $($LocalizedData.CachingNanoServerPackagesMessage `
                         -f $VHDPackagesFolder,$LabPackagesFolder)
                 Copy-Item `
                     -Path $VHDPackagesFolder `
@@ -3553,7 +3553,7 @@ function New-Lab {
     }
     else
     {
-        Write-Verbose -Message ($LocalizedData.CreatingLabFolderMessage `
+        Write-Verbose -Message $($LocalizedData.CreatingLabFolderMessage `
             -f 'LabPath',$LabPath)
 
         New-Item `
@@ -3721,13 +3721,13 @@ Function Install-Lab {
     {
         # Initialize the core Lab components
         # Check Lab Folder structure
-        Write-Verbose -Message ($LocalizedData.InitializingLabFoldersMesage)
+        Write-Verbose -Message $($LocalizedData.InitializingLabFoldersMesage)
 
         # Check folders are defined
         [String] $LabPath = $Lab.labbuilderconfig.settings.labpath
         if (-not (Test-Path -Path $LabPath))
         {
-            Write-Verbose -Message ($LocalizedData.CreatingLabFolderMessage `
+            Write-Verbose -Message $($LocalizedData.CreatingLabFolderMessage `
                 -f 'LabPath',$LabPath)
 
             $null = New-Item `
@@ -3738,7 +3738,7 @@ Function Install-Lab {
         [String] $VHDParentPath = $Lab.labbuilderconfig.settings.vhdparentpathfull
         if (-not (Test-Path -Path $VHDParentPath))
         {
-            Write-Verbose -Message ($LocalizedData.CreatingLabFolderMessage `
+            Write-Verbose -Message $($LocalizedData.CreatingLabFolderMessage `
                 -f 'VHDParentPath',$VHDParentPath)
 
             $null = New-Item `
@@ -3747,7 +3747,7 @@ Function Install-Lab {
         }
         
         # Install Hyper-V Components
-        Write-Verbose -Message ($LocalizedData.InitializingHyperVComponentsMesage)
+        Write-Verbose -Message $($LocalizedData.InitializingHyperVComponentsMesage)
 
         # Create the LabBuilder Management Network switch and assign VLAN
         # Used by host to communicate with Lab VMs
@@ -3765,7 +3765,7 @@ Function Install-Lab {
         {
             $null = New-VMSwitch -Name $ManagementSwitchName -SwitchType Internal
 
-            Write-Verbose -Message ($LocalizedData.CreatingLabManagementSwitchMessage `
+            Write-Verbose -Message $($LocalizedData.CreatingLabManagementSwitchMessage `
                 -f $ManagementSwitchName,$ManagementVlan)
         }
         # Check the Vlan ID of the adapter on the switch
@@ -3778,7 +3778,7 @@ Function Install-Lab {
 
         if ($ExistingVlan -ne $ManagementVlan)
         {
-            Write-Verbose -Message ($LocalizedData.UpdatingLabManagementSwitchMessage `
+            Write-Verbose -Message $($LocalizedData.UpdatingLabManagementSwitchMessage `
                 -f $ManagementSwitchName,$ManagementVlan)
 
             Set-VMNetworkAdapterVlan `
@@ -3941,7 +3941,7 @@ Function Update-Lab {
     Causes the entire folder containing this Lab to be deleted.
 .EXAMPLE
     Uninstall-Lab `
-        -Path c:\mylab\config.xml `
+        -ConfigPath c:\mylab\config.xml `
         -RemoveSwitch`
         -RemoveVMTemplate `
         -RemoveVMFolder `
@@ -4044,7 +4044,7 @@ Function Uninstall-Lab {
             # Remove the VM Templates
             if ($RemoveVMTemplate)
             {
-                if ($PSCmdlet.ShouldProcess( ($LocalizedData.ShouldRemoveVMTemplate `
+                if ($PSCmdlet.ShouldProcess( $($LocalizedData.ShouldRemoveVMTemplate `
                     -f $Lab.labbuilderconfig.name,$Lab.labbuilderconfig.settings.labpath )))
                 {
                     $null = Remove-LabVMTemplate `
@@ -4055,7 +4055,7 @@ Function Uninstall-Lab {
             # Remove the VM Switches
             if ($RemoveSwitch)
             {
-                if ($PSCmdlet.ShouldProcess( ($LocalizedData.ShouldRemoveSwitch `
+                if ($PSCmdlet.ShouldProcess( $($LocalizedData.ShouldRemoveSwitch `
                     -f $Lab.labbuilderconfig.name,$Lab.labbuilderconfig.settings.labpath )))
                 {
                     $null = Remove-LabSwitch `
@@ -4066,7 +4066,7 @@ Function Uninstall-Lab {
             # Remove the VM Template VHDs
             if ($RemoveVMTemplateVHD)
             {
-                if ($PSCmdlet.ShouldProcess( ($LocalizedData.ShouldRemoveVMTemplateVHD `
+                if ($PSCmdlet.ShouldProcess( $($LocalizedData.ShouldRemoveVMTemplateVHD `
                     -f $Lab.labbuilderconfig.name,$Lab.labbuilderconfig.settings.labpath )))
                 {
                     $null = Remove-LabVMTemplateVHD `
@@ -4079,7 +4079,7 @@ Function Uninstall-Lab {
             {
                 if (Test-Path -Path $Lab.labbuilderconfig.settings.labpath)
                 {
-                    if ($PSCmdlet.ShouldProcess( ($LocalizedData.ShouldRemoveLabFolder `
+                    if ($PSCmdlet.ShouldProcess( $($LocalizedData.ShouldRemoveLabFolder `
                         -f $Lab.labbuilderconfig.name,$Lab.labbuilderconfig.settings.labpath )))
                     {
                         Remove-Item `

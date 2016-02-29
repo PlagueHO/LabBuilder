@@ -12,8 +12,8 @@ DSC Template Configuration File For use by LabBuilder
 Configuration DC_FORESTPRIMARY
 {
     Import-DscResource -ModuleName 'PSDesiredStateConfiguration' -ModuleVersion 1.1
-    Import-DscResource -ModuleName xActiveDirectory
-    Import-DscResource -ModuleName xDNSServer
+    Import-DscResource -ModuleName xActiveDirectory -ModuleVersion 2.9.0.0 # Current as of 8 Feb 2016
+    Import-DscResource -ModuleName xDNSServer -ModuleVersion 1.5.0.0 # Current as of 8 Feb 2016
     Node $AllNodes.NodeName {
         # Assemble the Local Admin Credentials
         If ($Node.LocalAdminPassword) {
