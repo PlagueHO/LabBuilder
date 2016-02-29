@@ -202,7 +202,7 @@ These Management Adapters are usually used to allow access to the internet by th
                                   <xs:documentation>
 This required attribute is used to set the Name of the Management Virtual Adapter connected to this Hyper-V Virtual Switch.
 
-Note: If this Lab configuration has got a LabId setting defined, it will be prepended to the beginning of this attribute when the Switch is created if the Switch type is a Private, Internal or NAT. 
+Note: If this Lab configuration has got a LabId setting defined, it will be prepended to this value when the Switch is created if the Switch type is a Private, Internal or NAT. 
                                   </xs:documentation>
                                   <xs:appinfo>name="Cluster Network"</xs:appinfo>
                                 </xs:annotation>
@@ -229,13 +229,50 @@ This optional attribute is used to set a VLAN ID of the Management Virtual Adapt
                       </xs:complexType>
                     </xs:element>
                   </xs:all>
-                  <xs:attribute name="name" type="xs:string" use="required" />
-                  <xs:attribute name="type" type="xs:string" use="required" />
-                  <xs:attribute name="vlan" type="xs:unsignedByte" use="optional" />
+                  <xs:attribute name="name" type="xs:string" use="required">
+                    <xs:annotation>
+                      <xs:documentation>
+This required attribute is used to configure the Name of the Hyper-V Virtual Switch to be created for this Lab. 
+
+Note: If this Lab configuration has got a LabId setting defined, it will be prepended to this value when the Switch is created if the Switch type is a Private, Internal or NAT. 
+                      </xs:documentation>
+                      <xs:appinfo>name="Domain Cluster"</xs:appinfo>
+                    </xs:annotation>
+                  </xs:attribute>
+                  <xs:attribute name="type" type="xs:string" use="required">
+                    <xs:annotation>
+                      <xs:documentation>
+This required attribute is used to set the Type of Hyper-V Virtual Switch to create.
+It can be set to:
+ - Internal
+ - Private
+ - External
+ - NAT  
+                      </xs:documentation>
+                      <xs:appinfo>type="Internal"</xs:appinfo>
+                    </xs:annotation>
+                  </xs:attribute>
+                  <xs:attribute name="vlan" type="xs:unsignedByte" use="optional">
+                    <xs:annotation>
+                      <xs:documentation>
+This optional attribute is used to configure the VLAN ID of all Virtual Network Adapters that will connect to this Virtual Swtich. 
+                      </xs:documentation>
+                      <xs:appinfo>vlan="43"</xs:appinfo>
+                    </xs:annotation>
+                  </xs:attribute>
                 </xs:complexType>
               </xs:element>
             </xs:sequence>
-            <xs:attribute name="managementvlan" type="xs:unsignedByte" use="optional" />
+            <xs:attribute name="managementvlan" type="xs:unsignedByte" use="optional">
+              <xs:annotation>
+                <xs:documentation>
+This optional attribute is used to change the VLAN ID used by the Private Hyper-V Management Switch created to manage this Lab.
+If not set the default VLAN ID value of 99 will be used.
+All Virtual Network Adapters automatically created and attached to the Management Switch for this Lab will be set to use this VLAN ID.
+                </xs:documentation>
+                <xs:appinfo>managementvlan="55"</xs:appinfo>
+              </xs:annotation>
+            </xs:attribute>
           </xs:complexType>
         </xs:element>
         <xs:element minOccurs="0" maxOccurs="1" name="templatevhds">
@@ -249,6 +286,16 @@ These Template VHD files will be created from Windows Install Media ISO files if
           <xs:complexType>
             <xs:sequence>
               <xs:element minOccurs="0" maxOccurs="unbounded" name="templatevhd">
+                <xs:annotation>
+                  <xs:documentation>
+This optional element represents a Template VHD (Virtual Hard Disk) that will be created and used by a Virtual Machine Template to create boot disks for Virtual Machines.
+If the VHD/VHDx file for this Template VHD can not be found it will be created using the specified Windows Install Media ISO file.
+If the Windows Media ISO file can not be found the Lab Install will not be able to proceed.
+
+Note: It is common for more than one Lab to use the same Template VHD files, therefore it is common to set the VHDPath and ISOPath attributes of this element to be a folder that can be accessed by multiple Labs.
+                  </xs:documentation>
+                  <xs:appinfo>&lt;templatevhd&gt;...&lt;/templatevhd&gt;</xs:appinfo>
+                </xs:annotation>
                 <xs:complexType>
                   <xs:attribute name="name" type="xs:string" use="required" />
                   <xs:attribute name="iso" type="xs:string" use="required" />
@@ -265,9 +312,36 @@ These Template VHD files will be created from Windows Install Media ISO files if
                 </xs:complexType>
               </xs:element>
             </xs:sequence>
-            <xs:attribute name="isopath" type="xs:string" use="required" />
-            <xs:attribute name="vhdpath" type="xs:string" use="required" />
-            <xs:attribute name="prefix" type="xs:string" use="optional" />
+            <xs:attribute name="isopath" type="xs:string" use="optional">
+              <xs:annotation>
+                <xs:documentation>
+This optional attribute can be used to set the path to the folder that LabBuilder will look for the Windows Install Media ISO files for any missing Template VHD files. 
+If not set this will default to the same path as the Lab configuration file.
+This can be a relative or full path.
+If a relative path is set, it will be relative to the full path of the Lab configuration file.
+                </xs:documentation>
+                <xs:appinfo>isopath="d:\LabShared\ISOs"</xs:appinfo>
+              </xs:annotation>
+            </xs:attribute>
+            <xs:attribute name="vhdpath" type="xs:string" use="optional">
+              <xs:annotation>
+                <xs:documentation>
+This optional attribute can be used to set the path to the folder that LabBuilder will create or look for any Template VHD files in. 
+If not set this will default to the same path as the Lab configuration file.
+This can be a relative or full path.
+If a relative path is set, it will be relative to the full path of the Lab configuration file.
+                </xs:documentation>
+                <xs:appinfo>isopath="d:\LabShared\VHDs"</xs:appinfo>
+              </xs:annotation>
+            </xs:attribute>
+            <xs:attribute name="prefix" type="xs:string" use="optional">
+              <xs:annotation>
+                <xs:documentation>
+This optional attribute can be used to prepend a string to the VHD Template file that is created. 
+                </xs:documentation>
+                <xs:appinfo>prefix="Templates "</xs:appinfo>
+              </xs:annotation>
+            </xs:attribute>
           </xs:complexType>
         </xs:element>
         <xs:element minOccurs="0" maxOccurs="1" name="templates">
@@ -283,6 +357,12 @@ Every Virtual Machine defined in this Lab must refer to a Template in this colle
           <xs:complexType>
             <xs:sequence>
               <xs:element minOccurs="0" maxOccurs="unbounded" name="template">
+                <xs:annotation>
+                  <xs:documentation>
+This optional element represents a Virtual Machine Template that will be created when this Lab is installed.
+                  </xs:documentation>
+                  <xs:appinfo>&lt;template&gt;...&lt;/template&gt;</xs:appinfo>
+                </xs:annotation>
                 <xs:complexType>
                   <xs:attribute name="name" type="xs:string" use="required" />
                   <xs:attribute name="vhd" type="xs:string" use="optional" />
