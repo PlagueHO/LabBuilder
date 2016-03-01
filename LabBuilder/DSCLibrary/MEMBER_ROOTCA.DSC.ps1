@@ -37,13 +37,6 @@ Configuration MEMBER_ROOTCA
 			[PSCredential]$DomainAdminCredential = New-Object System.Management.Automation.PSCredential ("$($Node.DomainName)\Administrator", (ConvertTo-SecureString $Node.DomainAdminPassword -AsPlainText -Force))
 		}
 
-		# Install the RSAT PowerShell Module which is required by the xWaitForResource
-		WindowsFeature RSATADPowerShell
-		{ 
-			Ensure = "Present" 
-			Name = "RSAT-AD-PowerShell" 
-		} 
-
 		# Install the CA Service
 		WindowsFeature ADCSCA {
 			Name = 'ADCS-Cert-Authority'
@@ -88,24 +81,23 @@ Configuration MEMBER_ROOTCA
 			}
 		}
 
-		# Wait for the Domain to be available so we can join it.
-		xWaitForADDomain DscDomainWait
-		{
-			DomainName = $Node.DomainName
-			DomainUserCredential = $DomainAdminCredential 
-			RetryCount = 100 
-			RetryIntervalSec = 10 
-			DependsOn = "[WindowsFeature]RSATADPowerShell" 
-		}
-
-		# Join this Server to the Domain so that it can be an Enterprise CA.
+        # Wait for the Domain to be available so we can join it.
+        WaitForAll DC
+        {
+        ResourceName      = '[xADDomain]PrimaryDC'
+        NodeName          = $Node.DCname
+        RetryIntervalSec  = 15
+        RetryCount        = 60
+        }
+		
+        # Join this Server to the Domain
 		xComputer JoinDomain 
 		{ 
 			Name          = $Node.NodeName
 			DomainName    = $Node.DomainName
 			Credential    = $DomainAdminCredential 
-			DependsOn = "[xWaitForADDomain]DscDomainWait" 
-		} 
+			DependsOn = "[WaitForAll]DC" 
+		}
 			
 		# Create the CAPolicy.inf file that sets basic parameters for certificate issuance for this CA.
 		File CAPolicy

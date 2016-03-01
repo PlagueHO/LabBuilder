@@ -37,7 +37,6 @@ DSC Template Configuration File For use by LabBuilder
 Configuration MEMBER_FILESERVER_ISCSI
 {
 	Import-DscResource -ModuleName 'PSDesiredStateConfiguration' -ModuleVersion 1.1
-    Import-DscResource -ModuleName xActiveDirectory -ModuleVersion 2.9.0.0 # Current as of 8 Feb 2016
 	Import-DscResource -ModuleName xComputerManagement -ModuleVersion 1.4.0.0 # Current as of 8 Feb 2016
 	Import-DscResource -ModuleName xStorage -ModuleVersion 2.4.0.0  # Current as of 8 Feb 2016
     Import-DscResource -ModuleName xNetworking -ModuleVersion 2.7.0.0  #Current as of 13-Feb-2016
@@ -106,29 +105,23 @@ Configuration MEMBER_FILESERVER_ISCSI
 			DependsOn = "[WindowsFeature]StorageServicesInstall" 
 		}
 
-		WindowsFeature RSATADPowerShell
-		{ 
-			Ensure = "Present" 
-			Name = "RSAT-AD-PowerShell" 
-			DependsOn = "[WindowsFeature]ISCSITargetServerInstall"
-		} 
-
-		xWaitForADDomain DscDomainWait
-		{
-			DomainName = $Node.DomainName
-			DomainUserCredential = $DomainAdminCredential 
-			RetryCount = 100 
-			RetryIntervalSec = 10 
-			DependsOn = "[WindowsFeature]RSATADPowerShell" 
-		}
-
+        # Wait for the Domain to be available so we can join it.
+        WaitForAll DC
+        {
+        ResourceName      = '[xADDomain]PrimaryDC'
+        NodeName          = $Node.DCname
+        RetryIntervalSec  = 15
+        RetryCount        = 60
+        }
+		
+        # Join this Server to the Domain
 		xComputer JoinDomain 
 		{ 
 			Name          = $Node.NodeName
 			DomainName    = $Node.DomainName
 			Credential    = $DomainAdminCredential 
-			DependsOn = "[xWaitForADDomain]DscDomainWait" 
-		} 
+			DependsOn = "[WaitForAll]DC" 
+		}
 
 		# Enable FSRM FireWall rules so we can remote manage FSRM
 		xFirewall FSRMFirewall1

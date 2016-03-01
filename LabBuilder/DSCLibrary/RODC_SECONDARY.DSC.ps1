@@ -50,14 +50,23 @@ Configuration RODC_SECONDARY
             DependsOn = "[WindowsFeature]ADDSInstall"
         }
 
-        xWaitForADDomain DscDomainWait
+        # Wait for the Domain to be available so we can join it.
+        WaitForAll DC
         {
-            DomainName = $Node.DomainName
-            DomainUserCredential = $DomainAdminCredential 
-            RetryCount = 100 
-            RetryIntervalSec = 10 
-            DependsOn = "[WindowsFeature]ADDSInstall"
+        ResourceName      = '[xADDomain]PrimaryDC'
+        NodeName          = $Node.DCname
+        RetryIntervalSec  = 15
+        RetryCount        = 60
         }
+		
+        # Join this Server to the Domain
+		xComputer JoinDomain 
+		{ 
+			Name          = $Node.NodeName
+			DomainName    = $Node.DomainName
+			Credential    = $DomainAdminCredential 
+			DependsOn = "[WaitForAll]DC" 
+		}
         
 <#
 		xADDomainController SecondaryDC

@@ -16,7 +16,6 @@ DSC Template Configuration File For use by LabBuilder
 Configuration MEMBER_FAILOVERCLUSTER_FS
 {
     Import-DscResource -ModuleName 'PSDesiredStateConfiguration' -ModuleVersion 1.1
-    Import-DscResource -ModuleName xActiveDirectory -ModuleVersion 2.9.0.0 # Current as of 8 Feb 2016
 	Import-DscResource -ModuleName xComputerManagement -ModuleVersion 1.4.0.0 # Current as of 8 Feb 2016
     Import-DscResource -ModuleName xPSDesiredStateConfiguration -ModuleVersion 3.7.0.0 # Current as of 28 Feb 2016
 	Import-DscResource -ModuleName ciscsi -ModuleVersion 1.0.0.14  # Current as of 8 Feb 2016
@@ -28,13 +27,6 @@ Configuration MEMBER_FAILOVERCLUSTER_FS
         If ($Node.DomainAdminPassword) {
             [PSCredential]$DomainAdminCredential = New-Object System.Management.Automation.PSCredential ("$($Node.DomainName)\Administrator", (ConvertTo-SecureString $Node.DomainAdminPassword -AsPlainText -Force))
         }
-
-        # Install the RSAT PowerShell Module which is required by the xWaitForResource
-        WindowsFeature RSATADPowerShell
-        { 
-            Ensure = "Present" 
-            Name = "RSAT-AD-PowerShell" 
-        } 
 
         WindowsFeature FailoverClusteringInstall
         { 
@@ -49,24 +41,23 @@ Configuration MEMBER_FAILOVERCLUSTER_FS
         } 
 
         # Wait for the Domain to be available so we can join it.
-        xWaitForADDomain DscDomainWait
+        WaitForAll DC
         {
-            DomainName = $Node.DomainName
-            DomainUserCredential = $DomainAdminCredential 
-            RetryCount = 100 
-            RetryIntervalSec = 10 
-            DependsOn = "[WindowsFeature]RSATADPowerShell" 
+        ResourceName      = '[xADDomain]PrimaryDC'
+        NodeName          = $Node.DCname
+        RetryIntervalSec  = 15
+        RetryCount        = 60
         }
-
+		
         # Join this Server to the Domain so that it can be an Enterprise CA.
-        xComputer JoinDomain 
-        { 
-            Name          = $Node.NodeName
-            DomainName    = $Node.DomainName
-            Credential    = $DomainAdminCredential 
-            DependsOn = "[xWaitForADDomain]DscDomainWait" 
-        }
-        
+		xComputer JoinDomain 
+		{ 
+			Name          = $Node.NodeName
+			DomainName    = $Node.DomainName
+			Credential    = $DomainAdminCredential 
+			DependsOn = "[WaitForAll]DC" 
+		}
+
         if ($Node.ServerTargetName)
         {
             # Ensure the iSCSI Initiator service is running

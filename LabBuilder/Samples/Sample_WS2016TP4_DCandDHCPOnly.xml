@@ -128,6 +128,7 @@
         <parameters>
           DomainName = "LABBUILDER.COM"
           DomainAdminPassword = "P@ssword!1"
+		  DCName = "SA-DC1"
           PSDscAllowDomainUser = $True
         </parameters>
       </dsc>
