@@ -58,8 +58,7 @@
   <vms>   
     <vm name="SS-DEFAULT"
         template="Template Windows Server 2012 R2 Datacenter FULL"
-        computername="SS-DEFAULT"
-        usedifferencingbootdisk="Y">
+        computername="SS-DEFAULT">
       <dsc configname="STANDALONE_DEFAULT"
            configfile="STANDALONE_DEFAULT.DSC.ps1">
       </dsc>

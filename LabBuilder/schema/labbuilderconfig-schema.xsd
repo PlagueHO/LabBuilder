@@ -58,7 +58,7 @@ The Virtual Machines, Virtual Hard Disk drives and other Lab related files will 
                 <xs:documentation>
 This optional attribute contains the path to the folder that will contain the Parent VHD files used by the Virtual Machines in this Lab.
 If this folder is not rooted, it will be assumed to be a subfolder of the 'labpath'.
-The Parent VHD files are used as Parent VHD's to any Lab VM boot disks or cloned to each Virtual Machine folder depending on the 'usedifferencingbootdisk' setting for each Lab VM.
+The Parent VHD files are used as Parent VHD's to any Lab VM boot disks or cloned to each Virtual Machine folder depending on the 'usedifferencingdisk' setting for each Lab VM.
                 </xs:documentation>
                 <xs:appinfo>vhdparentpath="f:\Labs\WS2012R2-CLUSTER-TEST-01\ParentVHDs"</xs:appinfo>
               </xs:annotation>
@@ -499,7 +499,7 @@ Currently this is only supported on Windows 10 built 10586 or above and Windows 
 Default Value: N.
 Valid Values: Y | N
                       </xs:documentation>
-                      <xs:appinfo>templatevhd="Windows Server 2012 R2 Datacenter Core"</xs:appinfo>
+                      <xs:appinfo>exposevirtualizationextensions="Y"</xs:appinfo>
                     </xs:annotation>
                   </xs:attribute>
                   <xs:attribute name="packages" type="xs:string" use="optional">
@@ -977,20 +977,165 @@ This MSU Package file will be downloaded to the host temporary folder and instal
                       </xs:complexType>
                     </xs:element>
                   </xs:all>
-                  <xs:attribute name="name" type="xs:string" use="required" />
-                  <xs:attribute name="template" type="xs:string" use="required" />
-                  <xs:attribute name="computername" type="xs:string" use="required" />
-                  <xs:attribute name="memorystartupbytes" type="xs:string" use="optional" />
-                  <xs:attribute name="dynamicmemoryenabled" type="xs:string" use="optional" />
-                  <xs:attribute name="exposevirtualizationextensions" type="xs:string" use="optional" />
-                  <xs:attribute name="usedifferencingbootdisk" type="xs:string" use="optional" />
-                  <xs:attribute name="administratorpassword" type="xs:string" use="optional" />
-                  <xs:attribute name="productkey" type="xs:string" use="optional" />
-                  <xs:attribute name="timezone" type="xs:string" use="optional" />
-                  <xs:attribute name="unattendfile" type="xs:string" use="optional" />
-                  <xs:attribute name="setupcomplete" type="xs:string" use="optional" />
-                  <xs:attribute name="integrationservices" type="xs:string" use="optional" />
-                  <xs:attribute name="packages" type="xs:string" use="optional" />
+                  <xs:attribute name="name" type="xs:string" use="required">
+                    <xs:annotation>
+                      <xs:documentation>
+This required attribute contains the name of the Lab Virtual Machine.
+This is the name that will appear in the Hyper-V manager for this Virtual Machine when this Lab is installed.
+
+Note: If this Lab configuration has got a LabId setting defined, it will be pre-pended to this value when the Virtual Machines is created. 
+                      </xs:documentation>
+                      <xs:appinfo>name="SA-DC1"</xs:appinfo>
+                    </xs:annotation>
+                  </xs:attribute>
+                  <xs:attribute name="template" type="xs:string" use="required">
+                    <xs:annotation>
+                      <xs:documentation>
+This required attribute is used to specify the template from the templates collection that will be used to create this Virtual Machine from. 
+The Template must match the name of one of the Templates in the Template collection, otherwise an error will occur when the Lab is installed.
+
+Note: many of the attributes defined in for the Virutal Machine may also be defined in the Template.
+If they are defined in the template but not in the Virtual Machine then the template setting will be used.
+If the setting is defined in the Virtual Machine and also in the Template, the Virtual Machine value will be used.
+                      </xs:documentation>
+                      <xs:appinfo>template="Windows Server 2012 R2 Datacenter Core"</xs:appinfo>
+                    </xs:annotation>
+                  </xs:attribute>
+                  <xs:attribute name="computername" type="xs:string" use="required">
+                    <xs:annotation>
+                      <xs:documentation>
+This required attribute contains the Computer Name of the Virtual Machine.
+This is the name that will be set on the Virtual Machine once it has been first booted.
+                      </xs:documentation>
+                      <xs:appinfo>computername="SA-DC1"</xs:appinfo>
+                    </xs:annotation>
+                  </xs:attribute>
+                  <xs:attribute name="memorystartupbytes" type="xs:string" use="optional">
+                    <xs:annotation>
+                      <xs:documentation>
+This optional attribute contains the amount of startup memory to assign to Virtual Machine. 
+If this attribute is not defined, but it is defined in the Template then the template value will be used, otherwise the default value will be used.
+
+Default Value: 1GB.
+Valid Values: PowerShell numeric values (e.g. 2GB, 1TB, 300MB, 160000000).
+                      </xs:documentation>
+                      <xs:appinfo>memorystartupbytes="8GB"</xs:appinfo>
+                    </xs:annotation>
+                  </xs:attribute>
+                  <xs:attribute name="dynamicmemoryenabled" type="xs:string" use="optional">
+                    <xs:annotation>
+                      <xs:documentation>
+This optional attribute contains a flag to enable or disable Dynamic Memory for Virtual Machine.
+If this attribute is not defined, but it is defined in the Template then the template value will be used, otherwise the default value will be used.
+Note: Disabling this value is usually only used when Nested Virtualization is required.
+
+Default Value: Y.
+Valid Values: Y | N
+                      </xs:documentation>
+                      <xs:appinfo>dynamicmemoryenabled="N"</xs:appinfo>
+                    </xs:annotation>
+                  </xs:attribute>
+                  <xs:attribute name="exposevirtualizationextensions" type="xs:string" use="optional">
+                    <xs:annotation>
+                      <xs:documentation>
+This optional attribute controls whether or not Virtualization Extensions are exposed for Virtual Machine.
+If this attribute is not defined, but it is defined in the Template then the template value will be used, otherwise the default value will be used.
+This attribute should only be enabled if the Host system this Lab is to be installed on is able to support Nested Virtualziation.
+Currently this is only supported on Windows 10 built 10586 or above and Windows Server 2016 TP4 or above.
+
+Default Value: N.
+Valid Values: Y | N
+                      </xs:documentation>
+                      <xs:appinfo>exposevirtualizationextensions="Y"</xs:appinfo>
+                    </xs:annotation>
+                  </xs:attribute>
+                  <xs:attribute name="usedifferencingdisk" type="xs:string" use="optional">
+                    <xs:annotation>
+                      <xs:documentation>
+This optional attribute controls whether or not the Boot VHD created for this Virtual Machine will be a Differencing disk or a copy of the Template VHD.
+Using a Differencing Disk for the Boot VHD will conserve disk space.
+
+Default Value: Y.
+Valid Values: Y | N
+                      </xs:documentation>
+                      <xs:appinfo>usedifferencingdisk="Y"</xs:appinfo>
+                    </xs:annotation>
+                  </xs:attribute>
+                  <xs:attribute name="administratorpassword" type="xs:string" use="optional">
+                    <xs:annotation>
+                      <xs:documentation>
+This optional attribute specifies the local Administrator password to assign when this Virtual Machine is installed.
+If this attribute is not defined, but it is defined in the Template then the template value will be used, otherwise the default value will be used.
+                      </xs:documentation>
+                      <xs:appinfo>administratorpassword="MyP@ssw0rd!1"</xs:appinfo>
+                    </xs:annotation>
+                  </xs:attribute>
+                  <xs:attribute name="productkey" type="xs:string" use="optional">
+                    <xs:annotation>
+                      <xs:documentation>
+This optional attribute specifies the Windows product key to set on this Virtual Machine.
+If this attribute is not defined, but it is defined in the Template then the template value will be used, otherwise the default value will be used.
+                      </xs:documentation>
+                      <xs:appinfo>productkey="AAAAA-AAAAA-AAAAA-AAAAA-AAAAA"</xs:appinfo>
+                    </xs:annotation>
+                  </xs:attribute>
+                  <xs:attribute name="timezone" type="xs:string" use="optional">
+                    <xs:annotation>
+                      <xs:documentation>
+This optional attribute sets the timezone assigned to this Virtual Machine.
+If this attribute is not defined, but it is defined in the Template then the template value will be used, otherwise the default value will be used.
+
+Default Value: PST.
+                      </xs:documentation>
+                      <xs:appinfo>timezone="CST"</xs:appinfo>
+                    </xs:annotation>
+                  </xs:attribute>
+                  <xs:attribute name="unattendfile" type="xs:string" use="optional">
+                    <xs:annotation>
+                      <xs:documentation>
+This optional attribute allows a specific unattend XML file to be used instead of the default XML file.
+If a relative path path is used for this attribute then it will be appended onto the path of this the Lab config file, otherwise the full rooted path to the file will be used. 
+                      </xs:documentation>
+                      <xs:appinfo>unattendfile="Unattend\SpecialUnattend.xml"</xs:appinfo>
+                    </xs:annotation>
+                  </xs:attribute>
+                  <xs:attribute name="setupcomplete" type="xs:string" use="optional">
+                    <xs:annotation>
+                      <xs:documentation>
+This optional attribute allows a specific Setup Complete script file to be used instead of the default Setup Complete script.
+If a relative path path is used for this attribute then it will be appended onto the path of this the Lab config file, otherwise the full rooted path to the file will be used. 
+                      </xs:documentation>
+                      <xs:appinfo>setupcomplete="Scripts\SetupScompleteDebug.cmd"</xs:appinfo>
+                    </xs:annotation>
+                  </xs:attribute>
+                  <xs:attribute name="integrationservices" type="xs:string" use="optional">
+                    <xs:annotation>
+                      <xs:documentation>
+This optional attribute controls which Integration Services are enabled on this Virtual Machine.
+It should contain a comma delimited list of Integration Service names that should be enabled.
+If this attribute is defined but left empty, all Integration Services will be disabled.
+If this attribute is not defined all Integration Services will be enabled.
+If this attribute is not defined, but it is defined in the Template then the template value will be used, otherwise the default value will be used.
+
+Default Value: Guest Service Interface,Heartbeat,Key-Value Pair Exchange,Shutdown,Time Synchronization,VSS
+Valid Values: Guest Service Interface | Heartbeat | Key-Value Pair Exchange | Shutdown | Time Synchronization | VSS
+                      </xs:documentation>
+                      <xs:appinfo>ostype="Server"</xs:appinfo>
+                    </xs:annotation>
+                  </xs:attribute>
+                  <xs:attribute name="packages" type="xs:string" use="optional">
+                    <xs:annotation>
+                      <xs:documentation>
+This optional attribute can contain a comma delimited list of packages that should be installed onto this Virtual Machine 
+If this attribute is not defined, but it is defined in the Template then the template value will be used, otherwise the default value will be used.
+
+Note: Currently, this is only used to install packages on Nano Server Virtual Machines, but may be extended to install MSU packages.
+
+Valid Values (for Nano Server): Compute | OEM-Drivers | Storage | FailoverCluster | ReverseForwarders | Guest | Containers | Defender | DCB | DNS | DSC | IIS | NPDS | SCVMM | SCVMM-Compute
+                      </xs:documentation>
+                      <xs:appinfo>packages="Storage,Guest"</xs:appinfo>
+                    </xs:annotation>
+                  </xs:attribute>
                   <xs:attribute name="bootorder" type="xs:unsignedByte" use="optional" />
                 </xs:complexType>
               </xs:element>

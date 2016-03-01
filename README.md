@@ -500,7 +500,11 @@ Versions
 * DSC Resource Module version number added to all DSC Library configurations to resolve WMF 5.0 issue.
 * Fix to Nano Server Package caching bug.
 * DSC Library Domain Join process improved.
+* DSC\ConfigFile attribute supports rooted paths.
+* VM\UnattendFile attribute supports rooted paths.
+* VM\SetupComplete attribute supports rooted paths.
 * DSC\ConfigFile Lab setting supports rooted paths.
+* VM\UseDifferencingBootDisk default changed to 'Y'.
 
 ### 0.5.0.0
 * BREKAING: Renamed Config parameter to Lab parameter to indicate the object is actually an object that also stores Lab state information.

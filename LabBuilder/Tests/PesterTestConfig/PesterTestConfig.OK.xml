@@ -156,7 +156,7 @@
         memorystartupbytes="2GB"
         dynamicmemoryenabled="N"
         exposevirtualizationextensions="Y"
-        usedifferencingbootdisk="Y"
+        usedifferencingdisk="Y"
         administratorpassword="Something"
         productkey="DDDDD-DDDDD-DDDDD-DDDDD-DDDDD"
         timezone="Pacific Standard Time"
