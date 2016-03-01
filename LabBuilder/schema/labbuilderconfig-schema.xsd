@@ -635,7 +635,7 @@ This attribute is only used when the Data VHD has the Shared attribute set to 'Y
 
 Valid Values: Y | N
                                   </xs:documentation>
-                                  <xs:appinfo>supportpr='Y'</xs:appinfo>
+                                  <xs:appinfo>supportpr="Y"</xs:appinfo>
                                 </xs:annotation>
                               </xs:attribute>
                               <xs:attribute name="partitionstyle" type="xs:string" use="optional">
@@ -697,7 +697,7 @@ This attribute should only be set to 'Y' if this SourceVHD attribute is defined.
 
 Valid Values: Y | N
                                   </xs:documentation>
-                                  <xs:appinfo>movesourcevhd='Y'</xs:appinfo>
+                                  <xs:appinfo>movesourcevhd="Y"</xs:appinfo>
                                 </xs:annotation>
                               </xs:attribute>
                               <xs:attribute name="shared" type="xs:string" use="optional">
@@ -708,7 +708,7 @@ This attribute should only be set to 'Y' if this DataVHD is being stored on a Cl
 
 Valid Values: Y | N
                                   </xs:documentation>
-                                  <xs:appinfo>shared='Y'</xs:appinfo>
+                                  <xs:appinfo>shared="Y"</xs:appinfo>
                                 </xs:annotation>
                               </xs:attribute>
                             </xs:complexType>
@@ -886,7 +886,7 @@ This is usually required when Network Virtualization is being implemented.
 Default Value: N.
 Valid Values: Y | N
                                   </xs:documentation>
-                                  <xs:appinfo>macaddressspoofing='Y'</xs:appinfo>
+                                  <xs:appinfo>macaddressspoofing="Y"</xs:appinfo>
                                 </xs:annotation>
                               </xs:attribute>
                             </xs:complexType>
@@ -895,13 +895,54 @@ Valid Values: Y | N
                       </xs:complexType>
                     </xs:element>
                     <xs:element minOccurs="0" maxOccurs="1" name="dsc">
+                      <xs:annotation>
+                        <xs:documentation>
+This optional element contains the settings related to configuring Desired State Configuration on the Lab Virtual Machine.
+                        </xs:documentation>
+                        <xs:appinfo>&lt;dsc&gt;...&lt;/dsc&gt;</xs:appinfo>
+                      </xs:annotation>
                       <xs:complexType>
                         <xs:all>
-                          <xs:element minOccurs="0" maxOccurs="1" name="parameters" type="xs:string" />
+                          <xs:element minOccurs="0" maxOccurs="1" name="parameters" type="xs:string">
+                            <xs:annotation>
+                              <xs:documentation>
+This optional element contains any parameters that should be passed to the DSC Library Configuration script being used to configure this Virtual Machine.
+These parameters get loaded into the ConfigData object and can be then used by the DSC Library Configuration script.
+The parameters that are available to be set depends on the DSC Library Configuration script that is assigned to this Virtual Machine.
+Review the documentation within the DSC Library Configuration script to see what parameters are available. 
+                              </xs:documentation>
+                              <xs:appinfo>&lt;parameters&gt;...&lt;/parameters&gt;</xs:appinfo>
+                            </xs:annotation>
+                          </xs:element>
                         </xs:all>
-                        <xs:attribute name="configname" type="xs:string" use="required" />
-                        <xs:attribute name="configfile" type="xs:string" use="required" />
-                        <xs:attribute name="logging" type="xs:string" use="optional" />
+                        <xs:attribute name="configname" type="xs:string" use="required">
+                          <xs:annotation>
+                            <xs:documentation>
+This required attribute contains the configuration name that is set in the DSC Library Configuration file that is used to configure this Virtual Machine.
+                            </xs:documentation>
+                            <xs:appinfo>configname="DC_FORESTPRIMARY"</xs:appinfo>
+                          </xs:annotation>
+                        </xs:attribute>
+                        <xs:attribute name="configfile" type="xs:string" use="required" >
+                          <xs:annotation>
+                            <xs:documentation>
+This required attribute contains the filename for the DSC Library Configuration file to use to configure this Virtual Machine. 
+If a relative path path is used for this attribute then it will be appended onto the DSCLibrary path specified in the Lab settings, otherwise the full rooted path to the file will be used. 
+                            </xs:documentation>
+                            <xs:appinfo>configfile="DC_FORESTPRIMARY.DSC.ps1"</xs:appinfo>
+                          </xs:annotation>
+                        </xs:attribute>
+                        <xs:attribute name="logging" type="xs:string" use="optional">
+                          <xs:annotation>
+                            <xs:documentation>
+This optional attribute enables DSC Logging on the Virtual Machine in the DSC Event Logs.
+
+Default Value: N.
+Valid Values: Y | N
+                            </xs:documentation>
+                            <xs:appinfo>logging="Y"</xs:appinfo>
+                          </xs:annotation>
+                        </xs:attribute>
                       </xs:complexType>
                     </xs:element>
                     <xs:element minOccurs="0" maxOccurs="1" name="install">

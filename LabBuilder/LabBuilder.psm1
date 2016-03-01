@@ -2339,9 +2339,16 @@ function Get-LabVM {
         [String] $DSCConfigFile = ''
         if ($VM.DSC.ConfigFile) 
 		{
-            $DSCConfigFile = Join-Path `
-                -Path $Lab.labbuilderconfig.settings.dsclibrarypathfull `
-                -ChildPath $VM.DSC.ConfigFile
+            if (-not [System.IO.Path]::IsPathRooted($VM.DSC.ConfigFile))
+            {
+                $DSCConfigFile = Join-Path `
+                    -Path $Lab.labbuilderconfig.settings.dsclibrarypathfull `
+                    -ChildPath $VM.DSC.ConfigFile
+            }
+            else
+            {
+                $DSCConfigFile = $VM.DSC.ConfigFile
+            } # if
 
             if ([System.IO.Path]::GetExtension($DSCConfigFile).ToLower() -ne '.ps1' )
             {
@@ -2352,7 +2359,7 @@ function Get-LabVM {
                         -f $VMName,$DSCConfigFile)
                 }
                 ThrowException @ExceptionParameters
-            }
+            } # if
 
             if (-not (Test-Path $DSCConfigFile))
             {
