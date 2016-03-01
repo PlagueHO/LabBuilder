@@ -569,19 +569,148 @@ This optional element represents a Data Virtual Hard Drive that will be created 
                               <xs:appinfo>&lt;datavhd&gt;...&lt;/datavhd&gt;</xs:appinfo>
                             </xs:annotation>
                             <xs:complexType>
-                              <xs:attribute name="vhd" type="xs:string" use="required" />
-                              <xs:attribute name="sourcevhd" type="xs:string" use="optional" />
-                              <xs:attribute name="copyfolders" type="xs:string" use="optional" />
-                              <xs:attribute name="type" type="xs:string" use="optional" />
-                              <xs:attribute name="size" type="xs:string" use="optional" />
-                              <xs:attribute name="supportpr" type="xs:string" use="optional" />
-                              <xs:attribute name="partitionstyle" type="xs:string" use="optional" />
-                              <xs:attribute name="filesystem" type="xs:string" use="optional" />
-                              <xs:attribute name="filesystemlabel" type="xs:string" use="optional" />
-                              <xs:attribute name="parentvhd" type="xs:string" use="optional" />
-                              <xs:attribute name="movesourcevhd" type="xs:string" use="optional" />
-                              <xs:attribute name="shared" type="xs:string" use="optional" />
-                              <xs:attribute name="supportsr" type="xs:string" use="optional" />
+                              <xs:attribute name="vhd" type="xs:string" use="required">
+                                <xs:annotation>
+                                  <xs:documentation>
+This required attribute is used to specify the path and filename of the Virtual Machine Data VHD to create and attach to the Virtual Machine.
+If a relative path or just a filename is provided to the VHD file then it will be set as relative to the 'Virtual Hard Disks' folder in the Virtual Machine folder.
+If this VHD does not exist then it may be created using the additional attributes provided.
+                                  </xs:documentation>
+                                  <xs:appinfo>vhd="DataDisks/DataDisk1.vhdx"</xs:appinfo>
+                                </xs:annotation>
+                              </xs:attribute>
+                              <xs:attribute name="sourcevhd" type="xs:string" use="optional">
+                                <xs:annotation>
+                                  <xs:documentation>
+This optional attribute controls the file path to the VHD file that will be cloned to create the new Data VHD if it does not exist.
+This attribute is only used when the Data VHD does not exist and need to be created.
+This attribute should not be defined if the Size or Type attributes are defined.
+If the MoveSourceVHD attribute is set to 'Y' then this file will be moved to Data VHD location instead of being copied.
+                                  </xs:documentation>
+                                  <xs:appinfo>vhd="DataDisks/DataDisk1.vhdx"</xs:appinfo>
+                                </xs:annotation>
+                              </xs:attribute>
+                              <xs:attribute name="copyfolders" type="xs:string" use="optional">
+                                <xs:annotation>
+                                  <xs:documentation>
+This optional attribute allows specified folders to be copied onto a new Data VHD when it is first created.
+This attribute is only used when the Data VHD does not exist and need to be created.
+When a new DataVHD is created the folders specifed in this attribute are copied recursively to the first formatted partition on the new Data VHD.
+This attribute should only be set if both the partitionstyle and filesystem attributes are defined, or if the new Data VHD is cloned from a VHD that contains a formatted volume.
+                                  </xs:documentation>
+                                  <xs:appinfo>copyfolders="f:\data\tools"</xs:appinfo>
+                                </xs:annotation>
+                              </xs:attribute>
+                              <xs:attribute name="type" type="xs:string" use="optional">
+                                <xs:annotation>
+                                  <xs:documentation>
+This optional attribute controls the type of Data VHD file to create if the VHD does not already exist.
+This attribute is only used when the Data VHD does not exist and need to be created.
+This attribute should not be defined if the SourceVHD attribute is defined.
+If the value of this attribute is Differencing then the ParentVHD attribute must also be set.
+
+Valid Values: Fixed | Dynamic | Differencing
+                                  </xs:documentation>
+                                  <xs:appinfo>type="Dynamic"</xs:appinfo>
+                                </xs:annotation>
+                              </xs:attribute>
+                              <xs:attribute name="size" type="xs:string" use="optional">
+                                <xs:annotation>
+                                  <xs:documentation>
+This optional attribute controls the size of Data VHD file to create if the VHD does not already exist.
+If the VHD already exists and this value is larger than the current size of the VHD, then it will be expanded, otherwise an error will occur.
+This attribute should not be defined if the SourceVHD attribute is defined.
+
+Valid Values: PowerShell numeric values (e.g. 2GB, 1TB, 300MB, 160000000).
+                                  </xs:documentation>
+                                  <xs:appinfo>size="100GB"</xs:appinfo>
+                                </xs:annotation>
+                              </xs:attribute>
+                              <xs:attribute name="supportpr" type="xs:string" use="optional">
+                                <xs:annotation>
+                                  <xs:documentation>
+This optional attribute enables support persistent reservation on this Data VHD.
+This attribute is only used when the Data VHD does not exist and need to be created.
+This attribute is only used when the Data VHD has the Shared attribute set to 'Y'.
+
+Valid Values: Y | N
+                                  </xs:documentation>
+                                  <xs:appinfo>supportpr='Y'</xs:appinfo>
+                                </xs:annotation>
+                              </xs:attribute>
+                              <xs:attribute name="partitionstyle" type="xs:string" use="optional">
+                                <xs:annotation>
+                                  <xs:documentation>
+This optional attribute causes a newly created Data VHD to be partitioned and formatted so that files and folders can be copied to it.
+This attribute is only used when the Data VHD does not exist and need to be created.
+Normally, this attribute would be set if the CopyFolders attribute was also set, enabling the folders to be copied onto the Data VHD before the Virtual Machine has been provisioned.
+If this is not defined for then the Data VHD will need to be partitioned and allocated within the host operating system via DSC or some other mechanism.
+If this attribute is defined then the FileSystem attribute must also be defined.
+
+Valid Values: MBR | GPT
+                                  </xs:documentation>
+                                  <xs:appinfo>partitionstyle="GPT"</xs:appinfo>
+                                </xs:annotation>
+                              </xs:attribute>
+                              <xs:attribute name="filesystem" type="xs:string" use="optional">
+                                <xs:annotation>
+                                  <xs:documentation>
+This optional attribute causes a newly created Data VHD to be partitioned and formatted so that files and folders can be copied to it.
+This attribute is only used when the Data VHD does not exist and need to be created.
+Normally, this attribute would be set if the CopyFolders attribute was also set, enabling the folders to be copied onto the Data VHD before the Virtual Machine has been provisioned.
+If this is not defined for then the Data VHD will need to be partitioned and allocated within the host operating system via DSC or some other mechanism.
+If this attribute is defined then the PartitionStyle attribute must also be defined.
+
+Valid Values: FAT32 | EXFAT | NTFS | REFS
+Note: REFS can only be used if the host is Windows Server 2012 or above. However, REFS can still be formatted within the guest operating system even if the Host is Windows 10.
+                                  </xs:documentation>
+                                  <xs:appinfo>filesystem="NTFS"</xs:appinfo>
+                                </xs:annotation>
+                              </xs:attribute>
+                              <xs:attribute name="filesystemlabel" type="xs:string" use="optional">
+                                <xs:annotation>
+                                  <xs:documentation>
+This optional attribute causes a newly created Data VHD to be set with a label if it has been partitioned and formatted.
+This attribute is only used when the Data VHD does not exist and need to be created.
+Normally, this attribute would be set if the CopyFolders attribute was also set, enabling the folders to be copied onto the Data VHD before the Virtual Machine has been provisioned.
+If this attribute is defined then both the PartitionStyle abd FileSystem attributes must also be defined.
+                                  </xs:documentation>
+                                  <xs:appinfo>filesystemlabel="ToolsDisk"</xs:appinfo>
+                                </xs:annotation>
+                              </xs:attribute>
+                              <xs:attribute name="parentvhd" type="xs:string" use="optional">
+                                <xs:annotation>
+                                  <xs:documentation>
+This optional attribute specifies the Parent VHD to use for a Differencing VHD.
+It should be a full path or a path relative to the Virtual Hard Disk folder in the Virtual Machine.
+This attribute is only used when the Data VHD does not exist and need to be created.
+If this attribute is defined then the Type attribute must be set to Differencing.
+                                  </xs:documentation>
+                                  <xs:appinfo>parentvhd="..\..\ToolsDiskParent.vhdx"</xs:appinfo>
+                                </xs:annotation>
+                              </xs:attribute>
+                              <xs:attribute name="movesourcevhd" type="xs:string" use="optional">
+                                <xs:annotation>
+                                  <xs:documentation>
+This optional attribute causes the Source VHD that is used to create the new Data VHD to be moved instead of copied.
+This attribute should only be set to 'Y' if this SourceVHD attribute is defined.
+
+Valid Values: Y | N
+                                  </xs:documentation>
+                                  <xs:appinfo>movesourcevhd='Y'</xs:appinfo>
+                                </xs:annotation>
+                              </xs:attribute>
+                              <xs:attribute name="shared" type="xs:string" use="optional">
+                                <xs:annotation>
+                                  <xs:documentation>
+This optional attribute enables the Data VHD to be attached as a Shared VHD to the Virtual Machine.
+This attribute should only be set to 'Y' if this DataVHD is being stored on a Cluster Shared Volume and the share supports SMB 3.02.
+
+Valid Values: Y | N
+                                  </xs:documentation>
+                                  <xs:appinfo>shared='Y'</xs:appinfo>
+                                </xs:annotation>
+                              </xs:attribute>
                             </xs:complexType>
                           </xs:element>
                         </xs:sequence>
