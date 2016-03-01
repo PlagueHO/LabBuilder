@@ -234,7 +234,7 @@ Configuration MEMBER_ROOTCA
 			# Configure the Online Responder Feature
 			xADCSOnlineResponder ConfigOnlineResponder {
 				Ensure = 'Present'
-				Name = 'ConfigOnlineResponder'
+				IsSingleInstance  = 'Yes'
 				Credential = $LocalAdminCredential
 				DependsOn = '[Script]ADCSAdvConfig'
 			}
