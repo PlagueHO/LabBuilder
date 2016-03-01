@@ -128,6 +128,7 @@
            configfile="DC_SECONDARY.DSC.ps1">
         <parameters>
           DomainName = "LABBUILDER.COM"
+		  DCName = "SA-DC1"
           DomainAdminPassword = "P@ssword!1"
           PSDscAllowDomainUser = $True
         </parameters>
@@ -157,6 +158,7 @@
         <parameters>
           DomainName = "LABBUILDER.COM"
           DomainAdminPassword = "P@ssword!1"
+		  DCName = "SA-DC1"
           PSDscAllowDomainUser = $True
           Scopes = @(
               @{ Name = 'Site A Primary';
@@ -286,6 +288,7 @@
         <parameters>
           DomainName = "LABBUILDER.COM"
           DomainAdminPassword = "P@ssword!1"
+		  DCName = "SA-DC1"
           PSDscAllowDomainUser = $True
         </parameters>
       </dsc>
@@ -317,6 +320,7 @@
         <parameters>
            DomainName = "LABBUILDER.COM"
            DomainAdminPassword = "P@ssword!1"
+           DCName = "SA-DC1"
            PSDscAllowDomainUser = $True
            InstallOnlineResponder = $True
            InstallEnrollmentWebService = $True
@@ -362,6 +366,7 @@
         <parameters>
           DomainName = "LABBUILDER.COM"
           DomainAdminPassword = "P@ssword!1"
+		  DCName = "SA-DC1"
           PSDscAllowDomainUser = $True
           TargetName = 'sa-foc-target'
           VirtualDisks =  @(
@@ -421,6 +426,7 @@
            logging="Y">
         <parameters>
           DomainName = "LABBUILDER.COM"
+		  DCName = "SA-DC1"
           DomainAdminPassword = "P@ssword!1"
           PSDscAllowDomainUser = $True
         </parameters>
@@ -462,6 +468,7 @@
            logging="Y">
         <parameters>
           DomainName = "LABBUILDER.COM"
+		  DCName = "SA-DC1"
           DomainAdminPassword = "P@ssword!1"
           PSDscAllowDomainUser = $True
         </parameters>
@@ -504,6 +511,7 @@
         <parameters>
           DomainName = "LABBUILDER.COM"
           DomainAdminPassword = "P@ssword!1"
+		  DCName = "SA-DC1"
           PSDscAllowDomainUser = $True
           ServerTargetName = 'sa-fs1-sa-foc-target-target'
           TargetPortalAddress = '192.168.129.24'
@@ -550,6 +558,7 @@
         <parameters>
           DomainName = "LABBUILDER.COM"
           DomainAdminPassword = "P@ssword!1"
+		  DCName = "SA-DC1"
           PSDscAllowDomainUser = $True
           ServerTargetName = 'sa-fs1-sa-foc-target-target'
           TargetPortalAddress = '192.168.129.24'
@@ -596,6 +605,7 @@
         <parameters>
           DomainName = "LABBUILDER.COM"
           DomainAdminPassword = "P@ssword!1"
+		  DCName = "SA-DC1"
           PSDscAllowDomainUser = $True
           ServerTargetName = 'sa-fs1-sa-foc-target-target'
           TargetPortalAddress = '192.168.129.24'
@@ -645,6 +655,7 @@
         <parameters>
           DomainName = "LABBUILDER.COM"
           DomainAdminPassword = "P@ssword!1"
+		  DCName = "SA-DC1"
           PSDscAllowDomainUser = $True
         </parameters>
       </dsc>
@@ -692,6 +703,7 @@
         <parameters>
           DomainName = "LABBUILDER.COM"
           DomainAdminPassword = "P@ssword!1"
+		  DCName = "SA-DC1"
           PSDscAllowDomainUser = $True
         </parameters>
       </dsc>
