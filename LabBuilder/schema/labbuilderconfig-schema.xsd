@@ -297,18 +297,129 @@ Note: It is common for more than one Lab to use the same Template VHD files, the
                   <xs:appinfo>&lt;templatevhd&gt;...&lt;/templatevhd&gt;</xs:appinfo>
                 </xs:annotation>
                 <xs:complexType>
-                  <xs:attribute name="name" type="xs:string" use="required" />
-                  <xs:attribute name="iso" type="xs:string" use="required" />
-                  <xs:attribute name="url" type="xs:string" use="optional" />
-                  <xs:attribute name="vhd" type="xs:string" use="required" />
-                  <xs:attribute name="edition" type="xs:string" use="optional" />
-                  <xs:attribute name="ostype" type="xs:string" use="required" />
-                  <xs:attribute name="features" type="xs:string" use="optional" />
-                  <xs:attribute name="vhdformat" type="xs:string" use="optional" />
-                  <xs:attribute name="vhdtype" type="xs:string" use="optional" />
-                  <xs:attribute name="generation" type="xs:unsignedByte" use="optional" />
-                  <xs:attribute name="vhdsize" type="xs:string" use="required" />
-                  <xs:attribute name="packages" type="xs:string" use="optional" />
+                  <xs:attribute name="name" type="xs:string" use="required">
+                    <xs:annotation>
+                      <xs:documentation>
+This required attribute will be the name of this Template VHD.
+It will be used by Template elements to refer to this Template VHD.
+                      </xs:documentation>
+                      <xs:appinfo>name="Windows Server 2012 R2 Datacenter Full"</xs:appinfo>
+                    </xs:annotation>
+                  </xs:attribute>
+                  <xs:attribute name="iso" type="xs:string" use="required">
+                    <xs:annotation>
+                      <xs:documentation>
+This required attribute should contain the relative or full path to the Windows Install Media ISO file required to build this Template VHD.
+If this filename is not a rooted path it will be appended to the path found in the ISOFiles attribute.
+                      </xs:documentation>
+                      <xs:appinfo>iso="9600.16384.130821-1623_x64fre_Server_EN-US_IRM_SSS_DV5.iso"</xs:appinfo>
+                    </xs:annotation>
+                  </xs:attribute>
+                  <xs:attribute name="url" type="xs:string" use="optional">
+                    <xs:annotation>
+                      <xs:documentation>
+This optional attribute can be set to a URL that will be reported to a user if the ISO file required to build this Template VHD is not found.
+
+Note: This URL will not be automatically downloaded, a user will need to open this URL in a browser.
+                      </xs:documentation>
+                      <xs:appinfo>url="https://www.microsoft.com/en-us/evalcenter/evaluate-windows-server-2012-r2"</xs:appinfo>
+                    </xs:annotation>
+                  </xs:attribute>
+                  <xs:attribute name="vhd" type="xs:string" use="required">
+                    <xs:annotation>
+                      <xs:documentation>
+This required attribute should contain the relative or full path to the VHD file that this Template VHD will use and/or create.
+If this filename is not a rooted path it will be appended to the path found in the VHDFiles attribute.
+                      </xs:documentation>
+                      <xs:appinfo>vhd="Windows Server 2012 R2 Datacenter Full.vhdx"</xs:appinfo>
+                    </xs:annotation>
+                  </xs:attribute>
+                  <xs:attribute name="edition" type="xs:string" use="optional">
+                    <xs:annotation>
+                      <xs:documentation>
+This optional attribute will be the Edition that is installed from the Windows Install Media ISO if the Template VHD needs to be created.
+If this is not provided and the VHD file needs to be created from the Windows Install Media ISO then the first edition in this Install Media will be created.
+                      </xs:documentation>
+                      <xs:appinfo>edition="Windows Server 2012 R2 SERVERDATACENTER"</xs:appinfo>
+                    </xs:annotation>
+                  </xs:attribute>
+                  <xs:attribute name="ostype" type="xs:string" use="required">
+                    <xs:annotation>
+                      <xs:documentation>
+This required attribute sets defines the type of Operating System that this Template VHD contains.
+It is used by LabBuilder to determine how to configure Virtual Machines based on this template VHD.
+It is also used to determine if Nano Server packages should be applied.
+
+ - Default Value: Server.
+ - Valid Values: Server | Client | Nano
+                      </xs:documentation>
+                      <xs:appinfo>ostype="Server"</xs:appinfo>
+                    </xs:annotation>
+                  </xs:attribute>
+                  <xs:attribute name="features" type="xs:string" use="optional">
+                    <xs:annotation>
+                      <xs:documentation>
+This optional attribute can contain a comma delimited list of Windows Server Features that should be installed into this Virtual Machine Template VHD.
+Normally, additional Windows Server Features are installed via DSC Library Configurations, so this attribute should not normally be used. 
+                      </xs:documentation>
+                      <xs:appinfo>features="Web-Application-Proxy,Routing"</xs:appinfo>
+                    </xs:annotation>
+                  </xs:attribute>
+                  <xs:attribute name="vhdformat" type="xs:string" use="optional">
+                    <xs:annotation>
+                      <xs:documentation>
+This optional attribute controls the type of VHD format to create if the VHD does not already exist.
+
+ - Default Value: VHDX
+ - Valid Values: VHDX | VHD
+                      </xs:documentation>
+                      <xs:appinfo>vhdformat="VHDx"</xs:appinfo>
+                    </xs:annotation>
+                  </xs:attribute>
+                  <xs:attribute name="vhdtype" type="xs:string" use="optional">
+                    <xs:annotation>
+                      <xs:documentation>
+This optional attribute controls the type of VHD file to create if the VHD does not already exist.
+
+ - Default Value: Dynamic
+ - Valid Values: Fixed | Dynamic
+                      </xs:documentation>
+                      <xs:appinfo>vhdtype="Fixed"</xs:appinfo>
+                    </xs:annotation>
+                  </xs:attribute>
+                  <xs:attribute name="generation" type="xs:unsignedByte" use="optional">
+                    <xs:annotation>
+                      <xs:documentation>
+This optional attribute controls the Virtual Machine generation of VHD file to create if the VHD does not already exist.
+
+ - Default Value: 2
+ - Valid Values: 1 | 2
+                      </xs:documentation>
+                      <xs:appinfo>generation="1"</xs:appinfo>
+                    </xs:annotation>
+                  </xs:attribute>
+                  <xs:attribute name="vhdsize" type="xs:string" use="required">
+                    <xs:annotation>
+                      <xs:documentation>
+This optional attribute controls the size of Boot VHD file to create if the VHD does not already exist.
+
+Valid Values: PowerShell numeric values (e.g. 2GB, 1TB, 300MB, 160000000).
+                      </xs:documentation>
+                      <xs:appinfo>size="25GB"</xs:appinfo>
+                    </xs:annotation>
+                  </xs:attribute>
+                  <xs:attribute name="packages" type="xs:string" use="optional">
+                    <xs:annotation>
+                      <xs:documentation>
+This optional attribute can contain a comma delimited list of packages that should be installed into this Virtual Machine Template VHD. 
+
+Note: Currently, this is only used to install packages on Nano Server Virtual Machines, but may be extended to install MSU packages.
+
+Valid Values (for Nano Server): Compute | OEM-Drivers | Storage | FailoverCluster | ReverseForwarders | Guest | Containers | Defender | DCB | DNS | DSC | IIS | NPDS | SCVMM | SCVMM-Compute
+                      </xs:documentation>
+                      <xs:appinfo>packages="Storage,Guest"</xs:appinfo>
+                    </xs:annotation>
+                  </xs:attribute>
                 </xs:complexType>
               </xs:element>
             </xs:sequence>
@@ -397,8 +508,8 @@ Note: This attribute should not be set if the TemplateVHD attribute is set.
                       <xs:documentation>
 This optional attribute contains the amount of startup memory to assign to Virtual Machines based on this Template. 
 
-Default Value: 1GB.
-Valid Values: PowerShell numeric values (e.g. 2GB, 1TB, 300MB, 160000000).
+ - Default Value: 1GB.
+ - Valid Values: PowerShell numeric values (e.g. 2GB, 1TB, 300MB, 160000000).
                       </xs:documentation>
                       <xs:appinfo>memorystartupbytes="8GB"</xs:appinfo>
                     </xs:annotation>
@@ -409,8 +520,8 @@ Valid Values: PowerShell numeric values (e.g. 2GB, 1TB, 300MB, 160000000).
 This optional attribute contains a flag to enable or disable Dynamic Memory for Virtual Machines based on this Template.
 Note: Disabling this value is usually only used when Nested Virtualization is required.
 
-Default Value: Y.
-Valid Values: Y | N
+ - Default Value: Y.
+ - Valid Values: Y | N
                       </xs:documentation>
                       <xs:appinfo>dynamicmemoryenabled="N"</xs:appinfo>
                     </xs:annotation>
@@ -420,8 +531,8 @@ Valid Values: Y | N
                       <xs:documentation>
 This optional attribute determines the number of virtual processors assigned to Virtual Machines based on this Template.
 
-Default Value: 1.
-Valid Values: 1-n.
+ - Default Value: 1.
+ - Valid Values: 1-n.
                       </xs:documentation>
                       <xs:appinfo>processorcount="2"</xs:appinfo>
                     </xs:annotation>
@@ -448,7 +559,7 @@ This optional attribute specifies the Windows product key to set on any Virtual 
                       <xs:documentation>
 This optional attribute sets the timezone assigned to Virtual Machines based on this Template.
 
-Default Value: PST.
+ - Default Value: PST.
                       </xs:documentation>
                       <xs:appinfo>timezone="CST"</xs:appinfo>
                     </xs:annotation>
@@ -459,8 +570,8 @@ Default Value: PST.
 This required attribute sets defines the type of Operating System that this Template contains.
 It is used by LabBuilder to determine how to configure Virtual Machines based on this template.
 
-Default Value: Server.
-Valid Values: Server | Client | Nano
+ - Default Value: Server.
+ - Valid Values: Server | Client | Nano
                       </xs:documentation>
                       <xs:appinfo>ostype="Server"</xs:appinfo>
                     </xs:annotation>
@@ -473,8 +584,8 @@ It should contain a comma delimited list of Integration Service names that shoul
 If this attribute is defined but left empty, all Integration Services will be disabled.
 If this attribute is not defined all Integration Services will be enabled.
 
-Default Value: Guest Service Interface,Heartbeat,Key-Value Pair Exchange,Shutdown,Time Synchronization,VSS
-Valid Values: Guest Service Interface | Heartbeat | Key-Value Pair Exchange | Shutdown | Time Synchronization | VSS
+ - Default Value: Guest Service Interface,Heartbeat,Key-Value Pair Exchange,Shutdown,Time Synchronization,VSS
+ - Valid Values: Guest Service Interface | Heartbeat | Key-Value Pair Exchange | Shutdown | Time Synchronization | VSS
                       </xs:documentation>
                       <xs:appinfo>ostype="Server"</xs:appinfo>
                     </xs:annotation>
@@ -493,11 +604,11 @@ If this attribute is defined, the SourceVHD attribute should not be defined.
                     <xs:annotation>
                       <xs:documentation>
 This optional attribute controls whether or not Virtualization Extensions are exposed for Virtual Machines based on this Template.
-This attribute should only be enabled if the Host system this Lab is to be installed on is able to support Nested Virtualziation.
+This attribute should only be enabled if the Host system this Lab is to be installed on is able to support Nested Virtualization.
 Currently this is only supported on Windows 10 built 10586 or above and Windows Server 2016 TP4 or above.
 
-Default Value: N.
-Valid Values: Y | N
+ - Default Value: N.
+ - Valid Values: Y | N
                       </xs:documentation>
                       <xs:appinfo>exposevirtualizationextensions="Y"</xs:appinfo>
                     </xs:annotation>
@@ -509,7 +620,7 @@ This optional attribute can contain a comma delimited list of packages that shou
 
 Note: Currently, this is only used to install packages on Nano Server Virtual Machines, but may be extended to install MSU packages.
 
-Valid Values (for Nano Server): Compute | OEM-Drivers | Storage | FailoverCluster | ReverseForwarders | Guest | Containers | Defender | DCB | DNS | DSC | IIS | NPDS | SCVMM | SCVMM-Compute
+ - Valid Values (for Nano Server): Compute | OEM-Drivers | Storage | FailoverCluster | ReverseForwarders | Guest | Containers | Defender | DCB | DNS | DSC | IIS | NPDS | SCVMM | SCVMM-Compute
                       </xs:documentation>
                       <xs:appinfo>packages="Storage,Guest"</xs:appinfo>
                     </xs:annotation>
@@ -595,7 +706,7 @@ If the MoveSourceVHD attribute is set to 'Y' then this file will be moved to Dat
                                   <xs:documentation>
 This optional attribute allows specified folders to be copied onto a new Data VHD when it is first created.
 This attribute is only used when the Data VHD does not exist and need to be created.
-When a new DataVHD is created the folders specifed in this attribute are copied recursively to the first formatted partition on the new Data VHD.
+When a new DataVHD is created the folders specified in this attribute are copied recursively to the first formatted partition on the new Data VHD.
 This attribute should only be set if both the partitionstyle and filesystem attributes are defined, or if the new Data VHD is cloned from a VHD that contains a formatted volume.
                                   </xs:documentation>
                                   <xs:appinfo>copyfolders="f:\data\tools"</xs:appinfo>
@@ -609,7 +720,7 @@ This attribute is only used when the Data VHD does not exist and need to be crea
 This attribute should not be defined if the SourceVHD attribute is defined.
 If the value of this attribute is Differencing then the ParentVHD attribute must also be set.
 
-Valid Values: Fixed | Dynamic | Differencing
+ - Valid Values: Fixed | Dynamic | Differencing
                                   </xs:documentation>
                                   <xs:appinfo>type="Dynamic"</xs:appinfo>
                                 </xs:annotation>
@@ -621,7 +732,7 @@ This optional attribute controls the size of Data VHD file to create if the VHD 
 If the VHD already exists and this value is larger than the current size of the VHD, then it will be expanded, otherwise an error will occur.
 This attribute should not be defined if the SourceVHD attribute is defined.
 
-Valid Values: PowerShell numeric values (e.g. 2GB, 1TB, 300MB, 160000000).
+ - Valid Values: PowerShell numeric values (e.g. 2GB, 1TB, 300MB, 160000000).
                                   </xs:documentation>
                                   <xs:appinfo>size="100GB"</xs:appinfo>
                                 </xs:annotation>
@@ -633,7 +744,7 @@ This optional attribute enables support persistent reservation on this Data VHD.
 This attribute is only used when the Data VHD does not exist and need to be created.
 This attribute is only used when the Data VHD has the Shared attribute set to 'Y'.
 
-Valid Values: Y | N
+ - Valid Values: Y | N
                                   </xs:documentation>
                                   <xs:appinfo>supportpr="Y"</xs:appinfo>
                                 </xs:annotation>
@@ -647,7 +758,7 @@ Normally, this attribute would be set if the CopyFolders attribute was also set,
 If this is not defined for then the Data VHD will need to be partitioned and allocated within the host operating system via DSC or some other mechanism.
 If this attribute is defined then the FileSystem attribute must also be defined.
 
-Valid Values: MBR | GPT
+ - Valid Values: MBR | GPT
                                   </xs:documentation>
                                   <xs:appinfo>partitionstyle="GPT"</xs:appinfo>
                                 </xs:annotation>
@@ -661,7 +772,7 @@ Normally, this attribute would be set if the CopyFolders attribute was also set,
 If this is not defined for then the Data VHD will need to be partitioned and allocated within the host operating system via DSC or some other mechanism.
 If this attribute is defined then the PartitionStyle attribute must also be defined.
 
-Valid Values: FAT32 | EXFAT | NTFS | REFS
+ - Valid Values: FAT32 | EXFAT | NTFS | REFS
 Note: REFS can only be used if the host is Windows Server 2012 or above. However, REFS can still be formatted within the guest operating system even if the Host is Windows 10.
                                   </xs:documentation>
                                   <xs:appinfo>filesystem="NTFS"</xs:appinfo>
@@ -673,7 +784,7 @@ Note: REFS can only be used if the host is Windows Server 2012 or above. However
 This optional attribute causes a newly created Data VHD to be set with a label if it has been partitioned and formatted.
 This attribute is only used when the Data VHD does not exist and need to be created.
 Normally, this attribute would be set if the CopyFolders attribute was also set, enabling the folders to be copied onto the Data VHD before the Virtual Machine has been provisioned.
-If this attribute is defined then both the PartitionStyle abd FileSystem attributes must also be defined.
+If this attribute is defined then both the PartitionStyle and FileSystem attributes must also be defined.
                                   </xs:documentation>
                                   <xs:appinfo>filesystemlabel="ToolsDisk"</xs:appinfo>
                                 </xs:annotation>
@@ -695,7 +806,7 @@ If this attribute is defined then the Type attribute must be set to Differencing
 This optional attribute causes the Source VHD that is used to create the new Data VHD to be moved instead of copied.
 This attribute should only be set to 'Y' if this SourceVHD attribute is defined.
 
-Valid Values: Y | N
+ - Valid Values: Y | N
                                   </xs:documentation>
                                   <xs:appinfo>movesourcevhd="Y"</xs:appinfo>
                                 </xs:annotation>
@@ -706,7 +817,7 @@ Valid Values: Y | N
 This optional attribute enables the Data VHD to be attached as a Shared VHD to the Virtual Machine.
 This attribute should only be set to 'Y' if this DataVHD is being stored on a Cluster Shared Volume and the share supports SMB 3.02.
 
-Valid Values: Y | N
+ - Valid Values: Y | N
                                   </xs:documentation>
                                   <xs:appinfo>shared="Y"</xs:appinfo>
                                 </xs:annotation>
@@ -851,7 +962,7 @@ Note: If this Lab configuration has got a LabId setting defined, it will be pre-
                               <xs:attribute name="switchname" type="xs:string" use="required">
                                 <xs:annotation>
                                   <xs:documentation>
-This required attribute controls the which Virtual Switch this Virtual Network Adapter should connect connect to.
+This required attribute controls the which Virtual Switch this Virtual Network Adapter should connect to.
  
 Note: If this Lab configuration has got a LabId setting defined, it will be pre-pended to this value when the Virtual Machine is created as long as the switch being connected to is an Internal, Private or NAT switch.
                                   </xs:documentation>
@@ -883,8 +994,8 @@ If this attribute is not set but the VLAN ID is set on the Virtual Switch that t
 This optional attribute enables MAC Address spoofing by the Guest Operating System.
 This is usually required when Network Virtualization is being implemented.
 
-Default Value: N.
-Valid Values: Y | N
+ - Default Value: N.
+ - Valid Values: Y | N
                                   </xs:documentation>
                                   <xs:appinfo>macaddressspoofing="Y"</xs:appinfo>
                                 </xs:annotation>
@@ -927,7 +1038,7 @@ This required attribute contains the configuration name that is set in the DSC L
                           <xs:annotation>
                             <xs:documentation>
 This required attribute contains the filename for the DSC Library Configuration file to use to configure this Virtual Machine. 
-If a relative path path is used for this attribute then it will be appended onto the DSCLibrary path specified in the Lab settings, otherwise the full rooted path to the file will be used. 
+If a relative path is used for this attribute then it will be appended onto the DSCLibrary path specified in the Lab settings, otherwise the full rooted path to the file will be used. 
                             </xs:documentation>
                             <xs:appinfo>configfile="DC_FORESTPRIMARY.DSC.ps1"</xs:appinfo>
                           </xs:annotation>
@@ -937,8 +1048,8 @@ If a relative path path is used for this attribute then it will be appended onto
                             <xs:documentation>
 This optional attribute enables DSC Logging on the Virtual Machine in the DSC Event Logs.
 
-Default Value: N.
-Valid Values: Y | N
+ - Default Value: N.
+ - Valid Values: Y | N
                             </xs:documentation>
                             <xs:appinfo>logging="Y"</xs:appinfo>
                           </xs:annotation>
@@ -957,7 +1068,7 @@ This optional element contains a collection that can be used to install addition
                           <xs:element minOccurs="0" maxOccurs="unbounded" name="msu">
                             <xs:annotation>
                               <xs:documentation>
-This optional element is used to specify an MSU package to be instlled onto the Virtual Machine boot disk prior to it being first booted. 
+This optional element is used to specify an MSU package to be installed onto the Virtual Machine boot disk prior to it being first booted. 
                               </xs:documentation>
                               <xs:appinfo>&lt;msu&gt;...&lt;/msu&gt;</xs:appinfo>
                             </xs:annotation>
@@ -994,7 +1105,7 @@ Note: If this Lab configuration has got a LabId setting defined, it will be pre-
 This required attribute is used to specify the template from the templates collection that will be used to create this Virtual Machine from. 
 The Template must match the name of one of the Templates in the Template collection, otherwise an error will occur when the Lab is installed.
 
-Note: many of the attributes defined in for the Virutal Machine may also be defined in the Template.
+Note: many of the attributes defined in for the Virtual Machine may also be defined in the Template.
 If they are defined in the template but not in the Virtual Machine then the template setting will be used.
 If the setting is defined in the Virtual Machine and also in the Template, the Virtual Machine value will be used.
                       </xs:documentation>
@@ -1016,8 +1127,8 @@ This is the name that will be set on the Virtual Machine once it has been first 
 This optional attribute contains the amount of startup memory to assign to Virtual Machine. 
 If this attribute is not defined, but it is defined in the Template then the template value will be used, otherwise the default value will be used.
 
-Default Value: 1GB.
-Valid Values: PowerShell numeric values (e.g. 2GB, 1TB, 300MB, 160000000).
+ - Default Value: 1GB.
+ - Valid Values: PowerShell numeric values (e.g. 2GB, 1TB, 300MB, 160000000).
                       </xs:documentation>
                       <xs:appinfo>memorystartupbytes="8GB"</xs:appinfo>
                     </xs:annotation>
@@ -1029,8 +1140,8 @@ This optional attribute contains a flag to enable or disable Dynamic Memory for 
 If this attribute is not defined, but it is defined in the Template then the template value will be used, otherwise the default value will be used.
 Note: Disabling this value is usually only used when Nested Virtualization is required.
 
-Default Value: Y.
-Valid Values: Y | N
+ - Default Value: Y.
+ - Valid Values: Y | N
                       </xs:documentation>
                       <xs:appinfo>dynamicmemoryenabled="N"</xs:appinfo>
                     </xs:annotation>
@@ -1043,8 +1154,8 @@ If this attribute is not defined, but it is defined in the Template then the tem
 This attribute should only be enabled if the Host system this Lab is to be installed on is able to support Nested Virtualziation.
 Currently this is only supported on Windows 10 built 10586 or above and Windows Server 2016 TP4 or above.
 
-Default Value: N.
-Valid Values: Y | N
+ - Default Value: N.
+ - Valid Values: Y | N
                       </xs:documentation>
                       <xs:appinfo>exposevirtualizationextensions="Y"</xs:appinfo>
                     </xs:annotation>
@@ -1055,8 +1166,8 @@ Valid Values: Y | N
 This optional attribute controls whether or not the Boot VHD created for this Virtual Machine will be a Differencing disk or a copy of the Template VHD.
 Using a Differencing Disk for the Boot VHD will conserve disk space.
 
-Default Value: Y.
-Valid Values: Y | N
+ - Default Value: Y.
+ - Valid Values: Y | N
                       </xs:documentation>
                       <xs:appinfo>usedifferencingdisk="Y"</xs:appinfo>
                     </xs:annotation>
@@ -1085,7 +1196,7 @@ If this attribute is not defined, but it is defined in the Template then the tem
 This optional attribute sets the timezone assigned to this Virtual Machine.
 If this attribute is not defined, but it is defined in the Template then the template value will be used, otherwise the default value will be used.
 
-Default Value: PST.
+ - Default Value: PST.
                       </xs:documentation>
                       <xs:appinfo>timezone="CST"</xs:appinfo>
                     </xs:annotation>
@@ -1094,7 +1205,7 @@ Default Value: PST.
                     <xs:annotation>
                       <xs:documentation>
 This optional attribute allows a specific unattend XML file to be used instead of the default XML file.
-If a relative path path is used for this attribute then it will be appended onto the path of this the Lab config file, otherwise the full rooted path to the file will be used. 
+If a relative path is used for this attribute then it will be appended onto the path of this the Lab config file, otherwise the full rooted path to the file will be used. 
                       </xs:documentation>
                       <xs:appinfo>unattendfile="Unattend\SpecialUnattend.xml"</xs:appinfo>
                     </xs:annotation>
@@ -1103,7 +1214,7 @@ If a relative path path is used for this attribute then it will be appended onto
                     <xs:annotation>
                       <xs:documentation>
 This optional attribute allows a specific Setup Complete script file to be used instead of the default Setup Complete script.
-If a relative path path is used for this attribute then it will be appended onto the path of this the Lab config file, otherwise the full rooted path to the file will be used. 
+If a relative path is used for this attribute then it will be appended onto the path of this the Lab config file, otherwise the full rooted path to the file will be used. 
                       </xs:documentation>
                       <xs:appinfo>setupcomplete="Scripts\SetupScompleteDebug.cmd"</xs:appinfo>
                     </xs:annotation>
@@ -1117,8 +1228,8 @@ If this attribute is defined but left empty, all Integration Services will be di
 If this attribute is not defined all Integration Services will be enabled.
 If this attribute is not defined, but it is defined in the Template then the template value will be used, otherwise the default value will be used.
 
-Default Value: Guest Service Interface,Heartbeat,Key-Value Pair Exchange,Shutdown,Time Synchronization,VSS
-Valid Values: Guest Service Interface | Heartbeat | Key-Value Pair Exchange | Shutdown | Time Synchronization | VSS
+ - Default Value: Guest Service Interface,Heartbeat,Key-Value Pair Exchange,Shutdown,Time Synchronization,VSS
+ - Valid Values: Guest Service Interface | Heartbeat | Key-Value Pair Exchange | Shutdown | Time Synchronization | VSS
                       </xs:documentation>
                       <xs:appinfo>ostype="Server"</xs:appinfo>
                     </xs:annotation>
@@ -1131,7 +1242,7 @@ If this attribute is not defined, but it is defined in the Template then the tem
 
 Note: Currently, this is only used to install packages on Nano Server Virtual Machines, but may be extended to install MSU packages.
 
-Valid Values (for Nano Server): Compute | OEM-Drivers | Storage | FailoverCluster | ReverseForwarders | Guest | Containers | Defender | DCB | DNS | DSC | IIS | NPDS | SCVMM | SCVMM-Compute
+ - Valid Values (for Nano Server): Compute | OEM-Drivers | Storage | FailoverCluster | ReverseForwarders | Guest | Containers | Defender | DCB | DNS | DSC | IIS | NPDS | SCVMM | SCVMM-Compute
                       </xs:documentation>
                       <xs:appinfo>packages="Storage,Guest"</xs:appinfo>
                     </xs:annotation>
