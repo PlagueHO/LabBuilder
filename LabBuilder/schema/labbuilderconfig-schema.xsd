@@ -835,11 +835,60 @@ This property of the Virtual Adapter is configured using Desired State Configura
                                   </xs:complexType>
                                 </xs:element>
                               </xs:all>
-                              <xs:attribute name="name" type="xs:string" use="required" />
-                              <xs:attribute name="switchname" type="xs:string" use="required" />
-                              <xs:attribute name="macaddress" type="xs:string" use="optional" />
-                              <xs:attribute name="vlan" type="xs:unsignedByte" use="optional" />
-                              <xs:attribute name="macaddressspoofing" type="xs:string" use="optional" />
+                              <xs:attribute name="name" type="xs:string" use="required">
+                                <xs:annotation>
+                                  <xs:documentation>
+This required attribute controls the name of this Virtual Network Adapter within the Host Operating System and the Guest Operating System of this Virtual Machine.
+The Virtual Network Adapter name within the Host will be changed immediately, but the Adapter name within the Guest Operating System will only be configured when the Guest is first installed.
+
+Changing the Name of the Adapter after the Guest Operating System has been installed is not possible, by changing this Name value.
+ 
+Note: If this Lab configuration has got a LabId setting defined, it will be pre-pended to this value when the Virtual Machine is created.
+                                  </xs:documentation>
+                                  <xs:appinfo>name="Cluster Comms"</xs:appinfo>
+                                </xs:annotation>
+                              </xs:attribute>
+                              <xs:attribute name="switchname" type="xs:string" use="required">
+                                <xs:annotation>
+                                  <xs:documentation>
+This required attribute controls the which Virtual Switch this Virtual Network Adapter should connect connect to.
+ 
+Note: If this Lab configuration has got a LabId setting defined, it will be pre-pended to this value when the Virtual Machine is created as long as the switch being connected to is an Internal, Private or NAT switch.
+                                  </xs:documentation>
+                                  <xs:appinfo>switchname="Cluster"</xs:appinfo>
+                                </xs:annotation>
+                              </xs:attribute>
+                              <xs:attribute name="macaddress" type="xs:string" use="optional">
+                                <xs:annotation>
+                                  <xs:documentation>
+This optional attribute is used to set a static MAC Address on the Virtual Network Adapter.
+Care should be taken to ensure that this MAC Address is unique on the Virtual Switch that is being connected to.
+                                  </xs:documentation>
+                                  <xs:appinfo>macaddress="00155D010801"</xs:appinfo>
+                                </xs:annotation>
+                              </xs:attribute>
+                              <xs:attribute name="vlan" type="xs:unsignedByte" use="optional">
+                                <xs:annotation>
+                                  <xs:documentation>
+This optional attribute is used to configure a VLAN ID on the Virtual Network Adapter.
+If this attribute is set it will override any VLAN ID that is set on the Virtual Switch that this Virtual Network Adapter connects to.
+If this attribute is not set but the VLAN ID is set on the Virtual Switch that this Virtual Network Adapter connects to is set, then the Virtual Network Adapter VLAN ID will be set to the Virtual Switch VLAN ID.
+                                  </xs:documentation>
+                                  <xs:appinfo>vlan="80"</xs:appinfo>
+                                </xs:annotation>
+                              </xs:attribute>
+                              <xs:attribute name="macaddressspoofing" type="xs:string" use="optional">
+                                <xs:annotation>
+                                  <xs:documentation>
+This optional attribute enables MAC Address spoofing by the Guest Operating System.
+This is usually required when Network Virtualization is being implemented.
+
+Default Value: N.
+Valid Values: Y | N
+                                  </xs:documentation>
+                                  <xs:appinfo>macaddressspoofing='Y'</xs:appinfo>
+                                </xs:annotation>
+                              </xs:attribute>
                             </xs:complexType>
                           </xs:element>
                         </xs:sequence>
