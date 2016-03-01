@@ -735,19 +735,103 @@ This optional element represents a Virtual Network Adapter that will be created,
                             <xs:complexType>
                               <xs:all>
                                 <xs:element minOccurs="0" maxOccurs="1" name="ipv4">
+                                  <xs:annotation>
+                                    <xs:documentation>
+This optional element represents the IPv4 settings that will be assigned to this Virtual Network Adapter from within the guest operating system.
+If this element is not defined, then the IPv4 settings for the adapter will not be set or changed.
+                                    </xs:documentation>
+                                    <xs:appinfo>&lt;ipv4&gt;...&lt;/ipv4&gt;</xs:appinfo>
+                                  </xs:annotation>
                                   <xs:complexType>
-                                    <xs:attribute name="address" type="xs:string" use="required" />
-                                    <xs:attribute name="defaultgateway" type="xs:string" use="optional" />
-                                    <xs:attribute name="subnetmask" type="xs:unsignedByte" use="required" />
-                                    <xs:attribute name="dnsserver" type="xs:string" use="optional" />
+                                    <xs:attribute name="address" type="xs:string" use="optional">
+                                      <xs:annotation>
+                                        <xs:documentation>
+This optional attribute configures this Virtual Adapter to use a static IPv4 address.
+If this attribute is defined then the IPv4 subnetmask attribute should also be defined.
+This property of the Virtual Adapter is configured using Desired State Configuration.
+                                        </xs:documentation>
+                                        <xs:appinfo>address="10.0.1.19"</xs:appinfo>
+                                      </xs:annotation>
+                                    </xs:attribute>
+                                    <xs:attribute name="defaultgateway" type="xs:string" use="optional">
+                                      <xs:annotation>
+                                        <xs:documentation>
+This optional attribute configures the IPv4 default gateway of the Virtual Adapter.
+This property of the Virtual Adapter is configured using Desired State Configuration.
+                                        </xs:documentation>
+                                        <xs:appinfo>defaultgateway="10.0.1.0"</xs:appinfo>
+                                      </xs:annotation>
+                                    </xs:attribute>
+                                    <xs:attribute name="subnetmask" type="xs:unsignedByte" use="optional">
+                                      <xs:annotation>
+                                        <xs:documentation>
+This required attribute configures the subnet mask of the IPv4 Address assigned to this Virtual Network Adapter.
+If this attribute is defined then the IPv4 address attribute should also be defined.
+This property of the Virtual Adapter is configured using Desired State Configuration.
+                                        </xs:documentation>
+                                        <xs:appinfo>subnetmask="8"</xs:appinfo>
+                                      </xs:annotation>
+                                    </xs:attribute>
+                                    <xs:attribute name="dnsserver" type="xs:string" use="optional">
+                                      <xs:annotation>
+                                        <xs:documentation>
+This required attribute configures the IPv4 DNS Server addresses assigned to this Virtual Network Adapter.
+This can be a comma delimited list of addresses. 
+This property of the Virtual Adapter is configured using Desired State Configuration.
+                                        </xs:documentation>
+                                        <xs:appinfo>dnsserver="10.0.1.10,10.0.1.11"</xs:appinfo>
+                                      </xs:annotation>
+                                    </xs:attribute>
                                   </xs:complexType>
                                 </xs:element>
                                 <xs:element minOccurs="0" maxOccurs="1" name="ipv6">
+                                  <xs:annotation>
+                                    <xs:documentation>
+This optional element represents the IPv6 settings that will be assigned to this Virtual Network Adapter from within the guest operating system.
+If this element is not defined, then the IPv6 settings for the adapter will not be set or changed.
+                                    </xs:documentation>
+                                    <xs:appinfo>&lt;ipv4&gt;...&lt;/ipv4&gt;</xs:appinfo>
+                                  </xs:annotation>
                                   <xs:complexType>
-                                    <xs:attribute name="address" type="xs:string" use="required" />
-                                    <xs:attribute name="defaultgateway" type="xs:string" use="optional" />
-                                    <xs:attribute name="subnetmask" type="xs:unsignedByte" use="required" />
-                                    <xs:attribute name="dnsserver" type="xs:string" use="optional" />
+                                    <xs:attribute name="address" type="xs:string" use="optional">
+                                      <xs:annotation>
+                                        <xs:documentation>
+This optional attribute configures this Virtual Adapter to use a static IPv6 address.
+If this attribute is defined then the IPv6 subnetmask attribute should also be defined.
+This property of the Virtual Adapter is configured using Desired State Configuration.
+                                        </xs:documentation>
+                                        <xs:appinfo>address="fd53:ccc5:895a:0000::1a"</xs:appinfo>
+                                      </xs:annotation>
+                                    </xs:attribute>
+                                    <xs:attribute name="defaultgateway" type="xs:string" use="optional">
+                                      <xs:annotation>
+                                        <xs:documentation>
+This optional attribute configures the IPv6 default gateway of the Virtual Adapter.
+This property of the Virtual Adapter is configured using Desired State Configuration.
+                                        </xs:documentation>
+                                        <xs:appinfo>defaultgateway="fd53:ccc5:895a:0000::0"</xs:appinfo>
+                                      </xs:annotation>
+                                    </xs:attribute>
+                                    <xs:attribute name="subnetmask" type="xs:unsignedByte" use="optional">
+                                      <xs:annotation>
+                                        <xs:documentation>
+This required attribute configures the subnet mask of the IPv6 Address assigned to this Virtual Network Adapter.
+If this attribute is defined then the IPv6 address attribute should also be defined.
+This property of the Virtual Adapter is configured using Desired State Configuration.
+                                        </xs:documentation>
+                                        <xs:appinfo>subnetmask="64"</xs:appinfo>
+                                      </xs:annotation>
+                                    </xs:attribute>
+                                    <xs:attribute name="dnsserver" type="xs:string" use="optional">
+                                      <xs:annotation>
+                                        <xs:documentation>
+This required attribute configures the IPv6 DNS Server addresses assigned to this Virtual Network Adapter.
+This can be a comma delimited list of addresses. 
+This property of the Virtual Adapter is configured using Desired State Configuration.
+                                        </xs:documentation>
+                                        <xs:appinfo>dnsserver="fd53:ccc5:895a:0000::a,fd53:ccc5:895a:0000::b"</xs:appinfo>
+                                      </xs:annotation>
+                                    </xs:attribute>
                                   </xs:complexType>
                                 </xs:element>
                               </xs:all>
