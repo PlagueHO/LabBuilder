@@ -946,11 +946,31 @@ Valid Values: Y | N
                       </xs:complexType>
                     </xs:element>
                     <xs:element minOccurs="0" maxOccurs="1" name="install">
+                      <xs:annotation>
+                        <xs:documentation>
+This optional element contains a collection that can be used to install additional MSU packages onto the Virtual Machine prior to it being first booted.
+                        </xs:documentation>
+                        <xs:appinfo>&lt;install&gt;...&lt;/install&gt;</xs:appinfo>
+                      </xs:annotation>
                       <xs:complexType>
                         <xs:sequence>
                           <xs:element minOccurs="0" maxOccurs="unbounded" name="msu">
+                            <xs:annotation>
+                              <xs:documentation>
+This optional element is used to specify an MSU package to be instlled onto the Virtual Machine boot disk prior to it being first booted. 
+                              </xs:documentation>
+                              <xs:appinfo>&lt;msu&gt;...&lt;/msu&gt;</xs:appinfo>
+                            </xs:annotation>
                             <xs:complexType>
-                              <xs:attribute name="url" type="xs:string" use="required" />
+                              <xs:attribute name="url" type="xs:string" use="required">
+                                <xs:annotation>
+                                  <xs:documentation>
+This required attribute contains the URL that the MSU package file can be downloaded to.
+This MSU Package file will be downloaded to the host temporary folder and installed onto the Virtual Machine Boot VHD prior to first boot.
+                                  </xs:documentation>
+                                  <xs:appinfo>url="http://download.microsoft.com/download/1/D/8/1D8B5022-5477-4B9A-8104-6A71FF9D98AB/WindowsTH-KB2693643-x64.msu"</xs:appinfo>
+                                </xs:annotation>
+                              </xs:attribute>
                             </xs:complexType>
                           </xs:element>
                         </xs:sequence>
