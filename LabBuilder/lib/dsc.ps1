@@ -3,7 +3,9 @@
     Get a list of all Resources imported in a DSC Config
 .DESCRIPTION
     Uses RegEx to pull a list of Resources that are imported in a DSC Configuration using the
-    Import-DSCResource cmdlet
+    Import-DSCResource cmdlet.
+    
+    If The -ModuleVersion parameter is included then
     
     The xNetworking will always be included and the PSDesiredConfigration will always be excluded.
 .PARAMETER DSCConfigFile
@@ -12,7 +14,8 @@
     GetModulesInDSCConfig -DSCConfigFile c:\mydsc\Server01.ps1
     Return the DSC Resource module list from file c:\mydsc\server01.ps1
 .OUTPUTS
-    An array of strings containing resource module names
+    An array of LabDSCModule objects containing the DSC Resource modules required by this DSC
+    configuration file.
 #>
 function GetModulesInDSCConfig()
 {
@@ -24,19 +27,33 @@ function GetModulesInDSCConfig()
         [ValidateNotNullOrEmpty()]	
         [String] $DSCConfigFile
     )
-    [String[]] $Modules = $Null
+    [Array] $Modules = $null
     [String] $Content = Get-Content -Path $DSCConfigFile
-    $Regex = "Import\-DscResource\s(?:\-ModuleName\s)?'?`"?([A-Za-z0-9._-]+)`"?'?"
+    $Regex = "Import\-DscResource\s(?:\-ModuleName\s)?'?`"?([A-Za-z0-9._-]+)`"?'?((\s-ModuleVersion)?\s?'?`"?([0-9.]+)`"?`?)?"
     $Matches = [regex]::matches($Content, $Regex, 'IgnoreCase')
     foreach ($Match in $Matches)
     {
-        if ($Match.Groups[1].Value -ne 'PSDesiredStateConfiguration')
+        $ModuleName = $Match.Groups[1].Value
+        if ($ModuleName -ne 'PSDesiredStateConfiguration')
         {
-            $Modules += $Match.Groups[1].Value
-        } # If
-    } # Foreach
+            $ModuleVersion = $Match.Groups[4].Value
+            # Make sure this module isn't already in the list
+            if ($ModuleName -notin $Modules)
+            {
+                $Module = New-Object -TypeName LabDSCModule
+                $Module.ModuleName = $ModuleName
+                if (-not [String]::IsNullOrWhitespace($ModuleVersion))
+                {
+                    $Module.ModuleVersion = $ModuleVersion
+                } # 
+                $Modules += @( $Module ) 
+            } # if
+        } # if
+    } # foreach
     # Add the xNetworking DSC Resource because it is always used
-    $Modules += 'xNetworking'
+    $Module = New-Object -TypeName LabDSCModule
+    $Module.ModuleName = 'xNetworking'
+    $Modules += @( $Module ) 
     Return $Modules
 } # GetModulesInDSCConfig
 
@@ -100,8 +117,10 @@ function CreateDSCMOFFiles {
         -f $VM.DSCConfigFile,$VM.Name)
 
     $DSCModules = GetModulesInDSCConfig -DSCConfigFile $($VM.DSCConfigFile)
-    foreach ($ModuleName in $DSCModules)
+    foreach ($DSCModule in $DSCModules)
     {
+        $ModuleName = $DSCModule.ModuleName
+        $ModuleVersion = $DSCModule.Version
         if (($InstalledModules | Where-Object -Property Name -EQ $ModuleName).Count -eq 0)
         {
             # The Module isn't available on this computer, so try and install it
@@ -680,8 +699,10 @@ function StartDSC {
             -and (-not $ModuleCopyComplete))
         {
             $DSCModules = GetModulesInDSCConfig -DSCConfigFile $($VM.DSCConfigFile)
-            foreach ($ModuleName in $DSCModules)
+            foreach ($DSCModule in $DSCModules)
             {
+                $ModuleName = $DSCModule.ModuleName
+                $ModuleVersion = $DSCModule.Version
                 try
                 {
                     Write-Verbose -Message $($LocalizedData.CopyingFilesToVMMessage `
