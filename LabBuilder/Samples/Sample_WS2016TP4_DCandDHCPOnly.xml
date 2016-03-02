@@ -93,8 +93,7 @@
   <vms>   
     <vm name="SA-DC1"
         template="Windows Server 2016 TP4 Datacenter FULL"
-        computername="SA-DC1"
-        usedifferencingbootdisk="Y">
+        computername="SA-DC1">
       <dsc configname="DC_FORESTPRIMARY"
            configfile="DC_FORESTPRIMARY.DSC.ps1">
         <parameters>
@@ -121,8 +120,7 @@
 
     <vm name="SA-DHCP1"
         template="Windows Server 2016 TP4 Datacenter CORE"
-        computername="SA-DHCP1"
-        usedifferencingbootdisk="Y">
+        computername="SA-DHCP1" >
       <dsc configname="MEMBER_DHCP"
            configfile="MEMBER_DHCP.DSC.ps1">
         <parameters>

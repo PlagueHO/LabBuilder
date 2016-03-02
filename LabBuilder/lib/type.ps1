@@ -142,7 +142,7 @@ class LabVM {
     [Uint64] $MemoryStartupBytes = 1GB
     [Boolean] $DynamicMemoryEnabled = $True
     [Boolean] $ExposeVirtualizationExtensions = $True
-    [Boolean] $UseDifferencingBootDisk = $True
+    [Boolean] $UseDifferencingDisk = $True
     [String] $AdministratorPassword
     [String] $ProductKey
     [String] $Timezone="Pacific Standard Time"

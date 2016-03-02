@@ -304,7 +304,7 @@ Configuration MEMBER_SUBCA
             # Configure the Online Responder Feature
             xADCSOnlineResponder ConfigOnlineResponder {
                 Ensure = 'Present'
-                Name = 'ConfigOnlineResponder'
+                IsSingleInstance  = 'Yes'
                 Credential = $LocalAdminCredential
                 DependsOn = '[Script]ADCSAdvConfig'
             }

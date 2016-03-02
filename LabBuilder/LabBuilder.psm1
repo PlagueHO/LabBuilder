@@ -2289,11 +2289,18 @@ function Get-LabVM {
 
         # Does the VM have an Unattend file specified?
         [String] $UnattendFile = ''
-        if ($VM.UnattendFile) 
+        if ($VM.UnattendFile)
 		{
-            $UnattendFile = Join-Path `
-                -Path $Lab.labbuilderconfig.settings.fullconfigpath `
-                -ChildPath $VM.UnattendFile
+            if ([System.IO.Path]::IsPathRooted($VM.UnattendFile))
+            {
+                $UnattendFile = $VM.UnattendFile
+            }
+            else
+            {
+                $UnattendFile = Join-Path `
+                    -Path $Lab.labbuilderconfig.settings.fullconfigpath `
+                    -ChildPath $VM.UnattendFile
+            } # if
             if (-not (Test-Path $UnattendFile)) 
 			{
                 $ExceptionParameters = @{
@@ -2310,9 +2317,16 @@ function Get-LabVM {
         [String] $SetupComplete = ''
         if ($VM.SetupComplete) 
 		{
-            $SetupComplete = Join-Path `
-                -Path $Lab.labbuilderconfig.settings.fullconfigpath `
-                -ChildPath $VM.SetupComplete
+            if ([System.IO.Path]::IsPathRooted($VM.SetupComplete))
+            {
+                $SetupComplete = $VM.SetupComplete
+            }
+            else
+            {
+                $SetupComplete = Join-Path `
+                    -Path $Lab.labbuilderconfig.settings.fullconfigpath `
+                    -ChildPath $VM.SetupComplete                
+            } # if
             if ([System.IO.Path]::GetExtension($SetupComplete).ToLower() -notin '.ps1','.cmd' )
             {
                 $ExceptionParameters = @{
@@ -2339,9 +2353,16 @@ function Get-LabVM {
         [String] $DSCConfigFile = ''
         if ($VM.DSC.ConfigFile) 
 		{
-            $DSCConfigFile = Join-Path `
-                -Path $Lab.labbuilderconfig.settings.dsclibrarypathfull `
-                -ChildPath $VM.DSC.ConfigFile
+            if (-not [System.IO.Path]::IsPathRooted($VM.DSC.ConfigFile))
+            {
+                $DSCConfigFile = Join-Path `
+                    -Path $Lab.labbuilderconfig.settings.dsclibrarypathfull `
+                    -ChildPath $VM.DSC.ConfigFile
+            }
+            else
+            {
+                $DSCConfigFile = $VM.DSC.ConfigFile
+            } # if
 
             if ([System.IO.Path]::GetExtension($DSCConfigFile).ToLower() -ne '.ps1' )
             {
@@ -2352,7 +2373,7 @@ function Get-LabVM {
                         -f $VMName,$DSCConfigFile)
                 }
                 ThrowException @ExceptionParameters
-            }
+            } # if
 
             if (-not (Test-Path $DSCConfigFile))
             {
@@ -2436,6 +2457,13 @@ function Get-LabVM {
             $ExposeVirtualizationExtensions=$VMTemplate.ExposeVirtualizationExtensions
         } # if
         
+        
+        [String] $UseDifferencingDisk = 'Y'
+        if ($VM.UseDifferencingDisk -eq 'N')
+        {
+            $UseDifferencingDisk = 'N'
+        } # if
+
         # Get the Integration Services flags
         if ($null -ne $VM.IntegrationServices)
         {
@@ -2521,7 +2549,7 @@ function Get-LabVM {
             ComputerName = $VM.ComputerName;
             Template = $VM.template;
             ParentVHD = $ParentVHDPath;
-            UseDifferencingDisk = $VM.usedifferencingbootdisk;
+            UseDifferencingDisk = $UseDifferencingDisk;
             MemoryStartupBytes = $MemoryStartupBytes;
             DynamicMemoryEnabled = $DynamicMemoryEnabled;
             ProcessorCount = $ProcessorCount;

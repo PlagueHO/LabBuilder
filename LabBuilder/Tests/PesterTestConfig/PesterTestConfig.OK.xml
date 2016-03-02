@@ -156,7 +156,7 @@
         memorystartupbytes="2GB"
         dynamicmemoryenabled="N"
         exposevirtualizationextensions="Y"
-        usedifferencingbootdisk="Y"
+        usedifferencingdisk="Y"
         administratorpassword="Something"
         productkey="DDDDD-DDDDD-DDDDD-DDDDD-DDDDD"
         timezone="Pacific Standard Time"
@@ -171,7 +171,7 @@
         <datavhd vhd="DataDiskDynamic.vhdx" type="dynamic" size="10GB" partitionstyle="GPT" filesystem="NTFS" filesystemlabel="ToolsDisk" />
         <datavhd vhd="DataDiskDifferencing.vhdx" type="differencing" size="10GB" parentvhd="VhdFiles\DataDisk.vhdx" />
         <datavhd vhd="DataDiskMove.vhdx" sourcevhd="VhdFiles\DataDisk.vhdx" movesourcevhd="Y" />
-        <datavhd vhd="DataDiskShared.vhdx" type="fixed" size="10GB" shared="Y" supportsr="Y" />
+        <datavhd vhd="DataDiskShared.vhdx" type="fixed" size="10GB" shared="Y" supportpr="Y" />
       </datavhds>
       <adapters>
         <adapter name="External" switchname="External" macaddress="00155D010801" />
