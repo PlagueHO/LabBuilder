@@ -4,50 +4,66 @@
 .DESCRIPTION
     Uses RegEx to pull a list of Resources that are imported in a DSC Configuration using the
     Import-DSCResource cmdlet.
-    
-    If The -ModuleVersion parameter is included then
+
+    If The -ModuleVersion parameter is included then the ModuleVersion property in the returned
+    LabDSCModule object will be set, otherwise it will be null.
     
     The xNetworking will always be included and the PSDesiredConfigration will always be excluded.
 .PARAMETER DSCConfigFile
-    Contains the path to the DSC Config file to extract resource module names from
+    Contains the path to the DSC Config file to extract resource module names from.
+.PARAMETER DSCConfigContent
+    Contains the content of the DSC Config to extract resource module names from.
 .EXAMPLE
     GetModulesInDSCConfig -DSCConfigFile c:\mydsc\Server01.ps1
     Return the DSC Resource module list from file c:\mydsc\server01.ps1
+.EXAMPLE
+    GetModulesInDSCConfig -DSCConfigContent $DSCConfig
+    Return the DSC Resource module list from the DSC Config in $DSCConfig.
 .OUTPUTS
     An array of LabDSCModule objects containing the DSC Resource modules required by this DSC
     configuration file.
 #>
 function GetModulesInDSCConfig()
 {
-    [CmdletBinding()]
-    [OutputType([String[]])]
+   [CmdLetBinding(DefaultParameterSetName="File")]
+   [OutputType([Object[]])]
     Param
     (
-        [Parameter(Mandatory=$True)]
+        [parameter(
+            Position=1,
+            ParameterSetName="File",
+            Mandatory=$true)]
         [ValidateNotNullOrEmpty()]	
-        [String] $DSCConfigFile
+        [String] $DSCConfigFile,
+        
+        [parameter(
+            Position=2,
+            ParameterSetName="Content",
+            Mandatory=$true)]
+        [ValidateNotNullOrEmpty()]	
+        [String] $DSCConfigContent       
     )
-    [Array] $Modules = $null
-    [String] $Content = Get-Content -Path $DSCConfigFile
+    [LabDSCModule[]] $Modules = $Null
+    if ($PSCmdlet.ParameterSetName -eq 'File')
+    {
+        [String] $DSCConfigContent = Get-Content -Path $DSCConfigFile -RAW
+    } # if
     $Regex = "Import\-DscResource\s(?:\-ModuleName\s)?'?`"?([A-Za-z0-9._-]+)`"?'?((\s-ModuleVersion)?\s?'?`"?([0-9.]+)`"?`?)?"
-    $Matches = [regex]::matches($Content, $Regex, 'IgnoreCase')
+    $Matches = [regex]::matches($DSCConfigContent, $Regex, 'IgnoreCase')
     foreach ($Match in $Matches)
     {
         $ModuleName = $Match.Groups[1].Value
-        if ($ModuleName -ne 'PSDesiredStateConfiguration')
+        $ModuleVersion = $Match.Groups[4].Value
+        # Make sure this module isn't already in the list
+        if ($ModuleName -notin $Modules.ModuleName)
         {
-            $ModuleVersion = $Match.Groups[4].Value
-            # Make sure this module isn't already in the list
-            if ($ModuleName -notin $Modules)
+            $Module = New-Object -TypeName LabDSCModule
+            $Module.ModuleName = $ModuleName
+            if (-not [String]::IsNullOrWhitespace($ModuleVersion))
             {
-                $Module = New-Object -TypeName LabDSCModule
-                $Module.ModuleName = $ModuleName
-                if (-not [String]::IsNullOrWhitespace($ModuleVersion))
-                {
-                    $Module.ModuleVersion = $ModuleVersion
-                } # 
-                $Modules += @( $Module ) 
-            } # if
+                $Module.ModuleVersion = $ModuleVersion
+            } # 
+            $Modules += @( $Module ) 
         } # if
     } # foreach
     # Add the xNetworking DSC Resource because it is always used

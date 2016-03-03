@@ -55,6 +55,17 @@ InModuleScope LabBuilder {
                 [String]::Compare((Get-Content -Path "$Global:ArtifactPath\ExpectedDSCModules.json"),$ExpectedDSCModules,$true) | Should Be 0
             }
         }
+        Context 'Called with Test DSC Resource Content' {
+            It 'Returns DSCModules Object that matches Expected Object' {
+                $Content = Get-Content -Path (Join-Path -Path $Global:TestConfigPath -ChildPath 'dsclibrary\PesterTest.DSC.ps1') -RAW
+                $DSCModules = GetModulesInDSCConfig `
+                    -DSCConfigContent $Content
+
+                Set-Content -Path "$Global:ArtifactPath\ExpectedDSCModules.json" -Value ($DSCModules | ConvertTo-Json -Depth 4)
+                $ExpectedDSCModules = Get-Content -Path "$Global:ExpectedContentPath\ExpectedDSCModules.json"
+                [String]::Compare((Get-Content -Path "$Global:ArtifactPath\ExpectedDSCModules.json"),$ExpectedDSCModules,$true) | Should Be 0
+            }
+        }
     }
     
     Describe 'CreateDSCMOFFiles' -Tags 'Incomplete' {
