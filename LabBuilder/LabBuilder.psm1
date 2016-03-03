@@ -1412,6 +1412,11 @@ function Get-LabVMTemplate {
                     -Leaf
             } 
         }
+        elseif ($VMTemplate.SourceVHD)
+        {
+            # A SourceVHD is already set - 
+            # Usually because it was pulled From a Hyper-V VM template.
+        }
         else
         {
             # Neither a SourceVHD or TemplateVHD was provided
