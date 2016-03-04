@@ -52,8 +52,11 @@ InModuleScope LabBuilder {
                 $DSCModules = GetModulesInDSCConfig `
                     -DSCConfigFile (Join-Path -Path $Global:TestConfigPath -ChildPath 'dsclibrary\PesterTest.DSC.ps1')
 
-                Set-Content -Path "$Global:ArtifactPath\ExpectedDSCModules.json" -Value ($DSCModules | ConvertTo-Json -Depth 4)
-                $ExpectedDSCModules = Get-Content -Path "$Global:ExpectedContentPath\ExpectedDSCModules.json"
+                Set-Content `
+                    -Path "$Global:ArtifactPath\ExpectedDSCModules.json" `
+                    -Value ($DSCModules | ConvertTo-Json -Depth 4)
+                $ExpectedDSCModules = Get-Content `
+                    -Path "$Global:ExpectedContentPath\ExpectedDSCModules.json"
                 [String]::Compare((Get-Content -Path "$Global:ArtifactPath\ExpectedDSCModules.json"),$ExpectedDSCModules,$true) | Should Be 0
             }
         }
@@ -63,7 +66,9 @@ InModuleScope LabBuilder {
                 $DSCModules = GetModulesInDSCConfig `
                     -DSCConfigContent $Content
 
-                Set-Content -Path "$Global:ArtifactPath\ExpectedDSCModules.json" -Value ($DSCModules | ConvertTo-Json -Depth 4)
+                Set-Content `
+                    -Path "$Global:ArtifactPath\ExpectedDSCModules.json" `
+                    -Value ($DSCModules | ConvertTo-Json -Depth 4)
                 $ExpectedDSCModules = Get-Content -Path "$Global:ExpectedContentPath\ExpectedDSCModules.json"
                 [String]::Compare((Get-Content -Path "$Global:ArtifactPath\ExpectedDSCModules.json"),$ExpectedDSCModules,$true) | Should Be 0
             }
