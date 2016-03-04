@@ -1,4 +1,4 @@
-<#########################################################################################################################################
+<###################################################################################################
 DSC Template Configuration File For use by LabBuilder
 .Title
     MEMBER_FAILOVERCLUSTER_HV
@@ -9,12 +9,13 @@ DSC Template Configuration File For use by LabBuilder
     DomainName = "LABBUILDER.COM"
     DomainAdminPassword = "P@ssword!1"
     PSDscAllowDomainUser = $True
-#########################################################################################################################################>
+###################################################################################################>
+
 Configuration MEMBER_FAILOVERCLUSTER_HV
 {
-    Import-DscResource -ModuleName 'PSDesiredStateConfiguration' -ModuleVersion 1.1
-	Import-DscResource -ModuleName xComputerManagement -ModuleVersion 1.4.0.0 # Current as of 8 Feb 2016
-    Import-DscResource -ModuleName xPSDesiredStateConfiguration -ModuleVersion 3.7.0.0 # Current as of 28 Feb 2016
+    Import-DscResource -ModuleName 'PSDesiredStateConfiguration'
+    Import-DscResource -ModuleName xComputerManagement
+    Import-DscResource -ModuleName xPSDesiredStateConfiguration
     Node $AllNodes.NodeName {
         # Assemble the Local Admin Credentials
         If ($Node.LocalAdminPassword) {
@@ -50,14 +51,14 @@ Configuration MEMBER_FAILOVERCLUSTER_HV
         RetryIntervalSec  = 15
         RetryCount        = 60
         }
-		
+        
         # Join this Server to the Domain so that it can be an Enterprise CA.
-		xComputer JoinDomain 
-		{ 
-			Name          = $Node.NodeName
-			DomainName    = $Node.DomainName
-			Credential    = $DomainAdminCredential 
-			DependsOn = "[WaitForAll]DC" 
-		}
+        xComputer JoinDomain 
+        { 
+            Name          = $Node.NodeName
+            DomainName    = $Node.DomainName
+            Credential    = $DomainAdminCredential 
+            DependsOn = "[WaitForAll]DC" 
+        }
     }
 }

@@ -1,4 +1,4 @@
-<#########################################################################################################################################
+<###################################################################################################
 DSC Template Configuration File For use by LabBuilder
 .Title
     MEMBER_FAILOVERCLUSTER_FS
@@ -12,13 +12,14 @@ DSC Template Configuration File For use by LabBuilder
     ServerTargetName = 'sa-foc-target'
     TargetPortalAddress = '192.168.129.24'
     InitiatorPortalAddress = '192.168.129.28'
-#########################################################################################################################################>
+###################################################################################################>
+
 Configuration MEMBER_FAILOVERCLUSTER_FS
 {
-    Import-DscResource -ModuleName 'PSDesiredStateConfiguration' -ModuleVersion 1.1
-	Import-DscResource -ModuleName xComputerManagement -ModuleVersion 1.4.0.0 # Current as of 8 Feb 2016
-    Import-DscResource -ModuleName xPSDesiredStateConfiguration -ModuleVersion 3.7.0.0 # Current as of 28 Feb 2016
-	Import-DscResource -ModuleName ciscsi -ModuleVersion 1.0.0.14  # Current as of 8 Feb 2016
+    Import-DscResource -ModuleName 'PSDesiredStateConfiguration'
+    Import-DscResource -ModuleName xComputerManagement
+    Import-DscResource -ModuleName xPSDesiredStateConfiguration
+    Import-DscResource -ModuleName ciscsi
     Node $AllNodes.NodeName {
         # Assemble the Local Admin Credentials
         If ($Node.LocalAdminPassword) {
@@ -48,15 +49,15 @@ Configuration MEMBER_FAILOVERCLUSTER_FS
         RetryIntervalSec  = 15
         RetryCount        = 60
         }
-		
+        
         # Join this Server to the Domain so that it can be an Enterprise CA.
-		xComputer JoinDomain 
-		{ 
-			Name          = $Node.NodeName
-			DomainName    = $Node.DomainName
-			Credential    = $DomainAdminCredential 
-			DependsOn = "[WaitForAll]DC" 
-		}
+        xComputer JoinDomain 
+        { 
+            Name          = $Node.NodeName
+            DomainName    = $Node.DomainName
+            Credential    = $DomainAdminCredential 
+            DependsOn = "[WaitForAll]DC" 
+        }
 
         if ($Node.ServerTargetName)
         {
@@ -88,6 +89,6 @@ Configuration MEMBER_FAILOVERCLUSTER_FS
                 IsPersistent = $true 
                 DependsOn = "[WaitForAny]WaitForiSCSIServerTarget" 
             } # End of ciSCSITarget Resource
-        }	
+        }    
     }
 }
