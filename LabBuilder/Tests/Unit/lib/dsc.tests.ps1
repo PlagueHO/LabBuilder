@@ -99,7 +99,9 @@ InModuleScope LabBuilder {
 
                 Set-Content -Path "$Global:ArtifactPath\ExpectedDSCConfig.txt" -Value $DSCConfig
                 $ExpectedDSCConfig = Get-Content -Path "$Global:ExpectedContentPath\ExpectedDSCConfig.txt"
-                [String]::Compare((Get-Content -Path "$Global:ArtifactPath\ExpectedDSCConfig.txt"),$ExpectedDSCConfig,$true) | Should Be 0
+                @(Compare-Object `
+                    -ReferenceObject $ExpectedDSCConfig `
+                    -DifferenceObject (Get-Content -Path "$Global:ArtifactPath\ExpectedDSCConfig.txt")).Count  | Should Be 0 
             }
         }
         Context 'Called with Test DSC Resource Content' {
@@ -111,7 +113,9 @@ InModuleScope LabBuilder {
 
                 Set-Content -Path "$Global:ArtifactPath\ExpectedDSCConfig.txt" -Value $DSCConfig
                 $ExpectedDSCConfig = Get-Content -Path "$Global:ExpectedContentPath\ExpectedDSCConfig.txt"
-                [String]::Compare((Get-Content -Path "$Global:ArtifactPath\ExpectedDSCConfig.txt"),$ExpectedDSCConfig,$true) | Should Be 0
+                @(Compare-Object `
+                    -ReferenceObject $ExpectedDSCConfig `
+                    -DifferenceObject (Get-Content -Path "$Global:ArtifactPath\ExpectedDSCConfig.txt")).Count  | Should Be 0 
             }
         }
     }
