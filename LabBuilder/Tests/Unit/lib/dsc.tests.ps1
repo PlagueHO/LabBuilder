@@ -113,14 +113,9 @@ InModuleScope LabBuilder {
 
                 Set-Content -Path "$Global:ArtifactPath\ExpectedDSCConfig.txt" -Value $DSCConfig
                 $ExpectedDSCConfig = Get-Content -Path "$Global:ExpectedContentPath\ExpectedDSCConfig.txt"
-                $Compare = (Compare-Object `
+                @(Compare-Object `
                     -ReferenceObject $ExpectedDSCConfig `
-                    -DifferenceObject (Get-Content -Path "$Global:ArtifactPath\ExpectedDSCConfig.txt"))
-                foreach ($Cmp in $Compare)
-                {
-                    Write-Verbose -Verbose $Cmp                
-                }
-                $Compare.Count  | Should Be 0 
+                    -DifferenceObject (Get-Content -Path "$Global:ArtifactPath\ExpectedDSCConfig.txt")).Count  | Should Be 0 
             }
         }
     }
