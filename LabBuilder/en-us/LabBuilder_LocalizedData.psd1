@@ -82,6 +82,7 @@ ConvertFrom-StringData -StringData @'
     BootPhaseStartVMsTimeoutError=One or more Virtual Machines with Bootorder '{0}' failed to start completely in the required time.
     BootPhaseStopVMsTimeoutError=One or more Virtual Machines with Bootorder '{0}' failed to stop completely in the required time.
     ConfigurationXMLValidationError=Lab Configuration XML '{0}'- {1}.
+    DSCConfiguartionMissingError=Start of Configuration could not be correctly identified in DSC Config.
 
     ImportingLibFileMessage=Importing function library '{0}'.
     InstallingHyperVComponentsMesage=Installing {0} Hyper-V Components.

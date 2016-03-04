@@ -3,43 +3,179 @@
     Get a list of all Resources imported in a DSC Config
 .DESCRIPTION
     Uses RegEx to pull a list of Resources that are imported in a DSC Configuration using the
-    Import-DSCResource cmdlet
+    Import-DSCResource cmdlet.
+
+    If The -ModuleVersion parameter is included then the ModuleVersion property in the returned
+    LabDSCModule object will be set, otherwise it will be null.
     
     The xNetworking will always be included and the PSDesiredConfigration will always be excluded.
 .PARAMETER DSCConfigFile
-    Contains the path to the DSC Config file to extract resource module names from
+    Contains the path to the DSC Config file to extract resource module names from.
+.PARAMETER DSCConfigContent
+    Contains the content of the DSC Config to extract resource module names from.
 .EXAMPLE
     GetModulesInDSCConfig -DSCConfigFile c:\mydsc\Server01.ps1
     Return the DSC Resource module list from file c:\mydsc\server01.ps1
+.EXAMPLE
+    GetModulesInDSCConfig -DSCConfigContent $DSCConfig
+    Return the DSC Resource module list from the DSC Config in $DSCConfig.
 .OUTPUTS
-    An array of strings containing resource module names
+    An array of LabDSCModule objects containing the DSC Resource modules required by this DSC
+    configuration file.
 #>
 function GetModulesInDSCConfig()
 {
-    [CmdletBinding()]
-    [OutputType([String[]])]
+   [CmdLetBinding(DefaultParameterSetName="Content")]
+   [OutputType([Object[]])]
     Param
     (
-        [Parameter(Mandatory=$True)]
-        [ValidateNotNullOrEmpty()]	
+        [parameter(
+            Position=1,
+            ParameterSetName="Content",
+            Mandatory=$true)]
+        [String] $DSCConfigContent,
+
+        [parameter(
+            Position=2,
+            ParameterSetName="File",
+            Mandatory=$true)]
+        [ValidateNotNullOrEmpty()]
         [String] $DSCConfigFile
     )
-    [String[]] $Modules = $Null
-    [String] $Content = Get-Content -Path $DSCConfigFile
-    $Regex = "Import\-DscResource\s(?:\-ModuleName\s)?'?`"?([A-Za-z0-9._-]+)`"?'?"
-    $Matches = [regex]::matches($Content, $Regex, 'IgnoreCase')
+    [LabDSCModule[]] $Modules = $Null
+    if ($PSCmdlet.ParameterSetName -eq 'File')
+    {
+        [String] $DSCConfigContent = Get-Content -Path $DSCConfigFile -RAW
+    } # if
+    $Regex = "[ \t]*?Import\-DscResource[ \t]+(?:\-ModuleName[ \t])?'?`"?([A-Za-z0-9._-]+)`"?'?(([ \t]+-ModuleVersion)?[ \t]+'?`"?([0-9.]+)`"?`?)?[ \t]*?[\r\n]+?"
+    $Matches = [regex]::matches($DSCConfigContent, $Regex, 'IgnoreCase')
     foreach ($Match in $Matches)
     {
-        if ($Match.Groups[1].Value -ne 'PSDesiredStateConfiguration')
+        $ModuleName = $Match.Groups[1].Value
+        $ModuleVersion = $Match.Groups[4].Value
+        # Make sure this module isn't already in the list
+        if ($ModuleName -notin $Modules.ModuleName)
         {
-            $Modules += $Match.Groups[1].Value
-        } # If
-    } # Foreach
-    # Add the xNetworking DSC Resource because it is always used
-    $Modules += 'xNetworking'
+            $Module = New-Object -TypeName LabDSCModule
+            $Module.ModuleName = $ModuleName
+            if (-not [String]::IsNullOrWhitespace($ModuleVersion))
+            {
+                $Module.ModuleVersion = $ModuleVersion
+            } # if
+            $Modules += @( $Module )
+        } # if
+    } # foreach
     Return $Modules
 } # GetModulesInDSCConfig
 
+
+<#
+.SYNOPSIS
+    Sets the Modules Resources that should be imported in a DSC Config.
+.DESCRIPTION
+    It will completely replace the list of Imported DSCResources with this new list.
+.PARAMETER DSCConfigFile
+    Contains the path to the DSC Config file to set resource module names in.
+.PARAMETER DSCConfigContent
+    Contains the content of the DSC Config to set resource module names in.
+.PARAMETER Modules
+    Contains an array of LabDSCModule objects to replace set in the Configuration.
+.EXAMPLE
+    SetModulesInDSCConfig -DSCConfigFile c:\mydsc\Server01.ps1 -Modules $Modules
+    Set the DSC Resource module in the content from file c:\mydsc\server01.ps1
+.EXAMPLE
+    SetModulesInDSCConfig -DSCConfigContent $DSCConfig -Modules $Modules
+    Set the DSC Resource module in the content $DSCConfig
+.OUTPUTS
+    A string containing the content of the DSC Config file with the updated
+    module names in it.
+#>
+function SetModulesInDSCConfig()
+{
+   [CmdLetBinding(DefaultParameterSetName="Content")]
+   [OutputType([String])]
+    Param
+    (
+        [parameter(
+            Position=1,
+            ParameterSetName="Content",
+            Mandatory=$true)]
+        [String] $DSCConfigContent,
+
+        [parameter(
+            Position=2,
+            ParameterSetName="File",
+            Mandatory=$true)]
+        [ValidateNotNullOrEmpty()]
+        [String] $DSCConfigFile,
+
+        [parameter(
+            Position=3,
+            Mandatory=$true)]
+        [ValidateNotNullOrEmpty()]
+        [LabDSCModule[]] $Modules
+    )
+    if ($PSCmdlet.ParameterSetName -eq 'File')
+    {
+        [String] $DSCConfigContent = Get-Content -Path $DSCConfigFile -RAW
+    } # if
+    $Regex = "[ \t]*?Import\-DscResource[ \t]+(?:\-ModuleName[ \t])?'?`"?([A-Za-z0-9._-]+)`"?'?(([ \t]+-ModuleVersion)?[ \t]+'?`"?([0-9.]+)`"?`?)?[ \t]*?[\r\n]+?"
+    $Matches = [regex]::matches($DSCConfigContent, $Regex, 'IgnoreCase')
+    foreach ($Module in $Modules)
+    {
+        $ImportCommand = "Import-DscResource -ModuleName '$($Module.ModuleName)'"
+        if ($Module.ModuleVersion)
+        {
+            $ImportCommand = "$ImportCommand -ModuleVersion '$($Module.ModuleVersion)'"
+        } # if
+        $ImportCommand = "    $ImportCommand"
+        # is this module already in there?
+        [Boolean] $Found = $False
+        foreach ($Match in $Matches)
+        {
+            if ($Match.Groups[1].Value -eq $Module.ModuleName)
+            {
+                # Found the module - so replace it
+                $DSCConfigContent = ("{0}{1}{2}") `
+                    -f $DSCConfigContent.Substring(0,$Match.Index),`
+                    $ImportCommand,`
+                    $DSCConfigContent.Substring($Match.Index+$Match.Length)
+                $Matches = [regex]::matches($DSCConfigContent, $Regex, 'IgnoreCase')
+                $Found = $True
+                break
+            } # if
+        } # foreach
+        if (-not $Found)
+        {
+            if ($Matches.Count -gt 0)
+            {
+                # Add this to the end of the existing Import-DSCResource lines
+                $Match = $Matches[$Matches.count-1]
+            }
+            else
+            {
+                # There are no existing DSC Resource lines, so add it after
+                # Configuration ... { line
+                $Match = [regex]::matches($DSCConfigContent, "[ \t]*?Configuration[ \t]+?'?`"?[A-Za-z0-9._-]+`"?'?[ \t]*?[\r\n]*?{[\r\n]?", 'IgnoreCase')
+                if (-not $Match)
+                {
+                    $ExceptionParameters = @{
+                        errorId = 'DSCConfiguartionMissingError'
+                        errorCategory = 'InvalidArgument'
+                        errorMessage = $($LocalizedData.DSCConfiguartionMissingError)
+                    }
+                    ThrowException @ExceptionParameters
+                }
+            } # if
+            $DSCConfigContent = ("{0}{1}{2}") `
+                -f $DSCConfigContent.Substring(0,$Match.Index+$Match.Length),`
+                $ImportCommand,`
+                $DSCConfigContent.Substring($Match.Index+$Match.Length)
+            $Matches = [regex]::matches($DSCConfigContent, $Regex, 'IgnoreCase')
+        } # Module not found so add it to the end
+    } # foreach
+    Return $DSCConfigContent
+} # SetModulesInDSCConfig
 
 
 <#
@@ -99,26 +235,57 @@ function CreateDSCMOFFiles {
     Write-Verbose -Message $($LocalizedData.DSCConfigIdentifyModulesMessage `
         -f $VM.DSCConfigFile,$VM.Name)
 
-    $DSCModules = GetModulesInDSCConfig -DSCConfigFile $($VM.DSCConfigFile)
-    foreach ($ModuleName in $DSCModules)
+    [String] $DSCConfigContent = Get-Content `
+        -Path $($VM.DSCConfigFile) `
+        -RAW
+    [LabDSCModule[]] $DSCModules = GetModulesInDSCConfig `
+        -DSCConfigContent $DSCConfigContent
+        
+    # Add the xNetworking DSC Resource because it is always used
+    $Module = New-Object -TypeName LabDSCModule
+    $Module.ModuleName = 'xNetworking'
+    $DSCModules += @( $Module ) 
+
+    foreach ($DSCModule in $DSCModules)
     {
-        if (($InstalledModules | Where-Object -Property Name -EQ $ModuleName).Count -eq 0)
+        $ModuleName = $DSCModule.ModuleName
+        $ModuleSplat = @{ Name = $ModuleName }
+        $ModuleVersion = $DSCModule.Version
+        if ($ModuleVersion)
+        {
+            $FilterScript = { ($_.Name -eq $ModuleName) -and ($ModuleVersion -eq $_.Version) }
+            $ModuleSplat += @{ RequiredVersion = $ModuleVersion }
+        }
+        else
+        {
+            $FilterScript = { ($_.Name -eq $ModuleName) }
+        }
+        $Module = ($InstalledModules | Where-Object -FilterScript $FilterScript | Sort-Object -Property Version -Descending | Select-Object -First 1)
+        
+        if ($Module)
+        {
+            # The module already exists, load the version number into the Module
+            # to force the version number to be set in the DSC Config file
+            $DSCModule.ModuleVersion = $Module.Version
+        }
+        else
         {
             # The Module isn't available on this computer, so try and install it
             Write-Verbose -Message $($LocalizedData.DSCConfigSearchingForModuleMessage `
                 -f $VM.DSCConfigFile,$VM.Name,$ModuleName)
 
-            $NewModule = Find-Module -Name $ModuleName
+            $NewModule = Find-Module `
+                @ModuleSplat
             if ($NewModule)
             {
                 Write-Verbose -Message $($LocalizedData.DSCConfigInstallingModuleMessage `
                     -f $VM.DSCConfigFile,$VM.Name,$ModuleName)
 
-                Try
+                try
                 {
                     $NewModule | Install-Module
                 }
-                Catch
+                catch
                 {
                     $ExceptionParameters = @{
                         errorId = 'DSCModuleDownloadError'
@@ -129,7 +296,7 @@ function CreateDSCMOFFiles {
                     ThrowException @ExceptionParameters
                 }
             }
-            Else
+            else
             {
                 $ExceptionParameters = @{
                     errorId = 'DSCModuleDownloadError'
@@ -139,7 +306,8 @@ function CreateDSCMOFFiles {
                 }
                 ThrowException @ExceptionParameters
             }
-        } # If
+            $DSCModule.ModuleVersion = $NewModule.Version
+        } # if
 
         Write-Verbose -Message $($LocalizedData.DSCConfigSavingModuleMessage `
             -f $VM.DSCConfigFile,$VM.Name,$ModuleName)
@@ -153,7 +321,7 @@ function CreateDSCMOFFiles {
                 -ChildPath $ModuleName
             if (Test-Path -Path $ModulePath)
             {
-                Break
+                break
             } # If
         } # Foreach
         if (-not (Test-Path -Path $ModulePath))
@@ -188,7 +356,7 @@ function CreateDSCMOFFiles {
         | Where-Object { $_.FriendlyName -eq $Script:DSCCertificateFriendlyName } `
         | Remove-Item
     
-    # Add the VM Self-Signed Certificate to the Local Machine store and get the Thumbprint	
+    # Add the VM Self-Signed Certificate to the Local Machine store and get the Thumbprint    
     [String] $CertificateFile = Join-Path `
         -Path $VMLabBuilderFiles `
         -ChildPath $Script:DSCEncryptionCert
@@ -225,7 +393,7 @@ function CreateDSCMOFFiles {
     # A DSC Config File was provided so create a MOF File out of it.
     Write-Verbose -Message $($LocalizedData.DSCConfigCreatingMOFMessage `
         -f $VM.DSCConfigFile,$VM.Name)
-    
+
     # Now create the Networking DSC Config file
     [String] $DSCNetworkingConfig = GetDSCNetworkingConfig `
         -Lab $Lab -VM $VM
@@ -239,19 +407,21 @@ function CreateDSCMOFFiles {
     [String] $DSCFile = Join-Path `
         -Path $VMLabBuilderFiles `
         -ChildPath 'DSC.ps1'
-    [String] $DSCContent = Get-Content `
-        -Path $VM.DSCConfigFile `
-        -Raw
-    
-    if (-not ($DSCContent -match 'Networking Network {}'))
+
+    # Set the Modules List in the DSC Configuration
+    $DSCConfigContent = SetModulesInDSCConfig `
+        -DSCConfigContent $DSCConfigContent `
+        -Modules $DSCModules
+
+    if (-not ($DSCConfigContent -match 'Networking Network {}'))
     {
         # Add the Networking Configuration item to the base DSC Config File
         # Find the location of the line containing "Node $AllNodes.NodeName {"
         [String] $Regex = '\s*Node\s.*{.*'
-        $Matches = [regex]::matches($DSCContent, $Regex, 'IgnoreCase')
+        $Matches = [regex]::matches($DSCConfigContent, $Regex, 'IgnoreCase')
         if ($Matches.Count -eq 1)
         {
-            $DSCContent = $DSCContent.`
+            $DSCConfigContent = $DSCConfigContent.`
                 Insert($Matches[0].Index+$Matches[0].Length,"`r`nNetworking Network {}`r`n")
         }
         Else
@@ -269,7 +439,7 @@ function CreateDSCMOFFiles {
     # Save the DSC Content
     $null = Set-Content `
         -Path $DSCFile `
-        -Value $DSCContent `
+        -Value $DSCConfigContent `
         -Force
 
     # Hook the Networking DSC File into the main DSC File
@@ -679,34 +849,45 @@ function StartDSC {
             -and ($Session.State -eq 'Opened') `
             -and (-not $ModuleCopyComplete))
         {
-            $DSCModules = GetModulesInDSCConfig -DSCConfigFile $($VM.DSCConfigFile)
-            foreach ($ModuleName in $DSCModules)
+            [String] $DSCContent = Get-Content `
+                -Path $($VM.DSCConfigFile) `
+                -RAW
+            [LabDSCModule[]] $DSCModules = GetModulesInDSCConfig `
+                -DSCConfigContent $DSCContent
+            foreach ($DSCModule in $DSCModules)
             {
-                try
+                $ModuleName = $DSCModule.ModuleName
+                # Upload all but PSDesiredStateConfiguration because it
+                # should always exist on client node.
+                if ($ModuleName -ne 'PSDesiredStateConfiguration')
                 {
-                    Write-Verbose -Message $($LocalizedData.CopyingFilesToVMMessage `
-                        -f $VM.Name,"DSC Module $ModuleName")
+                    $ModuleVersion = $DSCModule.Version
+                    try
+                    {
+                        Write-Verbose -Message $($LocalizedData.CopyingFilesToVMMessage `
+                            -f $VM.Name,"DSC Module $ModuleName")
 
-                    $null = Copy-Item `
-                        -Path (Join-Path `
-                            -Path $VMLabBuilderFiles `
-                            -ChildPath "DSC Modules\$ModuleName\") `
-                        -Destination "$($env:ProgramFiles)\WindowsPowerShell\Modules\" `
-                        -ToSession $Session `
-                        -Force `
-                        -Recurse `
-                        -ErrorAction Stop
-                }
-                catch
-                {
-                    Write-Verbose -Message $($LocalizedData.CopyingFilesToVMFailedMessage `
-                        -f $VM.Name,"DSC Module $ModuleName",$Script:RetryConnectSeconds)
+                        $null = Copy-Item `
+                            -Path (Join-Path `
+                                -Path $VMLabBuilderFiles `
+                                -ChildPath "DSC Modules\$ModuleName\") `
+                            -Destination "$($env:ProgramFiles)\WindowsPowerShell\Modules\" `
+                            -ToSession $Session `
+                            -Force `
+                            -Recurse `
+                            -ErrorAction Stop
+                    }
+                    catch
+                    {
+                        Write-Verbose -Message $($LocalizedData.CopyingFilesToVMFailedMessage `
+                            -f $VM.Name,"DSC Module $ModuleName",$Script:RetryConnectSeconds)
 
-                    Start-Sleep -Seconds $Script:RetryConnectSeconds
-                } # Try
-            } # Foreach
+                        Start-Sleep -Seconds $Script:RetryConnectSeconds
+                    } # try
+                } # if
+            } # foreach
             $ModuleCopyComplete = $True
-        } # If
+        } # ff
 
         # If the copy didn't complete and we're out of time throw an exception
         if ((-not $ModuleCopyComplete) `
