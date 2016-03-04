@@ -7,8 +7,6 @@
 
     If The -ModuleVersion parameter is included then the ModuleVersion property in the returned
     LabDSCModule object will be set, otherwise it will be null.
-    
-    The xNetworking will always be included and the PSDesiredConfigration will always be excluded.
 .PARAMETER DSCConfigFile
     Contains the path to the DSC Config file to extract resource module names from.
 .PARAMETER DSCConfigContent
@@ -854,6 +852,12 @@ function StartDSC {
                 -RAW
             [LabDSCModule[]] $DSCModules = GetModulesInDSCConfig `
                 -DSCConfigContent $DSCContent
+
+            # Add the xNetworking DSC Resource because it is always used
+            $Module = New-Object -TypeName LabDSCModule
+            $Module.ModuleName = 'xNetworking'
+            $DSCModules += @( $Module ) 
+
             foreach ($DSCModule in $DSCModules)
             {
                 $ModuleName = $DSCModule.ModuleName
