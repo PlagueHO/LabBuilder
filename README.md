@@ -511,7 +511,7 @@ Versions
 * CreateDSCMOFFiles: Updated to set Module versions in DSC Config files.
 * DSC Library all configurations have Module version numbers removed.
 * Test Sample file code updated to remove switches when lab uninstalled.
-
+* Uninstall-Lab: Management Switch automatically removed when Lab uninstalled. 
 
 ### 0.5.0.0
 * BREKAING: Renamed Config parameter to Lab parameter to indicate the object is actually an object that also stores Lab state information.
