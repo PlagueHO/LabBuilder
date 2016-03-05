@@ -628,15 +628,15 @@ Note: Currently, this is only used to install packages on Nano Server Virtual Ma
                 </xs:complexType>
               </xs:element>
             </xs:sequence>
-            <xs:attribute name="fromvms" type="xs:string" use="optional">            
+            <xs:attribute name="fromvm" type="xs:string" use="optional">            
               <xs:annotation>
                 <xs:documentation>
 This optional attribute enables the list of Template Virtual Machines to be pulled from the Virtual Machines defined in Hyper-V.
 The list of Hyper-V Virtual Machines to use as templates can be specified using a wild card value. E.g. 'Template *'
-If specified, when the Lab is installed the list of available Virtual Machine Templates will be pulled from Hyper-V by matching the names against the FromVMs attribute.
+If specified, when the Lab is installed the list of available Virtual Machine Templates will be pulled from Hyper-V by matching the names against the FromVM attribute.
 After the list of Hyper-V Virtual Machines to use a templates is pulled in, any Templates defined in this container will be merged into this list. 
                 </xs:documentation>
-                <xs:appinfo>fromvms="Template *"</xs:appinfo>
+                <xs:appinfo>fromvm="Template *"</xs:appinfo>
               </xs:annotation>
             </xs:attribute>
           </xs:complexType>

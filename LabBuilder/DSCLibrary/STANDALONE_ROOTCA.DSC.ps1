@@ -1,4 +1,4 @@
-<#########################################################################################################################################
+<###################################################################################################
 DSC Template Configuration File For use by LabBuilder
 .Title
     STANDALONE_ROOTCA
@@ -17,13 +17,13 @@ DSC Template Configuration File For use by LabBuilder
             ValidityPeriod = 'Years'
             AuditFilter = 127
             SubCAs = @('SA_SUBCA')
-#########################################################################################################################################>
+###################################################################################################>
 
 Configuration STANDALONE_ROOTCA
 {
-    Import-DscResource -ModuleName 'PSDesiredStateConfiguration' -ModuleVersion 1.1
-    Import-DscResource -ModuleName xAdcsDeployment -ModuleVersion 0.2.0.0 #Current as of 28 Feb 2016
-	Import-DscResource -ModuleName xPSDesiredStateConfiguration -ModuleVersion 3.7.0.0 # Current as of 28 Feb 2016
+    Import-DscResource -ModuleName 'PSDesiredStateConfiguration'
+    Import-DscResource -ModuleName xAdcsDeployment
+    Import-DscResource -ModuleName xPSDesiredStateConfiguration
     Node $AllNodes.NodeName {
         # Assemble the Local Admin Credentials
         If ($Node.LocalAdminPassword) {
@@ -46,11 +46,11 @@ Configuration STANDALONE_ROOTCA
         }
         
         WindowsFeature InstallWebMgmtService
-		{ 
-			Ensure = "Present" 
-			Name = "Web-Mgmt-Service" 
+        { 
+            Ensure = "Present" 
+            Name = "Web-Mgmt-Service" 
             DependsOn = '[WindowsFeature]ADCSWebEnrollment'
-		}
+        }
 
         # Create the CAPolicy.inf file which defines basic properties about the ROOT CA certificate
         File CAPolicy

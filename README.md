@@ -505,6 +505,13 @@ Versions
 * VM\SetupComplete attribute supports rooted paths.
 * DSC\ConfigFile Lab setting supports rooted paths.
 * VM\UseDifferencingBootDisk default changed to 'Y'.
+* GetModulesInDSCConfig: Returns Array of objects containing ModuleName and ModuleVersion.
+* GetModulesInDSCConfig: Now returns PSDesiredStateConfiguration module if listed -expected that calling function will ignore if required.
+* SetModulesInDSCConfig: Added function to set the Module versions in a DSC Config.
+* CreateDSCMOFFiles: Updated to set Module versions in DSC Config files.
+* DSC Library all configurations have Module version numbers removed.
+* Test Sample file code updated to remove switches when lab uninstalled.
+* Uninstall-Lab: Management Switch automatically removed when Lab uninstalled. 
 
 ### 0.5.0.0
 * BREKAING: Renamed Config parameter to Lab parameter to indicate the object is actually an object that also stores Lab state information.

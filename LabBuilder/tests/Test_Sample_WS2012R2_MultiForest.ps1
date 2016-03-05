@@ -1,5 +1,5 @@
 ﻿[String]$Script:ModulePath = "$PSScriptRoot\..\LabBuilder.psd1"
-[String]$Script:ConfigPath = "$PSScriptRoot\..\Samples\Sample_WS2012R2_DomainClustering.xml"
+[String]$Script:ConfigPath = "$PSScriptRoot\..\Samples\Sample_WS2012R2_MultiForest.xml"
 ####################################################################################################
 Function Test-StartLabVM {
     Param (

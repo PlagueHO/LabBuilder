@@ -1,4 +1,4 @@
-<#########################################################################################################################################
+<###################################################################################################
 DSC Template Configuration File For use by LabBuilder
 .Title
     STANDALONE_ROOTCA_NOSUBCA
@@ -9,12 +9,12 @@ DSC Template Configuration File For use by LabBuilder
             CADistinguishedNameSuffix = "DC=LABBUILDER,DC=COM"
             CRLPublicationURLs = "1:C:\Windows\system32\CertSrv\CertEnroll\%3%8%9.crl\n10:ldap:///CN=%7%8,CN=%2,CN=CDP,CN=Public Key Services,CN=Services,%6%10\n2:http://pki.labbuilder.com/CertEnroll/%3%8%9.crl"
             CACertPublicationURLs = "1:C:\Windows\system32\CertSrv\CertEnroll\%1_%3%4.crt\n2:ldap:///CN=%7,CN=AIA,CN=Public Key Services,CN=Services,%6%11\n2:http://pki.labbuilder.com/CertEnroll/%1_%3%4.crt"
-#########################################################################################################################################>
+###################################################################################################>
 
 Configuration STANDALONE_ROOTCA_NOSUBCA
 {
-    Import-DscResource -ModuleName 'PSDesiredStateConfiguration' -ModuleVersion 1.1
-    Import-DscResource -ModuleName xAdcsDeployment -ModuleVersion 0.2.0.0 #Current as of 28 Feb 2016
+    Import-DscResource -ModuleName 'PSDesiredStateConfiguration'
+    Import-DscResource -ModuleName xAdcsDeployment
     Node $AllNodes.NodeName {
         # Assemble the Local Admin Credentials
         If ($Node.LocalAdminPassword) {
@@ -37,11 +37,11 @@ Configuration STANDALONE_ROOTCA_NOSUBCA
         }
 
         WindowsFeature InstallWebMgmtService
-		{ 
-			Ensure = "Present" 
-			Name = "Web-Mgmt-Service" 
+        { 
+            Ensure = "Present" 
+            Name = "Web-Mgmt-Service" 
             DependsOn = '[WindowsFeature]ADCSWebEnrollment'
-		}        
+        }        
 
         # Create the CAPolicy.inf file which defines basic properties about the ROOT CA certificate
         File CAPolicy

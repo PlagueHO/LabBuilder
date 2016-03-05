@@ -157,3 +157,8 @@ class LabVM {
     [LabDSC] $DSC
     [String[]] $InstallMSU
 } # class LabVM
+
+class LabDSCModule {
+    [String] $ModuleName
+    [String] $ModuleVersion
+} # class LabDSCModule

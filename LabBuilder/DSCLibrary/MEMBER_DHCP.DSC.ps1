@@ -1,4 +1,4 @@
-<#########################################################################################################################################
+<###################################################################################################
 DSC Template Configuration File For use by LabBuilder
 .Title
     MEMBER_DHCP
@@ -7,13 +7,13 @@ DSC Template Configuration File For use by LabBuilder
 .Parameters:          
     DomainName = "LABBUILDER.COM"
     DomainAdminPassword = "P@ssword!1"
-#########################################################################################################################################>
+###################################################################################################>
 
 Configuration MEMBER_DHCP
 {
-    Import-DscResource -ModuleName 'PSDesiredStateConfiguration' -ModuleVersion 1.1
-	Import-DscResource -ModuleName xComputerManagement -ModuleVersion 1.4.0.0 # Current as of 8 Feb 2016
-	Import-DscResource -ModuleName xDHCPServer -ModuleVersion 1.3.0.0 # Current as of 8 Feb 2016
+    Import-DscResource -ModuleName 'PSDesiredStateConfiguration'
+    Import-DscResource -ModuleName xComputerManagement
+    Import-DscResource -ModuleName xDHCPServer
     Node $AllNodes.NodeName {
         # Assemble the Local Admin Credentials
         If ($Node.LocalAdminPassword) {
@@ -38,13 +38,13 @@ Configuration MEMBER_DHCP
         }
 
 
-		xComputer JoinDomain 
-		{ 
-			Name          = $Node.NodeName
-			DomainName    = $Node.DomainName
-			Credential    = $DomainAdminCredential 
-			DependsOn = "[WaitForAll]DC" 
-		}
+        xComputer JoinDomain 
+        { 
+            Name          = $Node.NodeName
+            DomainName    = $Node.DomainName
+            Credential    = $DomainAdminCredential 
+            DependsOn = "[WaitForAll]DC" 
+        }
 
         Script DHCPAuthorize
         {

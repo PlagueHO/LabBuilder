@@ -540,7 +540,7 @@ function Remove-LabSwitch {
                 }
             } # Switch
         } # if
-    } # foreach        
+    } # foreach
 } # Remove-LabSwitch
 #endregion
 
@@ -1411,6 +1411,11 @@ function Get-LabVMTemplate {
                     -Path $VMTemplate.sourcevhd `
                     -Leaf
             } 
+        }
+        elseif ($VMTemplate.SourceVHD)
+        {
+            # A SourceVHD is already set - 
+            # Usually because it was pulled From a Hyper-V VM template.
         }
         else
         {
@@ -4050,7 +4055,7 @@ Function Uninstall-Lab {
         {
             # Read the configuration
             $Lab = Get-Lab `
-                @PSBoundParameters             
+                @PSBoundParameters
         } # if
     } # begin
     
@@ -4118,8 +4123,19 @@ Function Uninstall-Lab {
                 } # if
             } # if
 
+            # Remove the LabBuilder Management Network switch
+            [String] $ManagementSwitchName = GetManagementSwitchName `
+                -Lab $Lab
+            if ((Get-VMSwitch | Where-Object -Property Name -eq $ManagementSwitchName).Count -ne 0)
+            {
+                $null = Remove-VMSwitch -Name $ManagementSwitchName
+
+                Write-Verbose -Message $($LocalizedData.RemovingLabManagementSwitchMessage `
+                    -f $ManagementSwitchName)
+            }
+
             Write-Verbose -Message $($LocalizedData.LabUninstallCompleteMessage `
-                -f $Lab.labbuilderconfig.name,$Lab.labbuilderconfig.settings.labpath )    
+                -f $Lab.labbuilderconfig.name,$Lab.labbuilderconfig.settings.labpath )
         } # if   
     } # process
 

@@ -1,4 +1,4 @@
-<#########################################################################################################################################
+<###################################################################################################
 DSC Template Configuration File For use by LabBuilder
 .Title
     MEMBER_SUBCA
@@ -14,14 +14,15 @@ DSC Template Configuration File For use by LabBuilder
           CACertPublicationURLs = "1:C:\Windows\system32\CertSrv\CertEnroll\%1_%3%4.crt\n2:ldap:///CN=%7,CN=AIA,CN=Public Key Services,CN=Services,%6%11\n2:http://pki.labbuilder.com/CertEnroll/%1_%3%4.crt"
           RootCAName = "SS_ROOTCA"
           RootCACommonName = "LABBUILDER.COM Root CA"
-#########################################################################################################################################>
+###################################################################################################>
+
 Configuration MEMBER_SUBCA
 {
-    Import-DscResource -ModuleName 'PSDesiredStateConfiguration' -ModuleVersion 1.1
-	Import-DscResource -ModuleName xComputerManagement -ModuleVersion 1.4.0.0 # Current as of 8 Feb 2016
-    Import-DscResource -ModuleName xAdcsDeployment -ModuleVersion  0.2.0.0 #Current as of 28 Feb 2016
-    Import-DscResource -ModuleName xPSDesiredStateConfiguration -ModuleVersion 3.7.0.0 # Current as of 28 Feb 2016
-    Import-DscResource -ModuleName xNetworking -ModuleVersion 2.7.0.0  #Current as of 13-Feb-2016
+    Import-DscResource -ModuleName 'PSDesiredStateConfiguration'
+    Import-DscResource -ModuleName xComputerManagement
+    Import-DscResource -ModuleName xAdcsDeployment
+    Import-DscResource -ModuleName xPSDesiredStateConfiguration
+    Import-DscResource -ModuleName xNetworking
     Node $AllNodes.NodeName {
         # Assemble the Local Admin Credentials
         If ($Node.LocalAdminPassword) {
@@ -83,15 +84,15 @@ Configuration MEMBER_SUBCA
         RetryIntervalSec  = 15
         RetryCount        = 60
         }
-		
+        
         # Join this Server to the Domain
-		xComputer JoinDomain 
-		{ 
-			Name          = $Node.NodeName
-			DomainName    = $Node.DomainName
-			Credential    = $DomainAdminCredential 
-			DependsOn = "[WaitForAll]DC" 
-		}
+        xComputer JoinDomain 
+        { 
+            Name          = $Node.NodeName
+            DomainName    = $Node.DomainName
+            Credential    = $DomainAdminCredential 
+            DependsOn = "[WaitForAll]DC" 
+        }
             
         # Create the CAPolicy.inf file that sets basic parameters for certificate issuance for this CA.
         File CAPolicy

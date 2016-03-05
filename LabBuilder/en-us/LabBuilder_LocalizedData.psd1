@@ -82,6 +82,7 @@ ConvertFrom-StringData -StringData @'
     BootPhaseStartVMsTimeoutError=One or more Virtual Machines with Bootorder '{0}' failed to start completely in the required time.
     BootPhaseStopVMsTimeoutError=One or more Virtual Machines with Bootorder '{0}' failed to stop completely in the required time.
     ConfigurationXMLValidationError=Lab Configuration XML '{0}'- {1}.
+    DSCConfiguartionMissingError=Start of Configuration could not be correctly identified in DSC Config.
 
     ImportingLibFileMessage=Importing function library '{0}'.
     InstallingHyperVComponentsMesage=Installing {0} Hyper-V Components.
@@ -100,6 +101,7 @@ ConvertFrom-StringData -StringData @'
     DownloadingLabResourcesMessage=Downloading Lab Resources.
     CreatingLabManagementSwitchMessage=Creating Lab Management Switch {0} on Vlan {1}.
     UpdatingLabManagementSwitchMessage=Updating Lab Management Switch {0} to Vlan {1}.
+    RemovingLabManagementSwitchMessage=Removing Lab Management Switch {0}.
     ModuleNotInstalledMessage=Module {0} ({1}) is not installed.
     DownloadingLabResourceWebMessage=Downloading Module {0} ({1}) from '{2}'.
     InstalledLabResourceWebMessage=Installed Module {0} ({1}) to '{2}'.
