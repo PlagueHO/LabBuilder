@@ -496,8 +496,7 @@ Versions
 * Get-Lab: Redundant checks for XML valid removed because convered by XSD schema validation.
 * Added Lib\Type.ps1 containing customg LabBuilder Classes and Enumerations.
 * Added functions for converting XSD schema to MD.
-* Configuration Schema updated.
-* DSC Resource Module version number added to all DSC Library configurations to resolve WMF 5.0 issue.
+* Configuration Schema: updated.
 * Fix to Nano Server Package caching bug.
 * DSC Library Domain Join process improved.
 * DSC\ConfigFile attribute supports rooted paths.
@@ -511,7 +510,10 @@ Versions
 * CreateDSCMOFFiles: Updated to set Module versions in DSC Config files.
 * DSC Library all configurations have Module version numbers removed.
 * Test Sample file code updated to remove switches when lab uninstalled.
-* Uninstall-Lab: Management Switch automatically removed when Lab uninstalled. 
+* Uninstall-Lab: Management Switch automatically removed when Lab uninstalled.
+* Configuration Schema: Added Resources\MSU.
+* Get-LabResourceModule: Function added.
+* Install-Lab: Fix CheckEnvironment bug.
 
 ### 0.5.0.0
 * BREKAING: Renamed Config parameter to Lab parameter to indicate the object is actually an object that also stores Lab state information.

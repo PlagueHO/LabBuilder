@@ -38,14 +38,19 @@ Enum LabFileSystem {
     ReFS = 4
 } # Enum LabFileSystem
 
-class LabModuleResource {
+class LabResourceModule {
     [String] $Name
     [String] $URL
     [String] $Folder
     [String] $MinimumVersion
-    [String] $MaximumVersion
     [String] $RequiredVersion
-} # class LabModuleResource
+} # class LabResourceModule
+
+class LabResourceMSU {
+    [String] $Name
+    [String] $URL
+    [String] $Path
+} # class LabResourceMSU
 
 class LabSwitchAdapter {
     [String] $Name

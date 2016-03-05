@@ -107,6 +107,35 @@ InModuleScope LabBuilder {
 
 
 
+#region LabResourceFunctions
+    Describe 'Get-LabResourceModule' {
+
+        Context 'Configuration passed with resource module missing Name.' {
+            It 'Throws a ResourceModuleNameIsEmptyError Exception' {
+                $Lab = Get-Lab -ConfigPath $Global:TestConfigOKPath
+                $Lab.labbuilderconfig.resources.module[0].RemoveAttribute('name')
+                $ExceptionParameters = @{
+                    errorId = 'ResourceModuleNameIsEmptyError'
+                    errorCategory = 'InvalidArgument'
+                    errorMessage = $($LocalizedData.ResourceModuleNameIsEmptyError)
+                }
+                $Exception = GetException @ExceptionParameters
+
+                { Get-LabResourceModule -Lab $Lab } | Should Throw $Exception
+            }
+        }
+        Context 'Valid configuration is passed' {
+            It 'Returns Resource Modules Array that matches Expected Array' {
+                $Lab = Get-Lab -ConfigPath $Global:TestConfigOKPath
+                [Array] $ResourceModules = Get-LabResourceModule -Lab $Lab
+                Set-Content -Path "$Global:ArtifactPath\ExpectedResourceModules.json" -Value ($ResourceModules | ConvertTo-Json -Depth 4)
+                $ExpectedResourceModules = Get-Content -Path "$Global:ExpectedContentPath\ExpectedResourceModules.json"
+                [String]::Compare((Get-Content -Path "$Global:ArtifactPath\ExpectedResourceModules.json"),$ExpectedResourceModules,$true) | Should Be 0
+            }
+        }
+    }
+#endregion
+
 #region LabSwitchFunctions
     Describe 'Get-LabSwitch' {
 

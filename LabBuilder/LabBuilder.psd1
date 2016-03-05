@@ -15,7 +15,7 @@
     FormatsToProcess = @()
     # NestedModules = @()
     FunctionsToExport = @(
-        'Install-LabHyperV'
+        'Get-LabResourceModule'
         'Get-LabSwitch'
         'Initialize-LabSwitch'
         'Remove-LabSwitch'

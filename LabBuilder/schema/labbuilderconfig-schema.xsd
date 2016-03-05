@@ -88,6 +88,7 @@ There can be different types of Resources that can be contained in the Resources
 
 Currently the Resource types that are supported are:
  - Module: A PowerShell (DSC) Module that is downloaded via URL or using PowerShell Get. This can be a DSC or non-DSC PowerShell module.
+ - MSU: A Microsoft Update package that will be downloaded to the lab Resources folder and can be installed into the Boot VHD when it is created from an ISO, when it is copied to the Parent VHD folder or when the VM is prepared for first boot.
             </xs:documentation>
             <xs:appinfo>&lt;resources&gt;...&lt;/resources&gt;</xs:appinfo>
           </xs:annotation>
@@ -149,6 +150,49 @@ If a version of the Module is not found that is exactly this version then this v
 This attribute should only be used if URL is not set.    
                       </xs:documentation>
                       <xs:appinfo>requiredversion="2.1.0.0"</xs:appinfo>
+                    </xs:annotation>
+                  </xs:attribute>
+                </xs:complexType>
+              </xs:element>
+              <xs:element minOccurs="0" maxOccurs="unbounded" name="msu">
+                <xs:annotation>
+                  <xs:documentation>
+An Microsoft Update (MSU) package file to be installed into a Boot VM.
+                  </xs:documentation>
+                  <xs:appinfo>&lt;msu /&gt;</xs:appinfo>
+                </xs:annotation>
+                <xs:complexType>
+                  <xs:attribute name="name" type="xs:string" use="required">
+                    <xs:annotation>
+                      <xs:documentation>
+A descriptive name for this MSU that will be used to identify this package.
+Any Lab build process that installs MSU packages will need to refer to this name, not the file name of the package.
+                      </xs:documentation>
+                      <xs:appinfo>name="WMF5.0-WS2012R2-W81"</xs:appinfo>
+                    </xs:annotation>
+                  </xs:attribute>
+                  <xs:attribute name="url" type="xs:string" use="required">
+                    <xs:annotation>
+                      <xs:documentation>
+The URL to download this MSU file from.
+If this file already exists in the Resources folder for this Lab when the Lab is installed, it will not be downloaded again.
+
+Note: If the Lab contains Windows Server 2012 R2, Windows Server 2012 or Windows Server 2008 R2 machines, the WMF 5.0 MSU packages MUST be installed on these machines before first boot or they will not be able to be configured.
+
+To download these packages:
+ - Windows Server 2012 R2 - https://download.microsoft.com/download/2/C/6/2C6E1B4A-EBE5-48A6-B225-2D2058A9CEFB/Win8.1AndW2K12R2-KB3134758-x64.msu
+ - Windows Server 2012 - https://download.microsoft.com/download/2/C/6/2C6E1B4A-EBE5-48A6-B225-2D2058A9CEFB/W2K12-KB3134759-x64.msu
+ - Windows Server 2008 R2 - https://download.microsoft.com/download/2/C/6/2C6E1B4A-EBE5-48A6-B225-2D2058A9CEFB/Win7AndW2K8R2-KB3134760-x64.msu'
+                      </xs:documentation>
+                      <xs:appinfo>url="https://download.microsoft.com/download/2/C/6/2C6E1B4A-EBE5-48A6-B225-2D2058A9CEFB/Win8.1AndW2K12R2-KB3134758-x64.msu"</xs:appinfo>
+                    </xs:annotation>
+                  </xs:attribute>
+                  <xs:attribute name="path" type="xs:string" use="optional">
+                    <xs:annotation>
+                      <xs:documentation>
+This optional attribute can be used to set an optional path this package will be stored and/or downloaded to.
+                      </xs:documentation>
+                      <xs:appinfo>path="f:\LabBuilder\sharedpackages\"</xs:appinfo>
                     </xs:annotation>
                   </xs:attribute>
                 </xs:complexType>

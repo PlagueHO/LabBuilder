@@ -9,6 +9,12 @@
   <settings labpath="" />
 
   <resources>
+    <msu name="WMF5.0-WS2012R2-W81"
+         url="https://download.microsoft.com/download/2/C/6/2C6E1B4A-EBE5-48A6-B225-2D2058A9CEFB/Win8.1AndW2K12R2-KB3134758-x64.msu" />
+    <msu name="WMF5.0-WS2012-W8"
+         url="https://download.microsoft.com/download/2/C/6/2C6E1B4A-EBE5-48A6-B225-2D2058A9CEFB/W2K12-KB3134759-x64.msu" />
+    <msu name="WMF5.0-WS2008R2-W7"
+         url="https://download.microsoft.com/download/2/C/6/2C6E1B4A-EBE5-48A6-B225-2D2058A9CEFB/Win7AndW2K8R2-KB3134760-x64.msu" />
   </resources>
 
   <switches>
@@ -30,7 +36,7 @@
                  vhd="Windows Server 2012 R2 Datacenter Full.vhdx" 
                  edition="Windows Server 2012 R2 SERVERDATACENTER" 
                  ostype="Server"
-                 features=""
+                 packages="WMF5.0-WS2012R2-W81"
                  vhdformat="vhdx" 
                  vhdtype="dynamic" 
                  generation="2" 
@@ -41,7 +47,7 @@
                  vhd="Windows Server 2012 R2 Datacenter Core.vhdx"
                  edition="Windows Server 2012 R2 SERVERDATACENTERCORE"
                  ostype="Server"
-                 features=""
+                 packages="WMF5.0-WS2012R2-W81"
                  vhdformat="vhdx" 
                  vhdtype="dynamic" 
                  generation="2" 
@@ -52,7 +58,6 @@
                  vhd="Windows Server 2016 TP4 Datacenter Full.vhdx"
                  edition="Windows Server 2016 Technical Preview 4 SERVERDATACENTER"
                  ostype="Server"
-                 features=""
                  vhdformat="vhdx" 
                  vhdtype="dynamic" 
                  generation="2" 
@@ -63,7 +68,6 @@
                  vhd="Windows Server 2016 TP4 Datacenter Core.vhdx"
                  edition="Windows Server 2016 Technical Preview 4 SERVERDATACENTERCORE"
                  ostype="Server"
-                 features=""
                  vhdformat="vhdx" 
                  vhdtype="dynamic" 
                  generation="2" 
@@ -74,7 +78,6 @@
                  vhd="Windows 10 Enterprise.vhdx"
                  edition="Windows 10 Enterprise"
                  ostype="Client"
-                 features=""
                  vhdformat="vhdx" 
                  vhdtype="dynamic" 
                  generation="2"

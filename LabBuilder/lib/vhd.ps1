@@ -69,31 +69,6 @@ function InitializeBootVHD {
         -Path $MountPoint `
         -Index 1
 
-    # Apply any additional MSU Updates
-    foreach ($URL in $VM.InstallMSU)
-    {
-        $MSUFilename = $URL.Substring($URL.LastIndexOf('/') + 1)
-        $MSUPath = Join-Path `
-			-Path $Script:WorkingFolder `
-			-ChildPath $MSUFilename
-
-        if (-not (Test-Path -Path $MSUPath))
-        {
-            Write-Verbose -Message $($LocalizedData.DownloadingVMBootDiskFileMessage `
-                -f $VM.Name,'MSU',$URL)
-            DownloadAndUnzipFile `
-                -URL $URL `
-                -DestinationPath $MSUPath
-        } # if
-
-        # Once downloaded apply the update
-        Write-Verbose -Message $($LocalizedData.ApplyingVMBootDiskFileMessage `
-            -f $VM.Name,'MSU',$URL)
-        $null = Add-WindowsPackage `
-			-PackagePath $MSUPath `
-			-Path $MountPoint
-    } # foreach
-
     # If this is a Nano Server
     if ($VM.OSType -eq 'Nano')
     {
@@ -143,12 +118,41 @@ function InitializeBootVHD {
                 } # if
             } # foreach
         } # if        
+    }
+    else
+    {
+        # Apply any packages
+        foreach ($Package in $VM.Packages)
+        {
+<#
+            $MSUFilename = $URL.Substring($URL.LastIndexOf('/') + 1)
+            $MSUPath = Join-Path `
+                -Path $Script:WorkingFolder `
+                -ChildPath $MSUFilename
+
+            if (-not (Test-Path -Path $MSUPath))
+            {
+                Write-Verbose -Message $($LocalizedData.DownloadingVMBootDiskFileMessage `
+                    -f $VM.Name,'MSU',$URL)
+                DownloadAndUnzipFile `
+                    -URL $URL `
+                    -DestinationPath $MSUPath
+            } # if
+
+            # Once downloaded apply the update
+            Write-Verbose -Message $($LocalizedData.ApplyingVMBootDiskFileMessage `
+                -f $VM.Name,'MSU',$URL)
+            $null = Add-WindowsPackage `
+                -PackagePath $MSUPath `
+                -Path $MountPoint
+#>
+        } # foreach
     } # if
     
     # Create the scripts folder where setup scripts will be put
     $null = New-Item `
-		-Path "$MountPoint\Windows\Setup\Scripts" `
-		-ItemType Directory
+        -Path "$MountPoint\Windows\Setup\Scripts" `
+        -ItemType Directory
 
     # Apply an unattended setup file
     Write-Verbose -Message $($LocalizedData.ApplyingVMBootDiskFileMessage `
@@ -293,24 +297,24 @@ function InitializeVhd
     [CmdletBinding(DefaultParameterSetName = 'AssignDriveLetter')]
     Param (
         [Parameter(Mandatory=$True)]
-        [ValidateNotNullOrEmpty()]	
+        [ValidateNotNullOrEmpty()]    
         [String] $Path,
 
-        [ValidateSet('GPT','MBR')]	
+        [ValidateSet('GPT','MBR')]    
         [String] $PartitionStyle,
 
-        [ValidateSet('FAT','FAT32','exFAT','NTFS','REFS')]	
+        [ValidateSet('FAT','FAT32','exFAT','NTFS','REFS')]    
         [String] $FileSystem,
         
-        [ValidateNotNullOrEmpty()]	
+        [ValidateNotNullOrEmpty()]    
         [String] $FileSystemLabel,
         
         [Parameter(ParameterSetName = 'DriveLetter')]
-        [ValidateNotNullOrEmpty()]	
+        [ValidateNotNullOrEmpty()]    
         [String] $DriveLetter,
         
         [Parameter(ParameterSetName = 'AccessPath')]
-        [ValidateNotNullOrEmpty()]	
+        [ValidateNotNullOrEmpty()]    
         [String] $AccessPath
     )
 

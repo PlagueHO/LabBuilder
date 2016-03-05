@@ -361,9 +361,9 @@ function DownloadResources {
 
     # Bootstrap Nuget # This needs to be a test, not a force 
     # $null = Get-PackageProvider -Name NuGet -ForceBootstrap -Force
-    
+
     # Make sure PSGallery is trusted
-    Set-PSRepository -Name PSGallery -InstallationPolicy Trusted    
+    Set-PSRepository -Name PSGallery -InstallationPolicy Trusted
     
     # Download any other resources required by this lab
     if ($Lab.labbuilderconfig.resources) 

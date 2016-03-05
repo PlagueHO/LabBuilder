@@ -11,13 +11,13 @@ ConvertFrom-StringData -StringData @'
     ConfigurationFileAlreadyExistsError=Configuration file {0} already exists.
     ConfigurationInvalidError=Configuration is invalid.
     PathNotFoundError={0} path '{1}' is not found.
-    ResourceModuleNameEmptyError=Resource Module Name is missing or empty.
+    ResourceModuleNameIsEmptyError=Resource Module Name is missing or empty.
     ModuleNotAvailableError=Error installing Module '{0}' ({1}); {2}.
-    SwitchNameIsEmptyError=Switch name is empty.
+    SwitchNameIsEmptyError=Switch name is missing or empty.
     UnknownSwitchTypeError=Unknown switch type '{0}' specified for switch '{1}'.
     AdapterSpecifiedError=Adapter specified on '{0}' switch '{1}'.
     NatSubnetAddressEmptyError=Switch NAT Subnet Address is empty '{0}'.
-    EmptyVMTemplateVHDNameError=Template VHD name is empty.
+    EmptyVMTemplateVHDNameError=Template VHD name is missing or empty.
     EmptyVMTemplateVHDISOPathError=The ISO Path in VM Template VHD '{0}' is empty.
     EmptyVMTemplateVHDPathError=The VHD Path in VM Template VHD '{0}' is empty.
     VMTemplateVHDISORootPathNotFoundError=The default ISO Folder '{0}' for VM template VHDs is not found.

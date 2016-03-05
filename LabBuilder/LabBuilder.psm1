@@ -87,6 +87,72 @@ $Libs.Foreach(
 #endregion
 
 
+#region LabResourceFunctions
+<#
+.SYNOPSIS
+   Gets an array of Module Resources from a Lab.
+.DESCRIPTION
+   Takes a provided Lab and returns the list of module resources required for this Lab.
+.PARAMETER Lab
+   Contains the Lab object that was loaded by the Get-Lab object.
+.PARAMETER Name
+   An optional array of Module names.
+   
+   Only Module Resources matching names in this list will be pulled into the returned in the array.
+.EXAMPLE
+   $Lab = Get-Lab -ConfigPath c:\mylab\config.xml
+   $Switches = Get-LabResourceModule -Lab $Lab
+   Loads a Lab and pulls the array of Module Resources from it.
+.OUTPUTS
+   Returns an array of LabModuleResource objects.
+#>
+function Get-LabResourceModule {
+    [OutputType([LabResourceModule[]])]
+    [CmdLetBinding()]
+    param
+    (
+        [Parameter(
+            Position=1,
+            Mandatory=$true)]
+        [ValidateNotNullOrEmpty()]
+        $Lab,
+        
+        [Parameter(
+            Position=2)]
+        [ValidateNotNullOrEmpty()]
+        [String[]] $Name
+    )
+
+    [LabResourceModule[]] $ResourceModules = @()
+    # Download any other resources required by this lab
+    if ($Lab.labbuilderconfig.resources) 
+    {
+        foreach ($Module in $Lab.labbuilderconfig.resources.module)
+        {
+            $ModuleName = $Module.Name
+            if ($ModuleName -eq 'module')
+            {
+                $ExceptionParameters = @{
+                    errorId = 'ResourceModuleNameIsEmptyError'
+                    errorCategory = 'InvalidArgument'
+                    errorMessage = $($LocalizedData.ResourceModuleNameIsEmptyError)
+                }
+                ThrowException @ExceptionParameters
+            } # if
+            $ResourceModule = New-Object -TypeName LabResourceModule
+            $ResourceModule.Name = $ModuleName
+            $ResourceModule.URL = $Module.URL
+            $ResourceModule.Folder = $Module.Folder
+            $ResourceModule.MinimumVersion = $Module.MinimumVersion
+            $ResourceModule.RequiredVersion = $Module.RequiredVersion
+            $ResourceModules += @( $ResourceModule )
+        } # foreach
+    } # if
+    return $ResourceModules
+} # Get-LabResourceModule
+#endregion
+
+
 #region LabSwitchFunctions
 <#
 .SYNOPSIS
@@ -127,8 +193,6 @@ function Get-LabSwitch {
 
     [String] $LabId = $Lab.labbuilderconfig.settings.labid 
     [Array] $Switches = @() 
-#    $XMLNameSpace = New-Object -TypeName System.Xml.XmlNamespaceManager -ArgumentList $Lab.NameTable
-#    $XMLNameSpace.AddNamespace("labbuilderconfig", $Script:ConfigurationXMLSchema)
     $ConfigSwitches = $Lab.labbuilderconfig.Switches.Switch
 
     foreach ($ConfigSwitch in $ConfigSwitches)
@@ -805,14 +869,14 @@ function Get-LabVMTemplateVHD {
                 errorMessage = $($LocalizedData.InvalidVMTemplateVHDVHDTypeError `
                     -f $TemplateVHD.Name,$VHDType)
             }
-            ThrowException @ExceptionParameters            
+            ThrowException @ExceptionParameters
         } # if
         
         # Get the disk size if provided
         [Int64] $Size = 25GB
         if ($TemplateVHD.VHDSize)
         {
-            $VHDSize = (Invoke-Expression $TemplateVHD.VHDSize)         
+            $VHDSize = (Invoke-Expression $TemplateVHD.VHDSize)
         } # if
 
         # Get the Template VM Generation 
@@ -2541,14 +2605,6 @@ function Get-LabVM {
             $Packages = $VMTemplate.packages
         } # if 
 
-        # Do we have any MSU files that are listed as needing to be applied to the OS before
-        # first boot up?
-        [String[]] $InstallMSU = @()
-        foreach ($Update in $VM.Install.MSU) 
-		{
-            $InstallMSU += $Update.URL
-        } # foreach
-
         $LabVMs += @{
             Name = $VMName;
             ComputerName = $VM.ComputerName;
@@ -2573,7 +2629,6 @@ function Get-LabVM {
             DSCLogging = $DSCLogging;
             OSType = $OSType;
             Packages = $Packages;
-            InstallMSU = $InstallMSU;
             VMRootPath = (Join-Path -Path $LabPath -ChildPath $VMName);
             LabBuilderFilesPath = (Join-Path -Path $LabPath -ChildPath "$VMName\LabBuilder Files");
             Bootorder = $Bootorder;
@@ -3739,14 +3794,14 @@ Function Install-Lab {
         if ($CheckEnvironment)
         {
             # Check Hyper-V
-            Install-LabHyperV
+            InstallHyperV
         } # if
 
         if ($PSCmdlet.ParameterSetName -eq 'File')
         {
             # Read the configuration
             $Lab = Get-Lab `
-                @PSBoundParameters             
+                @PSBoundParameters
         } # if
     } # begin
     
