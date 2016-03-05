@@ -134,6 +134,34 @@ InModuleScope LabBuilder {
             }
         }
     }
+
+
+    Describe 'Get-LabResourceMSU' {
+
+        Context 'Configuration passed with resource MSU missing Name.' {
+            It 'Throws a ResourceMSUNameIsEmptyError Exception' {
+                $Lab = Get-Lab -ConfigPath $Global:TestConfigOKPath
+                $Lab.labbuilderconfig.resources.msu[0].RemoveAttribute('name')
+                $ExceptionParameters = @{
+                    errorId = 'ResourceMSUNameIsEmptyError'
+                    errorCategory = 'InvalidArgument'
+                    errorMessage = $($LocalizedData.ResourceMSUNameIsEmptyError)
+                }
+                $Exception = GetException @ExceptionParameters
+
+                { Get-LabResourceMSU -Lab $Lab } | Should Throw $Exception
+            }
+        }
+        Context 'Valid configuration is passed' {
+            It 'Returns Resource MSU Array that matches Expected Array' {
+                $Lab = Get-Lab -ConfigPath $Global:TestConfigOKPath
+                [Array] $ResourceMSUs = Get-LabResourceMSU -Lab $Lab
+                Set-Content -Path "$Global:ArtifactPath\ExpectedResourceMSUs.json" -Value ($ResourceMSUs | ConvertTo-Json -Depth 4)
+                $ExpectedResourceMSUs = Get-Content -Path "$Global:ExpectedContentPath\ExpectedResourceMSUs.json"
+                [String]::Compare((Get-Content -Path "$Global:ArtifactPath\ExpectedResourceMSUs.json"),$ExpectedResourceMSUs,$true) | Should Be 0
+            }
+        }
+    }
 #endregion
 
 #region LabSwitchFunctions

@@ -124,12 +124,17 @@ function Get-LabResourceModule {
     )
 
     [LabResourceModule[]] $ResourceModules = @()
-    # Download any other resources required by this lab
     if ($Lab.labbuilderconfig.resources) 
     {
         foreach ($Module in $Lab.labbuilderconfig.resources.module)
         {
             $ModuleName = $Module.Name
+            if ($Name -and ($ModuleName -notin $Name))
+            {
+                # A names list was passed but this Module wasn't included
+                continue
+            } # if
+
             if ($ModuleName -eq 'module')
             {
                 $ExceptionParameters = @{
@@ -150,6 +155,73 @@ function Get-LabResourceModule {
     } # if
     return $ResourceModules
 } # Get-LabResourceModule
+
+
+<#
+.SYNOPSIS
+   Gets an array of MSU Resources from a Lab.
+.DESCRIPTION
+   Takes a provided Lab and returns the list of MSU resources required for this Lab.
+.PARAMETER Lab
+   Contains the Lab object that was loaded by the Get-Lab object.
+.PARAMETER Name
+   An optional array of MSU names.
+   
+   Only MSU Resources matching names in this list will be pulled into the returned in the array.
+.EXAMPLE
+   $Lab = Get-Lab -ConfigPath c:\mylab\config.xml
+   $Switches = Get-LabResourceModuleMSUb $Lab
+   Loads a Lab and pulls the array of MSU Resources from it.
+.OUTPUTS
+   Returns an array of LabMSUResource objects.
+#>
+function Get-LabResourceMSU {
+    [OutputType([LabResourceMSU[]])]
+    [CmdLetBinding()]
+    param
+    (
+        [Parameter(
+            Position=1,
+            Mandatory=$true)]
+        [ValidateNotNullOrEmpty()]
+        $Lab,
+        
+        [Parameter(
+            Position=2)]
+        [ValidateNotNullOrEmpty()]
+        [String[]] $Name
+    )
+
+    [LabResourceMSU[]] $ResourceMSUs = @()
+    if ($Lab.labbuilderconfig.resources) 
+    {
+        foreach ($MSU in $Lab.labbuilderconfig.resources.msu)
+        {
+            $MSUName = $MSU.Name
+            if ($Name -and ($MSUName -notin $Name))
+            {
+                # A names list was passed but this MSU wasn't included
+                continue
+            } # if
+
+            if ($MSUName -eq 'msu')
+            {
+                $ExceptionParameters = @{
+                    errorId = 'ResourceMSUNameIsEmptyError'
+                    errorCategory = 'InvalidArgument'
+                    errorMessage = $($LocalizedData.ResourceMSUNameIsEmptyError)
+                }
+                ThrowException @ExceptionParameters
+            } # if
+            $ResourceMSU = New-Object -TypeName LabResourceMSU
+            $ResourceMSU.Name = $MSUName
+            $ResourceMSU.URL = $MSU.URL
+            $ResourceMSU.Path = $MSU.Path
+            $ResourceMSUs += @( $ResourceMSU )
+        } # foreach
+    } # if
+    return $ResourceMSUs
+} # Get-LabResourceMSU
 #endregion
 
 

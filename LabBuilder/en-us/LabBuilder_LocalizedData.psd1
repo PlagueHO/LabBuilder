@@ -12,6 +12,7 @@ ConvertFrom-StringData -StringData @'
     ConfigurationInvalidError=Configuration is invalid.
     PathNotFoundError={0} path '{1}' is not found.
     ResourceModuleNameIsEmptyError=Resource Module Name is missing or empty.
+    ResourceMSUNameIsEmptyError=Resource MSU Name is missing or empty.
     ModuleNotAvailableError=Error installing Module '{0}' ({1}); {2}.
     SwitchNameIsEmptyError=Switch name is missing or empty.
     UnknownSwitchTypeError=Unknown switch type '{0}' specified for switch '{1}'.

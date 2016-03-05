@@ -513,6 +513,7 @@ Versions
 * Uninstall-Lab: Management Switch automatically removed when Lab uninstalled.
 * Configuration Schema: Added Resources\MSU.
 * Get-LabResourceModule: Function added.
+* Get-LabResourceMSU: Function added.
 * Install-Lab: Fix CheckEnvironment bug.
 
 ### 0.5.0.0
