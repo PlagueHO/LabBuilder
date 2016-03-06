@@ -1,4 +1,4 @@
-<#########################################################################################################################################
+<###################################################################################################
 DSC Template Configuration File For use by LabBuilder
 .Title
     DC_FORESTPRIMARY
@@ -7,11 +7,11 @@ DSC Template Configuration File For use by LabBuilder
 .Parameters:          
     DomainName = "LABBUILDER.COM"
     DomainAdminPassword = "P@ssword!1"
-#########################################################################################################################################>
+###################################################################################################>
 
 Configuration DC_FORESTPRIMARY
 {
-    Import-DscResource -ModuleName 'PSDesiredStateConfiguration' -ModuleVersion 1.1
+    Import-DscResource -ModuleName 'PSDesiredStateConfiguration'
     Import-DscResource -ModuleName xActiveDirectory
     Import-DscResource -ModuleName xDNSServer
     Node $AllNodes.NodeName {
@@ -78,7 +78,7 @@ Configuration DC_FORESTPRIMARY
         Script CreateKDSRootKey
         {
             SetScript = {
-                Add-KDSRootKey -EffectiveTime ((Get-Date).AddHours(-10))			}
+                Add-KDSRootKey -EffectiveTime ((Get-Date).AddHours(-10))            }
             GetScript = {
                 Return @{
                     KDSRootKey = (Get-KDSRootKey)
@@ -134,7 +134,7 @@ Configuration DC_FORESTPRIMARY
                 Return $True
             }
             DependsOn = '[xDnsServerPrimaryZone]GlobalNamesZone'
-        }	
+        }    
 #>
 
     }

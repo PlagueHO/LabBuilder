@@ -12,6 +12,8 @@
             dsclibrarypath="..\DSCLibrary\" />
 
   <resources>
+    <msu name="WMF5.0-WS2012R2-W81"
+         url="https://download.microsoft.com/download/2/C/6/2C6E1B4A-EBE5-48A6-B225-2D2058A9CEFB/Win8.1AndW2K12R2-KB3134758-x64.msu" />
   </resources>
   
   <switches>
@@ -38,7 +40,7 @@
                  vhd="Windows Server 2012 R2 Datacenter Full.vhdx" 
                  edition="Windows Server 2012 R2 SERVERDATACENTER" 
                  ostype="Server"
-                 features=""
+                 packages="WMF5.0-WS2012R2-W81"
                  vhdformat="vhdx" 
                  vhdtype="dynamic" 
                  generation="2" 
@@ -49,7 +51,7 @@
                  vhd="Windows Server 2012 R2 Datacenter Core.vhdx"
                  edition="Windows Server 2012 R2 SERVERDATACENTERCORE"
                  ostype="Server"
-                 features=""
+                 packages="WMF5.0-WS2012R2-W81"
                  vhdformat="vhdx" 
                  vhdtype="dynamic" 
                  generation="2" 
@@ -63,21 +65,22 @@
               processorcount="1"
               administratorpassword="P@ssword!1"
               timezone="New Zealand Standard Time" 
-              ostype="Server" />
+              ostype="Server"
+              packages="WMF5.0-WS2012R2-W81" />
     <template name="Template Windows Server 2012 R2 Datacenter Core"
               templatevhd="Windows Server 2012 R2 Datacenter CORE"
               memorystartupbytes="1GB"
               processorcount="1"
               administratorpassword="P@ssword!1"
               timezone="New Zealand Standard Time" 
-              ostype="Server" />
+              ostype="Server"
+              packages="WMF5.0-WS2012R2-W81" />
   </templates>
 
   <vms>
     <vm name="SA-DC1"
         template="Template Windows Server 2012 R2 Datacenter CORE"
-        computername="SA-DC1"
-        usedifferencingbootdisk="Y">
+        computername="SA-DC1">
       <dsc configname="DC_FORESTPRIMARY"
            configfile="DC_FORESTPRIMARY.DSC.ps1">
         <parameters>
@@ -104,12 +107,12 @@
 
     <vm name="SA-DHCP1"
         template="Template Windows Server 2012 R2 Datacenter CORE"
-        computername="SA-DHCP1"
-        usedifferencingbootdisk="Y">
+        computername="SA-DHCP1">
       <dsc configname="MEMBER_DHCP"
            configfile="MEMBER_DHCP.DSC.ps1">
         <parameters>
           DomainName = "LABBUILDER.COM"
+		  DCname = "SA-DC1"
           DomainAdminPassword = "P@ssword!1"
           PSDscAllowDomainUser = $True
         </parameters>

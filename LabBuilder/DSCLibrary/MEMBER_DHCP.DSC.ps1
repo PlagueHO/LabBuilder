@@ -1,4 +1,4 @@
-<#########################################################################################################################################
+<###################################################################################################
 DSC Template Configuration File For use by LabBuilder
 .Title
     MEMBER_DHCP
@@ -7,12 +7,11 @@ DSC Template Configuration File For use by LabBuilder
 .Parameters:          
     DomainName = "LABBUILDER.COM"
     DomainAdminPassword = "P@ssword!1"
-#########################################################################################################################################>
+###################################################################################################>
 
 Configuration MEMBER_DHCP
 {
-    Import-DscResource -ModuleName 'PSDesiredStateConfiguration' -ModuleVersion 1.1
-    Import-DscResource -ModuleName xActiveDirectory
+    Import-DscResource -ModuleName 'PSDesiredStateConfiguration'
     Import-DscResource -ModuleName xComputerManagement
     Import-DscResource -ModuleName xDHCPServer
     Node $AllNodes.NodeName {
@@ -30,29 +29,22 @@ Configuration MEMBER_DHCP
             Name = "DHCP" 
         }
 
-        WindowsFeature RSATADPowerShell
-        { 
-            Ensure = "Present" 
-            Name = "RSAT-AD-PowerShell" 
-            DependsOn = "[WindowsFeature]DHCPInstall" 
-        } 
-
-        xWaitForADDomain DscDomainWait
+        WaitForAll DC
         {
-            DomainName = $Node.DomainName
-            DomainUserCredential = $DomainAdminCredential 
-            RetryCount = 100 
-            RetryIntervalSec = 10 
-            DependsOn = "[WindowsFeature]RSATADPowerShell" 
+        ResourceName      = '[xADDomain]PrimaryDC'
+        NodeName          = $Node.DCname
+        RetryIntervalSec  = 15
+        RetryCount        = 60
         }
+
 
         xComputer JoinDomain 
         { 
             Name          = $Node.NodeName
             DomainName    = $Node.DomainName
             Credential    = $DomainAdminCredential 
-            DependsOn = "[xWaitForADDomain]DscDomainWait" 
-        } 
+            DependsOn = "[WaitForAll]DC" 
+        }
 
         Script DHCPAuthorize
         {

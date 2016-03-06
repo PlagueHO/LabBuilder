@@ -43,19 +43,85 @@ InModuleScope LabBuilder {
             -ArgumentList $exception, $errorId, $errorCategory, $null
         return $errorRecord
     }
+
+
     
     Describe 'GetModulesInDSCConfig' {
         Context 'Called with Test DSC Resource File' {
-            $Modules = GetModulesInDSCConfig `
-                -DSCConfigFile (Join-Path -Path $Global:TestConfigPath -ChildPath 'dsclibrary\PesterTest.DSC.ps1')
-            It 'Should Return Expected Modules' {
-                @(Compare-Object -ReferenceObject $Modules `
-                    -DifferenceObject @('xActiveDirectory','xComputerManagement','xDHCPServer','xNetworking')).Count `
-                | Should Be 0
+            It 'Returns DSCModules Object that matches Expected Object' {
+                $DSCModules = GetModulesInDSCConfig `
+                    -DSCConfigFile (Join-Path -Path $Global:TestConfigPath -ChildPath 'dsclibrary\PesterTest.DSC.ps1')
+
+                Set-Content `
+                    -Path "$Global:ArtifactPath\ExpectedDSCModules.json" `
+                    -Value ($DSCModules | ConvertTo-Json -Depth 4)
+                $ExpectedDSCModules = Get-Content `
+                    -Path "$Global:ExpectedContentPath\ExpectedDSCModules.json"
+                [String]::Compare((Get-Content -Path "$Global:ArtifactPath\ExpectedDSCModules.json"),$ExpectedDSCModules,$true) | Should Be 0
+            }
+        }
+        Context 'Called with Test DSC Resource Content' {
+            It 'Returns DSCModules Object that matches Expected Object' {
+                $Content = Get-Content -Path (Join-Path -Path $Global:TestConfigPath -ChildPath 'dsclibrary\PesterTest.DSC.ps1') -RAW
+                $DSCModules = GetModulesInDSCConfig `
+                    -DSCConfigContent $Content
+
+                Set-Content `
+                    -Path "$Global:ArtifactPath\ExpectedDSCModules.json" `
+                    -Value ($DSCModules | ConvertTo-Json -Depth 4)
+                $ExpectedDSCModules = Get-Content -Path "$Global:ExpectedContentPath\ExpectedDSCModules.json"
+                [String]::Compare((Get-Content -Path "$Global:ArtifactPath\ExpectedDSCModules.json"),$ExpectedDSCModules,$true) | Should Be 0
             }
         }
     }
+
+
     
+    Describe 'SetModulesInDSCConfig' {
+        $Module1 = New-Object -TypeName LabDSCModule
+        $Module1.ModuleName = 'PSDesiredStateConfiguration'
+        $Module1.ModuleVersion = '1.0'
+        $Module2 = New-Object -TypeName LabDSCModule
+        $Module2.ModuleName = 'xActiveDirectory'
+        $Module3 = New-Object -TypeName LabDSCModule
+        $Module3.ModuleName = 'xComputerManagement'
+        $Module3.ModuleVersion = '1.4.0.0'
+        $Module4 = New-Object -TypeName LabDSCModule
+        $Module4.ModuleName = 'xNewModule'
+        $Module4.ModuleVersion = '9.9.9.9'
+        [LabDSCModule[]] $UpdateModules = @($Module1,$Module2,$Module3,$Module4)
+
+        Context 'Called with Test DSC Resource File' {
+            It 'Returns DSCConfig Content that matches Expected String' {
+                [String] $DSCConfig = SetModulesInDSCConfig `
+                    -DSCConfigFile (Join-Path -Path $Global:TestConfigPath -ChildPath 'dsclibrary\PesterTest.DSC.ps1') `
+                    -Modules $UpdateModules
+
+                Set-Content -Path "$Global:ArtifactPath\ExpectedDSCConfig.txt" -Value $DSCConfig
+                $ExpectedDSCConfig = Get-Content -Path "$Global:ExpectedContentPath\ExpectedDSCConfig.txt"
+                @(Compare-Object `
+                    -ReferenceObject $ExpectedDSCConfig `
+                    -DifferenceObject (Get-Content -Path "$Global:ArtifactPath\ExpectedDSCConfig.txt")).Count  | Should Be 0 
+            }
+        }
+        Context 'Called with Test DSC Resource Content' {
+            It 'Returns DSCModules Content that matches Expected String' {
+                [String] $Content = Get-Content -Path (Join-Path -Path $Global:TestConfigPath -ChildPath 'dsclibrary\PesterTest.DSC.ps1') -RAW
+                $DSCConfig = SetModulesInDSCConfig `
+                    -DSCConfigContent $Content `
+                    -Modules $UpdateModules
+
+                Set-Content -Path "$Global:ArtifactPath\ExpectedDSCConfig.txt" -Value $DSCConfig
+                $ExpectedDSCConfig = Get-Content -Path "$Global:ExpectedContentPath\ExpectedDSCConfig.txt"
+                @(Compare-Object `
+                    -ReferenceObject $ExpectedDSCConfig `
+                    -DifferenceObject (Get-Content -Path "$Global:ArtifactPath\ExpectedDSCConfig.txt")).Count  | Should Be 0 
+            }
+        }
+    }
+
+
+
     Describe 'CreateDSCMOFFiles' -Tags 'Incomplete' {
 
         Mock Get-VM
@@ -65,7 +131,6 @@ InModuleScope LabBuilder {
         [Array]$Templates = Get-LabVMTemplate -Lab $Lab
         [Array]$VMs = Get-LabVM -Lab $Lab -VMTemplates $Templates -Switches $Switches
         
-        Mock Create-LabPath
         Mock Get-Module
         Mock GetModulesInDSCConfig -MockWith { @('TestModule') }
 
@@ -76,7 +141,6 @@ InModuleScope LabBuilder {
                 { CreateDSCMOFFiles -Lab $Lab -VM $VM } | Should Not Throw
             }
             It 'Calls Mocked commands' {
-                Assert-MockCalled Create-LabPath -Exactly 1
                 Assert-MockCalled Get-Module -Exactly 0
             }
         }
@@ -97,7 +161,6 @@ InModuleScope LabBuilder {
                 { CreateDSCMOFFiles -Lab $Lab -VM $VM } | Should Throw $Exception
             }
             It 'Calls Mocked commands' {
-                Assert-MockCalled Create-LabPath -Exactly 1
                 Assert-MockCalled Get-Module -Exactly 1
                 Assert-MockCalled GetModulesInDSCConfig -Exactly 1
                 Assert-MockCalled Find-Module -Exactly 1
@@ -121,7 +184,6 @@ InModuleScope LabBuilder {
                 { CreateDSCMOFFiles -Lab $Lab -VM $VM } | Should Throw $Exception
             }
             It 'Calls Mocked commands' {
-                Assert-MockCalled Create-LabPath -Exactly 1
                 Assert-MockCalled Get-Module -Exactly 1
                 Assert-MockCalled GetModulesInDSCConfig -Exactly 1
                 Assert-MockCalled Find-Module -Exactly 1
@@ -147,7 +209,6 @@ InModuleScope LabBuilder {
                 { CreateDSCMOFFiles -Lab $Lab -VM $VM } | Should Throw $Exception
             }
             It 'Calls Mocked commands' {
-                Assert-MockCalled Create-LabPath -Exactly 1
                 Assert-MockCalled Get-Module -Exactly 1
                 Assert-MockCalled GetModulesInDSCConfig -Exactly 1
                 Assert-MockCalled Find-Module -Exactly 1
@@ -175,7 +236,6 @@ InModuleScope LabBuilder {
                 { CreateDSCMOFFiles -Lab $Lab -VM $VM } | Should Throw $Exception
             }
             It 'Calls Mocked commands' {
-                Assert-MockCalled Create-LabPath -Exactly 1
                 Assert-MockCalled Get-Module -Exactly 1
                 Assert-MockCalled GetModulesInDSCConfig -Exactly 1
                 Assert-MockCalled Find-Module -Exactly 1
@@ -210,7 +270,6 @@ InModuleScope LabBuilder {
                 { CreateDSCMOFFiles -Lab $Lab -VM $VM } | Should Throw $Exception
             }
             It 'Calls Mocked commands' {
-                Assert-MockCalled Create-LabPath -Exactly 1
                 Assert-MockCalled Get-Module -Exactly 1
                 Assert-MockCalled GetModulesInDSCConfig -Exactly 1
                 Assert-MockCalled Find-Module -Exactly 1
