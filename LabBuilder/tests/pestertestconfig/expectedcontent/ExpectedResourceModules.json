@@ -1,0 +1,30 @@
+[
+    {
+        "Name":  "xNetworking",
+        "URL":  "https://github.com/PlagueHO/xNetworking/archive/dev.zip",
+        "Folder":  "xNetworking-dev",
+        "MinimumVersion":  "",
+        "RequiredVersion":  ""
+    },
+    {
+        "Name":  "xActiveDirectory",
+        "URL":  "",
+        "Folder":  "",
+        "MinimumVersion":  "",
+        "RequiredVersion":  ""
+    },
+    {
+        "Name":  "xExchange",
+        "URL":  "",
+        "Folder":  "",
+        "MinimumVersion":  "1.3.0.0",
+        "RequiredVersion":  ""
+    },
+    {
+        "Name":  "xDNSServer",
+        "URL":  "",
+        "Folder":  "",
+        "MinimumVersion":  "",
+        "RequiredVersion":  "1.2.0.0"
+    }
+]
