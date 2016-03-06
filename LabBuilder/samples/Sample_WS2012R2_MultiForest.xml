@@ -221,7 +221,7 @@
       <dsc configname="DC_FORESTPRIMARY"
            configfile="DC_FORESTPRIMARY.DSC.ps1">
         <parameters>
-          DomainName = "ALPHA.COM"
+          DomainName = "BRAVO.COM"
           DomainAdminPassword = "P@ssword!1"
         </parameters>
       </dsc>
