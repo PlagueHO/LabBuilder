@@ -496,8 +496,6 @@ Versions
 * Get-Lab: Redundant checks for XML valid removed because convered by XSD schema validation.
 * Added Lib\Type.ps1 containing customg LabBuilder Classes and Enumerations.
 * Added functions for converting XSD schema to MD.
-* Configuration Schema updated.
-* DSC Resource Module version number added to all DSC Library configurations to resolve WMF 5.0 issue.
 * Fix to Nano Server Package caching bug.
 * DSC Library Domain Join process improved.
 * DSC\ConfigFile attribute supports rooted paths.
@@ -506,13 +504,28 @@ Versions
 * DSC\ConfigFile Lab setting supports rooted paths.
 * VM\UseDifferencingBootDisk default changed to 'Y'.
 * GetModulesInDSCConfig: Returns Array of objects containing ModuleName and ModuleVersion.
-* GetModulesInDSCConfig: Now returns PSDesiredStateConfiguration module if listed -expected that calling function will ignore if required.
-* SetModulesInDSCConfig: Added function to set the Module versions in a DSC Config.
+                         Now returns PSDesiredStateConfiguration module if listed -expected that calling function will ignore if required.
+                         Added function to set the Module versions in a DSC Config.
 * CreateDSCMOFFiles: Updated to set Module versions in DSC Config files.
-* DSC Library all configurations have Module version numbers removed.
+* DSC Library: Module Version numbers removed from all DSC Library Configrations. 
 * Test Sample file code updated to remove switches when lab uninstalled.
-* Uninstall-Lab: Management Switch automatically removed when Lab uninstalled. 
-
+* Uninstall-Lab: Management Switch automatically removed when Lab uninstalled.
+* Configuration Schema: Added Resources\MSU element.
+                        Added Settings\Resource attribute.
+                        Removed VM\Install element support, superceeded by Packages attribute.
+* Get-LabResourceModule: Function added.
+* Initialize-LabResourceModule: Function added.
+* Get-LabResourceMSU: Function added.
+* Initialize-LabResourceMSU: Function added.
+* Install-Lab: Fix CheckEnvironment bug.
+               Added calls to Initialize-LabResourceModule and Initialize-LabResourceMSU.
+* DownloadResources: Utility function removed, superceeded by Initialize-LabResourceModule and Initialize-LabResourceMSU functions
+* Get-LabVM: Removed Install\MSU support.
+* InitializeBootVM: Removed Install\MSU support.
+                    Added support for installing Packages from Resources\MSU element.
+* Initialize-LabVMTemplateVHD: MSU Resources specified in Packages attribute are added to Template VHD when converted.
+* Initialize-LabVMTemplate: MSU Resources specified in Packages attribute are added to Template  when copied.
+ 
 ### 0.5.0.0
 * BREKAING: Renamed Config parameter to Lab parameter to indicate the object is actually an object that also stores Lab state information.
 * Remove-LabVM: Removed parameter 'RemoveVHDs'. Added parameter RemoveVMFolder which causes the VM folder and all contents to be deleted.

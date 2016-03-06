@@ -1,6 +1,6 @@
 [
     {
-        "packages":  null,
+        "packages":  "WMF5.0-WS2012R2-W81",
         "vhd":  "Windows Server 2012 R2 Datacenter Full.vhdx",
         "administratorpassword":  "None",
         "ProcessorCount":  "1",
@@ -15,7 +15,7 @@
         "sourcevhd":  "Intentionally Removed"
     },
     {
-        "packages":  null,
+        "packages":  "WMF5.0-WS2012R2-W81",
         "vhd":  "Windows Server 2012 R2 Datacenter Core.vhdx",
         "administratorpassword":  "None",
         "ProcessorCount":  "1",
@@ -31,7 +31,7 @@
         "exposevirtualizationextensions":  "Y"
     },
     {
-        "packages":  null,
+        "packages":  "RSAT-W10",
         "vhd":  "Windows 10 Enterprise.vhdx",
         "administratorpassword":  "None",
         "ProcessorCount":  "1",

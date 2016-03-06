@@ -12,6 +12,10 @@
             dsclibrarypath="..\DSCLibrary\" />
 
   <resources>
+    <msu name="WMF5.0-WS2012R2-W81"
+         url="https://download.microsoft.com/download/2/C/6/2C6E1B4A-EBE5-48A6-B225-2D2058A9CEFB/Win8.1AndW2K12R2-KB3134758-x64.msu" />
+    <msu name="RSAT-W10"
+         url="http://download.microsoft.com/download/1/D/8/1D8B5022-5477-4B9A-8104-6A71FF9D98AB/WindowsTH-KB2693643-x64.msu" />
   </resources>
   
   <switches>
@@ -38,7 +42,7 @@
                  vhd="Windows Server 2012 R2 Datacenter Full.vhdx" 
                  edition="Windows Server 2012 R2 SERVERDATACENTER" 
                  ostype="Server"
-                 features=""
+                 packages="WMF5.0-WS2012R2-W81"
                  vhdformat="vhdx" 
                  vhdtype="dynamic" 
                  generation="2" 
@@ -49,7 +53,7 @@
                  vhd="Windows Server 2012 R2 Datacenter Core.vhdx"
                  edition="Windows Server 2012 R2 SERVERDATACENTERCORE"
                  ostype="Server"
-                 features=""
+                 packages="WMF5.0-WS2012R2-W81"
                  vhdformat="vhdx" 
                  vhdtype="dynamic" 
                  generation="2" 
@@ -60,7 +64,7 @@
                  vhd="Windows 10 Enterprise.vhdx"
                  edition="Windows 10 Enterprise"
                  ostype="Client"
-                 features=""
+                 packages="RSAT-W10"
                  vhdformat="vhdx" 
                  vhdtype="dynamic" 
                  generation="2"
@@ -74,21 +78,24 @@
               processorcount="1"
               administratorpassword="P@ssword!1"
               timezone="New Zealand Standard Time" 
-              ostype="Server" />
+              ostype="Server"
+              packages="WMF5.0-WS2012R2-W81" />
     <template name="Template Windows Server 2012 R2 Datacenter Core"
               templatevhd="Windows Server 2012 R2 Datacenter Core"
               memorystartupbytes="1GB"
               processorcount="1"
               administratorpassword="P@ssword!1"
               timezone="New Zealand Standard Time" 
-              ostype="Server" />
+              ostype="Server"
+              packages="WMF5.0-WS2012R2-W81" />
     <template name="Template Windows 10 Enterprise"
               templatevhd="Windows 10 Enterprise"
               memorystartupbytes="2GB"
               processorcount="1"
               administratorpassword="P@ssword!1"
               timezone="New Zealand Standard Time" 
-              ostype="Client" />
+              ostype="Client"
+              packages="RSAT-W10" />
   </templates>
 
   <vms>
@@ -672,9 +679,6 @@
                  switchname="Internet" >
         </adapter>
       </adapters>
-      <install>
-        <msu url="http://download.microsoft.com/download/1/D/8/1D8B5022-5477-4B9A-8104-6A71FF9D98AB/WindowsTH-KB2693643-x64.msu" />
-      </install>
     </vm>
 
   </vms>
