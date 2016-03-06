@@ -619,7 +619,7 @@ function Initialize-LabSwitch {
                         -Name $SwitchName `
                         -NetAdapterName (`
                             Get-NetAdapter | `
-                            Where-Object { $_.Status -eq 'Up' } | `
+                            Where-Object { $_.Status -eq 'Up' -and $_.InterfaceDescription -notlike "Hyper-V Virtual*" } | `
                             Select-Object -First 1 -ExpandProperty Name `
                             )
                     if ($VMSwitch.Adapters)
