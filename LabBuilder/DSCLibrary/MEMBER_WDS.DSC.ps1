@@ -1,4 +1,4 @@
-<#########################################################################################################################################
+<###################################################################################################
 DSC Template Configuration File For use by LabBuilder
 .Title
     MEMBER_WDS
@@ -7,12 +7,11 @@ DSC Template Configuration File For use by LabBuilder
 .Parameters:          
     DomainName = "LABBUILDER.COM"
     DomainAdminPassword = "P@ssword!1"
-#########################################################################################################################################>
+###################################################################################################>
 
 Configuration MEMBER_WDS
 {
-    Import-DscResource -ModuleName 'PSDesiredStateConfiguration' -ModuleVersion 1.1
-    Import-DscResource -ModuleName xActiveDirectory
+    Import-DscResource -ModuleName 'PSDesiredStateConfiguration'
     Import-DscResource -ModuleName xComputerManagement
     Import-DscResource -ModuleName xStorage
     Node $AllNodes.NodeName {
@@ -37,13 +36,6 @@ Configuration MEMBER_WDS
             DependsOn = "[WindowsFeature]WDSDeploymentInstall" 
         } 
 
-        WindowsFeature RSATADPowerShellInstall
-        { 
-            Ensure = "Present" 
-            Name = "RSAT-AD-PowerShell" 
-            DependsOn = "[WindowsFeature]WDSTransportInstall" 
-        } 
-
         WindowsFeature BitLockerNetworkUnlockInstall
         { 
             Ensure = "Present" 
@@ -51,21 +43,22 @@ Configuration MEMBER_WDS
             DependsOn = "[WindowsFeature]RSATADPowerShellInstall" 
         } 
 
-        xWaitForADDomain DscDomainWait
+        # Wait for the Domain to be available so we can join it.
+        WaitForAll DC
         {
-            DomainName = $Node.DomainName
-            DomainUserCredential = $DomainAdminCredential 
-            RetryCount = 100 
-            RetryIntervalSec = 10 
-            DependsOn = "[WindowsFeature]BitLockerNetworkUnlockInstall" 
+        ResourceName      = '[xADDomain]PrimaryDC'
+        NodeName          = $Node.DCname
+        RetryIntervalSec  = 15
+        RetryCount        = 60
         }
-
+        
+        # Join this Server to the Domain
         xComputer JoinDomain 
         { 
             Name          = $Node.NodeName
             DomainName    = $Node.DomainName
             Credential    = $DomainAdminCredential 
-            DependsOn = "[xWaitForADDomain]DscDomainWait" 
+            DependsOn = "[WaitForAll]DC" 
         }
         
         xWaitforDisk Disk2

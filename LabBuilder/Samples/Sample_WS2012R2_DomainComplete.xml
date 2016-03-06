@@ -12,6 +12,10 @@
             dsclibrarypath="..\DSCLibrary\" />
 
   <resources>
+    <msu name="WMF5.0-WS2012R2-W81"
+         url="https://download.microsoft.com/download/2/C/6/2C6E1B4A-EBE5-48A6-B225-2D2058A9CEFB/Win8.1AndW2K12R2-KB3134758-x64.msu" />
+    <msu name="RSAT-W10"
+         url="http://download.microsoft.com/download/1/D/8/1D8B5022-5477-4B9A-8104-6A71FF9D98AB/WindowsTH-KB2693643-x64.msu" />
   </resources>
   
   <switches>
@@ -38,7 +42,7 @@
                  vhd="Windows Server 2012 R2 Datacenter Full.vhdx" 
                  edition="Windows Server 2012 R2 SERVERDATACENTER" 
                  ostype="Server"
-                 features=""
+                 packages="WMF5.0-WS2012R2-W81"
                  vhdformat="vhdx" 
                  vhdtype="dynamic" 
                  generation="2" 
@@ -49,7 +53,7 @@
                  vhd="Windows Server 2012 R2 Datacenter Core.vhdx"
                  edition="Windows Server 2012 R2 SERVERDATACENTERCORE"
                  ostype="Server"
-                 features=""
+                 packages="WMF5.0-WS2012R2-W81"
                  vhdformat="vhdx" 
                  vhdtype="dynamic" 
                  generation="2" 
@@ -60,7 +64,7 @@
                  vhd="Windows 10 Enterprise.vhdx"
                  edition="Windows 10 Enterprise"
                  ostype="Client"
-                 features=""
+                 packages="RSAT-W10"
                  vhdformat="vhdx" 
                  vhdtype="dynamic" 
                  generation="2"
@@ -74,28 +78,30 @@
               processorcount="1"
               administratorpassword="P@ssword!1"
               timezone="New Zealand Standard Time" 
-              ostype="Server" />
+              ostype="Server"
+              packages="WMF5.0-WS2012R2-W81" />
     <template name="Template Windows Server 2012 R2 Datacenter Core"
               templatevhd="Windows Server 2012 R2 Datacenter Core"
               memorystartupbytes="1GB"
               processorcount="1"
               administratorpassword="P@ssword!1"
               timezone="New Zealand Standard Time" 
-              ostype="Server" />
+              ostype="Server"
+              packages="WMF5.0-WS2012R2-W81" />
     <template name="Template Windows 10 Enterprise"
               templatevhd="Windows 10 Enterprise"
               memorystartupbytes="2GB"
               processorcount="1"
               administratorpassword="P@ssword!1"
               timezone="New Zealand Standard Time" 
-              ostype="Client" />
+              ostype="Client"
+              packages="RSAT-W10" />
   </templates>
 
   <vms>
     <vm name="SS-ROOTCA"
         template="Template Windows Server 2012 R2 Datacenter CORE"
-        computername="SS-ROOTCA"
-        usedifferencingbootdisk="Y">
+        computername="SS-ROOTCA">
       <dsc configname="STANDALONE_ROOTCA"
            configfile="STANDALONE_ROOTCA.DSC.ps1"
            logging="Y">
@@ -118,8 +124,7 @@
 
     <vm name="SS-INTERNET"
         template="Template Windows Server 2012 R2 Datacenter Full"
-        computername="SS-INTERNET"
-        usedifferencingbootdisk="Y">
+        computername="SS-INTERNET">
       <dsc configname="STANDALONE_INTERNET"
            configfile="STANDALONE_INTERNET.DSC.ps1"
            logging="Y">
@@ -171,8 +176,7 @@
 
     <vm name="SA-DC1"
         template="Template Windows Server 2012 R2 Datacenter CORE"
-        computername="SA-DC1"
-        usedifferencingbootdisk="Y">
+        computername="SA-DC1">
       <dsc configname="DC_FORESTPRIMARY"
            configfile="DC_FORESTPRIMARY.DSC.ps1">
         <parameters>
@@ -197,13 +201,13 @@
 
     <vm name="SA-DC2"
         template="Template Windows Server 2012 R2 Datacenter CORE"
-        computername="SA-DC2"
-        usedifferencingbootdisk="Y">
+        computername="SA-DC2">
       <dsc configname="DC_SECONDARY"
            configfile="DC_SECONDARY.DSC.ps1">
         <parameters>
           DomainName = "LABBUILDER.COM"
           DomainAdminPassword = "P@ssword!1"
+		  DCName = "SA-DC1"
           PSDscAllowDomainUser = $True
         </parameters>
       </dsc>
@@ -224,13 +228,13 @@
 
     <vm name="SA-RODC1"
     template="Template Windows Server 2012 R2 Datacenter CORE"
-    computername="SA-RODC1"
-    usedifferencingbootdisk="Y">
+    computername="SA-RODC1">
       <dsc configname="RODC_SECONDARY"
            configfile="RODC_SECONDARY.DSC.ps1">
         <parameters>
           DomainName = "LABBUILDER.COM"
           DomainAdminPassword = "P@ssword!1"
+		  DCName = "SA-DC1"
           PSDscAllowDomainUser = $True
         </parameters>
       </dsc>
@@ -251,13 +255,13 @@
 
     <vm name="SA-DHCP1"
         template="Template Windows Server 2012 R2 Datacenter CORE"
-        computername="SA-DHCP1"
-        usedifferencingbootdisk="Y">
+        computername="SA-DHCP1">
       <dsc configname="MEMBER_DHCP"
            configfile="MEMBER_DHCP.DSC.ps1">
         <parameters>
           DomainName = "LABBUILDER.COM"
           DomainAdminPassword = "P@ssword!1"
+		  DCName = "SA-DC1"
           PSDscAllowDomainUser = $True
           Scopes = @(
               @{ Name = 'Site A Primary';
@@ -373,13 +377,13 @@
 
     <vm name="SA-DHCP2"
       template="Template Windows Server 2012 R2 Datacenter CORE"
-      computername="SA-DHCP2"
-      usedifferencingbootdisk="Y">
+      computername="SA-DHCP2">
       <dsc configname="MEMBER_DHCP"
            configfile="MEMBER_DHCP.DSC.ps1">
         <parameters>
           DomainName = "LABBUILDER.COM"
           DomainAdminPassword = "P@ssword!1"
+		  DCName = "SA-DC1"
           PSDscAllowDomainUser = $True
           Scopes = @(
               @{ Name = 'Remediation Site A';
@@ -415,13 +419,13 @@
 
     <vm name="SA-NPS"
       template="Template Windows Server 2012 R2 Datacenter Full"
-      computername="SA-NPS"
-      usedifferencingbootdisk="Y">
+      computername="SA-NPS">
       <dsc configname="MEMBER_NPS_DFSTEST"
            configfile="MEMBER_NPS_DFSTEST.DSC.ps1">
         <parameters>
           DomainName = "LABBUILDER.COM"
           DomainAdminPassword = "P@ssword!1"
+		  DCName = "SA-DC1"
           PSDscAllowDomainUser = $True
         </parameters>
       </dsc>
@@ -442,13 +446,13 @@
 
     <vm name="SA-EDGE1"
       template="Template Windows Server 2012 R2 Datacenter CORE"
-      computername="SA-EDGE1"
-      usedifferencingbootdisk="Y">
+      computername="SA-EDGE1">
       <dsc configname="MEMBER_REMOTEACCESS"
            configfile="MEMBER_REMOTEACCESS.DSC.ps1">
         <parameters>
           DomainName = "LABBUILDER.COM"
           DomainAdminPassword = "P@ssword!1"
+		  DCName = "SA-DC1"
           PSDscAllowDomainUser = $True
         </parameters>
       </dsc>
@@ -476,13 +480,13 @@
 
     <vm name="SA-EDGE2"
       template="Template Windows Server 2012 R2 Datacenter CORE"
-      computername="SA-EDGE2"
-      usedifferencingbootdisk="Y">
+      computername="SA-EDGE2">
       <dsc configname="MEMBER_REMOTEACCESS"
            configfile="MEMBER_REMOTEACCESS.DSC.ps1">
         <parameters>
           DomainName = "LABBUILDER.COM"
           DomainAdminPassword = "P@ssword!1"
+		  DCName = "SA-DC1"
           PSDscAllowDomainUser = $True
         </parameters>
       </dsc>
@@ -510,8 +514,7 @@
 
     <vm name="SA-WDS"
       template="Template Windows Server 2012 R2 Datacenter Full"
-      computername="SA-WDS"
-      usedifferencingbootdisk="Y" >
+      computername="SA-WDS">
       <datavhds>
         <datavhd vhd="LABBUILDER.COM SA-WDS Data Disk.vhdx" size="10GB" type="dynamic" />
       </datavhds>
@@ -520,6 +523,7 @@
         <parameters>
           DomainName = "LABBUILDER.COM"
           DomainAdminPassword = "P@ssword!1"
+		  DCName = "SA-DC1"
           PSDscAllowDomainUser = $True
         </parameters>
       </dsc>
@@ -540,8 +544,7 @@
 
     <vm name="SA-WSUS"
       template="Template Windows Server 2012 R2 Datacenter CORE"
-      computername="SA-WSUS"
-      usedifferencingbootdisk="Y" >
+      computername="SA-WSUS">
       <datavhds>
         <datavhd vhd="LABBUILDER.COM SA-WSUS Data Disk.vhdx" size="10GB" type="dynamic" />
       </datavhds>
@@ -550,6 +553,7 @@
         <parameters>
           DomainName = "LABBUILDER.COM"
           DomainAdminPassword = "P@ssword!1"
+		  DCName = "SA-DC1"
           PSDscAllowDomainUser = $True
         </parameters>
       </dsc>
@@ -570,14 +574,14 @@
 
     <vm name="SA-SUBCA"
       template="Template Windows Server 2012 R2 Datacenter CORE"
-      computername="SA-SUBCA"
-      usedifferencingbootdisk="Y">
+      computername="SA-SUBCA">
       <dsc configname="MEMBER_SUBCA"
            configfile="MEMBER_SUBCA.DSC.ps1"
            logging="Y">
         <parameters>
           DomainName = "LABBUILDER.COM"
           DomainAdminPassword = "P@ssword!1"
+		  DCName = "SA-DC1"
           PSDscAllowDomainUser = $True
           InstallOnlineResponder = $True
           InstallEnrollmentWebService = $True
@@ -606,8 +610,7 @@
 
     <vm name="SA-FS1"
         template="Template Windows Server 2012 R2 Datacenter CORE"
-        computername="SA-FS1"
-        usedifferencingbootdisk="Y" >
+        computername="SA-FS1">
       <datavhds>
         <datavhd vhd="LABBUILDER.COM SA-FS1 Data Disk.vhdx" size="10GB" type="dynamic" />
       </datavhds>
@@ -617,6 +620,7 @@
         <parameters>
           DomainName = "LABBUILDER.COM"
           DomainAdminPassword = "P@ssword!1"
+		  DCName = "SA-DC1"
           PSDscAllowDomainUser = $True
         </parameters>
       </dsc>
@@ -637,8 +641,7 @@
 
     <vm name="SA-FS2"
         template="Template Windows Server 2012 R2 Datacenter CORE"
-        computername="SA-FS2"
-        usedifferencingbootdisk="Y" >
+        computername="SA-FS2">
       <datavhds>
         <datavhd vhd="LABBUILDER.COM SA-FS2 Data Disk.vhdx" size="10GB" type="dynamic" />
       </datavhds>
@@ -647,6 +650,7 @@
         <parameters>
           DomainName = "LABBUILDER.COM"
           DomainAdminPassword = "P@ssword!1"
+		  DCName = "SA-DC1"
           PSDscAllowDomainUser = $True
         </parameters>
       </dsc>
@@ -667,8 +671,7 @@
 
     <vm name="DA-IT01"
       template="Template Windows 10 Enterprise"
-      computername="DA-IT01"
-      usedifferencingbootdisk="Y">
+      computername="DA-IT01">
       <adapters>
         <adapter name="Domain Private Site A"
                  switchname="Domain Private Site A" />
@@ -676,9 +679,6 @@
                  switchname="Internet" >
         </adapter>
       </adapters>
-      <install>
-        <msu url="http://download.microsoft.com/download/1/D/8/1D8B5022-5477-4B9A-8104-6A71FF9D98AB/WindowsTH-KB2693643-x64.msu" />
-      </install>
     </vm>
 
   </vms>

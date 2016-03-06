@@ -27,13 +27,12 @@ $Libs = Get-ChildItem `
     -Recurse
 $Libs.Foreach(
     {
-        Write-Verbose -Message ($LocalizedData.ImportingLibFileMessage `
+        Write-Verbose -Message $($LocalizedData.ImportingLibFileMessage `
             -f $_.Fullname)
         . $_.Fullname    
     }
 )
 #endregion
-
 
 #region ModuleVariables
 [String] $Script:WorkingFolder = $ENV:Temp
@@ -41,6 +40,9 @@ $Libs.Foreach(
 # Supporting files
 [String] $Script:SupportConvertWindowsImagePath = Join-Path -Path $PSScriptRoot -ChildPath 'Support\Convert-WindowsImage.ps1'
 [String] $Script:SupportGertGenPath = Join-Path -Path $PSScriptRoot -ChildPath 'Support\New-SelfSignedCertificateEx.ps1'
+
+# DSC Library
+[String] $Script:DSCLibraryPath = Join-Path -Path $PSScriptRoot -ChildPath 'DSCLibrary'
 
 # Virtual Networking Parameters
 [Int] $Script:DefaultManagementVLan = 99
@@ -62,6 +64,7 @@ $Libs.Foreach(
 
 # XML Stuff
 [String] $Script:ConfigurationXMLSchema = Join-Path -Path $PSScriptRoot -ChildPath 'schema\labbuilderconfig-schema.xsd'
+[String] $Script:ConfigurationXMLTemplate = Join-Path -Path $PSScriptRoot -ChildPath 'template\labbuilderconfig-template.xml'
 
 # The current list of Nano Servers available with TP4.
 [Array] $Script:NanoServerPackageList = @(
@@ -81,6 +84,319 @@ $Libs.Foreach(
     @{ Name = 'SCVMM'; Filename = 'Microsoft-Windows-Server-SCVMM-Package.cab' },
     @{ Name = 'SCVMM-Compute'; Filename = 'Microsoft-Windows-Server-SCVMM-Compute-Package.cab' }
 )
+#endregion
+
+
+#region LabResourceFunctions
+<#
+.SYNOPSIS
+   Gets an array of Module Resources from a Lab.
+.DESCRIPTION
+   Takes a provided Lab and returns the list of module resources required for this Lab.
+.PARAMETER Lab
+   Contains the Lab object that was loaded by the Get-Lab object.
+.PARAMETER Name
+   An optional array of Module names.
+   
+   Only Module Resources matching names in this list will be pulled into the returned in the array.
+.EXAMPLE
+   $Lab = Get-Lab -ConfigPath c:\mylab\config.xml
+   $Switches = Get-LabResourceModule -Lab $Lab
+   Loads a Lab and pulls the array of Module Resources from it.
+.OUTPUTS
+   Returns an array of LabModuleResource objects.
+#>
+function Get-LabResourceModule {
+    [OutputType([LabResourceModule[]])]
+    [CmdLetBinding()]
+    param
+    (
+        [Parameter(
+            Position=1,
+            Mandatory=$true)]
+        [ValidateNotNullOrEmpty()]
+        $Lab,
+        
+        [Parameter(
+            Position=2)]
+        [ValidateNotNullOrEmpty()]
+        [String[]] $Name
+    )
+
+    [LabResourceModule[]] $ResourceModules = @()
+    if ($Lab.labbuilderconfig.resources) 
+    {
+        foreach ($Module in $Lab.labbuilderconfig.resources.module)
+        {
+            $ModuleName = $Module.Name
+            if ($Name -and ($ModuleName -notin $Name))
+            {
+                # A names list was passed but this Module wasn't included
+                continue
+            } # if
+
+            if ($ModuleName -eq 'module')
+            {
+                $ExceptionParameters = @{
+                    errorId = 'ResourceModuleNameIsEmptyError'
+                    errorCategory = 'InvalidArgument'
+                    errorMessage = $($LocalizedData.ResourceModuleNameIsEmptyError)
+                }
+                ThrowException @ExceptionParameters
+            } # if
+            $ResourceModule = New-Object -TypeName LabResourceModule
+            $ResourceModule.Name = $ModuleName
+            $ResourceModule.URL = $Module.URL
+            $ResourceModule.Folder = $Module.Folder
+            $ResourceModule.MinimumVersion = $Module.MinimumVersion
+            $ResourceModule.RequiredVersion = $Module.RequiredVersion
+            $ResourceModules += @( $ResourceModule )
+        } # foreach
+    } # if
+    return $ResourceModules
+} # Get-LabResourceModule
+
+
+<#
+.SYNOPSIS
+   Downloads the Resource Modules from a provided array.
+.DESCRIPTION
+   Takes an array of LabResourceModule objects ane ensures the Resource Modules are available in the PowerShell Modules folder. If they are not they will be downloaded.
+.PARAMETER Lab
+   Contains Lab object that was loaded by the Get-Lab object.
+.PARAMETER Name
+   An optional array of Module names.
+   
+   Only Module Resources matching names in this list will be pulled into the returned in the array.
+.PARAMETER ResourceModules
+   The array of Resource Modules pulled from the Lab using Get-LabResourceModule.
+
+   If not provided it will attempt to pull the list from the Lab.
+.EXAMPLE
+   $Lab = Get-Lab -ConfigPath c:\mylab\config.xml
+   $ResourceModules = Get-LabResourceModule -Lab $Lab
+   Initialize-LabResourceModule -Lab $Lab -ResourceModules $ResourceModules
+   Initializes the Resource Modules in the configured in the Lab c:\mylab\config.xml
+.EXAMPLE
+   $Lab = Get-Lab -ConfigPath c:\mylab\config.xml
+   Initialize-LabResourceModule -Lab $Lab
+   Initializes the Resource Modules in the configured in the Lab c:\mylab\config.xml
+.OUTPUTS
+   None.
+#>
+function Initialize-LabResourceModule {
+    [CmdLetBinding()]
+    param
+    (
+        [Parameter(
+            Position=1,
+            Mandatory=$true)]
+        [ValidateNotNullOrEmpty()]
+        $Lab,
+        
+        [Parameter(
+            Position=2)]
+        [ValidateNotNullOrEmpty()]
+        [String[]] $Name,
+
+        [Parameter(
+            Position=3)]
+        [LabResourceModule[]] $ResourceModules
+    )
+
+    # if resource modules was not passed, pull it.
+    if (-not $PSBoundParameters.ContainsKey('resourcemodules'))
+    {
+        $ResourceModules = Get-LabResourceModule `
+            @PSBoundParameters
+    }
+
+    if ($ResourceModules)
+    {
+        foreach ($Module in $ResourceModules)
+        {
+            $Splat = [PSObject] @{ Name = $Module.Name }
+            if ($Module.URL)
+            {
+                $Splat += [PSObject] @{ URL = $Module.URL }
+            }
+            if ($Module.Folder)
+            {
+                $Splat += [PSObject] @{ Folder = $Module.Folder }
+            }
+            if ($Module.RequiredVersion)
+            {
+                $Splat += [PSObject] @{ RequiredVersion = $Module.RequiredVersion }
+            }
+            if ($Module.MiniumVersion)
+            {
+                $Splat += [PSObject] @{ MiniumVersion = $Module.MiniumVersion }
+            }
+
+            Write-Verbose -Message $($LocalizedData.DownloadingResourceModuleMessage `
+                -f $Name,$URL)
+
+            DownloadResourceModule @Splat
+        } # foreach
+    } # if
+} # Initialize-LabResourceModule
+
+
+<#
+.SYNOPSIS
+   Gets an array of MSU Resources from a Lab.
+.DESCRIPTION
+   Takes a provided Lab and returns the list of MSU resources required for this Lab.
+.PARAMETER Lab
+   Contains the Lab object that was loaded by the Get-Lab object.
+.PARAMETER Name
+   An optional array of MSU names.
+   
+   Only MSU Resources matching names in this list will be pulled into the returned in the array.
+.EXAMPLE
+   $Lab = Get-Lab -ConfigPath c:\mylab\config.xml
+   $Switches = Get-LabResourceModuleMSUb $Lab
+   Loads a Lab and pulls the array of MSU Resources from it.
+.OUTPUTS
+   Returns an array of LabMSUResource objects.
+#>
+function Get-LabResourceMSU {
+    [OutputType([LabResourceMSU[]])]
+    [CmdLetBinding()]
+    param
+    (
+        [Parameter(
+            Position=1,
+            Mandatory=$true)]
+        [ValidateNotNullOrEmpty()]
+        $Lab,
+        
+        [Parameter(
+            Position=2)]
+        [ValidateNotNullOrEmpty()]
+        [String[]] $Name
+    )
+
+    [LabResourceMSU[]] $ResourceMSUs = @()
+    if ($Lab.labbuilderconfig.resources) 
+    {
+        foreach ($MSU in $Lab.labbuilderconfig.resources.msu)
+        {
+            $MSUName = $MSU.Name
+            if ($Name -and ($MSUName -notin $Name))
+            {
+                # A names list was passed but this MSU wasn't included
+                continue
+            } # if
+
+            if ($MSUName -eq 'msu')
+            {
+                $ExceptionParameters = @{
+                    errorId = 'ResourceMSUNameIsEmptyError'
+                    errorCategory = 'InvalidArgument'
+                    errorMessage = $($LocalizedData.ResourceMSUNameIsEmptyError)
+                }
+                ThrowException @ExceptionParameters
+            } # if
+            $ResourceMSU = New-Object -TypeName LabResourceMSU
+            $ResourceMSU.Name = $MSUName
+            $ResourceMSU.URL = $MSU.URL
+            $Path = $MSU.Path
+            if ($Path)
+            {
+                if (-not [System.IO.Path]::IsPathRooted($Path))
+                {
+                    $Path = Join-Path `
+                        -Path $Lab.labbuilderconfig.settings.resourcepathfull `
+                        -ChildPath $Path
+                }
+            }
+            else
+            {
+                $Path = $Lab.labbuilderconfig.settings.resourcepathfull
+            }
+            $FileName = Join-Path `
+                -Path $Path `
+                -ChildPath $MSU.URL.Substring($MSU.URL.LastIndexOf('/') + 1)
+            $ResourceMSU.Path = $Path
+            $ResourceMSU.Filename = $Filename
+            $ResourceMSUs += @( $ResourceMSU )
+        } # foreach
+    } # if
+    return $ResourceMSUs
+} # Get-LabResourceMSU
+
+
+<#
+.SYNOPSIS
+   Downloads the Resource MSU packages from a provided array.
+.DESCRIPTION
+   Takes an array of LabResourceMSU objects and ensures the MSU packages are available in the Lab Resources folder. If they are not they will be downloaded.
+.PARAMETER Lab
+   Contains Lab object that was loaded by the Get-Lab object.
+.PARAMETER Name
+   An optional array of MSU packages names.
+   
+   Only MSU packages matching names in this list will be pulled into the returned in the array.
+.PARAMETER ResourceModules
+   The array of Resource Modules pulled from the Lab using Get-LabResourceModule.
+
+   If not provided it will attempt to pull the list from the Lab.
+.EXAMPLE
+   $Lab = Get-Lab -ConfigPath c:\mylab\config.xml
+   $ResourceModules = Get-LabResourceModule -Lab $Lab
+   Initialize-LabResourceMSU -Lab $Lab -ResourceModules $ResourceModules
+   Initializes the Resource Modules in the configured in the Lab c:\mylab\config.xml
+.EXAMPLE
+   $Lab = Get-Lab -ConfigPath c:\mylab\config.xml
+   Initialize-LabResourceMSU -Lab $Lab
+   Initializes the Resource Modules in the configured in the Lab c:\mylab\config.xml
+.OUTPUTS
+   None.
+#>
+function Initialize-LabResourceMSU {
+    [CmdLetBinding()]
+    param
+    (
+        [Parameter(
+            Position=1,
+            Mandatory=$true)]
+        [ValidateNotNullOrEmpty()]
+        $Lab,
+        
+        [Parameter(
+            Position=2)]
+        [ValidateNotNullOrEmpty()]
+        [String[]] $Name,
+
+        [Parameter(
+            Position=3)]
+        [LabResourceMSU[]] $ResourceMSUs
+    )
+
+    # if resource MSUs was not passed, pull it.
+    if (-not $PSBoundParameters.ContainsKey('resourcemsus'))
+    {
+        $ResourceMSUs = Get-LabResourceMSU `
+            @PSBoundParameters
+    }
+
+    if ($ResourceMSUs)
+    {
+        foreach ($MSU in $ResourceMSUs)
+        {
+            if (-not (Test-Path -Path $MSU.Filename))
+            {
+                Write-Verbose -Message $($LocalizedData.DownloadingResourceMSUMessage `
+                    -f $MSU.Name,$MSU.URL)
+
+                DownloadAndUnzipFile `
+                    -URL $MSU.URL `
+                    -DestinationPath (Split-Path -Path $MSU.Filename)
+            } # if
+        } # foreach
+    } # if
+} # Initialize-LabResourceMSU
 #endregion
 
 
@@ -124,8 +440,6 @@ function Get-LabSwitch {
 
     [String] $LabId = $Lab.labbuilderconfig.settings.labid 
     [Array] $Switches = @() 
-#    $XMLNameSpace = New-Object -TypeName System.Xml.XmlNamespaceManager -ArgumentList $Lab.NameTable
-#    $XMLNameSpace.AddNamespace("labbuilderconfig", $Script:ConfigurationXMLSchema)
     $ConfigSwitches = $Lab.labbuilderconfig.Switches.Switch
 
     foreach ($ConfigSwitch in $ConfigSwitches)
@@ -537,7 +851,7 @@ function Remove-LabSwitch {
                 }
             } # Switch
         } # if
-    } # foreach        
+    } # foreach
 } # Remove-LabSwitch
 #endregion
 
@@ -764,7 +1078,7 @@ function Get-LabVMTemplateVHD {
             ThrowException @ExceptionParameters            
         } # if
 
-		# Get the Template Wim Image to use
+        # Get the Template Wim Image to use
         $Edition = $null
         if ($TemplateVHD.Edition)
         {
@@ -802,14 +1116,14 @@ function Get-LabVMTemplateVHD {
                 errorMessage = $($LocalizedData.InvalidVMTemplateVHDVHDTypeError `
                     -f $TemplateVHD.Name,$VHDType)
             }
-            ThrowException @ExceptionParameters            
+            ThrowException @ExceptionParameters
         } # if
         
         # Get the disk size if provided
         [Int64] $Size = 25GB
         if ($TemplateVHD.VHDSize)
         {
-            $VHDSize = (Invoke-Expression $TemplateVHD.VHDSize)         
+            $VHDSize = (Invoke-Expression $TemplateVHD.VHDSize)
         } # if
 
         # Get the Template VM Generation 
@@ -841,7 +1155,7 @@ function Get-LabVMTemplateVHD {
             $Features = $TemplateVHD.Features
         } # if
 
-		# Add template VHD to the list
+        # Add template VHD to the list
             $VMTemplateVHDs += @{
                 Name = $TemplateVHDName;
                 ISOPath = $ISOPath;
@@ -862,34 +1176,34 @@ function Get-LabVMTemplateVHD {
 
 <#
 .SYNOPSIS
-	Scans through a list of VM Template VHDs and creates them from the ISO if missing.
+    Scans through a list of VM Template VHDs and creates them from the ISO if missing.
 .DESCRIPTION
-	This function will take a list of VM Template VHDs from a Lab or it will
+    This function will take a list of VM Template VHDs from a Lab or it will
     extract the list itself if it is not provided and ensure that each VHD file is available.
-    
+
     If the VHD file is not available then it will attempt to create it from the ISO.
 .PARAMETER Lab
-   Contains the Lab object that was loaded by the Get-Lab object.
+    Contains the Lab object that was loaded by the Get-Lab object.
 .PARAMETER Name
-   An optional array of VM Template VHD names.
-   
-   Only VM Template VHDs matching names in this list will be initialized.
+    An optional array of VM Template VHD names.
+
+    Only VM Template VHDs matching names in this list will be initialized.
 .PARAMETER VMTemplateVHDs
-   The array of VMTemplateVHDs pulled from the Lab using Get-LabVMTemplateVHD
-   
-   If not provided it will attempt to pull the list from the Lab.
+    The array of VMTemplateVHDs pulled from the Lab using Get-LabVMTemplateVHD
+
+    If not provided it will attempt to pull the list from the Lab.
 .EXAMPLE
-   $Lab = Get-Lab -ConfigPath c:\mylab\config.xml
-   $VMTemplateVHDs = Get-LabVMTemplateVHD -Lab $Lab
-   Initialize-LabVMTemplateVHD -Lab $Lab -VMTemplateVHDs $VMTemplateVHDs
-   Loads a Lab and pulls the array of VM Template VHDs from it and then
-   ensures all the VHDs are available.
+    $Lab = Get-Lab -ConfigPath c:\mylab\config.xml
+    $VMTemplateVHDs = Get-LabVMTemplateVHD -Lab $Lab
+    Initialize-LabVMTemplateVHD -Lab $Lab -VMTemplateVHDs $VMTemplateVHDs
+    Loads a Lab and pulls the array of VM Template VHDs from it and then
+    ensures all the VHDs are available.
 .EXAMPLE
-   $Lab = Get-Lab -ConfigPath c:\mylab\config.xml
-   Initialize-LabVMTemplateVHD -Lab $Lab
-   Loads a Lab and then ensures VM Template VHDs all the VHDs are available.
+    $Lab = Get-Lab -ConfigPath c:\mylab\config.xml
+    Initialize-LabVMTemplateVHD -Lab $Lab
+    Loads a Lab and then ensures VM Template VHDs all the VHDs are available.
 .OUTPUTS
-    None. 
+    None.
 #>
 function Initialize-LabVMTemplateVHD
 {
@@ -908,14 +1222,14 @@ function Initialize-LabVMTemplateVHD
 
         [Parameter(
             Position=3)]
-	    [Array] $VMTemplateVHDs
+        [Array] $VMTemplateVHDs
     )
 
     # if VMTeplateVHDs array not passed, pull it from config.
     if (-not $PSBoundParameters.ContainsKey('VMTemplateVHDs'))
     {
         $VMTemplateVHDs = Get-LabVMTemplateVHD `
-            @PSBoundParameters        
+            @PSBoundParameters
     } # if
 
     # if there are no VMTemplateVHDs just return
@@ -940,14 +1254,14 @@ function Initialize-LabVMTemplateVHD
         if (Test-Path -Path ($VHDPath))
         {
             # The SourceVHD already exists
-            Write-Verbose -Message ($LocalizedData.SkipVMTemplateVHDFileMessage `
+            Write-Verbose -Message $($LocalizedData.SkipVMTemplateVHDFileMessage `
                 -f $TemplateVHDName,$VHDPath)
 
             continue
         } # if
         
         # Create the VHD
-        Write-Verbose -Message ($LocalizedData.CreatingVMTemplateVHDMessage `
+        Write-Verbose -Message $($LocalizedData.CreatingVMTemplateVHDMessage `
             -f $TemplateVHDName,$VHDPath)
             
         # Check the ISO exists.
@@ -964,7 +1278,7 @@ function Initialize-LabVMTemplateVHD
         } # if
         
         # Mount the ISO so we can read the files.
-        Write-Verbose -Message ($LocalizedData.MountingVMTemplateVHDISOMessage `
+        Write-Verbose -Message $($LocalizedData.MountingVMTemplateVHDISOMessage `
                 -f $TemplateVHDName,$ISOPath)
                 
         $null = Mount-DiskImage `
@@ -1040,14 +1354,14 @@ function Initialize-LabVMTemplateVHD
                 -Path $VHDPath `
                 -Parent
 
-            [String] $VHDPackagesFolder = Join-Path `
+            [String] $LabPackagesFolder = Join-Path `
                 -Path $VHDFolder `
                 -ChildPath 'NanoServerPackages'
             
-            if (-not (Test-Path -Path $VHDPackagesFolder -Type Container))
+            if (-not (Test-Path -Path $LabPackagesFolder -Type Container))
             {
-                Write-Verbose -Message ($LocalizedData.CachingNanoServerPackagesMessage `
-                        -f "$ISODrive\Nanoserver\Packages",$VHDPackagesFolder)
+                Write-Verbose -Message $($LocalizedData.CachingNanoServerPackagesMessage `
+                        -f "$ISODrive\Nanoserver\Packages",$LabPackagesFolder)
                 Copy-Item `
                     -Path "$ISODrive\Nanoserver\Packages" `
                     -Destination $VHDFolder `
@@ -1076,6 +1390,67 @@ function Initialize-LabVMTemplateVHD
                     package = $Packages
                 }
             } # if
+        }
+        else
+        {
+            if (-not [String]::IsNullOrWhitespace($VMTemplateVHD.Packages))
+            {
+                $Packages = @()
+
+                # Get the list of Lab Resource MSUs
+                $ResourceMSUs = Get-LabResourceMSU `
+                    -Lab $Lab
+
+                foreach ($Package in $VMTemplateVHD.Packages)
+                {
+                    # Find the package in the Resources
+                    [Boolean] $Found = $False
+                    foreach ($ResourceMSU in $ResourceMSUs)
+                    {
+                        if ($ResourceMSU.Name -eq $Package)
+                        {
+                            # Found the package
+                            $Found = $True
+                            break
+                        } # if
+                    } # foreach
+                    if (-not $Found)
+                    {
+                        # Dismount Disk Image before throwing exception
+                        $null = Dismount-DiskImage `
+                            -ImagePath $ISOPath
+
+                        $ExceptionParameters = @{
+                            errorId = 'PackageNotFoundError'
+                            errorCategory = 'InvalidArgument'
+                            errorMessage = $($LocalizedData.PackageNotFoundError `
+                            -f $Package)
+                        }
+                        ThrowException @ExceptionParameters
+                    } # if
+
+                    $PackagePath = $ResourceMSU.Filename
+                    if (-not (Test-Path -Path $PackagePath))
+                    {
+                        # Dismount Disk Image before throwing exception
+                        $null = Dismount-DiskImage `
+                            -ImagePath $ISOPath
+
+                        $ExceptionParameters = @{
+                            errorId = 'PackageMSUNotFoundError'
+                            errorCategory = 'InvalidArgument'
+                            errorMessage = $($LocalizedData.PackageMSUNotFoundError `
+                            -f $Package,$PackagePath)
+                        }
+                        ThrowException @ExceptionParameters
+                    } # if
+                    
+                    $Packages += @( $PackagePath )
+                } # foreach
+                $ConvertParams += @{
+                    Package = $Packages
+                }
+            } # if
         } # if 
         
         Write-Verbose -Message ($LocalizedData.ConvertingWIMtoVHDMessage `
@@ -1096,7 +1471,7 @@ function Initialize-LabVMTemplateVHD
         Convert-WindowsImage @ConvertParams
 
         # Dismount the ISO.
-        Write-Verbose -Message ($LocalizedData.DismountingVMTemplateVHDISOMessage `
+        Write-Verbose -Message $($LocalizedData.DismountingVMTemplateVHDISOMessage `
                 -f $TemplateVHDName,$ISOPath)
 
         $null = Dismount-DiskImage `
@@ -1108,9 +1483,9 @@ function Initialize-LabVMTemplateVHD
 
 <#
 .SYNOPSIS
-	Scans through a list of VM Template VHDs and removes them if they exist.
+    Scans through a list of VM Template VHDs and removes them if they exist.
 .DESCRIPTION
-	This function will take a list of VM Template VHDs from a Lab or it will
+    This function will take a list of VM Template VHDs from a Lab or it will
     extract the list itself if it is not provided and remove the VHD file if it exists.
 .PARAMETER Lab
    Contains the Lab object that was loaded by the Get-Lab object.
@@ -1152,7 +1527,7 @@ function Remove-LabVMTemplateVHD
 
         [Parameter(
             Position=3)]
-	    [Array] $VMTemplateVHDs
+        [Array] $VMTemplateVHDs
     )
 
     # if VMTeplateVHDs array not passed, pull it from config.
@@ -1186,7 +1561,7 @@ function Remove-LabVMTemplateVHD
             Remove-Item `
                 -Path $VHDPath `
                 -Force
-            Write-Verbose -Message ($LocalizedData.DeletingVMTemplateVHDFileMessage `
+            Write-Verbose -Message $($LocalizedData.DeletingVMTemplateVHDFileMessage `
                 -f $TemplateVHDName,$VHDPath)
         } # if
     } # endfor
@@ -1247,7 +1622,7 @@ function Get-LabVMTemplate {
     }
     
     [System.Collections.Hashtable[]] $VMTemplates = @()
-    [String] $VHDParentPath = $Lab.labbuilderconfig.settings.vhdparentpath
+    [String] $VHDParentPath = $Lab.labbuilderconfig.settings.vhdparentpathfull
     
     # Get a list of all templates in the Hyper-V system matching the phrase found in the fromvm
     # config setting
@@ -1408,6 +1783,11 @@ function Get-LabVMTemplate {
                     -Path $VMTemplate.sourcevhd `
                     -Leaf
             } 
+        }
+        elseif ($VMTemplate.SourceVHD)
+        {
+            # A SourceVHD is already set - 
+            # Usually because it was pulled From a Hyper-V VM template.
         }
         else
         {
@@ -1592,13 +1972,128 @@ function Initialize-LabVMTemplate {
                         -f $VMTemplate.Name,$VMTemplate.sourcevhd)
                 }
                 ThrowException @ExceptionParameters                
-			}
-            
-			Write-Verbose -Message $($LocalizedData.CopyingTemplateSourceVHDMessage `
+            }
+
+            Write-Verbose -Message $($LocalizedData.CopyingTemplateSourceVHDMessage `
                 -f $VMTemplate.sourcevhd,$VMTemplate.parentvhd)
             Copy-Item `
                 -Path $VMTemplate.sourcevhd `
                 -Destination $VMTemplate.parentvhd
+
+            # Add any packages to the template if required
+            if (-not [String]::IsNullOrWhitespace($VMTemplate.Packages))
+            {
+                if ($VMTemplate.OSType -ne 'Nano')
+                {
+                    # Mount the Template Boot VHD so that files can be loaded into it
+                    Write-Verbose -Message $($LocalizedData.MountingTemplateBootDiskMessage `
+                        -f $VMTemplate.Name,$VMTemplate.parentvhd)
+
+                    # Create a mount point for mounting the Boot VHD
+                    [String] $MountPoint = Join-Path `
+                        -Path (Split-Path -Path $VMTemplate.ParentVHD) `
+                        -ChildPath 'Mount'
+
+                    if (-not (Test-Path -Path $MountPoint -PathType Container))
+                    {
+                        $null = New-Item `
+                            -Path $MountPoint `
+                            -ItemType Directory
+                    }
+
+                    # Mount the VHD to the Mount point
+                    $null = Mount-WindowsImage `
+                        -ImagePath $VMTemplate.parentvhd `
+                        -Path $MountPoint `
+                        -Index 1
+
+                    # Get the list of Packages to apply
+                    $ApplyPackages = @($VMTemplate.Packages -split ',')
+
+                    # Get the list of Lab Resource MSUs
+                    $ResourceMSUs = Get-LabResourceMSU `
+                        -Lab $Lab
+
+                    foreach ($Package in $ApplyPackages)
+                    {
+                        # Find the package in the Resources
+                        [Boolean] $Found = $False
+                        foreach ($ResourceMSU in $ResourceMSUs)
+                        {
+                            if ($ResourceMSU.Name -eq $Package)
+                            {
+                                # Found the package
+                                $Found = $True
+                                break
+                            } # if
+                        } # foreach
+                        if (-not $Found)
+                        {
+                            # Dismount before throwing the error
+                            Write-Verbose -Message $($LocalizedData.DismountingTemplateBootDiskMessage `
+                                -f $VMTemplate.Name,$VMTemplate.parentvhd)
+                            $null = Dismount-WindowsImage `
+                                -Path $MountPoint `
+                                -Save
+                            $null = Remove-Item `
+                                -Path $MountPoint `
+                                -Recurse `
+                                -Force
+
+                            $ExceptionParameters = @{
+                                errorId = 'PackageNotFoundError'
+                                errorCategory = 'InvalidArgument'
+                                errorMessage = $($LocalizedData.PackageNotFoundError `
+                                -f $Package)
+                            }
+                            ThrowException @ExceptionParameters
+                        } # if
+
+                        $PackagePath = $ResourceMSU.Filename
+                        if (-not (Test-Path -Path $PackagePath))
+                        {
+                            # Dismount before throwing the error
+                            Write-Verbose -Message $($LocalizedData.DismountingTemplateBootDiskMessage `
+                                -f $VMTemplate.Name,$VMTemplate.parentvhd)
+                            $null = Dismount-WindowsImage `
+                                -Path $MountPoint `
+                                -Save
+                            $null = Remove-Item `
+                                -Path $MountPoint `
+                                -Recurse `
+                                -Force
+
+                            $ExceptionParameters = @{
+                                errorId = 'PackageMSUNotFoundError'
+                                errorCategory = 'InvalidArgument'
+                                errorMessage = $($LocalizedData.PackageMSUNotFoundError `
+                                -f $Package,$PackagePath)
+                            }
+                            ThrowException @ExceptionParameters
+                        } # if
+                        
+                        # Apply a Pacakge
+                        Write-Verbose -Message $($LocalizedData.ApplyingTemplateBootDiskFileMessage `
+                            -f $VMTemplate.Name,$Package,$PackagePath)
+
+                        $null = Add-WindowsPackage `
+                            -PackagePath $PackagePath `
+                            -Path $MountPoint
+                    } # foreach
+
+                    # Dismount the VHD
+                    Write-Verbose -Message $($LocalizedData.DismountingTemplateBootDiskMessage `
+                        -f $VMTemplate.Name,$VMTemplate.parentvhd)
+                    $null = Dismount-WindowsImage `
+                        -Path $MountPoint `
+                        -Save
+                    $null = Remove-Item `
+                        -Path $MountPoint `
+                        -Recurse `
+                        -Force
+                } # if
+            } # if
+
             Write-Verbose -Message $($LocalizedData.OptimizingParentVHDMessage `
                 -f $VMTemplate.parentvhd)
             Set-ItemProperty `
@@ -1635,7 +2130,7 @@ function Initialize-LabVMTemplate {
 
             if (-not (Test-Path -Path $LabPackagesFolder -Type Container))
             {
-                Write-Verbose -Message ($LocalizedData.CachingNanoServerPackagesMessage `
+                Write-Verbose -Message $($LocalizedData.CachingNanoServerPackagesMessage `
                         -f $VHDPackagesFolder,$LabPackagesFolder)
                 Copy-Item `
                     -Path $VHDPackagesFolder `
@@ -1805,12 +2300,12 @@ function Get-LabVM {
 
     [System.Collections.Hashtable[]] $LabVMs = @()
     [String] $LabPath = $Lab.labbuilderconfig.settings.labpath
-    [String] $VHDParentPath = $Lab.labbuilderconfig.settings.vhdparentpath
+    [String] $VHDParentPath = $Lab.labbuilderconfig.settings.vhdparentpathfull
     [String] $LabId = $Lab.labbuilderconfig.settings.labid 
     $VMs = $Lab.labbuilderconfig.vms.vm
 
     foreach ($VM in $VMs) 
-	{
+    {
         $VMName = $VM.Name
         if ($Name -and ($VMName -notin $Name))
         {
@@ -1819,7 +2314,7 @@ function Get-LabVM {
         } # if
 
         if ($VMName -eq 'VM')
-		{
+        {
             $ExceptionParameters = @{
                 errorId = 'VMNameError'
                 errorCategory = 'InvalidArgument'
@@ -1835,7 +2330,7 @@ function Get-LabVM {
         }
         
         if (-not $VM.Template) 
-		{
+        {
             $ExceptionParameters = @{
                 errorId = 'VMTemplateNameEmptyError'
                 errorCategory = 'InvalidArgument'
@@ -1857,7 +2352,7 @@ function Get-LabVM {
         } # foreach
 
         if (-not $Found) 
-		{
+        {
             $ExceptionParameters = @{
                 errorId = 'VMTemplateNotFoundError'
                 errorCategory = 'InvalidArgument'
@@ -1871,12 +2366,12 @@ function Get-LabVM {
         [System.Collections.Hashtable[]] $VMAdapters = @()
         [Int] $AdapterCount = 0
         foreach ($VMAdapter in $VM.Adapters.Adapter) 
-		{
+        {
             $AdapterCount++
             $AdapterName = $VMAdapter.Name 
             $AdapterSwitchName = $VMAdapter.SwitchName
             if ($AdapterName -eq 'adapter') 
-			{
+            {
                 $ExceptionParameters = @{
                     errorId = 'VMAdapterNameError'
                     errorCategory = 'InvalidArgument'
@@ -1887,7 +2382,7 @@ function Get-LabVM {
             }
             
             if (-not $AdapterSwitchName) 
-			{
+            {
                 $ExceptionParameters = @{
                     errorId = 'VMAdapterSwitchNameError'
                     errorCategory = 'InvalidArgument'
@@ -1908,11 +2403,11 @@ function Get-LabVM {
             # Check the switch is in the switch list
             [Boolean] $Found = $False
             foreach ($Switch in $Switches) 
-			{
+            {
                 # Match the switch name to the Adapter Switch Name or
                 # the LabId and Adapter Switch Name
                 if ($Switch.Name -eq $AdapterSwitchName) `
-				{
+                {
                     # The switch is found in the switch list - record the VLAN (if there is one)
                     $Found = $True
                     $SwitchVLan = $Switch.Vlan
@@ -1928,7 +2423,7 @@ function Get-LabVM {
                 }
             } # foreach
             if (-not $Found) 
-			{
+            {
                 $ExceptionParameters = @{
                     errorId = 'VMAdapterSwitchNotFoundError'
                     errorCategory = 'InvalidArgument'
@@ -1941,20 +2436,20 @@ function Get-LabVM {
             # Figure out the VLan - If defined in the VM use it, otherwise use the one defined in the Switch, otherwise keep blank.
             [String] $VLan = $VMAdapter.VLan
             if (-not $VLan) 
-			{
+            {
                 $VLan = $SwitchVLan
             } # if
             
             [String] $MACAddressSpoofing = 'Off'
             if ($VMAdapter.macaddressspoofing -eq 'On') 
-			{
+            {
                 $MACAddressSpoofing = 'On'
             }
             
             # Have we got any IPv4 settings?
             [System.Collections.Hashtable] $IPv4 = @{}
             if ($VMAdapter.IPv4) 
-			{
+            {
                 $IPv4 = @{
                     Address = $VMAdapter.IPv4.Address;
                     defaultgateway = $VMAdapter.IPv4.DefaultGateway;
@@ -1967,7 +2462,7 @@ function Get-LabVM {
             [System.Collections.Hashtable] $IPv6 = @{}
 
             if ($VMAdapter.IPv6) 
-			{
+            {
                 $IPv6 = @{
                     Address = $VMAdapter.IPv6.Address;
                     defaultgateway = $VMAdapter.IPv6.DefaultGateway;
@@ -2286,13 +2781,20 @@ function Get-LabVM {
 
         # Does the VM have an Unattend file specified?
         [String] $UnattendFile = ''
-        if ($VM.UnattendFile) 
-		{
-            $UnattendFile = Join-Path `
-                -Path $Lab.labbuilderconfig.settings.fullconfigpath `
-                -ChildPath $VM.UnattendFile
+        if ($VM.UnattendFile)
+        {
+            if ([System.IO.Path]::IsPathRooted($VM.UnattendFile))
+            {
+                $UnattendFile = $VM.UnattendFile
+            }
+            else
+            {
+                $UnattendFile = Join-Path `
+                    -Path $Lab.labbuilderconfig.settings.fullconfigpath `
+                    -ChildPath $VM.UnattendFile
+            } # if
             if (-not (Test-Path $UnattendFile)) 
-			{
+            {
                 $ExceptionParameters = @{
                     errorId = 'UnattendFileMissingError'
                     errorCategory = 'InvalidArgument'
@@ -2306,10 +2808,17 @@ function Get-LabVM {
         # Does the VM specify a Setup Complete Script?
         [String] $SetupComplete = ''
         if ($VM.SetupComplete) 
-		{
-            $SetupComplete = Join-Path `
-                -Path $Lab.labbuilderconfig.settings.fullconfigpath `
-                -ChildPath $VM.SetupComplete
+        {
+            if ([System.IO.Path]::IsPathRooted($VM.SetupComplete))
+            {
+                $SetupComplete = $VM.SetupComplete
+            }
+            else
+            {
+                $SetupComplete = Join-Path `
+                    -Path $Lab.labbuilderconfig.settings.fullconfigpath `
+                    -ChildPath $VM.SetupComplete                
+            } # if
             if ([System.IO.Path]::GetExtension($SetupComplete).ToLower() -notin '.ps1','.cmd' )
             {
                 $ExceptionParameters = @{
@@ -2335,26 +2844,18 @@ function Get-LabVM {
         # Load the DSC Config File setting and check it
         [String] $DSCConfigFile = ''
         if ($VM.DSC.ConfigFile) 
-		{
-            [String] $DSCLibraryPath = $Lab.labbuilderconfig.settings.dsclibrarypath
-            if ($DSCLibraryPath)
+        {
+            if (-not [System.IO.Path]::IsPathRooted($VM.DSC.ConfigFile))
             {
-                if ([System.IO.Path]::IsPathRooted($DSCLibraryPath))
-                {
-                    $DSCConfigFile = Join-Path `
-                        -Path $DSCLibraryPath `
-                        -ChildPath $VM.DSC.ConfigFile
-                }
-                else
-                {
-                    $DSCConfigFile = Join-Path `
-                        -Path $Lab.labbuilderconfig.settings.fullconfigpath `
-                        -ChildPath $DSCLibraryPath
-                    $DSCConfigFile = Join-Path `
-                        -Path $DSCConfigFile `
-                        -ChildPath $VM.DSC.ConfigFile
-                }
+                $DSCConfigFile = Join-Path `
+                    -Path $Lab.labbuilderconfig.settings.dsclibrarypathfull `
+                    -ChildPath $VM.DSC.ConfigFile
             }
+            else
+            {
+                $DSCConfigFile = $VM.DSC.ConfigFile
+            } # if
+
             if ([System.IO.Path]::GetExtension($DSCConfigFile).ToLower() -ne '.ps1' )
             {
                 $ExceptionParameters = @{
@@ -2364,7 +2865,7 @@ function Get-LabVM {
                         -f $VMName,$DSCConfigFile)
                 }
                 ThrowException @ExceptionParameters
-            }
+            } # if
 
             if (-not (Test-Path $DSCConfigFile))
             {
@@ -2429,11 +2930,11 @@ function Get-LabVM {
         # Get the Memory Startup Bytes (from the template or VM)
         [Int] $ProcessorCount = 1
         if ($VM.processorcount) 
-		{
+        {
             $ProcessorCount = (Invoke-Expression $VM.processorcount)
         }
         elseif ($VMTemplate.processorcount) 
-		{
+        {
             $ProcessorCount = $VMTemplate.processorcount
         } # if
 
@@ -2444,10 +2945,17 @@ function Get-LabVM {
             $ExposeVirtualizationExtensions = $VM.ExposeVirtualizationExtensions
         }
         elseif ($VMTemplate.ExposeVirtualizationExtensions)
-		{
+        {
             $ExposeVirtualizationExtensions=$VMTemplate.ExposeVirtualizationExtensions
         } # if
         
+        
+        [String] $UseDifferencingDisk = 'Y'
+        if ($VM.UseDifferencingDisk -eq 'N')
+        {
+            $UseDifferencingDisk = 'N'
+        } # if
+
         # Get the Integration Services flags
         if ($null -ne $VM.IntegrationServices)
         {
@@ -2461,79 +2969,71 @@ function Get-LabVM {
         # Get the Administrator password (from the template or VM)
         [String] $AdministratorPassword = ''
         if ($VM.administratorpassword) 
-		{
+        {
             $AdministratorPassword = $VM.administratorpassword
         }
         elseif ($VMTemplate.administratorpassword) 
-		{
+        {
             $AdministratorPassword = $VMTemplate.administratorpassword
         } # if
 
         # Get the Product Key (from the template or VM)
         [String] $ProductKey = ''
         if ($VM.productkey) 
-		{
+        {
             $ProductKey = $VM.productkey
         }
         elseif ($VMTemplate.productkey) 
-		{
+        {
             $ProductKey = $VMTemplate.productkey
         } # if
 
         # Get the Timezone (from the template or VM)
         [String] $Timezone = 'Pacific Standard Time'
         if ($VM.timezone) 
-		{
+        {
             $Timezone = $VM.timezone
         }
         elseif ($VMTemplate.timezone) 
-		{
+        {
             $Timezone = $VMTemplate.timezone
         } # if
 
         # Get the OS Type
         [String] $OSType = 'Server'
         if ($VM.ostype) 
-		{
+        {
             $OSType = $VM.ostype
         }
         elseif ($VMTemplate.ostype) 
-		{
+        {
             $OSType = $VMTemplate.ostype
         } # if 
 
         # Get the Bootorder
         [Byte] $Bootorder = [Byte]::MaxValue
         if ($VM.bootorder) 
-		{
+        {
             $Bootorder = $VM.bootorder
         } # if 
 
         # Get the Packages
         [String] $Packages = $null
         if ($VM.packages) 
-		{
+        {
             $Packages = $VM.packages
         }
         elseif ($VMTemplate.packages) 
-		{
+        {
             $Packages = $VMTemplate.packages
         } # if 
-
-        # Do we have any MSU files that are listed as needing to be applied to the OS before
-        # first boot up?
-        [String[]] $InstallMSU = @()
-        foreach ($Update in $VM.Install.MSU) 
-		{
-            $InstallMSU += $Update.URL
-        } # foreach
 
         $LabVMs += @{
             Name = $VMName;
             ComputerName = $VM.ComputerName;
             Template = $VM.template;
             ParentVHD = $ParentVHDPath;
-            UseDifferencingDisk = $VM.usedifferencingbootdisk;
+            UseDifferencingDisk = $UseDifferencingDisk;
             MemoryStartupBytes = $MemoryStartupBytes;
             DynamicMemoryEnabled = $DynamicMemoryEnabled;
             ProcessorCount = $ProcessorCount;
@@ -2552,7 +3052,6 @@ function Get-LabVM {
             DSCLogging = $DSCLogging;
             OSType = $OSType;
             Packages = $Packages;
-            InstallMSU = $InstallMSU;
             VMRootPath = (Join-Path -Path $LabPath -ChildPath $VMName);
             LabBuilderFilesPath = (Join-Path -Path $LabPath -ChildPath "$VMName\LabBuilder Files");
             Bootorder = $Bootorder;
@@ -3354,7 +3853,7 @@ function Get-Lab {
         }
         ThrowException @ExceptionParameters
     } # if
-    
+
     $Content = Get-Content -Path $ConfigPath -Raw
     if (-not $Content)
     {
@@ -3366,7 +3865,7 @@ function Get-Lab {
         }
         ThrowException @ExceptionParameters
     } # if
-    
+
     if (-not $SkipXMLValidation)
     {
         # Validate the XML
@@ -3379,7 +3878,7 @@ function Get-Lab {
     [XML] $Lab = New-Object System.Xml.XmlDocument
     $Lab.PreserveWhitespace = $true
     $Lab.LoadXML($Content)
-    
+
     # Figure out the Config path and load it into the XML object (if we can)
     # This path is used to find any additional configuration files that might
     # be provided with config
@@ -3390,7 +3889,9 @@ function Get-Lab {
         {
             # A relative path was provided in the config path so add the actual path of the
             # XML to it
-            [String] $FullConfigPath = Join-Path -Path $ConfigPath -ChildPath $XMLConfigPath
+            [String] $FullConfigPath = Join-Path `
+                -Path $ConfigPath `
+                -ChildPath $XMLConfigPath
         } # if
     }
     else
@@ -3398,7 +3899,7 @@ function Get-Lab {
         [String] $FullConfigPath = $ConfigPath
     }
     $Lab.labbuilderconfig.settings.setattribute('fullconfigpath',$FullConfigPath)
-    
+
     # if the LabPath was passed as a parameter, set it in the config
     if ($LabPath)
     {
@@ -3406,50 +3907,260 @@ function Get-Lab {
     }
     else
     {
-        [String] $LabPath = $Lab.labbuilderconfig.settings.labpath        
-    }
-    
-    # Check the LabPath is actually set by either the XML or passed in.
-    if (-not $LabPath)
-    {
-        $ExceptionParameters = @{
-            errorId = 'ConfigurationMissingElementError'
-            errorCategory = 'InvalidArgument'
-            errorMessage = $($LocalizedData.ConfigurationMissingElementError `
-                -f '<settings>\<labpath>')
-        }
-        ThrowException @ExceptionParameters
+        [String] $LabPath = $Lab.labbuilderconfig.settings.labpath
     }
 
-    # Get the VHDParentPath - if it isn't supplied default
+    # Get the VHDParentPathFull - if it isn't supplied default
     [String] $VHDParentPath = $Lab.labbuilderconfig.settings.vhdparentpath
     if (-not $VHDParentPath)
     {
         $VHDParentPath = 'Virtual Hard Disk Templates'
     }
-    # if the resulting parent path is not rooted make the root
-    # the Full config path
+    # if the resulting parent path is not rooted make the root the Lab Path
     if (-not ([System.IO.Path]::IsPathRooted($VHDParentPath)))
     {
         $VHDParentPath = Join-Path `
             -Path $LabPath `
-            -ChildPath $VHDParentPath        
-    }    
-    $Lab.labbuilderconfig.settings.setattribute('vhdparentpath',$VHDParentPath)
+            -ChildPath $VHDParentPath
+    } # if
+    $Lab.labbuilderconfig.settings.setattribute('vhdparentpathfull',$VHDParentPath)
 
-    if ((-not $Lab.labbuilderconfig) `
-        -or (-not $Lab.labbuilderconfig.settings))
+    # Get the DSCLibraryPathFull - if it isn't supplied default
+    [String] $DSCLibraryPath = $Lab.labbuilderconfig.settings.dsclibrarypath
+    if (-not $DSCLibraryPath)
     {
-        $ExceptionParameters = @{
-            errorId = 'ConfigurationInvalidError'
-            errorCategory = 'InvalidArgument'
-            errorMessage = $($LocalizedData.ConfigurationInvalidError)
-        }
-        ThrowException @ExceptionParameters
-    }
-    
+        $DSCLibraryPath = 'DSCLibrary'
+    } # if
+    # if the resulting parent path is not rooted make the root the Full config path
+    if (-not [System.IO.Path]::IsPathRooted($DSCLibraryPath))
+    {
+        $DSCLibraryPath = Join-Path `
+            -Path $Lab.labbuilderconfig.settings.fullconfigpath `
+            -ChildPath $DSCLibraryPath
+    } # if
+    $Lab.labbuilderconfig.settings.setattribute('dsclibrarypathfull',$DSCLibraryPath)
+
+    # Get the ResourcePathFull - if it isn't supplied default
+    [String] $ResourcePath = $Lab.labbuilderconfig.settings.resourcepath
+    if (-not $ResourcePath)
+    {
+        $ResourcePath = 'Resource'
+    } # if
+    # if the resulting Resource path is not rooted make the root the Lab Path
+    if (-not [System.IO.Path]::IsPathRooted($ResourcePath))
+    {
+        $ResourcePath = Join-Path `
+            -Path $LabPath `
+            -ChildPath $ResourcePath
+    } # if
+    $Lab.labbuilderconfig.settings.setattribute('resourcepathfull',$ResourcePath)
+
     Return $Lab
 } # Get-Lab
+
+
+<#
+.SYNOPSIS
+    Creates a new Lab Builder Configuration file and Lab folder.
+.DESCRIPTION
+    This function will take a path to a new Lab folder and a path or filename 
+    for a new Lab Configuration file and creates them using the standard XML
+    template.
+    
+    It will also copy the DSCLibrary folder as well as the create an empty
+    ISOFiles and VHDFiles folder in the Lab folder.
+    
+    After running this function the VMs, VMTemplates, Switches and VMTemplateVHDs
+    in the new Lab Configuration file would normally be customized to for the new
+    Lab.
+.PARAMETER ConfigPath
+    This is the path to the Lab Builder configuration file to create. If it is
+    not rooted the configuration file is created in the LabPath folder.
+.PARAMETER LabPath
+    This is a required path of the new Lab to create.
+.PARAMETER Name
+    This is a required name of the Lab that gets added to the new Lab Configration
+    file.
+.PARAMETER Version
+    This is a required version of the Lab that gets added to the new Lab Configration
+    file.
+.PARAMETER Id
+    This is the optional Lab Id that gets set in the new Lab Configuration
+    file.
+.PARAMETER Description
+    This is the optional Lab description that gets set in the new Lab Configuration
+    file.
+.PARAMETER DomainName
+    This is the optional Lab domain name that gets set in the new Lab Configuration
+    file.
+.PARAMETER Email
+    This is the optional Lab email address that gets set in the new Lab Configuration
+    file.
+.EXAMPLE
+    $MyLab = New-Lab `
+        -ConfigPath c:\MyLab\LabConfig1.xml `
+        -LabPath c:\MyLab `
+        -LabName 'MyLab' `
+        -LabVersion '1.2'
+    Creates a new Lab Configration file LabConfig1.xml and also a Lab folder
+    c:\MyLab and populates it with default DSCLibrary file and supporting folders.
+.OUTPUTS
+    The Lab object representing the new Lab Configuration that was created.
+#>
+function New-Lab {
+    [CmdLetBinding(
+        SupportsShouldProcess = $true)]
+    [OutputType([XML])]
+    param
+    (
+        [Parameter(
+            Position=1,
+            Mandatory=$true)]
+        [ValidateNotNullOrEmpty()]
+        [String] $ConfigPath,
+        
+        [Parameter(
+            Position=2,
+            Mandatory=$true)]
+        [ValidateNotNullOrEmpty()]
+        [String] $LabPath,
+        
+        [Parameter(
+            Position=3,
+            Mandatory=$true)]
+        [ValidateNotNullOrEmpty()]
+        [String] $Name,
+
+        [Parameter(
+            Position=4)]
+        [ValidateNotNullOrEmpty()]
+        [String] $Version = '1.0',
+        
+        [Parameter(
+            Position=5)]
+        [ValidateNotNullOrEmpty()]
+        [String] $Id,
+
+        [Parameter(
+            Position=6)]
+        [ValidateNotNullOrEmpty()]
+        [String] $Description,
+        
+        [Parameter(
+            Position=7)]
+        [ValidateNotNullOrEmpty()]
+        [String] $DomainName,
+
+        [Parameter(
+            Position=8)]
+        [ValidateNotNullOrEmpty()]
+        [String] $Email
+    ) # Param
+
+    # Determine the full Lab Path
+    if (-not [System.IO.Path]::IsPathRooted($LabPath))
+    {
+        $LabPath = Join-Path `
+            -Path Get-Location `
+            -ChildPath $LabPath
+    } # if
+    
+    # Does the Lab Path exist?
+    if (Test-Path -Path $LabPath -Type Container)
+    {
+        # It does - exit if the user declines
+        if (-not $PSCmdlet.ShouldProcess( ( $LocalizedData.ShouldOverwriteLab `
+            -f $LabPath )))
+        {
+            return
+        }
+    }
+    else
+    {
+        Write-Verbose -Message $($LocalizedData.CreatingLabFolderMessage `
+            -f 'LabPath',$LabPath)
+
+        New-Item `
+            -Path $LabPath `
+            -Type Directory
+    } # if
+
+    # Determine the full Lab configuration Path
+    if (-not [System.IO.Path]::IsPathRooted($ConfigPath))
+    {
+        $ConfigPath = Join-Path `
+            -Path $LabPath `
+            -ChildPath $ConfigPath
+    } # if
+
+    # Does the lab configuration path already exist?
+    if (Test-Path -Path $ConfigPath)
+    {
+        # It does - exit if the user declines
+        if (-not $PSCmdlet.ShouldProcess( ( $LocalizedData.ShouldOverwriteLabConfig `
+            -f $ConfigPath )))
+        {
+            return
+        }
+    } # if
+    
+    # Get the Config Template into a variable
+    $Content = Get-Content `
+        -Path $Script:ConfigurationXMLTemplate
+
+    # The XML passes the Schema check so load it.
+    [XML] $Lab = New-Object System.Xml.XmlDocument
+    $Lab.PreserveWhitespace = $true
+    $Lab.LoadXML($Content)
+
+    # Populate the Lab Entries
+    $Lab.labbuilderconfig.name = $Name
+    $Lab.labbuilderconfig.version = $Version
+    $Lab.labbuilderconfig.settings.labpath = $LabPath
+    if ($PSBoundParameters.ContainsKey('Id'))
+    {
+        $Lab.labbuilderconfig.settings.SetAttribute('Id',$Id)    
+    } # if
+    if ($PSBoundParameters.ContainsKey('Description'))
+    {
+        $Lab.labbuilderconfig.description = $Description
+    } # if
+    if ($PSBoundParameters.ContainsKey('DomainName'))
+    {
+        $Lab.labbuilderconfig.settings.SetAttribute('DomainName',$DomainName)    
+    } # if
+    if ($PSBoundParameters.ContainsKey('Email'))
+    {
+        $Lab.labbuilderconfig.settings.SetAttribute('Email',$Email)    
+    } # if
+
+    # Save Configiration XML
+    $Lab.Save($ConfigPath)
+   
+    # Create ISOFiles folder
+    New-Item `
+        -Path (Join-Path -Path $LabPath -ChildPath 'ISOFiles')`
+        -Type Directory `
+        -ErrorAction SilentlyContinue 
+        
+    # Create VDFFiles folder
+    New-Item `
+        -Path (Join-Path -Path $LabPath -ChildPath 'VHDFiles')`
+        -Type Directory `
+        -ErrorAction SilentlyContinue 
+        
+    # Copy the DSCLibrary
+    Copy-Item `
+        -Path $Script:DSCLibraryPath `
+        -Destination $LabPath `
+        -Recurse `
+        -Force `
+        -ErrorAction SilentlyContinue
+
+    Return (Get-Lab `
+        -ConfigPath $ConfigPath `
+        -LabPath $LabPath)
+} # New-Lab
 
 
 <#
@@ -3519,14 +4230,14 @@ Function Install-Lab {
         if ($CheckEnvironment)
         {
             # Check Hyper-V
-            Install-LabHyperV
+            InstallHyperV
         } # if
 
         if ($PSCmdlet.ParameterSetName -eq 'File')
         {
             # Read the configuration
             $Lab = Get-Lab `
-                @PSBoundParameters             
+                @PSBoundParameters
         } # if
     } # begin
     
@@ -3534,13 +4245,13 @@ Function Install-Lab {
     {
         # Initialize the core Lab components
         # Check Lab Folder structure
-        Write-Verbose -Message ($LocalizedData.InitializingLabFoldersMesage)
+        Write-Verbose -Message $($LocalizedData.InitializingLabFoldersMesage)
 
         # Check folders are defined
         [String] $LabPath = $Lab.labbuilderconfig.settings.labpath
         if (-not (Test-Path -Path $LabPath))
         {
-            Write-Verbose -Message ($LocalizedData.CreatingLabFolderMessage `
+            Write-Verbose -Message $($LocalizedData.CreatingLabFolderMessage `
                 -f 'LabPath',$LabPath)
 
             $null = New-Item `
@@ -3548,10 +4259,10 @@ Function Install-Lab {
                 -Type Directory
         }
 
-        [String] $VHDParentPath = $Lab.labbuilderconfig.settings.vhdparentpath
+        [String] $VHDParentPath = $Lab.labbuilderconfig.settings.vhdparentpathfull
         if (-not (Test-Path -Path $VHDParentPath))
         {
-            Write-Verbose -Message ($LocalizedData.CreatingLabFolderMessage `
+            Write-Verbose -Message $($LocalizedData.CreatingLabFolderMessage `
                 -f 'VHDParentPath',$VHDParentPath)
 
             $null = New-Item `
@@ -3559,8 +4270,19 @@ Function Install-Lab {
                 -Type Directory
         }
         
+        [String] $ResourcePath = $Lab.labbuilderconfig.settings.resourcepathfull
+        if (-not (Test-Path -Path $ResourcePath))
+        {
+            Write-Verbose -Message $($LocalizedData.CreatingLabFolderMessage `
+                -f 'ResourcePath',$ResourcePath)
+
+            $null = New-Item `
+                -Path $ResourcePath `
+                -Type Directory
+        }
+
         # Install Hyper-V Components
-        Write-Verbose -Message ($LocalizedData.InitializingHyperVComponentsMesage)
+        Write-Verbose -Message $($LocalizedData.InitializingHyperVComponentsMesage)
 
         # Create the LabBuilder Management Network switch and assign VLAN
         # Used by host to communicate with Lab VMs
@@ -3578,7 +4300,7 @@ Function Install-Lab {
         {
             $null = New-VMSwitch -Name $ManagementSwitchName -SwitchType Internal
 
-            Write-Verbose -Message ($LocalizedData.CreatingLabManagementSwitchMessage `
+            Write-Verbose -Message $($LocalizedData.CreatingLabManagementSwitchMessage `
                 -f $ManagementSwitchName,$ManagementVlan)
         }
         # Check the Vlan ID of the adapter on the switch
@@ -3591,7 +4313,7 @@ Function Install-Lab {
 
         if ($ExistingVlan -ne $ManagementVlan)
         {
-            Write-Verbose -Message ($LocalizedData.UpdatingLabManagementSwitchMessage `
+            Write-Verbose -Message $($LocalizedData.UpdatingLabManagementSwitchMessage `
                 -f $ManagementSwitchName,$ManagementVlan)
 
             Set-VMNetworkAdapterVlan `
@@ -3600,10 +4322,21 @@ Function Install-Lab {
                 -Access `
                 -VlanId $ManagementVlan
         }
-        # Download any other resources required by this lab
-        DownloadResources `
-            -Lab $Lab	
-        
+
+        # Download any Resource Modules required by this Lab
+        $ResourceModules = Get-LabResourceModule `
+            -Lab $Lab
+        Initialize-LabResourceModule `
+            -Lab $Lab `
+            -ResourceModules $ResourceModules
+
+        # Download any Resource MSUs required by this Lab
+        $ResourceMSUs = Get-LabResourceMSU `
+            -Lab $Lab
+        Initialize-LabResourceMSU `
+            -Lab $Lab `
+            -ResourceMSUs $ResourceMSUs
+
         # Initialize the Switches
         $Switches = Get-LabSwitch `
             -Lab $Lab
@@ -3754,7 +4487,7 @@ Function Update-Lab {
     Causes the entire folder containing this Lab to be deleted.
 .EXAMPLE
     Uninstall-Lab `
-        -Path c:\mylab\config.xml `
+        -ConfigPath c:\mylab\config.xml `
         -RemoveSwitch`
         -RemoveVMTemplate `
         -RemoveVMFolder `
@@ -3835,7 +4568,7 @@ Function Uninstall-Lab {
         {
             # Read the configuration
             $Lab = Get-Lab `
-                @PSBoundParameters             
+                @PSBoundParameters
         } # if
     } # begin
     
@@ -3857,7 +4590,7 @@ Function Uninstall-Lab {
             # Remove the VM Templates
             if ($RemoveVMTemplate)
             {
-                if ($PSCmdlet.ShouldProcess( ($LocalizedData.ShouldRemoveVMTemplate `
+                if ($PSCmdlet.ShouldProcess( $($LocalizedData.ShouldRemoveVMTemplate `
                     -f $Lab.labbuilderconfig.name,$Lab.labbuilderconfig.settings.labpath )))
                 {
                     $null = Remove-LabVMTemplate `
@@ -3868,7 +4601,7 @@ Function Uninstall-Lab {
             # Remove the VM Switches
             if ($RemoveSwitch)
             {
-                if ($PSCmdlet.ShouldProcess( ($LocalizedData.ShouldRemoveSwitch `
+                if ($PSCmdlet.ShouldProcess( $($LocalizedData.ShouldRemoveSwitch `
                     -f $Lab.labbuilderconfig.name,$Lab.labbuilderconfig.settings.labpath )))
                 {
                     $null = Remove-LabSwitch `
@@ -3879,7 +4612,7 @@ Function Uninstall-Lab {
             # Remove the VM Template VHDs
             if ($RemoveVMTemplateVHD)
             {
-                if ($PSCmdlet.ShouldProcess( ($LocalizedData.ShouldRemoveVMTemplateVHD `
+                if ($PSCmdlet.ShouldProcess( $($LocalizedData.ShouldRemoveVMTemplateVHD `
                     -f $Lab.labbuilderconfig.name,$Lab.labbuilderconfig.settings.labpath )))
                 {
                     $null = Remove-LabVMTemplateVHD `
@@ -3892,7 +4625,7 @@ Function Uninstall-Lab {
             {
                 if (Test-Path -Path $Lab.labbuilderconfig.settings.labpath)
                 {
-                    if ($PSCmdlet.ShouldProcess( ($LocalizedData.ShouldRemoveLabFolder `
+                    if ($PSCmdlet.ShouldProcess( $($LocalizedData.ShouldRemoveLabFolder `
                         -f $Lab.labbuilderconfig.name,$Lab.labbuilderconfig.settings.labpath )))
                     {
                         Remove-Item `
@@ -3903,8 +4636,19 @@ Function Uninstall-Lab {
                 } # if
             } # if
 
+            # Remove the LabBuilder Management Network switch
+            [String] $ManagementSwitchName = GetManagementSwitchName `
+                -Lab $Lab
+            if ((Get-VMSwitch | Where-Object -Property Name -eq $ManagementSwitchName).Count -ne 0)
+            {
+                $null = Remove-VMSwitch -Name $ManagementSwitchName
+
+                Write-Verbose -Message $($LocalizedData.RemovingLabManagementSwitchMessage `
+                    -f $ManagementSwitchName)
+            }
+
             Write-Verbose -Message $($LocalizedData.LabUninstallCompleteMessage `
-                -f $Lab.labbuilderconfig.name,$Lab.labbuilderconfig.settings.labpath )    
+                -f $Lab.labbuilderconfig.name,$Lab.labbuilderconfig.settings.labpath )
         } # if   
     } # process
 

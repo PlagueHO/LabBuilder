@@ -50,32 +50,78 @@ InModuleScope LabBuilder {
         $Lab = Get-Lab -ConfigPath $Global:TestConfigOKPath
         [array] $VMs = Get-LabVM -Lab $Lab
         $NanoServerPackagesFolder = Join-Path -Path $Lab.labbuilderconfig.settings.labpath -ChildPath 'NanoServerPackages'
-
+        $ResourceMSUFile = Join-Path -Path $Lab.labbuilderconfig.settings.resourcepathfull -ChildPath "Win8.1AndW2K12R2-KB3134758-x64.msu"
+        
         Mock New-Item
         Mock Mount-WindowsImage
-        Mock DownloadAndUnzipFile
         Mock Dismount-WindowsImage
         Mock Add-WindowsPackage
         Mock Copy-Item
         Mock Remove-Item
 
-        Context 'Valid Configuration Passed with no install MSU' {	
+        Context 'Valid Configuration Passed with Server VM and an invalid package' {
+            It 'Throws a PackageNotFoundError exception' {
+                $VM = $VMs[0].Clone()
+                $VM.Packages = 'DoesNotExist'
+                $ExceptionParameters = @{
+                    errorId = 'PackageNotFoundError'
+                    errorCategory = 'InvalidArgument'
+                    errorMessage = $($LocalizedData.PackageNotFoundError `
+                        -f 'DoesNotExist')
+                }
+                $Exception = GetException @ExceptionParameters
+                { InitializeBootVHD -Lab $Lab -VM $VM -VMBootDiskPath 'c:\Dummy\' } | Should Throw $Exception
+            }
+            It 'Calls Mocked commands' {
+                Assert-MockCalled New-Item -Exactly 1
+                Assert-MockCalled Mount-WindowsImage -Exactly 1
+                Assert-MockCalled Dismount-WindowsImage -Exactly 1
+                Assert-MockCalled Add-WindowsPackage -Exactly 0
+                Assert-MockCalled Copy-Item -Exactly 0
+                Assert-MockCalled Remove-Item -Exactly 1
+            }
+        }
+        Context 'Valid Configuration Passed with Server VM and one package' {
+            Mock Test-Path -ParameterFilter { $Path -eq $ResourceMSUFile } -MockWith { $True }
             It 'Does Not Throw Exception' {
                 $VM = $VMs[0].Clone()
-                $VM.InstallMSU = ''
+                $VM.Packages = 'WMF5.0-WS2012R2-W81'
                 { InitializeBootVHD -Lab $Lab -VM $VM -VMBootDiskPath 'c:\Dummy\' } | Should Not Throw
             }
             It 'Calls Mocked commands' {
                 Assert-MockCalled New-Item -Exactly 3
                 Assert-MockCalled Mount-WindowsImage -Exactly 1
-                Assert-MockCalled DownloadAndUnzipFile -Exactly 0
                 Assert-MockCalled Dismount-WindowsImage -Exactly 1
                 Assert-MockCalled Add-WindowsPackage -Exactly 1
                 Assert-MockCalled Copy-Item -Exactly 4
                 Assert-MockCalled Remove-Item -Exactly 1
             }
         }
-        Context 'Valid Configuration Passed with Nano Server VM' {	
+        Context 'Valid Configuration Passed with Server VM and one package but MSU does not exist' {
+            Mock Test-Path -ParameterFilter { $Path -eq $ResourceMSUFile } -MockWith { $False }
+            It 'Throws a PackageMSUNotFoundError exception' {
+                $VM = $VMs[0].Clone()
+                $VM.Packages = 'WMF5.0-WS2012R2-W81'
+                $ExceptionParameters = @{
+                    errorId = 'PackageMSUNotFoundError'
+                    errorCategory = 'InvalidArgument'
+                    errorMessage = $($LocalizedData.PackageMSUNotFoundError `
+                        -f 'WMF5.0-WS2012R2-W81',$ResourceMSUFile)
+                }
+                $Exception = GetException @ExceptionParameters
+                { InitializeBootVHD -Lab $Lab -VM $VM -VMBootDiskPath 'c:\Dummy\' } | Should Throw $Exception
+            }
+            It 'Calls Mocked commands' {
+                Assert-MockCalled New-Item -Exactly 1
+                Assert-MockCalled Mount-WindowsImage -Exactly 1
+                Assert-MockCalled Dismount-WindowsImage -Exactly 1
+                Assert-MockCalled Add-WindowsPackage -Exactly 0
+                Assert-MockCalled Copy-Item -Exactly 0
+                Assert-MockCalled Remove-Item -Exactly 1
+                Assert-MockCalled Test-Path -Exactly 1
+            }
+        }
+        Context 'Valid Configuration Passed with Nano Server VM and no packages' {
             Mock Test-Path -ParameterFilter { $Path -eq $NanoServerPackagesFolder } -MockWith { $True }
             It 'Does Not Throw Exception' {
                 $VM = $VMs[0].Clone()
@@ -85,18 +131,37 @@ InModuleScope LabBuilder {
             It 'Calls Mocked commands' {
                 Assert-MockCalled New-Item -Exactly 3
                 Assert-MockCalled Mount-WindowsImage -Exactly 1
-                Assert-MockCalled DownloadAndUnzipFile -Exactly 1
                 Assert-MockCalled Dismount-WindowsImage -Exactly 1
-                Assert-MockCalled Add-WindowsPackage -Exactly 3
+                Assert-MockCalled Add-WindowsPackage -Exactly 0
                 Assert-MockCalled Copy-Item -Exactly 3
                 Assert-MockCalled Remove-Item -Exactly 1
+                Assert-MockCalled Test-Path -Exactly 1
             }
         }
-        Context 'Valid Configuration Passed with Nano Server VM but NanoServerPackages folder missing' {	
+        Context 'Valid Configuration Passed with Nano Server VM and two packages' {
+            Mock Test-Path -ParameterFilter { $Path -eq $NanoServerPackagesFolder } -MockWith { $True }
+            It 'Does Not Throw Exception' {
+                $VM = $VMs[0].Clone()
+                $VM.OSType = 'Nano'
+                $VM.Packages = 'Containers,Guest'
+                { InitializeBootVHD -Lab $Lab -VM $VM -VMBootDiskPath 'c:\Dummy\' } | Should Not Throw
+            }
+            It 'Calls Mocked commands' {
+                Assert-MockCalled New-Item -Exactly 3
+                Assert-MockCalled Mount-WindowsImage -Exactly 1
+                Assert-MockCalled Dismount-WindowsImage -Exactly 1
+                Assert-MockCalled Add-WindowsPackage -Exactly 4
+                Assert-MockCalled Copy-Item -Exactly 3
+                Assert-MockCalled Remove-Item -Exactly 1
+                Assert-MockCalled Test-Path -Exactly 1
+            }
+        }
+        Context 'Valid Configuration Passed with Nano Server VM and two packages but NanoServerPackages folder missing' {
             Mock Test-Path -ParameterFilter { $Path -eq $NanoServerPackagesFolder } -MockWith { $False }
             It 'Throws a NanoServerPackagesFolderMissingError exception' {
                 $VM = $VMs[0].Clone()
                 $VM.OSType = 'Nano'
+                $VM.Packages = 'Containers,Guest'
                 $ExceptionParameters = @{
                     errorId = 'NanoServerPackagesFolderMissingError'
                     errorCategory = 'InvalidArgument'
@@ -109,14 +174,15 @@ InModuleScope LabBuilder {
             It 'Calls Mocked commands' {
                 Assert-MockCalled New-Item -Exactly 1
                 Assert-MockCalled Mount-WindowsImage -Exactly 1
-                Assert-MockCalled DownloadAndUnzipFile -Exactly 1
                 Assert-MockCalled Dismount-WindowsImage -Exactly 1
-                Assert-MockCalled Add-WindowsPackage -Exactly 1
+                Assert-MockCalled Add-WindowsPackage -Exactly 0
                 Assert-MockCalled Copy-Item -Exactly 0
                 Assert-MockCalled Remove-Item -Exactly 1
+                Assert-MockCalled Test-Path -Exactly 1
             }
         }
-        Context 'Valid Configuration Passed' {	
+        Context 'Valid Configuration Passed' {
+            Mock Test-Path -ParameterFilter { $Path -eq $ResourceMSUFile } -MockWith { $True }
             It 'Does Not Throw Exception' {
                 $VM = $VMs[0].Clone()
                 { InitializeBootVHD -Lab $Lab -VM $VM -VMBootDiskPath 'c:\Dummy\' } | Should Not Throw
@@ -124,11 +190,11 @@ InModuleScope LabBuilder {
             It 'Calls Mocked commands' {
                 Assert-MockCalled New-Item -Exactly 3
                 Assert-MockCalled Mount-WindowsImage -Exactly 1
-                Assert-MockCalled DownloadAndUnzipFile -Exactly 1
                 Assert-MockCalled Dismount-WindowsImage -Exactly 1
                 Assert-MockCalled Add-WindowsPackage -Exactly 1
                 Assert-MockCalled Copy-Item -Exactly 4
                 Assert-MockCalled Remove-Item -Exactly 1
+                Assert-MockCalled Test-Path -Exactly 1
             }
         }
     }

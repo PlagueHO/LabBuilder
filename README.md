@@ -114,10 +114,96 @@ To use this Module you will require on your Lab Host:
 
 Configuration XML
 =================
-
+Documentation for the LabBuilder Configuration XML can be found in the file [schema/labbuilderconfig-schema.md](LabBuilder/schema/labbuilderconfig-schema.md).
 
 Cmdlets
 =======
+
+Get-Lab
+-------
+### SYNOPSIS
+Loads a Lab Builder Configuration file and returns a Lab object
+
+### DESCRIPTION
+Takes the path to a valid LabBuilder Configiration XML file and loads it.
+
+It will perform simple validation on the XML file and throw an exception
+if any of the validation tests fail.
+
+At load time it will also add temporary configuration attributes to the in
+memory configuration that are used by other LabBuilder functions. So loading
+XML Configurartion without using this function is not advised.
+
+### PARAMETER ConfigPath
+This is the path to the Lab Builder configuration file to load.
+
+### PARAMETER LabPath
+This is an optional path that is used to Override the LabPath in the config file passed.
+
+### EXAMPLE
+$MyLab = Get-Lab -ConfigPath c:\MyLab\LabConfig1.xml
+Loads the LabConfig1.xml configuration and returns Lab object.
+
+### OUTPUTS
+The Lab object representing the Lab Configuration that was loaded.
+
+
+New-Lab
+-------
+### SYNOPSIS
+Creates a new Lab Builder Configuration file and Lab folder.
+
+### DESCRIPTION
+This function will take a path to a new Lab folder and a path or filename 
+for a new Lab Configuration file and creates them using the standard XML
+template.
+
+It will also copy the DSCLibrary folder as well as the create an empty
+ISOFiles and VHDFiles folder in the Lab folder.
+
+After running this function the VMs, VMTemplates, Switches and VMTemplateVHDs
+in the new Lab Configuration file would normally be customized to for the new
+Lab.
+
+### PARAMETER ConfigPath
+This is the path to the Lab Builder configuration file to create. If it is
+not rooted the configuration file is created in the LabPath folder.
+
+### PARAMETER LabPath
+This is a required path of the new Lab to create.
+
+### PARAMETER Name
+This is a required name of the Lab that gets added to the new Lab Configration file.
+
+### PARAMETER Version
+This is a required version of the Lab that gets added to the new Lab Configration file.
+
+### PARAMETER Id
+This is the optional Lab Id that gets set in the new Lab Configuration file.
+
+### PARAMETER Description
+This is the optional Lab description that gets set in the new Lab Configuration file.
+
+### PARAMETER DomainName
+This is the optional Lab domain name that gets set in the new Lab Configuration file.
+
+### PARAMETER Email
+This is the optional Lab email address that gets set in the new Lab Configuration file.
+
+### EXAMPLE
+```powershell
+$MyLab = New-Lab `
+    -ConfigPath c:\MyLab\LabConfig1.xml `
+    -LabPath c:\MyLab `
+    -LabName 'MyLab' `
+    -LabVersion '1.2'
+```
+Creates a new Lab Configration file LabConfig1.xml and also a Lab folder
+c:\MyLab and populates it with default DSCLibrary file and supporting folders.
+
+### OUTPUTS
+The Lab object representing the new Lab Configuration that was created.
+
 
 Install-Lab
 -----------
@@ -405,6 +491,41 @@ None
 
 Versions
 ========
+### 0.6.0.0
+* New-Lab: Function added for creating a new Lab configuration file and basic folder structure.
+* Get-Lab: Redundant checks for XML valid removed because convered by XSD schema validation.
+* Added Lib\Type.ps1 containing customg LabBuilder Classes and Enumerations.
+* Added functions for converting XSD schema to MD.
+* Fix to Nano Server Package caching bug.
+* DSC Library Domain Join process improved.
+* DSC\ConfigFile attribute supports rooted paths.
+* VM\UnattendFile attribute supports rooted paths.
+* VM\SetupComplete attribute supports rooted paths.
+* DSC\ConfigFile Lab setting supports rooted paths.
+* VM\UseDifferencingBootDisk default changed to 'Y'.
+* GetModulesInDSCConfig: Returns Array of objects containing ModuleName and ModuleVersion.
+                         Now returns PSDesiredStateConfiguration module if listed -expected that calling function will ignore if required.
+                         Added function to set the Module versions in a DSC Config.
+* CreateDSCMOFFiles: Updated to set Module versions in DSC Config files.
+* DSC Library: Module Version numbers removed from all DSC Library Configrations. 
+* Test Sample file code updated to remove switches when lab uninstalled.
+* Uninstall-Lab: Management Switch automatically removed when Lab uninstalled.
+* Configuration Schema: Added Resources\MSU element.
+                        Added Settings\Resource attribute.
+                        Removed VM\Install element support, superceeded by Packages attribute.
+* Get-LabResourceModule: Function added.
+* Initialize-LabResourceModule: Function added.
+* Get-LabResourceMSU: Function added.
+* Initialize-LabResourceMSU: Function added.
+* Install-Lab: Fix CheckEnvironment bug.
+               Added calls to Initialize-LabResourceModule and Initialize-LabResourceMSU.
+* DownloadResources: Utility function removed, superceeded by Initialize-LabResourceModule and Initialize-LabResourceMSU functions
+* Get-LabVM: Removed Install\MSU support.
+* InitializeBootVM: Removed Install\MSU support.
+                    Added support for installing Packages from Resources\MSU element.
+* Initialize-LabVMTemplateVHD: MSU Resources specified in Packages attribute are added to Template VHD when converted.
+* Initialize-LabVMTemplate: MSU Resources specified in Packages attribute are added to Template  when copied.
+ 
 ### 0.5.0.0
 * BREKAING: Renamed Config parameter to Lab parameter to indicate the object is actually an object that also stores Lab state information.
 * Remove-LabVM: Removed parameter 'RemoveVHDs'. Added parameter RemoveVMFolder which causes the VM folder and all contents to be deleted.

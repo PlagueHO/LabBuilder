@@ -36,30 +36,31 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Include="DSCLibrary\DC_FORESTPRIMARY.DSC.ps1" />
-    <Compile Include="DSCLibrary\DC_SECONDARY.DSC.ps1" />
-    <Compile Include="DSCLibrary\MEMBER_DHCP.DSC.ps1" />
-    <Compile Include="DSCLibrary\MEMBER_DHCPDNS.DSC.ps1" />
-    <Compile Include="DSCLibrary\MEMBER_DHCPNPAS.DSC.ps1" />
-    <Compile Include="DSCLibrary\MEMBER_FAILOVERCLUSTER_FS.DSC.ps1" />
-    <Compile Include="DSCLibrary\MEMBER_FAILOVERCLUSTER_HV.DSC.ps1" />
-    <Compile Include="DSCLibrary\MEMBER_FILESERVER.DSC.ps1" />
-    <Compile Include="DSCLibrary\MEMBER_FILESERVER_FSRMTEST.DSC.ps1" />
-    <Compile Include="DSCLibrary\MEMBER_FILESERVER_ISCSI.DSC.ps1" />
-    <Compile Include="DSCLibrary\MEMBER_NLB.DSC.ps1" />
-    <Compile Include="DSCLibrary\MEMBER_NPS.DSC.ps1" />
-    <Compile Include="DSCLibrary\MEMBER_NPS_DFSTEST.DSC.ps1" />
-    <Compile Include="DSCLibrary\MEMBER_REMOTEACCESS.DSC.ps1" />
-    <Compile Include="DSCLibrary\MEMBER_ROOTCA.DSC.ps1" />
-    <Compile Include="DSCLibrary\MEMBER_SUBCA.DSC.ps1" />
-    <Compile Include="DSCLibrary\MEMBER_WDS.DSC.ps1" />
-    <Compile Include="DSCLibrary\MEMBER_WSUS.DSC.ps1" />
-    <Compile Include="DSCLibrary\RODC_SECONDARY.DSC.ps1" />
-    <Compile Include="DSCLibrary\STANDALONE_DEFAULT.DSC.ps1" />
-    <Compile Include="DSCLibrary\STANDALONE_DHCPDNS.DSC.ps1" />
-    <Compile Include="DSCLibrary\STANDALONE_INTERNET.DSC.ps1" />
-    <Compile Include="DSCLibrary\STANDALONE_ROOTCA.DSC.ps1" />
-    <Compile Include="DSCLibrary\STANDALONE_ROOTCA_NOSUBCA.DSC.ps1" />
+    <Compile Include="dsclibrary\DC_FORESTPRIMARY.DSC.ps1" />
+    <Compile Include="dsclibrary\DC_SECONDARY.DSC.ps1" />
+    <Compile Include="dsclibrary\MEMBER_DEFAULT.ps1" />
+    <Compile Include="dsclibrary\MEMBER_DHCP.DSC.ps1" />
+    <Compile Include="dsclibrary\MEMBER_DHCPDNS.DSC.ps1" />
+    <Compile Include="dsclibrary\MEMBER_DHCPNPAS.DSC.ps1" />
+    <Compile Include="dsclibrary\MEMBER_FAILOVERCLUSTER_FS.DSC.ps1" />
+    <Compile Include="dsclibrary\MEMBER_FAILOVERCLUSTER_HV.DSC.ps1" />
+    <Compile Include="dsclibrary\MEMBER_FILESERVER.DSC.ps1" />
+    <Compile Include="dsclibrary\MEMBER_FILESERVER_FSRMTEST.DSC.ps1" />
+    <Compile Include="dsclibrary\MEMBER_FILESERVER_ISCSI.DSC.ps1" />
+    <Compile Include="dsclibrary\MEMBER_NLB.DSC.ps1" />
+    <Compile Include="dsclibrary\MEMBER_NPS.DSC.ps1" />
+    <Compile Include="dsclibrary\MEMBER_NPS_DFSTEST.DSC.ps1" />
+    <Compile Include="dsclibrary\MEMBER_REMOTEACCESS.DSC.ps1" />
+    <Compile Include="dsclibrary\MEMBER_ROOTCA.DSC.ps1" />
+    <Compile Include="dsclibrary\MEMBER_SUBCA.DSC.ps1" />
+    <Compile Include="dsclibrary\MEMBER_WDS.DSC.ps1" />
+    <Compile Include="dsclibrary\MEMBER_WSUS.DSC.ps1" />
+    <Compile Include="dsclibrary\RODC_SECONDARY.DSC.ps1" />
+    <Compile Include="dsclibrary\STANDALONE_DEFAULT.DSC.ps1" />
+    <Compile Include="dsclibrary\STANDALONE_DHCPDNS.DSC.ps1" />
+    <Compile Include="dsclibrary\STANDALONE_INTERNET.DSC.ps1" />
+    <Compile Include="dsclibrary\STANDALONE_ROOTCA.DSC.ps1" />
+    <Compile Include="dsclibrary\STANDALONE_ROOTCA_NOSUBCA.DSC.ps1" />
     <Compile Include="en-us\LabBuilder_LocalizedData.psd1" />
     <Compile Include="LabBuilder.psd1" />
     <Compile Include="LabBuilder.psm1" />
@@ -68,15 +69,11 @@
     <Compile Include="lib\utils.ps1" />
     <Compile Include="lib\vhd.ps1" />
     <Compile Include="lib\vm.ps1" />
-    <Compile Include="Samples\Sample_WS2012R2_DCandDHCPOnly.xml" />
-    <Compile Include="Samples\Sample_WS2012R2_DomainClustering.xml" />
-    <Compile Include="Samples\Sample_WS2012R2_DomainComplete.xml" />
-    <Compile Include="Samples\Sample_WS2012R2_Simple.xml" />
-    <Compile Include="Samples\Sample_WS2016TP4_DCandDHCPOnly.xml" />
-    <Compile Include="schema\labbuilderconfig.xsd" />
-    <Compile Include="Support\Convert-WindowsImage.ps1" />
-    <Compile Include="Support\makecert.exe" />
-    <Compile Include="Support\New-SelfSignedCertificateEx.ps1" />
+    <Compile Include="support\Convert-LabBuilderConfigSchemaToMD.ps1" />
+    <Compile Include="support\Convert-WindowsImage.ps1" />
+    <Compile Include="support\Convert-XSDToMD.ps1" />
+    <Compile Include="support\New-SelfSignedCertificateEx.ps1" />
+    <Compile Include="template\labbuilderconfig-template.xml" />
     <Compile Include="Tests\PesterTestConfig\dsclibrary\PesterTest.DSC.ps1" />
     <Compile Include="Tests\PesterTestConfig\expectedcontent\ExpectedSwitches.json" />
     <Compile Include="Tests\PesterTestConfig\expectedcontent\ExpectedTemplates.FromVM.json" />
@@ -106,14 +103,17 @@
     <Compile Include="Tests\Unit\lib\vm.tests.ps1" />
   </ItemGroup>
   <ItemGroup>
-    <Folder Include="DSCLibrary\" />
+    <Folder Include="dsclibrary\" />
     <Folder Include="en-us\" />
     <Folder Include="lib\" />
-    <Folder Include="Samples\" />
-    <Folder Include="Samples\isofiles\" />
-    <Folder Include="Samples\vhdfiles\" />
+    <Folder Include="samples\" />
+    <Folder Include="samples\isofiles\" />
+    <Folder Include="samples\vhdfiles\" />
     <Folder Include="schema\" />
-    <Folder Include="Support\" />
+    <Folder Include="support\" />
+    <Folder Include="support\tools\" />
+    <Folder Include="support\transform\" />
+    <Folder Include="template\" />
     <Folder Include="Tests\" />
     <Folder Include="Tests\PesterTestConfig\dsclibrary\" />
     <Folder Include="Tests\PesterTestConfig\expectedcontent\" />
@@ -124,7 +124,16 @@
     <Folder Include="Tests\Unit\lib\" />
   </ItemGroup>
   <ItemGroup>
-    <Content Include="Samples\isofiles\Put Windows installation ISO files here.txt" />
+    <Content Include="samples\isofiles\Put Windows installation ISO files here.txt" />
+    <Content Include="samples\Sample_WS2012R2_DCandDHCPOnly.xml" />
+    <Content Include="samples\Sample_WS2012R2_DomainClustering.xml" />
+    <Content Include="samples\Sample_WS2012R2_DomainComplete.xml" />
+    <Content Include="samples\Sample_WS2012R2_Simple.xml" />
+    <Content Include="samples\Sample_WS2016TP4_DCandDHCPOnly.xml" />
+    <Content Include="schema\labbuilderconfig-schema.md" />
+    <Content Include="schema\labbuilderconfig-schema.xsd" />
+    <Content Include="support\tools\msxsl.exe" />
+    <Content Include="support\transform\labbuilderconfig-schema-transformtomd.xsl" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <Target Name="Build" />
