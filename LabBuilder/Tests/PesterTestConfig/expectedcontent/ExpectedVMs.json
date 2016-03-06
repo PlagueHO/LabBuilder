@@ -107,12 +107,9 @@
                      }
                  ],
     "DSCParameters":  "\r\n          Dummy = \"Dummy\"\r\n        ",
-    "Packages":  "Containers",
+    "Packages":  "WMF5.0-WS2012R2-W81",
     "ComputerName":  "PESTER01",
     "Bootorder":  9,
-    "InstallMSU":  [
-                       "http://download.microsoft.com/download/1/D/8/1D8B5022-5477-4B9A-8104-6A71FF9D98AB/WindowsTH-KB2693643-x64.msu"
-                   ],
     "DynamicMemoryEnabled":  "N",
     "MemoryStartupBytes":  2147483648,
     "LabBuilderFilesPath":  "C:\\Pester Lab\\TestLab PESTER01\\LabBuilder Files",

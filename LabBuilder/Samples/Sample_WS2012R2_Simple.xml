@@ -54,7 +54,8 @@
               processorcount="1"
               administratorpassword="P@ssword!1"
               timezone="New Zealand Standard Time" 
-              ostype="Server" />
+              ostype="Server"
+              packages="WMF5.0-WS2012R2-W81" />
   </templates>
 
   <vms>   

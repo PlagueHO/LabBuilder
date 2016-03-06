@@ -136,6 +136,26 @@ InModuleScope LabBuilder {
     }
 
 
+
+    Describe 'Initialize-LabResourceModule' {
+
+        $Lab = Get-Lab -ConfigPath $Global:TestConfigOKPath
+        [LabResourceModule[]]$ResourceModules = Get-LabResourceModule -Lab $Lab
+
+        Mock DownloadResourceModule
+
+        Context 'Valid configuration is passed' {	
+            It 'Does not throw an Exception' {
+                { Initialize-LabResourceModule -Lab $Lab -ResourceModules $ResourceModules } | Should Not Throw
+            }
+            It 'Calls Mocked commands' {
+                Assert-MockCalled DownloadResourceModule -Exactly 4
+            }
+        }
+    }
+
+
+
     Describe 'Get-LabResourceMSU' {
 
         Context 'Configuration passed with resource MSU missing Name.' {
@@ -159,6 +179,25 @@ InModuleScope LabBuilder {
                 Set-Content -Path "$Global:ArtifactPath\ExpectedResourceMSUs.json" -Value ($ResourceMSUs | ConvertTo-Json -Depth 4)
                 $ExpectedResourceMSUs = Get-Content -Path "$Global:ExpectedContentPath\ExpectedResourceMSUs.json"
                 [String]::Compare((Get-Content -Path "$Global:ArtifactPath\ExpectedResourceMSUs.json"),$ExpectedResourceMSUs,$true) | Should Be 0
+            }
+        }
+    }
+
+
+    
+    Describe 'Initialize-LabResourceMSU' {
+
+        $Lab = Get-Lab -ConfigPath $Global:TestConfigOKPath
+        [LabResourceMSU[]]$ResourceMSUs = Get-LabResourceMSU -Lab $Lab
+
+        Mock DownloadAndUnzipFile
+
+        Context 'Valid configuration is passed' {	
+            It 'Does not throw an Exception' {
+                { Initialize-LabResourceMSU -Lab $Lab -ResourceMSUs $ResourceMSUs } | Should Not Throw
+            }
+            It 'Calls Mocked commands' {
+                Assert-MockCalled DownloadAndUnzipFile -Exactly 2
             }
         }
     }
@@ -654,6 +693,9 @@ InModuleScope LabBuilder {
 
 
     Describe 'Initialize-LabVMTemplateVHD' {
+        $Lab = Get-Lab -ConfigPath $Global:TestConfigOKPath
+        $ResourceMSUFile = Join-Path -Path $Lab.labbuilderconfig.settings.resourcepathfull -ChildPath "Win8.1AndW2K12R2-KB3134758-x64.msu"
+
         Mock Mount-DiskImage
         Mock Get-Diskimage -MockWith {
             New-CimInstance `
@@ -728,12 +770,17 @@ InModuleScope LabBuilder {
                 Assert-MockCalled Copy-Item -Exactly 0
                 Assert-MockCalled Rename-Item -Exactly 0
                 Assert-MockCalled Convert-WindowsImage -Exactly 0
-            }            
+            }
         }
-        Context 'Valid configuration passed' {
+        Context 'Valid configuration passed with no packages' {
             It 'Does not throw an Exception' {
                 $Lab = Get-Lab -ConfigPath $Global:TestConfigOKPath
-                { Initialize-LabVMTemplateVHD -Lab $Lab } | Should Not Throw
+                $VMTemplateVHDs = Get-LabVMTemplateVHD -Lab $Lab
+                foreach ($VMTemplateVHD in $VMTemplateVHDs)
+                {
+                    $VMTemplateVHD.Packages = ''
+                }
+                { Initialize-LabVMTemplateVHD -Lab $Lab -VMTemplateVHDs $VMTemplateVHDs } | Should Not Throw
             }
             It 'Calls expected mocks commands' {
                 Assert-MockCalled Mount-DiskImage -Exactly 2
@@ -744,7 +791,78 @@ InModuleScope LabBuilder {
                 Assert-MockCalled Copy-Item -Exactly 0
                 Assert-MockCalled Rename-Item -Exactly 0
                 Assert-MockCalled Convert-WindowsImage -Exactly 2
-            }            
+            }
+        }
+        Context 'Valid configuration passed with valid packages' {
+            Mock Test-Path -ParameterFilter { $Path -eq $ResourceMSUFile } -MockWith { $True }
+            It 'Does not throw an Exception' {
+                $Lab = Get-Lab -ConfigPath $Global:TestConfigOKPath
+                $VMTemplateVHDs = Get-LabVMTemplateVHD -Lab $Lab
+                { Initialize-LabVMTemplateVHD -Lab $Lab -VMTemplateVHDs $VMTemplateVHDs } | Should Not Throw
+            }
+            It 'Calls expected mocks commands' {
+                Assert-MockCalled Mount-DiskImage -Exactly 2
+                Assert-MockCalled Get-Diskimage -Exactly 2
+                Assert-MockCalled Get-Volume -Exactly 2
+                Assert-MockCalled Dismount-DiskImage -Exactly 2
+                Assert-MockCalled Get-WindowsImage -Exactly 0
+                Assert-MockCalled Copy-Item -Exactly 0
+                Assert-MockCalled Rename-Item -Exactly 0
+                Assert-MockCalled Convert-WindowsImage -Exactly 2
+            }
+        }
+        Context 'Valid configuration passed with an invalid package' {
+            It 'Throws a PackageNotFoundError exception' {
+                $Lab = Get-Lab -ConfigPath $Global:TestConfigOKPath
+                $VMTemplateVHDs = Get-LabVMTemplateVHD -Lab $Lab
+                foreach ($VMTemplateVHD in $VMTemplateVHDs)
+                {
+                    $VMTemplateVHD.Packages='DoesNotExist'
+                }
+                $ExceptionParameters = @{
+                    errorId = 'PackageNotFoundError'
+                    errorCategory = 'InvalidArgument'
+                    errorMessage = $($LocalizedData.PackageNotFoundError `
+                        -f 'DoesNotExist')
+                }
+                $Exception = GetException @ExceptionParameters
+                { Initialize-LabVMTemplateVHD -Lab $Lab -VMTemplateVHDs $VMTemplateVHDs } | Should Throw $Exception
+            }
+            It 'Calls expected mocks commands' {
+                Assert-MockCalled Mount-DiskImage -Exactly 1
+                Assert-MockCalled Get-Diskimage -Exactly 1
+                Assert-MockCalled Get-Volume -Exactly 1
+                Assert-MockCalled Dismount-DiskImage -Exactly 1
+                Assert-MockCalled Get-WindowsImage -Exactly 0
+                Assert-MockCalled Copy-Item -Exactly 0
+                Assert-MockCalled Rename-Item -Exactly 0
+                Assert-MockCalled Convert-WindowsImage -Exactly 0
+            }
+        }
+        Context 'Valid configuration passed with an invalid package' {
+            Mock Test-Path -ParameterFilter { $Path -eq $ResourceMSUFile } -MockWith { $False }
+            It 'Throws a PackageMSUNotFoundError exception' {
+                $Lab = Get-Lab -ConfigPath $Global:TestConfigOKPath
+                $VMTemplateVHDs = Get-LabVMTemplateVHD -Lab $Lab
+                $ExceptionParameters = @{
+                    errorId = 'PackageMSUNotFoundError'
+                    errorCategory = 'InvalidArgument'
+                    errorMessage = $($LocalizedData.PackageMSUNotFoundError `
+                        -f 'WMF5.0-WS2012R2-W81',$ResourceMSUFile)
+                }
+                $Exception = GetException @ExceptionParameters
+                { Initialize-LabVMTemplateVHD -Lab $Lab -VMTemplateVHDs $VMTemplateVHDs } | Should Throw $Exception
+            }
+            It 'Calls expected mocks commands' {
+                Assert-MockCalled Mount-DiskImage -Exactly 1
+                Assert-MockCalled Get-Diskimage -Exactly 1
+                Assert-MockCalled Get-Volume -Exactly 1
+                Assert-MockCalled Dismount-DiskImage -Exactly 1
+                Assert-MockCalled Get-WindowsImage -Exactly 0
+                Assert-MockCalled Copy-Item -Exactly 0
+                Assert-MockCalled Rename-Item -Exactly 0
+                Assert-MockCalled Convert-WindowsImage -Exactly 0
+            }
         }
     }
 
@@ -955,7 +1073,10 @@ InModuleScope LabBuilder {
     Describe 'Initialize-LabVMTemplate' {
 
         $Lab = Get-Lab -ConfigPath $Global:TestConfigOKPath
+        [array] $VMTemplates = Get-LabVMTemplate -Lab $Lab
         [Int32] $TemplateCount = $Lab.labbuilderconfig.templates.template.count
+        $ResourceWMFMSUFile = Join-Path -Path $Lab.labbuilderconfig.settings.resourcepathfull -ChildPath "Win8.1AndW2K12R2-KB3134758-x64.msu"
+        $ResourceRSATMSUFile = Join-Path -Path $Lab.labbuilderconfig.settings.resourcepathfull -ChildPath "WindowsTH-KB2693643-x64.msu"
 
         Mock Copy-Item
         Mock Set-ItemProperty -ParameterFilter { ($Name -eq 'IsReadOnly') -and ($Value -eq $True) }
@@ -963,6 +1084,11 @@ InModuleScope LabBuilder {
         Mock Test-Path -ParameterFilter { $Path -eq 'This File Doesnt Exist.vhdx' } -MockWith { $false }
         Mock Optimize-VHD
         Mock Get-VM
+        Mock New-Item
+        Mock Mount-WindowsImage
+        Mock Add-WindowsPackage
+        Mock Dismount-WindowsImage
+        Mock Remove-Item
 
         Context 'Valid Template Array with non-existent VHD source file' {
             [array]$Templates = @( @{
@@ -982,11 +1108,21 @@ InModuleScope LabBuilder {
 
                 { Initialize-LabVMTemplate -Lab $Lab -VMTemplates $Templates } | Should Throw $Exception
             }
+            It 'Calls Mocked commands' {
+                Assert-MockCalled Copy-Item -Exactly 0
+                Assert-MockCalled Set-ItemProperty -Exactly 0 -ParameterFilter { ($Name -eq 'IsReadOnly') -and ($Value -eq $True) }
+                Assert-MockCalled Set-ItemProperty -Exactly 0 -ParameterFilter { ($Name -eq 'IsReadOnly') -and ($Value -eq $False) }
+                Assert-MockCalled Optimize-VHD -Exactly 0
+                Assert-MockCalled New-Item -Exactly 0
+                Assert-MockCalled Mount-WindowsImage -Exactly 0
+                Assert-MockCalled Add-WindowsPackage -Exactly 0
+                Assert-MockCalled Dismount-WindowsImage -Exactly 0
+                Assert-MockCalled Remove-Item -Exactly 0
+            }
         }
         Context 'Valid configuration is passed' {	
-            [array]$VMTemplates = Get-LabVMTemplate -Lab $Lab
-            [array]$VMTemplateVHDs = Get-LabVMTemplateVHD -Lab $Lab
-
+            Mock Test-Path -ParameterFilter { $Path -eq $ResourceWMFMSUFile } -MockWith { $True }
+            Mock Test-Path -ParameterFilter { $Path -eq $ResourceRSATMSUFile } -MockWith { $True }
             It 'Does not throw an Exception' {
                 { Initialize-LabVMTemplate -Lab $Lab -VMTemplates $VMTemplates } | Should Not Throw
             }
@@ -995,9 +1131,16 @@ InModuleScope LabBuilder {
                 Assert-MockCalled Set-ItemProperty -Exactly $TemplateCount -ParameterFilter { ($Name -eq 'IsReadOnly') -and ($Value -eq $True) }
                 Assert-MockCalled Set-ItemProperty -Exactly $TemplateCount -ParameterFilter { ($Name -eq 'IsReadOnly') -and ($Value -eq $False) }
                 Assert-MockCalled Optimize-VHD -Exactly $TemplateCount
+                Assert-MockCalled New-Item -Exactly 3
+                Assert-MockCalled Mount-WindowsImage -Exactly 3
+                Assert-MockCalled Add-WindowsPackage -Exactly 3
+                Assert-MockCalled Dismount-WindowsImage -Exactly 3
+                Assert-MockCalled Remove-Item -Exactly 3
             }
         }
-        Context 'Valid configuration is passed without VMTemplates or VMTemplateVHDs' {	
+        Context 'Valid configuration is passed without VMTemplates' {	
+            Mock Test-Path -ParameterFilter { $Path -eq $ResourceWMFMSUFile } -MockWith { $True }
+            Mock Test-Path -ParameterFilter { $Path -eq $ResourceRSATMSUFile } -MockWith { $True }
             It 'Does not throw an Exception' {
                 { Initialize-LabVMTemplate -Lab $Lab } | Should Not Throw
             }
@@ -1006,6 +1149,11 @@ InModuleScope LabBuilder {
                 Assert-MockCalled Set-ItemProperty -Exactly $TemplateCount -ParameterFilter { ($Name -eq 'IsReadOnly') -and ($Value -eq $True) }
                 Assert-MockCalled Set-ItemProperty -Exactly $TemplateCount -ParameterFilter { ($Name -eq 'IsReadOnly') -and ($Value -eq $False) }
                 Assert-MockCalled Optimize-VHD -Exactly $TemplateCount
+                Assert-MockCalled New-Item -Exactly 3
+                Assert-MockCalled Mount-WindowsImage -Exactly 3
+                Assert-MockCalled Add-WindowsPackage -Exactly 3
+                Assert-MockCalled Dismount-WindowsImage -Exactly 3
+                Assert-MockCalled Remove-Item -Exactly 3
             }
         }
     }
@@ -1840,7 +1988,6 @@ InModuleScope LabBuilder {
     Describe 'Install-Lab' -Tags 'Incomplete'  {
         $Lab = Get-Lab -ConfigPath $Global:TestConfigOKPath
 
-        Mock DownloadResources
         Mock Get-VMSwitch
         Mock New-VMSwitch
         Mock Get-VMNetworkAdapter -MockWith { @{ Name = 'LabBuilder Management PesterTestConfig' } }
@@ -1852,7 +1999,6 @@ InModuleScope LabBuilder {
                 { Install-Lab -Lab $Lab } | Should Not Throw
             }
             It 'Calls appropriate mocks' {
-                Assert-MockCalled DownloadResources -Exactly 1
                 Assert-MockCalled Get-VMSwitch -Exactly 1
                 Assert-MockCalled New-VMSwitch -Exactly 1
                 Assert-MockCalled Get-VMNetworkAdapter -Exactly 1

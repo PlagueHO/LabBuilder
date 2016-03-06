@@ -50,6 +50,7 @@ class LabResourceMSU {
     [String] $Name
     [String] $URL
     [String] $Path
+    [String] $Filename
 } # class LabResourceMSU
 
 class LabSwitchAdapter {

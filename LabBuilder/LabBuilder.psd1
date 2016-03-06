@@ -16,7 +16,9 @@
     # NestedModules = @()
     FunctionsToExport = @(
         'Get-LabResourceModule'
+        'Initialize-LabResourceModule'
         'Get-LabResourceMSU'
+        'Initialize-LabResourceMSU'
         'Get-LabSwitch'
         'Initialize-LabSwitch'
         'Remove-LabSwitch'

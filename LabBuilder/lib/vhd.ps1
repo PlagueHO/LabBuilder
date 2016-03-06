@@ -11,8 +11,7 @@
    The files should have already been prepared by the CreateVMInitializationFiles function.
    The VM VHD image should contain an installed copy of Windows still in OOBE mode.
    
-   This function also applies downloads and applies and optional MSU update files from
-   a web site if specified in the VM declaration in the configuration.
+   This function also applies optional MSU package files from the Lab resource folder if specified in the packages list in the VM.
 .PARAMETER Lab
    Contains the Lab object that was produced by the Get-Lab cmdlet.
 .PARAMETER VM
@@ -69,12 +68,15 @@ function InitializeBootVHD {
         -Path $MountPoint `
         -Index 1
 
-    # If this is a Nano Server
-    if ($VM.OSType -eq 'Nano')
+    # Apply any listed packages to the Image
+    if (-not [String]::IsNullOrWhitespace($VM.Packages))
     {
-        # Now specify the Nano Server packages to add.
-        if (-not [String]::IsNullOrWhitespace($VM.Packages))
+        # Get the list of Packages to apply
+        $ApplyPackages = @($VM.Packages -split ',')
+
+        if ($VM.OSType -eq 'Nano')
         {
+            # Now specify the Nano Server packages to add.
             [String] $PackagesFolder = Join-Path `
                 -Path $LabPath `
                 -ChildPath 'NanoServerPackages'
@@ -92,63 +94,104 @@ function InitializeBootVHD {
                     errorMessage = $($LocalizedData.NanoServerPackagesFolderMissingError `
                     -f $PackagesFolder)
                 }
-                ThrowException @ExceptionParameters                
-            }    
-                
-            $NanoPackages = @($VM.Packages -split ',')
+                ThrowException @ExceptionParameters
+            }
 
             foreach ($Package in $Script:NanoServerPackageList) 
             {
-                if ($Package.Name -in $NanoPackages) 
+                if ($Package.Name -in $ApplyPackages) 
                 {
                     # Add the package
                     $PackagePath = Join-Path `
                         -Path $PackagesFolder `
                         -ChildPath $Package.Filename
+
+                    Write-Verbose -Message $($LocalizedData.ApplyingVMBootDiskFileMessage `
+                        -f $VM.Name,$Package.Name,$PackagePath)
+
                     $null = Add-WindowsPackage `
                         -PackagePath $PackagePath `
                         -Path $MountPoint
+
                     # Add the localization package
                     $PackagePath = Join-Path `
                         -Path $PackagesFolder `
                         -ChildPath "en-us\$($Package.Filename)"
+
+                    Write-Verbose -Message $($LocalizedData.ApplyingVMBootDiskFileMessage `
+                        -f $VM.Name,$Package.Name,$PackagePath)
+
                     $null = Add-WindowsPackage `
                         -PackagePath $PackagePath `
                         -Path $MountPoint
                 } # if
             } # foreach
-        } # if        
-    }
-    else
-    {
-        # Apply any packages
-        foreach ($Package in $VM.Packages)
+        }
+        else
         {
-<#
-            $MSUFilename = $URL.Substring($URL.LastIndexOf('/') + 1)
-            $MSUPath = Join-Path `
-                -Path $Script:WorkingFolder `
-                -ChildPath $MSUFilename
+            # Get the list of Lab Resource MSUs
+            $ResourceMSUs = Get-LabResourceMSU `
+                -Lab $Lab
 
-            if (-not (Test-Path -Path $MSUPath))
+            foreach ($Package in $ApplyPackages)
             {
-                Write-Verbose -Message $($LocalizedData.DownloadingVMBootDiskFileMessage `
-                    -f $VM.Name,'MSU',$URL)
-                DownloadAndUnzipFile `
-                    -URL $URL `
-                    -DestinationPath $MSUPath
-            } # if
+                # Find the package in the Resources
+                [Boolean] $Found = $False
+                foreach ($ResourceMSU in $ResourceMSUs)
+                {
+                    if ($ResourceMSU.Name -eq $Package)
+                    {
+                        # Found the package
+                        $Found = $True
+                        break
+                    } # if
+                } # foreach
+                if (-not $Found)
+                {
+                    # Dismount before throwing the error
+                    Write-Verbose -Message $($LocalizedData.DismountingVMBootDiskMessage `
+                        -f $VM.Name,$VMBootDiskPath)
+                    $null = Dismount-WindowsImage -Path $MountPoint -Save
+                    $null = Remove-Item -Path $MountPoint -Recurse -Force
 
-            # Once downloaded apply the update
-            Write-Verbose -Message $($LocalizedData.ApplyingVMBootDiskFileMessage `
-                -f $VM.Name,'MSU',$URL)
-            $null = Add-WindowsPackage `
-                -PackagePath $MSUPath `
-                -Path $MountPoint
-#>
-        } # foreach
+                    $ExceptionParameters = @{
+                        errorId = 'PackageNotFoundError'
+                        errorCategory = 'InvalidArgument'
+                        errorMessage = $($LocalizedData.PackageNotFoundError `
+                        -f $Package)
+                    }
+                    ThrowException @ExceptionParameters
+                } # if
+
+                $PackagePath = $ResourceMSU.Filename
+                if (-not (Test-Path -Path $PackagePath))
+                {
+                    # Dismount before throwing the error
+                    Write-Verbose -Message $($LocalizedData.DismountingVMBootDiskMessage `
+                        -f $VM.Name,$VMBootDiskPath)
+                    $null = Dismount-WindowsImage -Path $MountPoint -Save
+                    $null = Remove-Item -Path $MountPoint -Recurse -Force
+
+                    $ExceptionParameters = @{
+                        errorId = 'PackageMSUNotFoundError'
+                        errorCategory = 'InvalidArgument'
+                        errorMessage = $($LocalizedData.PackageMSUNotFoundError `
+                        -f $Package,$PackagePath)
+                    }
+                    ThrowException @ExceptionParameters
+                } # if
+                
+                # Apply a Pacakge
+                Write-Verbose -Message $($LocalizedData.ApplyingVMBootDiskFileMessage `
+                    -f $VM.Name,$Package,$PackagePath)
+
+                $null = Add-WindowsPackage `
+                    -PackagePath $PackagePath `
+                    -Path $MountPoint
+            } # foreach
+        } # if
     } # if
-    
+
     # Create the scripts folder where setup scripts will be put
     $null = New-Item `
         -Path "$MountPoint\Windows\Setup\Scripts" `

@@ -80,6 +80,8 @@ ConvertFrom-StringData -StringData @'
     VMDataDiskCopyFolderMissingError=The CopyFolder '{2}' that should be copied to Data Disk '{1}' in VM '{0}' does not exist.
     NanoServerPackagesFolderMissingError=The NanoServerPackages folder '{0}' does not exist.
     VMDoesNotExistError=The VM '{0}' does not exist.
+    PackageNotFoundError=The Package MSU '{0}' is not listed in the Lab Resource MSU list.
+    PackageMSUNotFoundError=The file '{1}' for Package MSU '{0}' does not exist.
     BootPhaseStartVMsTimeoutError=One or more Virtual Machines with Bootorder '{0}' failed to start completely in the required time.
     BootPhaseStopVMsTimeoutError=One or more Virtual Machines with Bootorder '{0}' failed to stop completely in the required time.
     ConfigurationXMLValidationError=Lab Configuration XML '{0}'- {1}.
@@ -99,7 +101,8 @@ ConvertFrom-StringData -StringData @'
     InitializeVHDAccessPathMessage=Assigning access path {1} to VHD {0}.
     DownloadingFileMessage=Downloading File '{0}' from '{1}' to '{2}'.
     ExtractingFileMessage=Extracting downloaded File '{0}' to '{1}'.
-    DownloadingLabResourcesMessage=Downloading Lab Resources.
+    DownloadingResourceModuleMessage=Downloading Lab Resource Module '{0}' from '{1}'.
+    DownloadingResourceMSUMessage=Downloading Lab Resource MSU Package '{0}' from '{1}'.
     CreatingLabManagementSwitchMessage=Creating Lab Management Switch {0} on Vlan {1}.
     UpdatingLabManagementSwitchMessage=Updating Lab Management Switch {0} to Vlan {1}.
     RemovingLabManagementSwitchMessage=Removing Lab Management Switch {0}.
@@ -159,6 +162,9 @@ ConvertFrom-StringData -StringData @'
     ApplyingVMBootDiskFileMessage=Applying {1} file '{2}' to VHD Boot Disk for VM '{0}'.
     CreatingVMBootDiskPantherFolderMessage=Creating Panther folder to VHD Boot Disk for VM '{0}'.
     DismountingVMBootDiskMessage=Dismounting VM '{0}' VHD Boot Disk '{1}'.
+    MountingTemplateBootDiskMessage=Mounting Template '{0}' VHD Boot Disk '{1}'.
+    ApplyingTemplateBootDiskFileMessage=Applying {1} file '{2}' to VHD Boot Disk for Template '{0}'.
+    DismountingTemplateBootDiskMessage=Dismounting Template '{0}' VHD Boot Disk '{1}'.
     AddingIPAddressToTrustedHostsMessage=Adding IP Address '{1}' to WS-Man Trusted Hosts to allow remoting to '{0}'.
     RemovingIPAddressFromTrustedHostsMessage=Removing IP Address '{1}' from WS-Man Trusted Hosts.
     WaitingForIPAddressAssignedMessage=Waiting for valid IP Address to be assigned to VM '{0}', retrying in {1} seconds.
@@ -186,7 +192,7 @@ ConvertFrom-StringData -StringData @'
     LabStartCompleteMessage=The Lab '{0}' in folder '{1}' has been started.
     LabStopCompleteMessage=The Lab '{0}' in folder '{1}' has been stopped.
     ConfigurationXMLValidationMessage=Lab Configuration XML '{0}'- {1}
-
+    
     ShouldUninstallLab=Uninstall the Lab '{0}' in folder '{1}'
     ShouldRemoveVMTemplate=Delete the Parent VM Template VHDs useb by Lab '{0}' in folder '{1}'
     ShouldRemoveSwitch=Delete the virtual switches used by Lab '{0}'

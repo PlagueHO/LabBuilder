@@ -59,6 +59,8 @@ The Virtual Machines, Virtual Hard Disk drives and other Lab related files will 
 This optional attribute contains the path to the folder that will contain the Parent VHD files used by the Virtual Machines in this Lab.
 If this folder is not rooted, it will be assumed to be a subfolder of the 'labpath'.
 The Parent VHD files are used as Parent VHD's to any Lab VM boot disks or cloned to each Virtual Machine folder depending on the 'usedifferencingdisk' setting for each Lab VM.
+
+- Default Value: ParentVHDs
                 </xs:documentation>
                 <xs:appinfo>vhdparentpath="f:\Labs\WS2012R2-CLUSTER-TEST-01\ParentVHDs"</xs:appinfo>
               </xs:annotation>
@@ -72,8 +74,22 @@ If this setting is not set it will default to 'dsclibrary' and will therefore be
 Usually the content of this folder will either be provided with the Lab or created by copying the DSCLibrary folder provided with the LabBuilder module.
                 
 Each Virtual Machine that is set to be configured by DSC requires a DSC configuration file that must be found in this folder.
+
+- Default Value: DSCLibrary
                 </xs:documentation>
                 <xs:appinfo>dsclibrarypath="C:\DSC\MyLibrary"</xs:appinfo>
+              </xs:annotation>
+            </xs:attribute>
+            <xs:attribute name="resourcepath" type="xs:string" use="optional">
+              <xs:annotation>
+                <xs:documentation>
+This optional attribute contains the path to the folder that will contain any Resource files required by this Lab.
+This includes the MSU packages that may need to be installed into the TemplateVHD or VM BootVHD files by specifing the MSU package names in the Packages attribute of the VMTemplateVHD, TemplateVHD or VM elements.
+If this folder is not rooted, it will be assumed to be a subfolder of the 'labpath'.
+
+- Default Value: Resource
+                </xs:documentation>
+                <xs:appinfo>resourcepath="f:\SharedResources\"</xs:appinfo>
               </xs:annotation>
             </xs:attribute>
           </xs:complexType>
@@ -1098,37 +1114,6 @@ This optional attribute enables DSC Logging on the Virtual Machine in the DSC Ev
                             <xs:appinfo>logging="Y"</xs:appinfo>
                           </xs:annotation>
                         </xs:attribute>
-                      </xs:complexType>
-                    </xs:element>
-                    <xs:element minOccurs="0" maxOccurs="1" name="install">
-                      <xs:annotation>
-                        <xs:documentation>
-This optional element contains a collection that can be used to install additional MSU packages onto the Virtual Machine prior to it being first booted.
-                        </xs:documentation>
-                        <xs:appinfo>&lt;install&gt;...&lt;/install&gt;</xs:appinfo>
-                      </xs:annotation>
-                      <xs:complexType>
-                        <xs:sequence>
-                          <xs:element minOccurs="0" maxOccurs="unbounded" name="msu">
-                            <xs:annotation>
-                              <xs:documentation>
-This optional element is used to specify an MSU package to be installed onto the Virtual Machine boot disk prior to it being first booted. 
-                              </xs:documentation>
-                              <xs:appinfo>&lt;msu&gt;...&lt;/msu&gt;</xs:appinfo>
-                            </xs:annotation>
-                            <xs:complexType>
-                              <xs:attribute name="url" type="xs:string" use="required">
-                                <xs:annotation>
-                                  <xs:documentation>
-This required attribute contains the URL that the MSU package file can be downloaded to.
-This MSU Package file will be downloaded to the host temporary folder and installed onto the Virtual Machine Boot VHD prior to first boot.
-                                  </xs:documentation>
-                                  <xs:appinfo>url="http://download.microsoft.com/download/1/D/8/1D8B5022-5477-4B9A-8104-6A71FF9D98AB/WindowsTH-KB2693643-x64.msu"</xs:appinfo>
-                                </xs:annotation>
-                              </xs:attribute>
-                            </xs:complexType>
-                          </xs:element>
-                        </xs:sequence>
                       </xs:complexType>
                     </xs:element>
                   </xs:all>

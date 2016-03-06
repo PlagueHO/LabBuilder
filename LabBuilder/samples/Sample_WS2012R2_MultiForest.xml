@@ -71,14 +71,16 @@
               processorcount="1"
               administratorpassword="P@ssword!1"
               timezone="New Zealand Standard Time" 
-              ostype="Server" />
+              ostype="Server"
+              packages="WMF5.0-WS2012R2-W81" />
     <template name="Template Windows Server 2012 R2 Datacenter Core"
               templatevhd="Windows Server 2012 R2 Datacenter CORE"
               memorystartupbytes="1GB"
               processorcount="1"
               administratorpassword="P@ssword!1"
               timezone="New Zealand Standard Time" 
-              ostype="Server" />
+              ostype="Server"
+              packages="WMF5.0-WS2012R2-W81" />
   </templates>
 
   <vms>
