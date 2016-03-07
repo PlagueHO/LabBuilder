@@ -43,11 +43,6 @@ InModuleScope LabBuilder {
             -ArgumentList $exception, $errorId, $errorCategory, $null
         return $errorRecord
     }
-    
-    
-    
-    Describe 'IsAdmin' -Tag 'Incomplete' {
-    }
 
 
 

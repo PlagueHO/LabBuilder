@@ -491,6 +491,10 @@ None
 
 Versions
 ========
+### 0.6.1.0
+* Initialize-LabSwitch: External switch correctly sets Adapter Name.
+* IsAdmin: Function removed because was not useful.
+
 ### 0.6.0.0
 * New-Lab: Function added for creating a new Lab configuration file and basic folder structure.
 * Get-Lab: Redundant checks for XML valid removed because convered by XSD schema validation.
