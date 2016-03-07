@@ -62,23 +62,6 @@ function ThrowException
 
 <#
 .SYNOPSIS
-   Returns True if running as Administrator
-#>
-function IsAdmin()
-{
-    # Get the ID and security principal of the current user account
-    $myWindowsID=[System.Security.Principal.WindowsIdentity]::GetCurrent()
-    $myWindowsPrincipal=new-object System.Security.Principal.WindowsPrincipal($myWindowsID)
-  
-    # Get the security principal for the Administrator role
-    $adminRole=[System.Security.Principal.WindowsBuiltInRole]::Administrator
-  
-    # Check to see if we are currently running "as Administrator"
-    Return ($myWindowsPrincipal.IsInRole($adminRole))
-} # IsAdmin
-
-<#
-.SYNOPSIS
    Download the a file to a folder and optionally unzip it.
    
    If the file is a zip file the file will be downloaded to a temporary
