@@ -5,8 +5,8 @@
                   version="1.0">
   <description>
   Sample Windows Server 2012 R2 Lab Configuration containing two forests:
-   - Alpha.com
-   - Bravo.com
+   - ALPHA.LOCAL
+   - BRAVO.LOCAL
   Each forest is on an isolated subnet and contains a DC server, DHCP server and an Edge Server.
   The edge servers are also on a shared subnet (Domain Internal) enabling routing between the isolated subnets (Domain Private Alpha/Bravo).
   A forest trust is not established between the forests.
@@ -90,7 +90,7 @@
       <dsc configname="DC_FORESTPRIMARY"
            configfile="DC_FORESTPRIMARY.DSC.ps1">
         <parameters>
-          DomainName = "ALPHA.COM"
+          DomainName = "ALPHA.LOCAL"
           DomainAdminPassword = "P@ssword!1"
         </parameters>
       </dsc>
@@ -118,7 +118,7 @@
       <dsc configname="MEMBER_DHCP"
            configfile="MEMBER_DHCP.DSC.ps1">
         <parameters>
-          DomainName = "ALPHA.COM"
+          DomainName = "ALPHA.LOCAL"
           DomainAdminPassword = "P@ssword!1"
 		  DCName = "ALPHA-DC1"
           PSDscAllowDomainUser = $True
@@ -181,7 +181,7 @@
       <dsc configname="MEMBER_REMOTEACCESS"
            configfile="MEMBER_REMOTEACCESS.DSC.ps1">
         <parameters>
-          DomainName = "ALPHA.COM"
+          DomainName = "ALPHA.LOCAL"
           DomainAdminPassword = "P@ssword!1"
 		  DCName = "ALPHA-DC1"
           PSDscAllowDomainUser = $True
@@ -221,7 +221,7 @@
       <dsc configname="DC_FORESTPRIMARY"
            configfile="DC_FORESTPRIMARY.DSC.ps1">
         <parameters>
-          DomainName = "BRAVO.COM"
+          DomainName = "BRAVO.LOCAL"
           DomainAdminPassword = "P@ssword!1"
         </parameters>
       </dsc>
@@ -249,7 +249,7 @@
       <dsc configname="MEMBER_DHCP"
            configfile="MEMBER_DHCP.DSC.ps1">
         <parameters>
-          DomainName = "BRAVO.COM"
+          DomainName = "BRAVO.LOCAL"
           DomainAdminPassword = "P@ssword!1"
 		  DCName = "BRAVO-DC1"
           PSDscAllowDomainUser = $True
@@ -312,7 +312,7 @@
       <dsc configname="MEMBER_REMOTEACCESS"
            configfile="MEMBER_REMOTEACCESS.DSC.ps1">
         <parameters>
-          DomainName = "BRAVO.COM"
+          DomainName = "BRAVO.LOCAL"
           DomainAdminPassword = "P@ssword!1"
 		  DCName = "BRAVO-DC1"
           PSDscAllowDomainUser = $True
