@@ -1,54 +1,58 @@
 [
     {
-        "adapters":  [
+        "Name":  "External",
+        "Type":  3,
+        "VLAN":  0,
+        "NATSubnetAddress":  "",
+        "Adapters":  [
                          {
-                             "name":  "Cluster",
-                             "macaddress":  "00155D010701"
+                             "Name":  "Cluster",
+                             "MACAddress":  "00155D010701",
+                             "Vlan":  0
                          },
                          {
-                             "name":  "Management",
-                             "macaddress":  "00155D010702"
+                             "Name":  "Management",
+                             "MACAddress":  "00155D010702",
+                             "Vlan":  0
                          },
                          {
-                             "name":  "SMB",
-                             "macaddress":  "00155D010703"
+                             "Name":  "SMB",
+                             "MACAddress":  "00155D010703",
+                             "Vlan":  0
                          },
                          {
-                             "name":  "LM",
-                             "macaddress":  "00155D010704"
+                             "Name":  "LM",
+                             "MACAddress":  "00155D010704",
+                             "Vlan":  0
                          }
-                     ],
-        "vlan":  null,
-        "name":  "External",
-        "natsubnetaddress":  null,
-        "type":  "External"
+                     ]
     },
     {
-        "adapters":  null,
-        "vlan":  "2",
-        "name":  "TestLab Private Vlan",
-        "natsubnetaddress":  null,
-        "type":  "Private"
+        "Name":  "TestLab Private Vlan",
+        "Type":  1,
+        "VLAN":  2,
+        "NATSubnetAddress":  "",
+        "Adapters":  null
     },
     {
-        "adapters":  null,
-        "vlan":  null,
-        "name":  "TestLab Private",
-        "natsubnetaddress":  null,
-        "type":  "Private"
+        "Name":  "TestLab Private",
+        "Type":  1,
+        "VLAN":  0,
+        "NATSubnetAddress":  "",
+        "Adapters":  null
     },
     {
-        "adapters":  null,
-        "vlan":  "3",
-        "name":  "TestLab Internal Vlan",
-        "natsubnetaddress":  null,
-        "type":  "Internal"
+        "Name":  "TestLab Internal Vlan",
+        "Type":  2,
+        "VLAN":  3,
+        "NATSubnetAddress":  "",
+        "Adapters":  null
     },
     {
-        "adapters":  null,
-        "vlan":  null,
-        "name":  "TestLab Internal",
-        "natsubnetaddress":  null,
-        "type":  "Internal"
+        "Name":  "TestLab Internal",
+        "Type":  2,
+        "VLAN":  0,
+        "NATSubnetAddress":  "",
+        "Adapters":  null
     }
 ]

@@ -22,7 +22,7 @@
                                   },
                          "Name":  "TestLab External",
                          "SwitchName":  "External",
-                         "VLan":  "",
+                         "VLan":  "0",
                          "IPv6":  {
 
                                   },
@@ -173,7 +173,7 @@
                      },
                      {
                          "vhd":  "C:\\Pester Lab\\TestLab PESTER01\\Virtual Hard Disks\\DataDiskMove.vhdx",
-                         "type":  null,
+                         "type":  "differencing",
                          "copyfolders":  null,
                          "partitionstyle":  null,
                          "filesystem":  null,

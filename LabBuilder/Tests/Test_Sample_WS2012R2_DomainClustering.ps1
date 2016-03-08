@@ -5,7 +5,7 @@ Function Test-StartLabVM {
     Param (
         [String[]]$StartVMs
     )
-    $Lab = Get-Lab -Path $Script:ConfigPath
+    $Lab = Get-Lab -Config $Script:ConfigPath
     [Array]$VMs = Get-LabVM `
         -Lab $Lab `
         -Name $StartVMs
