@@ -1086,18 +1086,18 @@ function Get-LabVMTemplateVHD {
         } # if
         
         # Get the Template OS Type 
-        [String] $OSType = 'Server'
+        $OSType = [LabOStype]::Server
         if ($TemplateVHD.OSType)
         {
-            $OSType = $TemplateVHD.OSType
+            $OSType = [LabOStype]::$($TemplateVHD.OSType)
         } # if
-        if ($OSType -notin @('Server','Client','Nano') )
+        if (-not $OSType)
         {
             $ExceptionParameters = @{
                 errorId = 'InvalidVMTemplateVHDOSTypeError'
                 errorCategory = 'InvalidArgument'
                 errorMessage = $($LocalizedData.InvalidVMTemplateVHDOSTypeError `
-                    -f $TemplateVHD.Name,$OSType)
+                    -f $TemplateVHD.Name,$TemplateVHD.OSType)
             }
             ThrowException @ExceptionParameters
         } # if
@@ -1110,35 +1110,35 @@ function Get-LabVMTemplateVHD {
         } # if
 
         # Get the Template VHD Format 
-        [String] $VHDFormat = 'VHDX'
+        $VHDFormat = [LabVHDFormat]::VHDx
         if ($TemplateVHD.VHDFormat)
         {
-            $VHDFormat = $TemplateVHD.VHDFormat
+            $VHDFormat = [LabVHDFormat]::$($TemplateVHD.VHDFormat)
         } # if
-        if ($VHDFormat -notin @('VHDx','VHD') )
+        if (-not $VHDFormat)
         {
             $ExceptionParameters = @{
                 errorId = 'InvalidVMTemplateVHDVHDFormatError'
                 errorCategory = 'InvalidArgument'
                 errorMessage = $($LocalizedData.InvalidVMTemplateVHDVHDFormatError `
-                    -f $TemplateVHD.Name,$VHDFormat)
+                    -f $TemplateVHD.Name,$TemplateVHD.VHDFormat)
             }
             ThrowException @ExceptionParameters
         }
 
         # Get the Template VHD Type 
-        [String] $VHDType = 'Dynamic'
+        $VHDType = [LabVHDType]::Dynamic
         if ($TemplateVHD.VHDType)
         {
-            $VHDType = $TemplateVHD.VHDType
+            $VHDType = [LabVHDType]::$($TemplateVHD.VHDType)
         } # if
-        if ($VHDType -notin @('Dynamic','Fixed') )
+        if (-not $VHDType)
         {
             $ExceptionParameters = @{
                 errorId = 'InvalidVMTemplateVHDVHDTypeError'
                 errorCategory = 'InvalidArgument'
                 errorMessage = $($LocalizedData.InvalidVMTemplateVHDVHDTypeError `
-                    -f $TemplateVHD.Name,$VHDType)
+                    -f $TemplateVHD.Name,$TemplateVHD.VHDType)
             }
             ThrowException @ExceptionParameters
         } # if
