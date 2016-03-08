@@ -540,9 +540,9 @@ function Get-LabSwitch {
 
 <#
 .SYNOPSIS
-   Creates Hyper-V Virtual Switches from a provided array.
+   Creates Hyper-V Virtual Switches from a provided array of LabSwitch objects.
 .DESCRIPTION
-   Takes an array of switches that were pulled from a Lab object by calling
+   Takes an array of LabSwitch objectsthat were pulled from a Lab object by calling
    Get-LabSwitch and ensures that they Hyper-V Virtual Switches on the system
    are configured to match.
 .PARAMETER Lab
@@ -552,9 +552,9 @@ function Get-LabSwitch {
    
    Only Switches matching names in this list will be initialized.
 .PARAMETER Switches
-   The array of switches pulled from the Lab using Get-LabSwitch.
+   The array of LabSwitch objects pulled from the Lab using Get-LabSwitch.
 
-   If not provided it will attempt to pull the list from the Lab.
+   If not provided it will attempt to pull the array from the Lab object provided.
 .EXAMPLE
    $Lab = Get-Lab -ConfigPath c:\mylab\config.xml
    $Switches = Get-LabSwitch -Lab $Lab
@@ -584,13 +584,13 @@ function Initialize-LabSwitch {
 
         [Parameter(
             Position=3)]
-        [Array] $Switches
+        [LabSwitch[]] $Switches
     )
 
     # if switches was not passed, pull it.
     if (-not $PSBoundParameters.ContainsKey('switches'))
     {
-        $Switches = Get-LabSwitch `
+        [LabSwitch[]] $Switches = Get-LabSwitch `
             @PSBoundParameters
     }
     
@@ -615,7 +615,7 @@ function Initialize-LabSwitch {
                 }
                 ThrowException @ExceptionParameters
             }
-            [string] $SwitchType = $VMSwitch.Type
+            [LabSwitchType] $SwitchType = $VMSwitch.Type
             Write-Verbose -Message $($LocalizedData.CreatingVirtualSwitchMessage `
                 -f $SwitchType,$SwitchName)
             Switch ($SwitchType)
@@ -644,9 +644,11 @@ function Initialize-LabSwitch {
                                     -StaticMacAddress $Adapter.MacAddress `
                                     
                                     -Passthru | `
-                                    Set-VMNetworkAdapterVlan -Access -VlanId $($Switch.Vlan)
+                                    Set-VMNetworkAdapterVlan `
+                                        -Access `
+                                        -VlanId $($VMSwitch.Vlan)
                             }
-                            Else
+                            else
                             { 
                                 $null = Add-VMNetworkAdapter `
                                     -ManagementOS `
@@ -656,16 +658,20 @@ function Initialize-LabSwitch {
                             } # if
                         } # foreach
                     } # if
-                    Break
+                    break
                 } # 'External'
                 'Private'
                 {
-                    $null = New-VMSwitch -Name $SwitchName -SwitchType Private
+                    $null = New-VMSwitch `
+                        -Name $SwitchName `
+                        -SwitchType Private
                     Break
                 } # 'Private'
                 'Internal'
                 {
-                    $null = New-VMSwitch -Name $SwitchName -SwitchType Internal
+                    $null = New-VMSwitch `
+                        -Name $SwitchName `
+                        -SwitchType Internal
                     if ($VMSwitch.Adapters)
                     {
                         foreach ($Adapter in $VMSwitch.Adapters)
@@ -680,7 +686,9 @@ function Initialize-LabSwitch {
                                     -Name $($Adapter.Name) `
                                     -StaticMacAddress $($Adapter.MacAddress) `
                                     -Passthru | `
-                                    Set-VMNetworkAdapterVlan -Access -VlanId $($Switch.Vlan)
+                                    Set-VMNetworkAdapterVlan `
+                                        -Access `
+                                        -VlanId $($VMSwitch.Vlan)
                             }
                             Else
                             { 
@@ -727,7 +735,7 @@ function Initialize-LabSwitch {
                 }
             } # Switch
         } # if
-    } # foreach       
+    } # foreach
 } # Initialize-LabSwitch
 
 
