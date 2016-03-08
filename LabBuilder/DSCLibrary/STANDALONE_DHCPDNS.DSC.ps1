@@ -4,7 +4,61 @@ DSC Template Configuration File For use by LabBuilder
     STANDALONE_DHCPDNS
 .Desription
     Builds a Standalone DHCP and DNS Server.
-.Parameters:    
+.Parameters:
+    Scopes = @(
+        @{ Name = 'Site A Primary';
+            Start = '192.168.128.50';
+            End = '192.168.128.254';
+            SubnetMask = '255.255.255.0';
+            AddressFamily = 'IPv4'
+        }
+    )
+    Reservations = @(
+        @{ Name = 'SA-DC1';
+            ScopeID = '192.168.128.0';
+            ClientMACAddress = '000000000000';
+            IPAddress = '192.168.128.10';
+            AddressFamily = 'IPv4'
+        },
+        @{ Name = 'SA-DC2';
+            ScopeID = '192.168.128.0';
+            ClientMACAddress = '000000000001';
+            IPAddress = '192.168.128.11';
+            AddressFamily = 'IPv4'
+        },
+        @{ Name = 'SA-DHCP1';
+            ScopeID = '192.168.128.0';
+            ClientMACAddress = '000000000002';
+            IPAddress = '192.168.128.16';
+            AddressFamily = 'IPv4'
+        },
+        @{ Name = 'SA-EDGE1';
+            ScopeID = '192.168.128.0';
+            ClientMACAddress = '000000000005';
+            IPAddress = '192.168.128.19';
+            AddressFamily = 'IPv4'
+        }
+    )
+    ScopeOptions = @(
+        @{ ScopeID = '192.168.128.0';
+            DNServerIPAddress = @('192.168.128.10','192.168.128.11');
+            Router = '192.168.128.19';
+            AddressFamily = 'IPv4'
+        }
+    )
+    Forwarders = @('8.8.8.8','8.8.4.4')
+    ADZones = @(
+        @{ Name = 'ALPHA.LOCAL';
+           DynamicUpdate = 'Secure';
+           ReplicationScope = 'Forest';
+        }
+    )
+    PrimaryZones = @(
+        @{ Name = 'BRAVO.LOCAL';
+           ZoneFile = 'bravo.local.dns';
+           DynamicUpdate = 'None';
+        }
+    )
 ###################################################################################################>
 
 Configuration STANDALONE_DHCPDNS
@@ -74,6 +128,46 @@ Configuration STANDALONE_DHCPDNS
                 Router = $ScopeOption.Router
                 AddressFamily = $ScopeOption.AddressFamily
                 DependsOn = '[WindowsFeature]DHCPInstall'
+            }
+        }
+        
+        # DNS Server Settings
+        if ($Node.Forwarders)
+        {
+            xDnsServerForwarder DNSForwarders
+            {
+                IsSingleInstance = 'Yes'
+                IPAddresses      = $Node.Forwarders
+                Credential       = $DomainAdminCredential 
+                DependsOn        = '[xComputer]JoinDomain'
+            }
+        }
+        
+        [Int]$Count=0
+        Foreach ($ADZone in $Node.ADZones) {
+            $Count++
+            xDnsServerADZone "ADZone$Count"
+            {
+                Ensure           = 'Present'
+                Name             = $ADZone.Name
+                DynamicUpdate    = $ADZone.DynamicUpdate
+                ReplicationScope = $ADZone.ReplicationScope
+                Credential       = $DomainAdminCredential 
+                DependsOn        = '[xComputer]JoinDomain'
+            }
+        }
+
+        [Int]$Count=0
+        Foreach ($PrimaryZone in $Node.PrimaryZones) {
+            $Count++
+            xDnsServerSecondaryZone "PrimaryZone$Count"
+            {
+                Ensure        = 'Present'
+                Name          = $PrimaryZone.Name
+                ZoneFile      = $PrimaryZone.ZoneFile
+                DynamicUpdate = $PrimaryZone.DynamicUpdate
+                Credential    = $DomainAdminCredential 
+                DependsOn     = '[xComputer]JoinDomain'
             }
         }
     }

@@ -501,6 +501,9 @@ Versions
                         Fixed bug setting VLAN Id on External and Internal Switch Adapters.
 * Remove-LabSwitch: Converted to use LabSwitch objects.
 * Tests\Test_Sample_*.ps1: Test-StartLabVM function fixed.
+* DSCLibrary\MEMBER_*.DSC.ps1: Updated parameter examples to include DCName parameter.
+* DSCLibrary\DC_*.DSC.ps1: Added DNS Zone and forwarder options (setting forwarder requires xDNSServer 1.6.0.0).
+* DSCLibrary\MEMBER_DNS.DSC.ps1: Created resource for member DNS servers.
 
 ### 0.6.0.0
 * New-Lab: Function added for creating a new Lab configuration file and basic folder structure.
