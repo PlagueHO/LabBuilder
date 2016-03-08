@@ -403,26 +403,25 @@ function Initialize-LabResourceMSU {
 #region LabSwitchFunctions
 <#
 .SYNOPSIS
-   Gets an array of switches from a Lab.
+    Gets an array of switches from a Lab.
 .DESCRIPTION
-   Takes a provided Lab and returns the list of switches required for this Lab.
-   
-   This list is usually passed to Initialize-LabSwitch to configure the switches required for this lab.
+    Takes a provided Lab and returns the array of LabSwitch objects required for this Lab.
+    This list is usually passed to Initialize-LabSwitch to configure the switches required for this lab.
 .PARAMETER Lab
-   Contains the Lab object that was loaded by the Get-Lab object.
+    Contains the Lab object that was loaded by the Get-Lab object.
 .PARAMETER Name
-   An optional array of Switch names.
-   
-   Only Switches matching names in this list will be pulled into the returned in the array.
+    An optional array of Switch names.
+
+    Only Switches matching names in this list will be pulled into the returned in the array.
 .EXAMPLE
-   $Lab = Get-Lab -ConfigPath c:\mylab\config.xml
-   $Switches = Get-LabSwitch -Lab $Lab
-   Loads a Lab and pulls the array of switches from it.
+    $Lab = Get-Lab -ConfigPath c:\mylab\config.xml
+    $Switches = Get-LabSwitch -Lab $Lab
+    Loads a Lab and pulls the array of switches from it.
 .OUTPUTS
-   Returns an array of switches.
+    Returns an array of LabSwitch objects.
 #>
 function Get-LabSwitch {
-    [OutputType([Array])]
+    [OutputType([LabSwitch[]])]
     [CmdLetBinding()]
     param
     (
@@ -439,7 +438,7 @@ function Get-LabSwitch {
     )
 
     [String] $LabId = $Lab.labbuilderconfig.settings.labid 
-    [Array] $Switches = @() 
+    [LabSwitch[]] $Switches = @() 
     $ConfigSwitches = $Lab.labbuilderconfig.Switches.Switch
 
     foreach ($ConfigSwitch in $ConfigSwitches)
@@ -453,8 +452,7 @@ function Get-LabSwitch {
             # A names list was passed but this swtich wasn't included
             continue
         } # if
-        
-        $SwitchType = $ConfigSwitch.Type
+
         if ($SwitchName -eq 'switch')
         {
             $ExceptionParameters = @{
@@ -465,46 +463,52 @@ function Get-LabSwitch {
             ThrowException @ExceptionParameters
         }
 
-        # if a LabId is set for the lab, prepend it to the Switch name as long as it isn't
-        # an external switch.
-        if ($LabId -and ($SwitchType -ne 'External'))
-        {
-            $SwitchName = "$LabId $SwitchName"
-        } # if
+        # Convert the switch type string to a LabSwitchType
+        $SwitchType = [LabSwitchType]::$($ConfigSwitch.Type)
 
-        if ($SwitchType -notin 'Private','Internal','External','NAT')
+        # If the SwitchType string doesn't match any enum value it will be
+        # set to null.
+        if (-not $SwitchType)
         {
             $ExceptionParameters = @{
                 errorId = 'UnknownSwitchTypeError'
                 errorCategory = 'InvalidArgument'
                 errorMessage = $($LocalizedData.UnknownSwitchTypeError `
-                    -f $SwitchType,$SwitchName)
+                    -f $ConfigSwitch.Type,$SwitchName)
             }
             ThrowException @ExceptionParameters
+        } # if
+
+        # if a LabId is set for the lab, prepend it to the Switch name as long as it isn't
+        # an external switch.
+        if ($LabId -and ($SwitchType -ne [LabSwitchType]::External))
+        {
+            $SwitchName = "$LabId $SwitchName"
         } # if
 
         # Assemble the list of Mangement OS Adapters if any are specified for this switch
         # Only Intenal and External switches are allowed Management OS adapters.
         if ($ConfigSwitch.Adapters)
         {
-            [System.Collections.Hashtable[]] $ConfigAdapters = @()
+            [LabSwitchAdapter[]] $ConfigAdapters = @()
             foreach ($Adapter in $ConfigSwitch.Adapters.Adapter)
             {
                 $AdapterName = $Adapter.Name
                 # if a LabId is set for the lab, prepend it to the adapter name.
                 # But only if it is not an External switch.
-                if ($LabId -and ($SwitchType -ne 'External'))
+                if ($LabId -and ($SwitchType -ne [LabSwitchType]::External))
                 {
                     $AdapterName = "$LabId $AdapterName"
                 }
 
-                $ConfigAdapters += @{
-                    name = $AdapterName
-                    macaddress = $Adapter.MacAddress
-                }
+                [LabSwitchAdapter] $ConfigAdapter = New-Object `
+                    -TypeName LabSwitchAdapter
+                $ConfigAdapter.Name = $AdapterName
+                $ConfigAdapter.MACAddress = $Adapter.MacAddress
+                $ConfigAdapters += @( $ConfigAdapter )
             } # foreach
             if (($ConfigAdapters.Count -gt 0) `
-                -and ($SwitchType -notin 'External','Internal'))
+                -and ($SwitchType -notin [LabSwitchType]::External,[LabSwitchType]::Internal))
             {
                 $ExceptionParameters = @{
                     errorId = 'AdapterSpecifiedError'
@@ -519,13 +523,16 @@ function Get-LabSwitch {
         {
             $ConfigAdapters = $null
         } # if
-        $Switches += [PSObject]@{
-            name = $SwitchName
-            type = $ConfigSwitch.Type;
-            vlan = $ConfigSwitch.Vlan;
-            natsubnetaddress = $ConfigSwitch.NatSubnetAddress;
-            adapters = $ConfigAdapters }
-            
+
+        # Create the new Switch object
+        [LabSwitch] $NewSwitch = New-Object `
+            -TypeName LabSwitch
+        $NewSwitch.Name = $SwitchName
+        $NewSwitch.Type = $SwitchType
+        $NewSwitch.VLAN = $ConfigSwitch.VLan
+        $NewSwitch.NATSubnetAddress = $ConfigSwitch.NatSubnetAddress
+        $NewSwitch.Adapters = $ConfigAdapters
+        $Switches += @( $NewSwitch )
     } # foreach
     return $Switches
 } # Get-LabSwitch

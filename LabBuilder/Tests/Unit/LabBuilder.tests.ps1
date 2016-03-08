@@ -228,7 +228,7 @@ InModuleScope LabBuilder {
                     errorId = 'UnknownSwitchTypeError'
                     errorCategory = 'InvalidArgument'
                     errorMessage = $($LocalizedData.UnknownSwitchTypeError `
-                        -f '',"$($Lab.labbuilderconfig.settings.labid) External")
+                        -f '','External')
                 }
                 $Exception = GetException @ExceptionParameters
 
@@ -243,7 +243,7 @@ InModuleScope LabBuilder {
                     errorId = 'UnknownSwitchTypeError'
                     errorCategory = 'InvalidArgument'
                     errorMessage = $($LocalizedData.UnknownSwitchTypeError `
-                        -f 'BadType',"$($Lab.labbuilderconfig.settings.labid) External")
+                        -f 'BadType','External')
                 }
                 $Exception = GetException @ExceptionParameters
 

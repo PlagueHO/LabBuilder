@@ -496,6 +496,7 @@ Versions
 * IsAdmin: Function removed because was not useful.
 * dsclibrary\DC_FORESTDOMAIN.DSC: New DSC Library config for creating child domains in an existing forest.
 * Samples\Sample_WS2012R2_MultiForest.xml: Added child domains.
+* Get-LabSwitch: Converted to output array of LabSwitch objects.
 
 ### 0.6.0.0
 * New-Lab: Function added for creating a new Lab configuration file and basic folder structure.
