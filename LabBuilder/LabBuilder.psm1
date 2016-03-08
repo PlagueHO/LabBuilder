@@ -1201,10 +1201,10 @@ function Get-LabVMTemplateVHD {
 
 <#
 .SYNOPSIS
-    Scans through a list of VM Template VHDs and creates them from the ISO if missing.
+    Scans through an array of LabVMTemplateVHD objects and creates them from the ISO if missing.
 .DESCRIPTION
-    This function will take a list of VM Template VHDs from a Lab or it will
-    extract the list itself if it is not provided and ensure that each VHD file is available.
+    This function will take an array of LabVMTemplateVHD objects from a Lab or it will
+    extract the arrays itself if it is not provided and ensure that each VHD file is available.
 
     If the VHD file is not available then it will attempt to create it from the ISO.
 .PARAMETER Lab
@@ -1214,7 +1214,7 @@ function Get-LabVMTemplateVHD {
 
     Only VM Template VHDs matching names in this list will be initialized.
 .PARAMETER VMTemplateVHDs
-    The array of VMTemplateVHDs pulled from the Lab using Get-LabVMTemplateVHD
+    The array of LabVMTemplateVHD objects pulled from the Lab using Get-LabVMTemplateVHD
 
     If not provided it will attempt to pull the list from the Lab.
 .EXAMPLE
@@ -1247,13 +1247,13 @@ function Initialize-LabVMTemplateVHD
 
         [Parameter(
             Position=3)]
-        [Array] $VMTemplateVHDs
+        [LabVMTemplateVHD[]] $VMTemplateVHDs
     )
 
     # if VMTeplateVHDs array not passed, pull it from config.
     if (-not $PSBoundParameters.ContainsKey('VMTemplateVHDs'))
     {
-        $VMTemplateVHDs = Get-LabVMTemplateVHD `
+        [LabVMTemplateVHD[]] $VMTemplateVHDs = Get-LabVMTemplateVHD `
             @PSBoundParameters
     } # if
 
@@ -1299,18 +1299,18 @@ function Initialize-LabVMTemplateVHD
                 errorMessage = $($LocalizedData.VMTemplateVHDISOPathNotFoundError `
                     -f $TemplateVHDName,$ISOPath)
             }
-            ThrowException @ExceptionParameters            
+            ThrowException @ExceptionParameters
         } # if
-        
+
         # Mount the ISO so we can read the files.
         Write-Verbose -Message $($LocalizedData.MountingVMTemplateVHDISOMessage `
                 -f $TemplateVHDName,$ISOPath)
-                
+
         $null = Mount-DiskImage `
             -ImagePath $ISOPath `
             -StorageType ISO `
             -Access Readonly
-    
+
         $DiskImage = Get-DiskImage -ImagePath $ISOPath
         [String] $DriveLetter = ( Get-Volume -DiskImage $DiskImage ).DriveLetter
         [String] $ISODrive = "$([string]$DriveLetter):"
@@ -1323,9 +1323,9 @@ function Initialize-LabVMTemplateVHD
         } # if
 
         # This will have to change depending on the version
-        # of Convert-WindowsImage being used. 
-        [String] $VHDFormat = $VMTemplateVHD.VHDFormat       
-        [String] $VHDType = $VMTemplateVHD.VHDType       
+        # of Convert-WindowsImage being used.
+        [String] $VHDFormat = $VMTemplateVHD.VHDFormat
+        [String] $VHDType = $VMTemplateVHD.VHDType
         [String] $VHDDiskLayout = 'UEFI'
         if ($VMTemplateVHD.Generation -eq 1)
         {
@@ -1351,7 +1351,7 @@ function Initialize-LabVMTemplateVHD
             disklayout = $VHDDiskLayout
             erroraction = 'Stop'
         }
-        
+
         # Set the size
         if ($null -ne $VMTemplateVHD.VHDSize)
         {
@@ -1359,7 +1359,7 @@ function Initialize-LabVMTemplateVHD
                 sizebytes = $VMTemplateVHD.VHDSize
             }
         } # if
-        
+
         # Are any features specified?
         if (-not [String]::IsNullOrWhitespace($VMTemplateVHD.Features))
         {
@@ -1368,7 +1368,7 @@ function Initialize-LabVMTemplateVHD
                 feature = $Features
             }
         } # if
-        
+
         # Perform Nano Server package prep
         if ($VMTemplateVHD.OSType -eq 'Nano')
         {
@@ -1382,7 +1382,7 @@ function Initialize-LabVMTemplateVHD
             [String] $LabPackagesFolder = Join-Path `
                 -Path $VHDFolder `
                 -ChildPath 'NanoServerPackages'
-            
+
             if (-not (Test-Path -Path $LabPackagesFolder -Type Container))
             {
                 Write-Verbose -Message $($LocalizedData.CachingNanoServerPackagesMessage `
@@ -1396,7 +1396,7 @@ function Initialize-LabVMTemplateVHD
                     -Path "$VHDFolder\Packages" `
                     -NewName 'NanoServerPackages'
             } # if
-                                        
+
             # Now specify the Nano Server packages to add.
             if (-not [String]::IsNullOrWhitespace($VMTemplateVHD.Packages))
             {
@@ -1469,7 +1469,7 @@ function Initialize-LabVMTemplateVHD
                         }
                         ThrowException @ExceptionParameters
                     } # if
-                    
+
                     $Packages += @( $PackagePath )
                 } # foreach
                 $ConvertParams += @{
@@ -1484,14 +1484,14 @@ function Initialize-LabVMTemplateVHD
         # Work around an issue with Convert-WindowsImage not seeing the drive
         Get-PSDrive `
             -PSProvider FileSystem  
-        
+
         # Dot source the Convert-WindowsImage script
         # Should only be done once 
         if (-not (Test-Path -Path Function:Convert-WindowsImage))
         {
             . $Script:SupportConvertWindowsImagePath
         } # if
-        
+
         # Call the Convert-WindowsImage script
         Convert-WindowsImage @ConvertParams
 
@@ -1501,39 +1501,38 @@ function Initialize-LabVMTemplateVHD
 
         $null = Dismount-DiskImage `
             -ImagePath $ISOPath
-
     } # endfor
 } # Initialize-LabVMTemplateVHD
 
 
 <#
 .SYNOPSIS
-    Scans through a list of VM Template VHDs and removes them if they exist.
+    Scans through an array of LabVMTemplateVHD objects and removes them if they exist.
 .DESCRIPTION
-    This function will take a list of VM Template VHDs from a Lab or it will
+    This function will take an array of LabVMTemplateVHD objects from a Lab or it will
     extract the list itself if it is not provided and remove the VHD file if it exists.
 .PARAMETER Lab
-   Contains the Lab object that was loaded by the Get-Lab object.
+    Contains the Lab object that was loaded by the Get-Lab object.
 .PARAMETER Name
-   An optional array of VM Template VHD names.
-   
-   Only VM Template VHDs matching names in this list will be removed.
+    An optional array of VM Template VHD names.
+    
+    Only VM Template VHDs matching names in this list will be removed.
 .PARAMETER VMTemplateVHDs
-   The array of VMTemplateVHDs pulled from the Lab using Get-LabVMTemplateVHD.
-   
-   If not provided it will attempt to pull the list from the Lab.
+    The array of LabVMTemplateVHD objects from the Lab using Get-LabVMTemplateVHD.
+
+    If not provided it will attempt to pull the list from the Lab.
 .EXAMPLE
-   $Lab = Get-Lab -ConfigPath c:\mylab\config.xml
-   $VMTemplateVHDs = Get-LabVMTemplateVHD -Lab $Lab
-   Remove-LabVMTemplateVHD -Lab $Lab -VMTemplateVHDs $VMTemplateVHDs
-   Loads a Lab and pulls the array of VM Template VHDs from it and then
-   ensures all the VM template VHDs are deleted.
+    $Lab = Get-Lab -ConfigPath c:\mylab\config.xml
+    $VMTemplateVHDs = Get-LabVMTemplateVHD -Lab $Lab
+    Remove-LabVMTemplateVHD -Lab $Lab -VMTemplateVHDs $VMTemplateVHDs
+    Loads a Lab and pulls the array of VM Template VHDs from it and then
+    ensures all the VM template VHDs are deleted.
 .EXAMPLE
-   $Lab = Get-Lab -ConfigPath c:\mylab\config.xml
-   Remove-LabVMTemplateVHD -Lab $Lab
-   Loads a Lab and then ensures the VM template VHDs are deleted.
+    $Lab = Get-Lab -ConfigPath c:\mylab\config.xml
+    Remove-LabVMTemplateVHD -Lab $Lab
+    Loads a Lab and then ensures the VM template VHDs are deleted.
 .OUTPUTS
-    None. 
+    None.
 #>
 function Remove-LabVMTemplateVHD
 {
@@ -1552,14 +1551,14 @@ function Remove-LabVMTemplateVHD
 
         [Parameter(
             Position=3)]
-        [Array] $VMTemplateVHDs
+        [LabVMTemplateVHD[]] $VMTemplateVHDs
     )
 
     # if VMTeplateVHDs array not passed, pull it from config.
     if (-not $PSBoundParameters.ContainsKey('VMTemplateVHDs'))
     {
-        $VMTemplateVHDs = Get-LabVMTemplateVHD `
-           @PSBoundParameters   
+        [LabVMTemplateVHD[]] $VMTemplateVHDs = Get-LabVMTemplateVHD `
+           @PSBoundParameters
     } # if
 
     # if there are no VMTemplateVHDs just return
@@ -1567,7 +1566,7 @@ function Remove-LabVMTemplateVHD
     {
         return
     } # if
-    
+
     [String] $LabPath = $Lab.labbuilderconfig.settings.labpath
 
     foreach ($VMTemplateVHD in $VMTemplateVHDs)
