@@ -1311,8 +1311,23 @@ function Initialize-LabVMTemplateVHD
             -StorageType ISO `
             -Access Readonly
 
+        # Refresh the PS Drive list to make sure the new drive can be detected
+        Get-PSDrive `
+            -PSProvider FileSystem
+
         $DiskImage = Get-DiskImage -ImagePath $ISOPath
-        [String] $DriveLetter = ( Get-Volume -DiskImage $DiskImage ).DriveLetter
+        $Volume = Get-Volume -DiskImage $DiskImage
+        if (-not $Volume)
+        {
+            $ExceptionParameters = @{
+                errorId = 'VolumeNotAvailableAfterMountError'
+                errorCategory = 'InvalidArgument'
+                errorMessage = $($LocalizedData.VolumeNotAvailableAfterMountError `
+                -f $ISOPath)
+            }
+            ThrowException @ExceptionParameters
+        }
+        [String] $DriveLetter = $Volume.DriveLetter
         if (-not $DriveLetter)
         {
             $ExceptionParameters = @{
@@ -1493,7 +1508,7 @@ function Initialize-LabVMTemplateVHD
 
         # Work around an issue with Convert-WindowsImage not seeing the drive
         Get-PSDrive `
-            -PSProvider FileSystem  
+            -PSProvider FileSystem
 
         # Dot source the Convert-WindowsImage script
         # Should only be done once 
