@@ -554,6 +554,7 @@ Versions
 * DSCLibrary\MEMBER_DNS.DSC.ps1: Created resource for member DNS servers.
 * Get-LabVMTemplateVHD: Converted to output array of LabVMTemplateVHD objects.
 * Initialize-LabVMTemplateVHD: Converted to use LabVMTemplateVHD objects.
+                               Check added to ensure Drive Letter is assigned to mounted ISO.
 * Remove-LabVMTemplateVHD: Converted to use LabVMTemplateVHD objects.
 * Readme.md: Windows Management Framework 5.0 (WMF 5.0) section added.
 

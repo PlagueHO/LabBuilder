@@ -1313,6 +1313,16 @@ function Initialize-LabVMTemplateVHD
 
         $DiskImage = Get-DiskImage -ImagePath $ISOPath
         [String] $DriveLetter = ( Get-Volume -DiskImage $DiskImage ).DriveLetter
+        if (-not $DriveLetter)
+        {
+            $ExceptionParameters = @{
+                errorId = 'DriveLetterNotAssignedError'
+                errorCategory = 'InvalidArgument'
+                errorMessage = $($LocalizedData.DriveLetterNotAssignedError `
+                -f $ISOPath)
+            }
+            ThrowException @ExceptionParameters
+        }
         [String] $ISODrive = "$([string]$DriveLetter):"
 
         # Determine the path to the WIM
