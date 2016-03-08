@@ -752,9 +752,9 @@ function Initialize-LabSwitch {
    
    Only Switches matching names in this list will be removed.
 .PARAMETER Switches
-   The array of switches pulled from the Lab using Get-LabSwitch.
+   The array of LabSwitch objects pulled from the Lab using Get-LabSwitch.
 
-   If not provided it will attempt to pull the list from the Lab.
+   If not provided it will attempt to pull the array from the Lab object.
 .EXAMPLE
    $Lab = Get-Lab -ConfigPath c:\mylab\config.xml
    $Switches = Get-LabSwitch -Lab $Lab
@@ -784,28 +784,28 @@ function Remove-LabSwitch {
 
         [Parameter(
             Position=3)]
-        [Array] $Switches
+        [LabSwitch[]] $Switches
     )
 
     # if switches were not passed so pull them
     if (-not $PSBoundParameters.ContainsKey('switches'))
     {
-        $Switches = Get-LabSwitch `
+        [LabSwitch[]] $Switches = Get-LabSwitch `
             @PSBoundParameters
     }
 
     # Delete Hyper-V Switches
-    foreach ($Switch in $Switches)
+    foreach ($VMSwitch in $Switches)
     {
-        if ($Name -and ($Switch.name -notin $Name))
+        if ($Name -and ($VMSwitch.name -notin $Name))
         {
             # A names list was passed but this swtich wasn't included
             continue
         } # if
 
-        if ((Get-VMSwitch | Where-Object -Property Name -eq $Switch.Name).Count -ne 0)
+        if ((Get-VMSwitch | Where-Object -Property Name -eq $VMSwitch.Name).Count -ne 0)
         {
-            [String] $SwitchName = $Switch.Name
+            [String] $SwitchName = $VMSwitch.Name
             if (-not $SwitchName)
             {
                 $ExceptionParameters = @{
@@ -815,42 +815,51 @@ function Remove-LabSwitch {
                 }
                 ThrowException @ExceptionParameters
             }
-            [string] $SwitchType = $Switch.Type
+            [LabSwitchType] $SwitchType = $VMSwitch.Type
             Write-Verbose -Message $($LocalizedData.DeleteingVirtualSwitchMessage `
                 -f $SwitchType,$SwitchName)
             Switch ($SwitchType)
             {
                 'External'
                 {
-                    if ($Switch.Adapters)
+                    if ($VMSwitch.Adapters)
                     {
-                        $Switch.Adapters.foreach( {
-                            $null = Remove-VMNetworkAdapter -ManagementOS -Name $_.Name
+                        $VMSwitch.Adapters.foreach( {
+                            $null = Remove-VMNetworkAdapter `
+                                -ManagementOS `
+                                -Name $_.Name
                         } )
                     } # if
-                    Remove-VMSwitch -Name $SwitchName
+                    Remove-VMSwitch `
+                        -Name $SwitchName
                     Break
                 } # 'External'
                 'Private'
                 {
-                    Remove-VMSwitch -Name $SwitchName
+                    Remove-VMSwitch `
+                        -Name $SwitchName
                     Break
                 } # 'Private'
                 'Internal'
                 {
-                    Remove-VMSwitch -Name $SwitchName
-                    if ($Switch.Adapters)
+                    Remove-VMSwitch `
+                        -Name $SwitchName
+                    if ($VMSwitch.Adapters)
                     {
-                        $Switch.Adapters.foreach( {
-                            $null = Remove-VMNetworkAdapter -ManagementOS -Name $_.Name
+                        $VMSwitch.Adapters.foreach( {
+                            $null = Remove-VMNetworkAdapter `
+                                -ManagementOS `
+                                -Name $_.Name
                         } )
                     } # if
                     Break
                 } # 'Internal'
                 'NAT'
                 {
-                    Remove-NetNAT -Name $SwitchName
-                    Remove-VMSwitch -Name $SwitchName
+                    Remove-NetNAT `
+                        -Name $SwitchName
+                    Remove-VMSwitch `
+                        -Name $SwitchName
                     Break
                 } # 'Internal'
 

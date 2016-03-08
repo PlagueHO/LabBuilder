@@ -374,10 +374,11 @@ InModuleScope LabBuilder {
     Describe 'Remove-LabSwitch' {
 
         $Lab = Get-Lab -ConfigPath $Global:TestConfigOKPath
-        [Array]$Switches = Get-LabSwitch -Lab $Lab
+        [LabSwitch[]] $Switches = Get-LabSwitch -Lab $Lab
 
         Mock Get-VMSwitch -MockWith { $Switches }
         Mock Remove-VMSwitch
+        Mock Remove-VMNetworkAdapter
 
         Context 'Valid configuration is passed' {	
             It 'Does not throw an Exception' {
@@ -386,6 +387,7 @@ InModuleScope LabBuilder {
             It 'Calls Mocked commands' {
                 Assert-MockCalled Get-VMSwitch -Exactly 5
                 Assert-MockCalled Remove-VMSwitch -Exactly 5
+                Assert-MockCalled Remove-VMNetworkAdapter -Exactly 4
             }
         }
 
@@ -396,30 +398,11 @@ InModuleScope LabBuilder {
             It 'Calls Mocked commands' {
                 Assert-MockCalled Get-VMSwitch -Exactly 5
                 Assert-MockCalled Remove-VMSwitch -Exactly 5
-            }
-        }
-
-        Context 'Valid configuration with invalid switch type passed' {	
-            $Switches[0].Type='Invalid'
-            It 'Throws a UnknownSwitchTypeError Exception' {
-                $ExceptionParameters = @{
-                    errorId = 'UnknownSwitchTypeError'
-                    errorCategory = 'InvalidArgument'
-                    errorMessage = $($LocalizedData.UnknownSwitchTypeError `
-                        -f 'Invalid',$Switches[0].Name)
-                }
-                $Exception = GetException @ExceptionParameters
-
-                { Remove-LabSwitch -Lab $Lab -Switches $Switches } | Should Throw $Exception
-            }
-            It 'Calls Mocked commands' {
-                Assert-MockCalled Get-VMSwitch -Exactly 1
-                Assert-MockCalled Remove-VMSwitch -Exactly 0
+                Assert-MockCalled Remove-VMNetworkAdapter -Exactly 4
             }
         }
 
         Context 'Valid configuration with blank switch name passed' {	
-            $Switches[0].Type = 'External'
             $Switches[0].Name = ''
             It 'Throws a SwitchNameIsEmptyError Exception' {
                 $ExceptionParameters = @{
@@ -434,6 +417,7 @@ InModuleScope LabBuilder {
             It 'Calls Mocked commands' {
                 Assert-MockCalled Get-VMSwitch -Exactly 1
                 Assert-MockCalled Remove-VMSwitch -Exactly 0
+                Assert-MockCalled Remove-VMNetworkAdapter -Exactly 0
             }
         }
     }

@@ -499,6 +499,7 @@ Versions
 * Get-LabSwitch: Converted to output array of LabSwitch objects.
 * Initialize-LabSwitch: Converted to use LabSwitch objects.
                         Fixed bug setting VLAN Id on External and Internal Switch Adapters.
+* Remove-LabSwitch: Converted to use LabSwitch objects.
 
 ### 0.6.0.0
 * New-Lab: Function added for creating a new Lab configuration file and basic folder structure.
