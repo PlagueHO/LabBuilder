@@ -4,10 +4,11 @@ DSC Template Configuration File For use by LabBuilder
     MEMBER_NLB
 .Desription
     Builds a Network Load Balancing cluster node.
-.Parameters:    
-          DomainName = "LABBUILDER.COM"
-          DomainAdminPassword = "P@ssword!1"
-          PSDscAllowDomainUser = $True
+.Parameters:
+    DomainName = "LABBUILDER.COM"
+    DomainAdminPassword = "P@ssword!1"
+    DCName = 'SA-DC1'
+    PSDscAllowDomainUser = $True
 ###################################################################################################>
 
 Configuration MEMBER_NLB
