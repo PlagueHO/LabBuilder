@@ -491,6 +491,17 @@ None
 
 Versions
 ========
+### Unreleased
+* Initialize-LabSwitch: External switch correctly sets Adapter Name.
+* IsAdmin: Function removed because was not useful.
+* dsclibrary\DC_FORESTDOMAIN.DSC: New DSC Library config for creating child domains in an existing forest.
+* Samples\Sample_WS2012R2_MultiForest.xml: Added child domains.
+* Get-LabSwitch: Converted to output array of LabSwitch objects.
+* Initialize-LabSwitch: Converted to use LabSwitch objects.
+                        Fixed bug setting VLAN Id on External and Internal Switch Adapters.
+* Remove-LabSwitch: Converted to use LabSwitch objects.
+* Tests\Test_Sample_*.ps1: Test-StartLabVM function fixed.
+
 ### 0.6.0.0
 * New-Lab: Function added for creating a new Lab configuration file and basic folder structure.
 * Get-Lab: Redundant checks for XML valid removed because convered by XSD schema validation.

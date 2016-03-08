@@ -4,7 +4,7 @@ DSC Template Configuration File For use by LabBuilder
     DC_FORESTPRIMARY
 .Desription
     Builds a Domain Controller as the first DC in a forest with the name of the Domain Name parameter passed.
-.Parameters:          
+.Parameters:
     DomainName = "LABBUILDER.COM"
     DomainAdminPassword = "P@ssword!1"
 ###################################################################################################>
@@ -30,17 +30,17 @@ Configuration DC_FORESTPRIMARY
         } 
 
         WindowsFeature DNSInstall 
-        { 
-            Ensure = "Present" 
-            Name = "DNS" 
-        } 
+        {
+            Ensure = "Present"
+            Name = "DNS"
+        }
 
-        WindowsFeature ADDSInstall 
-        { 
-            Ensure = "Present" 
-            Name = "AD-Domain-Services" 
-            DependsOn = "[WindowsFeature]DNSInstall" 
-        } 
+        WindowsFeature ADDSInstall
+        {
+            Ensure = "Present"
+            Name = "AD-Domain-Services"
+            DependsOn = "[WindowsFeature]DNSInstall"
+        }
         
         WindowsFeature RSAT-AD-PowerShellInstall
         {
@@ -49,22 +49,22 @@ Configuration DC_FORESTPRIMARY
             DependsOn = "[WindowsFeature]ADDSInstall"
         }
 
-        xADDomain PrimaryDC 
-        { 
+        xADDomain PrimaryDC
+        {
             DomainName = $Node.DomainName 
-            DomainAdministratorCredential = $DomainAdminCredential 
-            SafemodeAdministratorPassword = $LocalAdminCredential 
-            DependsOn = "[WindowsFeature]ADDSInstall" 
-        } 
+            DomainAdministratorCredential = $DomainAdminCredential
+            SafemodeAdministratorPassword = $LocalAdminCredential
+            DependsOn = "[WindowsFeature]ADDSInstall"
+        }
 
         xWaitForADDomain DscForestWait 
-        { 
+        {
             DomainName = $Node.DomainName 
-            DomainUserCredential = $DomainAdminCredential 
-            RetryCount = 20 
-            RetryIntervalSec = 30 
-            DependsOn = "[xADDomain]PrimaryDC" 
-        } 
+            DomainUserCredential = $DomainAdminCredential
+            RetryCount = 20
+            RetryIntervalSec = 30
+            DependsOn = "[xADDomain]PrimaryDC"
+        }
         
         # Enable AD Recycle bin
         xADRecycleBin RecycleBin

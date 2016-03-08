@@ -101,7 +101,7 @@ $Libs.Foreach(
    Only Module Resources matching names in this list will be pulled into the returned in the array.
 .EXAMPLE
    $Lab = Get-Lab -ConfigPath c:\mylab\config.xml
-   $Switches = Get-LabResourceModule -Lab $Lab
+   $ResourceModules = Get-LabResourceModule -Lab $Lab
    Loads a Lab and pulls the array of Module Resources from it.
 .OUTPUTS
    Returns an array of LabModuleResource objects.
@@ -255,7 +255,7 @@ function Initialize-LabResourceModule {
    Only MSU Resources matching names in this list will be pulled into the returned in the array.
 .EXAMPLE
    $Lab = Get-Lab -ConfigPath c:\mylab\config.xml
-   $Switches = Get-LabResourceModuleMSUb $Lab
+   $ResourceMSU = Get-LabResourceMSU $Lab
    Loads a Lab and pulls the array of MSU Resources from it.
 .OUTPUTS
    Returns an array of LabMSUResource objects.
@@ -403,26 +403,25 @@ function Initialize-LabResourceMSU {
 #region LabSwitchFunctions
 <#
 .SYNOPSIS
-   Gets an array of switches from a Lab.
+    Gets an array of switches from a Lab.
 .DESCRIPTION
-   Takes a provided Lab and returns the list of switches required for this Lab.
-   
-   This list is usually passed to Initialize-LabSwitch to configure the switches required for this lab.
+    Takes a provided Lab and returns the array of LabSwitch objects required for this Lab.
+    This list is usually passed to Initialize-LabSwitch to configure the switches required for this lab.
 .PARAMETER Lab
-   Contains the Lab object that was loaded by the Get-Lab object.
+    Contains the Lab object that was loaded by the Get-Lab object.
 .PARAMETER Name
-   An optional array of Switch names.
-   
-   Only Switches matching names in this list will be pulled into the returned in the array.
+    An optional array of Switch names.
+
+    Only Switches matching names in this list will be pulled into the returned in the array.
 .EXAMPLE
-   $Lab = Get-Lab -ConfigPath c:\mylab\config.xml
-   $Switches = Get-LabSwitch -Lab $Lab
-   Loads a Lab and pulls the array of switches from it.
+    $Lab = Get-Lab -ConfigPath c:\mylab\config.xml
+    $Switches = Get-LabSwitch -Lab $Lab
+    Loads a Lab and pulls the array of switches from it.
 .OUTPUTS
-   Returns an array of switches.
+    Returns an array of LabSwitch objects.
 #>
 function Get-LabSwitch {
-    [OutputType([Array])]
+    [OutputType([LabSwitch[]])]
     [CmdLetBinding()]
     param
     (
@@ -439,7 +438,7 @@ function Get-LabSwitch {
     )
 
     [String] $LabId = $Lab.labbuilderconfig.settings.labid 
-    [Array] $Switches = @() 
+    [LabSwitch[]] $Switches = @() 
     $ConfigSwitches = $Lab.labbuilderconfig.Switches.Switch
 
     foreach ($ConfigSwitch in $ConfigSwitches)
@@ -453,8 +452,7 @@ function Get-LabSwitch {
             # A names list was passed but this swtich wasn't included
             continue
         } # if
-        
-        $SwitchType = $ConfigSwitch.Type
+
         if ($SwitchName -eq 'switch')
         {
             $ExceptionParameters = @{
@@ -465,46 +463,52 @@ function Get-LabSwitch {
             ThrowException @ExceptionParameters
         }
 
-        # if a LabId is set for the lab, prepend it to the Switch name as long as it isn't
-        # an external switch.
-        if ($LabId -and ($SwitchType -ne 'External'))
-        {
-            $SwitchName = "$LabId $SwitchName"
-        } # if
+        # Convert the switch type string to a LabSwitchType
+        $SwitchType = [LabSwitchType]::$($ConfigSwitch.Type)
 
-        if ($SwitchType -notin 'Private','Internal','External','NAT')
+        # If the SwitchType string doesn't match any enum value it will be
+        # set to null.
+        if (-not $SwitchType)
         {
             $ExceptionParameters = @{
                 errorId = 'UnknownSwitchTypeError'
                 errorCategory = 'InvalidArgument'
                 errorMessage = $($LocalizedData.UnknownSwitchTypeError `
-                    -f $SwitchType,$SwitchName)
+                    -f $ConfigSwitch.Type,$SwitchName)
             }
             ThrowException @ExceptionParameters
+        } # if
+
+        # if a LabId is set for the lab, prepend it to the Switch name as long as it isn't
+        # an external switch.
+        if ($LabId -and ($SwitchType -ne [LabSwitchType]::External))
+        {
+            $SwitchName = "$LabId $SwitchName"
         } # if
 
         # Assemble the list of Mangement OS Adapters if any are specified for this switch
         # Only Intenal and External switches are allowed Management OS adapters.
         if ($ConfigSwitch.Adapters)
         {
-            [System.Collections.Hashtable[]] $ConfigAdapters = @()
+            [LabSwitchAdapter[]] $ConfigAdapters = @()
             foreach ($Adapter in $ConfigSwitch.Adapters.Adapter)
             {
                 $AdapterName = $Adapter.Name
                 # if a LabId is set for the lab, prepend it to the adapter name.
                 # But only if it is not an External switch.
-                if ($LabId -and ($SwitchType -ne 'External'))
+                if ($LabId -and ($SwitchType -ne [LabSwitchType]::External))
                 {
                     $AdapterName = "$LabId $AdapterName"
                 }
 
-                $ConfigAdapters += @{
-                    name = $AdapterName
-                    macaddress = $Adapter.MacAddress
-                }
+                [LabSwitchAdapter] $ConfigAdapter = New-Object `
+                    -TypeName LabSwitchAdapter
+                $ConfigAdapter.Name = $AdapterName
+                $ConfigAdapter.MACAddress = $Adapter.MacAddress
+                $ConfigAdapters += @( $ConfigAdapter )
             } # foreach
             if (($ConfigAdapters.Count -gt 0) `
-                -and ($SwitchType -notin 'External','Internal'))
+                -and ($SwitchType -notin [LabSwitchType]::External,[LabSwitchType]::Internal))
             {
                 $ExceptionParameters = @{
                     errorId = 'AdapterSpecifiedError'
@@ -519,13 +523,16 @@ function Get-LabSwitch {
         {
             $ConfigAdapters = $null
         } # if
-        $Switches += [PSObject]@{
-            name = $SwitchName
-            type = $ConfigSwitch.Type;
-            vlan = $ConfigSwitch.Vlan;
-            natsubnetaddress = $ConfigSwitch.NatSubnetAddress;
-            adapters = $ConfigAdapters }
-            
+
+        # Create the new Switch object
+        [LabSwitch] $NewSwitch = New-Object `
+            -TypeName LabSwitch
+        $NewSwitch.Name = $SwitchName
+        $NewSwitch.Type = $SwitchType
+        $NewSwitch.VLAN = $ConfigSwitch.VLan
+        $NewSwitch.NATSubnetAddress = $ConfigSwitch.NatSubnetAddress
+        $NewSwitch.Adapters = $ConfigAdapters
+        $Switches += @( $NewSwitch )
     } # foreach
     return $Switches
 } # Get-LabSwitch
@@ -533,9 +540,9 @@ function Get-LabSwitch {
 
 <#
 .SYNOPSIS
-   Creates Hyper-V Virtual Switches from a provided array.
+   Creates Hyper-V Virtual Switches from a provided array of LabSwitch objects.
 .DESCRIPTION
-   Takes an array of switches that were pulled from a Lab object by calling
+   Takes an array of LabSwitch objectsthat were pulled from a Lab object by calling
    Get-LabSwitch and ensures that they Hyper-V Virtual Switches on the system
    are configured to match.
 .PARAMETER Lab
@@ -545,9 +552,9 @@ function Get-LabSwitch {
    
    Only Switches matching names in this list will be initialized.
 .PARAMETER Switches
-   The array of switches pulled from the Lab using Get-LabSwitch.
+   The array of LabSwitch objects pulled from the Lab using Get-LabSwitch.
 
-   If not provided it will attempt to pull the list from the Lab.
+   If not provided it will attempt to pull the array from the Lab object provided.
 .EXAMPLE
    $Lab = Get-Lab -ConfigPath c:\mylab\config.xml
    $Switches = Get-LabSwitch -Lab $Lab
@@ -577,13 +584,13 @@ function Initialize-LabSwitch {
 
         [Parameter(
             Position=3)]
-        [Array] $Switches
+        [LabSwitch[]] $Switches
     )
 
     # if switches was not passed, pull it.
     if (-not $PSBoundParameters.ContainsKey('switches'))
     {
-        $Switches = Get-LabSwitch `
+        [LabSwitch[]] $Switches = Get-LabSwitch `
             @PSBoundParameters
     }
     
@@ -608,7 +615,7 @@ function Initialize-LabSwitch {
                 }
                 ThrowException @ExceptionParameters
             }
-            [string] $SwitchType = $VMSwitch.Type
+            [LabSwitchType] $SwitchType = $VMSwitch.Type
             Write-Verbose -Message $($LocalizedData.CreatingVirtualSwitchMessage `
                 -f $SwitchType,$SwitchName)
             Switch ($SwitchType)
@@ -619,7 +626,7 @@ function Initialize-LabSwitch {
                         -Name $SwitchName `
                         -NetAdapterName (`
                             Get-NetAdapter | `
-                            Where-Object { $_.Status -eq 'Up' } | `
+                            Where-Object { $_.Status -eq 'Up' -and $_.InterfaceDescription -notlike "Hyper-V Virtual*" } | `
                             Select-Object -First 1 -ExpandProperty Name `
                             )
                     if ($VMSwitch.Adapters)
@@ -637,9 +644,11 @@ function Initialize-LabSwitch {
                                     -StaticMacAddress $Adapter.MacAddress `
                                     
                                     -Passthru | `
-                                    Set-VMNetworkAdapterVlan -Access -VlanId $($Switch.Vlan)
+                                    Set-VMNetworkAdapterVlan `
+                                        -Access `
+                                        -VlanId $($VMSwitch.Vlan)
                             }
-                            Else
+                            else
                             { 
                                 $null = Add-VMNetworkAdapter `
                                     -ManagementOS `
@@ -649,16 +658,20 @@ function Initialize-LabSwitch {
                             } # if
                         } # foreach
                     } # if
-                    Break
+                    break
                 } # 'External'
                 'Private'
                 {
-                    $null = New-VMSwitch -Name $SwitchName -SwitchType Private
+                    $null = New-VMSwitch `
+                        -Name $SwitchName `
+                        -SwitchType Private
                     Break
                 } # 'Private'
                 'Internal'
                 {
-                    $null = New-VMSwitch -Name $SwitchName -SwitchType Internal
+                    $null = New-VMSwitch `
+                        -Name $SwitchName `
+                        -SwitchType Internal
                     if ($VMSwitch.Adapters)
                     {
                         foreach ($Adapter in $VMSwitch.Adapters)
@@ -673,7 +686,9 @@ function Initialize-LabSwitch {
                                     -Name $($Adapter.Name) `
                                     -StaticMacAddress $($Adapter.MacAddress) `
                                     -Passthru | `
-                                    Set-VMNetworkAdapterVlan -Access -VlanId $($Switch.Vlan)
+                                    Set-VMNetworkAdapterVlan `
+                                        -Access `
+                                        -VlanId $($VMSwitch.Vlan)
                             }
                             Else
                             { 
@@ -720,7 +735,7 @@ function Initialize-LabSwitch {
                 }
             } # Switch
         } # if
-    } # foreach       
+    } # foreach
 } # Initialize-LabSwitch
 
 
@@ -737,9 +752,9 @@ function Initialize-LabSwitch {
    
    Only Switches matching names in this list will be removed.
 .PARAMETER Switches
-   The array of switches pulled from the Lab using Get-LabSwitch.
+   The array of LabSwitch objects pulled from the Lab using Get-LabSwitch.
 
-   If not provided it will attempt to pull the list from the Lab.
+   If not provided it will attempt to pull the array from the Lab object.
 .EXAMPLE
    $Lab = Get-Lab -ConfigPath c:\mylab\config.xml
    $Switches = Get-LabSwitch -Lab $Lab
@@ -769,28 +784,28 @@ function Remove-LabSwitch {
 
         [Parameter(
             Position=3)]
-        [Array] $Switches
+        [LabSwitch[]] $Switches
     )
 
     # if switches were not passed so pull them
     if (-not $PSBoundParameters.ContainsKey('switches'))
     {
-        $Switches = Get-LabSwitch `
+        [LabSwitch[]] $Switches = Get-LabSwitch `
             @PSBoundParameters
     }
 
     # Delete Hyper-V Switches
-    foreach ($Switch in $Switches)
+    foreach ($VMSwitch in $Switches)
     {
-        if ($Name -and ($Switch.name -notin $Name))
+        if ($Name -and ($VMSwitch.name -notin $Name))
         {
             # A names list was passed but this swtich wasn't included
             continue
         } # if
 
-        if ((Get-VMSwitch | Where-Object -Property Name -eq $Switch.Name).Count -ne 0)
+        if ((Get-VMSwitch | Where-Object -Property Name -eq $VMSwitch.Name).Count -ne 0)
         {
-            [String] $SwitchName = $Switch.Name
+            [String] $SwitchName = $VMSwitch.Name
             if (-not $SwitchName)
             {
                 $ExceptionParameters = @{
@@ -800,42 +815,51 @@ function Remove-LabSwitch {
                 }
                 ThrowException @ExceptionParameters
             }
-            [string] $SwitchType = $Switch.Type
+            [LabSwitchType] $SwitchType = $VMSwitch.Type
             Write-Verbose -Message $($LocalizedData.DeleteingVirtualSwitchMessage `
                 -f $SwitchType,$SwitchName)
             Switch ($SwitchType)
             {
                 'External'
                 {
-                    if ($Switch.Adapters)
+                    if ($VMSwitch.Adapters)
                     {
-                        $Switch.Adapters.foreach( {
-                            $null = Remove-VMNetworkAdapter -ManagementOS -Name $_.Name
+                        $VMSwitch.Adapters.foreach( {
+                            $null = Remove-VMNetworkAdapter `
+                                -ManagementOS `
+                                -Name $_.Name
                         } )
                     } # if
-                    Remove-VMSwitch -Name $SwitchName
+                    Remove-VMSwitch `
+                        -Name $SwitchName
                     Break
                 } # 'External'
                 'Private'
                 {
-                    Remove-VMSwitch -Name $SwitchName
+                    Remove-VMSwitch `
+                        -Name $SwitchName
                     Break
                 } # 'Private'
                 'Internal'
                 {
-                    Remove-VMSwitch -Name $SwitchName
-                    if ($Switch.Adapters)
+                    Remove-VMSwitch `
+                        -Name $SwitchName
+                    if ($VMSwitch.Adapters)
                     {
-                        $Switch.Adapters.foreach( {
-                            $null = Remove-VMNetworkAdapter -ManagementOS -Name $_.Name
+                        $VMSwitch.Adapters.foreach( {
+                            $null = Remove-VMNetworkAdapter `
+                                -ManagementOS `
+                                -Name $_.Name
                         } )
                     } # if
                     Break
                 } # 'Internal'
                 'NAT'
                 {
-                    Remove-NetNAT -Name $SwitchName
-                    Remove-VMSwitch -Name $SwitchName
+                    Remove-NetNAT `
+                        -Name $SwitchName
+                    Remove-VMSwitch `
+                        -Name $SwitchName
                     Break
                 } # 'Internal'
 
@@ -2281,7 +2305,7 @@ function Get-LabVM {
 
         [Parameter(
             Position=4)]
-        [Array] $Switches
+        [LabSwitch[]] $Switches
     )
 
     # if VMTeplates array not passed, pull it from config.
@@ -2294,7 +2318,7 @@ function Get-LabVM {
     # if Switches array not passed, pull it from config.
     if (-not $PSBoundParameters.ContainsKey('Switches'))
     {
-        $Switches = Get-LabSwitch `
+        [LabSwitch[]] $Switches = Get-LabSwitch `
             -Lab $Lab
     }
 
@@ -2576,8 +2600,8 @@ function Get-LabVM {
             Remove-Variable -Name Type -ErrorAction SilentlyContinue
             if ($VMDataVhd.type)
             {
-                [String] $Type = $VMDataVhd.type
-                switch ($type)
+                [String] $VhdType = $VMDataVhd.type
+                switch ($VhdType)
                 {
                     'fixed'
                     {
@@ -2616,7 +2640,7 @@ function Get-LabVM {
                             errorId = 'VMDataDiskUnknownTypeError'
                             errorCategory = 'InvalidArgument'
                             errorMessage = $($LocalizedData.VMDataDiskUnknownTypeError `
-                                -f $VMName,$VHD,$type)
+                                -f $VMName,$VHD,$VhdType)
                         }
                         ThrowException @ExceptionParameters
                     }
@@ -2750,7 +2774,7 @@ function Get-LabVM {
 
             # if the data disk file doesn't exist then some basic parameters MUST be provided
             if (-not $Exists `
-                -and ((( $Type -notin ('fixed','dynamic','differencing') ) -or ($null -eq $Size) -or ($Size -eq 0) ) `
+                -and ((( $VhdType -notin ('fixed','dynamic','differencing') ) -or ($null -eq $Size) -or ($Size -eq 0) ) `
                 -and -not $SourceVhd ))
             {
                 $ExceptionParameters = @{
@@ -2765,7 +2789,7 @@ function Get-LabVM {
             # Write the values to the array
             $DataVhds += @{
                 vhd = $Vhd;
-                type = $Type;
+                type = $VhdType;
                 size = $Size
                 sourcevhd = $SourceVHD;
                 parentvhd = $ParentVHD;
@@ -3079,9 +3103,8 @@ function Get-LabVM {
    If not provided it will attempt to pull the list from the Lab.
 .EXAMPLE
    $Lab = Get-Lab -ConfigPath c:\mylab\config.xml
-   $Switches = Get-LabSwtich -Lab $Lab
    $VMTemplates = Get-LabVMTemplate -Lab $Lab
-   $VMs = Get-LabVs -Lab $Lab -Switches $Swtiches -VMTemplates $VMTemplates
+   $VMs = Get-LabVs -Lab $Lab -VMTemplates $VMTemplates
    Initialize-LabVM `
     -Lab $Lab `
     -VMs $VMs
@@ -3369,9 +3392,8 @@ function Initialize-LabVM {
    Causes the folder created to contain the Virtual Machine in this lab to be deleted.
 .EXAMPLE
    $Lab = Get-Lab -ConfigPath c:\mylab\config.xml
-   $Switches = Get-LabSwtich -Lab $Lab
    $VMTemplates = Get-LabVMTemplate -Lab $Lab
-   $VMs = Get-LabVs -Lab $Lab -Switches $Swtiches -VMTemplates $VMTemplates
+   $VMs = Get-LabVs -Lab $Lab -VMTemplates $VMTemplates
    Remove-LabVM -Lab $Lab -VMs $VMs
    Removes any Virtual Machines configured in the Lab c:\mylab\config.xml
 .EXAMPLE
@@ -4298,8 +4320,10 @@ Function Install-Lab {
         }
         if ((Get-VMSwitch | Where-Object -Property Name -eq $ManagementSwitchName).Count -eq 0)
         {
-            $null = New-VMSwitch -Name $ManagementSwitchName -SwitchType Internal
-
+            $null = New-VMSwitch `
+                -SwitchType Internal `
+                -Name $ManagementSwitchName
+                
             Write-Verbose -Message $($LocalizedData.CreatingLabManagementSwitchMessage `
                 -f $ManagementSwitchName,$ManagementVlan)
         }
@@ -4641,7 +4665,8 @@ Function Uninstall-Lab {
                 -Lab $Lab
             if ((Get-VMSwitch | Where-Object -Property Name -eq $ManagementSwitchName).Count -ne 0)
             {
-                $null = Remove-VMSwitch -Name $ManagementSwitchName
+                $null = Remove-VMSwitch `
+                    -Name $ManagementSwitchName
 
                 Write-Verbose -Message $($LocalizedData.RemovingLabManagementSwitchMessage `
                     -f $ManagementSwitchName)
