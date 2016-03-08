@@ -500,6 +500,7 @@ Versions
 * Initialize-LabSwitch: Converted to use LabSwitch objects.
                         Fixed bug setting VLAN Id on External and Internal Switch Adapters.
 * Remove-LabSwitch: Converted to use LabSwitch objects.
+* Tests\Test_Sample_*.ps1: Test-StartLabVM function fixed.
 
 ### 0.6.0.0
 * New-Lab: Function added for creating a new Lab configuration file and basic folder structure.

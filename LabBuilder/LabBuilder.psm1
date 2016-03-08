@@ -101,7 +101,7 @@ $Libs.Foreach(
    Only Module Resources matching names in this list will be pulled into the returned in the array.
 .EXAMPLE
    $Lab = Get-Lab -ConfigPath c:\mylab\config.xml
-   $Switches = Get-LabResourceModule -Lab $Lab
+   $ResourceModules = Get-LabResourceModule -Lab $Lab
    Loads a Lab and pulls the array of Module Resources from it.
 .OUTPUTS
    Returns an array of LabModuleResource objects.
@@ -255,7 +255,7 @@ function Initialize-LabResourceModule {
    Only MSU Resources matching names in this list will be pulled into the returned in the array.
 .EXAMPLE
    $Lab = Get-Lab -ConfigPath c:\mylab\config.xml
-   $Switches = Get-LabResourceModuleMSUb $Lab
+   $ResourceMSU = Get-LabResourceMSU $Lab
    Loads a Lab and pulls the array of MSU Resources from it.
 .OUTPUTS
    Returns an array of LabMSUResource objects.
@@ -2305,7 +2305,7 @@ function Get-LabVM {
 
         [Parameter(
             Position=4)]
-        [Array] $Switches
+        [LabSwitch[]] $Switches
     )
 
     # if VMTeplates array not passed, pull it from config.
@@ -2318,7 +2318,7 @@ function Get-LabVM {
     # if Switches array not passed, pull it from config.
     if (-not $PSBoundParameters.ContainsKey('Switches'))
     {
-        $Switches = Get-LabSwitch `
+        [LabSwitch[]] $Switches = Get-LabSwitch `
             -Lab $Lab
     }
 
@@ -2600,8 +2600,8 @@ function Get-LabVM {
             Remove-Variable -Name Type -ErrorAction SilentlyContinue
             if ($VMDataVhd.type)
             {
-                [String] $Type = $VMDataVhd.type
-                switch ($type)
+                [String] $VhdType = $VMDataVhd.type
+                switch ($VhdType)
                 {
                     'fixed'
                     {
@@ -2640,7 +2640,7 @@ function Get-LabVM {
                             errorId = 'VMDataDiskUnknownTypeError'
                             errorCategory = 'InvalidArgument'
                             errorMessage = $($LocalizedData.VMDataDiskUnknownTypeError `
-                                -f $VMName,$VHD,$type)
+                                -f $VMName,$VHD,$VhdType)
                         }
                         ThrowException @ExceptionParameters
                     }
@@ -2774,7 +2774,7 @@ function Get-LabVM {
 
             # if the data disk file doesn't exist then some basic parameters MUST be provided
             if (-not $Exists `
-                -and ((( $Type -notin ('fixed','dynamic','differencing') ) -or ($null -eq $Size) -or ($Size -eq 0) ) `
+                -and ((( $VhdType -notin ('fixed','dynamic','differencing') ) -or ($null -eq $Size) -or ($Size -eq 0) ) `
                 -and -not $SourceVhd ))
             {
                 $ExceptionParameters = @{
@@ -2789,7 +2789,7 @@ function Get-LabVM {
             # Write the values to the array
             $DataVhds += @{
                 vhd = $Vhd;
-                type = $Type;
+                type = $VhdType;
                 size = $Size
                 sourcevhd = $SourceVHD;
                 parentvhd = $ParentVHD;
@@ -3103,9 +3103,8 @@ function Get-LabVM {
    If not provided it will attempt to pull the list from the Lab.
 .EXAMPLE
    $Lab = Get-Lab -ConfigPath c:\mylab\config.xml
-   $Switches = Get-LabSwtich -Lab $Lab
    $VMTemplates = Get-LabVMTemplate -Lab $Lab
-   $VMs = Get-LabVs -Lab $Lab -Switches $Swtiches -VMTemplates $VMTemplates
+   $VMs = Get-LabVs -Lab $Lab -VMTemplates $VMTemplates
    Initialize-LabVM `
     -Lab $Lab `
     -VMs $VMs
@@ -3393,9 +3392,8 @@ function Initialize-LabVM {
    Causes the folder created to contain the Virtual Machine in this lab to be deleted.
 .EXAMPLE
    $Lab = Get-Lab -ConfigPath c:\mylab\config.xml
-   $Switches = Get-LabSwtich -Lab $Lab
    $VMTemplates = Get-LabVMTemplate -Lab $Lab
-   $VMs = Get-LabVs -Lab $Lab -Switches $Swtiches -VMTemplates $VMTemplates
+   $VMs = Get-LabVs -Lab $Lab -VMTemplates $VMTemplates
    Remove-LabVM -Lab $Lab -VMs $VMs
    Removes any Virtual Machines configured in the Lab c:\mylab\config.xml
 .EXAMPLE
@@ -4322,8 +4320,10 @@ Function Install-Lab {
         }
         if ((Get-VMSwitch | Where-Object -Property Name -eq $ManagementSwitchName).Count -eq 0)
         {
-            $null = New-VMSwitch -Name $ManagementSwitchName -SwitchType Internal
-
+            $null = New-VMSwitch `
+                -SwitchType Internal `
+                -Name $ManagementSwitchName
+                
             Write-Verbose -Message $($LocalizedData.CreatingLabManagementSwitchMessage `
                 -f $ManagementSwitchName,$ManagementVlan)
         }
@@ -4665,7 +4665,8 @@ Function Uninstall-Lab {
                 -Lab $Lab
             if ((Get-VMSwitch | Where-Object -Property Name -eq $ManagementSwitchName).Count -ne 0)
             {
-                $null = Remove-VMSwitch -Name $ManagementSwitchName
+                $null = Remove-VMSwitch `
+                    -Name $ManagementSwitchName
 
                 Write-Verbose -Message $($LocalizedData.RemovingLabManagementSwitchMessage `
                     -f $ManagementSwitchName)
