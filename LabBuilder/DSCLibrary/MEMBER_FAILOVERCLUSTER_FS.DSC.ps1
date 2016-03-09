@@ -8,6 +8,7 @@ DSC Template Configuration File For use by LabBuilder
 .Parameters:    
     DomainName = "LABBUILDER.COM"
     DomainAdminPassword = "P@ssword!1"
+    DCName = 'SA-DC1'
     PSDscAllowDomainUser = $True
     ServerTargetName = 'sa-foc-target'
     TargetPortalAddress = '192.168.129.24'

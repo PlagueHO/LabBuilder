@@ -5,20 +5,21 @@ DSC Template Configuration File For use by LabBuilder
 .Desription
     Builds an Enterprise Root CA.
 .Parameters:    
-          DomainName = "LABBUILDER.COM"
-          DomainAdminPassword = "P@ssword!1"
-          PSDscAllowDomainUser = $True
-          CACommonName = "LABBUILDER.COM Root CA"
-          CADistinguishedNameSuffix = "DC=LABBUILDER,DC=COM"
-          CRLPublicationURLs = "65:C:\Windows\system32\CertSrv\CertEnroll\%3%8%9.crl\n79:ldap:///CN=%7%8,CN=%2,CN=CDP,CN=Public Key Services,CN=Services,%6%10\n6:http://pki.labbuilder.com/CertEnroll/%3%8%9.crl"
-          CACertPublicationURLs = "1:C:\Windows\system32\CertSrv\CertEnroll\%1_%3%4.crt\n2:ldap:///CN=%7,CN=AIA,CN=Public Key Services,CN=Services,%6%11\n2:http://pki.labbuilder.com/CertEnroll/%1_%3%4.crt"
-          CRLPeriodUnits = 52
-          CRLPeriod = 'Weeks'
-          CRLOverlapUnits = 12
-          CRLOverlapPeriod = 'Hours'
-          ValidityPeriodUnits = 10
-          ValidityPeriod = 'Years'
-          AuditFilter = 127
+    DomainName = "LABBUILDER.COM"
+    DomainAdminPassword = "P@ssword!1"
+    DCName = 'SA-DC1'
+    PSDscAllowDomainUser = $True
+    CACommonName = "LABBUILDER.COM Root CA"
+    CADistinguishedNameSuffix = "DC=LABBUILDER,DC=COM"
+    CRLPublicationURLs = "65:C:\Windows\system32\CertSrv\CertEnroll\%3%8%9.crl\n79:ldap:///CN=%7%8,CN=%2,CN=CDP,CN=Public Key Services,CN=Services,%6%10\n6:http://pki.labbuilder.com/CertEnroll/%3%8%9.crl"
+    CACertPublicationURLs = "1:C:\Windows\system32\CertSrv\CertEnroll\%1_%3%4.crt\n2:ldap:///CN=%7,CN=AIA,CN=Public Key Services,CN=Services,%6%11\n2:http://pki.labbuilder.com/CertEnroll/%1_%3%4.crt"
+    CRLPeriodUnits = 52
+    CRLPeriod = 'Weeks'
+    CRLOverlapUnits = 12
+    CRLOverlapPeriod = 'Hours'
+    ValidityPeriodUnits = 10
+    ValidityPeriod = 'Years'
+    AuditFilter = 127
 ###################################################################################################>
 
 Configuration MEMBER_ROOTCA

@@ -1,80 +1,92 @@
 [
     {
+        "OSType":  1,
         "Generation":  2,
-        "Packages":  "WMF5.0-WS2012R2-W81",
-        "VHDFormat":  "vhdx",
+        "VHDFormat":  2,
+        "VHDType":  2,
         "VHDSize":  42949672960,
+        "Name":  "Windows Server 2012 R2 Datacenter Full",
+        "ISOPath":  "Intentionally Removed",
         "VHDPath":  "Intentionally Removed",
         "Edition":  "Windows Server 2012 R2 SERVERDATACENTER",
-        "Name":  "Windows Server 2012 R2 Datacenter Full",
-        "VHDType":  "dynamic",
-        "ISOPath":  "Intentionally Removed",
-        "OSType":  "Server",
+        "Packages":  [
+                         "WMF5.0-WS2012R2-W81"
+                     ],
         "Features":  null
     },
     {
+        "OSType":  1,
         "Generation":  2,
-        "Packages":  "WMF5.0-WS2012R2-W81",
-        "VHDFormat":  "vhdx",
+        "VHDFormat":  2,
+        "VHDType":  2,
         "VHDSize":  26843545600,
+        "Name":  "Windows Server 2012 R2 Datacenter Core",
+        "ISOPath":  "Intentionally Removed",
         "VHDPath":  "Intentionally Removed",
         "Edition":  "Windows Server 2012 R2 SERVERDATACENTERCORE",
-        "Name":  "Windows Server 2012 R2 Datacenter Core",
-        "VHDType":  "dynamic",
-        "ISOPath":  "Intentionally Removed",
-        "OSType":  "Server",
+        "Packages":  [
+                         "WMF5.0-WS2012R2-W81"
+                     ],
         "Features":  null
     },
     {
+        "OSType":  1,
         "Generation":  2,
-        "Packages":  "WMF5.0-WS2012R2-W81",
-        "VHDFormat":  "vhdx",
+        "VHDFormat":  2,
+        "VHDType":  2,
         "VHDSize":  42949672960,
+        "Name":  "Windows Server 2016 TP4 Datacenter FULL",
+        "ISOPath":  "Intentionally Removed",
         "VHDPath":  "Intentionally Removed",
         "Edition":  "Windows Server 2016 Technical Preview 4 SERVERDATACENTER",
-        "Name":  "Windows Server 2016 TP4 Datacenter FULL",
-        "VHDType":  "dynamic",
-        "ISOPath":  "Intentionally Removed",
-        "OSType":  "Server",
+        "Packages":  [
+                         "WMF5.0-WS2012R2-W81"
+                     ],
         "Features":  null
     },
     {
+        "OSType":  1,
         "Generation":  2,
-        "Packages":  "WMF5.0-WS2012R2-W81",
-        "VHDFormat":  "vhdx",
+        "VHDFormat":  2,
+        "VHDType":  2,
         "VHDSize":  26843545600,
+        "Name":  "Windows Server 2016 TP4 Datacenter CORE",
+        "ISOPath":  "Intentionally Removed",
         "VHDPath":  "Intentionally Removed",
         "Edition":  "Windows Server 2016 Technical Preview 4 SERVERDATACENTERCORE",
-        "Name":  "Windows Server 2016 TP4 Datacenter CORE",
-        "VHDType":  "dynamic",
-        "ISOPath":  "Intentionally Removed",
-        "OSType":  "Server",
+        "Packages":  [
+                         "WMF5.0-WS2012R2-W81"
+                     ],
         "Features":  null
     },
     {
+        "OSType":  3,
         "Generation":  2,
-        "Packages":  "RSAT-W10",
-        "VHDFormat":  "vhdx",
+        "VHDFormat":  2,
+        "VHDType":  2,
         "VHDSize":  26843545600,
+        "Name":  "Windows 10 Enterprise",
+        "ISOPath":  "Intentionally Removed",
         "VHDPath":  "Intentionally Removed",
         "Edition":  "Windows 10 Enterprise",
-        "Name":  "Windows 10 Enterprise",
-        "VHDType":  "dynamic",
-        "ISOPath":  "Intentionally Removed",
-        "OSType":  "Client",
+        "Packages":  [
+                         "RSAT-W10"
+                     ],
         "Features":  null
     },
     {
+        "OSType":  2,
         "Generation":  2,
-        "Packages":  "Guest",
-        "VHDFormat":  "vhdx",
+        "VHDFormat":  2,
+        "VHDType":  2,
         "VHDSize":  26843545600,
-        "VHDPath":  "Intentionally Removed",
-        "Edition":  null,
         "Name":  "Nano Server 2016 TP4 Basic",
-        "VHDType":  "dynamic",
         "ISOPath":  "Intentionally Removed",
-        "OSType":  "Nano",
+        "VHDPath":  "Intentionally Removed",
+        "Edition":  "",
+        "Packages":  [
+                         "Guest"
+                     ],
         "Features":  null
     }
 ]

@@ -8,6 +8,8 @@ DSC Template Configuration File For use by LabBuilder
 .Parameters:          
     DomainName = "LABBUILDER.COM"
     DomainAdminPassword = "P@ssword!1"
+    DCName = 'SA-DC1'
+    PSDscAllowDomainUser = $True
 ###################################################################################################>
 
 Configuration MEMBER_WSUS

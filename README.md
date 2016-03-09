@@ -96,6 +96,53 @@ The conversion process for a single ISO to VHD can take 10-20 minutes depending 
 For this reason multiple Labs can be configured to use the same path to store these VHDs by changing the _vhdpath_ attribute of the _<templatevhds>_ node in the configuration. 
 
 
+### Windows Management Framework 5.0 (WMF 5.0)
+All Lab Guest Virtual Machines must have WMF 5.0 installed onto them before they are first booted in a Lab environment. This is to ensure the Self-Signed certificate can be generated and returned to the host for DSC MOF encryption.
+
+If WMF 5.0 is not installed before the Lab VM Guest first boot then DSC configuration will not proceed, and the Lab Guest VM will boot with a clean OS, but none of the specific features installed or configured (e.g. DC's not promoted).
+
+WMF 5.0 is only required to be installed onto Windows 7, 8 and 8.1 or Windows Server 2008 R2, Windows Server 2012 and Windows Server 2012 R2. Windows 10 and Windows Server 2016 already include WMF 5.0 so it doesn't need to be installed.
+
+_Most Labs_ are configured to install WMF 5.0 **completely automatically** so you don't need to install worry about it.
+
+Note: It is possible to change a Lab Configuration file to prevent automatic installation of the WMF 5.0 MSU package onto Guest Lab VM's, but this is not recommended unless there is a good reason for doing so.
+
+LabBuilder supports automatically installing any MSU package that can be downloaded from the internet onto the Lab Guest VMs during installation of the Lab.
+These MSU packages can be installed during any of the following phases of Lab installation:
+ - Convert Windows Install Media ISO to Template VHD.
+ - Copy Template VHD to ParentVHD folder in Lab.
+ - Create new VM Boot VHD from ParentVHD folder in Lab.
+ 
+ By default, Lab configuration files are configured to ensure WMF 5.0 is installed at each of the above phases.
+ 
+ The WMF 5.0 MSU package is controlled by adding a new MSU element to the &lt;Resources&gt; element in a Lab Configuration.
+ E.g.
+```xml
+     <msu name="WMF5.0-WS2012R2-W81"
+         url="https://download.microsoft.com/download/2/C/6/2C6E1B4A-EBE5-48A6-B225-2D2058A9CEFB/Win8.1AndW2K12R2-KB3134758-x64.msu" />
+```
+
+This defines the name of the MSU package and the Download location.
+The package can then be added to the &lt;Template&gt;, &lt;TemplateVHD&gt; or &lt;VM&gt; element in the **Packages** attribute.
+E.g.
+```xml
+<templatevhd name="Windows Server 2012 R2 Datacenter Full"
+                iso="9600.16384.130821-1623_x64fre_Server_EN-US_IRM_SSS_DV5.iso"
+                url="https://www.microsoft.com/en-us/evalcenter/evaluate-windows-server-2012-r2"
+                vhd="Windows Server 2012 R2 Datacenter Full.vhdx" 
+                edition="Windows Server 2012 R2 SERVERDATACENTER" 
+                ostype="Server"
+                packages="WMF5.0-WS2012R2-W81"
+                vhdformat="vhdx" 
+                vhdtype="dynamic" 
+                generation="2" 
+                vhdsize="40GB" />
+```
+
+Other MSU packages can also be installed in the same way.
+Multiple MSU Packages can be installed to the same VHD by comma delimiting the Packages attribute.
+
+
 Requirements
 ============
 To use this Module you will require on your Lab Host:
@@ -109,8 +156,9 @@ To use this Module you will require on your Lab Host:
  2. Hyper-V available (which requires intel-VT CPU support).
  3. To use labs that contain Nested Hyper-V hosts only Windows 10 built 10586 or later and Windows Server 2016 TP3 or later are supported.
  4. Copies of the Windows installation media for any Operating Systems that will be used in your Labs.
-    * Note: Many Lab configuration files can contain a URL where the relevant trial media can be downloaded from.
-
+    * Note: Most Lab configuration files can contain a URL where the relevant trial media can be downloaded from, but you can use any Windows Install Media source you choose (including custom built ISOs).
+ 5. An internet connection to download the WMF 5.0 MSU and any other optional MSU packages required by the Lab.
+    * Note: This only needs to be done during the Install-Lab phase and can be disabled after this phase is complete.
 
 Configuration XML
 =================
@@ -501,6 +549,15 @@ Versions
                         Fixed bug setting VLAN Id on External and Internal Switch Adapters.
 * Remove-LabSwitch: Converted to use LabSwitch objects.
 * Tests\Test_Sample_*.ps1: Test-StartLabVM function fixed.
+* DSCLibrary\MEMBER_*.DSC.ps1: Updated parameter examples to include DCName parameter.
+* DSCLibrary\DC_*.DSC.ps1: Added DNS Zone and forwarder options (setting forwarder requires xDNSServer 1.6.0.0).
+* DSCLibrary\MEMBER_DNS.DSC.ps1: Created resource for member DNS servers.
+* Get-LabVMTemplateVHD: Converted to output array of LabVMTemplateVHD objects.
+* Initialize-LabVMTemplateVHD: Converted to use LabVMTemplateVHD objects.
+                               Check added to ensure Drive Letter is assigned to mounted ISO.
+* Remove-LabVMTemplateVHD: Converted to use LabVMTemplateVHD objects.
+* Readme.md: Windows Management Framework 5.0 (WMF 5.0) section added.
+* DSCLibrary\DC_FORESTDOMAIN.DSC.ps1: Changed name to DC_FORESTCHILDDOMAIN.DSC.ps1 to better indicate purpose.
 
 ### 0.6.0.0
 * New-Lab: Function added for creating a new Lab configuration file and basic folder structure.
