@@ -1,7 +1,7 @@
 <###################################################################################################
 DSC Template Configuration File For use by LabBuilder
 .Title
-    DC_FORESTDOMAIN
+    DC_FORESTCHILDDOMAIN
 .Desription
     Builds a Domain Controller and creates it as the first DC in a new child domain within the
     existing forest specified in the DomainName parameter.
@@ -27,7 +27,7 @@ DSC Template Configuration File For use by LabBuilder
     )
 ###################################################################################################>
 
-Configuration DC_FORESTDOMAIN
+Configuration DC_FORESTCHILDDOMAIN
 {
     Import-DscResource -ModuleName 'PSDesiredStateConfiguration'
     Import-DscResource -ModuleName xActiveDirectory

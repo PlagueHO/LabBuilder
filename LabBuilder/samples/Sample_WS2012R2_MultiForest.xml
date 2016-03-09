@@ -113,8 +113,8 @@
     <vm name="ALPHA-DC2"
         template="Template Windows Server 2012 R2 Datacenter Full"
         computername="ALPHA-DC2">
-      <dsc configname="DC_FORESTDOMAIN"
-           configfile="DC_FORESTDOMAIN.DSC.ps1">
+      <dsc configname="DC_FORESTCHILDDOMAIN"
+           configfile="DC_FORESTCHILDDOMAIN.DSC.ps1">
         <parameters>
           ParentDomainName = "ALPHA.LOCAL"
           DomainName = "DEV"
@@ -275,11 +275,11 @@
     <vm name="BRAVO-DC2"
         template="Template Windows Server 2012 R2 Datacenter Full"
         computername="BRAVO-DC2">
-      <dsc configname="DC_FORESTDOMAIN"
-           configfile="DC_FORESTDOMAIN.DSC.ps1">
+      <dsc configname="DC_FORESTCHILDDOMAIN"
+           configfile="DC_FORESTCHILDDOMAIN.DSC.ps1">
         <parameters>
           ParentDomainName = "BRAVO.LOCAL"
-          DomainName = "DEV"
+          DomainName = "SALES"
           DomainAdminPassword = "P@ssword!1"
           PSDscAllowDomainUser = $True
         </parameters>
