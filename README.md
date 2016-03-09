@@ -557,6 +557,7 @@ Versions
                                Check added to ensure Drive Letter is assigned to mounted ISO.
 * Remove-LabVMTemplateVHD: Converted to use LabVMTemplateVHD objects.
 * Readme.md: Windows Management Framework 5.0 (WMF 5.0) section added.
+* DSCLibrary\DC_FORESTDOMAIN.DSC.ps1: Changed name to DC_FORESTCHILDDOMAIN.DSC.ps1 to better indicate purpose.
 
 ### 0.6.0.0
 * New-Lab: Function added for creating a new Lab configuration file and basic folder structure.
