@@ -993,19 +993,23 @@ InModuleScope LabBuilder {
         Mock Get-VMHardDiskDrive -ParameterFilter { $VMName -eq 'Pester Windows 10 Enterprise' } `
             -MockWith { @{ path = 'Pester Windows 10 Enterprise.vhdx' } }
 
-        Context 'Valid configuration is passed with and Name filter set to matching switch' {
-            It 'Returns a Single Switch object' {
+        Context 'Valid configuration is passed with a Name filter set to matching VM' {
+            It 'Returns a Single Template object' {
                 $Lab = Get-Lab -ConfigPath $Global:TestConfigOKPath
                 $Lab.labbuilderconfig.templates.SetAttribute('fromvm','Pester *')
-                [Array] $Templates = Get-LabVMTemplate -Lab $Lab -Name $Lab.labbuilderconfig.Templates.template[0].Name
+                [Array] $Templates = Get-LabVMTemplate `
+                    -Lab $Lab `
+                    -Name $Lab.labbuilderconfig.Templates.template[0].Name
                 $Templates.Count | Should Be 1
             }
         }
-        Context 'Valid configuration is passed with and Name filter set to non-matching switch' {
-            It 'Returns a Single Switch object' {
+        Context 'Valid configuration is passed with a Name filter set to non-matching VM' {
+            It 'Returns no Template objects' {
                 $Lab = Get-Lab -ConfigPath $Global:TestConfigOKPath
                 $Lab.labbuilderconfig.templates.SetAttribute('fromvm','Pester *')
-                [Array] $Templates = Get-LabVMTemplate -Lab $Lab -Name 'Does Not Exist'
+                [Array] $Templates = Get-LabVMTemplate `
+                    -Lab $Lab `
+                    -Name 'Does Not Exist'
                 $Templates.Count | Should Be 0
             }
         }

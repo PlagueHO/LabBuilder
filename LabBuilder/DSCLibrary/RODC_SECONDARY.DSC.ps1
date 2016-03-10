@@ -54,10 +54,10 @@ Configuration RODC_SECONDARY
         # Wait for the Domain to be available so we can join it.
         WaitForAll DC
         {
-            ResourceName    = '[xADDomain]PrimaryDC'
-            NodeName        = $Node.DCname
-            RetryIntervalSe = 15
-            RetryCount      = 60
+            ResourceName     = '[xADDomain]PrimaryDC'
+            NodeName         = $Node.DCname
+            RetryIntervalSec = 15
+            RetryCount       = 60
         }
         
 <#

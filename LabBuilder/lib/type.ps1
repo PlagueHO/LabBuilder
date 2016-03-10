@@ -114,9 +114,11 @@ class LabVMTemplate {
     [String] $Name
     [String] $VHD
     [String] $SourceVHD
+    [String] $ParentVHD
     [String] $TemplateVHD
     [Uint64] $MemoryStartupBytes = 1GB
     [Boolean] $DynamicMemoryEnabled = $True
+    [Boolean] $ExposeVirtualizationExtensions = $False
     [Byte] $ProcessorCount = 1
     [String] $AdministratorPassword
     [String] $ProductKey

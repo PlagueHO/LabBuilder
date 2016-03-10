@@ -29,7 +29,7 @@ $Libs.Foreach(
     {
         Write-Verbose -Message $($LocalizedData.ImportingLibFileMessage `
             -f $_.Fullname)
-        . $_.Fullname    
+        . $_.Fullname
     }
 )
 #endregion
@@ -1629,21 +1629,21 @@ function Remove-LabVMTemplateVHD
    Contains the Lab object that was loaded by the Get-Lab object.
 .PARAMETER Name
    An optional array of VM Template names.
-   
+
    Only VM Templates matching names in this list will be returned in the array.
 .PARAMETER VMTemplateVHDs
    The array of VMTemplateVHDs pulled from the Lab using Get-LabVMTemplateVHD.
-   
+
    If not provided it will attempt to pull the list from the Lab.
 .EXAMPLE
    $Lab = Get-Lab -ConfigPath c:\mylab\config.xml
    $VMTemplates = Get-LabVMTemplate -Lab $Lab
    Loads a Lab and pulls the array of VMTemplates from it.
 .OUTPUTS
-   Returns an array of VM Templates.
+   Returns an array of LabVMTemplate objects.
 #>
 function Get-LabVMTemplate {
-    [OutputType([System.Collections.Hashtable[]])]
+    [OutputType([LabVMTemplate[]])]
     [CmdLetBinding()]
     param
     (
@@ -1652,25 +1652,25 @@ function Get-LabVMTemplate {
             Mandatory=$true)]
         [ValidateNotNullOrEmpty()]
         $Lab,
-        
+
         [Parameter(
             Position=2)]
         [ValidateNotNullOrEmpty()]
         [String[]] $Name,
-        
+
         [Parameter(
             Position=3)]
-        [Array] $VMTemplateVHDs        
+        [LabVMTemplateVHD[]] $VMTemplateVHDs
     )
 
     # if VMTeplateVHDs array not passed, pull it from config.
     if (-not $PSBoundParameters.ContainsKey('VMTemplateVHDs'))
     {
-        $VMTemplateVHDs = Get-LabVMTemplateVHD `
+        [LabVMTemplateVHD[]] $VMTemplateVHDs = Get-LabVMTemplateVHD `
             -Lab $Lab
     }
-    
-    [System.Collections.Hashtable[]] $VMTemplates = @()
+
+    [LabVMTemplate[]] $VMTemplates = @()
     [String] $VHDParentPath = $Lab.labbuilderconfig.settings.vhdparentpathfull
     
     # Get a list of all templates in the Hyper-V system matching the phrase found in the fromvm
@@ -1689,15 +1689,16 @@ function Get-LabVMTemplate {
 
             [String] $VHDFilepath = (Get-VMHardDiskDrive -VMName $Template.Name).Path
             [String] $VHDFilename = [System.IO.Path]::GetFileName($VHDFilepath)
-            $VMTemplates += @{
-                name = $Template.Name
-                vhd = $VHDFilename
-                sourcevhd = $VHDFilepath
-                parentvhd = (Join-Path -Path $VHDParentPath -ChildPath $VHDFilename)
-            }
+            [LabVMTemplate] $VMTemplate = New-Object `
+                -TypeName LabVMTemplate
+            $VMTemplate.Name = $Template.Name
+            $VMTemplate.Vhd = $VHDFilename
+            $VMTemplate.SourceVhd = $VHDFilepath
+            $VMTemplate.ParentVhd = (Join-Path -Path $VHDParentPath -ChildPath $VHDFilename)
+            $VMTemplates += @( $VMTemplate )
         } # foreach
     } # if
-    
+
     # Read the list of templates from the configuration file
     $Templates = $Lab.labbuilderconfig.templates.template
     foreach ($Template in $Templates)
@@ -1721,14 +1722,14 @@ function Get-LabVMTemplate {
             }
             ThrowException @ExceptionParameters
         } # if
-        
+
         # Does the template already exist in the list?
         [Boolean] $Found = $False
         foreach ($VMTemplate in $VMTemplates)
         {
             if ($VMTemplate.Name -eq $TemplateName)
             {
-                # The template already exists - so don't add it again,
+                # The template already exists - so don't add it again
                 $Found = $True
                 Break
             } # if
@@ -1736,10 +1737,11 @@ function Get-LabVMTemplate {
         if (-not $Found)
         {
             # The template wasn't found in the list of templates so add it
-            $VMTemplate = @{
-                name = $TemplateName;
-            }
-            $VMTemplates += $VMTemplate
+            [LabVMTemplate] $VMTemplate = New-Object `
+                -TypeName LabVMTemplate
+            $VMTemplate.Name = $TemplateName
+            # Add the new Template to the Templates Array
+            $VMTemplates += @( $VMTemplate )
         } # if
         
         # Determine the Source VHD, Template VHD and VHD
@@ -1755,9 +1757,9 @@ function Get-LabVMTemplate {
                 errorMessage = $($LocalizedData.TemplateSourceVHDAndTemplateVHDConflictError `
                     -f $TemplateName)
             }
-            ThrowException @ExceptionParameters            
+            ThrowException @ExceptionParameters
         } # if
-        
+
         if ($TemplateVHD)
         {
             # A TemplateVHD was provided so look it up.
@@ -1766,17 +1768,17 @@ function Get-LabVMTemplate {
             if ($VMTemplateVHD)
             {
                 # The TemplateVHD was found
-                $VMTemplate.sourcevhd = $VMTemplateVHD.VHDPath
+                $VMTemplate.Sourcevhd = $VMTemplateVHD.VHDPath
 
                 # if a VHD filename wasn't specified in the TemplateVHD
                 # Just use the leaf of the SourceVHD
                 if ($VMTemplateVHD.VHD)
                 {
-                    $VMTemplate.vhd = $VMTemplateVHD.VHD
+                    $VMTemplate.Vhd = $VMTemplateVHD.VHD
                 }
                 else
                 {
-                    $VMTemplate.vhd = Split-Path `
+                    $VMTemplate.Vhd = Split-Path `
                         -Path $VMTemplate.sourcevhd `
                         -Leaf
                 } # if
@@ -1799,11 +1801,11 @@ function Get-LabVMTemplate {
             # if this is a relative path, add it to the config path
             if ([System.IO.Path]::IsPathRooted($SourceVHD))
             {
-                $VMTemplate.sourcevhd = $SourceVHD                
+                $VMTemplate.SourceVhd = $SourceVHD
             }
             else
             {
-                $VMTemplate.sourcevhd = Join-Path `
+                $VMTemplate.SourceVhd = Join-Path `
                     -Path $Lab.labbuilderconfig.settings.fullconfigpath `
                     -ChildPath $SourceVHD
             }
@@ -1819,7 +1821,7 @@ function Get-LabVMTemplate {
                 }
                 ThrowException @ExceptionParameters
             } # if
-            
+
             # if a VHD filename wasn't specified in the Template
             # Just use the leaf of the SourceVHD
             if ($Template.VHD)
@@ -1831,17 +1833,17 @@ function Get-LabVMTemplate {
                 $VMTemplate.vhd = Split-Path `
                     -Path $VMTemplate.sourcevhd `
                     -Leaf
-            } 
+            } # if
         }
         elseif ($VMTemplate.SourceVHD)
         {
-            # A SourceVHD is already set - 
+            # A SourceVHD is already set
             # Usually because it was pulled From a Hyper-V VM template.
         }
         else
         {
             # Neither a SourceVHD or TemplateVHD was provided
-            # So throw an exception            
+            # So throw an exception
             $ExceptionParameters = @{
                 errorId = 'TemplateSourceVHDandTemplateVHDMissingError'
                 errorCategory = 'InvalidArgument'
@@ -1850,7 +1852,7 @@ function Get-LabVMTemplate {
             }
             ThrowException @ExceptionParameters
         } # if
-                
+
         # Ensure the ParentVHD is up-to-date
         $VMTemplate.parentvhd = Join-Path `
             -Path $VHDParentPath `
@@ -1868,57 +1870,55 @@ function Get-LabVMTemplate {
         } # if
         if ($Template.DynamicMemoryEnabled)
         {
-            $VMTemplate.dynamicmemoryenabled = $Template.DynamicMemoryEnabled
+            $VMTemplate.DynamicMemoryEnabled = ($Template.DynamicMemoryEnabled -eq 'Y')
         }
         elseif (-not $VMTemplate.DynamicMemoryEnabled)
         {
-            $VMTemplate.dynamicmemoryenabled = 'Y'
-        }
-         # if
+            $VMTemplate.DynamicMemoryEnabled = $True
+        } # if
         if ($Template.ProcessorCount)
         {
             $VMTemplate.ProcessorCount = $Template.ProcessorCount
         } # if
         if ($Template.ExposeVirtualizationExtensions)
         {
-            $VMTemplate.exposevirtualizationextensions = $Template.ExposeVirtualizationExtensions
-        } 
-        # if
+            $VMTemplate.ExposeVirtualizationExtensions = ($Template.ExposeVirtualizationExtensions -eq 'Y')
+        } # if
         if ($Template.AdministratorPassword)
         {
-            $VMTemplate.administratorpassword = $Template.AdministratorPassword
+            $VMTemplate.AdministratorPassword = $Template.AdministratorPassword
         } # if
         if ($Template.ProductKey)
         {
-            $VMTemplate.productkey = $Template.ProductKey
+            $VMTemplate.ProductKey = $Template.ProductKey
         } # if
         if ($Template.TimeZone)
         {
-            $VMTemplate.timezone = $Template.TimeZone
+            $VMTemplate.TimeZone = $Template.TimeZone
         } # if
         if ($Template.OSType)
         {
-            $VMTemplate.ostype = $Template.OSType
+            $VMTemplate.OSType = [LabOSType]::$($Template.OSType)
         }
         elseif (-not $VMTemplate.OSType)
         {
-            $VMTemplate.ostype = 'Server'
+            $VMTemplate.OSType = [LabOStype]::Server
         } # if
         if ($Template.IntegrationServices)
         {
-            $VMTemplate.integrationservices = $Template.IntegrationServices
+            $VMTemplate.IntegrationServices = $Template.IntegrationServices
         }
         else
         {
-            $VMTemplate.integrationservices = $null
+            $VMTemplate.IntegrationServices = $null
         } # if
         if ($Template.Packages)
         {
-            $VMTemplate.packages = $Template.Packages
+            $VMTemplate.Packages = $Template.Packages
         }
         else
         {
-            $VMTemplate.packages = $null
+            $VMTemplate.Packages = $null
         } # if
     } # foreach
     Return $VMTemplates
@@ -1931,8 +1931,8 @@ function Get-LabVMTemplate {
 .SYNOPSIS
    Initializes the Virtual Machine templates used by a Lab from a provided array.
 .DESCRIPTION
-   Takes an array of Virtual Machine templates that were configured in the Lab.
-   
+   Takes an array of LabVMTemplate objects that were configured in the Lab.
+
    The Virtual Machine templates are used to create the Virtual Machines specified in
    a Lab. The Virtual Machine template VHD files are copied to a folder where
    they will be copied to create new Virtual Machines or as parent difference disks for new
@@ -1944,21 +1944,21 @@ function Get-LabVMTemplate {
    
    Only VM Templates matching names in this list will be initialized.
 .PARAMETER VMTemplates
-   The array of VM Templates pulled from the Lab using Get-LabVMTemplate.
+   The array of LabVMTemplate objects pulled from the Lab using Get-LabVMTemplate.
 
    If not provided it will attempt to pull the list from the Lab.
 .PARAMETER VMTemplateVHDs
-   The array of VM Template VHDs pulled from the Lab using Get-LabVMTemplateVHD.
+   The array of LabVMTemplateVHD objects pulled from the Lab using Get-LabVMTemplateVHD.
 
    If not provided it will attempt to pull the list from the Lab.
+
+   This parameter is only used if the VMTemplates parameter is not provided.
 .EXAMPLE
    $Lab = Get-Lab -ConfigPath c:\mylab\config.xml
    $VMTemplates = Get-LabVMTemplate -Lab $Lab
-   $VMTemplateVHDs = Get-LabVMTemplateVHD -Lab $Lab
    Initialize-LabVMTemplate `
     -Lab $Lab `
-    -VMTemplates $VMTemplates `
-    -VMTemplateVHDs $VMTemplateVHDs
+    -VMTemplates $VMTemplates
    Initializes the Virtual Machine templates in the configured in the Lab c:\mylab\config.xml
 .EXAMPLE
    $Lab = Get-Lab -ConfigPath c:\mylab\config.xml
@@ -1984,13 +1984,17 @@ function Initialize-LabVMTemplate {
         
         [Parameter(
             Position=3)]
-        [Array] $VMTemplates
+        [LabVMTemplate[]] $VMTemplates,
+
+        [Parameter(
+            Position=4)]
+        [LabVMTemplateVHD[]] $VMTemplateVHDs
     )
     
     # if VMTeplates array not passed, pull it from config.
     if (-not $PSBoundParameters.ContainsKey('VMTemplates'))
     {
-        $VMTemplates = Get-LabVMTemplate `
+        [LabVMTemplate[]] $VMTemplates = Get-LabVMTemplate `
             @PSBoundParameters
     }
 
@@ -2006,13 +2010,13 @@ function Initialize-LabVMTemplate {
             # A names list was passed but this VM Template wasn't included
             continue
         } # if
-        
-        if (-not (Test-Path $VMTemplate.parentvhd))
+
+        if (-not (Test-Path $VMTemplate.ParentVhd))
         {
             # The Parent VHD isn't in the VHD Parent folder
             # so copy it there, optimize it and mark it read-only.
-            if (-not (Test-Path $VMTemplate.sourcevhd))
-            {  
+            if (-not (Test-Path $VMTemplate.SourceVhd))
+            {
                 # The source VHD could not be found.
                 $ExceptionParameters = @{
                     errorId = 'TemplateSourceVHDNotFoundError'
@@ -2024,10 +2028,10 @@ function Initialize-LabVMTemplate {
             }
 
             Write-Verbose -Message $($LocalizedData.CopyingTemplateSourceVHDMessage `
-                -f $VMTemplate.sourcevhd,$VMTemplate.parentvhd)
+                -f $VMTemplate.SourceVhd,$VMTemplate.ParentVhd)
             Copy-Item `
-                -Path $VMTemplate.sourcevhd `
-                -Destination $VMTemplate.parentvhd
+                -Path $VMTemplate.SourceVhd `
+                -Destination $VMTemplate.ParentVhd
 
             # Add any packages to the template if required
             if (-not [String]::IsNullOrWhitespace($VMTemplate.Packages))
@@ -2036,7 +2040,7 @@ function Initialize-LabVMTemplate {
                 {
                     # Mount the Template Boot VHD so that files can be loaded into it
                     Write-Verbose -Message $($LocalizedData.MountingTemplateBootDiskMessage `
-                        -f $VMTemplate.Name,$VMTemplate.parentvhd)
+                        -f $VMTemplate.Name,$VMTemplate.ParentVhd)
 
                     # Create a mount point for mounting the Boot VHD
                     [String] $MountPoint = Join-Path `
@@ -2103,7 +2107,7 @@ function Initialize-LabVMTemplate {
                         {
                             # Dismount before throwing the error
                             Write-Verbose -Message $($LocalizedData.DismountingTemplateBootDiskMessage `
-                                -f $VMTemplate.Name,$VMTemplate.parentvhd)
+                                -f $VMTemplate.Name,$VMTemplate.ParentVhd)
                             $null = Dismount-WindowsImage `
                                 -Path $MountPoint `
                                 -Save
@@ -2120,7 +2124,7 @@ function Initialize-LabVMTemplate {
                             }
                             ThrowException @ExceptionParameters
                         } # if
-                        
+
                         # Apply a Pacakge
                         Write-Verbose -Message $($LocalizedData.ApplyingTemplateBootDiskFileMessage `
                             -f $VMTemplate.Name,$Package,$PackagePath)
@@ -2170,7 +2174,7 @@ function Initialize-LabVMTemplate {
         if ($VMTemplate.OSType -eq 'Nano')
         {
             [String] $VHDPackagesFolder = Join-Path `
-                -Path (Split-Path -Path $VMTemplate.sourcevhd -Parent)`
+                -Path (Split-Path -Path $VMTemplate.SourceVhd -Parent)`
                 -ChildPath 'NanoServerPackages'
 
             [String] $LabPackagesFolder = Join-Path `
@@ -2198,7 +2202,7 @@ function Initialize-LabVMTemplate {
 .DESCRIPTION
    This cmdlet is used to remove any Virtual Machine Template VHDs that were copied when
    creating this Lab.
-   
+
    This function should never be run unless the Lab has no Differencing Disks using these
    Template VHDs or the Lab is being completely removed. Removing these Template VHDs if
    Lab Virtual Machines are using these templates as differencing disk parents will cause
@@ -2207,10 +2211,12 @@ function Initialize-LabVMTemplate {
    Contains the Lab object that was loaded by the Get-Lab object.
 .PARAMETER Name
    An optional array of VM Template names.
-   
+
    Only VM Templates matching names in this list will be removed.
 .PARAMETER VMTemplates
-   The array of Virtual Machine Templates pulled from the Lab using Get-LabVMTemplate.
+   The array of LabVMTemplate objects pulled from the Lab using Get-LabVMTemplate.
+
+   If not provided it will attempt to pull the list from the Lab.
 .EXAMPLE
    $Lab = Get-Lab -ConfigPath c:\mylab\config.xml
    $VMTemplates = Get-LabVMTemplate -Lab $Lab
@@ -2240,7 +2246,7 @@ function Remove-LabVMTemplate {
 
         [Parameter(
             Position=3)]
-        [Array] $VMTemplates
+        [LabVMTemplate[]] $VMTemplates
     )
 
     # if VMTeplates array not passed, pull it from config.
@@ -2257,16 +2263,16 @@ function Remove-LabVMTemplate {
             continue
         } # if
 
-        if (Test-Path $VMTemplate.parentvhd)
+        if (Test-Path $VMTemplate.ParentVhd)
         {
             Set-ItemProperty `
                 -Path $VMTemplate.parentvhd `
                 -Name IsReadOnly `
                 -Value $False
             Write-Verbose -Message $($LocalizedData.DeletingParentVHDMessage `
-                -f $VMTemplate.parentvhd)
+                -f $VMTemplate.ParentVhd)
             Remove-Item `
-                -Path $VMTemplate.parentvhd `
+                -Path $VMTemplate.ParentVhd `
                 -Confirm:$false `
                 -Force
         } # if
