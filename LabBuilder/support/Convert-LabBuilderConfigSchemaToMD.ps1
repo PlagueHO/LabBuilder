@@ -5,7 +5,7 @@
 #>
 $XMLFile = Join-Path -Path $PSScriptRoot -ChildPath '..\schema\labbuilderconfig-schema.xsd'
 $XSLFile = Join-Path -Path $PSScriptRoot -ChildPath 'transform\labbuilderconfig-schema-transformtomd.xsl'
-$OutputFile = Join-Path -Path $PSScriptRoot -ChildPath '..\schema\labbuilderconfig-schema.md'
+$OutputFile = Join-Path -Path $PSScriptRoot -ChildPath '..\docs\labbuilderconfig-schema.md'
 & "$PSScriptRoot\Convert-XSDToMD.ps1" `
     -XmlFile $XMLFile `
     -XslFile $XSLFile `

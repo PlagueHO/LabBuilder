@@ -52,7 +52,7 @@ deploy_script:
       $null = Copy-Item -Path (Join-Path -Path $buildFolder -ChildPath 'LabBuilder\LabBuilder.psd1') -Destination $VersionFolder
       $null = Copy-Item -Path (Join-Path -Path $buildFolder -ChildPath 'LabBuilder\LabBuilder.psm1') -Destination $VersionFolder
       $null = Copy-Item -Path (Join-Path -Path $buildFolder -ChildPath 'LICENSE') -Destination $VersionFolder
-      $null = Copy-Item -Path (Join-Path -Path $buildFolder -ChildPath 'README.MD') -Destination $VersionFolder
+      $null = Copy-Item -Path (Join-Path -Path $buildFolder -ChildPath 'README.md') -Destination $VersionFolder
       $null = Copy-Item -Path (Join-Path -Path $buildFolder -ChildPath 'LabBuilder\samples') -Destination $VersionFolder -Recurse
       $null = Copy-Item -Path (Join-Path -Path $buildFolder -ChildPath 'LabBuilder\dsclibrary') -Destination $VersionFolder -Recurse
       $null = Copy-Item -Path (Join-Path -Path $buildFolder -ChildPath 'LabBuilder\lib') -Destination $VersionFolder -Recurse
@@ -60,6 +60,7 @@ deploy_script:
       $null = Copy-Item -Path (Join-Path -Path $buildFolder -ChildPath 'LabBuilder\en-us') -Destination $VersionFolder -Recurse
       $null = Copy-Item -Path (Join-Path -Path $buildFolder -ChildPath 'LabBuilder\schema') -Destination $VersionFolder -Recurse
       $null = Copy-Item -Path (Join-Path -Path $buildFolder -ChildPath 'LabBuilder\template') -Destination $VersionFolder -Recurse
+      $null = Copy-Item -Path (Join-Path -Path $buildFolder -ChildPath 'LabBuilder\docs') -Destination $VersionFolder -Recurse
 
       # Set version number
       $manifest = Join-Path -Path $VersionFolder -ChildPath "LabBuilder.psd1"
