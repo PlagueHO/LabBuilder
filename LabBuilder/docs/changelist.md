@@ -20,6 +20,13 @@
 * Get-LabVMTemplate: Converted to output array of LabVMTemplate objects.
 * Initialize-LabVMTemplate: Converted to use LabVMTemplate objects.
 * Remove-LabVMTemplate: Converted to use LabVMTemplate objects.
+* Get-LabVM: Converted to output array of LabVM objects.
+* Initialize-LabVM: Converted to use LabVM objects.
+* Remove-LabVM: Converted to use LabVM objects.
+* Lib\dsc.ps1: All functions converted to use LabVM objects.
+* Lib\vm.ps1: All functions converted to use LabVM objects.
+* Lib\vhd.ps1: All functions converted to use LabVM objects.
+* InitializeVhd: Fix error when attempting to create a new VHD/VHDx with a formatted volume.
 
 ### 0.6.0.0
 * New-Lab: Function added for creating a new Lab configuration file and basic folder structure.

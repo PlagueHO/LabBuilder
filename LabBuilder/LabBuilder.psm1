@@ -2284,39 +2284,42 @@ function Remove-LabVMTemplate {
 #region LabVMFunctions
 <#
 .SYNOPSIS
-   Gets an Array of VMs from a Lab.
+    Gets an Array of LabVM objects from a Lab.
 .DESCRIPTION
-   Takes the provided Lab and returns the list of Virtul Machines
-   that will be created in this lab. This list is usually passed to Initialize-LabVM.
+    Takes the provided Lab and returns the list of VM objects that will be created in this lab.
+    This list is usually passed to Initialize-LabVM.
 .PARAMETER Lab
-   Contains the Lab Builder Lab object that was loaded by the Get-Lab object.
+    Contains the Lab Builder Lab object that was loaded by the Get-Lab object.
 .PARAMETER Name
-   An optional array of VM names.
-   
-   Only VMs matching names in this list will be returned in the array.
+    An optional array of VM names.
+
+    Only VMs matching names in this list will be returned in the array.
 .PARAMETER VMTemplates
-   Contains the array of VM Templates returned by Get-LabVMTemplate from this Lab.
+    Contains the array of LabVMTemplate objects returned by Get-LabVMTemplate from this Lab.
 
-   If not provided it will attempt to pull the list from the Lab.
+    If not provided it will attempt to pull the list from the Lab.
 .PARAMETER Switches
-   Contains the array of Virtual Switches returned by Get-LabSwitch from this Lab.
+    Contains the array of LabVMSwitch objects returned by Get-LabSwitch from this Lab.
 
-   If not provided it will attempt to pull the list from the Lab.
+    If not provided it will attempt to pull the list from the Lab.
 .EXAMPLE
-   $Lab = Get-Lab -ConfigPath c:\mylab\config.xml
-   $VMTemplates = Get-LabVMTemplate -Lab $Lab
-   $Switches = Get-LabSwitch -Lab $Lab
-   $VMs = Get-LabVM -Lab $Lab -VMTemplates $VMTemplates -Switches $Switches
-   Loads a Lab and pulls the array of VMs from it.
+    $Lab = Get-Lab -ConfigPath c:\mylab\config.xml
+    $VMTemplates = Get-LabVMTemplate -Lab $Lab
+    $Switches = Get-LabSwitch -Lab $Lab
+    $VMs = Get-LabVM `
+        -Lab $Lab `
+        -VMTemplates $VMTemplates `
+        -Switches $Switches
+    Loads a Lab and pulls the array of VMs from it.
 .EXAMPLE
-   $Lab = Get-Lab -ConfigPath c:\mylab\config.xml
-   $VMs = Get-LabVM -Lab $Lab
-   Loads a Lab and pulls the array of VMs from it.
+    $Lab = Get-Lab -ConfigPath c:\mylab\config.xml
+    $VMs = Get-LabVM -Lab $Lab
+    Loads a Lab and pulls the array of VMs from it.
 .OUTPUTS
-   Returns an array of VMs.
+    Returns an array of LabVM objects.
 #>
 function Get-LabVM {
-    [OutputType([System.Collections.Hashtable[]])]
+    [OutputType([LabVM[]])]
     [CmdLetBinding()]
     param (
         [Parameter(
@@ -2332,7 +2335,7 @@ function Get-LabVM {
         
         [Parameter(
             Position=3)]
-        [Array] $VMTemplates,
+        [LabVMTemplate[]] $VMTemplates,
 
         [Parameter(
             Position=4)]
@@ -2342,7 +2345,7 @@ function Get-LabVM {
     # if VMTeplates array not passed, pull it from config.
     if (-not $PSBoundParameters.ContainsKey('VMTemplates'))
     {
-        $VMTemplates = Get-LabVMTemplate `
+        [LabVMTemplate[]] $VMTemplates = Get-LabVMTemplate `
             -Lab $Lab
     }
 
@@ -2353,13 +2356,13 @@ function Get-LabVM {
             -Lab $Lab
     }
 
-    [System.Collections.Hashtable[]] $LabVMs = @()
+    [LabVM[]] $LabVMs = @()
     [String] $LabPath = $Lab.labbuilderconfig.settings.labpath
     [String] $VHDParentPath = $Lab.labbuilderconfig.settings.vhdparentpathfull
     [String] $LabId = $Lab.labbuilderconfig.settings.labid 
     $VMs = $Lab.labbuilderconfig.vms.vm
 
-    foreach ($VM in $VMs) 
+    foreach ($VM in $VMs)
     {
         $VMName = $VM.Name
         if ($Name -and ($VMName -notin $Name))
@@ -2383,7 +2386,7 @@ function Get-LabVM {
         {
             $VMName = "$LabId $VMName"
         }
-        
+
         if (-not $VM.Template) 
         {
             $ExceptionParameters = @{
@@ -2396,11 +2399,11 @@ function Get-LabVM {
         } # if
 
         # Find the template that this VM uses and get the VHD Path
-        [String] $ParentVHDPath =''
+        [String] $ParentVHDPath = ''
         [Boolean] $Found = $false
         foreach ($VMTemplate in $VMTemplates) {
             if ($VMTemplate.Name -eq $VM.Template) {
-                $ParentVHDPath = $VMTemplate.parentVHD
+                $ParentVHDPath = $VMTemplate.ParentVHD
                 $Found = $true
                 Break
             } # if
@@ -2418,7 +2421,7 @@ function Get-LabVM {
         } # if
 
         # Assemble the Network adapters that this VM will use
-        [System.Collections.Hashtable[]] $VMAdapters = @()
+        [LabVMAdapter[]] $VMAdapters = @()
         [Int] $AdapterCount = 0
         foreach ($VMAdapter in $VM.Adapters.Adapter) 
         {
@@ -2487,65 +2490,62 @@ function Get-LabVM {
                 }
                 ThrowException @ExceptionParameters
             } # if
-            
+
             # Figure out the VLan - If defined in the VM use it, otherwise use the one defined in the Switch, otherwise keep blank.
             [String] $VLan = $VMAdapter.VLan
             if (-not $VLan) 
             {
                 $VLan = $SwitchVLan
             } # if
-            
-            [String] $MACAddressSpoofing = 'Off'
-            if ($VMAdapter.macaddressspoofing -eq 'On') 
-            {
-                $MACAddressSpoofing = 'On'
-            }
-            
+
+            [Boolean] $MACAddressSpoofing = ($VMAdapter.macaddressspoofing -eq 'On') 
+
             # Have we got any IPv4 settings?
-            [System.Collections.Hashtable] $IPv4 = @{}
+            Remove-Variable -Name IPv4 -ErrorAction SilentlyContinue
             if ($VMAdapter.IPv4) 
             {
-                $IPv4 = @{
-                    Address = $VMAdapter.IPv4.Address;
-                    defaultgateway = $VMAdapter.IPv4.DefaultGateway;
-                    subnetmask = $VMAdapter.IPv4.SubnetMask;
-                    dnsserver = $VMAdapter.IPv4.DNSServer
-                }
+                $IPv4 = New-Object `
+                    -TypeName LabVMAdapterIPv4
+                $IPv4.Address = $VMAdapter.IPv4.Address
+                $IPv4.defaultgateway = $VMAdapter.IPv4.DefaultGateway
+                $IPv4.subnetmask = $VMAdapter.IPv4.SubnetMask
+                $IPv4.dnsserver = $VMAdapter.IPv4.DNSServer
             }
 
             # Have we got any IPv6 settings?
-            [System.Collections.Hashtable] $IPv6 = @{}
-
-            if ($VMAdapter.IPv6) 
+            Remove-Variable -Name IPv6 -ErrorAction SilentlyContinue
+            if ($VMAdapter.IPv6)
             {
-                $IPv6 = @{
-                    Address = $VMAdapter.IPv6.Address;
-                    defaultgateway = $VMAdapter.IPv6.DefaultGateway;
-                    subnetmask = $VMAdapter.IPv6.SubnetMask;
-                    dnsserver = $VMAdapter.IPv6.DNSServer
-                }
+                $IPv6 = New-Object `
+                    -TypeName LabVMAdapterIPv6
+                $IPv6.Address = $VMAdapter.IPv6.Address
+                $IPv6.defaultgateway = $VMAdapter.IPv6.DefaultGateway
+                $IPv6.subnetmask = $VMAdapter.IPv6.SubnetMask
+                $IPv6.dnsserver = $VMAdapter.IPv6.DNSServer
             }
 
-            $VMAdapters += @{
-                Name = $AdapterName;
-                SwitchName = $AdapterSwitchName;
-                MACAddress = $VMAdapter.macaddress;
-                MACAddressSpoofing = $MACAddressSpoofing;
-                VLan = $VLan;
-                IPv4 = $IPv4;
-                IPv6 = $IPv6
-            }
+            $NewVMAdapter = New-Object `
+                -TypeName LabVMAdapter
+            $NewVMAdapter.Name = $AdapterName
+            $NewVMAdapter.SwitchName = $AdapterSwitchName
+            $NewVMAdapter.MACAddress = $VMAdapter.macaddress
+            $NewVMAdapter.MACAddressSpoofing = $MACAddressSpoofing
+            $NewVMAdapter.VLan = $VLan
+            $NewVMAdapter.IPv4 = $IPv4
+            $NewVMAdapter.IPv6 = $IPv6
+            $VMAdapters += @( $NewVMAdapter )
         } # foreach
 
         # Assemble the Data Disks this VM will use
-        [System.Collections.Hashtable[]] $DataVhds = @()
+        [LabDataVHD[]] $DataVhds = @()
         [Int] $DataVhdCount = 0
         foreach ($VMDataVhd in $VM.DataVhds.DataVhd)
         {
             $DataVhdCount++
+
             # Load all the VHD properties and check they are valid
-            [String] $Vhd = $VMDataVhd.VHD
-            if (! $Vhd)
+            [String] $Vhd = $VMDataVhd.Vhd
+            if (-not $VMDataVhd.Vhd)
             {
                 $ExceptionParameters = @{
                     errorId = 'VMDataDiskVHDEmptyError'
@@ -2554,85 +2554,100 @@ function Get-LabVM {
                         -f $VMName)
                 }
                 ThrowException @ExceptionParameters
-            }
+            } # if
+
             # Adjust the path to be relative to the Virtual Hard Disks folder of the VM
             # if it doesn't contain a root (e.g. c:\)
-            if (! [System.IO.Path]::IsPathRooted($Vhd))
+            if (-not [System.IO.Path]::IsPathRooted($Vhd))
             {
                 $Vhd = Join-Path `
                     -Path $LabPath `
                     -ChildPath "$($VMName)\Virtual Hard Disks\$Vhd"
-            }
-            
+            } # if
+
             # Does the VHD already exist?
             $Exists = Test-Path `
                 -Path $Vhd
 
+            # Create the new Data VHD object
+            $NewDataVHD = New-Object `
+                -TypeName LabDataVHD
+            $NewDataVHD.Vhd = $Vhd
+
             # Get the Parent VHD and check it exists if passed
-            Remove-Variable -Name ParentVhd -ErrorAction SilentlyContinue
             if ($VMDataVhd.ParentVHD)
             {
-                [String] $ParentVhd = $VMDataVhd.ParentVHD
+                $NewDataVHD.ParentVhd = $VMDataVhd.ParentVHD
                 # Adjust the path to be relative to the Virtual Hard Disks folder of the VM
                 # if it doesn't contain a root (e.g. c:\)
-                if (! [System.IO.Path]::IsPathRooted($ParentVhd))
+                if (-not [System.IO.Path]::IsPathRooted($NewDataVHD.ParentVhd))
                 {
-                    $ParentVhd = Join-Path `
+                    $NewDataVHD.ParentVhd = Join-Path `
                         -Path $Lab.labbuilderconfig.settings.fullconfigpath `
-                        -ChildPath $ParentVhd
+                        -ChildPath $NewDataVHD.ParentVhd
                 }
-                if (-not (Test-Path -Path $ParentVhd))
+                if (-not (Test-Path -Path $NewDataVHD.ParentVhd))
                 {
                     $ExceptionParameters = @{
                         errorId = 'VMDataDiskParentVHDNotFoundError'
                         errorCategory = 'InvalidArgument'
                         errorMessage = $($LocalizedData.VMDataDiskParentVHDNotFoundError `
-                            -f $VMName,$ParentVhd)
+                            -f $VMName,$NewDataVHD.ParentVhd)
                     }
                     ThrowException @ExceptionParameters
-                }
-            }
+                } # if
+            } # if
 
             # Get the Source VHD and check it exists if passed
-            Remove-Variable -Name SourceVhd -ErrorAction SilentlyContinue
             if ($VMDataVhd.SourceVHD)
             {
-                [String] $SourceVhd = $VMDataVhd.SourceVHD
+                $NewDataVHD.SourceVhd = $VMDataVhd.SourceVHD
                 # Adjust the path to be relative to the Virtual Hard Disks folder of the VM
                 # if it doesn't contain a root (e.g. c:\)
-                if (! [System.IO.Path]::IsPathRooted($SourceVhd))
+                if (-not [System.IO.Path]::IsPathRooted($NewDataVHD.SourceVhd))
                 {
-                    $SourceVhd = Join-Path `
+                    $NewDataVHD.SourceVhd = Join-Path `
                         -Path $Lab.labbuilderconfig.settings.fullconfigpath `
-                        -ChildPath $SourceVhd
-                }
-                if (! (Test-Path -Path $SourceVhd))
+                        -ChildPath $NewDataVHD.SourceVhd
+                } # if
+                if (-not (Test-Path -Path $NewDataVHD.SourceVhd))
                 {
                     $ExceptionParameters = @{
                         errorId = 'VMDataDiskSourceVHDNotFoundError'
                         errorCategory = 'InvalidArgument'
                         errorMessage = $($LocalizedData.VMDataDiskSourceVHDNotFoundError `
-                            -f $VMName,$SourceVhd)
+                            -f $VMName,$NewDataVHD.SourceVhd)
                     }
                     ThrowException @ExceptionParameters
-                }
-            }
+                } # if
+            } # if
 
             # Get the disk size if provided
-            Remove-Variable -Name Size -ErrorAction SilentlyContinue
             if ($VMDataVhd.Size)
             {
-                $Size = (Invoke-Expression $VMDataVhd.size)         
-            }
+                $NewDataVHD.Size = (Invoke-Expression $VMDataVhd.Size)
+            } # if
 
-            [Boolean] $Shared = ($VMDataVhd.shared -eq 'Y')
+            # Get the Shared flag
+            $NewDataVHD.Shared = ($VMDataVhd.Shared -eq 'Y')
+
+            # Get the Support Persistent Reservations
+            $NewDataVHD.SupportPR = ($VMDataVhd.SupportPR -eq 'Y')
+            if ($NewDataVHD.SupportPR -and -not $NewDataVHD.Shared)
+            {
+                $ExceptionParameters = @{
+                    errorId = 'VMDataDiskSupportPRError'
+                    errorCategory = 'InvalidArgument'
+                    errorMessage = $($LocalizedData.VMDataDiskSupportPRError `
+                        -f $VMName,$VHD)
+                }
+                ThrowException @ExceptionParameters
+            } # if
 
             # Validate the data disk type specified
-            Remove-Variable -Name Type -ErrorAction SilentlyContinue
-            if ($VMDataVhd.type)
+            if ($VMDataVhd.Type)
             {
-                [String] $VhdType = $VMDataVhd.type
-                switch ($VhdType)
+                switch ($VMDataVhd.Type)
                 {
                     'fixed'
                     {
@@ -2644,7 +2659,7 @@ function Get-LabVM {
                     }
                     'differencing'
                     {
-                        if (-not $ParentVhd)
+                        if (-not $NewDataVHD.ParentVhd)
                         {
                             $ExceptionParameters = @{
                                 errorId = 'VMDataDiskParentVHDMissingError'
@@ -2653,8 +2668,8 @@ function Get-LabVM {
                                     -f $VMName)
                             }
                             ThrowException @ExceptionParameters
-                        }
-                        if ($Shared)
+                        } # if
+                        if ($NewDataVHD.Shared)
                         {
                             $ExceptionParameters = @{
                                 errorId = 'VMDataDiskSharedDifferencingError'
@@ -2662,8 +2677,8 @@ function Get-LabVM {
                                 errorMessage = $($LocalizedData.VMDataDiskSharedDifferencingError `
                                     -f $VMName,$VHD)
                             }
-                            ThrowException @ExceptionParameters                            
-                        }
+                            ThrowException @ExceptionParameters
+                        } # if
                     }
                     Default
                     {
@@ -2671,72 +2686,61 @@ function Get-LabVM {
                             errorId = 'VMDataDiskUnknownTypeError'
                             errorCategory = 'InvalidArgument'
                             errorMessage = $($LocalizedData.VMDataDiskUnknownTypeError `
-                                -f $VMName,$VHD,$VhdType)
+                                -f $VMName,$VHD,$VMDataVhd.Type)
                         }
                         ThrowException @ExceptionParameters
                     }
-                }
-            }
-
-            # Get the Support Persistent Reservations
-            [Boolean] $SupportPR = ($VMDataVhd.supportPR -eq 'Y')
-            if ($SupportPR -and -not $Shared)
-            {
-                $ExceptionParameters = @{
-                    errorId = 'VMDataDiskSupportPRError'
-                    errorCategory = 'InvalidArgument'
-                    errorMessage = $($LocalizedData.VMDataDiskSupportPRError `
-                        -f $VMName,$VHD)
-                }
-                ThrowException @ExceptionParameters
-            }
+                } # switch
+                $NewDataVHD.VHDType = [LabVHDType]::$($VMDataVhd.Type)
+            } # if
 
             # Get Partition Style for the new disk.
-            Remove-Variable -Name PartitionStyle -ErrorAction SilentlyContinue
-            if ($VMDataVhd.partitionstyle)
+            if ($VMDataVhd.PartitionStyle)
             {
-                [String] $PartitionStyle = $VMDataVhd.partitionstyle
-                if ($PartitionStyle -and ($PartitionStyle -notin 'MBR','GPT'))
+                $PartitionStyle = [LabPartitionStyle]::$($VMDataVhd.PartitionStyle)
+                if (-not $PartitionStyle)
                 {
                     $ExceptionParameters = @{
                         errorId = 'VMDataDiskPartitionStyleError'
                         errorCategory = 'InvalidArgument'
                         errorMessage = $($LocalizedData.VMDataDiskPartitionStyleError `
-                            -f $VMName,$VHD,$PartitionStyle)
+                            -f $VMName,$VHD,$VMDataVhd.PartitionStyle)
                     }
                     ThrowException @ExceptionParameters
-                }
-            }
+                } # if
+                $NewDataVHD.PartitionStyle = $PartitionStyle
+            } # if
 
             # Get file system for the new disk.
-            Remove-Variable -Name FileSystem -ErrorAction SilentlyContinue
-            if ($VMDataVhd.filesystem)
+            if ($VMDataVhd.FileSystem)
             {
-                [String] $FileSystem = $VMDataVhd.filesystem
-                if ($FileSystem -notin 'FAT','FAT32','exFAT','NTFS','ReFS')
+                $FileSystem = [LabFileSystem]::$($VMDataVhd.FileSystem)
+                if (-not $FileSystem)
                 {
                     $ExceptionParameters = @{
                         errorId = 'VMDataDiskFileSystemError'
                         errorCategory = 'InvalidArgument'
                         errorMessage = $($LocalizedData.VMDataDiskFileSystemError `
-                            -f $VMName,$VHD,$FileSystem)
+                            -f $VMName,$VHD,$VMDataVhd.FileSystem)
                     }
                     ThrowException @ExceptionParameters
-                }
-            }
+                } # if
+                $NewDataVHD.FileSystem = $FileSystem
+            } # if
 
             # Has a file system label been provided?
-            Remove-Variable -Name FileSystemLabel -ErrorAction SilentlyContinue
-            if ($VMDataVhd.filesystemlabel)
+            if ($VMDataVhd.FileSystemLabel)
             {
-                [String] $FileSystemLabel = $VMDataVhd.filesystemlabel
-            }
-            
+                $NewDataVHD.FileSystemLabel = $VMDataVhd.FileSystemLabel
+            } # if
+
             # if the Partition Style, File System or File System Label has been
             # provided then ensure Partition Style and File System are set.
-            if ($PartitionStyle -or $FileSystem -or $FileSystemLabel)
+            if ($NewDataVHD.PartitionStyle `
+                -or $NewDataVHD.FileSystem `
+                -or $NewDataVHD.FileSystemLabel)
             {
-                if (-not $PartitionStyle)
+                if (-not $NewDataVHD.PartitionStyle)
                 {
                     $ExceptionParameters = @{
                         errorId = 'VMDataDiskPartitionStyleMissingError'
@@ -2745,8 +2749,8 @@ function Get-LabVM {
                             -f $VMName,$VHD)
                     }
                     ThrowException @ExceptionParameters
-                }
-                if (-not $FileSystem)
+                } # if
+                if (-not $NewDataVHD.FileSystem)
                 {
                     $ExceptionParameters = @{
                         errorId = 'VMDataDiskFileSystemMissingError'
@@ -2755,15 +2759,13 @@ function Get-LabVM {
                             -f $VMName,$VHD)
                     }
                     ThrowException @ExceptionParameters
-                }
-            }
+                } # if
+            } # if
 
             # Get the Folder to copy and check it exists if passed
-            Remove-Variable -Name CopyFolders -ErrorAction SilentlyContinue
             if ($VMDataVhd.CopyFolders)
             {
-                [String]$CopyFolders = $VMDataVhd.CopyFolders
-                foreach ($CopyFolder in ($CopyFolders -Split ','))
+                foreach ($CopyFolder in ($VMDataVhd.CopyFolders -Split ','))
                 {
                     # Adjust the path to be relative to the configuration folder 
                     # if it doesn't contain a root (e.g. c:\)
@@ -2772,7 +2774,7 @@ function Get-LabVM {
                         $CopyFolder = Join-Path `
                             -Path $Lab.labbuilderconfig.settings.fullconfigpath `
                             -ChildPath $CopyFolder
-                    }
+                    } # if
                     if (-not (Test-Path -Path $CopyFolder -Type Container))
                     {
                     $ExceptionParameters = @{
@@ -2782,16 +2784,16 @@ function Get-LabVM {
                             -f $VMName,$VHD,$CopyFolder)
                         }
                     ThrowException @ExceptionParameters 
-                    }                   
-                }
-            } 
-            
+                    }
+                } # foreach
+                $NewDataVHD.CopyFolders = $VMDataVhd.CopyFolders
+            } # if
+
             # Should the Source VHD be moved rather than copied
-            Remove-Variable -Name MoveSourceVHD -ErrorAction SilentlyContinue
             if ($VMDataVhd.MoveSourceVHD)
             {
-                [Boolean] $MoveSourceVHD = ($VMDataVhd.MoveSourceVHD -eq 'Y')
-                if (! $SourceVHD)
+                $NewDataVHD.MoveSourceVHD = ($VMDataVhd.MoveSourceVHD -eq 'Y')
+                if (-not $NewDataVHD.SourceVHD)
                 {
                     $ExceptionParameters = @{
                         errorId = 'VMDataDiskSourceVHDIfMoveError'
@@ -2799,14 +2801,14 @@ function Get-LabVM {
                         errorMessage = $($LocalizedData.VMDataDiskSourceVHDIfMoveError `
                             -f $VMName,$VHD)
                     }
-                    ThrowException @ExceptionParameters                        
-                }
-            }
+                    ThrowException @ExceptionParameters
+                } # if
+            } # if
 
             # if the data disk file doesn't exist then some basic parameters MUST be provided
             if (-not $Exists `
-                -and ((( $VhdType -notin ('fixed','dynamic','differencing') ) -or ($null -eq $Size) -or ($Size -eq 0) ) `
-                -and -not $SourceVhd ))
+                -and ( ( ( -not $NewDataVHD.VhdType ) -or ( $NewDataVHD.Size -eq 0) ) `
+                -and -not $NewDataVHD.SourceVhd ) )
             {
                 $ExceptionParameters = @{
                     errorId = 'VMDataDiskCantBeCreatedError'
@@ -2814,24 +2816,10 @@ function Get-LabVM {
                     errorMessage = $($LocalizedData.VMDataDiskCantBeCreatedError `
                         -f $VMName,$VHD)
                 }
-                ThrowException @ExceptionParameters                    
-            }
-                        
-            # Write the values to the array
-            $DataVhds += @{
-                vhd = $Vhd;
-                type = $VhdType;
-                size = $Size
-                sourcevhd = $SourceVHD;
-                parentvhd = $ParentVHD;
-                shared = $Shared;
-                supportPR = $SupportPR;
-                moveSourceVHD = $MoveSourceVHD;
-                copyfolders = $CopyFolders;
-                partitionstyle = $PartitionStyle;
-                filesystem = $FileSystem;
-                filesystemlabel = $FileSystemLabel;
-            }
+                ThrowException @ExceptionParameters
+            } # if
+
+            $DataVHDs += @( $NewDataVHD )
         } # foreach
 
         # Does the VM have an Unattend file specified?
@@ -2872,7 +2860,7 @@ function Get-LabVM {
             {
                 $SetupComplete = Join-Path `
                     -Path $Lab.labbuilderconfig.settings.fullconfigpath `
-                    -ChildPath $VM.SetupComplete                
+                    -ChildPath $VM.SetupComplete
             } # if
             if ([System.IO.Path]::GetExtension($SetupComplete).ToLower() -notin '.ps1','.cmd' )
             {
@@ -2896,42 +2884,48 @@ function Get-LabVM {
             } # if
         } # if
 
+        # Create the Lab DSC object
+        $LabDSC = New-Object `
+            -TypeName LabDSC
+
+        $LabDSC.ConfigName = $VM.DSC.ConfigName
+
         # Load the DSC Config File setting and check it
-        [String] $DSCConfigFile = ''
+        [String] $LabDSC.ConfigFile = ''
         if ($VM.DSC.ConfigFile) 
         {
             if (-not [System.IO.Path]::IsPathRooted($VM.DSC.ConfigFile))
             {
-                $DSCConfigFile = Join-Path `
+                $LabDSC.ConfigFile = Join-Path `
                     -Path $Lab.labbuilderconfig.settings.dsclibrarypathfull `
                     -ChildPath $VM.DSC.ConfigFile
             }
             else
             {
-                $DSCConfigFile = $VM.DSC.ConfigFile
+                $LabDSC.ConfigFile = $VM.DSC.ConfigFile
             } # if
 
-            if ([System.IO.Path]::GetExtension($DSCConfigFile).ToLower() -ne '.ps1' )
+            if ([System.IO.Path]::GetExtension($LabDSC.ConfigFile).ToLower() -ne '.ps1' )
             {
                 $ExceptionParameters = @{
                     errorId = 'DSCConfigFileBadTypeError'
                     errorCategory = 'InvalidArgument'
                     errorMessage = $($LocalizedData.DSCConfigFileBadTypeError `
-                        -f $VMName,$DSCConfigFile)
+                        -f $VMName,$LabDSC.ConfigFile)
                 }
                 ThrowException @ExceptionParameters
             } # if
 
-            if (-not (Test-Path $DSCConfigFile))
+            if (-not (Test-Path $LabDSC.ConfigFile))
             {
                 $ExceptionParameters = @{
                     errorId = 'DSCConfigFileMissingError'
                     errorCategory = 'InvalidArgument'
                     errorMessage = $($LocalizedData.DSCConfigFileMissingError `
-                        -f $VMName,$DSCConfigFile)
+                        -f $VMName,$LabDSC.ConfigFile)
                 }
                 ThrowException @ExceptionParameters
-            }
+            } # if
             if (-not $VM.DSC.ConfigName)
             {
                 $ExceptionParameters = @{
@@ -2941,24 +2935,20 @@ function Get-LabVM {
                         -f $VMName)
                 }
                 ThrowException @ExceptionParameters
-            }
-        }
-        
+            } # if
+        } # if
+
         # Load the DSC Parameters
-        [String] $DSCParameters = ''
+        [String] $LabDSC.Parameters = ''
         if ($VM.DSC.Parameters)
         {
             # Correct any LFs into CRLFs to ensure the new line format is the same when
             # pulled from the XML.
-            $DSCParameters = ($VM.DSC.Parameters -replace "`r`n","`n") -replace "`n","`r`n"
+            $LabDSC.Parameters = ($VM.DSC.Parameters -replace "`r`n","`n") -replace "`n","`r`n"
         } # if
 
         # Load the DSC Parameters
-        [Boolean] $DSCLogging = $False
-        if ($VM.DSC.Logging -eq 'Y')
-        {
-            $DSCLogging = $True
-        } # if
+        [Boolean] $LabDSC.Logging = ($VM.DSC.Logging -eq 'Y')
 
         # Get the Memory Startup Bytes (from the template or VM)
         [Int64] $MemoryStartupBytes = 1GB
@@ -2972,15 +2962,15 @@ function Get-LabVM {
         } # if
 
         # Get the Dynamic Memory Enabled flag
-        [String] $DynamicMemoryEnabled = ''
+        [Boolean] $DynamicMemoryEnabled = $True
         if ($VM.DynamicMemoryEnabled)
         {
-            $DynamicMemoryEnabled = $VM.DynamicMemoryEnabled
-        }        
+            $DynamicMemoryEnabled = ($VM.DynamicMemoryEnabled -eq 'Y')
+        }
         elseif ($VMTemplate.DynamicMemoryEnabled)
         {
             $DynamicMemoryEnabled = $VMTemplate.DynamicMemoryEnabled
-        } #if
+        } # if
         
         # Get the Memory Startup Bytes (from the template or VM)
         [Int] $ProcessorCount = 1
@@ -3003,12 +2993,11 @@ function Get-LabVM {
         {
             $ExposeVirtualizationExtensions=$VMTemplate.ExposeVirtualizationExtensions
         } # if
-        
-        
-        [String] $UseDifferencingDisk = 'Y'
+
+        [Boolean] $UseDifferencingDisk = $True
         if ($VM.UseDifferencingDisk -eq 'N')
         {
-            $UseDifferencingDisk = 'N'
+            $UseDifferencingDisk = $False
         } # if
 
         # Get the Integration Services flags
@@ -3020,14 +3009,14 @@ function Get-LabVM {
         {
             $IntegrationServices = $VMTemplate.IntegrationServices
         } # if
-        
+
         # Get the Administrator password (from the template or VM)
         [String] $AdministratorPassword = ''
         if ($VM.administratorpassword) 
         {
             $AdministratorPassword = $VM.administratorpassword
         }
-        elseif ($VMTemplate.administratorpassword) 
+        elseif ($VMTemplate.administratorpassword)
         {
             $AdministratorPassword = $VMTemplate.administratorpassword
         } # if
@@ -3038,7 +3027,7 @@ function Get-LabVM {
         {
             $ProductKey = $VM.productkey
         }
-        elseif ($VMTemplate.productkey) 
+        elseif ($VMTemplate.productkey)
         {
             $ProductKey = $VMTemplate.productkey
         } # if
@@ -3055,62 +3044,60 @@ function Get-LabVM {
         } # if
 
         # Get the OS Type
-        [String] $OSType = 'Server'
-        if ($VM.ostype) 
+        $OSType = [LabOStype]::Server
+        if ($VM.OSType)
         {
-            $OSType = $VM.ostype
+            $OSType = $VM.OSType
         }
-        elseif ($VMTemplate.ostype) 
+        elseif ($VMTemplate.OSType)
         {
-            $OSType = $VMTemplate.ostype
-        } # if 
+            $OSType = $VMTemplate.OSType
+        } # if
 
         # Get the Bootorder
         [Byte] $Bootorder = [Byte]::MaxValue
-        if ($VM.bootorder) 
+        if ($VM.bootorder)
         {
             $Bootorder = $VM.bootorder
-        } # if 
+        } # if
 
         # Get the Packages
         [String] $Packages = $null
-        if ($VM.packages) 
+        if ($VM.packages)
         {
             $Packages = $VM.packages
         }
-        elseif ($VMTemplate.packages) 
+        elseif ($VMTemplate.packages)
         {
             $Packages = $VMTemplate.packages
-        } # if 
+        } # if
 
-        $LabVMs += @{
-            Name = $VMName;
-            ComputerName = $VM.ComputerName;
-            Template = $VM.template;
-            ParentVHD = $ParentVHDPath;
-            UseDifferencingDisk = $UseDifferencingDisk;
-            MemoryStartupBytes = $MemoryStartupBytes;
-            DynamicMemoryEnabled = $DynamicMemoryEnabled;
-            ProcessorCount = $ProcessorCount;
-            ExposeVirtualizationExtensions = $ExposeVirtualizationExtensions;
-            IntegrationServices = $IntegrationServices;
-            AdministratorPassword = $AdministratorPassword;
-            ProductKey = $ProductKey;
-            TimeZone =$Timezone;
-            Adapters = $VMAdapters;
-            DataVHDs = $DataVHDs;
-            UnattendFile = $UnattendFile;
-            SetupComplete = $SetupComplete;
-            DSCConfigFile = $DSCConfigFile;
-            DSCConfigName = $VM.DSC.ConfigName;
-            DSCParameters = $DSCParameters;
-            DSCLogging = $DSCLogging;
-            OSType = $OSType;
-            Packages = $Packages;
-            VMRootPath = (Join-Path -Path $LabPath -ChildPath $VMName);
-            LabBuilderFilesPath = (Join-Path -Path $LabPath -ChildPath "$VMName\LabBuilder Files");
-            Bootorder = $Bootorder;
-        }
+        $LabVM = New-Object `
+            -TypeName LabVM
+        $LabVM.Name = $VMName
+        $LabVM.ComputerName = $VM.ComputerName
+        $LabVM.Template = $VM.template
+        $LabVM.ParentVHD = $ParentVHDPath
+        $LabVM.UseDifferencingDisk = $UseDifferencingDisk
+        $LabVM.MemoryStartupBytes = $MemoryStartupBytes
+        $LabVM.DynamicMemoryEnabled = $DynamicMemoryEnabled
+        $LabVM.ProcessorCount = $ProcessorCount
+        $LabVM.ExposeVirtualizationExtensions = $ExposeVirtualizationExtensions
+        $LabVM.IntegrationServices = $IntegrationServices
+        $LabVM.AdministratorPassword = $AdministratorPassword
+        $LabVM.ProductKey = $ProductKey
+        $LabVM.TimeZone =$Timezone
+        $LabVM.UnattendFile = $UnattendFile
+        $LabVM.SetupComplete = $SetupComplete
+        $LabVM.OSType = $OSType
+        $LabVM.Adapters = $VMAdapters
+        $LabVM.DataVHDs = $DataVHDs
+        $LabVM.Packages = $Packages
+        $LabVM.Bootorder = $Bootorder
+        $LabVM.DSC = $LabDSC
+        $LabVM.VMRootPath = (Join-Path -Path $LabPath -ChildPath $VMName)
+        $LabVM.LabBuilderFilesPath = (Join-Path -Path $LabPath -ChildPath "$VMName\LabBuilder Files")
+        $LabVMs += @( $LabVM )
     } # foreach
 
     Return $LabVMs
@@ -3119,33 +3106,32 @@ function Get-LabVM {
 
 <#
 .SYNOPSIS
-   Initializes the Virtual Machines used by a Lab from a provided array.
+    Initializes the Virtual Machines used by a Lab from a provided array.
 .DESCRIPTION
-   Takes an array of Virtual Machines that were configured in the Lab.
+    Takes an array of LabVM objects that were configured in the Lab.
 .PARAMETER Lab
-   Contains the Lab object that was loaded by the Get-Lab object.
+    Contains the Lab object that was loaded by the Get-Lab object.
 .PARAMETER Name
-   An optional array of VMs.
-   
-   Only VMs matching names in this list will be initialized.
-.PARAMETER VMs
-   Array of Virtual Machines pulled from a Lab object.
+    An optional array of VM names.
 
-   If not provided it will attempt to pull the list from the Lab.
+    Only VMs matching names in this list will be initialized.
+.PARAMETER VMs
+    An array of LabVM objects pulled from a Lab object.
+
+    If not provided it will attempt to pull the list from the Lab object.
 .EXAMPLE
-   $Lab = Get-Lab -ConfigPath c:\mylab\config.xml
-   $VMTemplates = Get-LabVMTemplate -Lab $Lab
-   $VMs = Get-LabVs -Lab $Lab -VMTemplates $VMTemplates
-   Initialize-LabVM `
-    -Lab $Lab `
-    -VMs $VMs
-   Initializes the Virtual Machines in the configured in the Lab c:\mylab\config.xml
+    $Lab = Get-Lab -ConfigPath c:\mylab\config.xml
+    $VMs = Get-LabVs -Lab $Lab
+    Initialize-LabVM `
+        -Lab $Lab `
+        -VMs $VMs
+    Initializes the Virtual Machines in the configured in the Lab c:\mylab\config.xml
 .EXAMPLE
-   $Lab = Get-Lab -ConfigPath c:\mylab\config.xml
-   Initialize-LabVMs -Lab $Lab
-   Initializes the Virtual Machines in the configured in the Lab c:\mylab\config.xml
+    $Lab = Get-Lab -ConfigPath c:\mylab\config.xml
+    Initialize-LabVMs -Lab $Lab
+    Initializes the Virtual Machines in the configured in the Lab c:\mylab\config.xml
 .OUTPUTS
-   None.
+    None.
 #>
 function Initialize-LabVM {
     [CmdLetBinding()]
@@ -3164,13 +3150,13 @@ function Initialize-LabVM {
         
         [Parameter(
             Position=3)]
-        [Array] $VMs
+        [LabVM[]] $VMs
     )
     
     # if VMs array not passed, pull it from config.
     if (-not $PSBoundParameters.ContainsKey('VMs'))
     {
-        $VMs = Get-LabVM `
+        [LabVM[]] $VMs = Get-LabVM `
             @PSBoundParameters
     } # if
     
@@ -3233,12 +3219,15 @@ function Initialize-LabVM {
             $VMBootDiskPath = "$VHDPath\$($VM.Name) Boot Disk.vhdx"
             if (-not (Test-Path -Path $VMBootDiskPath))
             {
-                if ($VM.UseDifferencingDisk -eq 'Y')
+                if ($VM.UseDifferencingDisk)
                 {
                     Write-Verbose -Message $($LocalizedData.CreatingVMDiskMessage `
                         -f $VM.Name,$VMBootDiskPath,'Differencing Boot')
 
-                    $Null = New-VHD -Differencing -Path $VMBootDiskPath -ParentPath $VM.ParentVHD
+                    $Null = New-VHD `
+                        -Differencing `
+                        -Path $VMBootDiskPath `
+                        -ParentPath $VM.ParentVHD
                 }
                 else
                 {
@@ -3291,40 +3280,31 @@ function Initialize-LabVM {
         } # if
         
         # Enable/Disable Dynamic Memory
-        if ($VM.DynamicMemoryEnabled)
+        if ($VM.DynamicMemoryEnabled -ne (Get-VMMemory -VMName $VM.Name).DynamicMemoryEnabled)
         {
-            [Boolean] $DynamicMemoryEnabled = ($VM.DynamicMemoryEnabled -ne 'N')
-            if ($DynamicMemoryEnabled -ne (Get-VMMemory -VMName $VM.Name).DynamicMemoryEnabled)
-            {
-                Set-VMMemory `
-                    -VMName $VM.Name `
-                    -DynamicMemoryEnabled:$DynamicMemoryEnabled
-            } # if
+            Set-VMMemory `
+                -VMName $VM.Name `
+                -DynamicMemoryEnabled:$($VM.DynamicMemoryEnabled)
         } # if
 
-        
         # if the ExposeVirtualizationExtensions is configured then try and set this on 
         # Virtual Processor. Only supported in certain builds on Windows 10/Server 2016 TP4.
-        if ($VM.ExposeVirtualizationExtensions)
+        if ($VM.ExposeVirtualizationExtensions -ne (Get-VMProcessor -VMName $VM.Name).ExposeVirtualizationExtensions)
         {
-            [Boolean] $ExposeVirtualizationExtensions = ($VM.ExposeVirtualizationExtensions -eq 'Y') 
-            if ($ExposeVirtualizationExtensions -ne (Get-VMProcessor -VMName $VM.Name).ExposeVirtualizationExtensions)
-            {
-                Set-VMProcessor `
-                    -VMName $VM.Name `
-                    -ExposeVirtualizationExtensions:$ExposeVirtualizationExtensions                
-            }   
-        }
+            Set-VMProcessor `
+                -VMName $VM.Name `
+                -ExposeVirtualizationExtensions:$VM.ExposeVirtualizationExtensions
+        } # if
 
         # Enable/Disable the Integration Services
         UpdateVMIntegrationServices `
             -VM $VM
-        
+
         # Update the data disks for the VM
         UpdateVMDataDisks `
             -Lab $Lab `
-            -VM $VM        
-            
+            -VM $VM
+
         # Create/Update the Management Network Adapter
         if ((Get-VMNetworkAdapter -VMName $VM.Name | Where-Object -Property Name -EQ $ManagementSwitchName).Count -eq 0)
         {
@@ -3339,7 +3319,10 @@ function Initialize-LabVM {
         $VMNetworkAdapter = Get-VMNetworkAdapter `
             -VMName $VM.Name `
             -Name $ManagementSwitchName
-        $null = $VMNetworkAdapter | Set-VMNetworkAdapterVlan -Access -VlanId $ManagementVlan
+        $null = $VMNetworkAdapter |
+            Set-VMNetworkAdapterVlan `
+                -Access `
+                -VlanId $ManagementVlan
 
         Write-Verbose -Message $($LocalizedData.SettingVMNetworkAdapterVlanMessage `
             -f $VM.Name,$ManagementSwitchName,'Management',$ManagementVlan)
@@ -3358,41 +3341,56 @@ function Initialize-LabVM {
                     -Name $VMAdapter.Name
             } # if
 
-            $VMNetworkAdapter = Get-VMNetworkAdapter -VMName $VM.Name -Name $VMAdapter.Name
-            $Vlan = $VMAdapter.VLan
-            if ($VLan)
+            $VMNetworkAdapter = Get-VMNetworkAdapter `
+                -VMName $VM.Name `
+                -Name $VMAdapter.Name
+            if ($VMAdapter.VLan)
             {
-                $null = $VMNetworkAdapter | Set-VMNetworkAdapterVlan -Access -VlanId $Vlan
+                $null = $VMNetworkAdapter |
+                    Set-VMNetworkAdapterVlan `
+                        -Access `
+                        -VlanId $VMAdapter.VLan
 
                 Write-Verbose -Message $($LocalizedData.SettingVMNetworkAdapterVlanMessage `
-                    -f $VM.Name,$VMAdapter.Name,'',$Vlan)
+                    -f $VM.Name,$VMAdapter.Name,'',$VMAdapter.VLan)
             }
             else
             {
-                $null = $VMNetworkAdapter | Set-VMNetworkAdapterVlan -Untagged
+                $null = $VMNetworkAdapter |
+                    Set-VMNetworkAdapterVlan `
+                        -Untagged
 
                 Write-Verbose -Message $($LocalizedData.ClearingVMNetworkAdapterVlanMessage `
                     -f $VM.Name,$VMAdapter.Name,'')
             } # if
 
-            if ($VMAdapter.MACAddress)
+            if ([String]::IsNullOrWhitespace($VMAdapter.MACAddress))
             {
-                $null = $VMNetworkAdapter | Set-VMNetworkAdapter -StaticMacAddress $VMAdapter.MACAddress
+                $null = $VMNetworkAdapter |
+                    Set-VMNetworkAdapter `
+                        -DynamicMacAddress
             }
             else
             {
-                $null = $VMNetworkAdapter | Set-VMNetworkAdapter -DynamicMacAddress
+                $null = $VMNetworkAdapter |
+                    Set-VMNetworkAdapter `
+                        -StaticMacAddress $VMAdapter.MACAddress
             } # if
 
             # Enable Device Naming
             if ((Get-Command -Name Set-VMNetworkAdapter).Parameters.ContainsKey('DeviceNaming'))
             {
-                $null = $VMNetworkAdapter | Set-VMNetworkAdapter -DeviceNaming On
-            }
+                $null = $VMNetworkAdapter |
+                    Set-VMNetworkAdapter `
+                        -DeviceNaming On
+            } # if
             if ($VMAdapter.MACAddressSpoofing -ne $VMNetworkAdapter.MACAddressSpoofing)
             {
-                $null = $VMNetworkAdapter | Set-VMNetworkAdapter -MacAddressSpoofing $VMAdapter.MACAddressSpoofing
-            }                
+                $MACAddressSpoofing = if ($VMAdapter.MACAddressSpoofing) {'On'} else {'Off'}
+                $null = $VMNetworkAdapter |
+                    Set-VMNetworkAdapter `
+                        -MacAddressSpoofing $MACAddressSpoofing
+            } # if
         } # foreach
 
         Install-LabVM `
@@ -3404,35 +3402,37 @@ function Initialize-LabVM {
 
 <#
 .SYNOPSIS
-   Removes all Lab Virtual Machines.
+    Removes all Lab Virtual Machines.
 .DESCRIPTION
-   This cmdlet is used to remove any Virtual Machines that were created as part of this
-   Lab.
+    This cmdlet is used to remove any Virtual Machines that were created as part of this
+    Lab.
 
-   It can also optionally delete the folder and all files created as part of this Lab
-   Virutal Machine.
+    It can also optionally delete the folder and all files created as part of this Lab
+    Virutal Machine.
 .PARAMETER Lab
-   Contains the Lab object that was loaded by the Get-Lab object.
+    Contains the Lab object that was loaded by the Get-Lab object.
 .PARAMETER Name
-   An optional array of VM names.
-   
-   Only VMs matching names in this list will be removed.
+    An optional array of VM names.
+
+    Only VMs matching names in this list will be removed.
 .PARAMETER VMs
-   The array of Virtual Machines pulled from the Lab using Get-LabVM.
+    The array of LabVM objects pulled from the Lab using Get-LabVM.
+
+    If not provided it will attempt to pull the list from the Lab object.
 .PARAMETER RemoveVMFolder
-   Causes the folder created to contain the Virtual Machine in this lab to be deleted.
+    Causes the folder created to contain the Virtual Machine in this lab to be deleted.
 .EXAMPLE
-   $Lab = Get-Lab -ConfigPath c:\mylab\config.xml
-   $VMTemplates = Get-LabVMTemplate -Lab $Lab
-   $VMs = Get-LabVs -Lab $Lab -VMTemplates $VMTemplates
-   Remove-LabVM -Lab $Lab -VMs $VMs
-   Removes any Virtual Machines configured in the Lab c:\mylab\config.xml
+    $Lab = Get-Lab -ConfigPath c:\mylab\config.xml
+    $VMTemplates = Get-LabVMTemplate -Lab $Lab
+    $VMs = Get-LabVs -Lab $Lab -VMTemplates $VMTemplates
+    Remove-LabVM -Lab $Lab -VMs $VMs
+    Removes any Virtual Machines configured in the Lab c:\mylab\config.xml
 .EXAMPLE
-   $Lab = Get-Lab -ConfigPath c:\mylab\config.xml
-   Remove-LabVM -Lab $Lab
-   Removes any Virtual Machines configured in the Lab c:\mylab\config.xml
+    $Lab = Get-Lab -ConfigPath c:\mylab\config.xml
+    Remove-LabVM -Lab $Lab
+    Removes any Virtual Machines configured in the Lab c:\mylab\config.xml
 .OUTPUTS
-   None.
+    None.
 #>
 function Remove-LabVM {
     [CmdLetBinding()]
@@ -3451,7 +3451,7 @@ function Remove-LabVM {
         
         [Parameter(
             Position=3)]
-        [Array] $VMs,
+        [LabVM[]] $VMs,
 
         [Parameter(
             Position=4)]
@@ -3462,7 +3462,7 @@ function Remove-LabVM {
     if (-not $PSBoundParameters.ContainsKey('VMs'))
     {
         $null = $PSBoundParameters.Remove('RemoveVMFolder')
-        $VMs = Get-LabVM `
+        [LabVM[]] $VMs = Get-LabVM `
             @PSBoundParameters
     } # if
 
@@ -3542,7 +3542,7 @@ function Remove-LabVM {
 
     - It will also ensure DSC is configured for the VM.
 .PARAMETER VM
-   The VM Object referring to the VM to start to.
+   The LabVM Object referring to the VM to start to.
 .EXAMPLE
    $Lab = Get-Lab -ConfigPath c:\mylab\config.xml
    $VMs = Get-LabVM -Lab $Lab
@@ -3564,7 +3564,7 @@ function Install-LabVM {
         [Parameter(
             Position=2)]
         [ValidateNotNullOrEmpty()]
-        [Hashtable] $VM
+        [LabVM] $VM
     )
 
     [String] $LabPath = $Lab.labbuilderconfig.settings.labpath
@@ -3579,7 +3579,7 @@ function Install-LabVM {
     } # if
 
     # We only perform this section of VM Initialization (DSC, Cert, etc) with Server OS
-    if ($VM.OSType -in ('Server','Nano'))
+    if ($VM.OSType -in ([LabOStype]::Server,[LabOStype]::Nano))
     {
         # Has this VM been initialized before (do we have a cert for it)
         if (-not (Test-Path "$LabPath\$($VM.Name)\LabBuilder Files\$Script:DSCEncryptionCert"))
@@ -3646,10 +3646,10 @@ function Install-LabVM {
    The IP Address to this VM will be added to the WSMan TrustedHosts list if it isn't already
    added or if it isn't set to '*'.
 .PARAMETER VM
-   The VM Object referring to the VM to connect to.
+   The LabVM Object referring to the VM to connect to.
 .PARAMETER ConnectTimeout
    The number of seconds the connection will attempt to be established for.
-   
+
    Defaults to 300 seconds.
 .EXAMPLE
    $Lab = Get-Lab -ConfigPath c:\mylab\config.xml
@@ -3668,7 +3668,7 @@ function Connect-LabVM
         [Parameter(
             Position=1,
             Mandatory=$true)]
-        [Hashtable] $VM,
+        [LabVM] $VM,
         
         [Parameter(
             Position=2)]
@@ -3687,14 +3687,14 @@ function Connect-LabVM
         -and -not $FatalException)
     {
         try
-        {                
+        {
             # Get the Management IP Address of the VM
             # We repeat this because the IP Address will only be assiged 
             # once the VM is fully booted.
             $IPAddress = GetVMManagementIPAddress `
                 -Lab $Lab `
                 -VM $VM
-            
+
             # Add the IP Address to trusted hosts if not already in it
             # This could be avoided if able to use SSL or if PS Direct is used.
             # Also, don't add if TrustedHosts is already *
@@ -3720,7 +3720,6 @@ function Connect-LabVM
             Write-Verbose -Message $($LocalizedData.ConnectingVMMessage `
                 -f $VM.Name,$IPAddress)
 
-            # TODO: Convert to PS Direct once supported for this cmdlet.
             $Session = New-PSSession `
                 -Name 'LabBuilder' `
                 -ComputerName $IPAddress `
@@ -3742,7 +3741,7 @@ function Connect-LabVM
             Start-Sleep -Seconds $Script:RetryConnectSeconds
         } # Try
     } # While
-    
+
     # if a fatal exception occured or the connection just couldn't be established
     # then throw an exception so it can be caught by the calling code.
     if ($FatalException -or ($null -eq $Session))
@@ -3767,9 +3766,9 @@ function Connect-LabVM
    This cmdlet will disconnect a session from a running VM using PSRemoting.
    
    The IP Address to this VM will be removed from the WSMan TrustedHosts list 
-   if it exists in it.   
+   if it exists in it.
 .PARAMETER VM
-   The VM Object referring to the VM to connect to.
+   The LabVM Object referring to the VM to disconnect from.
 .EXAMPLE
    $Lab = Get-Lab -ConfigPath c:\mylab\config.xml
    $VMs = Get-LabVM -Lab $Lab
@@ -3786,7 +3785,7 @@ function Disconnect-LabVM
         [Parameter(
             Position=1,
             Mandatory=$true)]
-        [Hashtable] $VM
+        [LabVM] $VM
     )
 
     [PSCredential] $AdminCredential = CreateCredential `
@@ -3799,19 +3798,19 @@ function Disconnect-LabVM
         -VM $VM
 
     try
-    {                
+    {
         # Look for the session
         $Session = Get-PSSession `
             -Name 'LabBuilder' `
             -ComputerName $IPAddress `
             -Credential $AdminCredential `
-            -ErrorAction Stop       
+            -ErrorAction Stop
 
         if (-not $Session)
         {
             # No session found to this machine so nothing to do.
             Write-Verbose -Message $($LocalizedData.VMSessionDoesNotExistMessage `
-                -f $VM.Name)        
+                -f $VM.Name)
         }
         else
         {
@@ -3820,7 +3819,7 @@ function Disconnect-LabVM
                 # Disconnect the session
                 $null = $Session | Disconnect-PSSession
                 Write-Verbose -Message $($LocalizedData.DisconnectingVMMessage `
-                    -f $VM.Name,$IPAddress)                    
+                    -f $VM.Name,$IPAddress)
             }
             # Remove the session
             $null = $Session | Remove-PSSession -ErrorAction SilentlyContinue

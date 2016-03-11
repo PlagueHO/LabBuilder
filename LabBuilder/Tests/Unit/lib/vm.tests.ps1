@@ -14,6 +14,9 @@ $Global:ArtifactPath = "$Global:ModuleRoot\Artifacts"
 $Global:ExpectedContentPath = "$Global:TestConfigPath\ExpectedContent"
 $null = New-Item -Path "$Global:ArtifactPath" -ItemType Directory -Force -ErrorAction SilentlyContinue
 
+# Make sure the Types are declared
+. "$Global:ModuleRoot\lib\type.ps1"
+
 InModuleScope LabBuilder {
 <#
 .SYNOPSIS
@@ -100,7 +103,7 @@ InModuleScope LabBuilder {
 
         Context 'Valid configuration is passed with null Integration Services' {
             [Array]$VMs = Get-LabVM -Lab $Lab -VMTemplates $Templates -Switches $Switches
-            $VMs[0].Remove('IntegrationServices')
+            $VMs[0].IntegrationServices = $null
             It 'Does not throw an Exception' {
                 { UpdateVMIntegrationServices -VM $VMs[0] } | Should Not Throw 
             }
@@ -199,7 +202,7 @@ InModuleScope LabBuilder {
         Context 'Valid configuration is passed with a DataVHD that exists but has different type' {
             $VMs[0].DataVHDs = @( @{
                 Vhd = 'DoesExist.vhdx'
-                Type = 'Fixed'
+                VhdType = 'Fixed'
                 Size = 10GB
                 
             } )
@@ -211,7 +214,7 @@ InModuleScope LabBuilder {
                     errorId = 'VMDataDiskVHDConvertError'
                     errorCategory = 'InvalidArgument'
                     errorMessage = $($LocalizedData.VMDataDiskVHDConvertError `
-                        -f $VMs[0].Name,$VMs[0].DataVHDs.Vhd,$VMs[0].DataVHDs.Type)
+                        -f $VMs[0].Name,$VMs[0].DataVHDs.Vhd,$VMs[0].DataVHDs.VhdType)
                 }
                 $Exception = GetException @ExceptionParameters
                 { UpdateVMDataDisks -Lab $Lab -VM $VMs[0] } | Should Throw 
@@ -233,7 +236,7 @@ InModuleScope LabBuilder {
         Context 'Valid configuration is passed with a DataVHD that exists but has smaller size' {
             $VMs[0].DataVHDs = @( @{
                 Vhd = 'DoesExist.vhdx'
-                Type = 'Fixed'
+                VhdType = 'Fixed'
                 Size = 10GB
             } )
             Mock Get-VHD -MockWith { @{
@@ -267,7 +270,7 @@ InModuleScope LabBuilder {
         Context 'Valid configuration is passed with a DataVHD that exists but has larger size' {
             $VMs[0].DataVHDs = @( @{
                 Vhd = 'DoesExist.vhdx'
-                Type = 'Fixed'
+                VhdType = 'Fixed'
                 Size = 30GB
             } )
             Mock Get-VHD -MockWith { @{
@@ -369,7 +372,7 @@ InModuleScope LabBuilder {
         Context 'Valid configuration is passed with a 10GB Fixed DataVHD that does not exist' {
             $VMs[0].DataVHDs = @( @{
                 Vhd = 'DoesNotExist.vhdx'
-                Type = 'Fixed'
+                VhdType = 'Fixed'
                 Size = 10GB
             } )
             It 'Does not throw an Exception' {
@@ -392,7 +395,7 @@ InModuleScope LabBuilder {
         Context 'Valid configuration is passed with a 10GB Dynamic DataVHD that does not exist' {
             $VMs[0].DataVHDs = @( @{
                 Vhd = 'DoesNotExist.vhdx'
-                Type = 'Dynamic'
+                VhdType = 'Dynamic'
                 Size = 10GB
             } )
             It 'Does not throw an Exception' {
@@ -415,7 +418,7 @@ InModuleScope LabBuilder {
         Context 'Valid configuration is passed with a 10GB Dynamic DataVHD that does not exist and PartitionStyle and FileSystem is set' {
             $VMs[0].DataVHDs = @( @{
                 Vhd = 'DoesNotExist.vhdx'
-                Type = 'Dynamic'
+                VhdType = 'Dynamic'
                 Size = 10GB
                 PartitionStyle = 'GPT'
                 FileSystem = 'NTFS'
@@ -440,7 +443,7 @@ InModuleScope LabBuilder {
         Context 'Valid configuration is passed with a 10GB Dynamic DataVHD that does not exist and PartitionStyle, FileSystem and CopyFolders is set' {
             $VMs[0].DataVHDs = @( @{
                 Vhd = 'DoesNotExist.vhdx'
-                Type = 'Dynamic'
+                VhdType = 'Dynamic'
                 Size = 10GB
                 PartitionStyle = 'GPT'
                 FileSystem = 'NTFS'
@@ -466,7 +469,7 @@ InModuleScope LabBuilder {
         Context 'Valid configuration is passed with a 10GB Dynamic DataVHD that does not exist and CopyFolders is set' {
             $VMs[0].DataVHDs = @( @{
                 Vhd = 'DoesNotExist.vhdx'
-                Type = 'Dynamic'
+                VhdType = 'Dynamic'
                 Size = 10GB
                 CopyFolders = "$Global:TestConfigPath\ExpectedContent"
             } )
@@ -490,7 +493,7 @@ InModuleScope LabBuilder {
         Context 'Valid configuration is passed with a 10GB Differencing DataVHD that does not exist where ParentVHD is not set' {
             $VMs[0].DataVHDs = @( @{
                 Vhd = 'DoesNotExist.vhdx'
-                Type = 'Differencing'
+                VhdType = 'Differencing'
                 Size = 10GB
             } )
             It 'Throws VMDataDiskParentVHDMissingError Exception' {
@@ -520,7 +523,7 @@ InModuleScope LabBuilder {
         Context 'Valid configuration is passed with a 10GB Differencing DataVHD that does not exist where ParentVHD does not exist' {
             $VMs[0].DataVHDs = @( @{
                 Vhd = 'DoesNotExist.vhdx'
-                Type = 'Differencing'
+                VhdType = 'Differencing'
                 Size = 10GB
                 ParentVHD = 'DoesNotExist.vhdx'
             } )
@@ -551,7 +554,7 @@ InModuleScope LabBuilder {
         Context 'Valid configuration is passed with a 10GB Differencing DataVHD that does not exist' {
             $VMs[0].DataVHDs = @( @{
                 Vhd = 'DoesNotExist.vhdx'
-                Type = 'Dynamic'
+                VhdType = 'Dynamic'
                 Size = 10GB
                 ParentVHD = 'DoesExist.vhdx'
             } )
@@ -572,36 +575,6 @@ InModuleScope LabBuilder {
                 Assert-MockCalled New-Item -Exactly 0
             }
         }
-        Context 'Valid configuration is passed with a DataVHD that does not exist and an unknown Type' {
-            $VMs[0].DataVHDs = @( @{
-                Vhd = 'DoesNotExist.vhdx'
-                Type = 'Unknown'
-                Size = 10GB
-            } )
-            It 'Throws VMDataDiskUnknownTypeError Exception' {
-                $ExceptionParameters = @{
-                    errorId = 'VMDataDiskUnknownTypeError'
-                    errorCategory = 'InvalidArgument'
-                    errorMessage = $($LocalizedData.VMDataDiskUnknownTypeError `
-                        -f $VMs[0].Name,$VMs[0].DataVHDs[0].Vhd,$VMs[0].DataVHDs[0].Type)
-                }
-                $Exception = GetException @ExceptionParameters
-                { UpdateVMDataDisks -Lab $Lab -VM $VMs[0] } | Should Throw $Exception
-            }
-            It 'Calls Mocked commands' {
-                Assert-MockCalled Get-VHD -Exactly 0
-                Assert-MockCalled Resize-VHD -Exactly 0
-                Assert-MockCalled Move-Item -Exactly 0
-                Assert-MockCalled Copy-Item -Exactly 0
-                Assert-MockCalled New-VHD -Exactly 0
-                Assert-MockCalled Get-VMHardDiskDrive -Exactly 0
-                Assert-MockCalled Add-VMHardDiskDrive -Exactly 0
-                Assert-MockCalled InitializeVHD -Exactly 0
-                Assert-MockCalled Mount-VHD -Exactly 0
-                Assert-MockCalled Dismount-VHD -Exactly 0
-                Assert-MockCalled New-Item -Exactly 0
-            }
-        }
         Mock Get-VHD -MockWith { @{
             VhdType =  'Fixed'
             Size = 10GB
@@ -610,7 +583,7 @@ InModuleScope LabBuilder {
             Mock Get-VMHardDiskDrive -MockWith { @{ Path = 'DoesExist.vhdx' } }
             $VMs[0].DataVHDs = @( @{
                 Vhd = 'DoesExist.vhdx'
-                Type = 'Fixed'
+                VhdType = 'Fixed'
                 Size = 10GB
             } )
             It 'Does not throw an Exception' {

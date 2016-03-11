@@ -14,6 +14,9 @@ $Global:ArtifactPath = "$Global:ModuleRoot\Artifacts"
 $Global:ExpectedContentPath = "$Global:TestConfigPath\ExpectedContent"
 $null = New-Item -Path "$Global:ArtifactPath" -ItemType Directory -Force -ErrorAction SilentlyContinue
 
+# Make sure the Types are declared
+. "$Global:ModuleRoot\lib\type.ps1"
+
 InModuleScope LabBuilder {
 <#
 .SYNOPSIS
@@ -136,7 +139,7 @@ InModuleScope LabBuilder {
 
         Context 'Empty DSC Config' {
             $VM = $VMS[0].Clone()
-            $VM.DSCConfigFile = ''
+            $VM.DSC.ConfigFile = ''
             It 'Does not throw an Exception' {
                 { CreateDSCMOFFiles -Lab $Lab -VM $VM } | Should Not Throw
             }
@@ -153,7 +156,7 @@ InModuleScope LabBuilder {
                 errorId = 'DSCModuleDownloadError'
                 errorCategory = 'InvalidArgument'
                 errorMessage = $($LocalizedData.DSCModuleDownloadError `
-                    -f $VM.DSCConfigFile,$VM.Name,'TestModule')
+                    -f $VM.DSC.ConfigFile,$VM.Name,'TestModule')
             }
             $Exception = GetException @ExceptionParameters
 
@@ -176,7 +179,7 @@ InModuleScope LabBuilder {
                 errorId = 'DSCModuleDownloadError'
                 errorCategory = 'InvalidArgument'
                 errorMessage = $($LocalizedData.DSCModuleDownloadError `
-                    -f $VM.DSCConfigFile,$VM.Name,'TestModule')
+                    -f $VM.DSC.ConfigFile,$VM.Name,'TestModule')
             }
             $Exception = GetException @ExceptionParameters
 
@@ -201,7 +204,7 @@ InModuleScope LabBuilder {
                 errorId = 'DSCModuleNotFoundError'
                 errorCategory = 'InvalidArgument'
                 errorMessage = $($LocalizedData.DSCModuleNotFoundError `
-                    -f $VM.DSCConfigFile,$VM.Name,'TestModule')
+                    -f $VM.DSC.ConfigFile,$VM.Name,'TestModule')
             }
             $Exception = GetException @ExceptionParameters
 
@@ -282,7 +285,7 @@ InModuleScope LabBuilder {
                 Assert-MockCalled ConfigLCM -Exactly 1
             }
         }
-    }    
+    }
 
 
 

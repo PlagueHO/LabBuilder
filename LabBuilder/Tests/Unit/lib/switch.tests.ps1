@@ -14,6 +14,9 @@ $Global:ArtifactPath = "$Global:ModuleRoot\Artifacts"
 $Global:ExpectedContentPath = "$Global:TestConfigPath\ExpectedContent"
 $null = New-Item -Path "$Global:ArtifactPath" -ItemType Directory -Force -ErrorAction SilentlyContinue
 
+# Make sure the Types are declared
+. "$Global:ModuleRoot\lib\type.ps1"
+
 InModuleScope LabBuilder {
 <#
 .SYNOPSIS
