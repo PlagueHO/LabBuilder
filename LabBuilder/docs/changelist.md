@@ -1,4 +1,4 @@
-### Unreleased
+### 0.7.0.0
 * Initialize-LabSwitch: External switch correctly sets Adapter Name.
 * IsAdmin: Function removed because was not useful.
 * dsclibrary\DC_FORESTDOMAIN.DSC: New DSC Library config for creating child domains in an existing forest.
