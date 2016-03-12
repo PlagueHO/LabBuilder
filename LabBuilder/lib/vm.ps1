@@ -1250,7 +1250,8 @@ function UpdateVMDataDisks {
             $ExistingVhd = Get-VHD -Path $Vhd
 
             # Check the VHD Type
-            if (($DataVhd.VhdType) -and ($ExistingVhd.VhdType -ne $DataVhd.VhdType))
+            if (($DataVhd.VhdType) `
+                -and ($ExistingVhd.VhdType.ToString() -ne $DataVhd.VhdType.ToString()))
             {
                 # The type of disk can't be changed.
                 $ExceptionParameters = @{
