@@ -403,7 +403,7 @@ function InitializeVhd
         Write-Verbose -Message ($LocalizedData.InitializeVHDInitializingMessage `
             -f $Path,$PartitionStyle)
 
-        Initialize-Disk `
+        $null = Initialize-Disk `
             -Number $DiskNumber `
             -PartitionStyle $PartitionStyle `
             -ErrorAction Stop
@@ -562,7 +562,7 @@ function InitializeVhd
                 }
 
                 # Add the Partition Access Path
-                Add-PartitionAccessPath `
+                $null = Add-PartitionAccessPath `
                     -DiskNumber $DiskNumber `
                     -PartitionNumber 1 `
                     -AccessPath $AccessPath `

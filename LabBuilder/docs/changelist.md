@@ -1,3 +1,7 @@
+### 0.7.1.0
+* GetDSCNetworkingConfig: Fix DSC error occuring when a blank DNS Server address or Default Gateway address is set on an Adapter.
+* InitializeVhd: Prevent unnecessary results of disk partitioning and volume creation to console.
+
 ### 0.7.0.0
 * Initialize-LabSwitch: External switch correctly sets Adapter Name.
 * IsAdmin: Function removed because was not useful.
