@@ -112,7 +112,7 @@
            configfile="MEMBER_DHCP.DSC.ps1">
         <parameters>
           DomainName = "LABBUILDER.COM"
-		  DCname = "SA-DC1"
+          DCname = "SA-DC1"
           DomainAdminPassword = "P@ssword!1"
           PSDscAllowDomainUser = $True
         </parameters>

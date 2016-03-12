@@ -7,6 +7,7 @@
   Sample Windows Server 2012 R2 Lab Configuration containing two forests:
    - ALPHA.LOCAL
    - BRAVO.LOCAL
+  Each forest contains a child domain DEV.*.LOCAL.
   Each forest is on an isolated subnet and contains a DC server, DHCP server and an Edge Server.
   The edge servers are also on a shared subnet (Domain Internal) enabling routing between the isolated subnets (Domain Private Alpha/Bravo).
   A forest trust is not established between the forests.
@@ -95,8 +96,6 @@
         </parameters>
       </dsc>
       <adapters>
-        <adapter name="External"
-                 switchname="External" />
         <adapter name="Domain Private Alpha"
                  switchname="Domain Private Alpha">
           <ipv4 address="192.168.128.10"
@@ -111,6 +110,33 @@
       </adapters>
     </vm>
 
+    <vm name="ALPHA-DC2"
+        template="Template Windows Server 2012 R2 Datacenter Full"
+        computername="ALPHA-DC2">
+      <dsc configname="DC_FORESTCHILDDOMAIN"
+           configfile="DC_FORESTCHILDDOMAIN.DSC.ps1">
+        <parameters>
+          ParentDomainName = "ALPHA.LOCAL"
+          DomainName = "DEV"
+          DomainAdminPassword = "P@ssword!1"
+          PSDscAllowDomainUser = $True
+        </parameters>
+      </dsc>
+      <adapters>
+        <adapter name="Domain Private Alpha"
+                 switchname="Domain Private Alpha">
+          <ipv4 address="192.168.128.11"
+                defaultgateway="192.168.128.19"
+                subnetmask="24"
+                dnsserver="192.168.128.11,192.168.128.10"/>
+          <ipv6 address="fd53:ccc5:895a:bc00::b"
+                defaultgateway="fd53:ccc5:895a:bc00::13"
+                subnetmask="64"
+                dnsserver="fd53:ccc5:895a:bc00::b,fd53:ccc5:895a:bc00::a"/>
+        </adapter>
+      </adapters>
+    </vm>
+
     <vm name="ALPHA-DHCP1"
         template="Template Windows Server 2012 R2 Datacenter Full"
         computername="ALPHA-DHCP1"
@@ -120,7 +146,7 @@
         <parameters>
           DomainName = "ALPHA.LOCAL"
           DomainAdminPassword = "P@ssword!1"
-		  DCName = "ALPHA-DC1"
+          DCName = "ALPHA-DC1"
           PSDscAllowDomainUser = $True
           Scopes = @(
               @{ Name = 'Alpha Primary';
@@ -135,6 +161,12 @@
                  ScopeID = '192.168.128.0';
                  ClientMACAddress = '000000000000';
                  IPAddress = '192.168.128.10';
+                 AddressFamily = 'IPv4'
+              },
+              @{ Name = 'ALPHA-DC2';
+                 ScopeID = '192.168.128.0';
+                 ClientMACAddress = '000000000001';
+                 IPAddress = '192.168.128.11';
                  AddressFamily = 'IPv4'
               },
               @{ Name = 'ALPHA-DHCP1';
@@ -183,7 +215,7 @@
         <parameters>
           DomainName = "ALPHA.LOCAL"
           DomainAdminPassword = "P@ssword!1"
-		  DCName = "ALPHA-DC1"
+          DCName = "ALPHA-DC1"
           PSDscAllowDomainUser = $True
         </parameters>
       </dsc>
@@ -226,8 +258,6 @@
         </parameters>
       </dsc>
       <adapters>
-        <adapter name="External"
-                 switchname="External" />
         <adapter name="Domain Private Bravo"
                  switchname="Domain Private Bravo">
           <ipv4 address="192.168.130.10"
@@ -242,6 +272,33 @@
       </adapters>
     </vm>
 
+    <vm name="BRAVO-DC2"
+        template="Template Windows Server 2012 R2 Datacenter Full"
+        computername="BRAVO-DC2">
+      <dsc configname="DC_FORESTCHILDDOMAIN"
+           configfile="DC_FORESTCHILDDOMAIN.DSC.ps1">
+        <parameters>
+          ParentDomainName = "BRAVO.LOCAL"
+          DomainName = "SALES"
+          DomainAdminPassword = "P@ssword!1"
+          PSDscAllowDomainUser = $True
+        </parameters>
+      </dsc>
+      <adapters>
+        <adapter name="Domain Private Bravo"
+                 switchname="Domain Private Bravo">
+          <ipv4 address="192.168.130.11"
+                defaultgateway="192.168.130.19"
+                subnetmask="24"
+                dnsserver="192.168.130.11,192.168.130.10"/>
+          <ipv6 address="fd53:ccc5:895c:bc00::b"
+                defaultgateway="fd53:ccc5:895c:bc00::13"
+                subnetmask="64"
+                dnsserver="fd53:ccc5:895c:bc00::b,fd53:ccc5:895c:bc00::a"/>
+        </adapter>
+      </adapters>
+    </vm>
+
     <vm name="BRAVO-DHCP1"
         template="Template Windows Server 2012 R2 Datacenter Full"
         computername="BRAVO-DHCP1"
@@ -251,7 +308,7 @@
         <parameters>
           DomainName = "BRAVO.LOCAL"
           DomainAdminPassword = "P@ssword!1"
-		  DCName = "BRAVO-DC1"
+          DCName = "BRAVO-DC1"
           PSDscAllowDomainUser = $True
           Scopes = @(
               @{ Name = 'Bravo Primary';
@@ -266,6 +323,12 @@
                  ScopeID = '192.168.130.0';
                  ClientMACAddress = '000000000000';
                  IPAddress = '192.168.130.10';
+                 AddressFamily = 'IPv4'
+              },
+              @{ Name = 'BRAVO-DC2';
+                 ScopeID = '192.168.130.0';
+                 ClientMACAddress = '000000000001';
+                 IPAddress = '192.168.130.11';
                  AddressFamily = 'IPv4'
               },
               @{ Name = 'BRAVO-DHCP1';
@@ -314,7 +377,7 @@
         <parameters>
           DomainName = "BRAVO.LOCAL"
           DomainAdminPassword = "P@ssword!1"
-		  DCName = "BRAVO-DC1"
+          DCName = "BRAVO-DC1"
           PSDscAllowDomainUser = $True
         </parameters>
       </dsc>

@@ -1,31 +1,31 @@
 <#
 .SYNOPSIS
-   Initialized a VM VHD for first boot by applying any required files to the image.
+    Initialized a VM VHD for first boot by applying any required files to the image.
 .DESCRIPTION
-   This function mounts a VM boot VHD image and applies the following files from the
-   LabBuilder Files folder to it:
-     1. Unattend.xml - a Windows Unattend.xml file.
-     2. SetupComplete.cmd - the command file that gets run after the Windows OOBE is complete.
-     3. SetupComplete.ps1 - this PowerShell script file that is run at the the end of the
-                            SetupComplete.cmd.
-   The files should have already been prepared by the CreateVMInitializationFiles function.
-   The VM VHD image should contain an installed copy of Windows still in OOBE mode.
-   
-   This function also applies optional MSU package files from the Lab resource folder if specified in the packages list in the VM.
+    This function mounts a VM boot VHD image and applies the following files from the
+    LabBuilder Files folder to it:
+        1. Unattend.xml - a Windows Unattend.xml file.
+        2. SetupComplete.cmd - the command file that gets run after the Windows OOBE is complete.
+        3. SetupComplete.ps1 - this PowerShell script file that is run at the the end of the
+                                SetupComplete.cmd.
+    The files should have already been prepared by the CreateVMInitializationFiles function.
+    The VM VHD image should contain an installed copy of Windows still in OOBE mode.
+    
+    This function also applies optional MSU package files from the Lab resource folder if specified in the packages list in the VM.
 .PARAMETER Lab
-   Contains the Lab object that was produced by the Get-Lab cmdlet.
+    Contains the Lab object that was produced by the Get-Lab cmdlet.
 .PARAMETER VM
-   A Virtual Machine object pulled from the Lab Configuration file using Get-LabVM
+    A VMLab object pulled from the Lab Configuration file using Get-LabVM.
 .EXAMPLE
-   $Lab = Get-Lab -ConfigPath c:\mylab\config.xml
-   $VMs = Get-LabVM -Lab $Lab
-   InitializeBootVHD `
-       -Lab $Lab `
-       -VM $VMs[0] `
-       -VMBootDiskPath $BootVHD[0]
-   Prepare the boot VHD in for the first VM in the Lab c:\mylab\config.xml for initial boot.
+    $Lab = Get-Lab -ConfigPath c:\mylab\config.xml
+    $VMs = Get-LabVM -Lab $Lab
+    InitializeBootVHD `
+        -Lab $Lab `
+        -VM $VMs[0] `
+        -VMBootDiskPath $BootVHD[0]
+    Prepare the boot VHD in for the first VM in the Lab c:\mylab\config.xml for initial boot.
 .OUTPUTS
-   None.
+    None.
 #>
 function InitializeBootVHD {
     [CmdLetBinding()]
@@ -34,7 +34,7 @@ function InitializeBootVHD {
         $Lab,
 
         [Parameter(Mandatory)]
-        [System.Collections.Hashtable] $VM,
+        [LabVM] $VM,
 
         [Parameter(Mandatory)]
         [String] $VMBootDiskPath
@@ -74,7 +74,7 @@ function InitializeBootVHD {
         # Get the list of Packages to apply
         $ApplyPackages = @($VM.Packages -split ',')
 
-        if ($VM.OSType -eq 'Nano')
+        if ($VM.OSType -eq [LabOSType]::Nano)
         {
             # Now specify the Nano Server packages to add.
             [String] $PackagesFolder = Join-Path `
@@ -248,7 +248,7 @@ function InitializeBootVHD {
         -Force
 
     # Apply the Certificate Generator script if not a Nano Server
-    if ($VM.OSType -ne 'Nano')
+    if ($VM.OSType -ne [LabOSType]::Nano)
     {
         $CertGenFilename = Split-Path -Path $Script:SupportGertGenPath -Leaf
         Write-Verbose -Message $($LocalizedData.ApplyingVMBootDiskFileMessage `
@@ -340,24 +340,22 @@ function InitializeVhd
     [CmdletBinding(DefaultParameterSetName = 'AssignDriveLetter')]
     Param (
         [Parameter(Mandatory=$True)]
-        [ValidateNotNullOrEmpty()]    
+        [ValidateNotNullOrEmpty()]
         [String] $Path,
 
-        [ValidateSet('GPT','MBR')]    
-        [String] $PartitionStyle,
+        [LabPartitionStyle] $PartitionStyle,
 
-        [ValidateSet('FAT','FAT32','exFAT','NTFS','REFS')]    
-        [String] $FileSystem,
+        [LabFileSystem] $FileSystem,
         
-        [ValidateNotNullOrEmpty()]    
+        [ValidateNotNullOrEmpty()]
         [String] $FileSystemLabel,
         
         [Parameter(ParameterSetName = 'DriveLetter')]
-        [ValidateNotNullOrEmpty()]    
+        [ValidateNotNullOrEmpty()]
         [String] $DriveLetter,
         
         [Parameter(ParameterSetName = 'AccessPath')]
-        [ValidateNotNullOrEmpty()]    
+        [ValidateNotNullOrEmpty()]
         [String] $AccessPath
     )
 
@@ -371,7 +369,7 @@ function InitializeVhd
             -f "VHD",$Path)
         }
         ThrowException @ExceptionParameters
-    }
+    } # if
 
     # Check disk is not already mounted
     $VHD = Get-VHD `
@@ -386,10 +384,10 @@ function InitializeVhd
             -ErrorAction Stop
         $VHD = Get-VHD `
             -Path $Path
-    }
+    } # if
 
     # Check partition style
-    $DiskNumber = $VHD.DiskNumber 
+    $DiskNumber = $VHD.DiskNumber
     if ((Get-Disk -Number $DiskNumber).PartitionStyle -eq 'RAW')
     {
         if (-not $PartitionStyle)
@@ -400,8 +398,8 @@ function InitializeVhd
                 errorMessage = $($LocalizedData.InitializeVHDNotInitializedError `
                 -f $Path)
             }
-            ThrowException @ExceptionParameters                    
-        }
+            ThrowException @ExceptionParameters
+        } # if
         Write-Verbose -Message ($LocalizedData.InitializeVHDInitializingMessage `
             -f $Path,$PartitionStyle)
 
@@ -409,13 +407,14 @@ function InitializeVhd
             -Number $DiskNumber `
             -PartitionStyle $PartitionStyle `
             -ErrorAction Stop
-    }
+    } # if
 
-    # Check for a partition
+    # Check for a partition that is not 'reserved'
     $Partitions = @(Get-Partition `
         -DiskNumber $DiskNumber `
         -ErrorAction SilentlyContinue)
-    if (-not ($Partitions))
+    if (-not ($Partitions) `
+        -or (($Partitions | Where-Object -Property Type -ne 'Reserved').Count -eq 0))
     {
         Write-Verbose -Message ($LocalizedData.InitializeVHDCreatePartitionMessage `
             -f $Path)
@@ -424,7 +423,7 @@ function InitializeVhd
             -DiskNumber $DiskNumber `
             -UseMaximumSize `
             -ErrorAction Stop)
-    } 
+    } # if
     
     # Find the best partition to work with
     # This will usually be the one just created if it was
@@ -446,7 +445,7 @@ function InitializeVhd
                 # Found a parition with a matching file system
                 $FoundPartition = $Partition
                 break
-            } # if           
+            } # if
         }
         else
         {
@@ -466,7 +465,7 @@ function InitializeVhd
     elseif ($FoundFormattedPartition)
     {
         # An unformatted partition was found
-        $Partition = $FoundFormattedPartition            
+        $Partition = $FoundFormattedPartition
     }
     else
     {
@@ -493,7 +492,7 @@ function InitializeVhd
                 errorMessage = $($LocalizedData.InitializeVHDNotFormattedError `
                 -f $Path)
             }
-            ThrowException @ExceptionParameters                    
+            ThrowException @ExceptionParameters
         }
 
         # Format the volume
@@ -525,7 +524,7 @@ function InitializeVhd
                 -InputObject $Volume `
                 -NewFileSystemLabel $FileSystemLabel `
                 -ErrorAction Stop
-        }         
+        }
     }
 
     # Assign an access path or Drive letter
@@ -559,7 +558,7 @@ function InitializeVhd
                         errorMessage = $($LocalizedData.InitializeVHDAccessPathNotFoundError `
                         -f $Path,$AccessPath)
                     }
-                    ThrowException @ExceptionParameters        
+                    ThrowException @ExceptionParameters
                 }
 
                 # Add the Partition Access Path

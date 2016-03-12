@@ -228,7 +228,7 @@ InModuleScope LabBuilder {
                     errorId = 'UnknownSwitchTypeError'
                     errorCategory = 'InvalidArgument'
                     errorMessage = $($LocalizedData.UnknownSwitchTypeError `
-                        -f '',"$($Lab.labbuilderconfig.settings.labid) External")
+                        -f '','External')
                 }
                 $Exception = GetException @ExceptionParameters
 
@@ -243,7 +243,7 @@ InModuleScope LabBuilder {
                     errorId = 'UnknownSwitchTypeError'
                     errorCategory = 'InvalidArgument'
                     errorMessage = $($LocalizedData.UnknownSwitchTypeError `
-                        -f 'BadType',"$($Lab.labbuilderconfig.settings.labid) External")
+                        -f 'BadType','External')
                 }
                 $Exception = GetException @ExceptionParameters
 
@@ -295,7 +295,7 @@ InModuleScope LabBuilder {
     Describe 'Initialize-LabSwitch' {
 
         $Lab = Get-Lab -ConfigPath $Global:TestConfigOKPath
-        [Array]$Switches = Get-LabSwitch -Lab $Lab
+        [LabSwitch[]] $Switches = Get-LabSwitch -Lab $Lab
 
         Mock Get-VMSwitch
         Mock New-VMSwitch
@@ -326,29 +326,8 @@ InModuleScope LabBuilder {
             }
         }
 
-        Context 'Valid configuration with invalid switch type passed' {	
-            $Switches[0].Type='Invalid'
-            It 'Throws a UnknownSwitchTypeError Exception' {
-                $ExceptionParameters = @{
-                    errorId = 'UnknownSwitchTypeError'
-                    errorCategory = 'InvalidArgument'
-                    errorMessage = $($LocalizedData.UnknownSwitchTypeError `
-                        -f 'Invalid',$Switches[0].Name)
-                }
-                $Exception = GetException @ExceptionParameters
-
-                { Initialize-LabSwitch -Lab $Lab -Switches $Switches } | Should Throw $Exception
-            }
-            It 'Calls Mocked commands' {
-                Assert-MockCalled Get-VMSwitch -Exactly 1
-                Assert-MockCalled New-VMSwitch -Exactly 0
-                Assert-MockCalled Add-VMNetworkAdapter -Exactly 0
-                Assert-MockCalled Set-VMNetworkAdapterVlan -Exactly 0
-            }
-        }
-
         Context 'Valid configuration NAT with blank NAT Subnet Address' {	
-            $Switches[0].Type = 'NAT'
+            $Switches[0].Type = [LabSwitchType]::NAT
             It 'Throws a NatSubnetAddressEmptyError Exception' {
                 $ExceptionParameters = @{
                     errorId = 'NatSubnetAddressEmptyError'
@@ -369,7 +348,7 @@ InModuleScope LabBuilder {
         }
 
         Context 'Valid configuration with blank switch name passed' {	
-            $Switches[0].Type = 'External'
+            $Switches[0].Type = [LabSwitchType]::External
             $Switches[0].Name = ''
             It 'Throws a SwitchNameIsEmptyError Exception' {
                 $ExceptionParameters = @{
@@ -395,10 +374,11 @@ InModuleScope LabBuilder {
     Describe 'Remove-LabSwitch' {
 
         $Lab = Get-Lab -ConfigPath $Global:TestConfigOKPath
-        [Array]$Switches = Get-LabSwitch -Lab $Lab
+        [LabSwitch[]] $Switches = Get-LabSwitch -Lab $Lab
 
         Mock Get-VMSwitch -MockWith { $Switches }
         Mock Remove-VMSwitch
+        Mock Remove-VMNetworkAdapter
 
         Context 'Valid configuration is passed' {	
             It 'Does not throw an Exception' {
@@ -407,6 +387,7 @@ InModuleScope LabBuilder {
             It 'Calls Mocked commands' {
                 Assert-MockCalled Get-VMSwitch -Exactly 5
                 Assert-MockCalled Remove-VMSwitch -Exactly 5
+                Assert-MockCalled Remove-VMNetworkAdapter -Exactly 4
             }
         }
 
@@ -417,30 +398,11 @@ InModuleScope LabBuilder {
             It 'Calls Mocked commands' {
                 Assert-MockCalled Get-VMSwitch -Exactly 5
                 Assert-MockCalled Remove-VMSwitch -Exactly 5
-            }
-        }
-
-        Context 'Valid configuration with invalid switch type passed' {	
-            $Switches[0].Type='Invalid'
-            It 'Throws a UnknownSwitchTypeError Exception' {
-                $ExceptionParameters = @{
-                    errorId = 'UnknownSwitchTypeError'
-                    errorCategory = 'InvalidArgument'
-                    errorMessage = $($LocalizedData.UnknownSwitchTypeError `
-                        -f 'Invalid',$Switches[0].Name)
-                }
-                $Exception = GetException @ExceptionParameters
-
-                { Remove-LabSwitch -Lab $Lab -Switches $Switches } | Should Throw $Exception
-            }
-            It 'Calls Mocked commands' {
-                Assert-MockCalled Get-VMSwitch -Exactly 1
-                Assert-MockCalled Remove-VMSwitch -Exactly 0
+                Assert-MockCalled Remove-VMNetworkAdapter -Exactly 4
             }
         }
 
         Context 'Valid configuration with blank switch name passed' {	
-            $Switches[0].Type = 'External'
             $Switches[0].Name = ''
             It 'Throws a SwitchNameIsEmptyError Exception' {
                 $ExceptionParameters = @{
@@ -455,6 +417,7 @@ InModuleScope LabBuilder {
             It 'Calls Mocked commands' {
                 Assert-MockCalled Get-VMSwitch -Exactly 1
                 Assert-MockCalled Remove-VMSwitch -Exactly 0
+                Assert-MockCalled Remove-VMNetworkAdapter -Exactly 0
             }
         }
     }
@@ -1030,19 +993,23 @@ InModuleScope LabBuilder {
         Mock Get-VMHardDiskDrive -ParameterFilter { $VMName -eq 'Pester Windows 10 Enterprise' } `
             -MockWith { @{ path = 'Pester Windows 10 Enterprise.vhdx' } }
 
-        Context 'Valid configuration is passed with and Name filter set to matching switch' {
-            It 'Returns a Single Switch object' {
+        Context 'Valid configuration is passed with a Name filter set to matching VM' {
+            It 'Returns a Single Template object' {
                 $Lab = Get-Lab -ConfigPath $Global:TestConfigOKPath
                 $Lab.labbuilderconfig.templates.SetAttribute('fromvm','Pester *')
-                [Array] $Templates = Get-LabVMTemplate -Lab $Lab -Name $Lab.labbuilderconfig.Templates.template[0].Name
+                [Array] $Templates = Get-LabVMTemplate `
+                    -Lab $Lab `
+                    -Name $Lab.labbuilderconfig.Templates.template[0].Name
                 $Templates.Count | Should Be 1
             }
         }
-        Context 'Valid configuration is passed with and Name filter set to non-matching switch' {
-            It 'Returns a Single Switch object' {
+        Context 'Valid configuration is passed with a Name filter set to non-matching VM' {
+            It 'Returns no Template objects' {
                 $Lab = Get-Lab -ConfigPath $Global:TestConfigOKPath
                 $Lab.labbuilderconfig.templates.SetAttribute('fromvm','Pester *')
-                [Array] $Templates = Get-LabVMTemplate -Lab $Lab -Name 'Does Not Exist'
+                [Array] $Templates = Get-LabVMTemplate `
+                    -Lab $Lab `
+                    -Name 'Does Not Exist'
                 $Templates.Count | Should Be 0
             }
         }
@@ -1091,18 +1058,17 @@ InModuleScope LabBuilder {
         Mock Remove-Item
 
         Context 'Valid Template Array with non-existent VHD source file' {
-            [array]$Templates = @( @{
-                name = 'Bad VHD'
-                parentvhd = 'This File Doesnt Exist.vhdx' 
-                sourcevhd = 'This File Doesnt Exist.vhdx'
-            } )
+            $Template = [LabVMTemplate]::New('Bad VHD')
+            $Template.ParentVHD = 'This File Doesnt Exist.vhdx' 
+            $Template.SourceVHD = 'This File Doesnt Exist.vhdx'
+            [LabVMTemplate[]] $Templates = @( $Template )
 
             It 'Throws a TemplateSourceVHDNotFoundError Exception' {
                 $ExceptionParameters = @{
                     errorId = 'TemplateSourceVHDNotFoundError'
                     errorCategory = 'InvalidArgument'
                     errorMessage = $($LocalizedData.TemplateSourceVHDNotFoundError `
-                        -f 'Bad VHD','This File Doesnt Exist.vhdx')
+                        -f $Template.Name,$Template.SourceVHD)
                 }
                 $Exception = GetException @ExceptionParameters
 
@@ -1734,8 +1700,8 @@ InModuleScope LabBuilder {
                 $DataVhd.ParentVHD = 'Intentionally Removed'
                 $DataVhd.SourceVHD = 'Intentionally Removed'
             }
-            # Remove the DSCConfigFile path as this will be relative as well
-            $VMs[0].DSCConfigFile = ''
+            # Remove the DSC.ConfigFile path as this will be relative as well
+            $VMs[0].DSC.ConfigFile = ''
             It 'Returns Template Object that matches Expected Object' {
                 Set-Content -Path "$Global:ArtifactPath\ExpectedVMs.json" -Value ($VMs | ConvertTo-Json -Depth 6)
                 $ExpectedVMs = Get-Content -Path "$Global:ExpectedContentPath\ExpectedVMs.json"
@@ -1754,8 +1720,8 @@ InModuleScope LabBuilder {
                 $DataVhd.ParentVHD = 'Intentionally Removed'
                 $DataVhd.SourceVHD = 'Intentionally Removed'
             }
-            # Remove the DSCConfigFile path as this will be relative as well
-            $VMs[0].DSCConfigFile = ''
+            # Remove the DSC.ConfigFile path as this will be relative as well
+            $VMs[0].DSC.ConfigFile = ''
             It 'Returns Template Object that matches Expected Object' {
                 Set-Content -Path "$Global:ArtifactPath\ExpectedVMs.json" -Value ($VMs | ConvertTo-Json -Depth 6)
                 $ExpectedVMs = Get-Content -Path "$Global:ExpectedContentPath\ExpectedVMs.json"

@@ -86,6 +86,8 @@ ConvertFrom-StringData -StringData @'
     BootPhaseStopVMsTimeoutError=One or more Virtual Machines with Bootorder '{0}' failed to stop completely in the required time.
     ConfigurationXMLValidationError=Lab Configuration XML '{0}'- {1}.
     DSCConfiguartionMissingError=Start of Configuration could not be correctly identified in DSC Config.
+    VolumeNotAvailableAfterMountError=The volume was not found after ISO File '{0}' was mounted.
+    DriveLetterNotAssignedError=The volume was not found after ISO File '{0}' was mounted but a Drive Letter was not assigned.
 
     ImportingLibFileMessage=Importing function library '{0}'.
     InstallingHyperVComponentsMesage=Installing {0} Hyper-V Components.
