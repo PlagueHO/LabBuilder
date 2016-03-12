@@ -36,12 +36,17 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="docs\changelist.md" />
+    <Compile Include="docs\cmdlets-lab.md" />
+    <Compile Include="docs\labbuilderconfig-schema.md" />
+    <Compile Include="dsclibrary\DC_FORESTCHILDDOMAIN.DSC.ps1" />
     <Compile Include="dsclibrary\DC_FORESTPRIMARY.DSC.ps1" />
     <Compile Include="dsclibrary\DC_SECONDARY.DSC.ps1" />
     <Compile Include="dsclibrary\MEMBER_DEFAULT.ps1" />
     <Compile Include="dsclibrary\MEMBER_DHCP.DSC.ps1" />
     <Compile Include="dsclibrary\MEMBER_DHCPDNS.DSC.ps1" />
     <Compile Include="dsclibrary\MEMBER_DHCPNPAS.DSC.ps1" />
+    <Compile Include="dsclibrary\MEMBER_DNS.DSC.ps1" />
     <Compile Include="dsclibrary\MEMBER_FAILOVERCLUSTER_FS.DSC.ps1" />
     <Compile Include="dsclibrary\MEMBER_FAILOVERCLUSTER_HV.DSC.ps1" />
     <Compile Include="dsclibrary\MEMBER_FILESERVER.DSC.ps1" />
@@ -66,9 +71,11 @@
     <Compile Include="LabBuilder.psm1" />
     <Compile Include="lib\dsc.ps1" />
     <Compile Include="lib\switch.ps1" />
+    <Compile Include="lib\type.ps1" />
     <Compile Include="lib\utils.ps1" />
     <Compile Include="lib\vhd.ps1" />
     <Compile Include="lib\vm.ps1" />
+    <Compile Include="samples\Sample_WS2012R2_MultiForest.xml" />
     <Compile Include="support\Convert-LabBuilderConfigSchemaToMD.ps1" />
     <Compile Include="support\Convert-WindowsImage.ps1" />
     <Compile Include="support\Convert-XSDToMD.ps1" />
@@ -92,6 +99,7 @@
     <Compile Include="Tests\Test_Sample_WS2012R2_DCandDHCPOnly.ps1" />
     <Compile Include="Tests\Test_Sample_WS2012R2_DomainClustering.ps1" />
     <Compile Include="Tests\Test_Sample_WS2012R2_DomainComplete.ps1" />
+    <Compile Include="tests\Test_Sample_WS2012R2_MultiForest.ps1" />
     <Compile Include="Tests\Test_Sample_WS2012R2_Simple.ps1" />
     <Compile Include="Tests\Test_Sample_WS2016TP4_DCandDHCPOnly.ps1" />
     <Compile Include="Tests\Unit\LabBuilder.tests.ps1" />
@@ -103,6 +111,7 @@
     <Compile Include="Tests\Unit\lib\vm.tests.ps1" />
   </ItemGroup>
   <ItemGroup>
+    <Folder Include="docs\" />
     <Folder Include="dsclibrary\" />
     <Folder Include="en-us\" />
     <Folder Include="lib\" />
@@ -130,7 +139,6 @@
     <Content Include="samples\Sample_WS2012R2_DomainComplete.xml" />
     <Content Include="samples\Sample_WS2012R2_Simple.xml" />
     <Content Include="samples\Sample_WS2016TP4_DCandDHCPOnly.xml" />
-    <Content Include="schema\labbuilderconfig-schema.md" />
     <Content Include="schema\labbuilderconfig-schema.xsd" />
     <Content Include="support\tools\msxsl.exe" />
     <Content Include="support\transform\labbuilderconfig-schema-transformtomd.xsl" />

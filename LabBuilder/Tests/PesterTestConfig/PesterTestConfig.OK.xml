@@ -191,7 +191,7 @@
                 subnetmask="64"
                 dnsserver="fd53:ccc5:895a:0000::1"/>
         </adapter>
-        <adapter name="Internal Vlan" switchname="Internal Vlan" macaddress="00155D010802" >
+        <adapter name="Internal Vlan" switchname="Internal Vlan" macaddress="00155D010802" macaddressspoofing="On">
           <ipv4 address="192.168.16.2"
                 defaultgateway=""
                 subnetmask="24"

@@ -1,17 +1,17 @@
 <#
 .SYNOPSIS
-   Creates the folder structure that will contain a Lab Virtual Machine. 
+    Creates the folder structure that will contain a Lab Virtual Machine. 
 .DESCRIPTION
-   Creates a standard Hyper-V Virtual Machine folder structure as well as additional folders
-   for containing configuration files for DSC.
-.PARAMATER vmpath
-   The path to the folder where the Virtual Machine files are stored.
+    Creates a standard Hyper-V Virtual Machine folder structure as well as additional folders
+    for containing configuration files for DSC.
+.PARAMETER vmpath
+    The path to the folder where the Virtual Machine files are stored.
 .EXAMPLE
-   InitializeVMPaths -VMPath 'c:\VMs\Lab\Virtual Machine 1'
-   The command will create the Virtual Machine structure for a Lab VM in the folder:
-   'c:\VMs\Lab\Virtual Machine 1'
+    InitializeVMPaths -VMPath 'c:\VMs\Lab\Virtual Machine 1'
+    The command will create the Virtual Machine structure for a Lab VM in the folder:
+    'c:\VMs\Lab\Virtual Machine 1'
 .OUTPUTS
-   None.
+    None.
 #>
 function InitializeVMPaths {
     [CmdLetBinding()]
@@ -25,57 +25,57 @@ function InitializeVMPaths {
     if (-not (Test-Path -Path $VMPath))
     {
         $Null = New-Item `
-			-Path $VMPath `
-			-ItemType Directory
-    }
+            -Path $VMPath `
+            -ItemType Directory
+    } # if
     if (-not (Test-Path -Path "$VMPath\Virtual Machines"))
     {
         $Null = New-Item `
-			-Path "$VMPath\Virtual Machines" `
-			-ItemType Directory
-    }
+            -Path "$VMPath\Virtual Machines" `
+            -ItemType Directory
+    } # if
     if (-not (Test-Path -Path "$VMPath\Virtual Hard Disks"))
     {
         $Null = New-Item `
-		-Path "$VMPath\Virtual Hard Disks" `
-		-ItemType Directory
-    }
+        -Path "$VMPath\Virtual Hard Disks" `
+        -ItemType Directory
+    } # if
     if (-not (Test-Path -Path "$VMPath\LabBuilder Files"))
     {
         $Null = New-Item `
             -Path "$VMPath\LabBuilder Files" `
             -ItemType Directory
-    }
+    } # if
     if (-not (Test-Path -Path "$VMPath\LabBuilder Files\DSC Modules"))
     {
         $Null = New-Item `
             -Path "$VMPath\LabBuilder Files\DSC Modules" `
             -ItemType Directory
-    }
+    } # if
 } # InitializeVMPaths
 
 
 <#
 .SYNOPSIS
-   Prepares the the files for initializing a new VM.
+    Prepares the the files for initializing a new VM.
 .DESCRIPTION
-   This function creates the following files in the LabBuilder Files for the a VM in preparation
-   for them to be applied to the VM VHD before it is booted up for the first time:
-     1. Unattend.xml - a Windows Unattend.xml file.
-     2. SetupComplete.cmd - the command file that gets run after the Windows OOBE is complete.
-     3. SetupComplete.ps1 - this PowerShell script file that is run at the the end of the
-                            SetupComplete.cmd.
+    This function creates the following files in the LabBuilder Files for the a VM in preparation
+    for them to be applied to the VM VHD before it is booted up for the first time:
+        1. Unattend.xml - a Windows Unattend.xml file.
+        2. SetupComplete.cmd - the command file that gets run after the Windows OOBE is complete.
+        3. SetupComplete.ps1 - this PowerShell script file that is run at the the end of the
+                               SetupComplete.cmd.
 .PARAMETER Lab
-   Contains the Lab object that was produced by the Get-Lab cmdlet.
+    Contains the Lab object that was produced by the Get-Lab cmdlet.
 .PARAMETER VM
-   A Virtual Machine object pulled from the Lab Configuration file using Get-LabVM
+    A LabVM object pulled from the Lab Configuration file using Get-LabVM
 .EXAMPLE
-   $Lab = Get-Lab -ConfigPath c:\mylab\config.xml
-   $VMs = Get-LabVM -Lab $Lab
-   CreateVMInitializationFiles -Lab $Lab -VM $VMs[0]
-   Prepare the first VM in the Lab c:\mylab\config.xml for initial boot.
+    $Lab = Get-Lab -ConfigPath c:\mylab\config.xml
+    $VMs = Get-LabVM -Lab $Lab
+    CreateVMInitializationFiles -Lab $Lab -VM $VMs[0]
+    Prepare the first VM in the Lab c:\mylab\config.xml for initial boot.
 .OUTPUTS
-   None.
+    None.
 #>
 function CreateVMInitializationFiles {
     [CmdLetBinding()]
@@ -84,14 +84,16 @@ function CreateVMInitializationFiles {
         $Lab,
 
         [Parameter(Mandatory)]
-        [System.Collections.Hashtable] $VM
+        [LabVM] $VM
     )
 
     # Get Path to LabBuilder files
     [String] $VMLabBuilderFiles = $VM.LabBuilderFilesPath 
     
     # Generate an unattended setup file
-    [String] $UnattendFile = GetUnattendFileContent -Lab $Lab -VM $VM       
+    [String] $UnattendFile = GetUnattendFileContent `
+        -Lab $Lab `
+        -VM $VM
     $null = Set-Content `
         -Path (Join-Path -Path $VMLabBuilderFiles -ChildPath 'Unattend.xml') `
         -Value $UnattendFile -Force
@@ -100,7 +102,7 @@ function CreateVMInitializationFiles {
     [String] $SetupCompleteCmd = ''
 
     # Write out the CMD Setup Complete File
-    if ($VM.OsType -eq 'Nano')
+    if ($VM.OSType -eq [LabOSType]::Nano)
     {
         # For a Nano Server we also need to create the certificates
         # to upload to it (because it Nano Server can't generate them)
@@ -179,7 +181,7 @@ Add-Content ``
     } # If
 
     # Write out the CMD Setup Complete File
-    if ($VM.OsType -eq 'Nano')
+    if ($VM.OType -eq [LabOSType]::Nano)
     {
         $SetupCompleteCmd = @"
 @echo SetupComplete.cmd Script Started... >> %SYSTEMROOT%\Setup\Scripts\SetupComplete.log
@@ -229,23 +231,23 @@ Add-Content ``
 
 <#
 .SYNOPSIS
-   Assembles the content of a Unattend XML file that should be used to initialize
-   Windows on the specified VM.
+    Assembles the content of a Unattend XML file that should be used to initialize
+    Windows on the specified VM.
 .DESCRIPTION
-   This function will return the content of a standard Windows Unattend XML file
-   that can be written to an VHD containing a copy of Windows that is still in
-   OOBE mode.
+    This function will return the content of a standard Windows Unattend XML file
+    that can be written to an VHD containing a copy of Windows that is still in
+    OOBE mode.
 .PARAMETER Lab
-   Contains the Lab object that was produced by the Get-Lab cmdlet.
+    Contains the Lab object that was produced by the Get-Lab cmdlet.
 .PARAMETER VM
-   A Virtual Machine object pulled from the Lab Configuration file using Get-LabVM
+    A LabVM object pulled from the Lab Configuration file using Get-LabVM
 .EXAMPLE
-   $Lab = Get-Lab -ConfigPath c:\mylab\config.xml
-   $VMs = Get-LabVM -Lab $Lab
-   GetUnattendFileContent -Lab $Lab -VM $VMs[0]
-   Returns the content of the Unattend File for the first VM in the Lab c:\mylab\config.xml.
+    $Lab = Get-Lab -ConfigPath c:\mylab\config.xml
+    $VMs = Get-LabVM -Lab $Lab
+    GetUnattendFileContent -Lab $Lab -VM $VMs[0]
+    Returns the content of the Unattend File for the first VM in the Lab c:\mylab\config.xml.
 .OUTPUTS
-   The content of the Unattend File for the VM.
+    The content of the Unattend File for the VM.
 #>
 function GetUnattendFileContent {
     [CmdLetBinding()]
@@ -256,7 +258,7 @@ function GetUnattendFileContent {
         $Lab,
 
         [Parameter(Mandatory)]
-        [System.Collections.Hashtable] $VM
+        [LabVM] $VM
     )
     if ($VM.UnattendFile)
     {
@@ -297,9 +299,9 @@ function GetUnattendFileContent {
             <ComputerName>$($VM.ComputerName)</ComputerName>
         </component>
 "@
-		
+        
 
-        if ($VM.OSType -eq 'Client')
+        if ($VM.OSType -eq [LabOSType]::Clien)
         {
             $UnattendContent += @"
             <component name="Microsoft-Windows-Deployment" processorArchitecture="x86" publicKeyToken="31bf3856ad364e35" language="neutral" versionScope="nonSxS" xmlns:wcm="http://schemas.microsoft.com/WMIConfig/2002/State" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
@@ -354,24 +356,24 @@ function GetUnattendFileContent {
 
 <#
 .SYNOPSIS
-   Assemble the the PowerShell commands required to create a self-signed certificate.
+    Assemble the the PowerShell commands required to create a self-signed certificate.
 .DESCRIPTION
-   This function creates the content that can be written into a PS1 file to create a self-signed
-   certificate.
+    This function creates the content that can be written into a PS1 file to create a self-signed
+    certificate.
 .EXAMPLE
-   $Lab = Get-Lab -ConfigPath c:\mylab\config.xml
-   $VMs = Get-LabVM -Lab $Lab
-   $CertificatePS = GetCertificatePsFileContent -Lab $Lab -VM $VMs[0]
-   Return the Create Self-Signed Certificate script for the first VM in the
-   Lab c:\mylab\config.xml for DSC configuration.
+    $Lab = Get-Lab -ConfigPath c:\mylab\config.xml
+    $VMs = Get-LabVM -Lab $Lab
+    $CertificatePS = GetCertificatePsFileContent -Lab $Lab -VM $VMs[0]
+    Return the Create Self-Signed Certificate script for the first VM in the
+    Lab c:\mylab\config.xml for DSC configuration.
 .PARAMETER Lab
-   Contains the Lab object that was produced by the Get-Lab cmdlet.
+    Contains the Lab object that was produced by the Get-Lab cmdlet.
 .PARAMETER VM
-   A Virtual Machine object pulled from the Lab Configuration file using Get-LabVM
+    A LabVM object pulled from the Lab Configuration file using Get-LabVM
 .OUTPUTS
-   A string containing the Create Self-Signed Certificate PowerShell code.
+    A string containing the Create Self-Signed Certificate PowerShell code.
 .TODO
-   Add support for using an existing certificate if one exists.
+    Add support for using an existing certificate if one exists.
 #>
 function GetCertificatePsFileContent {
     [CmdLetBinding()]
@@ -382,7 +384,7 @@ function GetCertificatePsFileContent {
         $Lab,
 
         [Parameter(Mandatory)]
-        [System.Collections.Hashtable] $VM
+        [LabVM] $VM
     )
     [String] $CreateCertificatePs = @"
 `$CertificateFriendlyName = '$($Script:DSCCertificateFriendlyName)'
@@ -424,28 +426,28 @@ Export-Certificate ``
 
 <#
 .SYNOPSIS
-   Download the existing self-signed certificate from a running VM.
+    Download the existing self-signed certificate from a running VM.
 .DESCRIPTION
-   This function uses PS Remoting to connect to a running VM and download the an existing
-   Self-Signed certificate file that was written to the c:\windows folder of the guest operating
-   system by the SetupComplete.ps1 script on the. The certificate will be downloaded to the VM's
-   Labbuilder files folder.
+    This function uses PS Remoting to connect to a running VM and download the an existing
+    Self-Signed certificate file that was written to the c:\windows folder of the guest operating
+    system by the SetupComplete.ps1 script on the. The certificate will be downloaded to the VM's
+    Labbuilder files folder.
 .PARAMETER Lab
-   Contains the Lab object that was produced by the Get-Lab cmdlet.
+    Contains the Lab object that was produced by the Get-Lab cmdlet.
 .PARAMETER VM
-   A Virtual Machine object pulled from the Lab Configuration file using Get-LabVM
+    A LabVM object pulled from the Lab Configuration file using Get-LabVM
 .PARAMETER Timeout
-   The maximum amount of time that this function can take to download the certificate.
-   If the timeout is reached before the process is complete an error will be thrown.
-   The timeout defaults to 300 seconds.
+    The maximum amount of time that this function can take to download the certificate.
+    If the timeout is reached before the process is complete an error will be thrown.
+    The timeout defaults to 300 seconds.
 .EXAMPLE
-   $Lab = Get-Lab -ConfigPath c:\mylab\config.xml
-   $VMs = Get-LabVM -Lab $Lab
-   GetSelfSignedCertificate -Lab $Lab -VM $VMs[0]
-   Downloads the existing Self-signed certificate for the VM to the Labbuilder files folder of the
-   VM.
+    $Lab = Get-Lab -ConfigPath c:\mylab\config.xml
+    $VMs = Get-LabVM -Lab $Lab
+    GetSelfSignedCertificate -Lab $Lab -VM $VMs[0]
+    Downloads the existing Self-signed certificate for the VM to the Labbuilder files folder of the
+    VM.
 .OUTPUTS
-   The path to the certificate file that was downloaded.
+    The path to the certificate file that was downloaded.
 #>
 function GetSelfSignedCertificate
 {
@@ -457,7 +459,7 @@ function GetSelfSignedCertificate
         $Lab,
 
         [Parameter(Mandatory)]
-        [System.Collections.Hashtable] $VM,
+        [LabVM] $VM,
 
         [Int] $Timeout = 300
     )
@@ -478,7 +480,7 @@ function GetSelfSignedCertificate
         $Session = Connect-LabVM `
             -VM $VM `
             -ErrorAction Continue
-        
+
         # Failed to connnect to the VM
         if (-not $Session)
         {
@@ -490,7 +492,7 @@ function GetSelfSignedCertificate
             }
             ThrowException @ExceptionParameters
             return
-        }
+        } # if
 
         if (($Session) `
             -and ($Session.State -eq 'Opened') `
@@ -515,9 +517,9 @@ function GetSelfSignedCertificate
                         -f $VM.Name,$Script:RetryConnectSeconds)
                         
                     Start-Sleep -Seconds $Script:RetryConnectSeconds
-                } # Try
-            } # While
-        } # If
+                } # try
+            } # while
+        } # if
 
         # If the copy didn't complete and we're out of time throw an exception
         if ((-not $Complete) `
@@ -535,7 +537,7 @@ function GetSelfSignedCertificate
                     -f $VM.Name)
             }
             ThrowException @ExceptionParameters
-        }
+        } # if
 
         # Close the Session if it is opened and the download is complete
         if (($Session) `
@@ -546,36 +548,36 @@ function GetSelfSignedCertificate
             Disconnect-LabVM `
                 -VM $VM `
                 -ErrorAction Continue
-        } # If
-    } # While
-    return (Get-Item -Path "$VMLabBuilderFiles\$($Script:DSCEncryptionCert)")        
+        } # if
+    } # while
+    return (Get-Item -Path "$VMLabBuilderFiles\$($Script:DSCEncryptionCert)")
 } # GetSelfSignedCertificate
 
 
 <#
 .SYNOPSIS
-   Generate and download a new credential encryption certificate from a running VM.
+    Generate and download a new credential encryption certificate from a running VM.
 .DESCRIPTION
-   This function uses PS Remoting to connect to a running VM and upload the GetDSCEncryptionCert.ps1
-   script and then run it. This wil create a new self-signed certificate that is written to the
-   c:\windows folder of the guest operating system. The certificate will be downloaded to the VM's
-   Labbuilder files folder.
+    This function uses PS Remoting to connect to a running VM and upload the GetDSCEncryptionCert.ps1
+    script and then run it. This wil create a new self-signed certificate that is written to the
+    c:\windows folder of the guest operating system. The certificate will be downloaded to the VM's
+    Labbuilder files folder.
 .PARAMETER Lab
-   Contains the Lab object that was produced by the Get-Lab cmdlet.
+    Contains the Lab object that was produced by the Get-Lab cmdlet.
 .PARAMETER VM
-   A Virtual Machine object pulled from the Lab Configuration file using Get-LabVM
+    A LabVM object pulled from the Lab Configuration file using Get-LabVM
 .PARAMETER Timeout
-   The maximum amount of time that this function can take to download the certificate.
-   If the timeout is reached before the process is complete an error will be thrown.
-   The timeout defaults to 300 seconds.
+    The maximum amount of time that this function can take to download the certificate.
+    If the timeout is reached before the process is complete an error will be thrown.
+    The timeout defaults to 300 seconds.
 .EXAMPLE
-   $Lab = Get-Lab -ConfigPath c:\mylab\config.xml
-   $VMs = Get-LabVM -Lab $Lab
-   RecreateSelfSignedCertificate -Lab $Lab -VM $VMs[0]
-   Causes a new self-signed certificate on the VM and download it to the Labbuilder files folder
-   of th VM.
+    $Lab = Get-Lab -ConfigPath c:\mylab\config.xml
+    $VMs = Get-LabVM -Lab $Lab
+    RecreateSelfSignedCertificate -Lab $Lab -VM $VMs[0]
+    Causes a new self-signed certificate on the VM and download it to the Labbuilder files folder
+    of th VM.
 .OUTPUTS
-   The path to the certificate file that was downloaded.
+    The path to the certificate file that was downloaded.
 #>
 function RecreateSelfSignedCertificate
 {
@@ -587,7 +589,7 @@ function RecreateSelfSignedCertificate
         $Lab,
 
         [Parameter(Mandatory)]
-        [System.Collections.Hashtable] $VM,
+        [LabVM] $VM,
 
         [Int] $Timeout = 300
     )
@@ -620,7 +622,7 @@ function RecreateSelfSignedCertificate
             -ErrorAction Continue
 
         # Failed to connnect to the VM
-        if (! $Session)
+        if (-not $Session)
         {
             $ExceptionParameters = @{
                 errorId = 'CertificateDownloadError'
@@ -630,7 +632,7 @@ function RecreateSelfSignedCertificate
             }
             ThrowException @ExceptionParameters
             return
-        }
+        } # if
 
         $Complete = $False
 
@@ -658,9 +660,9 @@ function RecreateSelfSignedCertificate
                         -f $VM.Name,$Script:RetryConnectSeconds)
 
                     Start-Sleep -Seconds $Script:RetryConnectSeconds
-                } # Try
-            } # While
-        } # If
+                } # try
+            } # while
+        } # if
         
         $Complete = $False
 
@@ -685,9 +687,9 @@ function RecreateSelfSignedCertificate
                         -f $VM.Name,$Script:RetryConnectSeconds)
 
                     Start-Sleep -Seconds $Script:RetryConnectSeconds
-                } # Try
-            } # While
-        } # If
+                } # try
+            } # while
+        } # if
 
         $Complete = $False
 
@@ -749,23 +751,23 @@ function RecreateSelfSignedCertificate
 
 <#
 .SYNOPSIS
-   Generate a new credential encryption certificate on the Host for a VM.
+    Generate a new credential encryption certificate on the Host for a VM.
 .DESCRIPTION
-   This function will create a new self-signed certificate on the host that can be uploaded
-   to the VM that it is created for. The certificate will be created in the LabBuilder files
-   folder for the specified VM.
+    This function will create a new self-signed certificate on the host that can be uploaded
+    to the VM that it is created for. The certificate will be created in the LabBuilder files
+    folder for the specified VM.
 .PARAMETER Lab
-   Contains the Lab object that was produced by the Get-Lab cmdlet.
+    Contains the Lab object that was produced by the Get-Lab cmdlet.
 .PARAMETER VM
-   A Virtual Machine object pulled from the Lab Configuration file using Get-LabVM
+    A LabVM object pulled from the Lab Configuration file using Get-LabVM
 .EXAMPLE
-   $Lab = Get-Lab -ConfigPath c:\mylab\config.xml
-   $VMs = Get-LabVM -Lab $Lab
-   CreateHostSelfSignedCertificate -Lab $Lab -VM $VMs[0]
-   Causes a new self-signed certificate for the VM and stores it to the Labbuilder files folder
-   of th VM.
+    $Lab = Get-Lab -ConfigPath c:\mylab\config.xml
+    $VMs = Get-LabVM -Lab $Lab
+    CreateHostSelfSignedCertificate -Lab $Lab -VM $VMs[0]
+    Causes a new self-signed certificate for the VM and stores it to the Labbuilder files folder
+    of th VM.
 .OUTPUTS
-   The path to the certificate file that was created.
+    The path to the certificate file that was created.
 #>
 function CreateHostSelfSignedCertificate
 {
@@ -777,7 +779,7 @@ function CreateHostSelfSignedCertificate
         $Lab,
 
         [Parameter(Mandatory)]
-        [System.Collections.Hashtable] $VM
+        [LabVM] $VM
     )
 
     # Load path variables
@@ -836,7 +838,7 @@ function CreateHostSelfSignedCertificate
         -Type CERT `
         -FilePath $CertificateDestination `
         -Cert $Certificate `
-        -ErrorAction Stop        
+        -ErrorAction Stop
 
     # Remove the certificate from the Local Machine store
     $Certificate | Remove-Item
@@ -846,21 +848,21 @@ function CreateHostSelfSignedCertificate
 
 <#
 .SYNOPSIS
-   Gets the Management IP Address for a running Lab VM.
+    Gets the Management IP Address for a running Lab VM.
 .DESCRIPTION
-   This function will return the IPv4 address assigned to the network adapter that
-   is connected to the Management switch for the specified VM. The VM must be
-   running, otherwise an error will be thrown.
+    This function will return the IPv4 address assigned to the network adapter that
+    is connected to the Management switch for the specified VM. The VM must be
+    running, otherwise an error will be thrown.
 .PARAMETER Lab
-   Contains the Lab object that was produced by the Get-Lab cmdlet.
+    Contains the Lab object that was produced by the Get-Lab cmdlet.
 .PARAMETER VM
-   A Virtual Machine object pulled from the Lab Configuration file using Get-LabVM
+    A LabVM object pulled from the Lab Configuration file using Get-LabVM
 .EXAMPLE
-   $Lab = Get-Lab -ConfigPath c:\mylab\config.xml
-   $VMs = Get-LabVM -Lab $Lab
-   $IPAddress = GetVMManagementIPAddress -Lab $Lab -VM $VM[0]
+    $Lab = Get-Lab -ConfigPath c:\mylab\config.xml
+    $VMs = Get-LabVM -Lab $Lab
+    $IPAddress = GetVMManagementIPAddress -Lab $Lab -VM $VM[0]
 .OUTPUTS
-   The IP Managment IP Address.
+    The IP Managment IP Address.
 #>
 function GetVMManagementIPAddress {
     [CmdLetBinding()]
@@ -870,7 +872,7 @@ function GetVMManagementIPAddress {
         $Lab,
 
         [Parameter(Mandatory)]
-        [System.Collections.Hashtable] $VM
+        [LabVM] $VM
     )
     [String] $ManagementSwitchName = GetManagementSwitchName `
         -Lab $Lab
@@ -885,36 +887,36 @@ function GetVMManagementIPAddress {
                 -f $ManagementSwitchName,$VM.Name)
         }
         ThrowException @ExceptionParameters
-    }
+    } # if
     return $IPAddress
 } # GetVMManagementIPAddress
 
 
 <#
 .SYNOPSIS
-   Waits for a VM to complete setup.
+    Waits for a VM to complete setup.
 .DESCRIPTION
-   When a VM starts up for the first time various scripts are run that prepare the Virtual Machine
-   to be managed as part of a Lab. This function will wait for these scripts to complete.
-   It determines if the setup has been completed by using PowerShell remoting to connect to the
-   VM and downloading the c:\windows\Setup\Scripts\InitialSetupCompleted.txt file. If this file
-   does not exist then the initial setup has not been completed.
-   
-   The cmdlet will wait for a maximum of 300 seconds for this process to be completed.
+    When a VM starts up for the first time various scripts are run that prepare the Virtual Machine
+    to be managed as part of a Lab. This function will wait for these scripts to complete.
+    It determines if the setup has been completed by using PowerShell remoting to connect to the
+    VM and downloading the c:\windows\Setup\Scripts\InitialSetupCompleted.txt file. If this file
+    does not exist then the initial setup has not been completed.
+
+    The cmdlet will wait for a maximum of 300 seconds for this process to be completed.
 .PARAMETER VM
-   A Virtual Machine object pulled from the Lab Configuration file using Get-LabVM
+    A LabVM object pulled from the Lab Configuration file using Get-LabVM
 .PARAMETER Timeout
-   The maximum amount of time that this function will wait for the setup to complete.
-   If the timeout is reached before the process is complete an error will be thrown.
-   The timeout defaults to 300 seconds.
+    The maximum amount of time that this function will wait for the setup to complete.
+    If the timeout is reached before the process is complete an error will be thrown.
+    The timeout defaults to 300 seconds.
 .EXAMPLE
-   $Lab = Get-Lab -ConfigPath c:\mylab\config.xml
-   $VMs = Get-LabVM -Lab $Lab
-   WaitVMInitializationComplete -VM $VMs[0]
-   Waits for the initial setup to complete on the first VM in the config.xml.
+    $Lab = Get-Lab -ConfigPath c:\mylab\config.xml
+    $VMs = Get-LabVM -Lab $Lab
+    WaitVMInitializationComplete -VM $VMs[0]
+    Waits for the initial setup to complete on the first VM in the config.xml.
 .OUTPUTS
-   The path to the local copy of the Initial Setup complete file in the Labbuilder files folder
-   for this VM.
+    The path to the local copy of the Initial Setup complete file in the Labbuilder files folder
+    for this VM.
 #>
 function WaitVMInitializationComplete
 {
@@ -923,7 +925,7 @@ function WaitVMInitializationComplete
     param
     (
         [Parameter(Mandatory)]
-        [System.Collections.Hashtable] $VM,
+        [LabVM] $VM,
 
         [Int] $Timeout = 300
     )
@@ -940,7 +942,7 @@ function WaitVMInitializationComplete
 
     # Make sure the VM has started
     WaitVMStarted -VM $VM
-    
+
     [String] $InitialSetupCompletePath = Join-Path `
         -Path $VMLabBuilderFiles `
         -ChildPath 'InitialSetupCompleted.txt'
@@ -952,7 +954,7 @@ function WaitVMInitializationComplete
             -f $VM.Name)
         return $InitialSetupCompletePath 
     }
-    
+
     while ((-not $Complete) `
         -and (((Get-Date) - $StartTime).TotalSeconds) -lt $TimeOut)
     {
@@ -998,9 +1000,9 @@ function WaitVMInitializationComplete
                         -f $VM.Name,$Script:RetryConnectSeconds)                                
                     Start-Sleep `
                         -Seconds $Script:RetryConnectSeconds
-                } # Try
-            } # While
-        } # If
+                } # try
+            } # while
+        } # if
 
         # If the process didn't complete and we're out of time throw an exception
         if ((-not $Complete) `
@@ -1028,30 +1030,30 @@ function WaitVMInitializationComplete
             Disconnect-LabVM `
                 -VM $VM `
                 -ErrorAction Continue
-        } # If
-    } # While
+        } # if
+    } # while
     return $InitialSetupCompletePath
 } # WaitVMInitializationComplete
 
 
 <#
 .SYNOPSIS
-   Short description
+    Short description
 .DESCRIPTION
-   Long description
+    Long description
 .PARAMETER VM
-   The VM that should be waited for start up to complete.
+    A LabVM object pulled from the Lab Configuration file using Get-LabVM
 .EXAMPLE
-   Example of how to use this cmdlet
+    Example of how to use this cmdlet
 .OUTPUTS
-   None.
+    None.
 #>
 function WaitVMStarted {
     [CmdLetBinding()]
     param
     (
         [Parameter(Mandatory)]
-        [System.Collections.Hashtable] $VM
+        [LabVM] $VM
     )
     $Heartbeat = Get-VMIntegrationService -VMName $VM.Name -Name Heartbeat
     while ($Heartbeat.PrimaryStatusDescription -ne 'OK')
@@ -1064,22 +1066,22 @@ function WaitVMStarted {
 
 <#
 .SYNOPSIS
-   Short description
+    Short description
 .DESCRIPTION
-   Long description
+    Long description
 .PARAMETER VM
-   The VM that should be waited for turn off to complete.
+    A LabVM object pulled from the Lab Configuration file using Get-LabVM
 .EXAMPLE
-   Example of how to use this cmdlet
+    Example of how to use this cmdlet
 .OUTPUTS
-   None.
+    None.
 #>
 function WaitVMOff {
     [CmdLetBinding()]
     param
     (
         [Parameter(Mandatory)]
-        [System.Collections.Hashtable] $VM
+        [LabVM] $VM
     )
     $RunningVM = Get-VM -Name $VM.Name
     while ($RunningVM.State -ne 'Off')
@@ -1092,39 +1094,39 @@ function WaitVMOff {
 
 <#
 .SYNOPSIS
-   Updates the VM Integration Services to match the VM Configuration.
+    Updates the VM Integration Services to match the VM Configuration.
 .DESCRIPTION
-   This cmdlet will take the VM object provided and ensure the integration services specified
-   in it are enabled.
-   
-   The function will use comma delimited list of integration services in the VM object passed
-   and enable the integration services listed for this VM.
-   
-   If the IntegrationServices property of the VM is not set or set to null then ALL integration
-   services will be ENABLED.
-   
-   If the IntegrationServices property of the VM is set but is blank then ALL integration
-   services will be DISABLED.
-   
-   The IntegrationServices property should contain a comma delimited list of Integration Services
-   that should be enabled.
-   
-   The currently available Integration Services are:
-   - Guest Service Interface
-   - Heartbeat
-   - Key-Value Pair Exchange
-   - Shutdown
-   - Time Synchronization
-   - VSS
+    This cmdlet will take the VM object provided and ensure the integration services specified
+    in it are enabled.
+
+    The function will use comma delimited list of integration services in the VM object passed
+    and enable the integration services listed for this VM.
+
+    If the IntegrationServices property of the VM is not set or set to null then ALL integration
+    services will be ENABLED.
+
+    If the IntegrationServices property of the VM is set but is blank then ALL integration
+    services will be DISABLED.
+
+    The IntegrationServices property should contain a comma delimited list of Integration Services
+    that should be enabled.
+
+    The currently available Integration Services are:
+    - Guest Service Interface
+    - Heartbeat
+    - Key-Value Pair Exchange
+    - Shutdown
+    - Time Synchronization
+    - VSS
 .EXAMPLE
-   $Lab = Get-Lab -ConfigPath c:\mylab\config.xml
-   $VMs = Get-LabVM -Lab $Lab
-   UpdateVMIntegrationServices -VM VM[0]
-   This will update the Integration Services for the first VM in the configuration file c:\mylab\config.xml.
+    $Lab = Get-Lab -ConfigPath c:\mylab\config.xml
+    $VMs = Get-LabVM -Lab $Lab
+    UpdateVMIntegrationServices -VM VM[0]
+    This will update the Integration Services for the first VM in the configuration file c:\mylab\config.xml.
 .PARAMETER VM
-   A Virtual Machine object pulled from the Lab Configuration file using Get-LabVM.
+    A LabVM object pulled from the Lab Configuration file using Get-LabVM
 .OUTPUTS
-   None.
+    None.
 #>
 function UpdateVMIntegrationServices {
     [CmdLetBinding()]
@@ -1134,7 +1136,7 @@ function UpdateVMIntegrationServices {
             Mandatory,
             Position=1)]
         [ValidateNotNullOrEmpty()]
-        $VM
+        [LabVM] $VM
     )
     # Configure the Integration services
     $IntegrationServices = $VM.IntegrationServices
@@ -1183,27 +1185,27 @@ function UpdateVMIntegrationServices {
 
 <#
 .SYNOPSIS
-   Updates the VM Data Disks to match the VM Configuration.
+    Updates the VM Data Disks to match the VM Configuration.
 .DESCRIPTION
-   This cmdlet will take the VM configuration provided and ensure that that data disks that are
-   attached to the VM.
-   
-   The function will use the array of items in the DataVHDs property of the VM to create and
-   attach any data disk VHDs that are missing.
-   
-   If the data disk VHD file exists but is not attached it will be attached to the VM. If the
-   data disk VHD file does not exist then it will be created and attached. 
+    This cmdlet will take the VM configuration provided and ensure that that data disks that are
+    attached to the VM.
+
+    The function will use the array of items in the DataVHDs property of the VM to create and
+    attach any data disk VHDs that are missing.
+
+    If the data disk VHD file exists but is not attached it will be attached to the VM. If the
+    data disk VHD file does not exist then it will be created and attached. 
 .EXAMPLE
-   $Lab = Get-Lab -ConfigPath c:\mylab\config.xml
-   $VMs = Get-LabVM -Lab $Lab
-   UpdateVMDataDisks -Lab $Lab -VM VM[0]
-   This will update the data disks for the first VM in the configuration file c:\mylab\config.xml.
+    $Lab = Get-Lab -ConfigPath c:\mylab\config.xml
+    $VMs = Get-LabVM -Lab $Lab
+    UpdateVMDataDisks -Lab $Lab -VM VM[0]
+    This will update the data disks for the first VM in the configuration file c:\mylab\config.xml.
 .PARAMETER Lab
-   Contains the Lab object that was produced by the Get-Lab cmdlet.
+    Contains the Lab object that was produced by the Get-Lab cmdlet.
 .PARAMETER VM
-   A Virtual Machine object pulled from the Lab Configuration file using Get-LabVM.
+    A LabVM object pulled from the Lab Configuration file using Get-LabVM
 .OUTPUTS
-   None.
+    None.
 #>
 function UpdateVMDataDisks {
     [CmdLetBinding()]
@@ -1219,7 +1221,7 @@ function UpdateVMDataDisks {
             Mandatory,
             Position=1)]
         [ValidateNotNullOrEmpty()]
-        $VM
+        [LabVM] $VM
     )
 
     # If there are no data VHDs just return
@@ -1243,23 +1245,23 @@ function UpdateVMDataDisks {
         {
             Write-Verbose -Message $($LocalizedData.VMDiskAlreadyExistsMessage `
                 -f $VM.Name,$Vhd,'Data')
-                
+
             # Check the parameters of the VHD match
             $ExistingVhd = Get-VHD -Path $Vhd
 
             # Check the VHD Type
-            if (($DataVhd.type) -and ($ExistingVhd.VhdType -ne $DataVhd.type))
+            if (($DataVhd.VhdType) -and ($ExistingVhd.VhdType -ne $DataVhd.VhdType))
             {
                 # The type of disk can't be changed.
                 $ExceptionParameters = @{
                     errorId = 'VMDataDiskVHDConvertError'
                     errorCategory = 'InvalidArgument'
                     errorMessage = $($LocalizedData.VMDataDiskVHDConvertError `
-                        -f $VM.name,$Vhd,$DataVhd.type)
+                        -f $VM.name,$Vhd,$DataVhd.VhdType)
                 }
-                ThrowException @ExceptionParameters                
+                ThrowException @ExceptionParameters
             }
-            
+
             # Check the size
             if ($DataVhd.Size)
             {
@@ -1302,7 +1304,7 @@ function UpdateVMDataDisks {
                         errorMessage = $($LocalizedData.VMDataDiskSourceVHDNotFoundError `
                             -f $VM.name,$SourceVhd)
                     }
-                    ThrowException @ExceptionParameters                    
+                    ThrowException @ExceptionParameters
                 } # if
                 # Should the Source VHD be copied or moved
                 if ($DataVhd.MoveSourceVHD)
@@ -1331,7 +1333,7 @@ function UpdateVMDataDisks {
             else
             {
                 $Size = $DataVhd.size
-                switch ($DataVhd.type)
+                switch ($DataVhd.VhdType)
                 {
                     'fixed'
                     {
@@ -1357,7 +1359,7 @@ function UpdateVMDataDisks {
                             -SizeBytes $Size `
                             -Dynamic `
                             -ErrorAction Stop
-                        break;                            
+                        break;
                     } # 'dynamic'
                     'differencing'
                     {
@@ -1372,7 +1374,7 @@ function UpdateVMDataDisks {
                                 errorMessage = $($LocalizedData.VMDataDiskParentVHDMissingError `
                                     -f $VM.name)
                             }
-                            ThrowException @ExceptionParameters                    
+                            ThrowException @ExceptionParameters
                         } # if
                         if (-not (Test-Path -Path $ParentVhd))
                         {
@@ -1382,7 +1384,7 @@ function UpdateVMDataDisks {
                                 errorMessage = $($LocalizedData.VMDataDiskParentVHDNotFoundError `
                                     -f $VM.name,$ParentVhd)
                             }
-                            ThrowException @ExceptionParameters                    
+                            ThrowException @ExceptionParameters
                         } # if
                         
                         # Create a new Differencing VHD
@@ -1403,13 +1405,13 @@ function UpdateVMDataDisks {
                             errorId = 'VMDataDiskUnknownTypeError'
                             errorCategory = 'InvalidArgument'
                             errorMessage = $($LocalizedData.VMDataDiskUnknownTypeError `
-                                -f $VM.Name,$Vhd,$DataVhd.type)
+                                -f $VM.Name,$Vhd,$DataVhd.VhdType)
                         }
-                        ThrowException @ExceptionParameters                        
+                        ThrowException @ExceptionParameters
                     } # default
                 } # switch
-            } # if     
-            
+            } # if
+
             # Do folders need to be copied to this Data Disk?
             if ($null -ne $DataVhd.CopyFolders)
             {
@@ -1431,7 +1433,7 @@ function UpdateVMDataDisks {
                 # Yes, initialize the disk (or check it is)
                 $InitializeVHDParams = @{
                     Path = $VHD
-                    AccessPath = $MountPoint                        
+                    AccessPath = $MountPoint
                 }
                 # Are we allowed to initialize/format the disk?
                 if ($DataVHD.PartitionStyle -and $DataVHD.FileSystem)
@@ -1458,7 +1460,7 @@ function UpdateVMDataDisks {
                 
                 # Copy each folder to the VM Data Disk
                 foreach ($CopyFolder in @($DataVHD.CopyFolders))
-                {                    
+                {
                     Write-Verbose -Message $($LocalizedData.CopyingFoldersToVMDiskMessage `
                         -f $VM.Name,$VHD,$CopyFolder)
 
@@ -1488,6 +1490,7 @@ function UpdateVMDataDisks {
                         PartitionStyle = $DataVHD.PartitionStyle
                         FileSystem = $DataVHD.FileSystem
                     }
+
                     if ($DataVHD.FileSystemLabel)
                     {
                         $InitializeVHDParams += @{
@@ -1528,7 +1531,7 @@ function UpdateVMDataDisks {
             # attach the VHD to.
             $ControllerLocation = ($VMHardDiskDrives | 
                 Measure-Object -Property ControllerLocation -Maximum).Maximum + 1
-            
+
             $NewHardDiskParams = @{
                 VMName = $VM.Name
                 Path = $Vhd

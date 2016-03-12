@@ -993,19 +993,23 @@ InModuleScope LabBuilder {
         Mock Get-VMHardDiskDrive -ParameterFilter { $VMName -eq 'Pester Windows 10 Enterprise' } `
             -MockWith { @{ path = 'Pester Windows 10 Enterprise.vhdx' } }
 
-        Context 'Valid configuration is passed with and Name filter set to matching switch' {
-            It 'Returns a Single Switch object' {
+        Context 'Valid configuration is passed with a Name filter set to matching VM' {
+            It 'Returns a Single Template object' {
                 $Lab = Get-Lab -ConfigPath $Global:TestConfigOKPath
                 $Lab.labbuilderconfig.templates.SetAttribute('fromvm','Pester *')
-                [Array] $Templates = Get-LabVMTemplate -Lab $Lab -Name $Lab.labbuilderconfig.Templates.template[0].Name
+                [Array] $Templates = Get-LabVMTemplate `
+                    -Lab $Lab `
+                    -Name $Lab.labbuilderconfig.Templates.template[0].Name
                 $Templates.Count | Should Be 1
             }
         }
-        Context 'Valid configuration is passed with and Name filter set to non-matching switch' {
-            It 'Returns a Single Switch object' {
+        Context 'Valid configuration is passed with a Name filter set to non-matching VM' {
+            It 'Returns no Template objects' {
                 $Lab = Get-Lab -ConfigPath $Global:TestConfigOKPath
                 $Lab.labbuilderconfig.templates.SetAttribute('fromvm','Pester *')
-                [Array] $Templates = Get-LabVMTemplate -Lab $Lab -Name 'Does Not Exist'
+                [Array] $Templates = Get-LabVMTemplate `
+                    -Lab $Lab `
+                    -Name 'Does Not Exist'
                 $Templates.Count | Should Be 0
             }
         }
@@ -1054,18 +1058,17 @@ InModuleScope LabBuilder {
         Mock Remove-Item
 
         Context 'Valid Template Array with non-existent VHD source file' {
-            [array]$Templates = @( @{
-                name = 'Bad VHD'
-                parentvhd = 'This File Doesnt Exist.vhdx' 
-                sourcevhd = 'This File Doesnt Exist.vhdx'
-            } )
+            $Template = [LabVMTemplate]::New('Bad VHD')
+            $Template.ParentVHD = 'This File Doesnt Exist.vhdx' 
+            $Template.SourceVHD = 'This File Doesnt Exist.vhdx'
+            [LabVMTemplate[]] $Templates = @( $Template )
 
             It 'Throws a TemplateSourceVHDNotFoundError Exception' {
                 $ExceptionParameters = @{
                     errorId = 'TemplateSourceVHDNotFoundError'
                     errorCategory = 'InvalidArgument'
                     errorMessage = $($LocalizedData.TemplateSourceVHDNotFoundError `
-                        -f 'Bad VHD','This File Doesnt Exist.vhdx')
+                        -f $Template.Name,$Template.SourceVHD)
                 }
                 $Exception = GetException @ExceptionParameters
 
@@ -1697,8 +1700,8 @@ InModuleScope LabBuilder {
                 $DataVhd.ParentVHD = 'Intentionally Removed'
                 $DataVhd.SourceVHD = 'Intentionally Removed'
             }
-            # Remove the DSCConfigFile path as this will be relative as well
-            $VMs[0].DSCConfigFile = ''
+            # Remove the DSC.ConfigFile path as this will be relative as well
+            $VMs[0].DSC.ConfigFile = ''
             It 'Returns Template Object that matches Expected Object' {
                 Set-Content -Path "$Global:ArtifactPath\ExpectedVMs.json" -Value ($VMs | ConvertTo-Json -Depth 6)
                 $ExpectedVMs = Get-Content -Path "$Global:ExpectedContentPath\ExpectedVMs.json"
@@ -1717,8 +1720,8 @@ InModuleScope LabBuilder {
                 $DataVhd.ParentVHD = 'Intentionally Removed'
                 $DataVhd.SourceVHD = 'Intentionally Removed'
             }
-            # Remove the DSCConfigFile path as this will be relative as well
-            $VMs[0].DSCConfigFile = ''
+            # Remove the DSC.ConfigFile path as this will be relative as well
+            $VMs[0].DSC.ConfigFile = ''
             It 'Returns Template Object that matches Expected Object' {
                 Set-Content -Path "$Global:ArtifactPath\ExpectedVMs.json" -Value ($VMs | ConvertTo-Json -Depth 6)
                 $ExpectedVMs = Get-Content -Path "$Global:ExpectedContentPath\ExpectedVMs.json"
