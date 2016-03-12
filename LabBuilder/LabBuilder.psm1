@@ -90,21 +90,21 @@ $Libs.Foreach(
 #region LabResourceFunctions
 <#
 .SYNOPSIS
-   Gets an array of Module Resources from a Lab.
+    Gets an array of Module Resources from a Lab.
 .DESCRIPTION
-   Takes a provided Lab and returns the list of module resources required for this Lab.
+    Takes a provided Lab and returns the list of module resources required for this Lab.
 .PARAMETER Lab
-   Contains the Lab object that was loaded by the Get-Lab object.
+    Contains the Lab object that was loaded by the Get-Lab object.
 .PARAMETER Name
-   An optional array of Module names.
-   
-   Only Module Resources matching names in this list will be pulled into the returned in the array.
+    An optional array of Module names.
+
+    Only Module Resources matching names in this list will be pulled into the returned in the array.
 .EXAMPLE
-   $Lab = Get-Lab -ConfigPath c:\mylab\config.xml
-   $ResourceModules = Get-LabResourceModule -Lab $Lab
-   Loads a Lab and pulls the array of Module Resources from it.
+    $Lab = Get-Lab -ConfigPath c:\mylab\config.xml
+    $ResourceModules = Get-LabResourceModule -Lab $Lab
+    Loads a Lab and pulls the array of Module Resources from it.
 .OUTPUTS
-   Returns an array of LabModuleResource objects.
+    Returns an array of LabModuleResource objects.
 #>
 function Get-LabResourceModule {
     [OutputType([LabResourceModule[]])]
@@ -144,8 +144,7 @@ function Get-LabResourceModule {
                 }
                 ThrowException @ExceptionParameters
             } # if
-            $ResourceModule = New-Object -TypeName LabResourceModule
-            $ResourceModule.Name = $ModuleName
+            $ResourceModule = [LabResourceModule]::New($ModuleName)
             $ResourceModule.URL = $Module.URL
             $ResourceModule.Folder = $Module.Folder
             $ResourceModule.MinimumVersion = $Module.MinimumVersion
@@ -159,30 +158,31 @@ function Get-LabResourceModule {
 
 <#
 .SYNOPSIS
-   Downloads the Resource Modules from a provided array.
+    Downloads the Resource Modules from a provided array.
 .DESCRIPTION
-   Takes an array of LabResourceModule objects ane ensures the Resource Modules are available in the PowerShell Modules folder. If they are not they will be downloaded.
+    Takes an array of LabResourceModule objects ane ensures the Resource Modules are available in
+    the PowerShell Modules folder. If they are not they will be downloaded.
 .PARAMETER Lab
-   Contains Lab object that was loaded by the Get-Lab object.
+    Contains Lab object that was loaded by the Get-Lab object.
 .PARAMETER Name
-   An optional array of Module names.
-   
-   Only Module Resources matching names in this list will be pulled into the returned in the array.
-.PARAMETER ResourceModules
-   The array of Resource Modules pulled from the Lab using Get-LabResourceModule.
+    An optional array of Module names.
 
-   If not provided it will attempt to pull the list from the Lab.
+    Only Module Resources matching names in this list will be pulled into the returned in the array.
+.PARAMETER ResourceModules
+    The array of Resource Modules pulled from the Lab using Get-LabResourceModule.
+
+    If not provided it will attempt to pull the list from the Lab.
 .EXAMPLE
-   $Lab = Get-Lab -ConfigPath c:\mylab\config.xml
-   $ResourceModules = Get-LabResourceModule -Lab $Lab
-   Initialize-LabResourceModule -Lab $Lab -ResourceModules $ResourceModules
-   Initializes the Resource Modules in the configured in the Lab c:\mylab\config.xml
+    $Lab = Get-Lab -ConfigPath c:\mylab\config.xml
+    $ResourceModules = Get-LabResourceModule -Lab $Lab
+    Initialize-LabResourceModule -Lab $Lab -ResourceModules $ResourceModules
+    Initializes the Resource Modules in the configured in the Lab c:\mylab\config.xml
 .EXAMPLE
-   $Lab = Get-Lab -ConfigPath c:\mylab\config.xml
-   Initialize-LabResourceModule -Lab $Lab
-   Initializes the Resource Modules in the configured in the Lab c:\mylab\config.xml
+    $Lab = Get-Lab -ConfigPath c:\mylab\config.xml
+    Initialize-LabResourceModule -Lab $Lab
+    Initializes the Resource Modules in the configured in the Lab c:\mylab\config.xml
 .OUTPUTS
-   None.
+    None.
 #>
 function Initialize-LabResourceModule {
     [CmdLetBinding()]
@@ -244,21 +244,21 @@ function Initialize-LabResourceModule {
 
 <#
 .SYNOPSIS
-   Gets an array of MSU Resources from a Lab.
+    Gets an array of MSU Resources from a Lab.
 .DESCRIPTION
-   Takes a provided Lab and returns the list of MSU resources required for this Lab.
+    Takes a provided Lab and returns the list of MSU resources required for this Lab.
 .PARAMETER Lab
-   Contains the Lab object that was loaded by the Get-Lab object.
+    Contains the Lab object that was loaded by the Get-Lab object.
 .PARAMETER Name
-   An optional array of MSU names.
-   
-   Only MSU Resources matching names in this list will be pulled into the returned in the array.
+    An optional array of MSU names.
+
+    Only MSU Resources matching names in this list will be pulled into the returned in the array.
 .EXAMPLE
-   $Lab = Get-Lab -ConfigPath c:\mylab\config.xml
-   $ResourceMSU = Get-LabResourceMSU $Lab
-   Loads a Lab and pulls the array of MSU Resources from it.
+    $Lab = Get-Lab -ConfigPath c:\mylab\config.xml
+    $ResourceMSU = Get-LabResourceMSU $Lab
+    Loads a Lab and pulls the array of MSU Resources from it.
 .OUTPUTS
-   Returns an array of LabMSUResource objects.
+    Returns an array of LabMSUResource objects.
 #>
 function Get-LabResourceMSU {
     [OutputType([LabResourceMSU[]])]
@@ -298,9 +298,7 @@ function Get-LabResourceMSU {
                 }
                 ThrowException @ExceptionParameters
             } # if
-            $ResourceMSU = New-Object -TypeName LabResourceMSU
-            $ResourceMSU.Name = $MSUName
-            $ResourceMSU.URL = $MSU.URL
+            $ResourceMSU = [LabResourceMSU]::New($MSUName,$MSU.URL)
             $Path = $MSU.Path
             if ($Path)
             {
@@ -329,30 +327,31 @@ function Get-LabResourceMSU {
 
 <#
 .SYNOPSIS
-   Downloads the Resource MSU packages from a provided array.
+    Downloads the Resource MSU packages from a provided array.
 .DESCRIPTION
-   Takes an array of LabResourceMSU objects and ensures the MSU packages are available in the Lab Resources folder. If they are not they will be downloaded.
+    Takes an array of LabResourceMSU objects and ensures the MSU packages are available in the
+    Lab Resources folder. If they are not they will be downloaded.
 .PARAMETER Lab
-   Contains Lab object that was loaded by the Get-Lab object.
+    Contains Lab object that was loaded by the Get-Lab object.
 .PARAMETER Name
-   An optional array of MSU packages names.
-   
-   Only MSU packages matching names in this list will be pulled into the returned in the array.
-.PARAMETER ResourceModules
-   The array of Resource Modules pulled from the Lab using Get-LabResourceModule.
+    An optional array of MSU packages names.
 
-   If not provided it will attempt to pull the list from the Lab.
+    Only MSU packages matching names in this list will be pulled into the returned in the array.
+.PARAMETER ResourceModules
+    The array of Resource Modules pulled from the Lab using Get-LabResourceModule.
+
+    If not provided it will attempt to pull the list from the Lab.
 .EXAMPLE
-   $Lab = Get-Lab -ConfigPath c:\mylab\config.xml
-   $ResourceModules = Get-LabResourceModule -Lab $Lab
-   Initialize-LabResourceMSU -Lab $Lab -ResourceModules $ResourceModules
-   Initializes the Resource Modules in the configured in the Lab c:\mylab\config.xml
+    $Lab = Get-Lab -ConfigPath c:\mylab\config.xml
+    $ResourceModules = Get-LabResourceModule -Lab $Lab
+    Initialize-LabResourceMSU -Lab $Lab -ResourceModules $ResourceModules
+    Initializes the Resource Modules in the configured in the Lab c:\mylab\config.xml
 .EXAMPLE
-   $Lab = Get-Lab -ConfigPath c:\mylab\config.xml
-   Initialize-LabResourceMSU -Lab $Lab
-   Initializes the Resource Modules in the configured in the Lab c:\mylab\config.xml
+    $Lab = Get-Lab -ConfigPath c:\mylab\config.xml
+    Initialize-LabResourceMSU -Lab $Lab
+    Initializes the Resource Modules in the configured in the Lab c:\mylab\config.xml
 .OUTPUTS
-   None.
+    None.
 #>
 function Initialize-LabResourceMSU {
     [CmdLetBinding()]
@@ -501,9 +500,7 @@ function Get-LabSwitch {
                     $AdapterName = "$LabId $AdapterName"
                 }
 
-                [LabSwitchAdapter] $ConfigAdapter = New-Object `
-                    -TypeName LabSwitchAdapter
-                $ConfigAdapter.Name = $AdapterName
+                $ConfigAdapter = [LabSwitchAdapter]::New($AdapterName)
                 $ConfigAdapter.MACAddress = $Adapter.MacAddress
                 $ConfigAdapters += @( $ConfigAdapter )
             } # foreach
@@ -525,10 +522,7 @@ function Get-LabSwitch {
         } # if
 
         # Create the new Switch object
-        [LabSwitch] $NewSwitch = New-Object `
-            -TypeName LabSwitch
-        $NewSwitch.Name = $SwitchName
-        $NewSwitch.Type = $SwitchType
+        [LabSwitch] $NewSwitch = [LabSwitch]::New($SwitchName,$SwitchType)
         $NewSwitch.VLAN = $ConfigSwitch.VLan
         $NewSwitch.NATSubnetAddress = $ConfigSwitch.NatSubnetAddress
         $NewSwitch.Adapters = $ConfigAdapters
@@ -540,32 +534,32 @@ function Get-LabSwitch {
 
 <#
 .SYNOPSIS
-   Creates Hyper-V Virtual Switches from a provided array of LabSwitch objects.
+    Creates Hyper-V Virtual Switches from a provided array of LabSwitch objects.
 .DESCRIPTION
-   Takes an array of LabSwitch objectsthat were pulled from a Lab object by calling
-   Get-LabSwitch and ensures that they Hyper-V Virtual Switches on the system
-   are configured to match.
+    Takes an array of LabSwitch objectsthat were pulled from a Lab object by calling
+    Get-LabSwitch and ensures that they Hyper-V Virtual Switches on the system
+    are configured to match.
 .PARAMETER Lab
-   Contains Lab object that was loaded by the Get-Lab object.
+    Contains Lab object that was loaded by the Get-Lab object.
 .PARAMETER Name
-   An optional array of Switch names.
-   
-   Only Switches matching names in this list will be initialized.
-.PARAMETER Switches
-   The array of LabSwitch objects pulled from the Lab using Get-LabSwitch.
+    An optional array of Switch names.
 
-   If not provided it will attempt to pull the array from the Lab object provided.
+    Only Switches matching names in this list will be initialized.
+.PARAMETER Switches
+    The array of LabSwitch objects pulled from the Lab using Get-LabSwitch.
+
+    If not provided it will attempt to pull the array from the Lab object provided.
 .EXAMPLE
-   $Lab = Get-Lab -ConfigPath c:\mylab\config.xml
-   $Switches = Get-LabSwitch -Lab $Lab
-   Initialize-LabSwitch -Lab $Lab -Switches $Switches
-   Initializes the Hyper-V switches in the configured in the Lab c:\mylab\config.xml
+    $Lab = Get-Lab -ConfigPath c:\mylab\config.xml
+    $Switches = Get-LabSwitch -Lab $Lab
+    Initialize-LabSwitch -Lab $Lab -Switches $Switches
+    Initializes the Hyper-V switches in the configured in the Lab c:\mylab\config.xml
 .EXAMPLE
-   $Lab = Get-Lab -ConfigPath c:\mylab\config.xml
-   Initialize-LabSwitch -Lab $Lab
-   Initializes the Hyper-V switches in the configured in the Lab c:\mylab\config.xml
+    $Lab = Get-Lab -ConfigPath c:\mylab\config.xml
+    Initialize-LabSwitch -Lab $Lab
+    Initializes the Hyper-V switches in the configured in the Lab c:\mylab\config.xml
 .OUTPUTS
-   None.
+    None.
 #>
 function Initialize-LabSwitch {
     [CmdLetBinding()]
@@ -741,31 +735,31 @@ function Initialize-LabSwitch {
 
 <#
 .SYNOPSIS
-   Removes all Hyper-V Virtual Switches provided.
+    Removes all Hyper-V Virtual Switches provided.
 .DESCRIPTION
-   This cmdlet is used to remove any Hyper-V Virtual Switches that were created by
-   the Initialize-LabSwitch cmdlet.
+    This cmdlet is used to remove any Hyper-V Virtual Switches that were created by
+    the Initialize-LabSwitch cmdlet.
 .PARAMETER Lab
-   Contains the Lab object that was loaded by the Get-Lab object.
+    Contains the Lab object that was loaded by the Get-Lab object.
 .PARAMETER Name
-   An optional array of Switch names.
-   
-   Only Switches matching names in this list will be removed.
-.PARAMETER Switches
-   The array of LabSwitch objects pulled from the Lab using Get-LabSwitch.
+    An optional array of Switch names.
 
-   If not provided it will attempt to pull the array from the Lab object.
+    Only Switches matching names in this list will be removed.
+.PARAMETER Switches
+    The array of LabSwitch objects pulled from the Lab using Get-LabSwitch.
+
+    If not provided it will attempt to pull the array from the Lab object.
 .EXAMPLE
-   $Lab = Get-Lab -ConfigPath c:\mylab\config.xml
-   $Switches = Get-LabSwitch -Lab $Lab
-   Remove-LabSwitch -Lab $Lab -Switches $Switches
-   Removes any Hyper-V switches in the configured in the Lab c:\mylab\config.xml
+    $Lab = Get-Lab -ConfigPath c:\mylab\config.xml
+    $Switches = Get-LabSwitch -Lab $Lab
+    Remove-LabSwitch -Lab $Lab -Switches $Switches
+    Removes any Hyper-V switches in the configured in the Lab c:\mylab\config.xml
 .EXAMPLE
-   $Lab = Get-Lab -ConfigPath c:\mylab\config.xml
-   Remove-LabSwitch -Lab $Lab
-   Removes any Hyper-V switches in the configured in the Lab c:\mylab\config.xml
+    $Lab = Get-Lab -ConfigPath c:\mylab\config.xml
+    Remove-LabSwitch -Lab $Lab
+    Removes any Hyper-V switches in the configured in the Lab c:\mylab\config.xml
 .OUTPUTS
-   None.
+    None.
 #>
 function Remove-LabSwitch {
     [CmdLetBinding()]
@@ -883,28 +877,28 @@ function Remove-LabSwitch {
 #region LabVMTemplateVHDFunctions
 <#
 .SYNOPSIS
-   Gets an Array of TemplateVHDs for a Lab.
+    Gets an Array of TemplateVHDs for a Lab.
 .DESCRIPTION
-   Takes a provided Lab and returns the list of Template Disks that will be used to 
-   create the Virtual Machines in this lab. This list is usually passed to
-   Initialize-LabVMTemplateVHD.
-   
-   It will validate the paths to the ISO folder as well as to the ISO files themselves.
-   
-   If any ISO files references can't be found an exception will be thrown.
+    Takes a provided Lab and returns the list of Template Disks that will be used to 
+    create the Virtual Machines in this lab. This list is usually passed to
+    Initialize-LabVMTemplateVHD.
+
+    It will validate the paths to the ISO folder as well as to the ISO files themselves.
+
+    If any ISO files references can't be found an exception will be thrown.
 .PARAMETER Lab
-   Contains the Lab object that was loaded by the Get-Lab object.
+    Contains the Lab object that was loaded by the Get-Lab object.
 .PARAMETER Name
-   An optional array of VM Template VHD names.
-   
-   Only VM Template VHDs matching names in this list will be returned in the array.
+    An optional array of VM Template VHD names.
+
+    Only VM Template VHDs matching names in this list will be returned in the array.
 .EXAMPLE
-   $Lab = Get-Lab -ConfigPath c:\mylab\config.xml
-   $VMTemplateVHDs = Get-LabVMTemplateVHD -Lab $Lab
-   Loads a Lab and pulls the array of TemplateVHDs from it.
+    $Lab = Get-Lab -ConfigPath c:\mylab\config.xml
+    $VMTemplateVHDs = Get-LabVMTemplateVHD -Lab $Lab
+    Loads a Lab and pulls the array of TemplateVHDs from it.
 .OUTPUTS
-   Returns an array of LabVMTemplateVHD objects.
-   It will return Null if the TemplateVHDs node does not exist or contains no TemplateVHD nodes.
+    Returns an array of LabVMTemplateVHD objects.
+    It will return Null if the TemplateVHDs node does not exist or contains no TemplateVHD nodes.
 #>
 function Get-LabVMTemplateVHD {
     [OutputType([LabVMTemplateVHD[]])]
@@ -1180,9 +1174,7 @@ function Get-LabVMTemplateVHD {
         } # if
 
         # Add template VHD to the list
-        $NewVMTemplateVHD = New-Object `
-            -TypeName LabVMTemplateVHD
-        $NewVMTemplateVHD.Name = $TemplateVHDName
+        $NewVMTemplateVHD = [LabVMTemplateVHD]::New($TemplateVHDName)
         $NewVMTemplateVHD.ISOPath = $ISOPath
         $NewVMTemplateVHD.VHDPath = $VHDPath
         $NewVMTemplateVHD.OSType = $OSType
@@ -1689,9 +1681,7 @@ function Get-LabVMTemplate {
 
             [String] $VHDFilepath = (Get-VMHardDiskDrive -VMName $Template.Name).Path
             [String] $VHDFilename = [System.IO.Path]::GetFileName($VHDFilepath)
-            [LabVMTemplate] $VMTemplate = New-Object `
-                -TypeName LabVMTemplate
-            $VMTemplate.Name = $Template.Name
+            [LabVMTemplate] $VMTemplate = [LabVMTemplate]::New($Template.Name)
             $VMTemplate.Vhd = $VHDFilename
             $VMTemplate.SourceVhd = $VHDFilepath
             $VMTemplate.ParentVhd = (Join-Path -Path $VHDParentPath -ChildPath $VHDFilename)
@@ -1737,9 +1727,7 @@ function Get-LabVMTemplate {
         if (-not $Found)
         {
             # The template wasn't found in the list of templates so add it
-            [LabVMTemplate] $VMTemplate = New-Object `
-                -TypeName LabVMTemplate
-            $VMTemplate.Name = $TemplateName
+            $VMTemplate = [LabVMTemplate]::New($TemplateName)
             # Add the new Template to the Templates Array
             $VMTemplates += @( $VMTemplate )
         } # if
@@ -2504,11 +2492,8 @@ function Get-LabVM {
             Remove-Variable -Name IPv4 -ErrorAction SilentlyContinue
             if ($VMAdapter.IPv4) 
             {
-                $IPv4 = New-Object `
-                    -TypeName LabVMAdapterIPv4
-                $IPv4.Address = $VMAdapter.IPv4.Address
+                $IPv4 = [LabVMAdapterIPv4]::New($VMAdapter.IPv4.Address,$VMAdapter.IPv4.SubnetMask)
                 $IPv4.defaultgateway = $VMAdapter.IPv4.DefaultGateway
-                $IPv4.subnetmask = $VMAdapter.IPv4.SubnetMask
                 $IPv4.dnsserver = $VMAdapter.IPv4.DNSServer
             }
 
@@ -2516,17 +2501,12 @@ function Get-LabVM {
             Remove-Variable -Name IPv6 -ErrorAction SilentlyContinue
             if ($VMAdapter.IPv6)
             {
-                $IPv6 = New-Object `
-                    -TypeName LabVMAdapterIPv6
-                $IPv6.Address = $VMAdapter.IPv6.Address
+                $IPv6 = [LabVMAdapterIPv6]::New($VMAdapter.IPv6.Address,$VMAdapter.IPv6.SubnetMask)
                 $IPv6.defaultgateway = $VMAdapter.IPv6.DefaultGateway
-                $IPv6.subnetmask = $VMAdapter.IPv6.SubnetMask
                 $IPv6.dnsserver = $VMAdapter.IPv6.DNSServer
             }
 
-            $NewVMAdapter = New-Object `
-                -TypeName LabVMAdapter
-            $NewVMAdapter.Name = $AdapterName
+            $NewVMAdapter = [LabVMAdapter]::New($AdapterName)
             $NewVMAdapter.SwitchName = $AdapterSwitchName
             $NewVMAdapter.MACAddress = $VMAdapter.macaddress
             $NewVMAdapter.MACAddressSpoofing = $MACAddressSpoofing
@@ -2570,9 +2550,7 @@ function Get-LabVM {
                 -Path $Vhd
 
             # Create the new Data VHD object
-            $NewDataVHD = New-Object `
-                -TypeName LabDataVHD
-            $NewDataVHD.Vhd = $Vhd
+            $NewDataVHD = [LabDataVHD]::New($Vhd)
 
             # Get the Parent VHD and check it exists if passed
             if ($VMDataVhd.ParentVHD)
@@ -2885,10 +2863,7 @@ function Get-LabVM {
         } # if
 
         # Create the Lab DSC object
-        $LabDSC = New-Object `
-            -TypeName LabDSC
-
-        $LabDSC.ConfigName = $VM.DSC.ConfigName
+        $LabDSC = [LabDSC]::New($VM.DSC.ConfigName)
 
         # Load the DSC Config File setting and check it
         [String] $LabDSC.ConfigFile = ''
@@ -3072,11 +3047,8 @@ function Get-LabVM {
             $Packages = $VMTemplate.packages
         } # if
 
-        $LabVM = New-Object `
-            -TypeName LabVM
-        $LabVM.Name = $VMName
-        $LabVM.ComputerName = $VM.ComputerName
-        $LabVM.Template = $VM.template
+        $LabVM = [LabVM]::New($VMName,$VM.ComputerName)
+        $LabVM.Template = $VM.Template
         $LabVM.ParentVHD = $ParentVHDPath
         $LabVM.UseDifferencingDisk = $UseDifferencingDisk
         $LabVM.MemoryStartupBytes = $MemoryStartupBytes
@@ -4171,7 +4143,7 @@ function New-Lab {
     $Lab.labbuilderconfig.settings.labpath = $LabPath
     if ($PSBoundParameters.ContainsKey('Id'))
     {
-        $Lab.labbuilderconfig.settings.SetAttribute('Id',$Id)    
+        $Lab.labbuilderconfig.settings.SetAttribute('Id',$Id)
     } # if
     if ($PSBoundParameters.ContainsKey('Description'))
     {
@@ -4179,11 +4151,11 @@ function New-Lab {
     } # if
     if ($PSBoundParameters.ContainsKey('DomainName'))
     {
-        $Lab.labbuilderconfig.settings.SetAttribute('DomainName',$DomainName)    
+        $Lab.labbuilderconfig.settings.SetAttribute('DomainName',$DomainName)
     } # if
     if ($PSBoundParameters.ContainsKey('Email'))
     {
-        $Lab.labbuilderconfig.settings.SetAttribute('Email',$Email)    
+        $Lab.labbuilderconfig.settings.SetAttribute('Email',$Email)
     } # if
 
     # Save Configiration XML

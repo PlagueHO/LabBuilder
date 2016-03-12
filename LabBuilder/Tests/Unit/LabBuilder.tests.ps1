@@ -1058,18 +1058,17 @@ InModuleScope LabBuilder {
         Mock Remove-Item
 
         Context 'Valid Template Array with non-existent VHD source file' {
-            [array]$Templates = @( @{
-                name = 'Bad VHD'
-                parentvhd = 'This File Doesnt Exist.vhdx' 
-                sourcevhd = 'This File Doesnt Exist.vhdx'
-            } )
+            $Template = [LabVMTemplate]::New('Bad VHD')
+            $Template.ParentVHD = 'This File Doesnt Exist.vhdx' 
+            $Template.SourceVHD = 'This File Doesnt Exist.vhdx'
+            [LabVMTemplate[]] $Templates = @( $Template )
 
             It 'Throws a TemplateSourceVHDNotFoundError Exception' {
                 $ExceptionParameters = @{
                     errorId = 'TemplateSourceVHDNotFoundError'
                     errorCategory = 'InvalidArgument'
                     errorMessage = $($LocalizedData.TemplateSourceVHDNotFoundError `
-                        -f 'Bad VHD','This File Doesnt Exist.vhdx')
+                        -f $Template.Name,$Template.SourceVHD)
                 }
                 $Exception = GetException @ExceptionParameters
 

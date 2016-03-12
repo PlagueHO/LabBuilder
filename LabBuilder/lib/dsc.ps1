@@ -54,8 +54,7 @@ function GetModulesInDSCConfig()
         # Make sure this module isn't already in the list
         if ($ModuleName -notin $Modules.ModuleName)
         {
-            $Module = New-Object -TypeName LabDSCModule
-            $Module.ModuleName = $ModuleName
+            $Module = [LabDSCModule]::New($ModuleName)
             if (-not [String]::IsNullOrWhitespace($ModuleVersion))
             {
                 $Module.ModuleVersion = $ModuleVersion
@@ -240,8 +239,7 @@ function CreateDSCMOFFiles {
         -DSCConfigContent $DSCConfigContent
 
     # Add the xNetworking DSC Resource because it is always used
-    $Module = New-Object -TypeName LabDSCModule
-    $Module.ModuleName = 'xNetworking'
+    $Module = [LabDSCModule]::New('xNetworking')
     $DSCModules += @( $Module ) 
 
     foreach ($DSCModule in $DSCModules)
@@ -854,8 +852,7 @@ function StartDSC {
                 -DSCConfigContent $DSCContent
 
             # Add the xNetworking DSC Resource because it is always used
-            $Module = New-Object -TypeName LabDSCModule
-            $Module.ModuleName = 'xNetworking'
+            $Module = [LabDSCModule]::New('xNetworking')
             $DSCModules += @( $Module ) 
 
             foreach ($DSCModule in $DSCModules)

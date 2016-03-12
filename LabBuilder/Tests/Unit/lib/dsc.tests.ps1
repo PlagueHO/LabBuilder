@@ -14,9 +14,6 @@ $Global:ArtifactPath = "$Global:ModuleRoot\Artifacts"
 $Global:ExpectedContentPath = "$Global:TestConfigPath\ExpectedContent"
 $null = New-Item -Path "$Global:ArtifactPath" -ItemType Directory -Force -ErrorAction SilentlyContinue
 
-# Make sure the Types are declared
-. "$Global:ModuleRoot\lib\type.ps1"
-
 InModuleScope LabBuilder {
 <#
 .SYNOPSIS
@@ -81,17 +78,10 @@ InModuleScope LabBuilder {
 
     
     Describe 'SetModulesInDSCConfig' {
-        $Module1 = New-Object -TypeName LabDSCModule
-        $Module1.ModuleName = 'PSDesiredStateConfiguration'
-        $Module1.ModuleVersion = '1.0'
-        $Module2 = New-Object -TypeName LabDSCModule
-        $Module2.ModuleName = 'xActiveDirectory'
-        $Module3 = New-Object -TypeName LabDSCModule
-        $Module3.ModuleName = 'xComputerManagement'
-        $Module3.ModuleVersion = '1.4.0.0'
-        $Module4 = New-Object -TypeName LabDSCModule
-        $Module4.ModuleName = 'xNewModule'
-        $Module4.ModuleVersion = '9.9.9.9'
+        $Module1 = [LabDSCModule]::New('PSDesiredStateConfiguration','1.0')
+        $Module2 = [LabDSCModule]::New('xActiveDirectory')
+        $Module3 = [LabDSCModule]::New('xComputerManagement','1.4.0.0')
+        $Module4 = [LabDSCModule]::New('xNewModule','9.9.9.9')
         [LabDSCModule[]] $UpdateModules = @($Module1,$Module2,$Module3,$Module4)
 
         Context 'Called with Test DSC Resource File' {
@@ -357,11 +347,13 @@ InModuleScope LabBuilder {
 
 
 
-    Describe 'InitializeDSC' {
-
+    Describe 'InitializeDSC' -Tag 'Incomplete' {
         $Lab = Get-Lab -ConfigPath $Global:TestConfigOKPath
-        [array] $VMs = Get-LabVM -Lab $Lab
+        [LabVM[]] $VMs = Get-LabVM -Lab $Lab
 
+# There is a problem with Pester where the custom classes declared in type.ps1
+# are not able to be found by the Mock, so an error is thrown trying to mock
+# either of these two functions.
         Mock CreateDSCMOFFiles
         Mock SetDSCStartFile
 
