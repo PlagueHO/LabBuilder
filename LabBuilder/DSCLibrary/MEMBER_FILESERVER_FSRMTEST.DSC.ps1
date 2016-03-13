@@ -41,11 +41,18 @@ Configuration MEMBER_FILESERVER_FSRMTEST
             DependsOn = "[WindowsFeature]FileServerInstall" 
         }
 
+        WindowsFeature BranchCacheInstall 
+        { 
+            Ensure = "Present" 
+            Name = "FS-BranchCache" 
+            DependsOn = "[WindowsFeature]DataDedupInstall" 
+        }
+
         WindowsFeature DFSNameSpaceInstall 
         { 
             Ensure = "Present" 
             Name = "FS-DFS-Namespace" 
-            DependsOn = "[WindowsFeature]DataDedupInstall" 
+            DependsOn = "[WindowsFeature]BranchCacheInstall" 
         }
 
         WindowsFeature DFSReplicationInstall 

@@ -970,7 +970,7 @@ Configuration Networking {
         $AdapterCount++
         if ($Adapter.IPv4)
         {
-            if ($Adapter.IPv4.Address)
+            if (-not [String]::IsNullOrWhitespace($Adapter.IPv4.Address))
             {
 $DSCNetworkingConfig += @"
     xIPAddress IPv4_$AdapterCount {
@@ -981,7 +981,7 @@ $DSCNetworkingConfig += @"
     }
 
 "@
-                if ($Adapter.IPv4.DefaultGateway)
+                if (-not [String]::IsNullOrWhitespace($Adapter.IPv4.DefaultGateway))
                 {
 $DSCNetworkingConfig += @"
     xDefaultGatewayAddress IPv4G_$AdapterCount {
@@ -1015,7 +1015,7 @@ $DSCNetworkingConfig += @"
 "@
 
             } # If
-            if ($null -ne $Adapter.IPv4.DNSServer)
+            if (-not [String]::IsNullOrWhitespace($Adapter.IPv4.DNSServer))
             {
 $DSCNetworkingConfig += @"
     xDnsServerAddress IPv4D_$AdapterCount {
@@ -1029,7 +1029,7 @@ $DSCNetworkingConfig += @"
         } # If
         if ($Adapter.IPv6)
         {
-            if ($Adapter.IPv6.Address)
+            if (-not [String]::IsNullOrWhitespace($Adapter.IPv6.Address))
             {
 $DSCNetworkingConfig += @"
     xIPAddress IPv6_$AdapterCount {
@@ -1040,7 +1040,7 @@ $DSCNetworkingConfig += @"
     }
 
 "@
-                if ($Adapter.IPv6.DefaultGateway)
+                if (-not [String]::IsNullOrWhitespace($Adapter.IPv6.DefaultGateway))
                 {
 $DSCNetworkingConfig += @"
     xDefaultGatewayAddress IPv6G_$AdapterCount {
@@ -1074,7 +1074,7 @@ $DSCNetworkingConfig += @"
 "@
 
             } # If
-            if ($null -ne $Adapter.IPv6.DNSServer)
+            if (-not [String]::IsNullOrWhitespace($Adapter.IPv6.DNSServer))
             {
 $DSCNetworkingConfig += @"
     xDnsServerAddress IPv6D_$AdapterCount {
