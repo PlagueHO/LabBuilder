@@ -39,18 +39,11 @@ Configuration MEMBER_FILESERVER
             DependsOn = "[WindowsFeature]FileServerInstall" 
         }
 
-        WindowsFeature BranchCacheInstall 
-        { 
-            Ensure = "Present" 
-            Name = "FS-BranchCache" 
-            DependsOn = "[WindowsFeature]DataDedupInstall" 
-        }
-
         WindowsFeature DFSNameSpaceInstall 
         { 
             Ensure = "Present" 
             Name = "FS-DFS-Namespace" 
-            DependsOn = "[WindowsFeature]BranchCacheInstall" 
+            DependsOn = "[WindowsFeature]DataDedupInstall" 
         }
 
         WindowsFeature DFSReplicationInstall 
