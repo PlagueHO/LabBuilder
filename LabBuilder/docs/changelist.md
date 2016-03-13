@@ -4,6 +4,7 @@
 * UpdateVMDataDisks: Fix to incorrectly reported Data VHD type change error.
 * DSCLibrary\MEMBER_BRANCHCACHE_HOST.DSC.ps1: Created resource for BranchCache Hosted Servers.
 * DSCLibrary\MEMBER_FILESERVER_*.DSC.ps1: Added BranchCache for File Servers feature.
+* Readme.md: Added 'Lab Installation Process in Detail' section.
 
 ### 0.7.0.0
 * Initialize-LabSwitch: External switch correctly sets Adapter Name.
