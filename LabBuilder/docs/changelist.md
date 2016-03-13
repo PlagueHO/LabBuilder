@@ -1,7 +1,14 @@
+### Unreleased
+* DSCLibrary\MEMBER_FAILOVERCLUSTER_FS.DSC.ps1: Changed to install most File Server features on cluster nodes.
+* DSCLibrary\MEMBER_FAILOVERCLUSTER_DHCP.DSC.ps1: Created resource for Failover Cluster DHCP Server nodes.
+
 ### 0.7.1.0
 * GetDSCNetworkingConfig: Fix DSC error occuring when a blank DNS Server address or Default Gateway address is set on an Adapter.
 * InitializeVhd: Prevent unnecessary results of disk partitioning and volume creation to console.
 * UpdateVMDataDisks: Fix to incorrectly reported Data VHD type change error.
+* DSCLibrary\MEMBER_BRANCHCACHE_HOST.DSC.ps1: Created resource for BranchCache Hosted Servers.
+* DSCLibrary\MEMBER_FILESERVER_*.DSC.ps1: Added BranchCache for File Servers feature.
+* Readme.md: Added 'Lab Installation Process in Detail' section.
 
 ### 0.7.0.0
 * Initialize-LabSwitch: External switch correctly sets Adapter Name.
