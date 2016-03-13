@@ -133,6 +133,63 @@ Configuration MEMBER_FAILOVERCLUSTER_FS
                 IsPersistent = $true 
                 DependsOn = "[WaitForAny]WaitForiSCSIServerTarget" 
             } # End of ciSCSITarget Resource
-        }    
+        }
+
+        # Enable FSRM FireWall rules so we can remote manage FSRM
+        xFirewall FSRMFirewall1
+        {
+            Name = "FSRM-WMI-ASYNC-In-TCP"
+            Ensure = 'Present'
+            Enabled = 'True'
+        }
+
+        xFirewall FSRMFirewall2
+        {
+            Name = "FSRM-WMI-WINMGMT-In-TCP"
+            Ensure = 'Present'
+            Enabled = 'True' 
+        }
+
+        xFirewall FSRMFirewall3
+        {
+            Name = "FSRM-RemoteRegistry-In (RPC)"
+            Ensure = 'Present'
+            Enabled = 'True' 
+        }
+        
+        xFirewall FSRMFirewall4
+        {
+            Name = "FSRM-Task-Scheduler-In (RPC)"
+            Ensure = 'Present'
+            Enabled = 'True' 
+        }
+
+        xFirewall FSRMFirewall5
+        {
+            Name = "FSRM-SrmReports-In (RPC)"
+            Ensure = 'Present'
+            Enabled = 'True' 
+        }
+
+        xFirewall FSRMFirewall6
+        {
+            Name = "FSRM-RpcSs-In (RPC-EPMAP)"
+            Ensure = 'Present'
+            Enabled = 'True' 
+        }
+        
+        xFirewall FSRMFirewall7
+        {
+            Name = "FSRM-System-In (TCP-445)"
+            Ensure = 'Present'
+            Enabled = 'True' 
+        }
+        
+        xFirewall FSRMFirewall8
+        {
+            Name = "FSRM-SrmSvc-In (RPC)"
+            Ensure = 'Present'
+            Enabled = 'True'
+        }
     }
 }
