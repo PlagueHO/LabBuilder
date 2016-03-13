@@ -2,7 +2,6 @@ LabBuilder
 ==========
 
 [![Join the chat at https://gitter.im/PlagueHO/LabBuilder](https://badges.gitter.im/PlagueHO/LabBuilder.svg)](https://gitter.im/PlagueHO/LabBuilder?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
-
 [![Build status](https://ci.appveyor.com/api/projects/status/rcg7xmm97qhg2bjr/branch/master?svg=true)](https://ci.appveyor.com/project/PlagueHO/labbuilder/branch/master)
 
 
@@ -96,7 +95,68 @@ The conversion process for a single ISO to VHD can take 10-20 minutes depending 
 For this reason multiple Labs can be configured to use the same path to store these VHDs by changing the _vhdpath_ attribute of the _<templatevhds>_ node in the configuration. 
 
 
-### Windows Management Framework 5.0 (WMF 5.0)
+Lab Installation Process in Detail
+==================================
+When a new Lab is installed onto a Lab Host from a configuration file, LabBuilder performs the following tasks (in order):
+ 1. **Load Config**: The Lab configuration file is Loaded and validated.
+
+   _If the Lab Configuration file is invalid it will be rejected and the Lab will not be installed._
+
+ 2. **Create Lab Folder**: A folder on the Lab Host is created to store the Lab files (VM Templates, VMs, Resources etc.).
+
+  _The user specifies the location of this folder in the Lab Configuration file or by passing the LabPath parameter to the Install-Lab cmdlet._
+
+ 3. **Download Modules**: All Module Resources listed in the Lab Configuration are downloaded to the PowerShell Modules folder if they don't already exist.
+ 4. **Download MSUs**: All MSU Resources listed in the Lab Configuration are downloaded to the Resources folder in the Lab folder if they don't already exist. 
+ 5. **Create Lab Switches**: Each Virtual Switch specified in the Lab Configuration is created or updated in Hyper-V.
+ 6. **Create Management Switch**: A Management Internal Virtual Switch is created in Hyper-V for this Lab.
+
+   _Each Lab has it's own Management Internal Virtual Switch which will be named "Lab Management" with the Lab ID prepended to it._
+   _It will be assigned a VLAN Id of 99, which can be overridden in the Lab Configuration file._
+   _The Lab Management switch is for the Lab Host to communicate with the Lab Guest Virtual Machines so must not be removed._
+
+ 7. **Create Template VHDs**: Any Template VHD files that don't exist but should are created from the appropriate ISO files.
+
+    _A Lab Configuration file may not list any Template VHD files, or it may list them but not specify source ISO files to create the VHD files from._
+    _Instead the Templates may directly link to a VHD file or an existing Hyper-V Virtual Machine._ 
+
+ 8. **Create VHD Templates Folder**: A folder within the Lab folder will be created to store the Virtual Hard Disk Template files.
+
+    _This folder is usually called 'Virtual Hard Disk Templates'._
+    _This folder will be used to store Template VHD files or Differencing Disk Parent VHD files for use as a Boot Disk for Lab Virtual Machines._
+    _A VHD file in this folder can be used as a Template or a Differencing Disk Parent or both._
+
+ 9. **Copy VHD Templates**: Get the list of Templates in the Lab Configuration and copy the VHD specified to the Lab Virtual Hard Disk Templates folder.
+
+   _Any packages listed in the Template will be applied to the Template at this point._
+   _A Template VHD file will only be copied into this folder if it does not already exist._
+   _The Template VHD file will also be optimized in this folder and then marked as Read Only to ensure it is not changed (as it may be used as a Differencing Disk Parent)._
+
+ 10. **Create Virtual Machines**: Create the Lab Virtual Machines, one at a time, for each one performing the following steps:
+     
+     1. **Create Hyper-V VM**: Create the Virtual Machine and attach any Network Adapters listed in the Lab Configuration with it.
+     2. **Create Boot VHD**: Copy (if not using a Differencing Boot VHD) the Boot VHD from the Virtual Hard Disk Templates folder and attach it to the VM.
+     3. **Add Packages**: Add any listed packages to the VM.
+     4. **Create Data VHDs**: Copy/Create and attach any Data VHDs listed in the Lab Configuration with the VM.
+     5. **Create Config Files**: Create any VM configuration files required for first boot of the VM (e.g. Unattend.xml, SetupComplete.cmd) and copy them into the Boot VHD.  
+     6. **Boot VM**: Boot the VM for the first time and wait for Initial Setup of the VM to complete.
+     7. **Create Certificate**: A Self-Signed certificate will be created by the VM and made available on the VM Boot VHD.
+     8. **Download Certificate**: The Self-Signed certificate will be downloaded by the Lab Host and used to encrypt the credentials in the DSC MOF file that will be created.
+     9. **Create DSC Configuration**: The DSC Configuration file will be assembled from the speficied DSC Configuration and the required networking information.
+     10. **Compile DSC Configuration**: The DSC Configuration file will be compiled and a MOF file produced.
+     11. **Upload DSC Files**: This DSC MOF file, DSC LCM (Meta) MOF File and any DSC Resource Modules required will be uploaded into the VM.
+     12. **Start DSC**: DSC configuration will be started on the VM.
+
+         _Note: The LCM is configured to re-apply DSC every 15 minutes, so changing any settings managed by DSC on the server will be reverted within 15 minutes of them being changed._
+
+The entire process above is automated.
+As long as you a valid Lab Configuration file and any required Windows Installation Media ISO files then the Lab will be installed for you.
+Depending on the size of the Lab you are building and whether or not the ISO files need to be converted to VHD files, this could take from 5 minutes to many hours.
+For example, an Lab containing eight Windows Server 2012 R2 Virtual Machines configured as an AD Domain containing various services installed on a Host with four CPU cores, 32 GB RAM and an SSD will take about 45 minutes to install.
+
+
+Windows Management Framework 5.0 (WMF 5.0)
+==========================================
 All Lab Guest Virtual Machines must have WMF 5.0 installed onto them before they are first booted in a Lab environment. This is to ensure the Self-Signed certificate can be generated and returned to the host for DSC MOF encryption.
 
 If WMF 5.0 is not installed before the Lab VM Guest first boot then DSC configuration will not proceed, and the Lab Guest VM will boot with a clean OS, but none of the specific features installed or configured (e.g. DC's not promoted).

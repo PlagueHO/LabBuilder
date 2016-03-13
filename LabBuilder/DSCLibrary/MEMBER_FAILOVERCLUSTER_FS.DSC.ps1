@@ -40,7 +40,50 @@ Configuration MEMBER_FAILOVERCLUSTER_FS
         { 
             Ensure = "Present" 
             Name = "RSAT-Clustering-PowerShell" 
+            DependsOn = "[WindowsFeature]FailoverClusteringInstall" 
         } 
+
+        WindowsFeature FileServerInstall 
+        { 
+            Ensure = "Present" 
+            Name = "FS-FileServer" 
+            DependsOn = "[WindowsFeature]FailoverClusteringPSInstall" 
+        }
+
+        WindowsFeature DataDedupInstall 
+        { 
+            Ensure = "Present" 
+            Name = "FS-Data-Deduplication" 
+            DependsOn = "[WindowsFeature]FileServerInstall" 
+        }
+
+        WindowsFeature BranchCacheInstall 
+        { 
+            Ensure = "Present" 
+            Name = "FS-BranchCache" 
+            DependsOn = "[WindowsFeature]DataDedupInstall" 
+        }
+
+        WindowsFeature DFSNameSpaceInstall 
+        { 
+            Ensure = "Present" 
+            Name = "FS-DFS-Namespace" 
+            DependsOn = "[WindowsFeature]BranchCacheInstall" 
+        }
+
+        WindowsFeature DFSReplicationInstall 
+        { 
+            Ensure = "Present" 
+            Name = "FS-DFS-Replication" 
+            DependsOn = "[WindowsFeature]DFSNameSpaceInstall" 
+        }
+
+        WindowsFeature FSResourceManagerInstall 
+        { 
+            Ensure = "Present" 
+            Name = "FS-Resource-Manager" 
+            DependsOn = "[WindowsFeature]DFSReplicationInstall" 
+        }
 
         # Wait for the Domain to be available so we can join it.
         WaitForAll DC
@@ -90,6 +133,63 @@ Configuration MEMBER_FAILOVERCLUSTER_FS
                 IsPersistent = $true 
                 DependsOn = "[WaitForAny]WaitForiSCSIServerTarget" 
             } # End of ciSCSITarget Resource
-        }    
+        }
+
+        # Enable FSRM FireWall rules so we can remote manage FSRM
+        xFirewall FSRMFirewall1
+        {
+            Name = "FSRM-WMI-ASYNC-In-TCP"
+            Ensure = 'Present'
+            Enabled = 'True'
+        }
+
+        xFirewall FSRMFirewall2
+        {
+            Name = "FSRM-WMI-WINMGMT-In-TCP"
+            Ensure = 'Present'
+            Enabled = 'True' 
+        }
+
+        xFirewall FSRMFirewall3
+        {
+            Name = "FSRM-RemoteRegistry-In (RPC)"
+            Ensure = 'Present'
+            Enabled = 'True' 
+        }
+        
+        xFirewall FSRMFirewall4
+        {
+            Name = "FSRM-Task-Scheduler-In (RPC)"
+            Ensure = 'Present'
+            Enabled = 'True' 
+        }
+
+        xFirewall FSRMFirewall5
+        {
+            Name = "FSRM-SrmReports-In (RPC)"
+            Ensure = 'Present'
+            Enabled = 'True' 
+        }
+
+        xFirewall FSRMFirewall6
+        {
+            Name = "FSRM-RpcSs-In (RPC-EPMAP)"
+            Ensure = 'Present'
+            Enabled = 'True' 
+        }
+        
+        xFirewall FSRMFirewall7
+        {
+            Name = "FSRM-System-In (TCP-445)"
+            Ensure = 'Present'
+            Enabled = 'True' 
+        }
+        
+        xFirewall FSRMFirewall8
+        {
+            Name = "FSRM-SrmSvc-In (RPC)"
+            Ensure = 'Present'
+            Enabled = 'True'
+        }
     }
 }
