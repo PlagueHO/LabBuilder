@@ -1,3 +1,6 @@
+### Unreleased
+* DSCLibrary\MEMBER_FAILOVERCLUSTER_FS.DSC.ps1: Changed to install most File Server features on cluster nodes.
+
 ### 0.7.1.0
 * GetDSCNetworkingConfig: Fix DSC error occuring when a blank DNS Server address or Default Gateway address is set on an Adapter.
 * InitializeVhd: Prevent unnecessary results of disk partitioning and volume creation to console.

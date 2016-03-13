@@ -40,7 +40,50 @@ Configuration MEMBER_FAILOVERCLUSTER_FS
         { 
             Ensure = "Present" 
             Name = "RSAT-Clustering-PowerShell" 
+            DependsOn = "[WindowsFeature]FailoverClusteringInstall" 
         } 
+
+        WindowsFeature FileServerInstall 
+        { 
+            Ensure = "Present" 
+            Name = "FS-FileServer" 
+            DependsOn = "[WindowsFeature]FailoverClusteringPSInstall" 
+        }
+
+        WindowsFeature DataDedupInstall 
+        { 
+            Ensure = "Present" 
+            Name = "FS-Data-Deduplication" 
+            DependsOn = "[WindowsFeature]FileServerInstall" 
+        }
+
+        WindowsFeature BranchCacheInstall 
+        { 
+            Ensure = "Present" 
+            Name = "FS-BranchCache" 
+            DependsOn = "[WindowsFeature]DataDedupInstall" 
+        }
+
+        WindowsFeature DFSNameSpaceInstall 
+        { 
+            Ensure = "Present" 
+            Name = "FS-DFS-Namespace" 
+            DependsOn = "[WindowsFeature]BranchCacheInstall" 
+        }
+
+        WindowsFeature DFSReplicationInstall 
+        { 
+            Ensure = "Present" 
+            Name = "FS-DFS-Replication" 
+            DependsOn = "[WindowsFeature]DFSNameSpaceInstall" 
+        }
+
+        WindowsFeature FSResourceManagerInstall 
+        { 
+            Ensure = "Present" 
+            Name = "FS-Resource-Manager" 
+            DependsOn = "[WindowsFeature]DFSReplicationInstall" 
+        }
 
         # Wait for the Domain to be available so we can join it.
         WaitForAll DC
