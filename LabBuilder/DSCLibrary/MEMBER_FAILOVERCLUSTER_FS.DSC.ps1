@@ -10,6 +10,7 @@ DSC Template Configuration File For use by LabBuilder
     DomainAdminPassword = "P@ssword!1"
     DCName = 'SA-DC1'
     PSDscAllowDomainUser = $True
+    ISCSIServerName = 'SA-FS1'
     ServerTargetName = 'sa-foc-target'
     TargetPortalAddress = '192.168.129.24'
     InitiatorPortalAddress = '192.168.129.28'
@@ -117,7 +118,7 @@ Configuration MEMBER_FAILOVERCLUSTER_FS
             WaitForAny WaitForiSCSIServerTarget
             {
                 ResourceName = "[ciSCSIServerTarget]ClusterServerTarget"
-                NodeName = $Node.ServerTargetName
+                NodeName = $Node.ServerName
                 RetryIntervalSec = 30
                 RetryCount = 30
                 DependsOn = "[Service]iSCSIService"

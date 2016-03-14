@@ -511,6 +511,7 @@
           DomainAdminPassword = "P@ssword!1"
           DCName = "SA-DC1"
           PSDscAllowDomainUser = $True
+          ServerName = 'sa-fs1'
           ServerTargetName = 'sa-fs1-sa-foc-target-target'
           TargetPortalAddress = '192.168.129.24'
           InitiatorPortalAddress = '192.168.129.28'
@@ -557,6 +558,7 @@
           DomainAdminPassword = "P@ssword!1"
           DCName = "SA-DC1"
           PSDscAllowDomainUser = $True
+          ServerName = 'sa-fs1'
           ServerTargetName = 'sa-fs1-sa-foc-target-target'
           TargetPortalAddress = '192.168.129.24'
           InitiatorPortalAddress = '192.168.129.29'
@@ -603,6 +605,7 @@
           DomainAdminPassword = "P@ssword!1"
           DCName = "SA-DC1"
           PSDscAllowDomainUser = $True
+          ServerName = 'sa-fs1'
           ServerTargetName = 'sa-fs1-sa-foc-target-target'
           TargetPortalAddress = '192.168.129.24'
           InitiatorPortalAddress = '192.168.129.30'
