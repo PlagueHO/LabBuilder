@@ -7,6 +7,7 @@
 * Stop-Lab: Improved readability if timeout detect code.
             Ensure all VMs are stopped in a Bootphase, even if timeout occurs.
 * StartDSCDebug.ps1: Added a WaitForDebugger parameter to StartDSCDebug.ps1 that will cause LCM to start with debugging mode enabled.
+* Lib\Type.ps1: File removed and content moved to header of LabBuilder.psm1 so that types were available outside the module context.
 
 ### 0.7.2.0
 * DSCLibrary\MEMBER_FAILOVERCLUSTER_FS.DSC.ps1: Changed to install most File Server features on cluster nodes.
