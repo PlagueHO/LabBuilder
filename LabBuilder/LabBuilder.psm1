@@ -4780,7 +4780,7 @@ Function Start-Lab {
         } # if
     } # begin
 
-    process 
+    process
     {
         # Get the VMs
         $VMs = Get-LabVM `
@@ -4804,19 +4804,15 @@ Function Start-Lab {
                 Where-Object -FilterScript { ($_.BootOrder -eq $BootPhase) } )
 
             [DateTime] $StartPhase = Get-Date
-            [boolean] $PhaseComplete = $false
-            [boolean] $PhaseAllBooted = $true
+            [boolean] $PhaseComplete = $False
+            [boolean] $PhaseAllBooted = $True
             [int] $VMCount = $BootVMs.Count
             [int] $VMNumber = 0
-            [boolean] $FirstPassComplete = $false
-            
+
             # Loop through all the VMs in this "Bootphase" repeatedly
             # until timeout occurs or PhaseComplete is marked as complete
-            # Ensure that we also complete at least one full pass of all
-            # VMs in the "Bootphase"
             while (-not $PhaseComplete `
-                -and ((Get-Date) -lt $StartPhase.AddSeconds($StartupTimeout))`
-                -and -not $FirstPassComplete)
+                -and ((Get-Date) -lt $StartPhase.AddSeconds($StartupTimeout)))
             {
                 # Get the VM to boot/check
                 $VM = $BootVMs[$VMNumber]
@@ -4879,8 +4875,6 @@ Function Start-Lab {
                     } # if
                     # Reset the VM Loop
                     $VMNumber = 0
-                    # Flag that we have completed the first pass
-                    $FirstPassComplete = $True
                 } # if
             } # while
 
@@ -4896,7 +4890,7 @@ Function Start-Lab {
 
                 }
                 ThrowException @ExceptionParameters
-            }
+            } # if
         } # foreach
 
         Write-Verbose -Message $($LocalizedData.LabStartCompleteMessage `
@@ -5026,11 +5020,11 @@ Function Stop-Lab {
                 Where-Object -FilterScript { ($_.BootOrder -eq $BootPhase) } )
 
             [DateTime] $StartPhase = Get-Date
-            [boolean] $PhaseComplete = $false
-            [boolean] $PhaseAllStopped = $true
+            [boolean] $PhaseComplete = $False
+            [boolean] $PhaseAllStopped = $True
             [int] $VMCount = $BootVMs.Count
             [int] $VMNumber = 0
-            [boolean] $FirstPassComplete = $false
+            [boolean] $FirstPassComplete = $False
 
             # Loop through all the VMs in this "Bootphase" repeatedly
             # until timeout occurs or PhaseComplete is marked as complete
@@ -5115,7 +5109,7 @@ Function Stop-Lab {
 
                 }
                 ThrowException @ExceptionParameters
-            }
+            } # if
         } # foreach
 
         Write-Verbose -Message $($LocalizedData.LabStopCompleteMessage `

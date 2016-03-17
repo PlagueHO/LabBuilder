@@ -4,7 +4,6 @@
 * docs\labbuilderconfig-schema.md: Converted to UTF-8 to eliminate issues with Git.
 * support\Convert-XSDToMD.ps1: Added code to convert transformed output to UTF-8.
 * Start-Lab: Improved readability if timeout detect code.
-             Ensure all VMs are started in a Bootphase, even if timeout occurs.
 * Stop-Lab: Improved readability if timeout detect code.
             Ensure all VMs are stopped in a Bootphase, even if timeout occurs.
 
