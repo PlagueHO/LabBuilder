@@ -469,7 +469,6 @@ class LabDSCModule:System.ICloneable {
 [Int] $Script:RetryConnectSeconds = 5
 [Int] $Script:RetryHeartbeatSeconds = 1
 [Int] $Script:StartupTimeout = 90
-[Int] $Script:ShutdownTimeout = 30
 
 # XML Stuff
 [String] $Script:ConfigurationXMLSchema = Join-Path -Path $PSScriptRoot -ChildPath 'schema\labbuilderconfig-schema.xsd'
@@ -5303,7 +5302,7 @@ Function Start-Lab {
         } # foreach
 
         Write-Verbose -Message $($LocalizedData.LabStartCompleteMessage `
-            -f $Lab.labbuilderconfig.name,$Lab.labbuilderconfig.settings.fullconfigpath)    
+            -f $Lab.labbuilderconfig.name,$Lab.labbuilderconfig.settings.fullconfigpath)
     } # process
     
     end
@@ -5385,18 +5384,12 @@ Function Stop-Lab {
             Mandatory=$true,
             ValueFromPipeline=$true)]
         [ValidateNotNullOrEmpty()]
-        $Lab,
-        
-        [Parameter(
-            Position=4)]
-        [Int] $ShutdownTimeout = $Script:ShutdownTimeout
+        $Lab
     ) # Param
     
     begin
     {
         # Remove some PSBoundParameters so we can Splat
-        $null = $PSBoundParameters.Remove('ShutdownTimeout')
-
         if ($PSCmdlet.ParameterSetName -eq 'File')
         {
             # Read the configuration
@@ -5433,15 +5426,9 @@ Function Stop-Lab {
             [boolean] $PhaseAllStopped = $True
             [int] $VMCount = $BootVMs.Count
             [int] $VMNumber = 0
-            [boolean] $FirstPassComplete = $False
 
             # Loop through all the VMs in this "Bootphase" repeatedly
-            # until timeout occurs or PhaseComplete is marked as complete
-            # Ensure that we also complete at least one full pass of all
-            # VMs in the "Bootphase"
-            while (-not $PhaseComplete `
-                -and ((Get-Date) -lt $StartPhase.AddSeconds($ShutdownTimeout)) `
-                -and -not $FirstPassComplete)
+            while (-not $PhaseComplete)
             {
                 # Get the VM to boot/check
                 $VM = $BootVMs[$VMNumber]
@@ -5501,24 +5488,8 @@ Function Stop-Lab {
                     } # if
                     # Reset the VM Loop
                     $VMNumber = 0
-                    # Flag that we have completed the first pass
-                    $FirstPassComplete = $True
                 } # if
             } # while
-
-            # Did we timeout?
-            if (-not ($PhaseComplete))
-            {
-                # Yes, throw an exception
-                $ExceptionParameters = @{
-                    errorId = 'BootPhaseStopVMsTimeoutError'
-                    errorCategory = 'InvalidArgument'
-                    errorMessage = $($LocalizedData.BootPhaseStopVMsTimeoutError `
-                        -f $BootPhase)
-
-                }
-                ThrowException @ExceptionParameters
-            } # if
         } # foreach
 
         Write-Verbose -Message $($LocalizedData.LabStopCompleteMessage `
