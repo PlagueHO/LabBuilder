@@ -639,13 +639,27 @@ Start-DSCConfiguration ``
         -Value $DSCStartPs -Force
 
     $DSCStartPsDebug = @"
+param (
+    [boolean] $WaitForDebugger
+)
 Set-DscLocalConfigurationManager ``
     -Path `"$($ENV:SystemRoot)\Setup\Scripts\`" ``
     -Verbose
+if ($WaitForDebugger)
+{
+    Enable-DscDebug ``
+        -BreakAll
+}
 Start-DSCConfiguration ``
     -Path `"$($ENV:SystemRoot)\Setup\Scripts\`" ``
-    -Force -Debug -Wait ``
+    -Force ``
+    -Debug ``
+    -Wait ``
     -Verbose
+if ($WaitForDebugger)
+{
+    Disable-DscDebug
+}
 "@
     $null = Set-Content `
         -Path (Join-Path -Path $VMLabBuilderFiles -ChildPath 'StartDSCDebug.ps1') `
