@@ -3,6 +3,9 @@
 * samples\Sample_WS2012R2_DomainClustering.xml: Added ServerName property to all Failover Cluster servers DSC properties.
 * docs\labbuilderconfig-schema.md: Converted to UTF-8 to eliminate issues with Git.
 * support\Convert-XSDToMD.ps1: Added code to convert transformed output to UTF-8.
+* Start-Lab: Improved readability if timeout detect code.
+* Stop-Lab: Improved readability if timeout detect code.
+            Ensure all VMs are stopped in a Bootphase, even if timeout occurs.
 
 ### 0.7.2.0
 * DSCLibrary\MEMBER_FAILOVERCLUSTER_FS.DSC.ps1: Changed to install most File Server features on cluster nodes.
