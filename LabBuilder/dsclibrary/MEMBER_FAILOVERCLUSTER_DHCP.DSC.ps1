@@ -68,20 +68,20 @@ Configuration MEMBER_FAILOVERCLUSTER_FS
         }
 
         WindowsFeature FailoverClusteringInstall
-        { 
+        {
             Ensure = "Present" 
             Name = "Failover-Clustering" 
-        } 
+        }
 
         WindowsFeature FailoverClusteringPSInstall
-        { 
+        {
             Ensure = "Present" 
             Name = "RSAT-Clustering-PowerShell" 
             DependsOn = "[WindowsFeature]FailoverClusteringInstall" 
-        } 
+        }
 
         WindowsFeature DHCPInstall 
-        { 
+        {
             Ensure = "Present" 
             Name = "DHCP" 
             DependsOn = "[WindowsFeature]FailoverClusteringPSInstall"

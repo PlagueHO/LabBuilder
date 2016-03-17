@@ -67,7 +67,7 @@ Configuration MEMBER_DHCP
         }
 
         WindowsFeature DHCPInstall 
-        { 
+        {
             Ensure = "Present" 
             Name = "DHCP" 
         }

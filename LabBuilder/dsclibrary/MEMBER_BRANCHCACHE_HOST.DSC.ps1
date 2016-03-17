@@ -4,7 +4,7 @@ DSC Template Configuration File For use by LabBuilder
     MEMBER_BRANCHCACHE_HOST
 .Desription
     Builds a Server that is joined to a domain and then made into a BranchCache Hosted Mode Server.
-.Parameters:          
+.Parameters:
     DomainName = "LABBUILDER.COM"
     DomainAdminPassword = "P@ssword!1"
     DCName = 'SA-DC1'

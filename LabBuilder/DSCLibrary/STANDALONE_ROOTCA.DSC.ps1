@@ -35,7 +35,7 @@ Configuration STANDALONE_ROOTCA
             Name = 'ADCS-Cert-Authority'
             Ensure = 'Present'
         }
-        
+
         # Install ADCS Web Enrollment - only required because it creates the CertEnroll virtual folder
         # Which we use to pass certificates to the Issuing/Sub CAs       
         WindowsFeature ADCSWebEnrollment
@@ -44,9 +44,9 @@ Configuration STANDALONE_ROOTCA
             Name = 'ADCS-Web-Enrollment'
             DependsOn = '[WindowsFeature]ADCSCA'
         }
-        
+
         WindowsFeature InstallWebMgmtService
-        { 
+        {
             Ensure = "Present" 
             Name = "Web-Mgmt-Service" 
             DependsOn = '[WindowsFeature]ADCSWebEnrollment'
@@ -61,7 +61,7 @@ Configuration STANDALONE_ROOTCA
             Type = 'File'
             DependsOn = '[WindowsFeature]ADCSCA'
         }
-        
+
         # Configure the CA as Standalone Root CA
         xADCSCertificationAuthority ConfigCA
         {
@@ -171,7 +171,7 @@ Configuration STANDALONE_ROOTCA
             }
             DependsOn = '[xADCSWebEnrollment]ConfigWebEnrollment'
         }
-        
+
         # Generate Issuing certificates for any SubCAs
         Foreach ($SubCA in $Node.SubCAs) {
             

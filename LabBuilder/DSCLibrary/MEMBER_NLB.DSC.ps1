@@ -27,22 +27,22 @@ Configuration MEMBER_NLB
 
 
         WindowsFeature InstallWebServer
-        { 
+        {
             Ensure = "Present" 
             Name = "Web-Server" 
         }
 
         WindowsFeature InstallWebMgmtService
-        { 
+        {
             Ensure = "Present" 
             Name = "Web-Mgmt-Service" 
         }
 
         WindowsFeature InstallNLB
-        { 
+        {
             Ensure = "Present" 
             Name = "NLB" 
-        } 
+        }
 
         # Wait for the Domain to be available so we can join it.
         WaitForAll DC

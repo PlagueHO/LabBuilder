@@ -47,7 +47,7 @@ Configuration MEMBER_DNS
         }
 
         xComputer JoinDomain 
-        { 
+        {
             Name       = $Node.NodeName
             DomainName = $Node.DomainName
             Credential = $DomainAdminCredential 

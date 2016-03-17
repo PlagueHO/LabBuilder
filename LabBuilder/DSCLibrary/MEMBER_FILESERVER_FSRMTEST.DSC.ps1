@@ -49,35 +49,35 @@ Configuration MEMBER_FILESERVER_FSRMTEST
         }
 
         WindowsFeature DFSNameSpaceInstall 
-        { 
+        {
             Ensure = "Present" 
             Name = "FS-DFS-Namespace" 
             DependsOn = "[WindowsFeature]BranchCacheInstall" 
         }
 
         WindowsFeature DFSReplicationInstall 
-        { 
+        {
             Ensure = "Present" 
             Name = "FS-DFS-Replication" 
             DependsOn = "[WindowsFeature]DFSNameSpaceInstall" 
         }
 
         WindowsFeature FSResourceManagerInstall 
-        { 
+        {
             Ensure = "Present" 
             Name = "FS-Resource-Manager" 
             DependsOn = "[WindowsFeature]DFSReplicationInstall" 
         }
 
         WindowsFeature FSSyncShareInstall 
-        { 
+        {
             Ensure = "Present" 
             Name = "FS-SyncShareService" 
             DependsOn = "[WindowsFeature]FSResourceManagerInstall" 
         }
 
         WindowsFeature StorageServicesInstall 
-        { 
+        {
             Ensure = "Present" 
             Name = "Storage-Services" 
             DependsOn = "[WindowsFeature]FSSyncShareInstall" 

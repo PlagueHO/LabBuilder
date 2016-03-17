@@ -26,24 +26,24 @@ Configuration MEMBER_WDS
         }
 
         WindowsFeature WDSDeploymentInstall 
-        { 
+        {
             Ensure = "Present" 
             Name = "WDS-Deployment" 
-        } 
+        }
 
         WindowsFeature WDSTransportInstall 
-        { 
+        {
             Ensure = "Present" 
             Name = "WDS-Transport" 
             DependsOn = "[WindowsFeature]WDSDeploymentInstall" 
-        } 
+        }
 
         WindowsFeature BitLockerNetworkUnlockInstall
-        { 
+        {
             Ensure = "Present" 
             Name = "BitLocker-NetworkUnlock" 
             DependsOn = "[WindowsFeature]RSATADPowerShellInstall" 
-        } 
+        }
 
         # Wait for the Domain to be available so we can join it.
         WaitForAll DC

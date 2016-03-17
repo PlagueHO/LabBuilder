@@ -4,7 +4,7 @@ DSC Template Configuration File For use by LabBuilder
     STANDALONE_ROOTCA_NOSUBCA
 .Desription
     Builds a Standalone Root CA with no Sub CAs.
-.Parameters:    
+.Parameters:
             CACommonName = "LABBUILDER.COM Root CA"
             CADistinguishedNameSuffix = "DC=LABBUILDER,DC=COM"
             CRLPublicationURLs = "1:C:\Windows\system32\CertSrv\CertEnroll\%3%8%9.crl\n10:ldap:///CN=%7%8,CN=%2,CN=CDP,CN=Public Key Services,CN=Services,%6%10\n2:http://pki.labbuilder.com/CertEnroll/%3%8%9.crl"
@@ -26,7 +26,7 @@ Configuration STANDALONE_ROOTCA_NOSUBCA
             Name = 'ADCS-Cert-Authority'
             Ensure = 'Present'
         }
-        
+
         # Install ADCS Web Enrollment - only required because it creates the CertEnroll virtual folder
         # Which we use to pass certificates to the Issuing/Sub CAs       
         WindowsFeature ADCSWebEnrollment
@@ -52,7 +52,7 @@ Configuration STANDALONE_ROOTCA_NOSUBCA
             Type = 'File'
             DependsOn = '[WindowsFeature]ADCSCA'
         }
-        
+
         # Configure the CA as Standalone Root CA
         xADCSCertificationAuthority ConfigCA
         {

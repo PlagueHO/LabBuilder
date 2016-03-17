@@ -22,19 +22,19 @@ Configuration STANDALONE_INTERNET
         }
 
         WindowsFeature WebServerInstall 
-        { 
+        {
             Ensure = "Present" 
             Name = "Web-WebServer" 
         }
 
         WindowsFeature DHCPInstall 
-        { 
+        {
             Ensure = "Present" 
             Name = "DHCP" 
         }
 
         WindowsFeature DNSInstall 
-        { 
+        {
             Ensure = "Present" 
             Name = "DNS" 
         }
@@ -48,7 +48,7 @@ Configuration STANDALONE_INTERNET
             Type = 'File'
             DependsOn = '[WindowsFeature]WebServerInstall'
         }
-        
+
         # Add the special DNS A records that Windows OS's use
         # to identify if the internet is available.
         # Can't be done yet because Resources are too limited.

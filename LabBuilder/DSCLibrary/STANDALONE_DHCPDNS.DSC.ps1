@@ -73,13 +73,13 @@ Configuration STANDALONE_DHCPDNS
         }
 
         WindowsFeature DHCPInstall 
-        { 
+        {
             Ensure = "Present" 
             Name = "DHCP" 
         }
 
         WindowsFeature DNSInstall 
-        { 
+        {
             Ensure = "Present" 
             Name = "DNS" 
         }
@@ -142,7 +142,7 @@ Configuration STANDALONE_DHCPDNS
                 DependsOn        = '[xComputer]JoinDomain'
             }
         }
-        
+
         [Int]$Count=0
         Foreach ($ADZone in $Node.ADZones) {
             $Count++

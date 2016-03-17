@@ -4,7 +4,7 @@ DSC Template Configuration File For use by LabBuilder
     STANDALONE_DEFAULT
 .Desription
     Builds a Standalone computer with no additional DSC resources.
-.Parameters:          
+.Parameters:
 ###################################################################################################>
 
 Configuration STANDALONE_DEFAULT

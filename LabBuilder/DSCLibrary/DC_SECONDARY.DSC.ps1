@@ -50,15 +50,15 @@ Configuration DC_SECONDARY
         { 
             Ensure = "Present" 
             Name   = "DNS" 
-        } 
+        }
 
         WindowsFeature ADDSInstall 
-        { 
+        {
             Ensure    = "Present" 
             Name      = "AD-Domain-Services" 
             DependsOn = "[WindowsFeature]DNSInstall" 
-        } 
-        
+        }
+
         WindowsFeature RSAT-AD-PowerShellInstall
         {
             Ensure    = "Present"
@@ -74,7 +74,7 @@ Configuration DC_SECONDARY
             RetryIntervalSec     = 10 
             DependsOn            = "[WindowsFeature]ADDSInstall"
         }
-        
+
         xADDomainController SecondaryDC
         {
             DomainName                    = $Node.DomainName

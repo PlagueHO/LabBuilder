@@ -69,13 +69,13 @@ Configuration MEMBER_DHCPNPAS
         }
 
         WindowsFeature NPASPolicyServerInstall 
-        { 
+        {
             Ensure = "Present" 
             Name   = "NPAS-Policy-Server" 
-        } 
+        }
 
         WindowsFeature DHCPInstall 
-        { 
+        {
             Ensure    = "Present" 
             Name      = "DHCP" 
             DependsOn = "[WindowsFeature]NPASPolicyServerInstall"

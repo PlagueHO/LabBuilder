@@ -54,11 +54,11 @@ Configuration DC_FORESTCHILDDOMAIN
         }
 
         WindowsFeature ADDSInstall
-        { 
+        {
             Ensure    = "Present"
             Name      = "AD-Domain-Services"
             DependsOn = "[WindowsFeature]DNSInstall"
-        } 
+        }
         
         WindowsFeature RSAT-AD-PowerShellInstall
         {

@@ -53,7 +53,7 @@ Configuration MEMBER_ROOTCA
         }
 
         WindowsFeature InstallWebMgmtService
-        { 
+        {
             Ensure = "Present" 
             Name = "Web-Mgmt-Service" 
             DependsOn = '[WindowsFeature]ADCSWebEnrollment'

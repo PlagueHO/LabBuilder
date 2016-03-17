@@ -25,17 +25,17 @@ Configuration MEMBER_REMOTEACCESS
         }
 
         WindowsFeature DirectAccessVPNInstall 
-        { 
+        {
             Ensure = "Present" 
             Name = "DirectAccess-VPN" 
-        } 
+        }
 
         WindowsFeature RoutingInstall 
-        { 
+        {
             Ensure = "Present" 
             Name = "Routing" 
             DependsOn = "[WindowsFeature]DirectAccessVPNInstall" 
-        } 
+        }
 
         # Wait for the Domain to be available so we can join it.
         WaitForAll DC

@@ -29,21 +29,21 @@ Configuration RODC_SECONDARY
         { 
             Ensure = "Present" 
             Name   = "Windows-Server-Backup" 
-        } 
+        }
 
         WindowsFeature DNSInstall 
-        { 
+        {
             Ensure = "Present" 
             Name   = "DNS" 
-        } 
+        }
 
         WindowsFeature ADDSInstall 
-        { 
+        {
             Ensure    = "Present" 
             Name      = "AD-Domain-Services" 
             DependsOn = "[WindowsFeature]DNSInstall" 
-        } 
-        
+        }
+
         WindowsFeature RSAT-AD-PowerShellInstall
         {
             Ensure    = "Present"
@@ -59,7 +59,7 @@ Configuration RODC_SECONDARY
             RetryIntervalSec = 15
             RetryCount       = 60
         }
-        
+
 <#
         xADDomainController SecondaryDC
         {

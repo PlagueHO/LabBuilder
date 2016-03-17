@@ -47,7 +47,7 @@ Configuration MEMBER_SUBCA
         }
 
         WindowsFeature InstallWebMgmtService
-        { 
+        {
             Ensure = "Present" 
             Name = "Web-Mgmt-Service" 
             DependsOn = '[WindowsFeature]ADCSWebEnrollment'
@@ -88,13 +88,13 @@ Configuration MEMBER_SUBCA
         
         # Join this Server to the Domain
         xComputer JoinDomain 
-        { 
+        {
             Name          = $Node.NodeName
             DomainName    = $Node.DomainName
             Credential    = $DomainAdminCredential 
             DependsOn = "[WaitForAll]DC" 
         }
-            
+
         # Create the CAPolicy.inf file that sets basic parameters for certificate issuance for this CA.
         File CAPolicy
         {

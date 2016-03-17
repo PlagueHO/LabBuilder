@@ -184,7 +184,7 @@ Configuration DC_FORESTPRIMARY
                 Return $True
             }
             DependsOn = '[xDnsServerPrimaryZone]GlobalNamesZone'
-        }    
+        }
 #>
     }
 }

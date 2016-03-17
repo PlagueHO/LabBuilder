@@ -53,41 +53,41 @@ Configuration MEMBER_FILESERVER_ISCSI
         }
 
         WindowsFeature FileServerInstall 
-        { 
+        {
             Ensure = "Present" 
             Name = "FS-FileServer" 
         }
 
         WindowsFeature DataDedupInstall 
-        { 
+        {
             Ensure = "Present" 
             Name = "FS-Data-Deduplication" 
             DependsOn = "[WindowsFeature]FileServerInstall" 
         }
 
         WindowsFeature BranchCacheInstall 
-        { 
+        {
             Ensure = "Present" 
             Name = "FS-BranchCache" 
             DependsOn = "[WindowsFeature]DataDedupInstall" 
         }
 
         WindowsFeature DFSNameSpaceInstall 
-        { 
+        {
             Ensure = "Present" 
             Name = "FS-DFS-Namespace" 
             DependsOn = "[WindowsFeature]BranchCacheInstall" 
         }
 
         WindowsFeature DFSReplicationInstall 
-        { 
+        {
             Ensure = "Present" 
             Name = "FS-DFS-Replication" 
             DependsOn = "[WindowsFeature]DFSNameSpaceInstall" 
         }
 
         WindowsFeature FSResourceManagerInstall 
-        { 
+        {
             Ensure = "Present" 
             Name = "FS-Resource-Manager" 
             DependsOn = "[WindowsFeature]DFSReplicationInstall" 

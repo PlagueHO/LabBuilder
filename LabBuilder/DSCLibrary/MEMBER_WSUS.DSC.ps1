@@ -28,17 +28,17 @@ Configuration MEMBER_WSUS
         }
 
         WindowsFeature UpdateServicesWIDDBInstall 
-        { 
+        {
             Ensure = "Present" 
             Name = "UpdateServices-WidDB" 
-        } 
+        }
 
         WindowsFeature UpdateServicesServicesInstall 
-        { 
+        {
             Ensure = "Present" 
             Name = "UpdateServices-Services" 
             DependsOn = "[WindowsFeature]UpdateServicesWIDDBInstall" 
-        } 
+        }
 
         # Wait for the Domain to be available so we can join it.
         WaitForAll DC

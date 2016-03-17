@@ -27,24 +27,24 @@ Configuration MEMBER_NPS
         }
 
         WindowsFeature NPASPolicyServerInstall 
-        { 
+        {
             Ensure = "Present" 
             Name = "NPAS-Policy-Server" 
-        } 
+        }
 
         WindowsFeature NPASHealthInstall 
-        { 
+        {
             Ensure = "Present" 
             Name = "NPAS-Health" 
             DependsOn = "[WindowsFeature]NPASPolicyServerInstall" 
-        } 
+        }
 
         WindowsFeature RSATNPAS
-        { 
+        {
             Ensure = "Present" 
             Name = "RSAT-NPAS" 
             DependsOn = "[WindowsFeature]NPASPolicyServerInstall" 
-        } 
+        }
 
         # Wait for the Domain to be available so we can join it.
         WaitForAll DC

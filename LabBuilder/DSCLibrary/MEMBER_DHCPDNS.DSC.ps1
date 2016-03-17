@@ -81,7 +81,7 @@ Configuration MEMBER_DHCPDNS
         }
 
         WindowsFeature DNSInstall 
-        { 
+        {
             Ensure    = "Present" 
             Name      = "DNS" 
             DependsOn = "[WindowsFeature]DHCPInstall" 

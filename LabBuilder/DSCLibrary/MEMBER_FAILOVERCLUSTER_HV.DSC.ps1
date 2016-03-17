@@ -27,19 +27,19 @@ Configuration MEMBER_FAILOVERCLUSTER_HV
         }
 
         WindowsFeature FailoverClusteringInstall
-        { 
+        {
             Ensure = "Present" 
             Name = "Failover-Clustering" 
-        } 
+        }
 
         WindowsFeature FailoverClusteringPSInstall
-        { 
+        {
             Ensure = "Present" 
             Name = "RSAT-Clustering-PowerShell" 
-        } 
+        }
 
         WindowsFeature InstallHyperV
-        { 
+        {
             Ensure = "Present" 
             Name = "Hyper-V" 
         }
