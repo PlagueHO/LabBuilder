@@ -4,7 +4,7 @@ DSC Template Configuration File For use by LabBuilder
     MEMBER_DEFAULT
 .Desription
     Builds a Server that is joined to a domain.
-.Parameters:          
+.Parameters:
     DomainName = "LABBUILDER.COM"
     DomainAdminPassword = "P@ssword!1"
     PSDscAllowDomainUser = $True
@@ -34,7 +34,7 @@ Configuration MEMBER_FILESERVER
 
 
         xComputer JoinDomain 
-        { 
+        {
             Name       = $Node.NodeName
             DomainName = $Node.DomainName
             Credential = $DomainAdminCredential 
