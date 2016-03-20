@@ -14,6 +14,7 @@ ConvertFrom-StringData -StringData @'
     ResourceModuleNameIsEmptyError=Resource Module Name is missing or empty.
     ResourceMSUNameIsEmptyError=Resource MSU Name is missing or empty.
     ResourceISONameIsEmptyError=Resource ISO Name is missing or empty.
+    ResourceISOFileNotFoundError=Resource ISO file '{0}' is not found.
     ModuleNotAvailableError=Error installing Module '{0}' ({1}); {2}.
     SwitchNameIsEmptyError=Switch name is missing or empty.
     UnknownSwitchTypeError=Unknown switch type '{0}' specified for switch '{1}'.
@@ -144,6 +145,9 @@ ConvertFrom-StringData -StringData @'
     VMDiskAlreadyExistsMessage={2} disk '{1}' for VM '{0}' already exists.
     ExpandingVMDiskMessage=Expanding {2} disk '{1}' for VM '{0}' to {3}.
     AddingVMDiskMessage=Adding {2} disk '{1}' to VM '{0}'.
+    AddingVMDVDDriveMessage=Adding DVD Drive to VM '{0}'.
+    MountingVMDVDDriveISOMessage=Mounting ISO '{1}' to DVD Drive in VM '{0}'.
+    DismountingVMDVDDriveISOMessage=Dismounting ISO '{1}' from DVD Drive in VM '{0}'.
     CopyingFoldersToVMDiskMessage=Copying folder '{2}' to VM Disk '{1}' for VM '{0}'.
     InitializingVMDiskMessage=Initializing VM Disk '{1}' for VM '{0}'.
     MountingVMDiskMessage=Mounting VM Disk '{1}' for VM '{0}' to '{2}'.

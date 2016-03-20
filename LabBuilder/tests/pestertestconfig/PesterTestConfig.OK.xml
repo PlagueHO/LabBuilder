@@ -23,8 +23,7 @@
     <msu name="RSAT-W10"
          url="http://download.microsoft.com/download/1/D/8/1D8B5022-5477-4B9A-8104-6A71FF9D98AB/WindowsTH-KB2693643-x64.msu" />
     <iso name="SQL2012_FULL_ENU"
-         url="https://download.microsoft.com/download/4/C/7/4C7D40B9-BCF8-4F8A-9E76-06E9B92FE5AE/ENU/SQLFULL_ENU.iso"
-         path="C:\Pester Lab\Resouces\" />
+         url="https://download.microsoft.com/download/4/C/7/4C7D40B9-BCF8-4F8A-9E76-06E9B92FE5AE/ENU/SQLFULL_ENU.iso" />
   </resources>
 
   <switches>
@@ -184,6 +183,7 @@
       </datavhds>
       <dvddrives>
         <dvddrive iso="SQL2012_FULL_ENU" />
+        <dvddrive/>
       </dvddrives>
       <adapters>
         <adapter name="External" switchname="External" macaddress="00155D010801" />

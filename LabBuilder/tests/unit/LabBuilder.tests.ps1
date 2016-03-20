@@ -220,6 +220,33 @@ InModuleScope LabBuilder {
                 { Get-LabResourceISO -Lab $Lab } | Should Throw $Exception
             }
         }
+        Context 'Configuration passed with resource ISO file that does not exist.' {
+            It 'Throws a ResourceISOFileNotFoundError Exception' {
+                $Path = "$Global:TestConfigPath\ISOFiles\DOESNOTEXIST.iso"
+                $Lab = Get-Lab -ConfigPath $Global:TestConfigOKPath
+                $Lab.labbuilderconfig.resources.iso.RemoveAttribute('url')
+                $Lab.labbuilderconfig.resources.iso.SetAttribute('path',$Path)
+                $ExceptionParameters = @{
+                    errorId = 'ResourceISOFileNotFoundError'
+                    errorCategory = 'InvalidArgument'
+                    errorMessage = $($LocalizedData.ResourceISOFileNotFoundError `
+                        -f $Path)
+                }
+                $Exception = GetException @ExceptionParameters
+
+                { Get-LabResourceISO -Lab $Lab } | Should Throw $Exception
+            }
+        }
+        Context 'Configuration passed with resource ISO file that does not exist.' {
+            It 'Throws a ResourceISOFileNotFoundError Exception' {
+                $Path = "$Global:TestConfigPath\ISOFiles\SQL2014_FULL_ENU.iso"
+                $Lab = Get-Lab -ConfigPath $Global:TestConfigOKPath
+                $Lab.labbuilderconfig.resources.iso.RemoveAttribute('url')
+                $Lab.labbuilderconfig.resources.iso.SetAttribute('path',$Path)
+
+                { Get-LabResourceISO -Lab $Lab } | Should Not Throw
+            }
+        }
         Context 'Valid configuration is passed' {
             It 'Returns Resource ISO Array that matches Expected Array' {
                 $Lab = Get-Lab -ConfigPath $Global:TestConfigOKPath
@@ -1627,7 +1654,7 @@ InModuleScope LabBuilder {
         Context "Configuration passed with VM DVD Drive that has a missing Resource ISO." {
             It 'Throw VMDataDiskSourceVHDIfMoveError Exception' {
                 $Lab = Get-Lab -ConfigPath $Global:TestConfigOKPath
-                $Lab.labbuilderconfig.vms.vm.dvddrives.dvddrive.iso='DoesNotExist'
+                $Lab.labbuilderconfig.vms.vm.dvddrives.dvddrive[0].iso='DoesNotExist'
                 [Array]$Switches = Get-LabSwitch -Lab $Lab
                 [array]$Templates = Get-LabVMTemplate -Lab $Lab
                 $ExceptionParameters = @{

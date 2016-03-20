@@ -911,7 +911,7 @@ function Get-LabResourceISO {
                 }
                 ThrowException @ExceptionParameters
             } # if
-            $ResourceISO = [LabResourceISO]::New($ISOName,$ISO.URL)
+            $ResourceISO = [LabResourceISO]::New($ISOName)
             $Path = $ISO.Path
             if ($Path)
             {
@@ -920,15 +920,30 @@ function Get-LabResourceISO {
                     $Path = Join-Path `
                         -Path $Lab.labbuilderconfig.settings.resourcepathfull `
                         -ChildPath $Path
-                }
+                } # if
+
+                if (-not (Test-Path -Path $Path))
+                {
+                    $ExceptionParameters = @{
+                        errorId = 'ResourceISOFileNotFoundError'
+                        errorCategory = 'InvalidArgument'
+                        errorMessage = $($LocalizedData.ResourceISOFileNotFoundError `
+                            -f $Path)
+                    }
+                    ThrowException @ExceptionParameters
+                } # if
             }
             else
             {
                 $Path = $Lab.labbuilderconfig.settings.resourcepathfull
-            }
-            $FileName = Join-Path `
-                -Path $Path `
-                -ChildPath $ISO.URL.Substring($ISO.URL.LastIndexOf('/') + 1)
+                if ($ISO.URL)
+                {
+                    $FileName = Join-Path `
+                        -Path $Path `
+                        -ChildPath $ISO.URL.Substring($ISO.URL.LastIndexOf('/') + 1)
+                } # if
+            } # if
+            $ResourceISO.URL = $ISO.URL
             $ResourceISO.Path = $Path
             $ResourceISO.Filename = $Filename
             $ResourceISOs += @( $ResourceISO )
@@ -3930,6 +3945,11 @@ function Initialize-LabVM {
 
         # Update the data disks for the VM
         UpdateVMDataDisks `
+            -Lab $Lab `
+            -VM $VM
+
+        # Update the DVD Drives for the VM
+        UpdateVMDVDDrives `
             -Lab $Lab `
             -VM $VM
 
