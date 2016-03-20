@@ -1609,13 +1609,35 @@ function UpdateVMDVDDrives {
     foreach ($DVDDrive in @($VM.DVDDrives))
     {
         # Get a list of DVD Drives attached to the VM
-        $VMDVDDrives = Get-VMDVDDrive `
-            -VMName $VM.Name
+        $VMDVDDrives = @(Get-VMDVDDrive `
+            -VMName $VM.Name)
 
         # The DVD Drive will now exist so ensure it is attached
         if ($VMDVDDrives[$DVDDriveCount])
         {
-            # The data disk is not yet attached
+            # The DVD Drive is already attached then make sure the correct ISO
+            if ($VMDVDDrives[$DVDDriveCount].Path -ne $DVDDrive.Filename)
+            {
+                if ($DVDDrive.Filename)
+                {
+                    Write-Verbose -Message $($LocalizedData.MountingVMDVDDriveISOMessage `
+                        -f $VM.Name,$DVDDrive.Filename)
+                }
+                else
+                {
+                    Write-Verbose -Message $($LocalizedData.DismountingVMDVDDriveISOMessage `
+                        -f $VM.Name,$VMDVDDrives[$DVDDriveCount].Path)
+                } # if
+                Set-VMDVDDrive `
+                    -VMName $VM.Name `
+                    -ControllerNumber $VMDVDDrives[$DVDDriveCount].ControllerNumber `
+                    -ControllerLocation $VMDVDDrives[$DVDDriveCount].ControllerLocation `
+                    -Path $DVDDrive.Filename
+            } # if
+        }
+        else
+        {
+            # The DVD Drive does not exist
             Write-Verbose -Message $($LocalizedData.AddingVMDVDDriveMessage `
                 -f $VM.Name)
 
@@ -1630,28 +1652,11 @@ function UpdateVMDVDDrives {
                     -f $VM.Name,$DVDDrive.Filename)
 
                 $NewDVDDriveParams += @{
-                    $Path = $DVDDrive.Filename
+                    Path = $DVDDrive.Filename
                 }
             } # if
-            $null = Add-VMDVDDrive @NewHardDiskParams
-        }
-        else
-        {
-            # The DVD Drive is already attached then make sure the correct ISO
-            if ($DVDDrives[$DVDDriveCount].Path -ne $DVDDrive.Filename)
-            {
-                if ($DVDDrive.Filename)
-                {
-                    Write-Verbose -Message $($LocalizedData.MountingVMDVDDriveISOMessage `
-                        -f $VM.Name,$DVDDrive.Filename)
-                }
-                else
-                {
-                    Write-Verbose -Message $($LocalizedData.DismountingVMDVDDriveISOMessage `
-                        -f $VM.Name,$DVDDrives[$DVDDriveCount].Path)
-                } # if
-                $VMDVDDrives[$DVDDriveCount] | Set-VMDVDDrive -Path $DVDDrive.Filename
-            } # if
+            $null = Add-VMDVDDrive @NewDVDDriveParams
         } # if
+        $DVDDriveCount++
     } # foreach
 } # UpdateVMDVDDrives

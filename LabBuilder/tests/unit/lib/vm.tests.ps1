@@ -586,6 +586,150 @@ InModuleScope LabBuilder {
             }
         }
     }
-}    
+
+
+
+    Describe 'UpdateVMDVDDrives' {
+        #region Mocks
+        Mock Get-VMDVDDrive
+        Mock Add-VMDVDDrive
+        Mock Set-VMDVDDrive
+        #endregion
+
+        # The same VM will be used for all tests, but a different
+        # DVD Drives array will be created/assigned for each test.
+        $Lab = Get-Lab -ConfigPath $Global:TestConfigOKPath
+        [Array]$Templates = Get-LabVMTemplate -Lab $Lab
+        [Array]$Switches = Get-LabSwitch -Lab $Lab
+        [Array]$VMs = Get-LabVM -Lab $Lab -VMTemplates $Templates -Switches $Switches
+
+        Context 'Valid configuration is passed with no DVDDrives' {
+            $VMs[0].DVDDrives = @()
+            It 'Does not throw an Exception' {
+                { UpdateVMDVDDrives -Lab $Lab -VM $VMs[0] } | Should Not Throw
+            }
+            It 'Calls Mocked commands' {
+                Assert-MockCalled Get-VMDVDDrive -Exactly 0
+                Assert-MockCalled Add-VMDVDDrive -Exactly 0
+                Assert-MockCalled Set-VMDVDDrive -Exactly 0
+            }
+        }
+        Context 'Valid configuration is passed with a DVD Drive that is empty and empty DVD Drive exists' {
+            $DVDDrive = [LabDVDDrive]::New()
+            $VMs[0].DVDDrives = @( $DVDDrive )
+            Mock Get-VMDVDDrive -MockWith { @{
+                Path = $null
+                ControllerNumber = 0
+                ControllerLocation = 1
+            } }
+            It 'Does not throw an Exception' {
+                { UpdateVMDVDDrives -Lab $Lab -VM $VMs[0] } | Should Not Throw
+            }
+            It 'Calls Mocked commands' {
+                Assert-MockCalled Get-VMDVDDrive -Exactly 1
+                Assert-MockCalled Add-VMDVDDrive -Exactly 0
+                Assert-MockCalled Set-VMDVDDrive -Exactly 0
+            }
+        }
+        Context 'Valid configuration is passed with a DVD Drive that is empty and DVD Drive exists but is not empty' {
+            $DVDDrive = [LabDVDDrive]::New()
+            $VMs[0].DVDDrives = @( $DVDDrive )
+            Mock Get-VMDVDDrive -MockWith { @{
+                Path = 'SQL2014_FULL_ENU.iso'
+                ControllerNumber = 0
+                ControllerLocation = 1
+            } }
+            It 'Does not throw an Exception' {
+                { UpdateVMDVDDrives -Lab $Lab -VM $VMs[0] } | Should Not Throw
+            }
+            It 'Calls Mocked commands' {
+                Assert-MockCalled Get-VMDVDDrive -Exactly 1
+                Assert-MockCalled Add-VMDVDDrive -Exactly 0
+                Assert-MockCalled Set-VMDVDDrive -Exactly 1
+            }
+        }
+        Context 'Valid configuration is passed with a DVD Drive that has an ISO and DVD Drive exists but is empty' {
+            $DVDDrive = [LabDVDDrive]::New()
+            $DVDDrive.Filename = 'SQL2014_FULL_ENU.iso'
+            $VMs[0].DVDDrives = @( $DVDDrive )
+            Mock Get-VMDVDDrive -MockWith { @{
+                Path = $null
+                ControllerNumber = 0
+                ControllerLocation = 1
+            } }
+            It 'Does not throw an Exception' {
+                { UpdateVMDVDDrives -Lab $Lab -VM $VMs[0] } | Should Not Throw
+            }
+            It 'Calls Mocked commands' {
+                Assert-MockCalled Get-VMDVDDrive -Exactly 1
+                Assert-MockCalled Add-VMDVDDrive -Exactly 0
+                Assert-MockCalled Set-VMDVDDrive -Exactly 1
+            }
+        }
+        Context 'Valid configuration is passed with a DVD Drive that has an ISO and DVD Drive exists but contains a different ISO' {
+            $DVDDrive = [LabDVDDrive]::New()
+            $DVDDrive.Filename = 'SQL2014_FULL_ENU.iso'
+            $VMs[0].DVDDrives = @( $DVDDrive )
+            Mock Get-VMDVDDrive -MockWith { @{
+                Path = 'SQL2012_FULL_ENU.iso'
+                ControllerNumber = 0
+                ControllerLocation = 1
+            } }
+            It 'Does not throw an Exception' {
+                { UpdateVMDVDDrives -Lab $Lab -VM $VMs[0] } | Should Not Throw
+            }
+            It 'Calls Mocked commands' {
+                Assert-MockCalled Get-VMDVDDrive -Exactly 1
+                Assert-MockCalled Add-VMDVDDrive -Exactly 0
+                Assert-MockCalled Set-VMDVDDrive -Exactly 1
+            }
+        }
+        Context 'Valid configuration is passed with a DVD Drive that has an ISO and DVD Drive exists and has the same ISO' {
+            $DVDDrive = [LabDVDDrive]::New()
+            $DVDDrive.Filename = 'SQL2014_FULL_ENU.iso'
+            $VMs[0].DVDDrives = @( $DVDDrive )
+            Mock Get-VMDVDDrive -MockWith { @{
+                Path = 'SQL2014_FULL_ENU.iso'
+                ControllerNumber = 0
+                ControllerLocation = 1
+            } }
+            It 'Does not throw an Exception' {
+                { UpdateVMDVDDrives -Lab $Lab -VM $VMs[0] } | Should Not Throw
+            }
+            It 'Calls Mocked commands' {
+                Assert-MockCalled Get-VMDVDDrive -Exactly 1
+                Assert-MockCalled Add-VMDVDDrive -Exactly 0
+                Assert-MockCalled Set-VMDVDDrive -Exactly 0
+            }
+        }
+        Context 'Valid configuration is passed with a DVD Drive that has an ISO and no DVD Drives exist' {
+            $DVDDrive = [LabDVDDrive]::New()
+            $DVDDrive.Filename = 'SQL2014_FULL_ENU.iso'
+            $VMs[0].DVDDrives = @( $DVDDrive )
+            Mock Get-VMDVDDrive
+            It 'Does not throw an Exception' {
+                { UpdateVMDVDDrives -Lab $Lab -VM $VMs[0] } | Should Not Throw
+            }
+            It 'Calls Mocked commands' {
+                Assert-MockCalled Get-VMDVDDrive -Exactly 1
+                Assert-MockCalled Add-VMDVDDrive -Exactly 1
+                Assert-MockCalled Set-VMDVDDrive -Exactly 0
+            }
+        }
+        Context 'Valid configuration is passed with a DVD Drive that is empty and no DVD Drives exist' {
+            $DVDDrive = [LabDVDDrive]::New()
+            $VMs[0].DVDDrives = @( $DVDDrive )
+            Mock Get-VMDVDDrive
+            It 'Does not throw an Exception' {
+                { UpdateVMDVDDrives -Lab $Lab -VM $VMs[0] } | Should Not Throw
+            }
+            It 'Calls Mocked commands' {
+                Assert-MockCalled Get-VMDVDDrive -Exactly 1
+                Assert-MockCalled Add-VMDVDDrive -Exactly 1
+                Assert-MockCalled Set-VMDVDDrive -Exactly 0
+            }
+        }
+    }
+}
 
 Set-Location -Path $OldLocation

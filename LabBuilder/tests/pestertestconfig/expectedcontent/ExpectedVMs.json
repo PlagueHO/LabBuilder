@@ -197,7 +197,7 @@
     "DVDDrives":  [
                       {
                           "ISO":  "SQL2012_FULL_ENU",
-                          "Filename":  "C:\\Pester Lab\\Resouces\\SQLFULL_ENU.iso"
+                          "Filename":  "C:\\Pester Lab\\Resource\\SQLFULL_ENU.iso"
                       },
                       {
                           "ISO":  null,
