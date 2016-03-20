@@ -130,17 +130,11 @@ class LabResourceISO:System.ICloneable {
     [String] $Name
     [String] $URL
     [String] $Path
-    [String] $Filename
 
     LabResourceISO() {}
 
     LabResourceISO($Name) {
         $this.Name = $Name
-    } # Constructor
-
-    LabResourceISO($Name,$URL) {
-        $this.Name = $Name
-        $this.URL = $URL
     } # Constructor
 
     [Object] Clone () {
@@ -282,7 +276,7 @@ class LabDataVHD:System.ICloneable {
 
 class LabDVDDrive:System.ICloneable {
     [String] $ISO
-    [String] $Filename
+    [String] $Path
 
     LabDVDDrive() {}
     
@@ -938,14 +932,13 @@ function Get-LabResourceISO {
                 $Path = $Lab.labbuilderconfig.settings.resourcepathfull
                 if ($ISO.URL)
                 {
-                    $FileName = Join-Path `
+                    $Path = Join-Path `
                         -Path $Path `
                         -ChildPath $ISO.URL.Substring($ISO.URL.LastIndexOf('/') + 1)
                 } # if
             } # if
             $ResourceISO.URL = $ISO.URL
             $ResourceISO.Path = $Path
-            $ResourceISO.Filename = $Filename
             $ResourceISOs += @( $ResourceISO )
         } # foreach
     } # if
@@ -1010,16 +1003,16 @@ function Initialize-LabResourceISO {
 
     if ($ResourceISOs)
     {
-        foreach ($ISO in $ResourceISOs)
+        foreach ($ResourceISO in $ResourceISOs)
         {
-            if (-not (Test-Path -Path $ISO.Filename))
+            if (-not (Test-Path -Path $ResourceISO.Path))
             {
                 Write-Verbose -Message $($LocalizedData.DownloadingResourceISOMessage `
-                    -f $ISO.Name,$ISO.URL)
+                    -f $ResourceISO.Name,$ResourceISO.URL)
 
                 DownloadAndUnzipFile `
-                    -URL $ISO.URL `
-                    -DestinationPath (Split-Path -Path $ISO.Filename)
+                    -URL $ResourceISO.URL `
+                    -DestinationPath (Split-Path -Path $ResourceISO.Path)
             } # if
         } # foreach
     } # if
@@ -3464,7 +3457,7 @@ function Get-LabVM {
                 } # if
                 # The ISO resource was found so populate the ISO details
                 $NewDVDDrive.ISO = $VMDVDDrive.ISO
-                $NewDVDDrive.FileName = $ResourceISO.Filename
+                $NewDVDDrive.Path = $ResourceISO.Path
             } # if
 
             $DVDDrives += @( $NewDVDDrive )

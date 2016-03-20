@@ -650,7 +650,7 @@ InModuleScope LabBuilder {
         }
         Context 'Valid configuration is passed with a DVD Drive that has an ISO and DVD Drive exists but is empty' {
             $DVDDrive = [LabDVDDrive]::New()
-            $DVDDrive.Filename = 'SQL2014_FULL_ENU.iso'
+            $DVDDrive.Path = 'SQL2014_FULL_ENU.iso'
             $VMs[0].DVDDrives = @( $DVDDrive )
             Mock Get-VMDVDDrive -MockWith { @{
                 Path = $null
@@ -668,7 +668,7 @@ InModuleScope LabBuilder {
         }
         Context 'Valid configuration is passed with a DVD Drive that has an ISO and DVD Drive exists but contains a different ISO' {
             $DVDDrive = [LabDVDDrive]::New()
-            $DVDDrive.Filename = 'SQL2014_FULL_ENU.iso'
+            $DVDDrive.Path = 'SQL2014_FULL_ENU.iso'
             $VMs[0].DVDDrives = @( $DVDDrive )
             Mock Get-VMDVDDrive -MockWith { @{
                 Path = 'SQL2012_FULL_ENU.iso'
@@ -686,7 +686,7 @@ InModuleScope LabBuilder {
         }
         Context 'Valid configuration is passed with a DVD Drive that has an ISO and DVD Drive exists and has the same ISO' {
             $DVDDrive = [LabDVDDrive]::New()
-            $DVDDrive.Filename = 'SQL2014_FULL_ENU.iso'
+            $DVDDrive.Path = 'SQL2014_FULL_ENU.iso'
             $VMs[0].DVDDrives = @( $DVDDrive )
             Mock Get-VMDVDDrive -MockWith { @{
                 Path = 'SQL2014_FULL_ENU.iso'
@@ -704,7 +704,7 @@ InModuleScope LabBuilder {
         }
         Context 'Valid configuration is passed with a DVD Drive that has an ISO and no DVD Drives exist' {
             $DVDDrive = [LabDVDDrive]::New()
-            $DVDDrive.Filename = 'SQL2014_FULL_ENU.iso'
+            $DVDDrive.Path = 'SQL2014_FULL_ENU.iso'
             $VMs[0].DVDDrives = @( $DVDDrive )
             Mock Get-VMDVDDrive
             It 'Does not throw an Exception' {
