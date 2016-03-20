@@ -1023,19 +1023,39 @@ This attribute should only be set to 'Y' if this DataVHD is being stored on a Cl
                                   
 ``` shared="Y" ```
 
-### 7.1.2e - ADAPTERS Optional Element
+### 7.1.2e - DVDDRIVES Optional Element
+
+This optional element contains a collection of zero or more DVDDrive nodes, each representing a Virtual DVD Drive that will be created and attached to this Virtual Machine when this Lab is installed.
+                        
+``` <dvddrives>...</dvedrives> ```
+
+### 7.1.2.1e - DVDDRIVE Optional Element
+
+This optional element represents a Virtual DVD Drive that will be created and attached to the Virtual Machine when the Lab is installed.
+                              
+``` <dvddrive>...</dvddrive> ```
+
+### 7.1.2.1.1a - ISO Optional Attribute
+> iso="xs:string"
+
+
+This optional attribute is used to specify the name of the ISO Resource to mount to this Virtual DVD Drive.
+                                  
+``` iso="" ```
+
+### 7.1.3e - ADAPTERS Optional Element
 
 This optional element contains a collection of zero or more Adapter nodes, each representing a Virtual Network Adapter that will be created, attached to the Virtual Machine and connected to a Virtual Switch when this Lab is installed.
                         
 ``` <adapters>...</adapters> ```
 
-### 7.1.2.1e - ADAPTER Optional Element
+### 7.1.3.1e - ADAPTER Optional Element
 
 This optional element represents a Virtual Network Adapter that will be created, attached to the Virtual Machine and connected to a Virtual Switch when the Lab is installed.
                               
 ``` <adapter>...</adapter> ```
 
-### 7.1.2.1.1a - NAME Required Attribute
+### 7.1.3.1.1a - NAME Required Attribute
 > name="xs:string"
 
 
@@ -1048,7 +1068,7 @@ Note: If this Lab configuration has got a LabId setting defined, it will be pre-
                                   
 ``` name="Cluster Comms" ```
 
-### 7.1.2.1.2a - SWITCHNAME Required Attribute
+### 7.1.3.1.2a - SWITCHNAME Required Attribute
 > switchname="xs:string"
 
 
@@ -1058,7 +1078,7 @@ Note: If this Lab configuration has got a LabId setting defined, it will be pre-
                                   
 ``` switchname="Cluster" ```
 
-### 7.1.2.1.3a - MACADDRESS Optional Attribute
+### 7.1.3.1.3a - MACADDRESS Optional Attribute
 > macaddress="xs:string"
 
 
@@ -1067,7 +1087,7 @@ Care should be taken to ensure that this MAC Address is unique on the Virtual Sw
                                   
 ``` macaddress="00155D010801" ```
 
-### 7.1.2.1.4a - VLAN Optional Attribute
+### 7.1.3.1.4a - VLAN Optional Attribute
 > vlan="xs:unsignedByte"
 
 
@@ -1077,7 +1097,7 @@ If this attribute is not set but the VLAN ID is set on the Virtual Switch that t
                                   
 ``` vlan="80" ```
 
-### 7.1.2.1.5a - MACADDRESSSPOOFING Optional Attribute
+### 7.1.3.1.5a - MACADDRESSSPOOFING Optional Attribute
 > macaddressspoofing="xs:string"
 
 
@@ -1089,13 +1109,13 @@ This is usually required when Network Virtualization is being implemented.
                                   
 ``` macaddressspoofing="Y" ```
 
-### 7.1.3e - DSC Optional Element
+### 7.1.4e - DSC Optional Element
 
 This optional element contains the settings related to configuring Desired State Configuration on the Lab Virtual Machine.
                         
 ``` <dsc>...</dsc> ```
 
-### 7.1.3.1a - CONFIGNAME Required Attribute
+### 7.1.4.1a - CONFIGNAME Required Attribute
 > configname="xs:string"
 
 
@@ -1103,7 +1123,7 @@ This required attribute contains the configuration name that is set in the DSC L
                             
 ``` configname="DC_FORESTPRIMARY" ```
 
-### 7.1.3.2a - CONFIGFILE Required Attribute
+### 7.1.4.2a - CONFIGFILE Required Attribute
 > configfile="xs:string"
 
 
@@ -1112,7 +1132,7 @@ If a relative path is used for this attribute then it will be appended onto the 
                             
 ``` configfile="DC_FORESTPRIMARY.DSC.ps1" ```
 
-### 7.1.3.3a - LOGGING Optional Attribute
+### 7.1.4.3a - LOGGING Optional Attribute
 > logging="xs:string"
 
 
@@ -1123,7 +1143,7 @@ This optional attribute enables DSC Logging on the Virtual Machine in the DSC Ev
                             
 ``` logging="Y" ```
 
-### 7.1.3.1e - PARAMETERS Optional Element
+### 7.1.4.1e - PARAMETERS Optional Element
 
 > parameters="xs:string"
 

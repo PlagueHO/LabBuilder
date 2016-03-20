@@ -182,6 +182,9 @@
         <datavhd vhd="DataDiskMove.vhdx" sourcevhd="VhdFiles\DataDisk.vhdx" movesourcevhd="Y" />
         <datavhd vhd="DataDiskShared.vhdx" type="fixed" size="10GB" shared="Y" supportpr="Y" />
       </datavhds>
+      <dvddrives>
+        <dvddrive iso="SQL2012_FULL_ENU" />
+      </dvddrives>
       <adapters>
         <adapter name="External" switchname="External" macaddress="00155D010801" />
         <adapter name="Private Vlan" switchname="Private Vlan" macaddress="00155D010801" macaddressspoofing="Y" >

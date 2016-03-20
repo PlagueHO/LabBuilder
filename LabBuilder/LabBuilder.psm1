@@ -90,12 +90,12 @@ class LabResourceModule:System.ICloneable {
     } # Constructor
 
     [Object] Clone () {
-        $NewVM = [LabResourceModule]::New()
+        $New = [LabResourceModule]::New()
         foreach ($Property in ($this | Get-Member -MemberType Property))
         {
-            $NewVM.$($Property.Name) = $this.$($Property.Name)
+            $New.$($Property.Name) = $this.$($Property.Name)
         } # foreach
-        return $NewVM
+        return $New
     } # Clone
 } # class LabResourceModule
 
@@ -117,12 +117,12 @@ class LabResourceMSU:System.ICloneable {
     } # Constructor
 
     [Object] Clone () {
-        $NewVM = [LabResourceMSU]::New()
+        $New = [LabResourceMSU]::New()
         foreach ($Property in ($this | Get-Member -MemberType Property))
         {
-            $NewVM.$($Property.Name) = $this.$($Property.Name)
+            $New.$($Property.Name) = $this.$($Property.Name)
         } # foreach
-        return $NewVM
+        return $New
     } # Clone
 } # class LabResourceMSU
 
@@ -144,12 +144,12 @@ class LabResourceISO:System.ICloneable {
     } # Constructor
 
     [Object] Clone () {
-        $NewVM = [LabResourceISO]::New()
+        $New = [LabResourceISO]::New()
         foreach ($Property in ($this | Get-Member -MemberType Property))
         {
-            $NewVM.$($Property.Name) = $this.$($Property.Name)
+            $New.$($Property.Name) = $this.$($Property.Name)
         } # foreach
-        return $NewVM
+        return $New
     } # Clone
 } # class LabResourceISO
 
@@ -170,12 +170,12 @@ class LabSwitchAdapter:System.ICloneable {
     } # Constructor
 
     [Object] Clone () {
-        $NewVM = [LabSwitchAdapter]::New()
+        $New = [LabSwitchAdapter]::New()
         foreach ($Property in ($this | Get-Member -MemberType Property))
         {
-            $NewVM.$($Property.Name) = $this.$($Property.Name)
+            $New.$($Property.Name) = $this.$($Property.Name)
         } # foreach
-        return $NewVM
+        return $New
     } # Clone
 } # class LabSwitchAdapter
 
@@ -193,12 +193,12 @@ class LabVMAdapterIPv4:System.ICloneable {
     } # Constructor
     
     [Object] Clone () {
-        $NewVM = [LabVMAdapterIPv4]::New()
+        $New = [LabVMAdapterIPv4]::New()
         foreach ($Property in ($this | Get-Member -MemberType Property))
         {
-            $NewVM.$($Property.Name) = $this.$($Property.Name)
+            $New.$($Property.Name) = $this.$($Property.Name)
         } # foreach
-        return $NewVM
+        return $New
     } # Clone
 } # class LabVMAdapterIPv4
 
@@ -216,12 +216,12 @@ class LabVMAdapterIPv6:System.ICloneable {
     } # Constructor
 
     [Object] Clone () {
-        $NewVM = [LabVMAdapterIPv6]::New()
+        $New = [LabVMAdapterIPv6]::New()
         foreach ($Property in ($this | Get-Member -MemberType Property))
         {
-            $NewVM.$($Property.Name) = $this.$($Property.Name)
+            $New.$($Property.Name) = $this.$($Property.Name)
         } # foreach
-        return $NewVM
+        return $New
     } # Clone
 } # class LabVMAdapterIPv6
 
@@ -241,12 +241,12 @@ class LabVMAdapter:System.ICloneable {
     } # Constructor
     
     [Object] Clone () {
-        $NewVM = [LabVMAdapter]::New()
+        $New = [LabVMAdapter]::New()
         foreach ($Property in ($this | Get-Member -MemberType Property))
         {
-            $NewVM.$($Property.Name) = $this.$($Property.Name)
+            $New.$($Property.Name) = $this.$($Property.Name)
         } # foreach
-        return $NewVM
+        return $New
     } # Clone
 } # class LabVMAdapter
 
@@ -271,14 +271,34 @@ class LabDataVHD:System.ICloneable {
     } # Constructor
 
     [Object] Clone () {
-        $NewVM = [LabDataVHD]::New()
+        $New = [LabDataVHD]::New()
         foreach ($Property in ($this | Get-Member -MemberType Property))
         {
-            $NewVM.$($Property.Name) = $this.$($Property.Name)
+            $New.$($Property.Name) = $this.$($Property.Name)
         } # foreach
-        return $NewVM
+        return $New
     } # Clone
 } # class LabDataVHD
+
+class LabDVDDrive:System.ICloneable {
+    [String] $ISO
+    [String] $Filename
+
+    LabDVDDrive() {}
+    
+    LabDVDDrive($ISO) {
+        $this.ISO = $ISO
+    } # Constructor
+
+    [Object] Clone () {
+        $New = [LabDVDDrive]::New()
+        foreach ($Property in ($this | Get-Member -MemberType Property))
+        {
+            $New.$($Property.Name) = $this.$($Property.Name)
+        } # foreach
+        return $New
+    } # Clone
+} # class LabDVDDrive
 
 class LabVMTemplateVHD:System.ICloneable {
     [String] $Name
@@ -300,12 +320,12 @@ class LabVMTemplateVHD:System.ICloneable {
     } # Constructor
 
     [Object] Clone () {
-        $NewVM = [LabVMTemplateVHD]::New()
+        $New = [LabVMTemplateVHD]::New()
         foreach ($Property in ($this | Get-Member -MemberType Property))
         {
-            $NewVM.$($Property.Name) = $this.$($Property.Name)
+            $New.$($Property.Name) = $this.$($Property.Name)
         } # foreach
-        return $NewVM
+        return $New
     } # Clone
 } # class LabVMTemplateVHD
 
@@ -333,12 +353,12 @@ class LabVMTemplate:System.ICloneable {
     } # Constructor
 
     [Object] Clone () {
-        $NewVM = [LabVMTemplate]::New()
+        $New = [LabVMTemplate]::New()
         foreach ($Property in ($this | Get-Member -MemberType Property))
         {
-            $NewVM.$($Property.Name) = $this.$($Property.Name)
+            $New.$($Property.Name) = $this.$($Property.Name)
         } # foreach
-        return $NewVM
+        return $New
     } # Clone
 } # class LabVMTemplate
 
@@ -361,12 +381,12 @@ class LabSwitch:System.ICloneable {
     } # Constructor
 
     [Object] Clone () {
-        $NewVM = [LabSwitch]::New()
+        $New = [LabSwitch]::New()
         foreach ($Property in ($this | Get-Member -MemberType Property))
         {
-            $NewVM.$($Property.Name) = $this.$($Property.Name)
+            $New.$($Property.Name) = $this.$($Property.Name)
         } # foreach
-        return $NewVM
+        return $New
     } # Clone
 } # class LabSwitch
 
@@ -388,12 +408,12 @@ class LabDSC:System.ICloneable {
     } # Constructor
     
     [Object] Clone () {
-        $NewVM = [LabDSC]::New()
+        $New = [LabDSC]::New()
         foreach ($Property in ($this | Get-Member -MemberType Property))
         {
-            $NewVM.$($Property.Name) = $this.$($Property.Name)
+            $New.$($Property.Name) = $this.$($Property.Name)
         } # foreach
-        return $NewVM
+        return $New
     } # Clone
 } # class LabDSC
 
@@ -418,6 +438,7 @@ class LabVM:System.ICloneable {
     [String[]] $IntegrationServices = @('Guest Service Interface','Heartbeat','Key-Value Pair Exchange','Shutdown','Time Synchronization','VSS')
     [LabVMAdapter[]] $Adapters
     [LabDataVHD[]] $DataVHDs
+    [LabDVDDrive[]] $DVDDrives
     [LabDSC] $DSC
     [String] $VMRootPath
     [String] $LabBuilderFilesPath
@@ -434,12 +455,12 @@ class LabVM:System.ICloneable {
     } # Constructor
 
     [Object] Clone () {
-        $NewVM = [LabVM]::New()
+        $New = [LabVM]::New()
         foreach ($Property in ($this | Get-Member -MemberType Property))
         {
-            $NewVM.$($Property.Name) = $this.$($Property.Name)
+            $New.$($Property.Name) = $this.$($Property.Name)
         } # foreach
-        return $NewVM
+        return $New
     } # Clone
 } # class LabVM
 
@@ -459,12 +480,12 @@ class LabDSCModule:System.ICloneable {
     } # Constructor
 
     [Object] Clone () {
-        $NewVM = [LabDSCModule]::New()
+        $New = [LabDSCModule]::New()
         foreach ($Property in ($this | Get-Member -MemberType Property))
         {
-            $NewVM.$($Property.Name) = $this.$($Property.Name)
+            $New.$($Property.Name) = $this.$($Property.Name)
         } # foreach
-        return $NewVM
+        return $New
     } # Clone
 } # class LabDSCModule
 #endregion
@@ -3392,6 +3413,48 @@ function Get-LabVM {
             $DataVHDs += @( $NewDataVHD )
         } # foreach
 
+        # Assemble the DVD Drives this VM will use
+        [LabDVDDrive[]] $DVDDrives = @()
+        [Int] $DVDDriveCount = 0
+        foreach ($VMDVDDrive in $VM.DVDDrives.DVDDrive)
+        {
+            $DVDDriveCount++
+
+            # Create the new DVD Drive object
+            $NewDVDDrive = [LabDVDDRive]::New()
+
+            # Load all the DVD Drive properties and check they are valid
+            if ($VMDVDDrive.ISO)
+            {
+                # Look the ISO up in the ISO Resources
+                # Pull the list of Resource ISOs available if not already pulled from Lab.
+                if (-not $ResourceISOs)
+                {
+                    $ResourceISOs = Get-LabResourceISO `
+                        -Lab $Lab
+                } # if
+
+                # Lookup the Resource ISO record
+                $ResourceISO = $ResourceISOs | Where-Object -Property Name -eq $VMDVDDrive.ISO
+                if (-not $ResourceISO)
+                {
+                    # The ISO Resource was not found
+                    $ExceptionParameters = @{
+                        errorId = 'VMDVDDriveISOResourceNotFOundError'
+                        errorCategory = 'InvalidArgument'
+                        errorMessage = $($LocalizedData.VMDVDDriveISOResourceNotFOundError `
+                            -f $VMName,$VMDVDDrive.ISO)
+                    }
+                    ThrowException @ExceptionParameters
+                } # if
+                # The ISO resource was found so populate the ISO details
+                $NewDVDDrive.ISO = $VMDVDDrive.ISO
+                $NewDVDDrive.FileName = $ResourceISO.Filename
+            } # if
+
+            $DVDDrives += @( $NewDVDDrive )
+        } # foreach
+
         # Does the VM have an Unattend file specified?
         [String] $UnattendFile = ''
         if ($VM.UnattendFile)
@@ -3656,6 +3719,7 @@ function Get-LabVM {
         $LabVM.OSType = $OSType
         $LabVM.Adapters = $VMAdapters
         $LabVM.DataVHDs = $DataVHDs
+        $LabVM.DVDDrives = $DVDDrives
         $LabVM.Packages = $Packages
         $LabVM.Bootorder = $Bootorder
         $LabVM.DSC = $LabDSC

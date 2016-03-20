@@ -79,6 +79,7 @@ ConvertFrom-StringData -StringData @'
     VMDataDiskPartitionStyleMissingError=The Data Disk '{1}' in VM '{0}' does not have a partition style definied.
     VMDataDiskFileSystemMissingError=The Data Disk '{1}' in VM '{0}' does not have a file format definied.
     VMDataDiskCopyFolderMissingError=The CopyFolder '{2}' that should be copied to Data Disk '{1}' in VM '{0}' does not exist.
+    VMDVDDriveISOResourceNotFOundError=The ISO Resource '{1}' to be mounted into a Virtual DVD Drive specified in VM '{0}' does not exist.
     NanoServerPackagesFolderMissingError=The NanoServerPackages folder '{0}' does not exist.
     VMDoesNotExistError=The VM '{0}' does not exist.
     PackageNotFoundError=The Package MSU '{0}' is not listed in the Lab Resource MSU list.

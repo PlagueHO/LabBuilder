@@ -194,6 +194,12 @@
                          "FileSystemLabel":  null
                      }
                  ],
+    "DVDDrives":  [
+                      {
+                          "ISO":  "SQL2012_FULL_ENU",
+                          "Filename":  "C:\\Pester Lab\\Resouces\\SQLFULL_ENU.iso"
+                      }
+                  ],
     "DSC":  {
                 "Logging":  true,
                 "ConfigName":  "STANDALONE_DEFAULT",

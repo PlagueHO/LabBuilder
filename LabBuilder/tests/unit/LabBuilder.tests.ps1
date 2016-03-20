@@ -1207,12 +1207,12 @@ InModuleScope LabBuilder {
         #endregion
 
         # Figure out the TestVMName (saves typing later on)
-        $Lab = Get-Lab -ConfigPath $Global:TestConfigOKPath        
+        $Lab = Get-Lab -ConfigPath $Global:TestConfigOKPath
         $TestVMName = "$($Lab.labbuilderconfig.settings.labid) $($Lab.labbuilderconfig.vms.vm.name)"
 
         Context 'Configuration passed with VM missing VM Name.' {
             It 'Throw VMNameError Exception' {
-                $Lab = Get-Lab -ConfigPath $Global:TestConfigOKPath        
+                $Lab = Get-Lab -ConfigPath $Global:TestConfigOKPath
                 $Lab.labbuilderconfig.vms.vm.RemoveAttribute('name')
                 [Array]$Switches = Get-LabSwitch -Lab $Lab
                 [array]$Templates = Get-LabVMTemplate -Lab $Lab
@@ -1562,6 +1562,84 @@ InModuleScope LabBuilder {
                 { Get-LabVM -Lab $Lab -VMTemplates $Templates -Switches $Switches } | Should Throw $Exception
             }
         }
+        Context 'Valid configuration is passed with VM Data Disk with rooted VHD path.' {
+            $Lab = Get-Lab -ConfigPath $Global:TestConfigOKPath
+            $Lab.labbuilderconfig.vms.vm.datavhds.datavhd[0].vhd = "$Global:TestConfigPath\VhdFiles\DataDisk.vhdx"
+            [Array]$Switches = Get-LabSwitch -Lab $Lab
+            [Array]$Templates = Get-LabVMTemplate -Lab $Lab
+            [Array]$VMs = Get-LabVM -Lab $Lab -VMTemplates $Templates -Switches $Switches
+            It 'Returns Template Object containing VHD with correct rooted path' {
+                $VMs[0].DataVhds[0].vhd | Should Be "$Global:TestConfigPath\VhdFiles\DataDisk.vhdx"
+            }
+        }
+        Context 'Valid configuration is passed with VM Data Disk with non-rooted VHD path.' {
+            $Lab = Get-Lab -ConfigPath $Global:TestConfigOKPath
+            $Lab.labbuilderconfig.vms.vm.datavhds.datavhd[0].vhd = "DataDisk.vhdx"
+            [Array]$Switches = Get-LabSwitch -Lab $Lab
+            [Array]$Templates = Get-LabVMTemplate -Lab $Lab
+            [Array]$VMs = Get-LabVM -Lab $Lab -VMTemplates $Templates -Switches $Switches
+            It 'Returns Template Object containing VHD with correct rooted path' {
+                $VMs[0].DataVhds[0].vhd | Should Be "$($Lab.labbuilderconfig.settings.labpath)\$TestVMName\Virtual Hard Disks\DataDisk.vhdx"
+            }
+        }
+        Context 'Valid configuration is passed with VM Data Disk with rooted Parent VHD path.' {
+            $Lab = Get-Lab -ConfigPath $Global:TestConfigOKPath
+            $Lab.labbuilderconfig.vms.vm.datavhds.datavhd[3].parentvhd = "$Global:TestConfigPath\VhdFiles\DataDisk.vhdx"
+            [Array]$Switches = Get-LabSwitch -Lab $Lab
+            [Array]$Templates = Get-LabVMTemplate -Lab $Lab
+            [Array]$VMs = Get-LabVM -Lab $Lab -VMTemplates $Templates -Switches $Switches
+            It 'Returns Template Object containing Parent VHD with correct rooted path' {
+                $VMs[0].DataVhds[3].parentvhd | Should Be "$Global:TestConfigPath\VhdFiles\DataDisk.vhdx"
+            }
+        }
+        Context 'Valid configuration is passed with VM Data Disk with non-rooted Parent VHD path.' {
+            Mock Test-Path -MockWith { $true }
+            $Lab = Get-Lab -ConfigPath $Global:TestConfigOKPath
+            $Lab.labbuilderconfig.vms.vm.datavhds.datavhd[3].parentvhd = "VhdFiles\DataDisk.vhdx"
+            [Array]$Switches = Get-LabSwitch -Lab $Lab
+            [Array]$Templates = Get-LabVMTemplate -Lab $Lab
+            [Array]$VMs = Get-LabVM -Lab $Lab -VMTemplates $Templates -Switches $Switches
+            It 'Returns Template Object containing Parent VHD with correct rooted path' {
+                $VMs[0].DataVhds[3].parentvhd | Should Be "$Global:TestConfigPath\VhdFiles\DataDisk.vhdx"
+            }
+        }
+        Context 'Valid configuration is passed with VM Data Disk with rooted Source VHD path.' {
+            $Lab = Get-Lab -ConfigPath $Global:TestConfigOKPath
+            $Lab.labbuilderconfig.vms.vm.datavhds.datavhd[0].sourcevhd = "$Global:TestConfigPath\VhdFiles\DataDisk.vhdx"
+            [Array]$Switches = Get-LabSwitch -Lab $Lab
+            [Array]$Templates = Get-LabVMTemplate -Lab $Lab
+            [Array]$VMs = Get-LabVM -Lab $Lab -VMTemplates $Templates -Switches $Switches
+            It 'Returns Template Object containing Source VHD with correct rooted path' {
+                $VMs[0].DataVhds[0].sourcevhd | Should Be "$Global:TestConfigPath\VhdFiles\DataDisk.vhdx"
+            }
+        }
+        Context 'Valid configuration is passed with VM Data Disk with non-rooted Source VHD path.' {
+            Mock Test-Path -MockWith { $true }
+            $Lab = Get-Lab -ConfigPath $Global:TestConfigOKPath
+            $Lab.labbuilderconfig.vms.vm.datavhds.datavhd[0].sourcevhd = "VhdFiles\DataDisk.vhdx"
+            [Array]$Switches = Get-LabSwitch -Lab $Lab
+            [Array]$Templates = Get-LabVMTemplate -Lab $Lab
+            [Array]$VMs = Get-LabVM -Lab $Lab -VMTemplates $Templates -Switches $Switches
+            It 'Returns Template Object containing Source VHD with correct rooted path' {
+                $VMs[0].DataVhds[0].sourcevhd | Should Be "$Global:TestConfigPath\VhdFiles\DataDisk.vhdx"
+            }
+        }
+        Context "Configuration passed with VM DVD Drive that has a missing Resource ISO." {
+            It 'Throw VMDataDiskSourceVHDIfMoveError Exception' {
+                $Lab = Get-Lab -ConfigPath $Global:TestConfigOKPath
+                $Lab.labbuilderconfig.vms.vm.dvddrives.dvddrive.iso='DoesNotExist'
+                [Array]$Switches = Get-LabSwitch -Lab $Lab
+                [array]$Templates = Get-LabVMTemplate -Lab $Lab
+                $ExceptionParameters = @{
+                    errorId = 'VMDVDDriveISOResourceNotFOundError'
+                    errorCategory = 'InvalidArgument'
+                    errorMessage = $($LocalizedData.VMDVDDriveISOResourceNotFOundError `
+                        -f $TestVMName,'DoesNotExist')
+                }
+                $Exception = GetException @ExceptionParameters
+                { Get-LabVM -Lab $Lab -VMTemplates $Templates -Switches $Switches } | Should Throw $Exception
+            }
+        }
         Context "Configuration passed with VM unattend file that can't be found." {
             It 'Throw UnattendFileMissingError Exception' {
                 $Lab = Get-Lab -ConfigPath $Global:TestConfigOKPath
@@ -1656,68 +1734,6 @@ InModuleScope LabBuilder {
                 }
                 $Exception = GetException @ExceptionParameters
                 { Get-LabVM -Lab $Lab -VMTemplates $Templates -Switches $Switches } | Should Throw $Exception
-            }
-        }
-        Context 'Valid configuration is passed with VM Data Disk with rooted VHD path.' {
-            $Lab = Get-Lab -ConfigPath $Global:TestConfigOKPath
-            $Lab.labbuilderconfig.vms.vm.datavhds.datavhd[0].vhd = "$Global:TestConfigPath\VhdFiles\DataDisk.vhdx"
-            [Array]$Switches = Get-LabSwitch -Lab $Lab
-            [Array]$Templates = Get-LabVMTemplate -Lab $Lab
-            [Array]$VMs = Get-LabVM -Lab $Lab -VMTemplates $Templates -Switches $Switches
-            It 'Returns Template Object containing VHD with correct rooted path' {
-                $VMs[0].DataVhds[0].vhd | Should Be "$Global:TestConfigPath\VhdFiles\DataDisk.vhdx"
-            }
-        }
-        Context 'Valid configuration is passed with VM Data Disk with non-rooted VHD path.' {
-            $Lab = Get-Lab -ConfigPath $Global:TestConfigOKPath
-            $Lab.labbuilderconfig.vms.vm.datavhds.datavhd[0].vhd = "DataDisk.vhdx"
-            [Array]$Switches = Get-LabSwitch -Lab $Lab
-            [Array]$Templates = Get-LabVMTemplate -Lab $Lab
-            [Array]$VMs = Get-LabVM -Lab $Lab -VMTemplates $Templates -Switches $Switches
-            It 'Returns Template Object containing VHD with correct rooted path' {
-                $VMs[0].DataVhds[0].vhd | Should Be "$($Lab.labbuilderconfig.settings.labpath)\$TestVMName\Virtual Hard Disks\DataDisk.vhdx"
-            }
-        }
-        Context 'Valid configuration is passed with VM Data Disk with rooted Parent VHD path.' {
-            $Lab = Get-Lab -ConfigPath $Global:TestConfigOKPath
-            $Lab.labbuilderconfig.vms.vm.datavhds.datavhd[3].parentvhd = "$Global:TestConfigPath\VhdFiles\DataDisk.vhdx"
-            [Array]$Switches = Get-LabSwitch -Lab $Lab
-            [Array]$Templates = Get-LabVMTemplate -Lab $Lab
-            [Array]$VMs = Get-LabVM -Lab $Lab -VMTemplates $Templates -Switches $Switches
-            It 'Returns Template Object containing Parent VHD with correct rooted path' {
-                $VMs[0].DataVhds[3].parentvhd | Should Be "$Global:TestConfigPath\VhdFiles\DataDisk.vhdx"
-            }
-        }
-        Context 'Valid configuration is passed with VM Data Disk with non-rooted Parent VHD path.' {
-            Mock Test-Path -MockWith { $true }
-            $Lab = Get-Lab -ConfigPath $Global:TestConfigOKPath
-            $Lab.labbuilderconfig.vms.vm.datavhds.datavhd[3].parentvhd = "VhdFiles\DataDisk.vhdx"
-            [Array]$Switches = Get-LabSwitch -Lab $Lab
-            [Array]$Templates = Get-LabVMTemplate -Lab $Lab
-            [Array]$VMs = Get-LabVM -Lab $Lab -VMTemplates $Templates -Switches $Switches
-            It 'Returns Template Object containing Parent VHD with correct rooted path' {
-                $VMs[0].DataVhds[3].parentvhd | Should Be "$Global:TestConfigPath\VhdFiles\DataDisk.vhdx"
-            }
-        }
-        Context 'Valid configuration is passed with VM Data Disk with rooted Source VHD path.' {
-            $Lab = Get-Lab -ConfigPath $Global:TestConfigOKPath
-            $Lab.labbuilderconfig.vms.vm.datavhds.datavhd[0].sourcevhd = "$Global:TestConfigPath\VhdFiles\DataDisk.vhdx"
-            [Array]$Switches = Get-LabSwitch -Lab $Lab
-            [Array]$Templates = Get-LabVMTemplate -Lab $Lab
-            [Array]$VMs = Get-LabVM -Lab $Lab -VMTemplates $Templates -Switches $Switches
-            It 'Returns Template Object containing Source VHD with correct rooted path' {
-                $VMs[0].DataVhds[0].sourcevhd | Should Be "$Global:TestConfigPath\VhdFiles\DataDisk.vhdx"
-            }
-        }
-        Context 'Valid configuration is passed with VM Data Disk with non-rooted Source VHD path.' {
-            Mock Test-Path -MockWith { $true }
-            $Lab = Get-Lab -ConfigPath $Global:TestConfigOKPath
-            $Lab.labbuilderconfig.vms.vm.datavhds.datavhd[0].sourcevhd = "VhdFiles\DataDisk.vhdx"
-            [Array]$Switches = Get-LabSwitch -Lab $Lab
-            [Array]$Templates = Get-LabVMTemplate -Lab $Lab
-            [Array]$VMs = Get-LabVM -Lab $Lab -VMTemplates $Templates -Switches $Switches
-            It 'Returns Template Object containing Source VHD with correct rooted path' {
-                $VMs[0].DataVhds[0].sourcevhd | Should Be "$Global:TestConfigPath\VhdFiles\DataDisk.vhdx"
             }
         }
         Context 'Valid configuration is passed with and Name filter set to matching switch' {

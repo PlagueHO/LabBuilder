@@ -923,6 +923,36 @@ This attribute should only be set to 'Y' if this DataVHD is being stored on a Cl
                         </xs:sequence>
                       </xs:complexType>
                     </xs:element>
+                    <xs:element minOccurs="0" maxOccurs="1" name="dvddrives">
+                      <xs:annotation>
+                        <xs:documentation>
+This optional element contains a collection of zero or more DVDDrive nodes, each representing a Virtual DVD Drive that will be created and attached to this Virtual Machine when this Lab is installed.
+                        </xs:documentation>
+                        <xs:appinfo>&lt;dvddrives&gt;...&lt;/dvedrives&gt;</xs:appinfo>
+                      </xs:annotation>
+                      <xs:complexType>
+                        <xs:sequence>
+                          <xs:element minOccurs="0" maxOccurs="unbounded" name="dvddrive">
+                            <xs:annotation>
+                              <xs:documentation>
+This optional element represents a Virtual DVD Drive that will be created and attached to the Virtual Machine when the Lab is installed.
+                              </xs:documentation>
+                              <xs:appinfo>&lt;dvddrive&gt;...&lt;/dvddrive&gt;</xs:appinfo>
+                            </xs:annotation>
+                            <xs:complexType>
+                              <xs:attribute name="iso" type="xs:string" use="optional">
+                                <xs:annotation>
+                                  <xs:documentation>
+This optional attribute is used to specify the name of the ISO Resource to mount to this Virtual DVD Drive.
+                                  </xs:documentation>
+                                  <xs:appinfo>iso=""</xs:appinfo>
+                                </xs:annotation>
+                              </xs:attribute>
+                            </xs:complexType>
+                          </xs:element>
+                        </xs:sequence>
+                      </xs:complexType>
+                    </xs:element>
                     <xs:element minOccurs="0" maxOccurs="1" name="adapters">
                       <xs:annotation>
                         <xs:documentation>

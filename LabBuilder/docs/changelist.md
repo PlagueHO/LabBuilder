@@ -10,6 +10,7 @@
 * Lib\Type.ps1: File removed and content moved to header of LabBuilder.psm1 so that types were available outside the module context.
 * Stop-Lab: Removed Boot Phase timeout because Stop-VM does not return until VM shutdown.
 * Added support for ISO resources to be specified in the Lab configuration.
+* Added support for DVD Drives in Lab VM configuration.
 
 ### 0.7.2.0
 * DSCLibrary\MEMBER_FAILOVERCLUSTER_FS.DSC.ps1: Changed to install most File Server features on cluster nodes.
