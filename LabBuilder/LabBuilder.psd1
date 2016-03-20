@@ -19,6 +19,8 @@
         'Initialize-LabResourceModule'
         'Get-LabResourceMSU'
         'Initialize-LabResourceMSU'
+        'Get-LabResourceISO'
+        'Initialize-LabResourceISO'
         'Get-LabSwitch'
         'Initialize-LabSwitch'
         'Remove-LabSwitch'

@@ -215,6 +215,38 @@ This optional attribute can be used to set an optional path this package will be
                       
 ``` path="f:\LabBuilder\sharedpackages\" ```
 
+### 3.3e - ISO Optional Element
+
+An ISO file that can be mounted into one or more Lab Virtual Machines.
+                  
+``` <iso /> ```
+
+### 3.3.1a - NAME Required Attribute
+> name="xs:string"
+
+
+A descriptive name for this ISO that will be used to identify this disk.
+Any Lab build process that mounts ISO files will need to refer to this name, not the file name of the ISO.
+                      
+``` name="SQL2012_FULL_ENU" ```
+
+### 3.3.2a - URL Optional Attribute
+> url="xs:string"
+
+
+The optional URL to download this ISO file from.
+If this file already exists in the Resources folder for this Lab when the Lab is installed, it will not be downloaded again.
+                      
+``` url="https://download.microsoft.com/download/4/C/7/4C7D40B9-BCF8-4F8A-9E76-06E9B92FE5AE/ENU/SQLFULL_ENU.iso" ```
+
+### 3.3.3a - PATH Optional Attribute
+> path="xs:string"
+
+
+This optional attribute can be used to set an optional path this ISO will be stored and/or downloaded to.
+                      
+``` path="f:\LabBuilder\isos\" ```
+
 ### 4.0e - SWITCHES Optional Element
 
 This optional element contains a collection of zero or more Switch nodes representing the Hyper-V Virtual Switches that are required for this Lab.

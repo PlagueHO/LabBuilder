@@ -126,6 +126,33 @@ class LabResourceMSU:System.ICloneable {
     } # Clone
 } # class LabResourceMSU
 
+class LabResourceISO:System.ICloneable {
+    [String] $Name
+    [String] $URL
+    [String] $Path
+    [String] $Filename
+
+    LabResourceISO() {}
+
+    LabResourceISO($Name) {
+        $this.Name = $Name
+    } # Constructor
+
+    LabResourceISO($Name,$URL) {
+        $this.Name = $Name
+        $this.URL = $URL
+    } # Constructor
+
+    [Object] Clone () {
+        $NewVM = [LabResourceISO]::New()
+        foreach ($Property in ($this | Get-Member -MemberType Property))
+        {
+            $NewVM.$($Property.Name) = $this.$($Property.Name)
+        } # foreach
+        return $NewVM
+    } # Clone
+} # class LabResourceISO
+
 class LabSwitchAdapter:System.ICloneable {
     [String] $Name
     [String] $MACAddress
@@ -745,19 +772,19 @@ function Get-LabResourceMSU {
     An optional array of MSU packages names.
 
     Only MSU packages matching names in this list will be pulled into the returned in the array.
-.PARAMETER ResourceModules
-    The array of Resource Modules pulled from the Lab using Get-LabResourceModule.
+.PARAMETER ResourceMSUs
+    The array of ResourceMSU objects pulled from the Lab using Get-LabResourceModule.
 
     If not provided it will attempt to pull the list from the Lab.
 .EXAMPLE
     $Lab = Get-Lab -ConfigPath c:\mylab\config.xml
-    $ResourceModules = Get-LabResourceModule -Lab $Lab
-    Initialize-LabResourceMSU -Lab $Lab -ResourceModules $ResourceModules
-    Initializes the Resource Modules in the configured in the Lab c:\mylab\config.xml
+    $ResourceMSUs = Get-LabResourceMSU -Lab $Lab
+    Initialize-LabResourceMSU -Lab $Lab -ResourceMSUs $ResourceMSUs
+    Initializes the Resource MSUs in the configured in the Lab c:\mylab\config.xml
 .EXAMPLE
     $Lab = Get-Lab -ConfigPath c:\mylab\config.xml
     Initialize-LabResourceMSU -Lab $Lab
-    Initializes the Resource Modules in the configured in the Lab c:\mylab\config.xml
+    Initializes the Resource MSUs in the configured in the Lab c:\mylab\config.xml
 .OUTPUTS
     None.
 #>
@@ -804,6 +831,163 @@ function Initialize-LabResourceMSU {
         } # foreach
     } # if
 } # Initialize-LabResourceMSU
+#endregion
+
+
+<#
+.SYNOPSIS
+    Gets an array of ISO Resources from a Lab.
+.DESCRIPTION
+    Takes a provided Lab and returns the list of ISO resources required for this Lab.
+.PARAMETER Lab
+    Contains the Lab object that was loaded by the Get-Lab object.
+.PARAMETER Name
+    An optional array of ISO names.
+
+    Only ISO Resources matching names in this list will be pulled into the returned in the array.
+.EXAMPLE
+    $Lab = Get-Lab -ConfigPath c:\mylab\config.xml
+    $ResourceISO = Get-LabResourceISO $Lab
+    Loads a Lab and pulls the array of ISO Resources from it.
+.OUTPUTS
+    Returns an array of LabISOResource objects.
+#>
+function Get-LabResourceISO {
+    [OutputType([LabResourceISO[]])]
+    [CmdLetBinding()]
+    param
+    (
+        [Parameter(
+            Position=1,
+            Mandatory=$true)]
+        [ValidateNotNullOrEmpty()]
+        $Lab,
+        
+        [Parameter(
+            Position=2)]
+        [ValidateNotNullOrEmpty()]
+        [String[]] $Name
+    )
+
+    [LabResourceISO[]] $ResourceISOs = @()
+    if ($Lab.labbuilderconfig.resources) 
+    {
+        foreach ($ISO in $Lab.labbuilderconfig.resources.iso)
+        {
+            $ISOName = $ISO.Name
+            if ($Name -and ($ISOName -notin $Name))
+            {
+                # A names list was passed but this ISO wasn't included
+                continue
+            } # if
+
+            if ($ISOName -eq 'iso')
+            {
+                $ExceptionParameters = @{
+                    errorId = 'ResourceISONameIsEmptyError'
+                    errorCategory = 'InvalidArgument'
+                    errorMessage = $($LocalizedData.ResourceISONameIsEmptyError)
+                }
+                ThrowException @ExceptionParameters
+            } # if
+            $ResourceISO = [LabResourceISO]::New($ISOName,$ISO.URL)
+            $Path = $ISO.Path
+            if ($Path)
+            {
+                if (-not [System.IO.Path]::IsPathRooted($Path))
+                {
+                    $Path = Join-Path `
+                        -Path $Lab.labbuilderconfig.settings.resourcepathfull `
+                        -ChildPath $Path
+                }
+            }
+            else
+            {
+                $Path = $Lab.labbuilderconfig.settings.resourcepathfull
+            }
+            $FileName = Join-Path `
+                -Path $Path `
+                -ChildPath $ISO.URL.Substring($ISO.URL.LastIndexOf('/') + 1)
+            $ResourceISO.Path = $Path
+            $ResourceISO.Filename = $Filename
+            $ResourceISOs += @( $ResourceISO )
+        } # foreach
+    } # if
+    return $ResourceISOs
+} # Get-LabResourceISO
+
+
+<#
+.SYNOPSIS
+    Downloads the Resource ISO packages from a provided array.
+.DESCRIPTION
+    Takes an array of LabResourceISO objects and ensures the MSU packages are available in the
+    Lab Resources folder. If they are not they will be downloaded.
+.PARAMETER Lab
+    Contains Lab object that was loaded by the Get-Lab object.
+.PARAMETER Name
+    An optional array of ISO packages names.
+
+    Only ISO packages matching names in this list will be pulled into the returned in the array.
+.PARAMETER ResourceISOs
+    The array of ResourceISO objects pulled from the Lab using Get-LabResourceISO.
+
+    If not provided it will attempt to pull the list from the Lab.
+.EXAMPLE
+    $Lab = Get-Lab -ConfigPath c:\mylab\config.xml
+    $ResourceISOs = Get-LabResourceISO -Lab $Lab
+    Initialize-LabResourceISO -Lab $Lab -ResourceISOs $ResourceISOs
+    Initializes the Resource ISOs in the configured in the Lab c:\mylab\config.xml
+.EXAMPLE
+    $Lab = Get-Lab -ConfigPath c:\mylab\config.xml
+    Initialize-LabResourceISO -Lab $Lab
+    Initializes the Resource ISOs in the configured in the Lab c:\mylab\config.xml
+.OUTPUTS
+    None.
+#>
+function Initialize-LabResourceISO {
+    [CmdLetBinding()]
+    param
+    (
+        [Parameter(
+            Position=1,
+            Mandatory=$true)]
+        [ValidateNotNullOrEmpty()]
+        $Lab,
+        
+        [Parameter(
+            Position=2)]
+        [ValidateNotNullOrEmpty()]
+        [String[]] $Name,
+
+        [Parameter(
+            Position=3)]
+        [LabResourceISO[]] $ResourceISOs
+    )
+
+    # if resource ISOs was not passed, pull it.
+    if (-not $PSBoundParameters.ContainsKey('resourceisos'))
+    {
+        $ResourceMSUs = Get-LabResourceISO `
+            @PSBoundParameters
+    }
+
+    if ($ResourceISOs)
+    {
+        foreach ($ISO in $ResourceISOs)
+        {
+            if (-not (Test-Path -Path $ISO.Filename))
+            {
+                Write-Verbose -Message $($LocalizedData.DownloadingResourceISOMessage `
+                    -f $ISO.Name,$ISO.URL)
+
+                DownloadAndUnzipFile `
+                    -URL $ISO.URL `
+                    -DestinationPath (Split-Path -Path $ISO.Filename)
+            } # if
+        } # foreach
+    } # if
+} # Initialize-LabResourceISO
 #endregion
 
 

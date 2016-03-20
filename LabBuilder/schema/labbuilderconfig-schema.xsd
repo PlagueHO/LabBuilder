@@ -213,6 +213,42 @@ This optional attribute can be used to set an optional path this package will be
                   </xs:attribute>
                 </xs:complexType>
               </xs:element>
+              <xs:element minOccurs="0" maxOccurs="unbounded" name="iso">
+                <xs:annotation>
+                  <xs:documentation>
+An ISO file that can be mounted into one or more Lab Virtual Machines.
+                  </xs:documentation>
+                  <xs:appinfo>&lt;iso /&gt;</xs:appinfo>
+                </xs:annotation>
+                <xs:complexType>
+                  <xs:attribute name="name" type="xs:string" use="required">
+                    <xs:annotation>
+                      <xs:documentation>
+A descriptive name for this ISO that will be used to identify this disk.
+Any Lab build process that mounts ISO files will need to refer to this name, not the file name of the ISO.
+                      </xs:documentation>
+                      <xs:appinfo>name="SQL2012_FULL_ENU"</xs:appinfo>
+                    </xs:annotation>
+                  </xs:attribute>
+                  <xs:attribute name="url" type="xs:string" use="optional">
+                    <xs:annotation>
+                      <xs:documentation>
+The optional URL to download this ISO file from.
+If this file already exists in the Resources folder for this Lab when the Lab is installed, it will not be downloaded again.
+                      </xs:documentation>
+                      <xs:appinfo>url="https://download.microsoft.com/download/4/C/7/4C7D40B9-BCF8-4F8A-9E76-06E9B92FE5AE/ENU/SQLFULL_ENU.iso"</xs:appinfo>
+                    </xs:annotation>
+                  </xs:attribute>
+                  <xs:attribute name="path" type="xs:string" use="optional">
+                    <xs:annotation>
+                      <xs:documentation>
+This optional attribute can be used to set an optional path this ISO will be stored and/or downloaded to.
+                      </xs:documentation>
+                      <xs:appinfo>path="f:\LabBuilder\isos\"</xs:appinfo>
+                    </xs:annotation>
+                  </xs:attribute>
+                </xs:complexType>
+              </xs:element>
             </xs:sequence>
           </xs:complexType>
         </xs:element>

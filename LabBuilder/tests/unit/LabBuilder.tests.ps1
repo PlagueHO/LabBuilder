@@ -184,7 +184,7 @@ InModuleScope LabBuilder {
     }
 
 
-    
+
     Describe 'Initialize-LabResourceMSU' {
 
         $Lab = Get-Lab -ConfigPath $Global:TestConfigOKPath
@@ -198,6 +198,54 @@ InModuleScope LabBuilder {
             }
             It 'Calls Mocked commands' {
                 Assert-MockCalled DownloadAndUnzipFile -Exactly 2
+            }
+        }
+    }
+
+
+
+    Describe 'Get-LabResourceISO' {
+
+        Context 'Configuration passed with resource ISO missing Name.' {
+            It 'Throws a ResourceISONameIsEmptyError Exception' {
+                $Lab = Get-Lab -ConfigPath $Global:TestConfigOKPath
+                $Lab.labbuilderconfig.resources.iso.RemoveAttribute('name')
+                $ExceptionParameters = @{
+                    errorId = 'ResourceISONameIsEmptyError'
+                    errorCategory = 'InvalidArgument'
+                    errorMessage = $($LocalizedData.ResourceISONameIsEmptyError)
+                }
+                $Exception = GetException @ExceptionParameters
+
+                { Get-LabResourceISO -Lab $Lab } | Should Throw $Exception
+            }
+        }
+        Context 'Valid configuration is passed' {
+            It 'Returns Resource ISO Array that matches Expected Array' {
+                $Lab = Get-Lab -ConfigPath $Global:TestConfigOKPath
+                [Array] $ResourceISOs = Get-LabResourceISO -Lab $Lab
+                Set-Content -Path "$Global:ArtifactPath\ExpectedResourceISOs.json" -Value ($ResourceISOs | ConvertTo-Json -Depth 4)
+                $ExpectedResourceISOs = Get-Content -Path "$Global:ExpectedContentPath\ExpectedResourceISOs.json"
+                [String]::Compare((Get-Content -Path "$Global:ArtifactPath\ExpectedResourceISOs.json"),$ExpectedResourceISOs,$true) | Should Be 0
+            }
+        }
+    }
+
+
+
+    Describe 'Initialize-LabResourceISO' {
+
+        $Lab = Get-Lab -ConfigPath $Global:TestConfigOKPath
+        [LabResourceISO[]]$ResourceISOs = Get-LabResourceISO -Lab $Lab
+
+        Mock DownloadAndUnzipFile
+
+        Context 'Valid configuration is passed' {	
+            It 'Does not throw an Exception' {
+                { Initialize-LabResourceISO -Lab $Lab -ResourceISOs $ResourceISOs } | Should Not Throw
+            }
+            It 'Calls Mocked commands' {
+                Assert-MockCalled DownloadAndUnzipFile -Exactly 1
             }
         }
     }

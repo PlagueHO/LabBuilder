@@ -13,6 +13,7 @@ ConvertFrom-StringData -StringData @'
     PathNotFoundError={0} path '{1}' is not found.
     ResourceModuleNameIsEmptyError=Resource Module Name is missing or empty.
     ResourceMSUNameIsEmptyError=Resource MSU Name is missing or empty.
+    ResourceISONameIsEmptyError=Resource ISO Name is missing or empty.
     ModuleNotAvailableError=Error installing Module '{0}' ({1}); {2}.
     SwitchNameIsEmptyError=Switch name is missing or empty.
     UnknownSwitchTypeError=Unknown switch type '{0}' specified for switch '{1}'.
@@ -104,6 +105,7 @@ ConvertFrom-StringData -StringData @'
     ExtractingFileMessage=Extracting downloaded File '{0}' to '{1}'.
     DownloadingResourceModuleMessage=Downloading Lab Resource Module '{0}' from '{1}'.
     DownloadingResourceMSUMessage=Downloading Lab Resource MSU Package '{0}' from '{1}'.
+    DownloadingResourceISOMessage=Downloading Lab Resource ISO File '{0}' from '{1}'.
     CreatingLabManagementSwitchMessage=Creating Lab Management Switch {0} on Vlan {1}.
     UpdatingLabManagementSwitchMessage=Updating Lab Management Switch {0} to Vlan {1}.
     RemovingLabManagementSwitchMessage=Removing Lab Management Switch {0}.
