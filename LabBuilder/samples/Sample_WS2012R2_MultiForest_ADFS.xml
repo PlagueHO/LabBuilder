@@ -150,7 +150,7 @@
               },
               @{ Name = 'ALPHA-ADFS';
                  ScopeID = '192.168.128.0';
-                 ClientMACAddress = '000000000003';
+                 ClientMACAddress = '000000000004';
                  IPAddress = '192.168.128.18';
                  AddressFamily = 'IPv4'
               },
