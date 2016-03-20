@@ -11,6 +11,8 @@
 * Stop-Lab: Removed Boot Phase timeout because Stop-VM does not return until VM shutdown.
 * Added support for ISO resources to be specified in the Lab configuration.
 * Added support for DVD Drives in Lab VM configuration.
+* DSCLibrary\EMBER_ADFS_DSC.ps1: Added DSC Library Configuration for ADFS.
+* samples\Sample_WS2012R2_MultiForest_ADFS.ps1: Added Sample Lab for creating multiple forests for ADFS testing.
 
 ### 0.7.2.0
 * DSCLibrary\MEMBER_FAILOVERCLUSTER_FS.DSC.ps1: Changed to install most File Server features on cluster nodes.
