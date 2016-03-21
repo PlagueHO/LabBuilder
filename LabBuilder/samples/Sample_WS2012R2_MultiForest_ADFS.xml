@@ -111,7 +111,7 @@
     </vm>
 
     <vm name="ALPHA-DHCP1"
-        template="Template Windows Server 2012 R2 Datacenter Full"
+        template="Template Windows Server 2012 R2 Datacenter Core"
         computername="ALPHA-DHCP1"
         bootorder="2">
       <dsc configname="MEMBER_DHCP"
@@ -186,7 +186,7 @@
     </vm>
 
     <vm name="ALPHA-ROOTCA"
-      template="Template Windows Server 2012 R2 Datacenter CORE"
+      template="Template Windows Server 2012 R2 Datacenter Core"
       computername="ALPHA-ROOTCA"
       bootorder="3">
       <dsc configname="MEMBER_ROOTCA"
@@ -228,7 +228,7 @@
     </vm>
 
     <vm name="ALPHA-ADFS"
-      template="Template Windows Server 2012 R2 Datacenter CORE"
+      template="Template Windows Server 2012 R2 Datacenter Full"
       computername="ALPHA-ADFS"
       bootorder="3">
       <dsc configname="MEMBER_ADFS"
@@ -323,7 +323,7 @@
     </vm>
 
     <vm name="BRAVO-DHCP1"
-        template="Template Windows Server 2012 R2 Datacenter Full"
+        template="Template Windows Server 2012 R2 Datacenter Core"
         computername="BRAVO-DHCP1"
         bootorder="2">
       <dsc configname="MEMBER_DHCP"
@@ -398,7 +398,7 @@
     </vm>
 
     <vm name="BRAVO-ROOTCA"
-      template="Template Windows Server 2012 R2 Datacenter CORE"
+      template="Template Windows Server 2012 R2 Datacenter Core"
       computername="BRAVO-ROOTCA"
       bootorder="3">
       <dsc configname="MEMBER_ROOTCA"
@@ -440,7 +440,7 @@
     </vm>
 
     <vm name="BRAVO-ADFS"
-      template="Template Windows Server 2012 R2 Datacenter CORE"
+      template="Template Windows Server 2012 R2 Datacenter Full"
       computername="BRAVO-ADFS"
       bootorder="3">
       <dsc configname="MEMBER_ADFS"
