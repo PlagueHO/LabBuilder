@@ -56,7 +56,6 @@ DSC Template Configuration File For use by LabBuilder
            SourcePath      = '\\fileserver\MySite1\Images;
            Name            = 'Images';
            Ensure          = 'Present';
-           State           = 'Started';
         }
     )
 ###################################################################################################>
@@ -232,7 +231,6 @@ Configuration MEMBER_WEBSERVER
                 WebApplication     = $WebVirtualDirectory.WebApplication
                 PhysicalPath       = $WebVirtualDirectory.PhysicalPath
                 Name               = $WebVirtualDirectory.Name
-                State              = $WebVirtualDirectory.State
                 DependsOn          = "[File]WebVirtualDirectoryContent$Count"
             }
         }
