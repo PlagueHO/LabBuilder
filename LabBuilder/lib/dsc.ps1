@@ -626,12 +626,12 @@ if (-not (`$Result -like '*enabled: true*')) {
     # Start the actual DSC Configuration
     $DSCStartPs += @"
 Set-DscLocalConfigurationManager ``
-    -Path `"$($ENV:SystemRoot)\Setup\Scripts\`" ``
-    -Verbose  *>> `"$($ENV:SystemRoot)\Setup\Scripts\DSC.log`"
+    -Path `"`$(`$ENV:SystemRoot)\Setup\Scripts\`" ``
+    -Verbose  *>> `"`$(`$ENV:SystemRoot)\Setup\Scripts\DSC.log`"
 Start-DSCConfiguration ``
-    -Path `"$($ENV:SystemRoot)\Setup\Scripts\`" ``
+    -Path `"`$(`$ENV:SystemRoot)\Setup\Scripts\`" ``
     -Force ``
-    -Verbose  *>> `"$($ENV:SystemRoot)\Setup\Scripts\DSC.log`"
+    -Verbose  *>> `"`$(`$ENV:SystemRoot)\Setup\Scripts\DSC.log`"
 
 "@
     $null = Set-Content `
@@ -640,23 +640,23 @@ Start-DSCConfiguration ``
 
     $DSCStartPsDebug = @"
 param (
-    [boolean] $WaitForDebugger
+    [boolean] `$WaitForDebugger
 )
 Set-DscLocalConfigurationManager ``
-    -Path `"$($ENV:SystemRoot)\Setup\Scripts\`" ``
+    -Path `"`$(`$ENV:SystemRoot)\Setup\Scripts\`" ``
     -Verbose
-if ($WaitForDebugger)
+if (`$WaitForDebugger)
 {
     Enable-DscDebug ``
         -BreakAll
 }
 Start-DSCConfiguration ``
-    -Path `"$($ENV:SystemRoot)\Setup\Scripts\`" ``
+    -Path `"`$(`$ENV:SystemRoot)\Setup\Scripts\`" ``
     -Force ``
     -Debug ``
     -Wait ``
     -Verbose
-if ($WaitForDebugger)
+if (`$WaitForDebugger)
 {
     Disable-DscDebug
 }
