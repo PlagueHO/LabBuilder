@@ -148,7 +148,7 @@
                  IPAddress = '192.168.128.17';
                  AddressFamily = 'IPv4'
               },
-              @{ Name = 'ALPHA-ADFS';
+              @{ Name = 'ALPHA-ADFS1';
                  ScopeID = '192.168.128.0';
                  ClientMACAddress = '000000000004';
                  IPAddress = '192.168.128.18';
@@ -233,9 +233,9 @@
       </adapters>
     </vm>
 
-    <vm name="ALPHA-ADFS"
+    <vm name="ALPHA-ADFS1"
       template="Template Windows Server 2012 R2 Datacenter Full"
-      computername="ALPHA-ADFS"
+      computername="ALPHA-ADFS1"
       bootorder="3">
       <dsc configname="MEMBER_ADFS"
            configfile="MEMBER_ADFS.DSC.ps1"
@@ -395,7 +395,7 @@
                  IPAddress = '192.168.130.17';
                  AddressFamily = 'IPv4'
               },
-              @{ Name = 'BRAVO-ADFS';
+              @{ Name = 'BRAVO-ADFS1';
                  ScopeID = '192.168.130.0';
                  ClientMACAddress = '000000000004';
                  IPAddress = '192.168.130.18';
@@ -480,9 +480,9 @@
       </adapters>
     </vm>
 
-    <vm name="BRAVO-ADFS"
+    <vm name="BRAVO-ADFS1"
       template="Template Windows Server 2012 R2 Datacenter Full"
-      computername="BRAVO-ADFS"
+      computername="BRAVO-ADFS1"
       bootorder="3">
       <dsc configname="MEMBER_ADFS"
            configfile="MEMBER_ADFS.DSC.ps1"
