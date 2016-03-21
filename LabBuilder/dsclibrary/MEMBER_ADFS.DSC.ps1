@@ -3,7 +3,7 @@ DSC Template Configuration File For use by LabBuilder
 .Title
     MEMBER_ADFS
 .Desription
-    Builds a Server that is joined to a domain and then made into an ADFS Server.
+    Builds a Server that is joined to a domain and then made into an ADFS Server using WID.
 .Parameters:
     DomainName = "LABBUILDER.COM"
     DomainAdminPassword = "P@ssword!1"
@@ -24,10 +24,17 @@ Configuration MEMBER_ADFS
             [PSCredential]$DomainAdminCredential = New-Object System.Management.Automation.PSCredential ("$($Node.DomainName)\Administrator", (ConvertTo-SecureString $Node.DomainAdminPassword -AsPlainText -Force))
         }
 
+        WindowsFeature WIDInstall
+        {
+            Ensure = "Present"
+            Name = "Windows-Internal-Database"
+        }
+
         WindowsFeature ADFSInstall
         {
             Ensure = "Present"
             Name = "ADFS-Federation"
+            DependsOn = "[WindowsFeature]WIDInstall"
         }
 
         WaitForAll DC
