@@ -1,4 +1,6 @@
 ### Unreleased
+
+### 0.7.3.0
 * DSCLibrary\MEMBER_FAILOVERCLUSTER_FS.DSC.ps1: Added ServerName property to contain name of ISCSI Server.
 * samples\Sample_WS2012R2_DomainClustering.xml: Added ServerName property to all Failover Cluster servers DSC properties.
 * docs\labbuilderconfig-schema.md: Converted to UTF-8 to eliminate issues with Git.
