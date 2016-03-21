@@ -213,8 +213,8 @@
         </parameters>
       </dsc>
       <adapters>
-        <adapter name="Domain Private Site A"
-                 switchname="Domain Private Site A">
+        <adapter name="Domain Private Alpha"
+                 switchname="Domain Private Alpha">
           <ipv4 address="192.168.128.17"
                 defaultgateway="192.168.128.19"
                 subnetmask="24"
@@ -242,8 +242,8 @@
         </parameters>
       </dsc>
       <adapters>
-        <adapter name="Domain Private Site A"
-                 switchname="Domain Private Site A">
+        <adapter name="Domain Private Alpha"
+                 switchname="Domain Private Alpha">
           <ipv4 address="192.168.128.18"
                 defaultgateway="192.168.128.19"
                 subnetmask="24"
@@ -425,8 +425,8 @@
         </parameters>
       </dsc>
       <adapters>
-        <adapter name="Domain Private Site A"
-                 switchname="Domain Private Site A">
+        <adapter name="Domain Private Bravo"
+                 switchname="Domain Private Bravo">
           <ipv4 address="192.168.130.17"
                 defaultgateway="192.168.130.19"
                 subnetmask="24"
@@ -454,8 +454,8 @@
         </parameters>
       </dsc>
       <adapters>
-        <adapter name="Domain Private Site A"
-                 switchname="Domain Private Site A">
+        <adapter name="Domain Private Bravo"
+                 switchname="Domain Private Bravo">
           <ipv4 address="192.168.130.18"
                 defaultgateway="192.168.130.19"
                 subnetmask="24"
