@@ -1,6 +1,6 @@
 @{
     RootModule = 'LabBuilder.psm1'
-    ModuleVersion = '0.7.1.0'
+    ModuleVersion = '0.7.2.0'
     GUID = 'e229850e-7a90-4123-9a30-37814119d3a3'
     Author = 'Daniel Scott-Raynsford'
     CompanyName = ''
@@ -19,6 +19,8 @@
         'Initialize-LabResourceModule'
         'Get-LabResourceMSU'
         'Initialize-LabResourceMSU'
+        'Get-LabResourceISO'
+        'Initialize-LabResourceISO'
         'Get-LabSwitch'
         'Initialize-LabSwitch'
         'Remove-LabSwitch'

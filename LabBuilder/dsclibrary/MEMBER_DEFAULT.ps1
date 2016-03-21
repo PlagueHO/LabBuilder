@@ -1,28 +1,20 @@
 <###################################################################################################
 DSC Template Configuration File For use by LabBuilder
 .Title
-    MEMBER_DNS
+    MEMBER_DEFAULT
 .Desription
-    Builds a Server that is joined to a domain and then made into a DNS Server.
+    Builds a Server that is joined to a domain.
 .Parameters:
     DomainName = "LABBUILDER.COM"
     DomainAdminPassword = "P@ssword!1"
-    DCName = 'SA-DC1'
     PSDscAllowDomainUser = $True
-    Forwarders = @('8.8.8.8','8.8.4.4')
-    PrimaryZones = @(
-        @{ Name = 'BRAVO.LOCAL';
-           ZoneFile = 'bravo.local.dns';
-           DynamicUpdate = 'None';
-        }
-    )
 ###################################################################################################>
 
-Configuration MEMBER_DNS
+Configuration MEMBER_FILESERVER
 {
     Import-DscResource -ModuleName 'PSDesiredStateConfiguration'
     Import-DscResource -ModuleName xComputerManagement
-    Import-DscResource -ModuleName xDNSServer
+    Import-DscResource -ModuleName xNetworking
     Node $AllNodes.NodeName {
         # Assemble the Local Admin Credentials
         If ($Node.LocalAdminPassword) {
@@ -30,12 +22,6 @@ Configuration MEMBER_DNS
         }
         If ($Node.DomainAdminPassword) {
             [PSCredential]$DomainAdminCredential = New-Object System.Management.Automation.PSCredential ("$($Node.DomainName)\Administrator", (ConvertTo-SecureString $Node.DomainAdminPassword -AsPlainText -Force))
-        }
-
-        WindowsFeature DNSInstall 
-        { 
-            Ensure = "Present" 
-            Name   = "DNS" 
         }
 
         WaitForAll DC
@@ -46,37 +32,13 @@ Configuration MEMBER_DNS
             RetryCount       = 60
         }
 
+
         xComputer JoinDomain 
         {
             Name       = $Node.NodeName
             DomainName = $Node.DomainName
             Credential = $DomainAdminCredential 
-            DependsOn  = '[WaitForAll]DC' 
-        }
-
-        # DNS Server Settings
-        if ($Node.Forwarders)
-        {
-            xDnsServerForwarder DNSForwarders
-            {
-                IsSingleInstance = 'Yes'
-                IPAddresses      = $Node.Forwarders
-                Credential       = $DomainAdminCredential 
-                DependsOn        = '[xComputer]JoinDomain'
-            }
-        }
-        [Int]$Count=0
-        Foreach ($PrimaryZone in $Node.PrimaryZones) {
-            $Count++
-            xDnsServerPrimaryZone "PrimaryZone$Count"
-            {
-                Ensure        = 'Present'
-                Name          = $PrimaryZone.Name
-                ZoneFile      = $PrimaryZone.ZoneFile
-                DynamicUpdate = $PrimaryZone.DynamicUpdate
-                Credential    = $DomainAdminCredential 
-                DependsOn     = '[xComputer]JoinDomain'
-            }
+            DependsOn  = "[WaitForAll]DC" 
         }
     }
 }

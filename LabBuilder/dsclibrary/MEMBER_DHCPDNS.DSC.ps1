@@ -1,9 +1,9 @@
 <###################################################################################################
 DSC Template Configuration File For use by LabBuilder
 .Title
-    MEMBER_FAILOVERCLUSTER_DHCP
+    MEMBER_DHCPDNS
 .Desription
-    Builds a Network failover clustering node for use as a DHCP Server.
+    Builds a Server that is joined to a domain and then made into a DHCP Server and DNS Server.
 .Parameters:
     DomainName = "LABBUILDER.COM"
     DomainAdminPassword = "P@ssword!1"
@@ -50,13 +50,20 @@ DSC Template Configuration File For use by LabBuilder
             AddressFamily = 'IPv4'
         }
     )
+    Forwarders = @('8.8.8.8','8.8.4.4')
+    PrimaryZones = @(
+        @{ Name = 'BRAVO.LOCAL';
+           ZoneFile = 'bravo.local.dns';
+           DynamicUpdate = 'None';
+        }
+    )
 ###################################################################################################>
 
-Configuration MEMBER_FAILOVERCLUSTER_FS
+Configuration MEMBER_DHCPDNS
 {
     Import-DscResource -ModuleName 'PSDesiredStateConfiguration'
     Import-DscResource -ModuleName xComputerManagement
-    Import-DscResource -ModuleName xPSDesiredStateConfiguration
+    Import-DscResource -ModuleName xDNSServer
     Import-DscResource -ModuleName xDHCPServer
     Node $AllNodes.NodeName {
         # Assemble the Local Admin Credentials
@@ -67,42 +74,33 @@ Configuration MEMBER_FAILOVERCLUSTER_FS
             [PSCredential]$DomainAdminCredential = New-Object System.Management.Automation.PSCredential ("$($Node.DomainName)\Administrator", (ConvertTo-SecureString $Node.DomainAdminPassword -AsPlainText -Force))
         }
 
-        WindowsFeature FailoverClusteringInstall
-        {
-            Ensure = "Present" 
-            Name = "Failover-Clustering" 
-        }
-
-        WindowsFeature FailoverClusteringPSInstall
-        {
-            Ensure = "Present" 
-            Name = "RSAT-Clustering-PowerShell" 
-            DependsOn = "[WindowsFeature]FailoverClusteringInstall" 
-        }
-
         WindowsFeature DHCPInstall 
-        {
+        { 
             Ensure = "Present" 
-            Name = "DHCP" 
-            DependsOn = "[WindowsFeature]FailoverClusteringPSInstall"
+            Name   = "DHCP" 
         }
 
-        # Wait for the Domain to be available so we can join it.
+        WindowsFeature DNSInstall 
+        {
+            Ensure    = "Present" 
+            Name      = "DNS" 
+            DependsOn = "[WindowsFeature]DHCPInstall" 
+        }
+
         WaitForAll DC
         {
-        ResourceName      = '[xADDomain]PrimaryDC'
-        NodeName          = $Node.DCname
-        RetryIntervalSec  = 15
-        RetryCount        = 60
+            ResourceName     = '[xADDomain]PrimaryDC'
+            NodeName         = $Node.DCname
+            RetryIntervalSec = 15
+            RetryCount       = 60
         }
-        
-        # Join this Server to the Domain so that it can be an Enterprise CA.
-        xComputer JoinDomain 
+
+        xComputer JoinDomain
         { 
-            Name          = $Node.NodeName
-            DomainName    = $Node.DomainName
-            Credential    = $DomainAdminCredential 
-            DependsOn = "[WaitForAll]DC" 
+            Name       = $Node.NodeName
+            DomainName = $Node.DomainName
+            Credential = $DomainAdminCredential 
+            DependsOn  = "[WaitForAll]DC" 
         }
 
         # DHCP Server Settings
@@ -122,6 +120,7 @@ Configuration MEMBER_FAILOVERCLUSTER_FS
             }
             DependsOn = '[xComputer]JoinDomain'
         }
+
         [Int]$Count=0
         Foreach ($Scope in $Node.Scopes) {
             $Count++
@@ -161,6 +160,31 @@ Configuration MEMBER_FAILOVERCLUSTER_FS
                 DnsServerIPAddress = $ScopeOption.DNServerIPAddress
                 Router             = $ScopeOption.Router
                 AddressFamily      = $ScopeOption.AddressFamily
+            }
+        }
+
+        # DNS Server Settings
+        if ($Node.Forwarders)
+        {
+            xDnsServerForwarder DNSForwarders
+            {
+                IsSingleInstance = 'Yes'
+                IPAddresses      = $Node.Forwarders
+                Credential       = $DomainAdminCredential 
+                DependsOn        = '[xComputer]JoinDomain'
+            }
+        }
+        [Int]$Count=0
+        Foreach ($PrimaryZone in $Node.PrimaryZones) {
+            $Count++
+            xDnsServerPrimaryZone "PrimaryZone$Count"
+            {
+                Ensure        = 'Present'
+                Name          = $PrimaryZone.Name
+                ZoneFile      = $PrimaryZone.ZoneFile
+                DynamicUpdate = $PrimaryZone.DynamicUpdate
+                Credential    = $DomainAdminCredential 
+                DependsOn     = '[xComputer]JoinDomain'
             }
         }
     }
