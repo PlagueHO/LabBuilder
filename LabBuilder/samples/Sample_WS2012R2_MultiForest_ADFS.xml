@@ -159,6 +159,12 @@
                  ClientMACAddress = '000000000005';
                  IPAddress = '192.168.128.19';
                  AddressFamily = 'IPv4'
+              },
+              @{ Name = 'ALPHA-WEBAPP1';
+                 ScopeID = '192.168.128.0';
+                 ClientMACAddress = '000000000006';
+                 IPAddress = '192.168.128.20';
+                 AddressFamily = 'IPv4'
               }
             )
           ScopeOptions = @(
@@ -297,6 +303,35 @@
       </adapters>
     </vm>
 
+    <vm name="ALPHA-WEBAPP1"
+      template="Template Windows Server 2012 R2 Datacenter Full"
+      computername="ALPHA-WEBAPP1"
+      bootorder="3">
+      <dsc configname="MEMBER_WEBSERVER"
+           configfile="MEMBER_WEBSERVER.DSC.ps1"
+           logging="Y">
+        <parameters>
+           DomainName = "ALPHA.LOCAL"
+           DomainAdminPassword = "P@ssword!1"
+           DCName = "ALPHA-DC1"
+           PSDscAllowDomainUser = $True
+        </parameters>
+      </dsc>
+      <adapters>
+        <adapter name="Domain Private Alpha"
+                 switchname="Domain Private Alpha">
+          <ipv4 address="192.168.128.20"
+                defaultgateway="192.168.128.19"
+                subnetmask="24"
+                dnsserver="192.168.128.10,192.168.128.11"/>
+          <ipv6 address="fd53:ccc5:895a:bc00::20"
+                defaultgateway="fd53:ccc5:895a:bc00::13"
+                subnetmask="64"
+                dnsserver="fd53:ccc5:895a:bc00::a,fd53:ccc5:895a:bc00::b"/>
+        </adapter>
+      </adapters>
+    </vm>
+
     <vm name="BRAVO-DC1"
         template="Template Windows Server 2012 R2 Datacenter Full"
         computername="BRAVO-DC1">
@@ -370,6 +405,12 @@
                  ScopeID = '192.168.130.0';
                  ClientMACAddress = '000000000005';
                  IPAddress = '192.168.130.19';
+                 AddressFamily = 'IPv4'
+              },
+              @{ Name = 'BRAVO-WEBAP1';
+                 ScopeID = '192.168.130.0';
+                 ClientMACAddress = '000000000006';
+                 IPAddress = '192.168.130.20';
                  AddressFamily = 'IPv4'
               }
             )
@@ -506,6 +547,35 @@
         </adapter>
         <adapter name="External"
                  switchname="External" />
+      </adapters>
+    </vm>
+
+    <vm name="BRAVO-WEBAPP1"
+      template="Template Windows Server 2012 R2 Datacenter Full"
+      computername="BRAVO-WEBAPP1"
+      bootorder="3">
+      <dsc configname="MEMBER_WEBSERVER"
+           configfile="MEMBER_WEBSERVER.DSC.ps1"
+           logging="Y">
+        <parameters>
+           DomainName = "BRAVO.LOCAL"
+           DomainAdminPassword = "P@ssword!1"
+           DCName = "BRAVO-DC1"
+           PSDscAllowDomainUser = $True
+        </parameters>
+      </dsc>
+      <adapters>
+        <adapter name="Domain Private Bravo"
+                 switchname="Domain Private Bravo">
+          <ipv4 address="192.168.130.20"
+                defaultgateway="192.168.130.19"
+                subnetmask="24"
+                dnsserver="192.168.130.10,192.168.130.11"/>
+          <ipv6 address="fd53:ccc5:895c:bc00::20"
+                defaultgateway="fd53:ccc5:895c:bc00::13"
+                subnetmask="64"
+                dnsserver="fd53:ccc5:895c:bc00::a,fd53:ccc5:895c:bc00::b"/>
+        </adapter>
       </adapters>
     </vm>
   </vms>
