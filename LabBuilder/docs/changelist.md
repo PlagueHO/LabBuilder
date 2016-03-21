@@ -17,6 +17,7 @@
 * DSCLibrary\MEMBER_ADFS.DSC.ps1: Install WID.
 * DSCLibrary\MEMBER_WEBSERVER.ps1: Created resource for IIS Web Servers.
 * samples\Sample_WS2012R2_MultiForest_ADFS.xml: Added Web Application Servers.
+* .github\*: Added general documentation on contributing to this project.
 
 ### 0.7.2.0
 * DSCLibrary\MEMBER_FAILOVERCLUSTER_FS.DSC.ps1: Changed to install most File Server features on cluster nodes.
