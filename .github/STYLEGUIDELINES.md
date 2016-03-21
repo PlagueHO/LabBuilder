@@ -9,11 +9,9 @@ General Rules
 
  1. For all indentation, use 4 spaces instead of tab stops
  2. Make sure all files are encoding using UTF-8. 
- 3. Windows handles [newlines](http://en.wikipedia.org/wiki/Newline) using CR+LF instead of just CR. 
-For interoperability reasons, we recommend that you follow [these instructions](GettingStartedWithGitHub.md#setup-git) when installing Git on Windows so that newlines saved to GitHub are simply CRs. 
- 4. When writing Markdown, if a paragraph includes more than one sentence, end each sentence with a newline.
+ 3. When writing Markdown, if a paragraph includes more than one sentence, end each sentence with a newline.
 GitHub will still render the sentences as a single paragraph, but the readability of `git diff` will be greatly improved. 
- 5. Files must end with a newline, see [StackOverflow.](http://stackoverflow.com/questions/5813311/no-newline-at-end-of-file) 
+ 4. Files must end with a newline, see [StackOverflow.](http://stackoverflow.com/questions/5813311/no-newline-at-end-of-file) 
 
 PowerShell Coding Style Guidelines
 ==================================
