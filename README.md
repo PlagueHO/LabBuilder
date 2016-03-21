@@ -41,6 +41,29 @@ The general goals of this module are:
 + **Extensible**: Enable new Lab VM machine types to be configured by supplying different DSC library resources.
 
 
+Requirements
+============
+To use this Module you will require on your Lab Host:
+ 1. Operating Systems supported:
+    - Windows Server 2012
+    - Windows Server 2012 R2
+    - Windows Server 2016 TP4
+    - Windows 8.0
+    - Windows 8.1
+    - Windows 10
+ 2. Windows Management Framewok 5.0 (WMF5.0) Installed on your Lab Host.
+ 
+    _WMF 5.0 is installed on Windows 10 and Windows Server 2016 out of the box, but for Windows Server 2012/R2 and Windows 8/8.1 it will need to be installed separately._
+    _WMF 5.0 can be downloaded from [here](https://www.microsoft.com/en-us/download/details.aspx?id=50395)._
+    
+ 3. Hyper-V available (which requires intel-VT CPU support).
+ 4. To use labs that contain Nested Hyper-V hosts only Windows 10 built 10586 or later and Windows Server 2016 TP3 or later are supported.
+ 5. Copies of the Windows installation media for any Operating Systems that will be used in your Labs.
+    * Note: Most Lab configuration files can contain a URL where the relevant trial media can be downloaded from, but you can use any Windows Install Media source you choose (including custom built ISOs).
+ 6. An internet connection to download the WMF 5.0 MSU and any other optional MSU packages required by the Lab.
+    * Note: This only needs to be done during the Install-Lab phase and can be disabled after this phase is complete.
+
+
 Basic Usage Guide
 =================
 The use of this module is fairly simple from a process standpoint with the bulk of the work creating a Lab going into the creation of the configuration XML that defines it. But if there is a Lab configuration already available that fits your needs then there is almost nothing to do.
@@ -54,20 +77,68 @@ A Lab consists of the following items:
 
 There are a library of DSC configuration files for various machine types already defined and available for you to use in the **DSCLibrary** folder.
 
-Once these files are available the process of setting up the Lab is simple.
+## Installing the LabBuilder Module
+
+The easiest way to download and install the LabBuilder module is using PowerShell Get to download it from the [PowerShell Gallery](https://www.powershellgallery.com/packages/LabBuilder/):
+```powershell
+Install-Module -Name LabBuilder
+```
+
+PowerShell Get is built into Windows Management Framework 5.0, which is a requirement of this project, so it should already be installed onto your host.
+If it is not installed, download it from [here](https://www.microsoft.com/en-us/download/details.aspx?id=50395).
+
+## Installing a Lab
+
+Once the Lab files are available the process of installing the Lab is simple.
  1. Make a folder where all your Lab files will go (e.g. VMs, VHDs, ISOs, scripts) - e.g. c:\MyLab
- 2. Copy your the Lab Configuration XML file into that folder (try one of the sample configurations in the **Samples** folder).
+ 2. Copy the Lab Configuration XML file into that folder (try one of the sample configurations in the **Samples** folder).
  3. Edit the Lab Configuration XML file and customize the Settings to suit (specifically the LabPath setting). 
  4. Make a folder in your Lab folder for your Windows ISO files called **isofiles** - e.g. c:\MyLab\ISOFiles
  5. Copy any ISO files into this folder that your lab will use.
  6. Make a folder in your Lab folder for your VHD boot templates (converted from the ISO files) **vhdfiles** - e.g. c:\MyLab\VHDFiles
- 7. Run the following commands in an Administrative PowerShell window:
+ 7. Run the following command in an Administrative PowerShell window:
 ```powershell
-Import-Module LabBuilder
 Install-Lab -ConfigPath 'c:\MyLab\Configuration.xml'
 ```
 
 This will create a new Lab using the c:\MyLab\Configuration.xml file.
+
+If you want more verbose output of what is happening during the Lab Install process, use the -verbose parameter:
+```powershell
+Install-Lab -ConfigPath 'c:\MyLab\Configuration.xml' -Verbose
+```
+
+## Stopping a Lab
+
+Once the Lab has been installed, it can be stopped using this PowerShell command:
+
+```powershell
+Get-Lab -ConfigPath 'c:\MyLab\Configuration.xml' | Stop-Lab
+```
+
+This will shutdown any running Virutal Machines in the Lab in **Reverse Boot Order**, starting with Virtual Machines that have no boot order defined.
+LabBuilder will wait for all machines with the same Boot Order to be shut down before beginning shut down of VMs in the next lowest Boot Order.
+Any Lab Virtual Machine that has already been stopped will be ignored.
+
+_Note: Boot Order is an optional attribute defined in the Lab Configuration that controls the order Lab Virtual Machines should be booted in._
+
+You can of course just shut down the Virtual Machines in a Lab yourself via Hyper-V (or some other mechanism), but using Stop-Lab ensures the Virtual Machines are shutdown in a specific order defined in the Lab (e.g. Domain Controllers shut down last).
+
+
+## Starting a Lab
+
+Once the Lab has been installed and then stopped, it can be started back up using this PowerShell command:
+
+```powershell
+Get-Lab -ConfigPath 'c:\MyLab\Configuration.xml' | Start-Lab
+```
+
+This will start up any stopped Virutal Machines in the Lab in **Boot Order**, with Virtual Machines that have no boot order defined being started last.
+LabBuilder will wait for all machines with the same Boot Order to be started up fully before beginning start up of VMs in the next highest Boot Order.
+
+_Note: Boot Order is an optional attribute defined in the Lab Configuration that controls the order Lab Virtual Machines should be booted in._
+
+You can of course just start up the Virtual Machines in a Lab yourself via Hyper-V (or some other mechanism), but using Start-Lab ensures the Virtual Machines are started up in a specific order defined in the Lab (e.g. Domain Controllers started up first).
 
 
 ISO Files
@@ -201,24 +272,6 @@ E.g.
 
 Other MSU packages can also be installed in the same way.
 Multiple MSU Packages can be installed to the same VHD by comma delimiting the Packages attribute.
-
-
-Requirements
-============
-To use this Module you will require on your Lab Host:
- 1. Operating Systems supported:
-    - Windows Server 2012
-    - Windows Server 2012 R2
-    - Windows Server 2016 TP4
-    - Windows 8.0
-    - Windows 8.1
-    - Windows 10
- 2. Hyper-V available (which requires intel-VT CPU support).
- 3. To use labs that contain Nested Hyper-V hosts only Windows 10 built 10586 or later and Windows Server 2016 TP3 or later are supported.
- 4. Copies of the Windows installation media for any Operating Systems that will be used in your Labs.
-    * Note: Most Lab configuration files can contain a URL where the relevant trial media can be downloaded from, but you can use any Windows Install Media source you choose (including custom built ISOs).
- 5. An internet connection to download the WMF 5.0 MSU and any other optional MSU packages required by the Lab.
-    * Note: This only needs to be done during the Install-Lab phase and can be disabled after this phase is complete.
 
 
 Configuration XML

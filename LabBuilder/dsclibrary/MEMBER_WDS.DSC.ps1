@@ -1,22 +1,21 @@
 <###################################################################################################
 DSC Template Configuration File For use by LabBuilder
 .Title
-    MEMBER_BRANCHCACHE_HOST
+    MEMBER_WDS
 .Desription
-    Builds a Server that is joined to a domain and then made into a BranchCache Hosted Mode Server.
-.Parameters:
+    Builds a Server that is joined to a domain and then installs WSUS components.
+.Parameters:          
     DomainName = "LABBUILDER.COM"
     DomainAdminPassword = "P@ssword!1"
     DCName = 'SA-DC1'
     PSDscAllowDomainUser = $True
 ###################################################################################################>
 
-Configuration MEMBER_BRANCHCACHE_HOST
+Configuration MEMBER_WDS
 {
     Import-DscResource -ModuleName 'PSDesiredStateConfiguration'
     Import-DscResource -ModuleName xComputerManagement
     Import-DscResource -ModuleName xStorage
-    Import-DscResource -ModuleName xNetworking
     Node $AllNodes.NodeName {
         # Assemble the Local Admin Credentials
         If ($Node.LocalAdminPassword) {
@@ -26,10 +25,24 @@ Configuration MEMBER_BRANCHCACHE_HOST
             [PSCredential]$DomainAdminCredential = New-Object System.Management.Automation.PSCredential ("$($Node.DomainName)\Administrator", (ConvertTo-SecureString $Node.DomainAdminPassword -AsPlainText -Force))
         }
 
-        WindowsFeature BranchCache 
-        { 
+        WindowsFeature WDSDeploymentInstall 
+        {
             Ensure = "Present" 
-            Name = "BranchCache" 
+            Name = "WDS-Deployment" 
+        }
+
+        WindowsFeature WDSTransportInstall 
+        {
+            Ensure = "Present" 
+            Name = "WDS-Transport" 
+            DependsOn = "[WindowsFeature]WDSDeploymentInstall" 
+        }
+
+        WindowsFeature BitLockerNetworkUnlockInstall
+        {
+            Ensure = "Present" 
+            Name = "BitLocker-NetworkUnlock" 
+            DependsOn = "[WindowsFeature]RSATADPowerShellInstall" 
         }
 
         # Wait for the Domain to be available so we can join it.
@@ -49,20 +62,20 @@ Configuration MEMBER_BRANCHCACHE_HOST
             Credential    = $DomainAdminCredential 
             DependsOn = "[WaitForAll]DC" 
         }
-
-        # Enable BranchCache Hosted Mode Firewall Fules
-        xFirewall FSRMFirewall1
+        
+        xWaitforDisk Disk2
         {
-            Name = "Microsoft-Windows-PeerDist-HostedServer-In"
-            Ensure = 'Present'
-            Enabled = 'True'
+            DiskNumber = 1
+            RetryIntervalSec = 60
+            RetryCount = 60
+            DependsOn = "[xComputer]JoinDomain" 
         }
-
-        xFirewall FSRMFirewall2
+        
+        xDisk DVolume
         {
-            Name = "Microsoft-Windows-PeerDist-HostedServer-Out"
-            Ensure = 'Present'
-            Enabled = 'True' 
+            DiskNumber = 1
+            DriveLetter = 'D'
+            DependsOn = "[xWaitforDisk]Disk2" 
         }
     }
 }

@@ -34,6 +34,457 @@ $Libs.Foreach(
 )
 #endregion
 
+
+#region LabBuilderTypes
+<#
+.SYNOPSIS
+    Declares types and classes used by LabBuilder cmdlets.
+#>
+Enum LabOStype {
+    Server = 1
+    Nano = 2
+    Client = 3
+} # Enum LabOStype
+
+Enum LabVHDType {
+    Fixed = 1
+    Dynamic = 2
+    Differencing = 3
+} # Enum LabVHDType
+
+Enum LabVHDFormat {
+    VHD = 1
+    VHDx = 2
+} # Enum LabVHDFormat
+
+Enum LabSwitchType {
+    Private = 1
+    Internal = 2
+    External = 3
+    NAT = 4
+} # Enum LabSwitchType
+
+Enum LabPartitionStyle {
+    MBR = 1
+    GPT = 2
+} # Enum LabPartitionStyle
+
+Enum LabFileSystem {
+    FAT32 = 1
+    exFAT = 2
+    NTFS = 3
+    ReFS = 4
+} # Enum LabFileSystem
+
+class LabResourceModule:System.ICloneable {
+    [String] $Name
+    [String] $URL
+    [String] $Folder
+    [String] $MinimumVersion
+    [String] $RequiredVersion
+
+    LabResourceModule() {}
+
+    LabResourceModule($Name) {
+        $this.Name = $Name
+    } # Constructor
+
+    [Object] Clone () {
+        $New = [LabResourceModule]::New()
+        foreach ($Property in ($this | Get-Member -MemberType Property))
+        {
+            $New.$($Property.Name) = $this.$($Property.Name)
+        } # foreach
+        return $New
+    } # Clone
+} # class LabResourceModule
+
+class LabResourceMSU:System.ICloneable {
+    [String] $Name
+    [String] $URL
+    [String] $Path
+    [String] $Filename
+
+    LabResourceMSU() {}
+
+    LabResourceMSU($Name) {
+        $this.Name = $Name
+    } # Constructor
+
+    LabResourceMSU($Name,$URL) {
+        $this.Name = $Name
+        $this.URL = $URL
+    } # Constructor
+
+    [Object] Clone () {
+        $New = [LabResourceMSU]::New()
+        foreach ($Property in ($this | Get-Member -MemberType Property))
+        {
+            $New.$($Property.Name) = $this.$($Property.Name)
+        } # foreach
+        return $New
+    } # Clone
+} # class LabResourceMSU
+
+class LabResourceISO:System.ICloneable {
+    [String] $Name
+    [String] $URL
+    [String] $Path
+
+    LabResourceISO() {}
+
+    LabResourceISO($Name) {
+        $this.Name = $Name
+    } # Constructor
+
+    [Object] Clone () {
+        $New = [LabResourceISO]::New()
+        foreach ($Property in ($this | Get-Member -MemberType Property))
+        {
+            $New.$($Property.Name) = $this.$($Property.Name)
+        } # foreach
+        return $New
+    } # Clone
+} # class LabResourceISO
+
+class LabSwitchAdapter:System.ICloneable {
+    [String] $Name
+    [String] $MACAddress
+    [Byte] $Vlan
+
+    LabSwitchAdapter() {}
+
+    LabSwitchAdapter($Name) {
+        $this.Name = $Name
+    } # Constructor
+
+    LabSwitchAdapter($Name,$Type) {
+        $this.Name = $Name
+        $this.Type = $Type
+    } # Constructor
+
+    [Object] Clone () {
+        $New = [LabSwitchAdapter]::New()
+        foreach ($Property in ($this | Get-Member -MemberType Property))
+        {
+            $New.$($Property.Name) = $this.$($Property.Name)
+        } # foreach
+        return $New
+    } # Clone
+} # class LabSwitchAdapter
+
+class LabVMAdapterIPv4:System.ICloneable {
+    [String] $Address
+    [String] $DefaultGateway
+    [Byte] $SubnetMask
+    [String] $DNSServer
+
+    LabVMAdapterIPv4() {}
+
+    LabVMAdapterIPv4($Address,$SubnetMask) {
+        $this.Address = $Address
+        $this.SubnetMask = $SubnetMask
+    } # Constructor
+    
+    [Object] Clone () {
+        $New = [LabVMAdapterIPv4]::New()
+        foreach ($Property in ($this | Get-Member -MemberType Property))
+        {
+            $New.$($Property.Name) = $this.$($Property.Name)
+        } # foreach
+        return $New
+    } # Clone
+} # class LabVMAdapterIPv4
+
+class LabVMAdapterIPv6:System.ICloneable {
+    [String] $Address
+    [String] $DefaultGateway
+    [Byte] $SubnetMask
+    [String] $DNSServer
+
+    LabVMAdapterIPv6() {}
+
+    LabVMAdapterIPv6($Address,$SubnetMask) {
+        $this.Address = $Address
+        $this.SubnetMask = $SubnetMask
+    } # Constructor
+
+    [Object] Clone () {
+        $New = [LabVMAdapterIPv6]::New()
+        foreach ($Property in ($this | Get-Member -MemberType Property))
+        {
+            $New.$($Property.Name) = $this.$($Property.Name)
+        } # foreach
+        return $New
+    } # Clone
+} # class LabVMAdapterIPv6
+
+class LabVMAdapter:System.ICloneable {
+    [String] $Name
+    [String] $SwitchName
+    [String] $MACAddress
+    [Boolean] $MACAddressSpoofing
+    [Byte] $Vlan
+    [LabVMAdapterIPv4] $IPv4
+    [LabVMAdapterIPv6] $IPv6
+
+    LabVMAdapter() {}
+
+    LabVMAdapter($Name) {
+        $this.Name = $Name
+    } # Constructor
+    
+    [Object] Clone () {
+        $New = [LabVMAdapter]::New()
+        foreach ($Property in ($this | Get-Member -MemberType Property))
+        {
+            $New.$($Property.Name) = $this.$($Property.Name)
+        } # foreach
+        return $New
+    } # Clone
+} # class LabVMAdapter
+
+class LabDataVHD:System.ICloneable {
+    [String] $VHD
+    [LabVHDType] $VHDType
+    [Uint64] $Size
+    [String] $SourceVHD
+    [String] $ParentVHD
+    [Boolean] $MoveSourceVHD
+    [String] $CopyFolders
+    [LabFileSystem] $FileSystem
+    [LabPartitionStyle] $PartitionStyle
+    [String] $FileSystemLabel
+    [Boolean] $Shared = $False
+    [Boolean] $SupportPR = $False
+
+    LabDataVHD() {}
+    
+    LabDataVHD($VHD) {
+        $this.VHD = $VHD
+    } # Constructor
+
+    [Object] Clone () {
+        $New = [LabDataVHD]::New()
+        foreach ($Property in ($this | Get-Member -MemberType Property))
+        {
+            $New.$($Property.Name) = $this.$($Property.Name)
+        } # foreach
+        return $New
+    } # Clone
+} # class LabDataVHD
+
+class LabDVDDrive:System.ICloneable {
+    [String] $ISO
+    [String] $Path
+
+    LabDVDDrive() {}
+    
+    LabDVDDrive($ISO) {
+        $this.ISO = $ISO
+    } # Constructor
+
+    [Object] Clone () {
+        $New = [LabDVDDrive]::New()
+        foreach ($Property in ($this | Get-Member -MemberType Property))
+        {
+            $New.$($Property.Name) = $this.$($Property.Name)
+        } # foreach
+        return $New
+    } # Clone
+} # class LabDVDDrive
+
+class LabVMTemplateVHD:System.ICloneable {
+    [String] $Name
+    [String] $ISOPath
+    [String] $VHDPath
+    [LabOStype] $OSType = [LabOStype]::Server
+    [String] $Edition
+    [Byte] $Generation = 2
+    [LabVHDFormat] $VHDFormat = [LabVHDFormat]::VHDx
+    [LabVHDType] $VHDType = [LabVHDType]::Dynamic 
+    [Uint64] $VHDSize = 0
+    [String[]] $Packages
+    [String[]] $Features
+
+    LabVMTemplateVHD() {}
+    
+    LabVMTemplateVHD($Name) {
+        $this.Name = $Name
+    } # Constructor
+
+    [Object] Clone () {
+        $New = [LabVMTemplateVHD]::New()
+        foreach ($Property in ($this | Get-Member -MemberType Property))
+        {
+            $New.$($Property.Name) = $this.$($Property.Name)
+        } # foreach
+        return $New
+    } # Clone
+} # class LabVMTemplateVHD
+
+class LabVMTemplate:System.ICloneable {
+    [String] $Name
+    [String] $VHD
+    [String] $SourceVHD
+    [String] $ParentVHD
+    [String] $TemplateVHD
+    [Uint64] $MemoryStartupBytes = 1GB
+    [Boolean] $DynamicMemoryEnabled = $True
+    [Boolean] $ExposeVirtualizationExtensions = $False
+    [Byte] $ProcessorCount = 1
+    [String] $AdministratorPassword
+    [String] $ProductKey
+    [String] $Timezone="Pacific Standard Time"
+    [LabOStype] $OSType = [LabOStype]::Server
+    [String[]] $IntegrationServices = @('Guest Service Interface','Heartbeat','Key-Value Pair Exchange','Shutdown','Time Synchronization','VSS') 
+    [String[]] $Packages
+
+    LabVMTemplate() {}
+    
+    LabVMTemplate($Name) {
+        $this.Name = $Name
+    } # Constructor
+
+    [Object] Clone () {
+        $New = [LabVMTemplate]::New()
+        foreach ($Property in ($this | Get-Member -MemberType Property))
+        {
+            $New.$($Property.Name) = $this.$($Property.Name)
+        } # foreach
+        return $New
+    } # Clone
+} # class LabVMTemplate
+
+class LabSwitch:System.ICloneable {
+    [String] $Name
+    [LabSwitchType] $Type
+    [Byte] $VLAN
+    [String] $NATSubnetAddress
+    [LabSwitchAdapter[]] $Adapters
+
+    LabSwitch() {}
+    
+    LabSwitch($Name) {
+        $this.Name = $Name
+    } # Constructor
+
+    LabSwitch($Name,$Type) {
+        $this.Name = $Name
+        $this.Type = $Type
+    } # Constructor
+
+    [Object] Clone () {
+        $New = [LabSwitch]::New()
+        foreach ($Property in ($this | Get-Member -MemberType Property))
+        {
+            $New.$($Property.Name) = $this.$($Property.Name)
+        } # foreach
+        return $New
+    } # Clone
+} # class LabSwitch
+
+class LabDSC:System.ICloneable {
+    [String] $ConfigName
+    [String] $ConfigFile
+    [String] $Parameters
+    [Boolean] $Logging = $False
+
+    LabDSC() {}
+    
+    LabDSC($ConfigName) {
+        $this.ConfigName = $ConfigName
+    } # Constructor
+
+    LabDSC($ConfigName,$ConfigFile) {
+        $this.ConfigName = $ConfigName
+        $this.ConfigFile = $ConfigFile
+    } # Constructor
+    
+    [Object] Clone () {
+        $New = [LabDSC]::New()
+        foreach ($Property in ($this | Get-Member -MemberType Property))
+        {
+            $New.$($Property.Name) = $this.$($Property.Name)
+        } # foreach
+        return $New
+    } # Clone
+} # class LabDSC
+
+class LabVM:System.ICloneable {
+    [String] $Name
+    [String] $Template
+    [String] $ComputerName
+    [Byte] $ProcessorCount
+    [Uint64] $MemoryStartupBytes = 1GB
+    [Boolean] $DynamicMemoryEnabled = $True
+    [Boolean] $ExposeVirtualizationExtensions = $True
+    [String] $ParentVHD
+    [Boolean] $UseDifferencingDisk = $True
+    [String] $AdministratorPassword
+    [String] $ProductKey
+    [String] $Timezone="Pacific Standard Time"
+    [LabOStype] $OSType = [LabOStype]::Server
+    [String] $UnattendFile
+    [String] $SetupComplete
+    [String[]] $Packages
+    [Int] $BootOrder
+    [String[]] $IntegrationServices = @('Guest Service Interface','Heartbeat','Key-Value Pair Exchange','Shutdown','Time Synchronization','VSS')
+    [LabVMAdapter[]] $Adapters
+    [LabDataVHD[]] $DataVHDs
+    [LabDVDDrive[]] $DVDDrives
+    [LabDSC] $DSC
+    [String] $VMRootPath
+    [String] $LabBuilderFilesPath
+
+    LabVM() {}
+    
+    LabVM($Name) {
+        $this.Name = $Name
+    } # Constructor
+
+    LabVM($Name,$ComputerName) {
+        $this.Name = $Name
+        $this.ComputerName = $ComputerName
+    } # Constructor
+
+    [Object] Clone () {
+        $New = [LabVM]::New()
+        foreach ($Property in ($this | Get-Member -MemberType Property))
+        {
+            $New.$($Property.Name) = $this.$($Property.Name)
+        } # foreach
+        return $New
+    } # Clone
+} # class LabVM
+
+class LabDSCModule:System.ICloneable {
+    [String] $ModuleName
+    [String] $ModuleVersion
+
+    LabDSCModule() {}
+    
+    LabDSCModule($ModuleName) {
+        $this.ModuleName = $ModuleName
+    } # Constructor
+
+    LabDSCModule($ModuleName,$ModuleVersion) {
+        $this.ModuleName = $ModuleName
+        $this.ModuleVersion = $ModuleVersion
+    } # Constructor
+
+    [Object] Clone () {
+        $New = [LabDSCModule]::New()
+        foreach ($Property in ($this | Get-Member -MemberType Property))
+        {
+            $New.$($Property.Name) = $this.$($Property.Name)
+        } # foreach
+        return $New
+    } # Clone
+} # class LabDSCModule
+#endregion
+
+
 #region ModuleVariables
 [String] $Script:WorkingFolder = $ENV:Temp
 
@@ -60,7 +511,6 @@ $Libs.Foreach(
 [Int] $Script:RetryConnectSeconds = 5
 [Int] $Script:RetryHeartbeatSeconds = 1
 [Int] $Script:StartupTimeout = 90
-[Int] $Script:ShutdownTimeout = 30
 
 # XML Stuff
 [String] $Script:ConfigurationXMLSchema = Join-Path -Path $PSScriptRoot -ChildPath 'schema\labbuilderconfig-schema.xsd'
@@ -337,19 +787,19 @@ function Get-LabResourceMSU {
     An optional array of MSU packages names.
 
     Only MSU packages matching names in this list will be pulled into the returned in the array.
-.PARAMETER ResourceModules
-    The array of Resource Modules pulled from the Lab using Get-LabResourceModule.
+.PARAMETER ResourceMSUs
+    The array of ResourceMSU objects pulled from the Lab using Get-LabResourceModule.
 
     If not provided it will attempt to pull the list from the Lab.
 .EXAMPLE
     $Lab = Get-Lab -ConfigPath c:\mylab\config.xml
-    $ResourceModules = Get-LabResourceModule -Lab $Lab
-    Initialize-LabResourceMSU -Lab $Lab -ResourceModules $ResourceModules
-    Initializes the Resource Modules in the configured in the Lab c:\mylab\config.xml
+    $ResourceMSUs = Get-LabResourceMSU -Lab $Lab
+    Initialize-LabResourceMSU -Lab $Lab -ResourceMSUs $ResourceMSUs
+    Initializes the Resource MSUs in the configured in the Lab c:\mylab\config.xml
 .EXAMPLE
     $Lab = Get-Lab -ConfigPath c:\mylab\config.xml
     Initialize-LabResourceMSU -Lab $Lab
-    Initializes the Resource Modules in the configured in the Lab c:\mylab\config.xml
+    Initializes the Resource MSUs in the configured in the Lab c:\mylab\config.xml
 .OUTPUTS
     None.
 #>
@@ -396,6 +846,177 @@ function Initialize-LabResourceMSU {
         } # foreach
     } # if
 } # Initialize-LabResourceMSU
+#endregion
+
+
+<#
+.SYNOPSIS
+    Gets an array of ISO Resources from a Lab.
+.DESCRIPTION
+    Takes a provided Lab and returns the list of ISO resources required for this Lab.
+.PARAMETER Lab
+    Contains the Lab object that was loaded by the Get-Lab object.
+.PARAMETER Name
+    An optional array of ISO names.
+
+    Only ISO Resources matching names in this list will be pulled into the returned in the array.
+.EXAMPLE
+    $Lab = Get-Lab -ConfigPath c:\mylab\config.xml
+    $ResourceISO = Get-LabResourceISO $Lab
+    Loads a Lab and pulls the array of ISO Resources from it.
+.OUTPUTS
+    Returns an array of LabISOResource objects.
+#>
+function Get-LabResourceISO {
+    [OutputType([LabResourceISO[]])]
+    [CmdLetBinding()]
+    param
+    (
+        [Parameter(
+            Position=1,
+            Mandatory=$true)]
+        [ValidateNotNullOrEmpty()]
+        $Lab,
+        
+        [Parameter(
+            Position=2)]
+        [ValidateNotNullOrEmpty()]
+        [String[]] $Name
+    )
+
+    [LabResourceISO[]] $ResourceISOs = @()
+    if ($Lab.labbuilderconfig.resources) 
+    {
+        foreach ($ISO in $Lab.labbuilderconfig.resources.iso)
+        {
+            $ISOName = $ISO.Name
+            if ($Name -and ($ISOName -notin $Name))
+            {
+                # A names list was passed but this ISO wasn't included
+                continue
+            } # if
+
+            if ($ISOName -eq 'iso')
+            {
+                $ExceptionParameters = @{
+                    errorId = 'ResourceISONameIsEmptyError'
+                    errorCategory = 'InvalidArgument'
+                    errorMessage = $($LocalizedData.ResourceISONameIsEmptyError)
+                }
+                ThrowException @ExceptionParameters
+            } # if
+            $ResourceISO = [LabResourceISO]::New($ISOName)
+            $Path = $ISO.Path
+            if ($Path)
+            {
+                if (-not [System.IO.Path]::IsPathRooted($Path))
+                {
+                    $Path = Join-Path `
+                        -Path $Lab.labbuilderconfig.settings.resourcepathfull `
+                        -ChildPath $Path
+                } # if
+
+                if (-not (Test-Path -Path $Path))
+                {
+                    $ExceptionParameters = @{
+                        errorId = 'ResourceISOFileNotFoundError'
+                        errorCategory = 'InvalidArgument'
+                        errorMessage = $($LocalizedData.ResourceISOFileNotFoundError `
+                            -f $Path)
+                    }
+                    ThrowException @ExceptionParameters
+                } # if
+            }
+            else
+            {
+                $Path = $Lab.labbuilderconfig.settings.resourcepathfull
+                if ($ISO.URL)
+                {
+                    $Path = Join-Path `
+                        -Path $Path `
+                        -ChildPath $ISO.URL.Substring($ISO.URL.LastIndexOf('/') + 1)
+                } # if
+            } # if
+            $ResourceISO.URL = $ISO.URL
+            $ResourceISO.Path = $Path
+            $ResourceISOs += @( $ResourceISO )
+        } # foreach
+    } # if
+    return $ResourceISOs
+} # Get-LabResourceISO
+
+
+<#
+.SYNOPSIS
+    Downloads the Resource ISO packages from a provided array.
+.DESCRIPTION
+    Takes an array of LabResourceISO objects and ensures the MSU packages are available in the
+    Lab Resources folder. If they are not they will be downloaded.
+.PARAMETER Lab
+    Contains Lab object that was loaded by the Get-Lab object.
+.PARAMETER Name
+    An optional array of ISO packages names.
+
+    Only ISO packages matching names in this list will be pulled into the returned in the array.
+.PARAMETER ResourceISOs
+    The array of ResourceISO objects pulled from the Lab using Get-LabResourceISO.
+
+    If not provided it will attempt to pull the list from the Lab.
+.EXAMPLE
+    $Lab = Get-Lab -ConfigPath c:\mylab\config.xml
+    $ResourceISOs = Get-LabResourceISO -Lab $Lab
+    Initialize-LabResourceISO -Lab $Lab -ResourceISOs $ResourceISOs
+    Initializes the Resource ISOs in the configured in the Lab c:\mylab\config.xml
+.EXAMPLE
+    $Lab = Get-Lab -ConfigPath c:\mylab\config.xml
+    Initialize-LabResourceISO -Lab $Lab
+    Initializes the Resource ISOs in the configured in the Lab c:\mylab\config.xml
+.OUTPUTS
+    None.
+#>
+function Initialize-LabResourceISO {
+    [CmdLetBinding()]
+    param
+    (
+        [Parameter(
+            Position=1,
+            Mandatory=$true)]
+        [ValidateNotNullOrEmpty()]
+        $Lab,
+        
+        [Parameter(
+            Position=2)]
+        [ValidateNotNullOrEmpty()]
+        [String[]] $Name,
+
+        [Parameter(
+            Position=3)]
+        [LabResourceISO[]] $ResourceISOs
+    )
+
+    # if resource ISOs was not passed, pull it.
+    if (-not $PSBoundParameters.ContainsKey('resourceisos'))
+    {
+        $ResourceMSUs = Get-LabResourceISO `
+            @PSBoundParameters
+    }
+
+    if ($ResourceISOs)
+    {
+        foreach ($ResourceISO in $ResourceISOs)
+        {
+            if (-not (Test-Path -Path $ResourceISO.Path))
+            {
+                Write-Verbose -Message $($LocalizedData.DownloadingResourceISOMessage `
+                    -f $ResourceISO.Name,$ResourceISO.URL)
+
+                DownloadAndUnzipFile `
+                    -URL $ResourceISO.URL `
+                    -DestinationPath (Split-Path -Path $ResourceISO.Path)
+            } # if
+        } # foreach
+    } # if
+} # Initialize-LabResourceISO
 #endregion
 
 
@@ -2800,6 +3421,48 @@ function Get-LabVM {
             $DataVHDs += @( $NewDataVHD )
         } # foreach
 
+        # Assemble the DVD Drives this VM will use
+        [LabDVDDrive[]] $DVDDrives = @()
+        [Int] $DVDDriveCount = 0
+        foreach ($VMDVDDrive in $VM.DVDDrives.DVDDrive)
+        {
+            $DVDDriveCount++
+
+            # Create the new DVD Drive object
+            $NewDVDDrive = [LabDVDDRive]::New()
+
+            # Load all the DVD Drive properties and check they are valid
+            if ($VMDVDDrive.ISO)
+            {
+                # Look the ISO up in the ISO Resources
+                # Pull the list of Resource ISOs available if not already pulled from Lab.
+                if (-not $ResourceISOs)
+                {
+                    $ResourceISOs = Get-LabResourceISO `
+                        -Lab $Lab
+                } # if
+
+                # Lookup the Resource ISO record
+                $ResourceISO = $ResourceISOs | Where-Object -Property Name -eq $VMDVDDrive.ISO
+                if (-not $ResourceISO)
+                {
+                    # The ISO Resource was not found
+                    $ExceptionParameters = @{
+                        errorId = 'VMDVDDriveISOResourceNotFOundError'
+                        errorCategory = 'InvalidArgument'
+                        errorMessage = $($LocalizedData.VMDVDDriveISOResourceNotFOundError `
+                            -f $VMName,$VMDVDDrive.ISO)
+                    }
+                    ThrowException @ExceptionParameters
+                } # if
+                # The ISO resource was found so populate the ISO details
+                $NewDVDDrive.ISO = $VMDVDDrive.ISO
+                $NewDVDDrive.Path = $ResourceISO.Path
+            } # if
+
+            $DVDDrives += @( $NewDVDDrive )
+        } # foreach
+
         # Does the VM have an Unattend file specified?
         [String] $UnattendFile = ''
         if ($VM.UnattendFile)
@@ -3064,6 +3727,7 @@ function Get-LabVM {
         $LabVM.OSType = $OSType
         $LabVM.Adapters = $VMAdapters
         $LabVM.DataVHDs = $DataVHDs
+        $LabVM.DVDDrives = $DVDDrives
         $LabVM.Packages = $Packages
         $LabVM.Bootorder = $Bootorder
         $LabVM.DSC = $LabDSC
@@ -3274,6 +3938,11 @@ function Initialize-LabVM {
 
         # Update the data disks for the VM
         UpdateVMDataDisks `
+            -Lab $Lab `
+            -VM $VM
+
+        # Update the DVD Drives for the VM
+        UpdateVMDVDDrives `
             -Lab $Lab `
             -VM $VM
 
@@ -4691,24 +5360,24 @@ Function Uninstall-Lab {
 .DESCRIPTION
     This cmdlet will start all the Hyper-V virtual machines definied in a Lab
     configuration.
-    
+
     It will use the Bootorder attribute (if defined) for any VMs to determine
     the order they should be booted in. If a Bootorder is not specified for a
     machine, it will be booted after all machines with a defined boot order.
-    
+
     The lower the Bootorder value for a machine the earlier it will be started
     in the start process.
-    
+
     Machines will be booted in series, with each machine starting once the
     previous machine has completed startup and has a management IP address.
 
     If a Virtual Machine in the Lab is already running, it will be ignored
     and the next machine in series will be started.
-    
+
     If more than one Virtual Machine shares the same Bootorder value, then
     these machines will be booted in parallel, with the boot process only
     continuing onto the next Bootorder when all these machines are booted.
-    
+
     If a Virtual Machine specified in the configuration is not found an
     exception will be thrown.
     
@@ -4761,12 +5430,12 @@ Function Start-Lab {
             ValueFromPipeline=$true)]
         [ValidateNotNullOrEmpty()]
         $Lab,
-        
+
         [Parameter(
             Position=4)]
         [Int] $StartupTimeout = $Script:StartupTimeout
     ) # Param
-    
+
     begin
     {
         # Remove some PSBoundParameters so we can Splat
@@ -4776,16 +5445,16 @@ Function Start-Lab {
         {
             # Read the configuration
             $Lab = Get-Lab `
-                @PSBoundParameters             
-        } # if        
+                @PSBoundParameters
+        } # if
     } # begin
-    
-    process 
+
+    process
     {
         # Get the VMs
         $VMs = Get-LabVM `
             -Lab $Lab
-            
+
         # Get the bootorders by lowest first and ignoring 0 and call
         $BootOrders = @( ($VMs |
             Where-Object -FilterScript { ($_.Bootorder -gt 0) } ).Bootorder )
@@ -4802,22 +5471,22 @@ Function Start-Lab {
             # Get all VMs in this "Bootphase"
             $BootVMs = @( $VMs |
                 Where-Object -FilterScript { ($_.BootOrder -eq $BootPhase) } )
-            
-            [DateTime] $StartTime = Get-Date
-            [boolean] $PhaseComplete = $false
-            [boolean] $PhaseAllBooted = $true
+
+            [DateTime] $StartPhase = Get-Date
+            [boolean] $PhaseComplete = $False
+            [boolean] $PhaseAllBooted = $True
             [int] $VMCount = $BootVMs.Count
             [int] $VMNumber = 0
-            
+
             # Loop through all the VMs in this "Bootphase" repeatedly
             # until timeout occurs or PhaseComplete is marked as complete
             while (-not $PhaseComplete `
-                -and (((Get-Date) - $StartTime).TotalSeconds) -lt $StartupTimeout)
+                -and ((Get-Date) -lt $StartPhase.AddSeconds($StartupTimeout)))
             {
                 # Get the VM to boot/check
                 $VM = $BootVMs[$VMNumber]
                 $VMName = $VM.Name
-                
+
                 # Get the actual Hyper-V VM object
                 $VMObject = Get-VM `
                     -Name $VMName `
@@ -4830,11 +5499,11 @@ Function Start-Lab {
                         errorCategory = 'InvalidArgument'
                         errorMessage = $($LocalizedData.VMDoesNotExistError `
                             -f $VMName)
-                            
+
                     }
                     ThrowException @ExceptionParameters
                 } # if
-            
+
                 # Start the VM if it is off
                 if ($VMObject.State -eq 'Off')
                 {
@@ -4843,7 +5512,7 @@ Function Start-Lab {
                     Start-VM `
                         -VM $VMObject
                 } # if
-                
+
                 # Use the allocation of a Management IP Address as an indicator
                 # the machine has booted
                 $ManagementIP = GetVMManagementIPAddress `
@@ -4877,7 +5546,7 @@ Function Start-Lab {
                     $VMNumber = 0
                 } # if
             } # while
-            
+
             # Did we timeout?
             if (-not ($PhaseComplete))
             {
@@ -4887,14 +5556,14 @@ Function Start-Lab {
                     errorCategory = 'InvalidArgument'
                     errorMessage = $($LocalizedData.BootPhaseStartVMsTimeoutError `
                         -f $BootPhase)
-                        
+
                 }
                 ThrowException @ExceptionParameters
-            }
+            } # if
         } # foreach
 
         Write-Verbose -Message $($LocalizedData.LabStartCompleteMessage `
-            -f $Lab.labbuilderconfig.name,$Lab.labbuilderconfig.settings.fullconfigpath)    
+            -f $Lab.labbuilderconfig.name,$Lab.labbuilderconfig.settings.fullconfigpath)
     } # process
     
     end
@@ -4909,29 +5578,29 @@ Function Start-Lab {
 .DESCRIPTION
     This cmdlet will stop all the Hyper-V virtual machines definied in a Lab
     configuration.
-    
+
     It will use the Bootorder attribute (if defined) for any VMs to determine
     the order they should be shutdown in. If a Bootorder is not specified for a
     machine, it will be shutdown before all machines with a defined boot order.
-    
+
     The higher the Bootorder value for a machine the earlier it will be shutdown
     in the stop process.
 
     The Virtual Machines will be shutdown in REVERSE Bootorder.
-    
+
     Machines will be shutdown in series, with each machine shutting down once the
     previous machine has completed shutdown.
-    
+
     If a Virtual Machine in the Lab is already shutdown, it will be ignored
     and the next machine in series will be shutdown.
-    
+
     If more than one Virtual Machine shares the same Bootorder value, then
     these machines will be shutdown in parallel, with the shutdown process only
     continuing onto the next Bootorder when all these machines are shutdown.
 
     If a Virtual Machine specified in the configuration is not found an
     exception will be thrown.
-    
+
     If a Virtual Machine takes longer than the ShutdownTimeout then an exception
     will be thown but the Stop process will continue.
 .PARAMETER ConfigPath
@@ -4976,26 +5645,20 @@ Function Stop-Lab {
             Mandatory=$true,
             ValueFromPipeline=$true)]
         [ValidateNotNullOrEmpty()]
-        $Lab,
-        
-        [Parameter(
-            Position=4)]
-        [Int] $ShutdownTimeout = $Script:ShutdownTimeout
+        $Lab
     ) # Param
     
     begin
     {
         # Remove some PSBoundParameters so we can Splat
-        $null = $PSBoundParameters.Remove('ShutdownTimeout')
-
         if ($PSCmdlet.ParameterSetName -eq 'File')
         {
             # Read the configuration
             $Lab = Get-Lab `
-                @PSBoundParameters             
-        } # if        
+                @PSBoundParameters
+        } # if
     } # begin
-    
+
     process
     {
         # Get the VMs
@@ -5018,22 +5681,20 @@ Function Stop-Lab {
             # Get all VMs in this "Bootphase"
             $BootVMs = @( $VMs |
                 Where-Object -FilterScript { ($_.BootOrder -eq $BootPhase) } )
-            
-            [DateTime] $StartTime = Get-Date
-            [boolean] $PhaseComplete = $false
-            [boolean] $PhaseAllStopped = $true
+
+            [DateTime] $StartPhase = Get-Date
+            [boolean] $PhaseComplete = $False
+            [boolean] $PhaseAllStopped = $True
             [int] $VMCount = $BootVMs.Count
             [int] $VMNumber = 0
-            
+
             # Loop through all the VMs in this "Bootphase" repeatedly
-            # until timeout occurs or PhaseComplete is marked as complete
-            while (-not $PhaseComplete `
-                -and (((Get-Date) - $StartTime).TotalSeconds) -lt $ShutdownTimeout)
+            while (-not $PhaseComplete)
             {
                 # Get the VM to boot/check
                 $VM = $BootVMs[$VMNumber]
                 $VMName = $VM.Name
-                
+
                 # Get the actual Hyper-V VM object
                 $VMObject = Get-VM `
                     -Name $VMName `
@@ -5046,20 +5707,22 @@ Function Stop-Lab {
                         errorCategory = 'InvalidArgument'
                         errorMessage = $($LocalizedData.VMDoesNotExistError `
                             -f $VMName)
-                            
+
                     }
                     ThrowException @ExceptionParameters
                 } # if
-            
+
                 # Shutodwn the VM if it is off
                 if ($VMObject.State -eq 'Running')
                 {
                     Write-Verbose -Message $($LocalizedData.StoppingVMMessage `
                         -f $VMName)
-                    Stop-VM `
-                        -VM $VMObject
+                    $null = Stop-VM `
+                        -VM $VMObject `
+                        -Force `
+                        -ErrorAction Continue
                 } # if
-                
+
                 # Determine if the VM has stopped.
                 if ((Get-VM -VMName $VMName).State -ne 'Off')
                 {
@@ -5074,7 +5737,7 @@ Function Stop-Lab {
                     if ($PhaseAllStopped)
                     {
                         # if we have gone through all VMs in this "Bootphase"
-                        # and they're all marked as booted then we can mark
+                        # and they're all marked as stopped then we can mark
                         # this phase as complete and allow moving on to the next one
                         Write-Verbose -Message $($LocalizedData.AllBootPhaseVMsStoppedMessage `
                             -f $BootPhase)
@@ -5088,24 +5751,10 @@ Function Stop-Lab {
                     $VMNumber = 0
                 } # if
             } # while
-            
-            # Did we timeout?
-            if (-not ($PhaseComplete))
-            {
-                # Yes, throw an exception
-                $ExceptionParameters = @{
-                    errorId = 'BootPhaseStopVMsTimeoutError'
-                    errorCategory = 'InvalidArgument'
-                    errorMessage = $($LocalizedData.BootPhaseStopVMsTimeoutError `
-                        -f $BootPhase)
-                        
-                }
-                ThrowException @ExceptionParameters
-            }
         } # foreach
 
         Write-Verbose -Message $($LocalizedData.LabStopCompleteMessage `
-            -f $Lab.labbuilderconfig.name,$Lab.labbuilderconfig.settings.fullconfigpath)    
+            -f $Lab.labbuilderconfig.name,$Lab.labbuilderconfig.settings.fullconfigpath)
     } # process
 
     end
