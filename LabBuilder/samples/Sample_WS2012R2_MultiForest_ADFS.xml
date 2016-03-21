@@ -260,8 +260,8 @@
       template="Template Windows Server 2012 R2 Datacenter Full"
       computername="ALPHA-EDGE1"
       bootorder="3">
-      <dsc configname="MEMBER_REMOTEACCESS"
-           configfile="MEMBER_REMOTEACCESS.DSC.ps1">
+      <dsc configname="MEMBER_REMOTEACCESS_WAP"
+           configfile="MEMBER_REMOTEACCESS_WAP.DSC.ps1">
         <parameters>
           DomainName = "ALPHA.LOCAL"
           DomainAdminPassword = "P@ssword!1"
@@ -472,8 +472,8 @@
       template="Template Windows Server 2012 R2 Datacenter Full"
       computername="BRAVO-EDGE1"
       bootorder="3">
-      <dsc configname="MEMBER_REMOTEACCESS"
-           configfile="MEMBER_REMOTEACCESS.DSC.ps1">
+      <dsc configname="MEMBER_REMOTEACCESS_WAP"
+           configfile="MEMBER_REMOTEACCESS_WAP.DSC.ps1">
         <parameters>
           DomainName = "BRAVO.LOCAL"
           DomainAdminPassword = "P@ssword!1"

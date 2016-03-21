@@ -1,9 +1,10 @@
 <###################################################################################################
 DSC Template Configuration File For use by LabBuilder
 .Title
-    MEMBER_REMOTEACCESS
+    MEMBER_REMOTEACCESS_WAP
 .Desription
-    Builds a Server that is joined to a domain and then contains Remote Access components.
+    Builds a Server that is joined to a domain and then contains Remote Access and
+    Web Application Proxy components.
 .Parameters:
     DomainName = "LABBUILDER.COM"
     DomainAdminPassword = "P@ssword!1"
@@ -11,7 +12,7 @@ DSC Template Configuration File For use by LabBuilder
     PSDscAllowDomainUser = $True
 ###################################################################################################>
 
-Configuration MEMBER_REMOTEACCESS
+Configuration MEMBER_REMOTEACCESS_WAP
 {
     Import-DscResource -ModuleName 'PSDesiredStateConfiguration'
     Import-DscResource -ModuleName xComputerManagement
@@ -35,6 +36,13 @@ Configuration MEMBER_REMOTEACCESS
             Ensure = "Present" 
             Name = "Routing" 
             DependsOn = "[WindowsFeature]DirectAccessVPNInstall" 
+        }
+
+        WindowsFeature WebApplicationProxyInstall 
+        {
+            Ensure = "Present" 
+            Name = "Web-Application-Proxy"
+            DependsOn = "[WindowsFeature]RoutingInstall"
         }
 
         # Wait for the Domain to be available so we can join it.
