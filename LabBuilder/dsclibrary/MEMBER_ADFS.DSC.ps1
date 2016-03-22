@@ -1,9 +1,9 @@
 <###################################################################################################
 DSC Template Configuration File For use by LabBuilder
 .Title
-    MEMBER_BRANCHCACHE_HOST
+    MEMBER_ADFS
 .Desription
-    Builds a Server that is joined to a domain and then made into a BranchCache Hosted Mode Server.
+    Builds a Server that is joined to a domain and then made into an ADFS Server using WID.
 .Parameters:
     DomainName = "LABBUILDER.COM"
     DomainAdminPassword = "P@ssword!1"
@@ -11,12 +11,10 @@ DSC Template Configuration File For use by LabBuilder
     PSDscAllowDomainUser = $True
 ###################################################################################################>
 
-Configuration MEMBER_BRANCHCACHE_HOST
+Configuration MEMBER_ADFS
 {
     Import-DscResource -ModuleName 'PSDesiredStateConfiguration'
     Import-DscResource -ModuleName xComputerManagement
-    Import-DscResource -ModuleName xStorage
-    Import-DscResource -ModuleName xNetworking
     Node $AllNodes.NodeName {
         # Assemble the Local Admin Credentials
         If ($Node.LocalAdminPassword) {
@@ -26,43 +24,33 @@ Configuration MEMBER_BRANCHCACHE_HOST
             [PSCredential]$DomainAdminCredential = New-Object System.Management.Automation.PSCredential ("$($Node.DomainName)\Administrator", (ConvertTo-SecureString $Node.DomainAdminPassword -AsPlainText -Force))
         }
 
-        WindowsFeature BranchCache 
-        { 
-            Ensure = "Present" 
-            Name = "BranchCache" 
+        WindowsFeature WIDInstall
+        {
+            Ensure = "Present"
+            Name = "Windows-Internal-Database"
         }
 
-        # Wait for the Domain to be available so we can join it.
+        WindowsFeature ADFSInstall
+        {
+            Ensure = "Present"
+            Name = "ADFS-Federation"
+            DependsOn = "[WindowsFeature]WIDInstall"
+        }
+
         WaitForAll DC
         {
-        ResourceName      = '[xADDomain]PrimaryDC'
-        NodeName          = $Node.DCname
-        RetryIntervalSec  = 15
-        RetryCount        = 60
+            ResourceName      = '[xADDomain]PrimaryDC'
+            NodeName          = $Node.DCname
+            RetryIntervalSec  = 15
+            RetryCount        = 60
         }
-        
-        # Join this Server to the Domain
+
         xComputer JoinDomain 
         { 
             Name          = $Node.NodeName
             DomainName    = $Node.DomainName
             Credential    = $DomainAdminCredential 
-            DependsOn = "[WaitForAll]DC" 
-        }
-
-        # Enable BranchCache Hosted Mode Firewall Fules
-        xFirewall FSRMFirewall1
-        {
-            Name = "Microsoft-Windows-PeerDist-HostedServer-In"
-            Ensure = 'Present'
-            Enabled = 'True'
-        }
-
-        xFirewall FSRMFirewall2
-        {
-            Name = "Microsoft-Windows-PeerDist-HostedServer-Out"
-            Ensure = 'Present'
-            Enabled = 'True' 
+            DependsOn     = "[WaitForAll]DC" 
         }
     }
 }

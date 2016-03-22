@@ -1,3 +1,26 @@
+### Unreleased
+
+### 0.7.3.0
+* DSCLibrary\MEMBER_FAILOVERCLUSTER_FS.DSC.ps1: Added ServerName property to contain name of ISCSI Server.
+* samples\Sample_WS2012R2_DomainClustering.xml: Added ServerName property to all Failover Cluster servers DSC properties.
+* docs\labbuilderconfig-schema.md: Converted to UTF-8 to eliminate issues with Git.
+* support\Convert-XSDToMD.ps1: Added code to convert transformed output to UTF-8.
+* Start-Lab: Improved readability if timeout detect code.
+* Stop-Lab: Improved readability if timeout detect code.
+            Ensure all VMs are stopped in a Bootphase, even if timeout occurs.
+* StartDSCDebug.ps1: Added a WaitForDebugger parameter to StartDSCDebug.ps1 that will cause LCM to start with debugging mode enabled.
+* Lib\Type.ps1: File removed and content moved to header of LabBuilder.psm1 so that types were available outside the module context.
+* Stop-Lab: Removed Boot Phase timeout because Stop-VM does not return until VM shutdown.
+* Added support for ISO resources to be specified in the Lab configuration.
+* Added support for DVD Drives in Lab VM configuration.
+* DSCLibrary\MEMBER_ADFS.DSC.ps1: Added DSC Library Configuration for ADFS.
+* samples\Sample_WS2012R2_MultiForest_ADFS.ps1: Added Sample Lab for creating multiple forests for ADFS testing.
+* DSCLibrary\MEMBER_REMOTEACCESS_WAP.DSC.ps1: Added DSC Library Configuration for Remote Access and Web Application Proxy.
+* DSCLibrary\MEMBER_ADFS.DSC.ps1: Install WID.
+* DSCLibrary\MEMBER_WEBSERVER.ps1: Created resource for IIS Web Servers.
+* samples\Sample_WS2012R2_MultiForest_ADFS.xml: Added Web Application Servers.
+* .github\*: Added general documentation on contributing to this project.
+
 ### 0.7.2.0
 * DSCLibrary\MEMBER_FAILOVERCLUSTER_FS.DSC.ps1: Changed to install most File Server features on cluster nodes.
 * DSCLibrary\MEMBER_FAILOVERCLUSTER_DHCP.DSC.ps1: Created resource for Failover Cluster DHCP Server nodes.

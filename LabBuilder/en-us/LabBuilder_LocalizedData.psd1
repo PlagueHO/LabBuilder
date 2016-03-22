@@ -13,6 +13,8 @@ ConvertFrom-StringData -StringData @'
     PathNotFoundError={0} path '{1}' is not found.
     ResourceModuleNameIsEmptyError=Resource Module Name is missing or empty.
     ResourceMSUNameIsEmptyError=Resource MSU Name is missing or empty.
+    ResourceISONameIsEmptyError=Resource ISO Name is missing or empty.
+    ResourceISOFileNotFoundError=Resource ISO file '{0}' is not found.
     ModuleNotAvailableError=Error installing Module '{0}' ({1}); {2}.
     SwitchNameIsEmptyError=Switch name is missing or empty.
     UnknownSwitchTypeError=Unknown switch type '{0}' specified for switch '{1}'.
@@ -78,12 +80,12 @@ ConvertFrom-StringData -StringData @'
     VMDataDiskPartitionStyleMissingError=The Data Disk '{1}' in VM '{0}' does not have a partition style definied.
     VMDataDiskFileSystemMissingError=The Data Disk '{1}' in VM '{0}' does not have a file format definied.
     VMDataDiskCopyFolderMissingError=The CopyFolder '{2}' that should be copied to Data Disk '{1}' in VM '{0}' does not exist.
+    VMDVDDriveISOResourceNotFOundError=The ISO Resource '{1}' to be mounted into a Virtual DVD Drive specified in VM '{0}' does not exist.
     NanoServerPackagesFolderMissingError=The NanoServerPackages folder '{0}' does not exist.
     VMDoesNotExistError=The VM '{0}' does not exist.
     PackageNotFoundError=The Package MSU '{0}' is not listed in the Lab Resource MSU list.
     PackageMSUNotFoundError=The file '{1}' for Package MSU '{0}' does not exist.
     BootPhaseStartVMsTimeoutError=One or more Virtual Machines with Bootorder '{0}' failed to start completely in the required time.
-    BootPhaseStopVMsTimeoutError=One or more Virtual Machines with Bootorder '{0}' failed to stop completely in the required time.
     ConfigurationXMLValidationError=Lab Configuration XML '{0}'- {1}.
     DSCConfiguartionMissingError=Start of Configuration could not be correctly identified in DSC Config.
     VolumeNotAvailableAfterMountError=The volume was not found after ISO File '{0}' was mounted.
@@ -105,6 +107,7 @@ ConvertFrom-StringData -StringData @'
     ExtractingFileMessage=Extracting downloaded File '{0}' to '{1}'.
     DownloadingResourceModuleMessage=Downloading Lab Resource Module '{0}' from '{1}'.
     DownloadingResourceMSUMessage=Downloading Lab Resource MSU Package '{0}' from '{1}'.
+    DownloadingResourceISOMessage=Downloading Lab Resource ISO File '{0}' from '{1}'.
     CreatingLabManagementSwitchMessage=Creating Lab Management Switch {0} on Vlan {1}.
     UpdatingLabManagementSwitchMessage=Updating Lab Management Switch {0} to Vlan {1}.
     RemovingLabManagementSwitchMessage=Removing Lab Management Switch {0}.
@@ -142,6 +145,9 @@ ConvertFrom-StringData -StringData @'
     VMDiskAlreadyExistsMessage={2} disk '{1}' for VM '{0}' already exists.
     ExpandingVMDiskMessage=Expanding {2} disk '{1}' for VM '{0}' to {3}.
     AddingVMDiskMessage=Adding {2} disk '{1}' to VM '{0}'.
+    AddingVMDVDDriveMessage=Adding DVD Drive to VM '{0}'.
+    MountingVMDVDDriveISOMessage=Mounting ISO '{1}' to DVD Drive in VM '{0}'.
+    DismountingVMDVDDriveISOMessage=Dismounting ISO '{1}' from DVD Drive in VM '{0}'.
     CopyingFoldersToVMDiskMessage=Copying folder '{2}' to VM Disk '{1}' for VM '{0}'.
     InitializingVMDiskMessage=Initializing VM Disk '{1}' for VM '{0}'.
     MountingVMDiskMessage=Mounting VM Disk '{1}' for VM '{0}' to '{2}'.

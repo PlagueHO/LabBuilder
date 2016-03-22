@@ -20,3 +20,5 @@ param
     $OutputFile
 )
 & "$PSScriptRoot\tools\msxsl.exe" @($XmlFile,$XslFile,'-o',$OutputFile)
+$content = Get-Content -Raw -Encoding Unicode -Path $OutputFile
+[System.IO.File]::WriteAllText($OutputFile, $content, [System.Text.Encoding]::UTF8)

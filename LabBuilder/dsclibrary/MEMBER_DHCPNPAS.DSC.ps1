@@ -1,10 +1,12 @@
 <###################################################################################################
 DSC Template Configuration File For use by LabBuilder
 .Title
-    MEMBER_FAILOVERCLUSTER_DHCP
+    MEMBER_DHCPNPAS
 .Desription
-    Builds a Network failover clustering node for use as a DHCP Server.
-.Parameters:
+    Builds a Server that is joined to a domain and then made into a DHCP Server. NPAS is also installed.
+.Notes
+    NPAS requires a full server install, so ensure that this OS is not a Core version.
+.Parameters:          
     DomainName = "LABBUILDER.COM"
     DomainAdminPassword = "P@ssword!1"
     DCName = 'SA-DC1'
@@ -52,11 +54,10 @@ DSC Template Configuration File For use by LabBuilder
     )
 ###################################################################################################>
 
-Configuration MEMBER_FAILOVERCLUSTER_FS
+Configuration MEMBER_DHCPNPAS
 {
     Import-DscResource -ModuleName 'PSDesiredStateConfiguration'
     Import-DscResource -ModuleName xComputerManagement
-    Import-DscResource -ModuleName xPSDesiredStateConfiguration
     Import-DscResource -ModuleName xDHCPServer
     Node $AllNodes.NodeName {
         # Assemble the Local Admin Credentials
@@ -67,42 +68,33 @@ Configuration MEMBER_FAILOVERCLUSTER_FS
             [PSCredential]$DomainAdminCredential = New-Object System.Management.Automation.PSCredential ("$($Node.DomainName)\Administrator", (ConvertTo-SecureString $Node.DomainAdminPassword -AsPlainText -Force))
         }
 
-        WindowsFeature FailoverClusteringInstall
+        WindowsFeature NPASPolicyServerInstall 
         {
             Ensure = "Present" 
-            Name = "Failover-Clustering" 
-        }
-
-        WindowsFeature FailoverClusteringPSInstall
-        {
-            Ensure = "Present" 
-            Name = "RSAT-Clustering-PowerShell" 
-            DependsOn = "[WindowsFeature]FailoverClusteringInstall" 
+            Name   = "NPAS-Policy-Server" 
         }
 
         WindowsFeature DHCPInstall 
         {
-            Ensure = "Present" 
-            Name = "DHCP" 
-            DependsOn = "[WindowsFeature]FailoverClusteringPSInstall"
+            Ensure    = "Present" 
+            Name      = "DHCP" 
+            DependsOn = "[WindowsFeature]NPASPolicyServerInstall"
         }
 
-        # Wait for the Domain to be available so we can join it.
         WaitForAll DC
         {
-        ResourceName      = '[xADDomain]PrimaryDC'
-        NodeName          = $Node.DCname
-        RetryIntervalSec  = 15
-        RetryCount        = 60
+            ResourceName     = '[xADDomain]PrimaryDC'
+            NodeName         = $Node.DCname
+            RetryIntervalSec = 15
+            RetryCount       = 60
         }
-        
-        # Join this Server to the Domain so that it can be an Enterprise CA.
+
         xComputer JoinDomain 
         { 
-            Name          = $Node.NodeName
-            DomainName    = $Node.DomainName
-            Credential    = $DomainAdminCredential 
-            DependsOn = "[WaitForAll]DC" 
+            Name       = $Node.NodeName
+            DomainName = $Node.DomainName
+            Credential = $DomainAdminCredential 
+            DependsOn  = "[WaitForAll]DC" 
         }
 
         # DHCP Server Settings
