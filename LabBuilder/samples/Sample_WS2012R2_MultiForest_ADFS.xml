@@ -87,7 +87,8 @@
   <vms>
     <vm name="ALPHA-DC1"
         template="Template Windows Server 2012 R2 Datacenter Full"
-        computername="ALPHA-DC1">
+        computername="ALPHA-DC1"
+        bootorder="1">
       <dsc configname="DC_FORESTPRIMARY"
            configfile="DC_FORESTPRIMARY.DSC.ps1">
         <parameters>
@@ -334,7 +335,8 @@
 
     <vm name="BRAVO-DC1"
         template="Template Windows Server 2012 R2 Datacenter Full"
-        computername="BRAVO-DC1">
+        computername="BRAVO-DC1"
+        bootorder="1">
       <dsc configname="DC_FORESTPRIMARY"
            configfile="DC_FORESTPRIMARY.DSC.ps1">
         <parameters>
