@@ -64,18 +64,18 @@ deploy_script:
 
       # Set version number
       $manifest = Join-Path -Path $VersionFolder -ChildPath "LabBuilder.psd1"
-      .\support\Patch-ModuleManifest -BuildNumber $env:APPVEYOR_BUILD_NUMBER
+      .\LabBuilder\Support\Patch-ModuleManifest.ps1 -Path $Manifest -BuildNumber $env:APPVEYOR_BUILD_NUMBER
 
       # Create zip artifact
       $zipFilePath = Join-Path -Path $buildFolder -ChildPath "${env:APPVEYOR_PROJECT_NAME}_${env:APPVEYOR_BUILD_VERSION}.zip"
       $null = Add-Type -assemblyname System.IO.Compression.FileSystem
       [System.IO.Compression.ZipFile]::CreateFromDirectory($StagingFolder, $zipFilePath)
-                  
+
       # Create Publish Script Artifact
       $PublishScriptName = $env:APPVEYOR_PROJECT_NAME + "." + $env:APPVEYOR_BUILD_VERSION + "_publish.ps1"
       $PublishScriptPath = Join-Path -Path $buildFolder -ChildPath $PublishScriptName
       Set-Content -Path $PublishScriptPath -Value "Publish-Module -Name 'LabBuilder' -RequiredVersion ${env:APPVEYOR_BUILD_VERSION} -NuGetApiKey (Read-Host -Prompt 'NuGetApiKey')"
-      
+
       @(
           # You can add other artifacts here
           $zipFilePath,
