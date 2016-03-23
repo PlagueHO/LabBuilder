@@ -1,6 +1,7 @@
 ### Unreleased
 * DSCLibrary\MEMBER_ADFS.DSC.ps1: Enable ADFS Firewall Rules.
 * AppVeyor.yml: Module Manifest version number always set to match build version.
+* DSCLibrary\MEMBER_IPAM.DSC.ps1:Added DSC Library Configuration for IPAM Server.
 
 ### 0.7.3.0
 * DSCLibrary\MEMBER_FAILOVERCLUSTER_FS.DSC.ps1: Added ServerName property to contain name of ISCSI Server.
