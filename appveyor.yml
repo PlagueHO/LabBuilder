@@ -9,6 +9,28 @@ environment:
 install: 
   - cinst -y pester
   - ps: |
+      # Update AppVeyor Build Version by pulling from Manifest
+      $ManifestPath = Join-Path -Path $ENV:APPVEYOR_BUILD_FOLDER -ChildPath 'LabBuilder\LabBuilder.psd1'
+      $ManifestContent = Get-Content -Path $ManifestPath -Raw
+
+      $Regex = '(?<=ModuleVersion\s+=\s+'')(?<ModuleVersion>.*)(?='')'
+      $Matches = @([regex]::matches($ManifestContent, $Regex, 'IgnoreCase'))
+      $version = $null
+      if ($Matches)
+      {
+          $version = $Matches[0].Value
+      }
+
+      # new version
+      $version = "$version.$env:APPVEYOR_BUILD_NUMBER"
+
+      # update AppVeyor build
+      Update-AppveyorBuild -Version $version
+
+      # Set version number
+      $ManifestContent = $ManifestContent -replace '(?<=ModuleVersion\s+=\s+'')(?<ModuleVersion>.*)(?='')', ('${{ModuleVersion}}.{0}' -f $env:APPVEYOR_BUILD_NUMBER)
+      Set-Content -Path $ManifestPath -Value $ManifestContent
+      
       Install-WindowsFeature -Name hyper-v-powershell
       Get-PackageProvider -Name nuget -ForceBootStrap -Force
 
@@ -39,28 +61,6 @@ test_script:
 # scripts to run before deployment 
 deploy_script: 
   - ps: |
-      # Update AppVeyor Build Version by pulling from Manifest
-      $ManifestPath = Join-Path -Path $ENV:APPVEYOR_BUILD_FOLDER -ChildPath 'LabBuilder\LabBuilder.psd1'
-      $ManifestContent = Get-Content -Path $ManifestPath -Raw
-
-      $Regex = '(?<=ModuleVersion\s+=\s+'')(?<ModuleVersion>.*)(?='')'
-      $Matches = @([regex]::matches($ManifestContent, $Regex, 'IgnoreCase'))
-      $version = $null
-      if ($Matches)
-      {
-          $version = $Matches[0].Value
-      }
-
-      # new version
-      $version = "$version.$env:APPVEYOR_BUILD_NUMBER"
-
-      # update AppVeyor build
-      Update-AppveyorBuild -Version $version
-
-      # Set version number
-      $ManifestContent = $ManifestContent -replace '(?<=ModuleVersion\s+=\s+'')(?<ModuleVersion>.*)(?='')', ('${{ModuleVersion}}.{0}' -f $env:APPVEYOR_BUILD_NUMBER)
-      Set-Content -Path $ManifestPath -Value $ManifestContent
-
       # Creating project artifact
       $buildFolder = $ENV:APPVEYOR_BUILD_FOLDER
       $StagingFolder = Join-Path -Path $buildFolder -ChildPath 'Staging'
