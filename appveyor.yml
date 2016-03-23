@@ -2,7 +2,7 @@
 #      environment configuration  # 
 #---------------------------------# 
 os: WMF 5
-version: 0.7.3.{build}
+version: 1.0.0.{build}
 environment:
   PowerShellGalleryApiKey:
     secure: 3fXfDuds8yhTa7WTOLIEhytrpsej9kcP+4rPrgLaFVmIhimmc+FgUVxkR4u468LH
@@ -39,6 +39,28 @@ test_script:
 # scripts to run before deployment 
 deploy_script: 
   - ps: |
+      # Update AppVeyor Build Version by pulling from Manifest
+      $ManifestPath = Join-Path -Path $ENV:APPVEYOR_BUILD_FOLDER -ChildPath 'LabBuilder\LabBuilder.psd1'
+      $ManifestContent = Get-Content -Path $ManifestPath -Raw
+
+      $Regex = '(?<=ModuleVersion\s+=\s+'')(?<ModuleVersion>.*)(?='')'
+      $Matches = @([regex]::matches($ManifestContent, $Regex, 'IgnoreCase'))
+      $version = $null
+      if ($Matches)
+      {
+          $version = $Matches[0].Value
+      }
+
+      # new version
+      $version = "$version.$env:APPVEYOR_BUILD_NUMBER"
+
+      # update AppVeyor build
+      Update-AppveyorBuild -Version $version
+
+      # Set version number
+      $ManifestContent = $ManifestContent -replace '(?<=ModuleVersion\s+=\s+'')(?<ModuleVersion>.*)(?='')', ('${{ModuleVersion}}.{0}' -f $env:APPVEYOR_BUILD_NUMBER)
+      Set-Content -Path $ManifestPath -Value $ManifestContent
+
       # Creating project artifact
       $buildFolder = $ENV:APPVEYOR_BUILD_FOLDER
       $StagingFolder = Join-Path -Path $buildFolder -ChildPath 'Staging'
@@ -61,10 +83,6 @@ deploy_script:
       $null = Copy-Item -Path (Join-Path -Path $buildFolder -ChildPath 'LabBuilder\schema') -Destination $VersionFolder -Recurse
       $null = Copy-Item -Path (Join-Path -Path $buildFolder -ChildPath 'LabBuilder\template') -Destination $VersionFolder -Recurse
       $null = Copy-Item -Path (Join-Path -Path $buildFolder -ChildPath 'LabBuilder\docs') -Destination $VersionFolder -Recurse
-
-      # Set version number
-      $manifest = Join-Path -Path $VersionFolder -ChildPath "LabBuilder.psd1"
-      .\LabBuilder\Support\Patch-ModuleManifest.ps1 -Path $Manifest -BuildNumber $env:APPVEYOR_BUILD_NUMBER
 
       # Create zip artifact
       $zipFilePath = Join-Path -Path $buildFolder -ChildPath "${env:APPVEYOR_PROJECT_NAME}_${env:APPVEYOR_BUILD_VERSION}.zip"
