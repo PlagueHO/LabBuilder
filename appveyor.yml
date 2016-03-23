@@ -64,8 +64,8 @@ deploy_script:
 
       # Set version number
       $manifest = Join-Path -Path $VersionFolder -ChildPath "LabBuilder.psd1"
-      (Get-Content $manifest -Raw).Replace("0.7.3.0", $env:APPVEYOR_BUILD_VERSION) | Out-File $manifest
-      
+      .\support\Patch-ModuleManifest -BuildNumber $env:APPVEYOR_BUILD_NUMBER
+
       # Create zip artifact
       $zipFilePath = Join-Path -Path $buildFolder -ChildPath "${env:APPVEYOR_PROJECT_NAME}_${env:APPVEYOR_BUILD_VERSION}.zip"
       $null = Add-Type -assemblyname System.IO.Compression.FileSystem
