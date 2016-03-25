@@ -27,7 +27,8 @@ Configuration MEMBER_SQLSERVER2014
         }
 
         # Install the SQL Server Dependencies
-        WindowsFeature Net35Install {
+        WindowsFeature Net35Install
+        {
             Name = 'NET-Framework-Core'
             Ensure = 'Present'
         }
