@@ -26,6 +26,12 @@ Configuration MEMBER_SQLSERVER2014
             [PSCredential]$DomainAdminCredential = New-Object System.Management.Automation.PSCredential ("$($Node.DomainName)\Administrator", (ConvertTo-SecureString $Node.DomainAdminPassword -AsPlainText -Force))
         }
 
+        # Install the SQL Server Dependencies
+        WindowsFeature Net35Install {
+            Name = 'NET-Framework-Core'
+            Ensure = 'Present'
+        }
+
         WaitForAll DC
         {
             ResourceName      = '[xADDomain]PrimaryDC'
