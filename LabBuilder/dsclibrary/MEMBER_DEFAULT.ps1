@@ -7,6 +7,7 @@ DSC Template Configuration File For use by LabBuilder
 .Parameters:
     DomainName = "LABBUILDER.COM"
     DomainAdminPassword = "P@ssword!1"
+    DCName = 'SA-DC1'
     PSDscAllowDomainUser = $True
 ###################################################################################################>
 
@@ -14,7 +15,6 @@ Configuration MEMBER_FILESERVER
 {
     Import-DscResource -ModuleName 'PSDesiredStateConfiguration'
     Import-DscResource -ModuleName xComputerManagement
-    Import-DscResource -ModuleName xNetworking
     Node $AllNodes.NodeName {
         # Assemble the Local Admin Credentials
         If ($Node.LocalAdminPassword) {
@@ -31,7 +31,6 @@ Configuration MEMBER_FILESERVER
             RetryIntervalSec = 15
             RetryCount       = 60
         }
-
 
         xComputer JoinDomain 
         {

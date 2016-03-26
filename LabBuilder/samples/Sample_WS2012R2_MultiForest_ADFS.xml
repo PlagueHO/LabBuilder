@@ -87,7 +87,8 @@
   <vms>
     <vm name="ALPHA-DC1"
         template="Template Windows Server 2012 R2 Datacenter Full"
-        computername="ALPHA-DC1">
+        computername="ALPHA-DC1"
+        bootorder="1">
       <dsc configname="DC_FORESTPRIMARY"
            configfile="DC_FORESTPRIMARY.DSC.ps1">
         <parameters>
@@ -148,7 +149,7 @@
                  IPAddress = '192.168.128.17';
                  AddressFamily = 'IPv4'
               },
-              @{ Name = 'ALPHA-ADFS';
+              @{ Name = 'ALPHA-ADFS1';
                  ScopeID = '192.168.128.0';
                  ClientMACAddress = '000000000004';
                  IPAddress = '192.168.128.18';
@@ -158,6 +159,12 @@
                  ScopeID = '192.168.128.0';
                  ClientMACAddress = '000000000005';
                  IPAddress = '192.168.128.19';
+                 AddressFamily = 'IPv4'
+              },
+              @{ Name = 'ALPHA-WEBAPP1';
+                 ScopeID = '192.168.128.0';
+                 ClientMACAddress = '000000000006';
+                 IPAddress = '192.168.128.20';
                  AddressFamily = 'IPv4'
               }
             )
@@ -201,7 +208,7 @@
            InstallEnrollmentWebService = $True
            CACommonName = "ALPHA.LOCAL Root CA"
            CADistinguishedNameSuffix = "DC=ALPHA,DC=LOCAL"
-           CRLPublicationURLs = "1:C:\Windows\system32\CertSrv\CertEnroll\%3%8%9.crl\n74:ldap:///CN=%7%8,CN=%2,CN=CDP,CN=Public Key Services,CN=Services,%6%10\n2:http://pki.alpha.local/CertEnroll/%3%8%9.crl"
+           CRLPublicationURLs = "65:C:\Windows\system32\CertSrv\CertEnroll\%3%8%9.crl\n79:ldap:///CN=%7%8,CN=%2,CN=CDP,CN=Public Key Services,CN=Services,%6%10\n2:http://pki.alpha.local/CertEnroll/%3%8%9.crl"
            CACertPublicationURLs = "1:C:\Windows\system32\CertSrv\CertEnroll\%1_%3%4.crt\n2:ldap:///CN=%7,CN=AIA,CN=Public Key Services,CN=Services,%6%11\n2:http://pki.alpha.local/CertEnroll/%1_%3%4.crt\n32:http://pki.alpha.local/ocsp"
            CRLPeriodUnits = 52
            CRLPeriod = 'Weeks'
@@ -227,9 +234,9 @@
       </adapters>
     </vm>
 
-    <vm name="ALPHA-ADFS"
+    <vm name="ALPHA-ADFS1"
       template="Template Windows Server 2012 R2 Datacenter Full"
-      computername="ALPHA-ADFS"
+      computername="ALPHA-ADFS1"
       bootorder="3">
       <dsc configname="MEMBER_ADFS"
            configfile="MEMBER_ADFS.DSC.ps1"
@@ -297,9 +304,39 @@
       </adapters>
     </vm>
 
+    <vm name="ALPHA-WEBAPP1"
+      template="Template Windows Server 2012 R2 Datacenter Full"
+      computername="ALPHA-WEBAPP1"
+      bootorder="3">
+      <dsc configname="MEMBER_WEBSERVER"
+           configfile="MEMBER_WEBSERVER.DSC.ps1"
+           logging="Y">
+        <parameters>
+           DomainName = "ALPHA.LOCAL"
+           DomainAdminPassword = "P@ssword!1"
+           DCName = "ALPHA-DC1"
+           PSDscAllowDomainUser = $True
+        </parameters>
+      </dsc>
+      <adapters>
+        <adapter name="Domain Private Alpha"
+                 switchname="Domain Private Alpha">
+          <ipv4 address="192.168.128.20"
+                defaultgateway="192.168.128.19"
+                subnetmask="24"
+                dnsserver="192.168.128.10,192.168.128.11"/>
+          <ipv6 address="fd53:ccc5:895a:bc00::20"
+                defaultgateway="fd53:ccc5:895a:bc00::13"
+                subnetmask="64"
+                dnsserver="fd53:ccc5:895a:bc00::a,fd53:ccc5:895a:bc00::b"/>
+        </adapter>
+      </adapters>
+    </vm>
+
     <vm name="BRAVO-DC1"
         template="Template Windows Server 2012 R2 Datacenter Full"
-        computername="BRAVO-DC1">
+        computername="BRAVO-DC1"
+        bootorder="1">
       <dsc configname="DC_FORESTPRIMARY"
            configfile="DC_FORESTPRIMARY.DSC.ps1">
         <parameters>
@@ -360,7 +397,7 @@
                  IPAddress = '192.168.130.17';
                  AddressFamily = 'IPv4'
               },
-              @{ Name = 'BRAVO-ADFS';
+              @{ Name = 'BRAVO-ADFS1';
                  ScopeID = '192.168.130.0';
                  ClientMACAddress = '000000000004';
                  IPAddress = '192.168.130.18';
@@ -370,6 +407,12 @@
                  ScopeID = '192.168.130.0';
                  ClientMACAddress = '000000000005';
                  IPAddress = '192.168.130.19';
+                 AddressFamily = 'IPv4'
+              },
+              @{ Name = 'BRAVO-WEBAP1';
+                 ScopeID = '192.168.130.0';
+                 ClientMACAddress = '000000000006';
+                 IPAddress = '192.168.130.20';
                  AddressFamily = 'IPv4'
               }
             )
@@ -413,7 +456,7 @@
            InstallEnrollmentWebService = $True
            CACommonName = "BRAVO.LOCAL Root CA"
            CADistinguishedNameSuffix = "DC=BRAVO,DC=LOCAL"
-           CRLPublicationURLs = "1:C:\Windows\system32\CertSrv\CertEnroll\%3%8%9.crl\n74:ldap:///CN=%7%8,CN=%2,CN=CDP,CN=Public Key Services,CN=Services,%6%10\n2:http://pki.bravo.local/CertEnroll/%3%8%9.crl"
+           CRLPublicationURLs = "65:C:\Windows\system32\CertSrv\CertEnroll\%3%8%9.crl\n79:ldap:///CN=%7%8,CN=%2,CN=CDP,CN=Public Key Services,CN=Services,%6%10\n2:http://pki.bravo.local/CertEnroll/%3%8%9.crl"
            CACertPublicationURLs = "1:C:\Windows\system32\CertSrv\CertEnroll\%1_%3%4.crt\n2:ldap:///CN=%7,CN=AIA,CN=Public Key Services,CN=Services,%6%11\n2:http://pki.bravo.local/CertEnroll/%1_%3%4.crt\n32:http://pki.bravo.local/ocsp"
            CRLPeriodUnits = 52
            CRLPeriod = 'Weeks'
@@ -439,9 +482,9 @@
       </adapters>
     </vm>
 
-    <vm name="BRAVO-ADFS"
+    <vm name="BRAVO-ADFS1"
       template="Template Windows Server 2012 R2 Datacenter Full"
-      computername="BRAVO-ADFS"
+      computername="BRAVO-ADFS1"
       bootorder="3">
       <dsc configname="MEMBER_ADFS"
            configfile="MEMBER_ADFS.DSC.ps1"
@@ -506,6 +549,35 @@
         </adapter>
         <adapter name="External"
                  switchname="External" />
+      </adapters>
+    </vm>
+
+    <vm name="BRAVO-WEBAPP1"
+      template="Template Windows Server 2012 R2 Datacenter Full"
+      computername="BRAVO-WEBAPP1"
+      bootorder="3">
+      <dsc configname="MEMBER_WEBSERVER"
+           configfile="MEMBER_WEBSERVER.DSC.ps1"
+           logging="Y">
+        <parameters>
+           DomainName = "BRAVO.LOCAL"
+           DomainAdminPassword = "P@ssword!1"
+           DCName = "BRAVO-DC1"
+           PSDscAllowDomainUser = $True
+        </parameters>
+      </dsc>
+      <adapters>
+        <adapter name="Domain Private Bravo"
+                 switchname="Domain Private Bravo">
+          <ipv4 address="192.168.130.20"
+                defaultgateway="192.168.130.19"
+                subnetmask="24"
+                dnsserver="192.168.130.10,192.168.130.11"/>
+          <ipv6 address="fd53:ccc5:895c:bc00::20"
+                defaultgateway="fd53:ccc5:895c:bc00::13"
+                subnetmask="64"
+                dnsserver="fd53:ccc5:895c:bc00::a,fd53:ccc5:895c:bc00::b"/>
+        </adapter>
       </adapters>
     </vm>
   </vms>

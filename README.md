@@ -64,6 +64,11 @@ To use this Module you will require on your Lab Host:
     * Note: This only needs to be done during the Install-Lab phase and can be disabled after this phase is complete.
 
 
+Contributing
+============
+If you wish to contribute to this project, please read the [Contributing.md](/.github/CONTRIBUTING.md) document first. We would be very grateful of any contributions.
+
+
 Basic Usage Guide
 =================
 The use of this module is fairly simple from a process standpoint with the bulk of the work creating a Lab going into the creation of the configuration XML that defines it. But if there is a Lab configuration already available that fits your needs then there is almost nothing to do.

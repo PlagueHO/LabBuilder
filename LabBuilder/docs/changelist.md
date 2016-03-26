@@ -1,4 +1,12 @@
 ### Unreleased
+* DSCLibrary\MEMBER_ADFS.DSC.ps1: Enable ADFS Firewall Rules.
+* AppVeyor.yml: Module Manifest version number always set to match build version.
+* DSCLibrary\MEMBER_IPAM.DSC.ps1:Added DSC Library Configuration for IPAM Server.
+* DSCLibrary\MEMBER_FAILOVERCLUSTER_*.DSC.ps1: Added iSCSI Firewall Rules to allow iSNS registration.
+* DSCLibrary\MEMBER_ADFS.DSC.ps1: Added DSC Library configuration for ADRMS.
+* DSCLibrary\MEMBER_SQLSERVER2014.DSC.ps1: Added Incomplete DSC Library configuration for SQL Server 2014.
+
+### 0.7.3.0
 * DSCLibrary\MEMBER_FAILOVERCLUSTER_FS.DSC.ps1: Added ServerName property to contain name of ISCSI Server.
 * samples\Sample_WS2012R2_DomainClustering.xml: Added ServerName property to all Failover Cluster servers DSC properties.
 * docs\labbuilderconfig-schema.md: Converted to UTF-8 to eliminate issues with Git.
@@ -15,6 +23,9 @@
 * samples\Sample_WS2012R2_MultiForest_ADFS.ps1: Added Sample Lab for creating multiple forests for ADFS testing.
 * DSCLibrary\MEMBER_REMOTEACCESS_WAP.DSC.ps1: Added DSC Library Configuration for Remote Access and Web Application Proxy.
 * DSCLibrary\MEMBER_ADFS.DSC.ps1: Install WID.
+* DSCLibrary\MEMBER_WEBSERVER.ps1: Created resource for IIS Web Servers.
+* samples\Sample_WS2012R2_MultiForest_ADFS.xml: Added Web Application Servers.
+* .github\*: Added general documentation on contributing to this project.
 
 ### 0.7.2.0
 * DSCLibrary\MEMBER_FAILOVERCLUSTER_FS.DSC.ps1: Changed to install most File Server features on cluster nodes.
