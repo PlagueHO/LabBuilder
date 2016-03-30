@@ -125,7 +125,7 @@ function SetModulesInDSCConfig()
         {
             $ImportCommand = "$ImportCommand -ModuleVersion '$($Module.ModuleVersion)'"
         } # if
-        $ImportCommand = "    $ImportCommand"
+        $ImportCommand = "`r`n$ImportCommand"
         # is this module already in there?
         [Boolean] $Found = $False
         foreach ($Match in $Matches)

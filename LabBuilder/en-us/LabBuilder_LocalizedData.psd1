@@ -202,9 +202,9 @@ ConvertFrom-StringData -StringData @'
     ConfigurationXMLValidationMessage=Lab Configuration XML '{0}'- {1}
     
     ShouldUninstallLab=Uninstall the Lab '{0}' in folder '{1}'
-    ShouldRemoveVMTemplate=Delete the Parent VM Template VHDs useb by Lab '{0}' in folder '{1}'
+    ShouldRemoveVMTemplate=Delete the Parent VM Template VHDs used by Lab '{0}' in folder '{1}'
     ShouldRemoveSwitch=Delete the virtual switches used by Lab '{0}'
-    ShouldRemoveVMTemplateVHD=Delete the VM Template VHDs use by Lab '{0}'.
+    ShouldRemoveVMTemplateVHD=Delete the VM Template VHDs used by Lab '{0}'.
     ShouldRemoveLabFolder=Delete the folder '{1}' containing Lab '{0}'
     ShouldOverwriteLab=Install a new Lab into the existing folder '{0}'
     ShouldOverwriteLabConfig=Overwrite the existing Lab Configuration file '{0}'
