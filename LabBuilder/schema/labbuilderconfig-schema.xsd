@@ -92,6 +92,18 @@ If this folder is not rooted, it will be assumed to be a subfolder of the 'labpa
                 <xs:appinfo>resourcepath="f:\SharedResources\"</xs:appinfo>
               </xs:annotation>
             </xs:attribute>
+            <xs:attribute name="dismpath" type="xs:string" use="optional">
+              <xs:annotation>
+                <xs:documentation>
+This optional attribute contains the path to the copy of DISM.EXE that should be used to convert any Windows Install Media ISOs to VHD files.
+This is usually only required if the Lab Host is running Windows Server 2012 R2 or earlier or Windows 8.1 or earlier and the Windows Install Media ISO being converted is Windows Server 2016.
+The latest version of DISM can be found in the Windows ADK here https://msdn.microsoft.com/en-us/library/hh825494.aspx.
+Once the ADK is installed this setting can be configured to tell LabBuilder where to find the appropriate version (x86 or amd64) of DISM.
+You should not include the DISM.EXE application name in the path.
+                </xs:documentation>
+                <xs:appinfo>resourcepath="C:\Program Files (x86)\Windows Kits\10\Assessment and Deployment Kit\Deployment Tools\amd64\DISM\"</xs:appinfo>
+              </xs:annotation>
+            </xs:attribute>
           </xs:complexType>
         </xs:element>
         <xs:element minOccurs="0" maxOccurs="1" name="resources">

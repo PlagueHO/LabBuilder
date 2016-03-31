@@ -90,6 +90,7 @@ ConvertFrom-StringData -StringData @'
     DSCConfiguartionMissingError=Start of Configuration could not be correctly identified in DSC Config.
     VolumeNotAvailableAfterMountError=The volume was not found after ISO File '{0}' was mounted.
     DriveLetterNotAssignedError=The volume was not found after ISO File '{0}' was mounted but a Drive Letter was not assigned.
+    ConvertWindowsImageError=An error occured converting {2} in '{1}' from ISO File '{0}' to a bootable {3}; {4}.
 
     ImportingLibFileMessage=Importing function library '{0}'.
     InstallingHyperVComponentsMesage=Installing {0} Hyper-V Components.

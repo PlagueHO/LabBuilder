@@ -1875,8 +1875,26 @@ function Initialize-LabVMTemplateVHD
     {
         return
     } # if
-    
+
     [String] $LabPath = $Lab.labbuilderconfig.settings.labpath
+
+    # Is an alternate path to DISM specified?
+    if ($Lab.labbuilderconfig.settings.DismPath)
+    {
+        $DismPath = Join-Path `
+            -Path $Lab.labbuilderconfig.settings.DismPath `
+            -ChildPath 'dism.exe'
+        if (-not (Test-Path -Path $DismPath))
+        {
+            $ExceptionParameters = @{
+                errorId = 'FileNotFoundError'
+                errorCategory = 'InvalidArgument'
+                errorMessage = $($LocalizedData.FileNotFoundError `
+                -f 'alternate DISM.EXE',$DismPath)
+            }
+            ThrowException @ExceptionParameters
+        }
+    }
 
     foreach ($VMTemplateVHD in $VMTemplateVHDs)
     {
@@ -1984,6 +2002,7 @@ function Initialize-LabVMTemplateVHD
             sourcepath = $SourcePath
             vhdpath = $VHDpath
             vhdformat = $VHDFormat
+            # Convert-WindowsImage doesn't support creating different VHDTypes
             # vhdtype = $VHDType
             edition = $Edition
             disklayout = $VHDDiskLayout
@@ -2006,6 +2025,14 @@ function Initialize-LabVMTemplateVHD
                 feature = $Features
             }
         } # if
+
+        # Is an alternate path to DISM specified?
+        if ($DismPath)
+        {
+            $ConvertParams += @{
+                DismPath = $DismPath
+            }
+        }
 
         # Perform Nano Server package prep
         if ($VMTemplateVHD.OSType -eq 'Nano')
@@ -2114,7 +2141,7 @@ function Initialize-LabVMTemplateVHD
                     Package = $Packages
                 }
             } # if
-        } # if 
+        } # if
         
         Write-Verbose -Message ($LocalizedData.ConvertingWIMtoVHDMessage `
             -f $SourcePath,$VHDPath,$VHDFormat,$Edition,$VHDPartitionStyle,$VHDType)
@@ -2130,15 +2157,30 @@ function Initialize-LabVMTemplateVHD
             . $Script:SupportConvertWindowsImagePath
         } # if
 
-        # Call the Convert-WindowsImage script
-        Convert-WindowsImage @ConvertParams
+        try
+        {
+            # Call the Convert-WindowsImage script
+            Convert-WindowsImage @ConvertParams
+        } # try
+        catch
+        {
+            $ExceptionParameters = @{
+                errorId = 'ConvertWindowsImageError'
+                errorCategory = 'InvalidArgument'
+                errorMessage = $($LocalizedData.ConvertWindowsImageError `
+                    -f $ISOPath,$SourcePath,$Edition,$VHDFormat,$_.Exception.Message)
+            }
+            ThrowException @ExceptionParameters
+        } # catch
+        finally
+        {
+            # Dismount the ISO.
+            Write-Verbose -Message $($LocalizedData.DismountingVMTemplateVHDISOMessage `
+                    -f $TemplateVHDName,$ISOPath)
 
-        # Dismount the ISO.
-        Write-Verbose -Message $($LocalizedData.DismountingVMTemplateVHDISOMessage `
-                -f $TemplateVHDName,$ISOPath)
-
-        $null = Dismount-DiskImage `
-            -ImagePath $ISOPath
+            $null = Dismount-DiskImage `
+                -ImagePath $ISOPath
+        } # finally
     } # endfor
 } # Initialize-LabVMTemplateVHD
 
@@ -4578,7 +4620,7 @@ function Get-Lab {
     [String] $ConfigPath = [System.IO.Path]::GetDirectoryName($ConfigPath)
     [String] $XMLConfigPath = $Lab.labbuilderconfig.settings.configpath
     if ($XMLConfigPath) {
-        if (! [System.IO.Path]::IsPathRooted($XMLConfigurationPath))
+        if (-not [System.IO.Path]::IsPathRooted($XMLConfigurationPath))
         {
             # A relative path was provided in the config path so add the actual path of the
             # XML to it
@@ -4930,7 +4972,8 @@ Function Install-Lab {
         {
             # Read the configuration
             $Lab = Get-Lab `
-                @PSBoundParameters
+                @PSBoundParameters `
+                -ErrorAction Stop
         } # if
     } # begin
     
@@ -5023,35 +5066,40 @@ Function Install-Lab {
             -Lab $Lab
         Initialize-LabResourceModule `
             -Lab $Lab `
-            -ResourceModules $ResourceModules
+            -ResourceModules $ResourceModules `
+            -ErrorAction Stop
 
         # Download any Resource MSUs required by this Lab
         $ResourceMSUs = Get-LabResourceMSU `
             -Lab $Lab
         Initialize-LabResourceMSU `
             -Lab $Lab `
-            -ResourceMSUs $ResourceMSUs
+            -ResourceMSUs $ResourceMSUs `
+            -ErrorAction Stop
 
         # Initialize the Switches
         $Switches = Get-LabSwitch `
             -Lab $Lab
         Initialize-LabSwitch `
             -Lab $Lab `
-            -Switches $Switches
+            -Switches $Switches `
+            -ErrorAction Stop
 
         # Initialize the VM Template VHDs
         $VMTemplateVHDs = Get-LabVMTemplateVHD `
             -Lab $Lab
         Initialize-LabVMTemplateVHD `
             -Lab $Lab `
-            -VMTemplateVHDs $VMTemplateVHDs
+            -VMTemplateVHDs $VMTemplateVHDs `
+            -ErrorAction Stop
 
         # Initialize the VM Templates
         $VMTemplates = Get-LabVMTemplate `
             -Lab $Lab
         Initialize-LabVMTemplate `
             -Lab $Lab `
-            -VMTemplates $VMTemplates
+            -VMTemplates $VMTemplates `
+            -ErrorAction Stop
 
         # Initialize the VMs
         $VMs = Get-LabVM `
@@ -5060,7 +5108,8 @@ Function Install-Lab {
             -Switches $Switches
         Initialize-LabVM `
             -Lab $Lab `
-            -VMs $VMs 
+            -VMs $VMs `
+            -ErrorAction Stop
 
         Write-Verbose -Message $($LocalizedData.LabInstallCompleteMessage `
             -f $Lab.labbuilderconfig.name,$Lab.labbuilderconfig.settings.fullconfigpath)
@@ -5125,25 +5174,25 @@ Function Update-Lab {
     ) # Param
 
     begin
-    {   
+    {
         if ($PSCmdlet.ParameterSetName -eq 'File')
         {
             # Read the configuration
             $Lab = Get-Lab `
-                @PSBoundParameters             
+                @PSBoundParameters
         } # if
     } # begin
-    
+
     process
     {
         Install-Lab `
             @PSBoundParameters
-    
+
         Write-Verbose -Message $($LocalizedData.LabUpdateCompleteMessage `
             -f $Lab.labbuilderconfig.name,$Lab.labbuilderconfig.settings.fullconfigpath)
     } # process
 
-    end 
+    end
     {
     } # end
 } # Update-Lab
@@ -5151,16 +5200,16 @@ Function Update-Lab {
 
 <#
 .SYNOPSIS
-   Uninstall the components of an existing Lab.
+     Uninstall the components of an existing Lab.
 .DESCRIPTION
-   This function will attempt to remove the components of the lab specified
-   in the provided LabBuilder configuration file.
-   
-   It will always remove any Lab Virtual Machines, but can also optionally
-   remove:
-   Switches
-   VM Templates
-   VM Template VHDs
+    This function will attempt to remove the components of the lab specified
+    in the provided LabBuilder configuration file.
+    
+    It will always remove any Lab Virtual Machines, but can also optionally
+    remove:
+    Switches
+    VM Templates
+    VM Template VHDs
 .PARAMETER ConfigPath
     The path to the LabBuilder configuration XML file.
 .PARAMETER LabPath
@@ -5200,7 +5249,7 @@ Function Update-Lab {
     Completely uninstall all components in the lab defined in the
     c:\mylab\config.xml LabBuilder configuration file.
 .OUTPUTS
-   None
+    None
 #>
 Function Uninstall-Lab {
     [CmdLetBinding(DefaultParameterSetName="Lab",
