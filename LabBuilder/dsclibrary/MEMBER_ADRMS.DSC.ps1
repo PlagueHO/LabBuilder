@@ -9,6 +9,7 @@ DSC Template Configuration File For use by LabBuilder
     DomainAdminPassword = "P@ssword!1"
     DCName = 'SA-DC1'
     PSDscAllowDomainUser = $True
+    ADFSSupport = $True
 ###################################################################################################>
 
 Configuration MEMBER_ADRMS
@@ -24,19 +25,29 @@ Configuration MEMBER_ADRMS
             [PSCredential]$DomainAdminCredential = New-Object System.Management.Automation.PSCredential ("$($Node.DomainName)\Administrator", (ConvertTo-SecureString $Node.DomainAdminPassword -AsPlainText -Force))
         }
 
+        WindowsFeature WIDInstall
+        {
+            Ensure = "Present"
+            Name = "Windows-Internal-Database"
+        }
+
         WindowsFeature ADRMSServerInstall
         {
             Ensure = "Present"
             Name = "ADRMS-Server"
+            DependsOn = "[WindowsFeature]WIDInstall"
         }
 
-        WindowsFeature ADRMSIdentityInstall
+        if ($Node.ADFSSupport)
         {
-            Ensure = "Present"
-            Name = "ADRMS-Identity"
-            DependsOn = "[WindowsFeature]ADRMSServerInstall"
+            WindowsFeature ADRMSIdentityInstall
+            {
+                Ensure = "Present"
+                Name = "ADRMS-Identity"
+                DependsOn = "[WindowsFeature]ADRMSServerInstall"
+            }
         }
-
+        
         WaitForAll DC
         {
             ResourceName      = '[xADDomain]PrimaryDC'
