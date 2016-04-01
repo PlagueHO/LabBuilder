@@ -1,4 +1,5 @@
 ### Unreleased
+* lib\vm.ps1: WaitWMStarted - name of integrationservice "heartbeat" detected by id to be culture neutral
 * DSCLibrary\MEMBER_ADFS.DSC.ps1: Enable ADFS Firewall Rules.
 * AppVeyor.yml: Module Manifest version number always set to match build version.
 * DSCLibrary\MEMBER_IPAM.DSC.ps1:Added DSC Library Configuration for IPAM Server.
