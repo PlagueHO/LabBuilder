@@ -5,6 +5,10 @@
 * DSCLibrary\MEMBER_FAILOVERCLUSTER_*.DSC.ps1: Added iSCSI Firewall Rules to allow iSNS registration.
 * DSCLibrary\MEMBER_ADFS.DSC.ps1: Added DSC Library configuration for ADRMS.
 * DSCLibrary\MEMBER_SQLSERVER2014.DSC.ps1: Added Incomplete DSC Library configuration for SQL Server 2014.
+* Support\Convert-WindowsImage.ps1: Updated to March 2016 version so that DISM path can be specified.
+* labbuilder-schema.xsd: Added Settings\DismPath attribute so that path to DISM can be specified.
+* Failure to validate Lab configuration XML will terminate any cmdlet immediately.
+* Any failure in Install-Lab will cause immediate build termination.
 
 ### 0.7.3.0
 * DSCLibrary\MEMBER_FAILOVERCLUSTER_FS.DSC.ps1: Added ServerName property to contain name of ISCSI Server.

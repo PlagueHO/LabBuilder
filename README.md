@@ -160,6 +160,8 @@ Some common ISO download locations:
  - Windows 10 Enterprise: https://www.microsoft.com/en-us/evalcenter/evaluate-windows-10-enterprise
  - Windows Server 2016 TP4: https://www.microsoft.com/en-us/evalcenter/evaluate-windows-server-technical-preview
 
+**Important**: If you are converting Windows Server 2016 ISO files or adding packages to VHDs please see the [Windows Server 2016](#Windows Server 2016) section.
+
 Multiple VHD templates may use the same ISO file in a Lab.
 For example, if multiple editions of an Operating system are used in the same lab.
 
@@ -170,6 +172,29 @@ In that case, you can set the _vhdpath_ attribute of the _<templatevhds>_ node i
 The conversion process for a single ISO to VHD can take 10-20 minutes depending on your machine.
 For this reason multiple Labs can be configured to use the same path to store these VHDs by changing the _vhdpath_ attribute of the _<templatevhds>_ node in the configuration. 
 
+Windows Server 2016
+===================
+
+If you are converting a Windows Server 2016 image and your Lab Host is running either:
+ - Windows Server 2012 R2 or older
+ - Windows 8.1 or older
+
+You will need to install an updated version of the DISM before you will be able to add any packages to a Windows Server 2016 ISO.
+This includes building Nano Server Images.
+
+You can get the latest version of the DISM by downloading and installing the [Windows ADK](http://go.microsoft.com/fwlink/?LinkId=293394).
+After installing the Windows ADK, you can force LabBuilder to use this version by configuring the "dismpath" attribute in the "settings" element of your LabBuilder configuration file:
+```xml
+<labbuilderconfig xmlns="labbuilderconfig"
+                  name="PesterTestConfig"
+                  version="1.0">
+  <description>My Lab</description>
+
+  <settings labid="TestLab"
+            domainname="CONTOSO.COM"
+            labpath="C:\Lab"
+            dismpath="C:\Program Files (x86)\Windows Kits\10\Assessment and Deployment Kit\Deployment Tools\amd64\DISM" />
+```
 
 Lab Installation Process in Detail
 ==================================
