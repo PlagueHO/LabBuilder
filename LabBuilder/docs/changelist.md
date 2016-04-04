@@ -11,6 +11,7 @@
 * Failure to validate Lab configuration XML will terminate any cmdlet immediately.
 * Any failure in Install-Lab will cause immediate build termination.
 * Support\Convert-WindowsImage.ps1: Fixed incorrect error reported when invalid Edition is specified.
+* SetModulesInDSCConfig: Ensure each Import-DSCResource ends up on a new line.
 
 ### 0.7.3.0
 * DSCLibrary\MEMBER_FAILOVERCLUSTER_FS.DSC.ps1: Added ServerName property to contain name of ISCSI Server.

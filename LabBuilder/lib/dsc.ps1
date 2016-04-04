@@ -125,7 +125,7 @@ function SetModulesInDSCConfig()
         {
             $ImportCommand = "$ImportCommand -ModuleVersion '$($Module.ModuleVersion)'"
         } # if
-        $ImportCommand = "    $ImportCommand"
+        $ImportCommand = "    $ImportCommand`r`n"
         # is this module already in there?
         [Boolean] $Found = $False
         foreach ($Match in $Matches)
@@ -975,7 +975,7 @@ function GetDSCNetworkingConfig {
     )
     [String] $DSCNetworkingConfig = @"
 Configuration Networking {
-    Import-DscResource -ModuleName xNetworking -ModuleVersion 2.7.0.0  #Current as of 13-Feb-2016
+    Import-DscResource -ModuleName xNetworking -ModuleVersion 2.8.0.0  #Current as of 2016-04-05
 
 "@
     [Int] $AdapterCount = 0
