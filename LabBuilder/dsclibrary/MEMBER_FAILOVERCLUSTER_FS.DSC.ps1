@@ -10,8 +10,8 @@ DSC Template Configuration File For use by LabBuilder
     DomainAdminPassword = "P@ssword!1"
     DCName = 'SA-DC1'
     PSDscAllowDomainUser = $True
-    ISCSIServerName = 'SA-FS1'
-    ServerTargetName = 'sa-foc-target'
+    ServerName = 'SA-FS1'
+    ServerTargetName = 'sa-fs1-sa-foc-target-target'
     TargetPortalAddress = '192.168.129.24'
     InitiatorPortalAddress = '192.168.129.28'
 ###################################################################################################>
