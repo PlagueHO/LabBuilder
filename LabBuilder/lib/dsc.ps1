@@ -116,7 +116,7 @@ function SetModulesInDSCConfig()
     {
         [String] $DSCConfigContent = Get-Content -Path $DSCConfigFile -RAW
     } # if
-    $Regex = "[ \t]*?Import\-DscResource[ \t]+(?:\-ModuleName[ \t])?'?`"?([A-Za-z0-9._-]+)`"?'?(([ \t]+-ModuleVersion)?[ \t]+'?`"?([0-9.]+)`"?`?)?[ \t]*?[\r\n]+?"
+    $Regex = "[ \t]*?Import\-DscResource[ \t]+(?:\-ModuleName[ \t]+)?'?`"?([A-Za-z0-9._-]+)`"?'?([ \t]+(-ModuleVersion[ \t]+)?'?`"?([0-9.]+)`"?'?)?[ \t]*[\r\n]+"
     $Matches = [regex]::matches($DSCConfigContent, $Regex, 'IgnoreCase')
     foreach ($Module in $Modules)
     {
@@ -153,7 +153,7 @@ function SetModulesInDSCConfig()
             {
                 # There are no existing DSC Resource lines, so add it after
                 # Configuration ... { line
-                $Match = [regex]::matches($DSCConfigContent, "[ \t]*?Configuration[ \t]+?'?`"?[A-Za-z0-9._-]+`"?'?[ \t]*?[\r\n]*?{[\r\n]?", 'IgnoreCase')
+                $Match = [regex]::matches($DSCConfigContent, "[ \t]*?Configuration[ \t]+?'?`"?[A-Za-z0-9._-]+`"?'?[ \t]*?[\r\n]*?{[\r\n]*?", 'IgnoreCase')
                 if (-not $Match)
                 {
                     $ExceptionParameters = @{
