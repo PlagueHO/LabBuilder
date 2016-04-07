@@ -17,6 +17,7 @@
 * Added CertificateSource attribute to VM to support controlling where any Lab Certificates should be generated from when initializing a Lab VM.
 * Generalized Nano Server package support.
 * Both ResourceMSU and Nano Server packages can now be installed on Template VHDs and Virtual Machines.
+* Automatically add Microsoft-NanoServer-DSC-Package.cab to new Nano Server VMs.
 
 ### 0.7.3.0
 * DSCLibrary\MEMBER_FAILOVERCLUSTER_FS.DSC.ps1: Added ServerName property to contain name of ISCSI Server.

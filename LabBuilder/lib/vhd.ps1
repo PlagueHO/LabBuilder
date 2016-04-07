@@ -70,6 +70,7 @@ function InitializeBootVHD {
 
     try
     {
+        $Packages = $VM.Packages
         if ($VM.OSType -eq [LabOSType]::Nano)
         {
             # Now specify the Nano Server packages to add.
@@ -86,16 +87,28 @@ function InitializeBootVHD {
                 }
                 ThrowException @ExceptionParameters
             }
-        }
-
+            # Add DSC Package to packages list if missing
+            if ([String]::IsNullOrWhitespace($Packages))
+            {
+                $Packages = 'Microsoft-NanoServer-DSC-Package.cab'
+            }
+            else
+            {
+                if (@($Packages -split ',') -notcontains 'Microsoft-NanoServer-DSC-Package.cab')
+                {
+                    $Pacakges = "$Packages,Microsoft-NanoServer-DSC-Package.cab"
+                } # if
+            } # if
+        } # if
+        
         # Apply any listed packages to the Image
-        if (-not [String]::IsNullOrWhitespace($VM.Packages))
+        if (-not [String]::IsNullOrWhitespace($Packages))
         {
             # Get the list of Lab Resource MSUs
             $ResourceMSUs = Get-LabResourceMSU `
                 -Lab $Lab
 
-            foreach ($Package in @($VM.Packages -split ','))
+            foreach ($Package in @($Packages -split ','))
             {
                 if (([System.IO.Path]::GetExtension($Package) -eq '.cab') `
                     -and ($VM.OSType -eq [LabOSType]::Nano))
