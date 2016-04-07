@@ -15,6 +15,8 @@
 * DSCLibrary\MEMBER_NANO.DSC.ps1: Added DSC Library configuration for joining a Nano server to n AD Domain.
 * labbuilder-schema.xsd: Fixed VM attribute descriptions.
 * Added CertificateSource attribute to VM to support controlling where any Lab Certificates should be generated from when initializing a Lab VM.
+* Generalized Nano Server package support.
+* Both ResourceMSU and Nano Server packages can now be installed on Template VHDs and Virtual Machines.
 
 ### 0.7.3.0
 * DSCLibrary\MEMBER_FAILOVERCLUSTER_FS.DSC.ps1: Added ServerName property to contain name of ISCSI Server.
