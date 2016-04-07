@@ -5136,7 +5136,7 @@ Function Install-Lab {
             -ErrorAction Stop
 
         Write-Verbose -Message $($LocalizedData.LabInstallCompleteMessage `
-            -f $Lab.labbuilderconfig.name,$Lab.labbuilderconfig.settings.fullconfigpath)
+            -f $Lab.labbuilderconfig.name,$Lab.labbuilderconfig.settings.labpath)
     } # process
     end 
     {
