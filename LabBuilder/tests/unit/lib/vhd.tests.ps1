@@ -123,6 +123,7 @@ InModuleScope LabBuilder {
         }
         Context 'Valid Configuration Passed with Nano Server VM and no packages' {
             Mock Test-Path -ParameterFilter { $Path -eq $NanoServerPackagesFolder } -MockWith { $True }
+            Mock Test-Path -ParameterFilter { $Path -like "$NanoServerPackagesFolder\*.cab" } -MockWith { $True }
             It 'Does Not Throw Exception' {
                 $VM = $VMs[0].Clone()
                 $VM.Packages = ''
@@ -133,10 +134,10 @@ InModuleScope LabBuilder {
                 Assert-MockCalled New-Item -Exactly 3
                 Assert-MockCalled Mount-WindowsImage -Exactly 1
                 Assert-MockCalled Dismount-WindowsImage -Exactly 1
-                Assert-MockCalled Add-WindowsPackage -Exactly 0
+                Assert-MockCalled Add-WindowsPackage -Exactly 2
                 Assert-MockCalled Copy-Item -Exactly 3
                 Assert-MockCalled Remove-Item -Exactly 1
-                Assert-MockCalled Test-Path -Exactly 1
+                Assert-MockCalled Test-Path -Exactly 3
             }
         }
         Context 'Valid Configuration Passed with Nano Server VM and two packages' {
