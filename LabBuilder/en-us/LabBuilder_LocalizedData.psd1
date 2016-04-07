@@ -83,6 +83,7 @@ ConvertFrom-StringData -StringData @'
     VMDVDDriveISOResourceNotFOundError=The ISO Resource '{1}' to be mounted into a Virtual DVD Drive specified in VM '{0}' does not exist.
     NanoServerPackagesFolderMissingError=The NanoServerPackages folder '{0}' does not exist.
     VMDoesNotExistError=The VM '{0}' does not exist.
+    NanoPackageNotFoundError=The Nano Server Package '{0}' could not be found.
     PackageNotFoundError=The Package MSU '{0}' is not listed in the Lab Resource MSU list.
     PackageMSUNotFoundError=The file '{1}' for Package MSU '{0}' does not exist.
     BootPhaseStartVMsTimeoutError=One or more Virtual Machines with Bootorder '{0}' failed to start completely in the required time.

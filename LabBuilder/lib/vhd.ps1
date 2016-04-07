@@ -68,129 +68,145 @@ function InitializeBootVHD {
         -Path $MountPoint `
         -Index 1
 
-    # Apply any listed packages to the Image
-    if (-not [String]::IsNullOrWhitespace($VM.Packages))
+    try
     {
-        # Get the list of Packages to apply
-        $ApplyPackages = @($VM.Packages -split ',')
-
         if ($VM.OSType -eq [LabOSType]::Nano)
         {
             # Now specify the Nano Server packages to add.
-            [String] $PackagesFolder = Join-Path `
+            [String] $NanoPackagesFolder = Join-Path `
                 -Path $LabPath `
                 -ChildPath 'NanoServerPackages'
-            if (-not (Test-Path -Path $PackagesFolder))
+            if (-not (Test-Path -Path $NanoPackagesFolder))
             {
-                # Dismount before throwing the error
-                Write-Verbose -Message $($LocalizedData.DismountingVMBootDiskMessage `
-                    -f $VM.Name,$VMBootDiskPath)
-                $null = Dismount-WindowsImage -Path $MountPoint -Save
-                $null = Remove-Item -Path $MountPoint -Recurse -Force
-
                 $ExceptionParameters = @{
                     errorId = 'NanoServerPackagesFolderMissingError'
                     errorCategory = 'InvalidArgument'
                     errorMessage = $($LocalizedData.NanoServerPackagesFolderMissingError `
-                    -f $PackagesFolder)
+                    -f $NanoPackagesFolder)
                 }
                 ThrowException @ExceptionParameters
             }
-
-            foreach ($Package in $Script:NanoServerPackageList) 
-            {
-                if ($Package.Name -in $ApplyPackages) 
-                {
-                    # Add the package
-                    $PackagePath = Join-Path `
-                        -Path $PackagesFolder `
-                        -ChildPath $Package.Filename
-
-                    Write-Verbose -Message $($LocalizedData.ApplyingVMBootDiskFileMessage `
-                        -f $VM.Name,$Package.Name,$PackagePath)
-
-                    $null = Add-WindowsPackage `
-                        -PackagePath $PackagePath `
-                        -Path $MountPoint
-
-                    # Add the localization package
-                    $PackagePath = Join-Path `
-                        -Path $PackagesFolder `
-                        -ChildPath "en-us\$($Package.Filename)"
-
-                    Write-Verbose -Message $($LocalizedData.ApplyingVMBootDiskFileMessage `
-                        -f $VM.Name,$Package.Name,$PackagePath)
-
-                    $null = Add-WindowsPackage `
-                        -PackagePath $PackagePath `
-                        -Path $MountPoint
-                } # if
-            } # foreach
         }
-        else
+
+        # Apply any listed packages to the Image
+        if (-not [String]::IsNullOrWhitespace($VM.Packages))
         {
             # Get the list of Lab Resource MSUs
             $ResourceMSUs = Get-LabResourceMSU `
                 -Lab $Lab
 
-            foreach ($Package in $ApplyPackages)
+            foreach ($Package in @($VM.Packages -split ','))
             {
-                # Find the package in the Resources
-                [Boolean] $Found = $False
-                foreach ($ResourceMSU in $ResourceMSUs)
+                if (([System.IO.Path]::GetExtension($Package) -eq '.cab') `
+                    -and ($VM.OSType -eq [LabOSType]::Nano))
                 {
-                    if ($ResourceMSU.Name -eq $Package)
+                    # This is a Nano Server .CAB pacakge
+                    # Generate the path to the Nano Package
+                    $PackagePath = Join-Path `
+                        -Path $NanoPackagesFolder `
+                        -ChildPath $Package
+
+                    # Does it exist?
+                    if (-not (Test-Path -Path $PackagePath))
                     {
-                        # Found the package
-                        $Found = $True
-                        break
+                        $ExceptionParameters = @{
+                            errorId = 'NanoPackageNotFoundError'
+                            errorCategory = 'InvalidArgument'
+                            errorMessage = $($LocalizedData.NanoPackageNotFoundError `
+                            -f $PackagePath)
+                        }
+                        ThrowException @ExceptionParameters
+                    }
+
+                    # Add the package
+                    Write-Verbose -Message $($LocalizedData.ApplyingVMBootDiskFileMessage `
+                        -f $VM.Name,$Package,$PackagePath)
+
+                    $null = Add-WindowsPackage `
+                        -PackagePath $PackagePath `
+                        -Path $MountPoint
+
+                    # Generate the path to the Nano Language Package
+                    $PackageLangFile = Join-Path `
+                        -Path $NanoPackagesFolder `
+                        -ChildPath "en-us\$Package"
+
+                    # Does it exist?
+                    if (-not (Test-Path -Path $PackageLangFile))
+                    {
+                        $ExceptionParameters = @{
+                            errorId = 'NanoPackageNotFoundError'
+                            errorCategory = 'InvalidArgument'
+                            errorMessage = $($LocalizedData.NanoPackageNotFoundError `
+                            -f $PackageLangFile)
+                        }
+                        ThrowException @ExceptionParameters
+                    }
+                    
+                    Write-Verbose -Message $($LocalizedData.ApplyingVMBootDiskFileMessage `
+                        -f $VM.Name,$Package,$PackageLangFile)
+
+                    # Add the package
+                    $null = Add-WindowsPackage `
+                        -PackagePath $PackageLangFile `
+                        -Path $MountPoint
+                }
+                else
+                {
+                    # Tihs is a ResourceMSU type package
+                    [Boolean] $Found = $False
+                    foreach ($ResourceMSU in $ResourceMSUs)
+                    {
+                        if ($ResourceMSU.Name -eq $Package)
+                        {
+                            # Found the package
+                            $Found = $True
+                            break
+                        } # if
+                    } # foreach
+                    if (-not $Found)
+                    {
+                        $ExceptionParameters = @{
+                            errorId = 'PackageNotFoundError'
+                            errorCategory = 'InvalidArgument'
+                            errorMessage = $($LocalizedData.PackageNotFoundError `
+                            -f $Package)
+                        }
+                        ThrowException @ExceptionParameters
                     } # if
-                } # foreach
-                if (-not $Found)
-                {
-                    # Dismount before throwing the error
-                    Write-Verbose -Message $($LocalizedData.DismountingVMBootDiskMessage `
-                        -f $VM.Name,$VMBootDiskPath)
-                    $null = Dismount-WindowsImage -Path $MountPoint -Save
-                    $null = Remove-Item -Path $MountPoint -Recurse -Force
 
-                    $ExceptionParameters = @{
-                        errorId = 'PackageNotFoundError'
-                        errorCategory = 'InvalidArgument'
-                        errorMessage = $($LocalizedData.PackageNotFoundError `
-                        -f $Package)
-                    }
-                    ThrowException @ExceptionParameters
+                    $PackagePath = $ResourceMSU.Filename
+                    if (-not (Test-Path -Path $PackagePath))
+                    {
+                        $ExceptionParameters = @{
+                            errorId = 'PackageMSUNotFoundError'
+                            errorCategory = 'InvalidArgument'
+                            errorMessage = $($LocalizedData.PackageMSUNotFoundError `
+                            -f $Package,$PackagePath)
+                        }
+                        ThrowException @ExceptionParameters
+                    } # if
+                    # Apply a Pacakge
+                    Write-Verbose -Message $($LocalizedData.ApplyingVMBootDiskFileMessage `
+                        -f $VM.Name,$Package,$PackagePath)
+
+                    $null = Add-WindowsPackage `
+                        -PackagePath $PackagePath `
+                        -Path $MountPoint
                 } # if
-
-                $PackagePath = $ResourceMSU.Filename
-                if (-not (Test-Path -Path $PackagePath))
-                {
-                    # Dismount before throwing the error
-                    Write-Verbose -Message $($LocalizedData.DismountingVMBootDiskMessage `
-                        -f $VM.Name,$VMBootDiskPath)
-                    $null = Dismount-WindowsImage -Path $MountPoint -Save
-                    $null = Remove-Item -Path $MountPoint -Recurse -Force
-
-                    $ExceptionParameters = @{
-                        errorId = 'PackageMSUNotFoundError'
-                        errorCategory = 'InvalidArgument'
-                        errorMessage = $($LocalizedData.PackageMSUNotFoundError `
-                        -f $Package,$PackagePath)
-                    }
-                    ThrowException @ExceptionParameters
-                } # if
-                
-                # Apply a Pacakge
-                Write-Verbose -Message $($LocalizedData.ApplyingVMBootDiskFileMessage `
-                    -f $VM.Name,$Package,$PackagePath)
-
-                $null = Add-WindowsPackage `
-                    -PackagePath $PackagePath `
-                    -Path $MountPoint
             } # foreach
         } # if
-    } # if
+    }
+    catch
+    {
+        # Dismount Disk Image before throwing exception
+        Write-Verbose -Message $($LocalizedData.DismountingVMBootDiskMessage `
+            -f $VM.Name,$VMBootDiskPath)
+        $null = Dismount-WindowsImage -Path $MountPoint -Save
+        $null = Remove-Item -Path $MountPoint -Recurse -Force
+
+        Throw $_
+    } # try
 
     # Create the scripts folder where setup scripts will be put
     $null = New-Item `

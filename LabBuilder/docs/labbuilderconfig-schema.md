@@ -521,13 +521,20 @@ Valid Values: PowerShell numeric values (e.g. 2GB, 1TB, 300MB, 160000000).
 > packages="xs:string"
 
 
-This optional attribute can contain a comma delimited list of packages that should be installed into this Virtual Machine Template VHD. 
+This optional attribute can contain a comma delimited list of packages that should be installed into this Virtual Machine Template VHD.
 
-Note: Currently, this is only used to install packages on Nano Server Virtual Machines, but may be extended to install MSU packages.
+If the Template VHD is a Nano Server then the packages can be .cab files, which will install the Nano Server package from the ISO or a Resource MSU file.
 
-Valid Values (for Nano Server): Compute | OEM-Drivers | Storage | FailoverCluster | ReverseForwarders | Guest | Containers | Defender | DCB | DNS | DSC | IIS | NPDS | SCVMM | SCVMM-Compute
+If the Template VHD is not a Nano Server then the packages must be Resource MSU files.
+
+Valid Values:
+ - Resource MSU names that are can be found in the ResourceMSU list.
+
+Valid Values for Nano Server:
+ - Filename including the .cab extension of a valid Nano Server package found on the Windows Install Media ISO.
+ - Resource MSU names that are can be found in the ResourceMSU list.
                       
-``` packages="Storage,Guest" ```
+``` packages="Microsoft-NanoServer-DNS-Package.cab,SomePackage.msu" ```
 
 ### 6.0e - TEMPLATES Optional Element
 
@@ -697,13 +704,20 @@ Currently this is only supported on Windows 10 built 10586 or above and Windows 
 > packages="xs:string"
 
 
-This optional attribute can contain a comma delimited list of packages that should be installed onto any Virtual Machines using this Template. 
+This optional attribute can contain a comma delimited list of packages that should be installed onto any Virtual Machines using this Template.
 
-Note: Currently, this is only used to install packages on Nano Server Virtual Machines, but may be extended to install MSU packages.
+If the Template is a Nano Server then the packages can be .cab files, which will install the Nano Server package from the ISO or a Resource MSU file.
 
- - Valid Values (for Nano Server): Compute | OEM-Drivers | Storage | FailoverCluster | ReverseForwarders | Guest | Containers | Defender | DCB | DNS | DSC | IIS | NPDS | SCVMM | SCVMM-Compute
-                      
-``` packages="Storage,Guest" ```
+If the Template is not a Nano Server then the packages must be Resource MSU files.
+
+Valid Values:
+ - Resource MSU names that are can be found in the ResourceMSU list.
+
+Valid Values for Nano Server:
+ - Filename including the .cab extension of a valid Nano Server package found on the Windows Install Media ISO.
+ - Resource MSU names that are can be found in the ResourceMSU list.
+                       
+``` packages="Microsoft-NanoServer-DNS-Package.cab,SomePackage.msu" ```
 
 ### 7.0e - VMS Optional Element
 
@@ -874,11 +888,18 @@ If this attribute is not defined, but it is defined in the Template then the tem
 This optional attribute can contain a comma delimited list of packages that should be installed onto this Virtual Machine.
 If this attribute is not defined, but it is defined in the Template then the template value will be used, otherwise the default value will be used.
 
-Note: Currently, this is only used to install packages on Nano Server Virtual Machines, but may be extended to install MSU packages.
+If the Virtual Machine is a Nano Server then the packages can be .cab files, which will install the Nano Server package from the ISO or a Resource MSU file.
 
- - Valid Values (for Nano Server): Compute | OEM-Drivers | Storage | FailoverCluster | ReverseForwarders | Guest | Containers | Defender | DCB | DNS | DSC | IIS | NPDS | SCVMM | SCVMM-Compute
+If the Virtual Machine is not a Nano Server then the packages must be Resource MSU files.
+
+Valid Values:
+ - Resource MSU names that are can be found in the ResourceMSU list.
+
+Valid Values for Nano Server:
+ - Filename including the .cab extension of a valid Nano Server package found on the Windows Install Media ISO.
+ - Resource MSU names that are can be found in the ResourceMSU list.
                       
-``` packages="Storage,Guest" ```
+``` packages="Microsoft-NanoServer-DNS-Package.cab,SomePackage.msu" ```
 
 ### 7.1.15a - BOOTORDER Optional Attribute
 > bootorder="xs:unsignedByte"

@@ -765,8 +765,7 @@ InModuleScope LabBuilder {
         Mock Convert-WindowsImage
         Mock Resolve-Path -MockWith { 'X:\Sources\Install.WIM' }
         Mock Test-Path -ParameterFilter { $Path -eq 'X:\Sources\Install.WIM' } -MockWith { $True }
-        Mock Test-Path -ParameterFilter { $Path -eq '
-            C:\dism\dism.exe' } -MockWith { $False }
+        Mock Test-Path -ParameterFilter { $Path -eq 'C:\dism\dism.exe' } -MockWith { $False }
 
         Context 'Configuration passed but alternate DISM not found' {
             It 'Throws a FileNotFoundError exception' {
@@ -838,10 +837,12 @@ InModuleScope LabBuilder {
                 Assert-MockCalled Convert-WindowsImage -Exactly 0
             }
         }
-        Context 'Valid configuration passed with no packages' {
+        Context 'Valid configuration passed with two VHDx files not generated and no packages' {
             It 'Does not throw an Exception' {
                 $Lab = Get-Lab -ConfigPath $Global:TestConfigOKPath
                 $VMTemplateVHDs = Get-LabVMTemplateVHD -Lab $Lab
+                $VMTemplateVHDs[0].vhdpath = 'doesnotexist.vhdx'
+                $VMTemplateVHDs[1].vhdpath = 'doesnotexist.vhdx'
                 foreach ($VMTemplateVHD in $VMTemplateVHDs)
                 {
                     $VMTemplateVHD.Packages = ''
@@ -859,11 +860,13 @@ InModuleScope LabBuilder {
                 Assert-MockCalled Convert-WindowsImage -Exactly 2
             }
         }
-        Context 'Valid configuration passed with valid packages' {
+        Context 'Valid configuration passed with two VHDx files not generated valid packages' {
             Mock Test-Path -ParameterFilter { $Path -eq $ResourceMSUFile } -MockWith { $True }
             It 'Does not throw an Exception' {
                 $Lab = Get-Lab -ConfigPath $Global:TestConfigOKPath
                 $VMTemplateVHDs = Get-LabVMTemplateVHD -Lab $Lab
+                $VMTemplateVHDs[0].vhdpath = 'doesnotexist.vhdx'
+                $VMTemplateVHDs[1].vhdpath = 'doesnotexist.vhdx'
                 { Initialize-LabVMTemplateVHD -Lab $Lab -VMTemplateVHDs $VMTemplateVHDs } | Should Not Throw
             }
             It 'Calls expected mocks commands' {
@@ -881,6 +884,7 @@ InModuleScope LabBuilder {
             It 'Throws a PackageNotFoundError exception' {
                 $Lab = Get-Lab -ConfigPath $Global:TestConfigOKPath
                 $VMTemplateVHDs = Get-LabVMTemplateVHD -Lab $Lab
+                $VMTemplateVHDs[0].vhdpath = 'doesnotexist.vhdx'
                 foreach ($VMTemplateVHD in $VMTemplateVHDs)
                 {
                     $VMTemplateVHD.Packages='DoesNotExist'
@@ -910,6 +914,7 @@ InModuleScope LabBuilder {
             It 'Throws a PackageMSUNotFoundError exception' {
                 $Lab = Get-Lab -ConfigPath $Global:TestConfigOKPath
                 $VMTemplateVHDs = Get-LabVMTemplateVHD -Lab $Lab
+                $VMTemplateVHDs[0].vhdpath = 'doesnotexist.vhdx'
                 $ExceptionParameters = @{
                     errorId = 'PackageMSUNotFoundError'
                     errorCategory = 'InvalidArgument'
@@ -930,12 +935,62 @@ InModuleScope LabBuilder {
                 Assert-MockCalled Convert-WindowsImage -Exactly 0
             }
         }
+
+        $Lab = Get-Lab -ConfigPath $Global:TestConfigOKPath
+        $VMTemplateVHDs = Get-LabVMTemplateVHD -Lab $Lab
+        $VMTemplateVHDs[5].vhdpath = "$($VMTemplateVHDs[5].vhdpath).NotExist"
+
+        $NanoServerPackagesFolder = Join-Path `
+                -Path (Split-Path -Path $VMTemplateVHDs[5].vhdpath -Parent) `
+                -ChildPath 'NanoServerPackages'
+        
+        Context 'Valid Configuration Passed with Nano Server VHDx not generated and two packages' {
+            Mock Test-Path -ParameterFilter { $Path -eq $NanoServerPackagesFolder } -MockWith { $True }
+            Mock Test-Path -ParameterFilter { $Path -like "$NanoServerPackagesFolder\*.cab" } -MockWith { $True }
+
+            It 'Does Not Throw Exception' {
+                $VMTemplateVHDs[5].Packages = 'Microsoft-NanoServer-Containers-Package.cab,Microsoft-NanoServer-Guest-Package.cab'
+                { Initialize-LabVMTemplateVHD -Lab $Lab -VMTemplateVHDs $VMTemplateVHDs } | Should Not Throw
+            }
+            It 'Calls Mocked commands' {
+                Assert-MockCalled Mount-DiskImage -Exactly 1
+                Assert-MockCalled Get-Diskimage -Exactly 1
+                Assert-MockCalled Get-Volume -Exactly 1
+                Assert-MockCalled Dismount-DiskImage -Exactly 1
+                Assert-MockCalled Get-WindowsImage -Exactly 1
+                Assert-MockCalled Copy-Item -Exactly 0
+                Assert-MockCalled Rename-Item -Exactly 0
+                Assert-MockCalled Convert-WindowsImage -Exactly 1
+            }
+        }
+        Context 'Valid Configuration Passed with Nano Server VHDx not generated and two packages and an MSU' {
+            Mock Test-Path -ParameterFilter { $Path -eq $NanoServerPackagesFolder } -MockWith { $True }
+            Mock Test-Path -ParameterFilter { $Path -like "$NanoServerPackagesFolder\*.cab" } -MockWith { $True }
+            Mock Test-Path -ParameterFilter { $Path -eq $ResourceMSUFile } -MockWith { $True }
+
+            It 'Does Not Throw Exception' {
+                $VMTemplateVHDs[5].Packages = 'Microsoft-NanoServer-Containers-Package.cab,Microsoft-NanoServer-Guest-Package.cab,WMF5.0-WS2012R2-W81'
+                { Initialize-LabVMTemplateVHD -Lab $Lab -VMTemplateVHDs $VMTemplateVHDs } | Should Not Throw
+            }
+            It 'Calls Mocked commands' {
+                Assert-MockCalled Mount-DiskImage -Exactly 1
+                Assert-MockCalled Get-Diskimage -Exactly 1
+                Assert-MockCalled Get-Volume -Exactly 1
+                Assert-MockCalled Dismount-DiskImage -Exactly 1
+                Assert-MockCalled Get-WindowsImage -Exactly 1
+                Assert-MockCalled Copy-Item -Exactly 0
+                Assert-MockCalled Rename-Item -Exactly 0
+                Assert-MockCalled Convert-WindowsImage -Exactly 1
+            }
+        }
         Context 'Valid configuration passed but Convert-WindowsImage throws' {
             Mock Convert-WindowsImage -MockWith { Throw 'Convert-WindowsImage Exception' }
             Mock Test-Path -ParameterFilter { $Path -eq $ResourceMSUFile } -MockWith { $True }
-            It 'Does not throw an Exception' {
+            It 'Throws a ConvertWindowsImageError exception' {
                 $Lab = Get-Lab -ConfigPath $Global:TestConfigOKPath
                 $VMTemplateVHDs = Get-LabVMTemplateVHD -Lab $Lab
+                $VMTemplateVHDs[0].vhdpath = 'doesnotexist.vhdx'
+                $VMTemplateVHDs[1].vhdpath = 'doesnotexist.vhdx'
                 $ExceptionParameters = @{
                     errorId = 'ConvertWindowsImageError'
                     errorCategory = 'InvalidArgument'
@@ -970,7 +1025,7 @@ InModuleScope LabBuilder {
             It 'Calls expected mocks commands' {
                 Assert-MockCalled Test-Path -Exactly $VMTemplateVHDs.Count
                 Assert-MockCalled Remove-Item -Exactly 0
-            }            
+            }
         }
         Mock Test-Path -MockWith { $True }
         Context 'Configuration passed with VMtemplateVHDs but VHD found' {
@@ -980,7 +1035,7 @@ InModuleScope LabBuilder {
             It 'Calls expected mocks commands' {
                 Assert-MockCalled Test-Path -Exactly $VMTemplateVHDs.Count
                 Assert-MockCalled Remove-Item -Exactly $VMTemplateVHDs.Count
-            }            
+            }
         }
         Context 'Configuration passed with no VMtemplateVHDs' {
             It 'Does not throw an Exception' {
