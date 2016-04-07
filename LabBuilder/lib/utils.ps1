@@ -257,7 +257,7 @@ function DownloadResourceModule {
     else
     {
         [ScriptBlock] $Query = `
-            $Query = { $_.Name -eq $Name }
+            { $_.Name -eq $Name }
         $VersionMessage = 'any version'
     }
 
@@ -440,11 +440,28 @@ function ValidateConfigurationXMLSchema {
         $Script:XMLErrorCount++
     });
     $reader = [System.Xml.XmlReader]::Create([string] $ConfigPath, $readerSettings)
-    while ($reader.Read())
+    try
     {
-    } # while
-    $null = $reader.Close()
-
+        while ($reader.Read())
+        {
+        } # while
+    } # try
+    catch
+    {
+        # XML is NOT valid
+        $ExceptionParameters = @{
+            errorId = 'ConfigurationXMLValidationError'
+            errorCategory = 'InvalidArgument'
+            errorMessage = $($LocalizedData.ConfigurationXMLValidationError `
+                -f $ConfigPath,$_.Exception.Message)
+        }
+        ThrowException @ExceptionParameters
+    } # catch
+    finally
+    {
+        $null = $reader.Close()
+    } # finally
+    
     # Verify the results of the XSD validation
     if($script:XMLErrorCount -gt 0)
     {

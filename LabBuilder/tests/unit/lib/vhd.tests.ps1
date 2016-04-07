@@ -123,27 +123,30 @@ InModuleScope LabBuilder {
         }
         Context 'Valid Configuration Passed with Nano Server VM and no packages' {
             Mock Test-Path -ParameterFilter { $Path -eq $NanoServerPackagesFolder } -MockWith { $True }
+            Mock Test-Path -ParameterFilter { $Path -like "$NanoServerPackagesFolder\*.cab" } -MockWith { $True }
             It 'Does Not Throw Exception' {
                 $VM = $VMs[0].Clone()
-                $VM.OSType = 'Nano'
+                $VM.Packages = ''
+                $VM.OSType = [LabOStype]::Nano
                 { InitializeBootVHD -Lab $Lab -VM $VM -VMBootDiskPath 'c:\Dummy\' } | Should Not Throw
             }
             It 'Calls Mocked commands' {
                 Assert-MockCalled New-Item -Exactly 3
                 Assert-MockCalled Mount-WindowsImage -Exactly 1
                 Assert-MockCalled Dismount-WindowsImage -Exactly 1
-                Assert-MockCalled Add-WindowsPackage -Exactly 0
+                Assert-MockCalled Add-WindowsPackage -Exactly 2
                 Assert-MockCalled Copy-Item -Exactly 3
                 Assert-MockCalled Remove-Item -Exactly 1
-                Assert-MockCalled Test-Path -Exactly 1
+                Assert-MockCalled Test-Path -Exactly 3
             }
         }
         Context 'Valid Configuration Passed with Nano Server VM and two packages' {
             Mock Test-Path -ParameterFilter { $Path -eq $NanoServerPackagesFolder } -MockWith { $True }
+            Mock Test-Path -ParameterFilter { $Path -like "$NanoServerPackagesFolder\*.cab" } -MockWith { $True }
             It 'Does Not Throw Exception' {
                 $VM = $VMs[0].Clone()
-                $VM.OSType = 'Nano'
-                $VM.Packages = 'Containers,Guest'
+                $VM.OSType = [LabOStype]::Nano
+                $VM.Packages = 'Microsoft-NanoServer-Containers-Package.cab,Microsoft-NanoServer-Guest-Package.cab'
                 { InitializeBootVHD -Lab $Lab -VM $VM -VMBootDiskPath 'c:\Dummy\' } | Should Not Throw
             }
             It 'Calls Mocked commands' {
@@ -153,15 +156,36 @@ InModuleScope LabBuilder {
                 Assert-MockCalled Add-WindowsPackage -Exactly 4
                 Assert-MockCalled Copy-Item -Exactly 3
                 Assert-MockCalled Remove-Item -Exactly 1
-                Assert-MockCalled Test-Path -Exactly 1
+                Assert-MockCalled Test-Path -Exactly 5
+            }
+        }
+        Context 'Valid Configuration Passed with Nano Server VM and two packages and an MSU' {
+            Mock Test-Path -ParameterFilter { $Path -eq $NanoServerPackagesFolder } -MockWith { $True }
+            Mock Test-Path -ParameterFilter { $Path -like "$NanoServerPackagesFolder\*.cab" } -MockWith { $True }
+            Mock Test-Path -ParameterFilter { $Path -eq $ResourceMSUFile } -MockWith { $True }
+
+            It 'Does Not Throw Exception' {
+                $VM = $VMs[0].Clone()
+                $VM.OSType = [LabOStype]::Nano
+                $VM.Packages = 'Microsoft-NanoServer-Containers-Package.cab,Microsoft-NanoServer-Guest-Package.cab,WMF5.0-WS2012R2-W81'
+                { InitializeBootVHD -Lab $Lab -VM $VM -VMBootDiskPath 'c:\Dummy\' } | Should Not Throw
+            }
+            It 'Calls Mocked commands' {
+                Assert-MockCalled New-Item -Exactly 3
+                Assert-MockCalled Mount-WindowsImage -Exactly 1
+                Assert-MockCalled Dismount-WindowsImage -Exactly 1
+                Assert-MockCalled Add-WindowsPackage -Exactly 5
+                Assert-MockCalled Copy-Item -Exactly 3
+                Assert-MockCalled Remove-Item -Exactly 1
+                Assert-MockCalled Test-Path -Exactly 6
             }
         }
         Context 'Valid Configuration Passed with Nano Server VM and two packages but NanoServerPackages folder missing' {
             Mock Test-Path -ParameterFilter { $Path -eq $NanoServerPackagesFolder } -MockWith { $False }
             It 'Throws a NanoServerPackagesFolderMissingError exception' {
                 $VM = $VMs[0].Clone()
-                $VM.OSType = 'Nano'
-                $VM.Packages = 'Containers,Guest'
+                $VM.OSType = [LabOStype]::Nano
+                $VM.Packages = 'Microsoft-NanoServer-Containers-Package.cab,Microsoft-NanoServer-Guest-Package.cab'
                 $ExceptionParameters = @{
                     errorId = 'NanoServerPackagesFolderMissingError'
                     errorCategory = 'InvalidArgument'

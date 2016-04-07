@@ -83,6 +83,7 @@ ConvertFrom-StringData -StringData @'
     VMDVDDriveISOResourceNotFOundError=The ISO Resource '{1}' to be mounted into a Virtual DVD Drive specified in VM '{0}' does not exist.
     NanoServerPackagesFolderMissingError=The NanoServerPackages folder '{0}' does not exist.
     VMDoesNotExistError=The VM '{0}' does not exist.
+    NanoPackageNotFoundError=The Nano Server Package '{0}' could not be found.
     PackageNotFoundError=The Package MSU '{0}' is not listed in the Lab Resource MSU list.
     PackageMSUNotFoundError=The file '{1}' for Package MSU '{0}' does not exist.
     BootPhaseStartVMsTimeoutError=One or more Virtual Machines with Bootorder '{0}' failed to start completely in the required time.
@@ -90,6 +91,7 @@ ConvertFrom-StringData -StringData @'
     DSCConfiguartionMissingError=Start of Configuration could not be correctly identified in DSC Config.
     VolumeNotAvailableAfterMountError=The volume was not found after ISO File '{0}' was mounted.
     DriveLetterNotAssignedError=The volume was not found after ISO File '{0}' was mounted but a Drive Letter was not assigned.
+    ConvertWindowsImageError=An error occured converting {2} in '{1}' from ISO File '{0}' to a bootable {3}; {4}.
 
     ImportingLibFileMessage=Importing function library '{0}'.
     InstallingHyperVComponentsMesage=Installing {0} Hyper-V Components.
