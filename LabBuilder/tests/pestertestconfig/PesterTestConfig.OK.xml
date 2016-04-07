@@ -173,7 +173,8 @@
         setupcomplete="" 
         integrationservices="Guest Service Interface,Heartbeat,Key-Value Pair Exchange,Shutdown,Time Synchronization,VSS" 
         packages=""
-        bootorder="9" >
+        bootorder="9"
+        certificatesource="Host" >
       <datavhds>
         <datavhd vhd="DataDiskCopy.vhdx" sourcevhd="VhdFiles\DataDisk.vhdx" copyfolders="isofiles" />
         <datavhd vhd="DataDiskFixed.vhdx" type="fixed" size="10GB" supportpr="N" partitionstyle="MBR" filesystem="NTFS" />

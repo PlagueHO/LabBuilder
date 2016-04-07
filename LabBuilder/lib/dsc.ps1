@@ -336,23 +336,27 @@ function CreateDSCMOFFiles {
             -Recurse -Force
     } # Foreach
 
-    if (-not (RecreateSelfSignedCertificate -Lab $Lab -VM $VM))
+    if ($VM.CertificateSource -eq [LabCertificateSource]::Guest)
     {
-        $ExceptionParameters = @{
-            errorId = 'CertificateCreateError'
-            errorCategory = 'InvalidArgument'
-            errorMessage = $($LocalizedData.CertificateCreateError `
-                -f $VM.Name)
+        # Recreate the certificate if it the source is the Guest
+        if (-not (RecreateSelfSignedCertificate -Lab $Lab -VM $VM))
+        {
+            $ExceptionParameters = @{
+                errorId = 'CertificateCreateError'
+                errorCategory = 'InvalidArgument'
+                errorMessage = $($LocalizedData.CertificateCreateError `
+                    -f $VM.Name)
+            }
+            ThrowException @ExceptionParameters
         }
-        ThrowException @ExceptionParameters
-    }
 
-    # Remove any old self-signed certifcates for this VM
-    Get-ChildItem -Path cert:\LocalMachine\My `
-        | Where-Object { $_.FriendlyName -eq $Script:DSCCertificateFriendlyName } `
-        | Remove-Item
+        # Remove any old self-signed certifcates for this VM
+        Get-ChildItem -Path cert:\LocalMachine\My `
+            | Where-Object { $_.FriendlyName -eq $Script:DSCCertificateFriendlyName } `
+            | Remove-Item
+    } # if
 
-    # Add the VM Self-Signed Certificate to the Local Machine store and get the Thumbprint    
+    # Add the VM Self-Signed Certificate to the Local Machine store and get the Thumbprint
     [String] $CertificateFile = Join-Path `
         -Path $VMLabBuilderFiles `
         -ChildPath $Script:DSCEncryptionCert
@@ -610,8 +614,12 @@ Get-NetAdapter ``
     } # Foreach
 
     # Enable DSC logging (as long as it hasn't been already)
-    [String] $Logging = ($VM.DSC.Logging).ToString() 
-    $DSCStartPs += @"
+    # Nano Server doesn't have the Microsoft-Windows-Dsc/Analytic channels so
+    # Logging can't be enabled.
+    if ($VM.OSType -ne [LabOSType]::Nano)
+    {
+        [String] $Logging = ($VM.DSC.Logging).ToString() 
+        $DSCStartPs += @"
 `$Result = & "wevtutil.exe" get-log "Microsoft-Windows-Dsc/Analytic"
 if (-not (`$Result -like '*enabled: true*')) {
     & "wevtutil.exe" set-log "Microsoft-Windows-Dsc/Analytic" /q:true /e:$Logging
@@ -622,6 +630,7 @@ if (-not (`$Result -like '*enabled: true*')) {
 }
 
 "@
+    } # if
 
     # Start the actual DSC Configuration
     $DSCStartPs += @"

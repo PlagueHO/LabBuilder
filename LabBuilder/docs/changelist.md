@@ -12,6 +12,9 @@
 * Any failure in Install-Lab will cause immediate build termination.
 * Support\Convert-WindowsImage.ps1: Fixed incorrect error reported when invalid Edition is specified.
 * SetModulesInDSCConfig: Ensure each Import-DSCResource ends up on a new line.
+* DSCLibrary\MEMBER_NANO.DSC.ps1: Added DSC Library configuration for joining a Nano server to n AD Domain.
+* labbuilder-schema.xsd: Fixed VM attribute descriptions.
+* Added CertificateSource attribute to VM to support controlling where any Lab Certificates should be generated from when initializing a Lab VM.
 
 ### 0.7.3.0
 * DSCLibrary\MEMBER_FAILOVERCLUSTER_FS.DSC.ps1: Added ServerName property to contain name of ISCSI Server.

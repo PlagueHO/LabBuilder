@@ -257,7 +257,7 @@ function DownloadResourceModule {
     else
     {
         [ScriptBlock] $Query = `
-            $Query = { $_.Name -eq $Name }
+            { $_.Name -eq $Name }
         $VersionMessage = 'any version'
     }
 

@@ -76,6 +76,11 @@ Enum LabFileSystem {
     ReFS = 4
 } # Enum LabFileSystem
 
+Enum LabCertificateSource {
+    Guest = 1
+    Host = 2
+} # Enum LabCertificateSource
+
 class LabResourceModule:System.ICloneable {
     [String] $Name
     [String] $URL
@@ -436,6 +441,7 @@ class LabVM:System.ICloneable {
     [LabDSC] $DSC
     [String] $VMRootPath
     [String] $LabBuilderFilesPath
+    [LabCertificateSource] $CertificateSource = [LabCertificateSource]::Guest
 
     LabVM() {}
     
@@ -1973,7 +1979,7 @@ function Initialize-LabVMTemplateVHD
 
         # Determine the path to the WIM
         [String] $SourcePath = "$ISODrive\Sources\Install.WIM"
-        if ($VMTemplateVHD.OSType -eq 'Nano')
+        if ($VMTemplateVHD.OSType -eq [LabOStype]::Nano)
         {
             $SourcePath = "$ISODrive\Nanoserver\NanoServer.WIM"
         } # if
@@ -2035,7 +2041,7 @@ function Initialize-LabVMTemplateVHD
         }
 
         # Perform Nano Server package prep
-        if ($VMTemplateVHD.OSType -eq 'Nano')
+        if ($VMTemplateVHD.OSType -eq [LabOStype]::Nano)
         {
             # Make a copy of the all the Nano packages in the VHD root folder
             # So that if any VMs need to add more packages they are accessible
@@ -2675,7 +2681,7 @@ function Initialize-LabVMTemplate {
                     errorMessage = $($LocalizedData.TemplateSourceVHDNotFoundError `
                         -f $VMTemplate.Name,$VMTemplate.sourcevhd)
                 }
-                ThrowException @ExceptionParameters                
+                ThrowException @ExceptionParameters
             }
 
             Write-Verbose -Message $($LocalizedData.CopyingTemplateSourceVHDMessage `
@@ -2687,7 +2693,7 @@ function Initialize-LabVMTemplate {
             # Add any packages to the template if required
             if (-not [String]::IsNullOrWhitespace($VMTemplate.Packages))
             {
-                if ($VMTemplate.OSType -ne 'Nano')
+                if ($VMTemplate.OSType -ne [LabOStype]::Nano)
                 {
                     # Mount the Template Boot VHD so that files can be loaded into it
                     Write-Verbose -Message $($LocalizedData.MountingTemplateBootDiskMessage `
@@ -2822,7 +2828,7 @@ function Initialize-LabVMTemplate {
 
         # if this is a Nano Server template, we need to ensure that the
         # NanoServerPackages folder is copied to our Lab folder
-        if ($VMTemplate.OSType -eq 'Nano')
+        if ($VMTemplate.OSType -eq [LabOStype]::Nano)
         {
             [String] $VHDPackagesFolder = Join-Path `
                 -Path (Split-Path -Path $VMTemplate.SourceVhd -Parent)`
@@ -3752,6 +3758,18 @@ function Get-LabVM {
             $Packages = $VMTemplate.packages
         } # if
 
+        # Get the Certificate Source
+        $CertificateSource = [LabCertificateSource]::Guest
+        if ($OSType -eq [LabOSType]::Nano)
+        {
+            # Nano Server can't generate certificates so must always be set to Host
+            $CertificateSource = [LabCertificateSource]::Host
+        }
+        elseif ($VM.CertificateSource)
+        {
+            $CertificateSource = $VM.CertificateSource
+        } # if
+
         $LabVM = [LabVM]::New($VMName,$VM.ComputerName)
         $LabVM.Template = $VM.Template
         $LabVM.ParentVHD = $ParentVHDPath
@@ -3775,6 +3793,7 @@ function Get-LabVM {
         $LabVM.DSC = $LabDSC
         $LabVM.VMRootPath = (Join-Path -Path $LabPath -ChildPath $VMName)
         $LabVM.LabBuilderFilesPath = (Join-Path -Path $LabPath -ChildPath "$VMName\LabBuilder Files")
+        $LabVM.CertificateSource = $CertificateSource
         $LabVMs += @( $LabVM )
     } # foreach
 
@@ -4267,26 +4286,29 @@ function Install-LabVM {
         # Has this VM been initialized before (do we have a cert for it)
         if (-not (Test-Path "$LabPath\$($VM.Name)\LabBuilder Files\$Script:DSCEncryptionCert"))
         {
-            # No, so check it is initialized and download the cert.
+            # No, so check it is initialized and download the cert if required
             if (WaitVMInitializationComplete -VM $VM -ErrorAction Continue)
             {
                 Write-Verbose -Message $($LocalizedData.CertificateDownloadStartedMessage `
                     -f $VM.Name)
-                    
-                if (GetSelfSignedCertificate -Lab $Lab -VM $VM)
+
+                if ($VM.CertificateSource -eq [LabCertificateSource]::Guest)
                 {
-                    Write-Verbose -Message $($LocalizedData.CertificateDownloadCompleteMessage `
-                        -f $VM.Name)
-                }
-                else
-                {
-                    $ExceptionParameters = @{
-                        errorId = 'CertificateDownloadError'
-                        errorCategory = 'InvalidArgument'
-                        errorMessage = $($LocalizedData.CertificateDownloadError `
-                            -f $VM.name)
+                    if (GetSelfSignedCertificate -Lab $Lab -VM $VM)
+                    {
+                        Write-Verbose -Message $($LocalizedData.CertificateDownloadCompleteMessage `
+                            -f $VM.Name)
                     }
-                    ThrowException @ExceptionParameters
+                    else
+                    {
+                        $ExceptionParameters = @{
+                            errorId = 'CertificateDownloadError'
+                            errorCategory = 'InvalidArgument'
+                            errorMessage = $($LocalizedData.CertificateDownloadError `
+                                -f $VM.name)
+                        }
+                        ThrowException @ExceptionParameters
+                    } # if
                 } # if
             }
             else

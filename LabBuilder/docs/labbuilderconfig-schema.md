@@ -865,13 +865,13 @@ If this attribute is not defined, but it is defined in the Template then the tem
  - Default Value: Guest Service Interface,Heartbeat,Key-Value Pair Exchange,Shutdown,Time Synchronization,VSS
  - Valid Values: Guest Service Interface | Heartbeat | Key-Value Pair Exchange | Shutdown | Time Synchronization | VSS
                       
-``` ostype="Server" ```
+``` integrationservices="Guest Service Interface,Heartbeat" ```
 
 ### 7.1.14a - PACKAGES Optional Attribute
 > packages="xs:string"
 
 
-This optional attribute can contain a comma delimited list of packages that should be installed onto this Virtual Machine 
+This optional attribute can contain a comma delimited list of packages that should be installed onto this Virtual Machine.
 If this attribute is not defined, but it is defined in the Template then the template value will be used, otherwise the default value will be used.
 
 Note: Currently, this is only used to install packages on Nano Server Virtual Machines, but may be extended to install MSU packages.
@@ -883,6 +883,25 @@ Note: Currently, this is only used to install packages on Nano Server Virtual Ma
 ### 7.1.15a - BOOTORDER Optional Attribute
 > bootorder="xs:unsignedByte"
 
+
+This optional attribute controls the boot and shutdown order of the Virtual Machine when Start-Lab or Stop-Lab is called repsectively.
+Multiple Lab Virtual Machines in the same Lab can share the same boot order.
+Any Lab Virtual Machines without a boot order will be started last or shutdown first.
+                      
+``` bootorder="4" ```
+
+### 7.1.16a - CERTIFICATESOURCE Optional Attribute
+> certificatesource="xs:string"
+
+
+This optional attribute controls where the Certificates for the Lab Virtual Machine is generated from.
+This attribute should not need to be changed in most Lab Virtual Machines.
+The attribute is ignored for Nano Servers because certificate generation can not be performed by Nano Servers (currently).
+
+ - Default Value: Guest (or Host for Nano Servers).
+ - Valid Values: Guest | Host
+                      
+``` certificatesource="Host" ```
 
 ### 7.1.1e - DATAVHDS Optional Element
 

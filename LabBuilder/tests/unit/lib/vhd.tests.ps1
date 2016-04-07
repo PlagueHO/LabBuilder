@@ -125,7 +125,7 @@ InModuleScope LabBuilder {
             Mock Test-Path -ParameterFilter { $Path -eq $NanoServerPackagesFolder } -MockWith { $True }
             It 'Does Not Throw Exception' {
                 $VM = $VMs[0].Clone()
-                $VM.OSType = 'Nano'
+                $VM.OSType = [LabOStype]::Nano
                 { InitializeBootVHD -Lab $Lab -VM $VM -VMBootDiskPath 'c:\Dummy\' } | Should Not Throw
             }
             It 'Calls Mocked commands' {
@@ -142,7 +142,7 @@ InModuleScope LabBuilder {
             Mock Test-Path -ParameterFilter { $Path -eq $NanoServerPackagesFolder } -MockWith { $True }
             It 'Does Not Throw Exception' {
                 $VM = $VMs[0].Clone()
-                $VM.OSType = 'Nano'
+                $VM.OSType = [LabOStype]::Nano
                 $VM.Packages = 'Containers,Guest'
                 { InitializeBootVHD -Lab $Lab -VM $VM -VMBootDiskPath 'c:\Dummy\' } | Should Not Throw
             }
@@ -160,7 +160,7 @@ InModuleScope LabBuilder {
             Mock Test-Path -ParameterFilter { $Path -eq $NanoServerPackagesFolder } -MockWith { $False }
             It 'Throws a NanoServerPackagesFolderMissingError exception' {
                 $VM = $VMs[0].Clone()
-                $VM.OSType = 'Nano'
+                $VM.OSType = [LabOStype]::Nano
                 $VM.Packages = 'Containers,Guest'
                 $ExceptionParameters = @{
                     errorId = 'NanoServerPackagesFolderMissingError'
