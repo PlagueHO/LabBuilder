@@ -4,7 +4,7 @@
         "Type":  3,
         "VLAN":  0,
         "NATSubnetAddress":  "",
-        "BindingAdapterName":  "",
+        "BindingAdapterName":  "Ethernet",
         "BindingAdapterMac":  "",
         "Adapters":  [
                          {

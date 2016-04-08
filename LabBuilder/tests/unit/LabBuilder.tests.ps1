@@ -378,6 +378,7 @@ InModuleScope LabBuilder {
             }
         }
         Mock New-VMSwitch
+        Mock Get-VMNetworkAdapter
         Mock Add-VMNetworkAdapter
         Mock Set-VMNetworkAdapterVlan
         Mock Get-NetAdapter -MockWith {
@@ -396,6 +397,7 @@ InModuleScope LabBuilder {
             It 'Calls Mocked commands' {
                 Assert-MockCalled Get-VMSwitch -Exactly 6
                 Assert-MockCalled New-VMSwitch -Exactly 5
+                Assert-MockCalled Get-VMNetworkAdapter -Exactly 1
                 Assert-MockCalled Add-VMNetworkAdapter -Exactly 4
                 Assert-MockCalled Set-VMNetworkAdapterVlan -Exactly 0
                 Assert-MockCalled Get-NetAdapter -Exactly 2
@@ -409,6 +411,7 @@ InModuleScope LabBuilder {
             It 'Calls Mocked commands' {
                 Assert-MockCalled Get-VMSwitch -Exactly 6
                 Assert-MockCalled New-VMSwitch -Exactly 5
+                Assert-MockCalled Get-VMNetworkAdapter -Exactly 1
                 Assert-MockCalled Add-VMNetworkAdapter -Exactly 4
                 Assert-MockCalled Set-VMNetworkAdapterVlan -Exactly 0
                 Assert-MockCalled Get-NetAdapter -Exactly 2
@@ -431,6 +434,7 @@ InModuleScope LabBuilder {
             It 'Calls Mocked commands' {
                 Assert-MockCalled Get-VMSwitch -Exactly 1
                 Assert-MockCalled New-VMSwitch -Exactly 0
+                Assert-MockCalled Get-VMNetworkAdapter -Exactly 0
                 Assert-MockCalled Add-VMNetworkAdapter -Exactly 0
                 Assert-MockCalled Set-VMNetworkAdapterVlan -Exactly 0
                 Assert-MockCalled Get-NetAdapter -Exactly 0
@@ -453,6 +457,7 @@ InModuleScope LabBuilder {
             It 'Calls Mocked commands' {
                 Assert-MockCalled Get-VMSwitch -Exactly 1
                 Assert-MockCalled New-VMSwitch -Exactly 0
+                Assert-MockCalled Get-VMNetworkAdapter -Exactly 0
                 Assert-MockCalled Add-VMNetworkAdapter -Exactly 0
                 Assert-MockCalled Set-VMNetworkAdapterVlan -Exactly 0
                 Assert-MockCalled Get-NetAdapter -Exactly 0
@@ -477,6 +482,7 @@ InModuleScope LabBuilder {
             It 'Calls Mocked commands' {
                 Assert-MockCalled Get-VMSwitch -Exactly 1
                 Assert-MockCalled New-VMSwitch -Exactly 0
+                Assert-MockCalled Get-VMNetworkAdapter -Exactly 0
                 Assert-MockCalled Add-VMNetworkAdapter -Exactly 0
                 Assert-MockCalled Set-VMNetworkAdapterVlan -Exactly 0
                 Assert-MockCalled Get-NetAdapter -Exactly 1
@@ -501,6 +507,7 @@ InModuleScope LabBuilder {
             It 'Calls Mocked commands' {
                 Assert-MockCalled Get-VMSwitch -Exactly 1
                 Assert-MockCalled New-VMSwitch -Exactly 0
+                Assert-MockCalled Get-VMNetworkAdapter -Exactly 0
                 Assert-MockCalled Add-VMNetworkAdapter -Exactly 0
                 Assert-MockCalled Set-VMNetworkAdapterVlan -Exactly 0
                 Assert-MockCalled Get-NetAdapter -Exactly 1
