@@ -372,36 +372,53 @@ InModuleScope LabBuilder {
         $Lab = Get-Lab -ConfigPath $Global:TestConfigOKPath
         [LabSwitch[]] $Switches = Get-LabSwitch -Lab $Lab
 
-        Mock Get-VMSwitch
+        Mock Get-VMSwitch -MockWith {
+            @{
+                Name = 'Dummy Switch'
+            }
+        }
         Mock New-VMSwitch
+        Mock Get-VMNetworkAdapter
         Mock Add-VMNetworkAdapter
         Mock Set-VMNetworkAdapterVlan
+        Mock Get-NetAdapter -MockWith {
+            @{
+                Name       = 'Ethernet'
+                MACAddress = '0012345679A0'
+                Status     = 'Up'
+                Virtual    = $False
+            }
+        }
 
-        Context 'Valid configuration is passed' {	
+        Context 'Valid configuration is passed' {
             It 'Does not throw an Exception' {
                 { Initialize-LabSwitch -Lab $Lab -Switches $Switches } | Should Not Throw
             }
             It 'Calls Mocked commands' {
-                Assert-MockCalled Get-VMSwitch -Exactly 5
+                Assert-MockCalled Get-VMSwitch -Exactly 6
                 Assert-MockCalled New-VMSwitch -Exactly 5
+                Assert-MockCalled Get-VMNetworkAdapter -Exactly 1
                 Assert-MockCalled Add-VMNetworkAdapter -Exactly 4
                 Assert-MockCalled Set-VMNetworkAdapterVlan -Exactly 0
+                Assert-MockCalled Get-NetAdapter -Exactly 2
             }
         }
 
-        Context 'Valid configuration without switches is passed' {	
+        Context 'Valid configuration without switches is passed' {
             It 'Does not throw an Exception' {
                 { Initialize-LabSwitch -Lab $Lab } | Should Not Throw
             }
             It 'Calls Mocked commands' {
-                Assert-MockCalled Get-VMSwitch -Exactly 5
+                Assert-MockCalled Get-VMSwitch -Exactly 6
                 Assert-MockCalled New-VMSwitch -Exactly 5
+                Assert-MockCalled Get-VMNetworkAdapter -Exactly 1
                 Assert-MockCalled Add-VMNetworkAdapter -Exactly 4
                 Assert-MockCalled Set-VMNetworkAdapterVlan -Exactly 0
+                Assert-MockCalled Get-NetAdapter -Exactly 2
             }
         }
 
-        Context 'Valid configuration NAT with blank NAT Subnet Address' {	
+        Context 'Valid configuration NAT with blank NAT Subnet Address' {
             $Switches[0].Type = [LabSwitchType]::NAT
             It 'Throws a NatSubnetAddressEmptyError Exception' {
                 $ExceptionParameters = @{
@@ -417,12 +434,14 @@ InModuleScope LabBuilder {
             It 'Calls Mocked commands' {
                 Assert-MockCalled Get-VMSwitch -Exactly 1
                 Assert-MockCalled New-VMSwitch -Exactly 0
+                Assert-MockCalled Get-VMNetworkAdapter -Exactly 0
                 Assert-MockCalled Add-VMNetworkAdapter -Exactly 0
                 Assert-MockCalled Set-VMNetworkAdapterVlan -Exactly 0
+                Assert-MockCalled Get-NetAdapter -Exactly 0
             }
         }
 
-        Context 'Valid configuration with blank switch name passed' {	
+        Context 'Valid configuration with blank switch name passed' {
             $Switches[0].Type = [LabSwitchType]::External
             $Switches[0].Name = ''
             It 'Throws a SwitchNameIsEmptyError Exception' {
@@ -438,8 +457,60 @@ InModuleScope LabBuilder {
             It 'Calls Mocked commands' {
                 Assert-MockCalled Get-VMSwitch -Exactly 1
                 Assert-MockCalled New-VMSwitch -Exactly 0
+                Assert-MockCalled Get-VMNetworkAdapter -Exactly 0
                 Assert-MockCalled Add-VMNetworkAdapter -Exactly 0
                 Assert-MockCalled Set-VMNetworkAdapterVlan -Exactly 0
+                Assert-MockCalled Get-NetAdapter -Exactly 0
+            }
+        }
+
+        [LabSwitch[]] $Switches = Get-LabSwitch -Lab $Lab
+
+        Context 'Valid configuration with External switch with binding Adapter name bad' {
+            Mock Get-NetAdapter
+            It 'Throws a BindingAdapterNotFoundError Exception' {
+                $ExceptionParameters = @{
+                    errorId = 'BindingAdapterNotFoundError'
+                    errorCategory = 'InvalidArgument'
+                    errorMessage = $($LocalizedData.BindingAdapterNotFoundError `
+                        -f $Switches[0].Name,"with a name '$($Switches[0].BindingAdapterName)' ")
+                }
+                $Exception = GetException @ExceptionParameters
+
+                { Initialize-LabSwitch -Lab $Lab -Switches $Switches } | Should Throw $Exception
+            }
+            It 'Calls Mocked commands' {
+                Assert-MockCalled Get-VMSwitch -Exactly 1
+                Assert-MockCalled New-VMSwitch -Exactly 0
+                Assert-MockCalled Get-VMNetworkAdapter -Exactly 0
+                Assert-MockCalled Add-VMNetworkAdapter -Exactly 0
+                Assert-MockCalled Set-VMNetworkAdapterVlan -Exactly 0
+                Assert-MockCalled Get-NetAdapter -Exactly 1
+            }
+        }
+
+        Context 'Valid configuration with External switch with binding Adapter MAC bad' {
+            Mock Get-NetAdapter
+            $Switches[0].BindingAdapterName = ''
+            $Switches[0].BindingAdapterMac = '1111111111'
+            It 'Throws a BindingAdapterNotFoundError Exception' {
+                $ExceptionParameters = @{
+                    errorId = 'BindingAdapterNotFoundError'
+                    errorCategory = 'InvalidArgument'
+                    errorMessage = $($LocalizedData.BindingAdapterNotFoundError `
+                        -f $Switches[0].Name,"with a MAC address '$($Switches[0].BindingAdapterMac)' ")
+                }
+                $Exception = GetException @ExceptionParameters
+
+                { Initialize-LabSwitch -Lab $Lab -Switches $Switches } | Should Throw $Exception
+            }
+            It 'Calls Mocked commands' {
+                Assert-MockCalled Get-VMSwitch -Exactly 1
+                Assert-MockCalled New-VMSwitch -Exactly 0
+                Assert-MockCalled Get-VMNetworkAdapter -Exactly 0
+                Assert-MockCalled Add-VMNetworkAdapter -Exactly 0
+                Assert-MockCalled Set-VMNetworkAdapterVlan -Exactly 0
+                Assert-MockCalled Get-NetAdapter -Exactly 1
             }
         }
     }

@@ -18,6 +18,7 @@
 * Generalized Nano Server package support.
 * Both ResourceMSU and Nano Server packages can now be installed on Template VHDs and Virtual Machines.
 * Automatically add Microsoft-NanoServer-DSC-Package.cab to new Nano Server VMs.
+* Added BindingAdapterName and BindingAdapterMac attribute to swtich element to allow control over bound adapter.
 
 ### 0.7.3.0
 * DSCLibrary\MEMBER_FAILOVERCLUSTER_FS.DSC.ps1: Added ServerName property to contain name of ISCSI Server.

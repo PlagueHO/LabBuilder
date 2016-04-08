@@ -92,6 +92,8 @@ ConvertFrom-StringData -StringData @'
     VolumeNotAvailableAfterMountError=The volume was not found after ISO File '{0}' was mounted.
     DriveLetterNotAssignedError=The volume was not found after ISO File '{0}' was mounted but a Drive Letter was not assigned.
     ConvertWindowsImageError=An error occured converting {2} in '{1}' from ISO File '{0}' to a bootable {3}; {4}.
+    BindingAdapterNotFoundError=A physical network adapter {1}was not found to bind to the External Switch {0}.
+    BindingAdapterUsedError=Error binding physical network adapter '{1}' to External Swtich '{0}' because it is already bound to another External Switch.
 
     ImportingLibFileMessage=Importing function library '{0}'.
     InstallingHyperVComponentsMesage=Installing {0} Hyper-V Components.

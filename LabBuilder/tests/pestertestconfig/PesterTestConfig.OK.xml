@@ -28,7 +28,7 @@
   </resources>
 
   <switches>
-    <switch name="External" type="External" >
+    <switch name="External" type="External" bindingadaptername="Ethernet">
       <adapters>
         <adapter name="Cluster" macaddress="00155D010701" vlan="5"/>
         <adapter name="Management" macaddress="00155D010702" vlan="6"/>
