@@ -366,6 +366,8 @@ class LabSwitch:System.ICloneable {
     [LabSwitchType] $Type
     [Byte] $VLAN
     [String] $NATSubnetAddress
+    [String] $BindingAdapterName
+    [String] $BindingAdapterMac
     [LabSwitchAdapter[]] $Adapters
 
     LabSwitch() {}
@@ -1131,6 +1133,8 @@ function Get-LabSwitch {
         [LabSwitch] $NewSwitch = [LabSwitch]::New($SwitchName,$SwitchType)
         $NewSwitch.VLAN = $ConfigSwitch.VLan
         $NewSwitch.NATSubnetAddress = $ConfigSwitch.NatSubnetAddress
+        $NewSwitch.BindingAdapterName = $ConfigSwitch.BindingAdapterName
+        $NewSwitch.BindingAdapterMac = $ConfigSwitch.BindingAdapterMac
         $NewSwitch.Adapters = $ConfigAdapters
         $Switches += @( $NewSwitch )
     } # foreach
@@ -1222,13 +1226,68 @@ function Initialize-LabSwitch {
             {
                 'External'
                 {
+                    # Determine which Physical Adapter to bind this switch to
+                    if ($VMSwitch.BindingAdapterMac)
+                    {
+                        $BindingAdapter = Get-NetAdapter `
+                            -Physical | Where-Object {
+                            ($_.MacAddress -replace '-','') -eq $VMSwitch.BindingAdapterMac
+                        }
+                        $ErrorDetail="with a MAC address '$($VMSwitch.BindingAdapterMac)' "
+                    }
+                    elseif ($VMSwitch.BindingAdapterName)
+                    {
+                        $BindingAdapter = Get-NetAdapter `
+                            -Physical `
+                            -Name $VMSwitch.BindingAdapterName `
+                            -ErrorAction SilentlyContinue
+                        $ErrorDetail="with a name '$($VMSwitch.BindingAdapterName)' "
+                    }
+                    else
+                    {
+                        $BindingAdapter = Get-NetAdapter | `
+                            Where-Object {
+                                ($_.Status -eq 'Up') `
+                                -and (-not $_.Virtual) `
+                            } | Select-Object -First 1
+                        $ErrorDetail=''
+                    } # if
+                    # Check that a Binding Adapter was found
+                    if (-not $BindingAdapter)
+                    {
+                        $ExceptionParameters = @{
+                            errorId = 'BindingAdapterNotFoundError'
+                            errorCategory = 'InvalidArgument'
+                            errorMessage = $($LocalizedData.BindingAdapterNotFoundError `
+                                -f $SwitchName,$ErrorDetail)
+                        }
+                        ThrowException @ExceptionParameters
+                    } # if
+                    # Check this adapter is not already bound to a switch
+                    $MacAddress = `
+                        (Get-VMNetworkAdapter `
+                            -ManagementOS `
+                            -Name (Get-VMSwitch | ? { 
+                            $_.SwitchType -eq 'External'
+                            }).Name).MacAddress
+
+                    $UsedAdapters = @((Get-NetAdapter -Physical | ? {
+                        ($_.MacAddress -replace '-','') -in $MacAddress
+                        }).Name)
+                    if ($BindingAdapter.Name -in $UsedAdapters)
+                    {
+                        $ExceptionParameters = @{
+                            errorId = 'BindingAdapterUsedError'
+                            errorCategory = 'InvalidArgument'
+                            errorMessage = $($LocalizedData.BindingAdapterUsedError `
+                                -f $SwitchName,$BindingAdapter.Name)
+                        }
+                        ThrowException @ExceptionParameters
+                    } # if
+                    # Create the swtich
                     $null = New-VMSwitch `
                         -Name $SwitchName `
-                        -NetAdapterName (`
-                            Get-NetAdapter | `
-                            Where-Object { $_.Status -eq 'Up' -and $_.InterfaceDescription -notlike "Hyper-V Virtual*" } | `
-                            Select-Object -First 1 -ExpandProperty Name `
-                            )
+                        -NetAdapterName ($BindingAdapter.Name)
                     if ($VMSwitch.Adapters)
                     {
                         foreach ($Adapter in $VMSwitch.Adapters)

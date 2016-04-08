@@ -307,7 +307,7 @@ It can be set to:
  - Internal
  - Private
  - External
- - NAT  
+ - NAT (only available on some Windows 10 versions and Windows Server 2016)
                       
 ``` type="Internal" ```
 
@@ -315,9 +315,29 @@ It can be set to:
 > vlan="xs:unsignedByte"
 
 
-This optional attribute is used to configure the VLAN ID of all Virtual Network Adapters that will connect to this Virtual Switch. 
+This optional attribute is used to configure the VLAN ID of all Virtual Network Adapters that will connect to this Virtual Switch.
                       
 ``` vlan="43" ```
+
+### 4.1.4a - BINDINGADAPTERNAME Optional Attribute
+> bindingadaptername="xs:string"
+
+
+This optional attribute is used to configure which physical network adapter an External switch will be bound to.
+This attribute should only be set if the switch type is External.
+If the bindingadaptermac attribute is set then this attribute should not be set.
+                      
+``` bindingadaptername="Ethernet 1" ```
+
+### 4.1.5a - BINDINGADAPTERMAC Optional Attribute
+> bindingadaptermac="xs:string"
+
+
+This optional attribute is used to configure which physical network adapter an External switch will be bound to.
+This attribute should only be set if the switch type is External.
+If the bindingadaptername attribute is set then this attribute should not be set.
+                      
+``` bindingadaptermac="C86000A1A895" ```
 
 ### 4.1.1e - ADAPTERS Optional Element
 

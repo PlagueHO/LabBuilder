@@ -358,7 +358,7 @@ It can be set to:
  - Internal
  - Private
  - External
- - NAT  
+ - NAT (only available on some Windows 10 versions and Windows Server 2016)
                       </xs:documentation>
                       <xs:appinfo>type="Internal"</xs:appinfo>
                     </xs:annotation>
@@ -366,9 +366,29 @@ It can be set to:
                   <xs:attribute name="vlan" type="xs:unsignedByte" use="optional">
                     <xs:annotation>
                       <xs:documentation>
-This optional attribute is used to configure the VLAN ID of all Virtual Network Adapters that will connect to this Virtual Switch. 
+This optional attribute is used to configure the VLAN ID of all Virtual Network Adapters that will connect to this Virtual Switch.
                       </xs:documentation>
                       <xs:appinfo>vlan="43"</xs:appinfo>
+                    </xs:annotation>
+                  </xs:attribute>
+                  <xs:attribute name="bindingadaptername" type="xs:string" use="optional">
+                    <xs:annotation>
+                      <xs:documentation>
+This optional attribute is used to configure which physical network adapter an External switch will be bound to.
+This attribute should only be set if the switch type is External.
+If the bindingadaptermac attribute is set then this attribute should not be set.
+                      </xs:documentation>
+                      <xs:appinfo>bindingadaptername="Ethernet 1"</xs:appinfo>
+                    </xs:annotation>
+                  </xs:attribute>
+                  <xs:attribute name="bindingadaptermac" type="xs:string" use="optional">
+                    <xs:annotation>
+                      <xs:documentation>
+This optional attribute is used to configure which physical network adapter an External switch will be bound to.
+This attribute should only be set if the switch type is External.
+If the bindingadaptername attribute is set then this attribute should not be set.
+                      </xs:documentation>
+                      <xs:appinfo>bindingadaptermac="C86000A1A895"</xs:appinfo>
                     </xs:annotation>
                   </xs:attribute>
                 </xs:complexType>
