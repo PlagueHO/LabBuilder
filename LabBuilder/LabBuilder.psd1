@@ -50,7 +50,7 @@
     FileList = @()
     PrivateData = @{
         PSData = @{
-            Tags = @('Hyper-V','Lab','Desired State Configuration','DSC')
+            Tags = @('Hyper-V','Lab','DesiredStateConfiguration','DSC')
             # LicenseUri = https://github.com/PlagueHO/LabBuilder/blob/master/LICENSE
             ProjectUri = 'https://github.com/PlagueHO/LabBuilder'
             # IconUri = ''
