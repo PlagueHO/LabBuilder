@@ -87,7 +87,8 @@
   <vms>
     <vm name="ALPHA-DC1"
         template="Template Windows Server 2012 R2 Datacenter Full"
-        computername="ALPHA-DC1">
+        computername="ALPHA-DC1"
+        bootorder="1">
       <dsc configname="DC_FORESTPRIMARY"
            configfile="DC_FORESTPRIMARY.DSC.ps1">
         <parameters>
@@ -207,7 +208,7 @@
            InstallEnrollmentWebService = $True
            CACommonName = "ALPHA.LOCAL Root CA"
            CADistinguishedNameSuffix = "DC=ALPHA,DC=LOCAL"
-           CRLPublicationURLs = "1:C:\Windows\system32\CertSrv\CertEnroll\%3%8%9.crl\n74:ldap:///CN=%7%8,CN=%2,CN=CDP,CN=Public Key Services,CN=Services,%6%10\n2:http://pki.alpha.local/CertEnroll/%3%8%9.crl"
+           CRLPublicationURLs = "65:C:\Windows\system32\CertSrv\CertEnroll\%3%8%9.crl\n79:ldap:///CN=%7%8,CN=%2,CN=CDP,CN=Public Key Services,CN=Services,%6%10\n2:http://pki.alpha.local/CertEnroll/%3%8%9.crl"
            CACertPublicationURLs = "1:C:\Windows\system32\CertSrv\CertEnroll\%1_%3%4.crt\n2:ldap:///CN=%7,CN=AIA,CN=Public Key Services,CN=Services,%6%11\n2:http://pki.alpha.local/CertEnroll/%1_%3%4.crt\n32:http://pki.alpha.local/ocsp"
            CRLPeriodUnits = 52
            CRLPeriod = 'Weeks'
@@ -334,7 +335,8 @@
 
     <vm name="BRAVO-DC1"
         template="Template Windows Server 2012 R2 Datacenter Full"
-        computername="BRAVO-DC1">
+        computername="BRAVO-DC1"
+        bootorder="1">
       <dsc configname="DC_FORESTPRIMARY"
            configfile="DC_FORESTPRIMARY.DSC.ps1">
         <parameters>
@@ -454,7 +456,7 @@
            InstallEnrollmentWebService = $True
            CACommonName = "BRAVO.LOCAL Root CA"
            CADistinguishedNameSuffix = "DC=BRAVO,DC=LOCAL"
-           CRLPublicationURLs = "1:C:\Windows\system32\CertSrv\CertEnroll\%3%8%9.crl\n74:ldap:///CN=%7%8,CN=%2,CN=CDP,CN=Public Key Services,CN=Services,%6%10\n2:http://pki.bravo.local/CertEnroll/%3%8%9.crl"
+           CRLPublicationURLs = "65:C:\Windows\system32\CertSrv\CertEnroll\%3%8%9.crl\n79:ldap:///CN=%7%8,CN=%2,CN=CDP,CN=Public Key Services,CN=Services,%6%10\n2:http://pki.bravo.local/CertEnroll/%3%8%9.crl"
            CACertPublicationURLs = "1:C:\Windows\system32\CertSrv\CertEnroll\%1_%3%4.crt\n2:ldap:///CN=%7,CN=AIA,CN=Public Key Services,CN=Services,%6%11\n2:http://pki.bravo.local/CertEnroll/%1_%3%4.crt\n32:http://pki.bravo.local/ocsp"
            CRLPeriodUnits = 52
            CRLPeriod = 'Weeks'

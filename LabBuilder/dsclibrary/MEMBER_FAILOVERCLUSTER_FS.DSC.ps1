@@ -4,14 +4,14 @@ DSC Template Configuration File For use by LabBuilder
     MEMBER_FAILOVERCLUSTER_FS
 .Desription
     Builds a Network failover clustering node for use as a File Server.
-    It also starts the iSCSI Initiator and connects to any specified iSCSI Targets.
-.Parameters:    
+    It also optionally starts the iSCSI Initiator and connects to any specified iSCSI Targets.
+.Parameters:
     DomainName = "LABBUILDER.COM"
     DomainAdminPassword = "P@ssword!1"
     DCName = 'SA-DC1'
     PSDscAllowDomainUser = $True
-    ISCSIServerName = 'SA-FS1'
-    ServerTargetName = 'sa-foc-target'
+    ServerName = 'SA-FS1'
+    ServerTargetName = 'sa-fs1-sa-foc-target-target'
     TargetPortalAddress = '192.168.129.24'
     InitiatorPortalAddress = '192.168.129.28'
 ###################################################################################################>
@@ -134,6 +134,20 @@ Configuration MEMBER_FAILOVERCLUSTER_FS
                 IsPersistent = $true 
                 DependsOn = "[WaitForAny]WaitForiSCSIServerTarget" 
             } # End of ciSCSITarget Resource
+
+            # Enable iSCSI FireWall rules so that the Initiator can be added to iSNS
+            xFirewall iSCSIFirewallIn
+            {
+                Name = "MsiScsi-In-TCP"
+                Ensure = 'Present'
+                Enabled = 'True'
+            }
+            xFirewall iSCSIFirewallOut
+            {
+                Name = "MsiScsi-Out-TCP"
+                Ensure = 'Present'
+                Enabled = 'True'
+            }
         }
 
         # Enable FSRM FireWall rules so we can remote manage FSRM

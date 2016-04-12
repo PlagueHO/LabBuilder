@@ -1,17 +1,18 @@
 <###################################################################################################
 DSC Template Configuration File For use by LabBuilder
 .Title
-    MEMBER_DEFAULT
+    MEMBER_NANO
 .Desription
-    Builds a Server that is joined to a domain.
+    Builds a Nano Server and joins it to a Domain using an ODJ Request File.
 .Parameters:
     DomainName = "LABBUILDER.COM"
     DomainAdminPassword = "P@ssword!1"
     DCName = 'SA-DC1'
     PSDscAllowDomainUser = $True
+    ODJRequestFile = 'C:\ODJRequest.txt'
 ###################################################################################################>
 
-Configuration MEMBER_FILESERVER
+Configuration MEMBER_NANO
 {
     Import-DscResource -ModuleName 'PSDesiredStateConfiguration'
     Import-DscResource -ModuleName xComputerManagement
@@ -32,12 +33,11 @@ Configuration MEMBER_FILESERVER
             RetryCount       = 60
         }
 
-        xComputer JoinDomain 
+        xOfflineDomainJoin JoinDomain 
         {
-            Name       = $Node.NodeName
-            DomainName = $Node.DomainName
-            Credential = $DomainAdminCredential 
-            DependsOn  = "[WaitForAll]DC" 
+            IsSingleInstance = 'Yes'
+            RequestFile      = $Node.ODJRequestFile
+            DependsOn        = '[WaitForAll]DC' 
         }
     }
 }

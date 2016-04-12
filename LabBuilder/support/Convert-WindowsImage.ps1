@@ -140,6 +140,13 @@ Convert-WindowsImage
             -nodhcp    - Prevents the use of DHCP to obtain the target IP address.
             -newkey    - Specifies that a new encryption key should be generated for the connection.
 
+    .PARAMETER DismPath
+        Full Path to an alternative version of the Dism.exe tool. The default is the current OS version.
+
+    .PARAMETER ApplyEA
+        Specifies that any EAs captured in the WIM should be applied to the VHD.
+        The default is False.
+
     .EXAMPLE
         .\Convert-WindowsImage.ps1 -SourcePath D:\foo\install.wim -Edition Professional -WorkingDirectory D:\foo
 
@@ -286,6 +293,16 @@ Convert-WindowsImage
         [Parameter(ParameterSetName="UI")]
         [switch]
         $Passthru,
+
+        [Parameter(ParameterSetName="SRC")]
+        [string]
+        [ValidateNotNullOrEmpty()]
+        [ValidateScript({ Test-Path $(Resolve-Path $_) })]
+        $DismPath,
+
+        [Parameter(ParameterSetName="SRC")]
+        [switch]
+        $ApplyEA = $false,
 
         [Parameter(ParameterSetName="UI")]
         [switch]
@@ -570,18 +587,18 @@ Convert-WindowsImage
         $PARTITION_STYLE_GPT    = 0x00000001                                   # Just in case...
 
         # Version information that can be populated by timebuild.
-        $ScriptVersion = DATA 
+        $ScriptVersion = DATA
         {
-            ConvertFrom-StringData -StringData @"
-Major     = 10
-Minor     = 0
-Build     = 10586
-Qfe       = 0
-Branch    = th2_release
-Timestamp = 151029-1700
-Flavor    = amd64fre
+    ConvertFrom-StringData -StringData @"
+        Major     = 10
+        Minor     = 0
+        Build     = 14278
+        Qfe       = 1000
+        Branch    = rs1_es_media
+        Timestamp = 160201-1707
+        Flavor    = amd64fre
 "@
-        }
+}
 
         $myVersion              = "$($ScriptVersion.Major).$($ScriptVersion.Minor).$($ScriptVersion.Build).$($ScriptVersion.QFE).$($ScriptVersion.Flavor).$($ScriptVersion.Branch).$($ScriptVersion.Timestamp)"
         $scriptName             = "Convert-WindowsImage"                       # Name of the script, obviously.
@@ -787,7 +804,7 @@ You can use the fields below to configure the VHD or VHDX that you want to creat
                 [ValidateNotNullOrEmpty()]
                 $text
             )
-            Write-Host "ERROR  : $($text)"
+            Write-Host "ERROR  : $($text)" -ForegroundColor (Get-Host).PrivateData.ErrorForegroundColor
         }
 
         ##########################################################################################
@@ -1801,21 +1818,17 @@ You can use the fields below to configure the VHD or VHDX that you want to creat
                     $WindowsImage = Get-WindowsImage -ImagePath $SourcePath | Where-Object {$_.ImageName -ilike "*$($Edition)"}
                 }
 
-                if (-not $WindowsImage -or ($WindowsImage -is [System.Array]))
+                if (-not $WindowsImage)
+                {
+                    throw "Requested windows Image was not found on the WIM file!"
+                }
+                if ($WindowsImage -is [System.Array])
                 {
                     Write-W2VInfo "WIM file has the following $($WindowsImage.Count) images that match filter *$($Edition)"
                     Get-WindowsImage -ImagePath $SourcePath
 
-                    if (-not $WindowsImage)
-                    {
-                        throw "Requested windows Image was not found on the WIM file!!"
-                    }
-                    else
-                    {
-                        Write-W2VError "You must specify an Edition or SKU index, since the WIM has more than one image."
-
-                        throw "There are more than one images that match ImageName filter *$($Edition)"
-                    }
+                    Write-W2VError "You must specify an Edition or SKU index, since the WIM has more than one image."
+                    throw "There are more than one images that match ImageName filter *$($Edition)"
                 }
             }
 
@@ -2003,15 +2016,30 @@ You can use the fields below to configure the VHD or VHDX that you want to creat
             ####################################################################################################
 
             Write-W2VInfo "Applying image to $VHDFormat. This could take a while..."
-            if (Get-Command Expand-WindowsImage -ErrorAction SilentlyContinue)
+            if ((Get-Command Expand-WindowsImage -ErrorAction SilentlyContinue) -and ((-not $ApplyEA) -and ([string]::IsNullOrEmpty($DismPath))))
             {
                 Expand-WindowsImage -ApplyPath $windowsDrive -ImagePath $SourcePath -Index $ImageIndex -LogPath "$($logFolder)\DismLogs.log" | Out-Null
             }
             else
             {
-                $dismArgs = @("/Apply-Image /ImageFile:`"$SourcePath`" /Index:$ImageIndex /ApplyDir:$windowsDrive /LogPath:`"$($logFolder)\DismLogs.log`"")
-                Write-W2VInfo "Applying image: $Dism $dismArgs"
-                $process  = Start-Process -Passthru -Wait -NoNewWindow -FilePath $(Join-Path $env:WinDir "system32\dism.exe") `
+                if (![string]::IsNullOrEmpty($DismPath))
+                {
+                    $dismPath = $DismPath
+                }
+                else
+                {
+                    $dismPath = $(Join-Path (get-item env:\windir).value "system32\dism.exe")
+                }
+
+                $applyImage = "/Apply-Image"
+                if ($ApplyEA)
+                {
+                    $applyImage = $applyImage + " /EA"
+                }
+
+                $dismArgs = @("$applyImage /ImageFile:`"$SourcePath`" /Index:$ImageIndex /ApplyDir:$windowsDrive /LogPath:`"$($logFolder)\DismLogs.log`"")
+                Write-W2VInfo "Applying image: $dismPath $dismArgs"
+                $process  = Start-Process -Passthru -Wait -NoNewWindow -FilePath $dismPath `
                             -ArgumentList $dismArgs `
 
                 if ($process.ExitCode -ne 0)
@@ -4023,4 +4051,3 @@ VirtualHardDisk
 
     Add-Type -TypeDefinition $code -ReferencedAssemblies "System.Xml","System.Linq","System.Xml.Linq" -ErrorAction SilentlyContinue
 }
-

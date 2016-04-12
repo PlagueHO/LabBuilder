@@ -8,6 +8,7 @@
     "IntegrationServices":  [
                                 "Guest Service Interface,Heartbeat,Key-Value Pair Exchange,Shutdown,Time Synchronization,VSS"
                             ],
+    "CertificateSource":  2,
     "Name":  "TestLab PESTER01",
     "Template":  "Pester Windows Server 2012 R2 Datacenter Full",
     "ComputerName":  "PESTER01",

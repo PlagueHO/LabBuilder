@@ -372,36 +372,53 @@ InModuleScope LabBuilder {
         $Lab = Get-Lab -ConfigPath $Global:TestConfigOKPath
         [LabSwitch[]] $Switches = Get-LabSwitch -Lab $Lab
 
-        Mock Get-VMSwitch
+        Mock Get-VMSwitch -MockWith {
+            @{
+                Name = 'Dummy Switch'
+            }
+        }
         Mock New-VMSwitch
+        Mock Get-VMNetworkAdapter
         Mock Add-VMNetworkAdapter
         Mock Set-VMNetworkAdapterVlan
+        Mock Get-NetAdapter -MockWith {
+            @{
+                Name       = 'Ethernet'
+                MACAddress = '0012345679A0'
+                Status     = 'Up'
+                Virtual    = $False
+            }
+        }
 
-        Context 'Valid configuration is passed' {	
+        Context 'Valid configuration is passed' {
             It 'Does not throw an Exception' {
                 { Initialize-LabSwitch -Lab $Lab -Switches $Switches } | Should Not Throw
             }
             It 'Calls Mocked commands' {
-                Assert-MockCalled Get-VMSwitch -Exactly 5
+                Assert-MockCalled Get-VMSwitch -Exactly 6
                 Assert-MockCalled New-VMSwitch -Exactly 5
+                Assert-MockCalled Get-VMNetworkAdapter -Exactly 1
                 Assert-MockCalled Add-VMNetworkAdapter -Exactly 4
                 Assert-MockCalled Set-VMNetworkAdapterVlan -Exactly 0
+                Assert-MockCalled Get-NetAdapter -Exactly 2
             }
         }
 
-        Context 'Valid configuration without switches is passed' {	
+        Context 'Valid configuration without switches is passed' {
             It 'Does not throw an Exception' {
                 { Initialize-LabSwitch -Lab $Lab } | Should Not Throw
             }
             It 'Calls Mocked commands' {
-                Assert-MockCalled Get-VMSwitch -Exactly 5
+                Assert-MockCalled Get-VMSwitch -Exactly 6
                 Assert-MockCalled New-VMSwitch -Exactly 5
+                Assert-MockCalled Get-VMNetworkAdapter -Exactly 1
                 Assert-MockCalled Add-VMNetworkAdapter -Exactly 4
                 Assert-MockCalled Set-VMNetworkAdapterVlan -Exactly 0
+                Assert-MockCalled Get-NetAdapter -Exactly 2
             }
         }
 
-        Context 'Valid configuration NAT with blank NAT Subnet Address' {	
+        Context 'Valid configuration NAT with blank NAT Subnet Address' {
             $Switches[0].Type = [LabSwitchType]::NAT
             It 'Throws a NatSubnetAddressEmptyError Exception' {
                 $ExceptionParameters = @{
@@ -417,12 +434,14 @@ InModuleScope LabBuilder {
             It 'Calls Mocked commands' {
                 Assert-MockCalled Get-VMSwitch -Exactly 1
                 Assert-MockCalled New-VMSwitch -Exactly 0
+                Assert-MockCalled Get-VMNetworkAdapter -Exactly 0
                 Assert-MockCalled Add-VMNetworkAdapter -Exactly 0
                 Assert-MockCalled Set-VMNetworkAdapterVlan -Exactly 0
+                Assert-MockCalled Get-NetAdapter -Exactly 0
             }
         }
 
-        Context 'Valid configuration with blank switch name passed' {	
+        Context 'Valid configuration with blank switch name passed' {
             $Switches[0].Type = [LabSwitchType]::External
             $Switches[0].Name = ''
             It 'Throws a SwitchNameIsEmptyError Exception' {
@@ -438,8 +457,60 @@ InModuleScope LabBuilder {
             It 'Calls Mocked commands' {
                 Assert-MockCalled Get-VMSwitch -Exactly 1
                 Assert-MockCalled New-VMSwitch -Exactly 0
+                Assert-MockCalled Get-VMNetworkAdapter -Exactly 0
                 Assert-MockCalled Add-VMNetworkAdapter -Exactly 0
                 Assert-MockCalled Set-VMNetworkAdapterVlan -Exactly 0
+                Assert-MockCalled Get-NetAdapter -Exactly 0
+            }
+        }
+
+        [LabSwitch[]] $Switches = Get-LabSwitch -Lab $Lab
+
+        Context 'Valid configuration with External switch with binding Adapter name bad' {
+            Mock Get-NetAdapter
+            It 'Throws a BindingAdapterNotFoundError Exception' {
+                $ExceptionParameters = @{
+                    errorId = 'BindingAdapterNotFoundError'
+                    errorCategory = 'InvalidArgument'
+                    errorMessage = $($LocalizedData.BindingAdapterNotFoundError `
+                        -f $Switches[0].Name,"with a name '$($Switches[0].BindingAdapterName)' ")
+                }
+                $Exception = GetException @ExceptionParameters
+
+                { Initialize-LabSwitch -Lab $Lab -Switches $Switches } | Should Throw $Exception
+            }
+            It 'Calls Mocked commands' {
+                Assert-MockCalled Get-VMSwitch -Exactly 1
+                Assert-MockCalled New-VMSwitch -Exactly 0
+                Assert-MockCalled Get-VMNetworkAdapter -Exactly 0
+                Assert-MockCalled Add-VMNetworkAdapter -Exactly 0
+                Assert-MockCalled Set-VMNetworkAdapterVlan -Exactly 0
+                Assert-MockCalled Get-NetAdapter -Exactly 1
+            }
+        }
+
+        Context 'Valid configuration with External switch with binding Adapter MAC bad' {
+            Mock Get-NetAdapter
+            $Switches[0].BindingAdapterName = ''
+            $Switches[0].BindingAdapterMac = '1111111111'
+            It 'Throws a BindingAdapterNotFoundError Exception' {
+                $ExceptionParameters = @{
+                    errorId = 'BindingAdapterNotFoundError'
+                    errorCategory = 'InvalidArgument'
+                    errorMessage = $($LocalizedData.BindingAdapterNotFoundError `
+                        -f $Switches[0].Name,"with a MAC address '$($Switches[0].BindingAdapterMac)' ")
+                }
+                $Exception = GetException @ExceptionParameters
+
+                { Initialize-LabSwitch -Lab $Lab -Switches $Switches } | Should Throw $Exception
+            }
+            It 'Calls Mocked commands' {
+                Assert-MockCalled Get-VMSwitch -Exactly 1
+                Assert-MockCalled New-VMSwitch -Exactly 0
+                Assert-MockCalled Get-VMNetworkAdapter -Exactly 0
+                Assert-MockCalled Add-VMNetworkAdapter -Exactly 0
+                Assert-MockCalled Set-VMNetworkAdapterVlan -Exactly 0
+                Assert-MockCalled Get-NetAdapter -Exactly 1
             }
         }
     }
@@ -762,10 +833,37 @@ InModuleScope LabBuilder {
         {
             . "$Global:ModuleRoot\support\Convert-WindowsImage.ps1"
         }
-        Mock Convert-WindowsImage 
+        Mock Convert-WindowsImage
         Mock Resolve-Path -MockWith { 'X:\Sources\Install.WIM' }
-        Mock Test-Path -MockWith { $True } -ParameterFilter { $Path -eq 'X:\Sources\Install.WIM' }
-                
+        Mock Test-Path -ParameterFilter { $Path -eq 'X:\Sources\Install.WIM' } -MockWith { $True }
+        Mock Test-Path -ParameterFilter { $Path -eq 'C:\dism\dism.exe' } -MockWith { $False }
+
+        Context 'Configuration passed but alternate DISM not found' {
+            It 'Throws a FileNotFoundError exception' {
+                $Lab = Get-Lab -ConfigPath $Global:TestConfigOKPath
+                $VMTemplateVHDs = Get-LabVMTemplateVHD -Lab $Lab
+                $ExceptionParameters = @{
+                    errorId = 'FileNotFoundError'
+                    errorCategory = 'InvalidArgument'
+                    errorMessage = $($LocalizedData.FileNotFoundError `
+                        -f 'alternate DISM.EXE','C:\dism\dism.exe')
+                }
+                { Initialize-LabVMTemplateVHD -Lab $Lab -VMTemplateVHDs $VMTemplateVHDs } | Should Throw $Exception
+            }
+            It 'Calls expected mocks commands' {
+                Assert-MockCalled Mount-DiskImage -Exactly 0
+                Assert-MockCalled Get-Diskimage -Exactly 0
+                Assert-MockCalled Get-Volume -Exactly 0
+                Assert-MockCalled Dismount-DiskImage -Exactly 0
+                Assert-MockCalled Get-WindowsImage -Exactly 0
+                Assert-MockCalled Copy-Item -Exactly 0
+                Assert-MockCalled Rename-Item -Exactly 0
+                Assert-MockCalled Convert-WindowsImage -Exactly 0
+            }
+        }
+
+        Mock Test-Path -ParameterFilter { $Path -eq 'C:\dism\dism.exe' } -MockWith { $True }
+
         Context 'Configuration passed with no VMtemplateVHDs' {
             It 'Does not throw an Exception' {
                 $Lab = Get-Lab -ConfigPath $Global:TestConfigOKPath
@@ -781,7 +879,7 @@ InModuleScope LabBuilder {
                 Assert-MockCalled Copy-Item -Exactly 0
                 Assert-MockCalled Rename-Item -Exactly 0
                 Assert-MockCalled Convert-WindowsImage -Exactly 0
-            }            
+            }
         }
         Context 'Configuration passed where the template ISO can not be found' {
             It 'Throws an VMTemplateVHDISOPathNotFoundError Exception' {
@@ -810,10 +908,12 @@ InModuleScope LabBuilder {
                 Assert-MockCalled Convert-WindowsImage -Exactly 0
             }
         }
-        Context 'Valid configuration passed with no packages' {
+        Context 'Valid configuration passed with two VHDx files not generated and no packages' {
             It 'Does not throw an Exception' {
                 $Lab = Get-Lab -ConfigPath $Global:TestConfigOKPath
                 $VMTemplateVHDs = Get-LabVMTemplateVHD -Lab $Lab
+                $VMTemplateVHDs[0].vhdpath = 'doesnotexist.vhdx'
+                $VMTemplateVHDs[1].vhdpath = 'doesnotexist.vhdx'
                 foreach ($VMTemplateVHD in $VMTemplateVHDs)
                 {
                     $VMTemplateVHD.Packages = ''
@@ -831,11 +931,13 @@ InModuleScope LabBuilder {
                 Assert-MockCalled Convert-WindowsImage -Exactly 2
             }
         }
-        Context 'Valid configuration passed with valid packages' {
+        Context 'Valid configuration passed with two VHDx files not generated valid packages' {
             Mock Test-Path -ParameterFilter { $Path -eq $ResourceMSUFile } -MockWith { $True }
             It 'Does not throw an Exception' {
                 $Lab = Get-Lab -ConfigPath $Global:TestConfigOKPath
                 $VMTemplateVHDs = Get-LabVMTemplateVHD -Lab $Lab
+                $VMTemplateVHDs[0].vhdpath = 'doesnotexist.vhdx'
+                $VMTemplateVHDs[1].vhdpath = 'doesnotexist.vhdx'
                 { Initialize-LabVMTemplateVHD -Lab $Lab -VMTemplateVHDs $VMTemplateVHDs } | Should Not Throw
             }
             It 'Calls expected mocks commands' {
@@ -853,6 +955,7 @@ InModuleScope LabBuilder {
             It 'Throws a PackageNotFoundError exception' {
                 $Lab = Get-Lab -ConfigPath $Global:TestConfigOKPath
                 $VMTemplateVHDs = Get-LabVMTemplateVHD -Lab $Lab
+                $VMTemplateVHDs[0].vhdpath = 'doesnotexist.vhdx'
                 foreach ($VMTemplateVHD in $VMTemplateVHDs)
                 {
                     $VMTemplateVHD.Packages='DoesNotExist'
@@ -882,6 +985,7 @@ InModuleScope LabBuilder {
             It 'Throws a PackageMSUNotFoundError exception' {
                 $Lab = Get-Lab -ConfigPath $Global:TestConfigOKPath
                 $VMTemplateVHDs = Get-LabVMTemplateVHD -Lab $Lab
+                $VMTemplateVHDs[0].vhdpath = 'doesnotexist.vhdx'
                 $ExceptionParameters = @{
                     errorId = 'PackageMSUNotFoundError'
                     errorCategory = 'InvalidArgument'
@@ -902,13 +1006,88 @@ InModuleScope LabBuilder {
                 Assert-MockCalled Convert-WindowsImage -Exactly 0
             }
         }
+
+        $Lab = Get-Lab -ConfigPath $Global:TestConfigOKPath
+        $VMTemplateVHDs = Get-LabVMTemplateVHD -Lab $Lab
+        $VMTemplateVHDs[5].vhdpath = "$($VMTemplateVHDs[5].vhdpath).NotExist"
+
+        $NanoServerPackagesFolder = Join-Path `
+                -Path (Split-Path -Path $VMTemplateVHDs[5].vhdpath -Parent) `
+                -ChildPath 'NanoServerPackages'
+        
+        Context 'Valid Configuration Passed with Nano Server VHDx not generated and two packages' {
+            Mock Test-Path -ParameterFilter { $Path -eq $NanoServerPackagesFolder } -MockWith { $True }
+            Mock Test-Path -ParameterFilter { $Path -like "$NanoServerPackagesFolder\*.cab" } -MockWith { $True }
+
+            It 'Does Not Throw Exception' {
+                $VMTemplateVHDs[5].Packages = 'Microsoft-NanoServer-Containers-Package.cab,Microsoft-NanoServer-Guest-Package.cab'
+                { Initialize-LabVMTemplateVHD -Lab $Lab -VMTemplateVHDs $VMTemplateVHDs } | Should Not Throw
+            }
+            It 'Calls Mocked commands' {
+                Assert-MockCalled Mount-DiskImage -Exactly 1
+                Assert-MockCalled Get-Diskimage -Exactly 1
+                Assert-MockCalled Get-Volume -Exactly 1
+                Assert-MockCalled Dismount-DiskImage -Exactly 1
+                Assert-MockCalled Get-WindowsImage -Exactly 1
+                Assert-MockCalled Copy-Item -Exactly 0
+                Assert-MockCalled Rename-Item -Exactly 0
+                Assert-MockCalled Convert-WindowsImage -Exactly 1
+            }
+        }
+        Context 'Valid Configuration Passed with Nano Server VHDx not generated and two packages and an MSU' {
+            Mock Test-Path -ParameterFilter { $Path -eq $NanoServerPackagesFolder } -MockWith { $True }
+            Mock Test-Path -ParameterFilter { $Path -like "$NanoServerPackagesFolder\*.cab" } -MockWith { $True }
+            Mock Test-Path -ParameterFilter { $Path -eq $ResourceMSUFile } -MockWith { $True }
+
+            It 'Does Not Throw Exception' {
+                $VMTemplateVHDs[5].Packages = 'Microsoft-NanoServer-Containers-Package.cab,Microsoft-NanoServer-Guest-Package.cab,WMF5.0-WS2012R2-W81'
+                { Initialize-LabVMTemplateVHD -Lab $Lab -VMTemplateVHDs $VMTemplateVHDs } | Should Not Throw
+            }
+            It 'Calls Mocked commands' {
+                Assert-MockCalled Mount-DiskImage -Exactly 1
+                Assert-MockCalled Get-Diskimage -Exactly 1
+                Assert-MockCalled Get-Volume -Exactly 1
+                Assert-MockCalled Dismount-DiskImage -Exactly 1
+                Assert-MockCalled Get-WindowsImage -Exactly 1
+                Assert-MockCalled Copy-Item -Exactly 0
+                Assert-MockCalled Rename-Item -Exactly 0
+                Assert-MockCalled Convert-WindowsImage -Exactly 1
+            }
+        }
+        Context 'Valid configuration passed but Convert-WindowsImage throws' {
+            Mock Convert-WindowsImage -MockWith { Throw 'Convert-WindowsImage Exception' }
+            Mock Test-Path -ParameterFilter { $Path -eq $ResourceMSUFile } -MockWith { $True }
+            It 'Throws a ConvertWindowsImageError exception' {
+                $Lab = Get-Lab -ConfigPath $Global:TestConfigOKPath
+                $VMTemplateVHDs = Get-LabVMTemplateVHD -Lab $Lab
+                $VMTemplateVHDs[0].vhdpath = 'doesnotexist.vhdx'
+                $VMTemplateVHDs[1].vhdpath = 'doesnotexist.vhdx'
+                $ExceptionParameters = @{
+                    errorId = 'ConvertWindowsImageError'
+                    errorCategory = 'InvalidArgument'
+                    errorMessage = $($LocalizedData.ConvertWindowsImageError `
+                        -f $VMTemplateVHDs[0].ISOPath,'X:\Sources\Install.WIM',$VMTemplateVHDs[0].Edition,$VMTemplateVHDs[0].VHDFormat,'Convert-WindowsImage Exception')
+                }
+                { Initialize-LabVMTemplateVHD -Lab $Lab -VMTemplateVHDs $VMTemplateVHDs } | Should Throw $Exception
+            }
+            It 'Calls expected mocks commands' {
+                Assert-MockCalled Mount-DiskImage -Exactly 1
+                Assert-MockCalled Get-Diskimage -Exactly 1
+                Assert-MockCalled Get-Volume -Exactly 1
+                Assert-MockCalled Dismount-DiskImage -Exactly 1
+                Assert-MockCalled Get-WindowsImage -Exactly 0
+                Assert-MockCalled Copy-Item -Exactly 0
+                Assert-MockCalled Rename-Item -Exactly 0
+                Assert-MockCalled Convert-WindowsImage -Exactly 1
+            }
+        }
     }
 
 
     Describe 'Remove-LabVMTemplateVHD' {
         $Lab = Get-Lab -ConfigPath $Global:TestConfigOKPath
         $VMTemplateVHDs = Get-LabVMTemplateVHD -Lab $Lab
-        Mock Remove-Item                        
+        Mock Remove-Item
         Mock Test-Path -MockWith { $False }
         Context 'Configuration passed with VMtemplateVHDs but VHD not found' {
             It 'Does not throw an Exception' {
@@ -917,7 +1096,7 @@ InModuleScope LabBuilder {
             It 'Calls expected mocks commands' {
                 Assert-MockCalled Test-Path -Exactly $VMTemplateVHDs.Count
                 Assert-MockCalled Remove-Item -Exactly 0
-            }            
+            }
         }
         Mock Test-Path -MockWith { $True }
         Context 'Configuration passed with VMtemplateVHDs but VHD found' {
@@ -927,7 +1106,7 @@ InModuleScope LabBuilder {
             It 'Calls expected mocks commands' {
                 Assert-MockCalled Test-Path -Exactly $VMTemplateVHDs.Count
                 Assert-MockCalled Remove-Item -Exactly $VMTemplateVHDs.Count
-            }            
+            }
         }
         Context 'Configuration passed with no VMtemplateVHDs' {
             It 'Does not throw an Exception' {

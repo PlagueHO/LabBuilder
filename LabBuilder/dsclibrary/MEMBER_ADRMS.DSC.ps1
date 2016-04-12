@@ -1,17 +1,18 @@
 <###################################################################################################
 DSC Template Configuration File For use by LabBuilder
 .Title
-    MEMBER_ADFS
+    MEMBER_ADRMS
 .Desription
-    Builds a Server that is joined to a domain and then made into an ADFS Server using WID.
+    Builds a Server that is joined to a domain and then made into an ADRMS Server.
 .Parameters:
     DomainName = "LABBUILDER.COM"
     DomainAdminPassword = "P@ssword!1"
     DCName = 'SA-DC1'
     PSDscAllowDomainUser = $True
+    ADFSSupport = $True
 ###################################################################################################>
 
-Configuration MEMBER_ADFS
+Configuration MEMBER_ADRMS
 {
     Import-DscResource -ModuleName 'PSDesiredStateConfiguration'
     Import-DscResource -ModuleName xComputerManagement
@@ -30,13 +31,23 @@ Configuration MEMBER_ADFS
             Name = "Windows-Internal-Database"
         }
 
-        WindowsFeature ADFSInstall
+        WindowsFeature ADRMSServerInstall
         {
             Ensure = "Present"
-            Name = "ADFS-Federation"
+            Name = "ADRMS-Server"
             DependsOn = "[WindowsFeature]WIDInstall"
         }
 
+        if ($Node.ADFSSupport)
+        {
+            WindowsFeature ADRMSIdentityInstall
+            {
+                Ensure = "Present"
+                Name = "ADRMS-Identity"
+                DependsOn = "[WindowsFeature]ADRMSServerInstall"
+            }
+        }
+        
         WaitForAll DC
         {
             ResourceName      = '[xADDomain]PrimaryDC'
@@ -45,34 +56,12 @@ Configuration MEMBER_ADFS
             RetryCount        = 60
         }
 
-        xComputer JoinDomain 
+        xComputer JoinDomain
         { 
             Name          = $Node.NodeName
             DomainName    = $Node.DomainName
-            Credential    = $DomainAdminCredential 
-            DependsOn     = "[WaitForAll]DC" 
-        }
-
-        # Enable ADFS FireWall rules
-        xFirewall ADFSFirewall1
-        {
-            Name = "ADFSSrv-HTTP-In-TCP"
-            Ensure = 'Present'
-            Enabled = 'True'
-        }
-
-        xFirewall ADFSFirewall2
-        {
-            Name = "ADFSSrv-HTTPS-In-TCP"
-            Ensure = 'Present'
-            Enabled = 'True'
-        }
-
-        xFirewall ADFSFirewall3
-        {
-            Name = "ADFSSrv-SmartcardAuthN-HTTPS-In-TCP"
-            Ensure = 'Present'
-            Enabled = 'True'
+            Credential    = $DomainAdminCredential
+            DependsOn     = "[WaitForAll]DC"
         }
     }
 }
