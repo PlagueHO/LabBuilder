@@ -1,4 +1,4 @@
-### Unreleased
+### 0.7.4.0
 * lib\vm.ps1: WaitWMStarted - name of integrationservice "heartbeat" detected by id to be culture neutral
 * DSCLibrary\MEMBER_ADFS.DSC.ps1: Enable ADFS Firewall Rules.
 * AppVeyor.yml: Module Manifest version number always set to match build version.
@@ -18,6 +18,9 @@
 * Generalized Nano Server package support.
 * Both ResourceMSU and Nano Server packages can now be installed on Template VHDs and Virtual Machines.
 * Automatically add Microsoft-NanoServer-DSC-Package.cab to new Nano Server VMs.
+* Added BindingAdapterName and BindingAdapterMac attribute to swtich element to allow control over bound adapter.
+* GetCertificatePsFileContent Changed so that PFX certificate imported into Root store for non Nano Servers.
+* Automatically set xNetworking version in DSC Networking config to that of the highest version available on the Lab Host.
 
 ### 0.7.3.0
 * DSCLibrary\MEMBER_FAILOVERCLUSTER_FS.DSC.ps1: Added ServerName property to contain name of ISCSI Server.

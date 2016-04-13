@@ -444,7 +444,7 @@ if (Test-Path -Path `"`$(`$ENV:SystemRoot)\$Script:DSCEncryptionPfxCert`")
     Import-PfxCertificate ``
         -Password '$Script:DSCCertificatePassword' ``
         -FilePath `"`$(`$ENV:SystemRoot)\$Script:DSCEncryptionPfxCert`" ``
-        -CertStoreLocation cert:\localMachine\my
+        -CertStoreLocation cert:\localMachine\root
     Add-Content ``
         -Path `"`$(`$ENV:SystemRoot)\Setup\Scripts\SetupComplete.log`" ``
         -Value 'Encryption Certificate from PFX Imported...' ``

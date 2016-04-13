@@ -982,9 +982,14 @@ function GetDSCNetworkingConfig {
         [Parameter(Mandatory)]
         [LabVM] $VM
     )
+    $xNetworkingVersion = (`
+        Get-Module xNetworking -ListAvailable `
+        | Sort-Object version -Descending `
+        | Select-Object -First 1 `
+        ).Version.ToString()
     [String] $DSCNetworkingConfig = @"
 Configuration Networking {
-    Import-DscResource -ModuleName xNetworking -ModuleVersion 2.8.0.0  #Current as of 2016-04-05
+    Import-DscResource -ModuleName xNetworking -ModuleVersion $xNetworkingVersion
 
 "@
     [Int] $AdapterCount = 0
