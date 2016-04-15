@@ -76,6 +76,11 @@ Enum LabFileSystem {
     ReFS = 4
 } # Enum LabFileSystem
 
+Enum LabCertificateSource {
+    Guest = 1
+    Host = 2
+} # Enum LabCertificateSource
+
 class LabResourceModule:System.ICloneable {
     [String] $Name
     [String] $URL
@@ -361,6 +366,8 @@ class LabSwitch:System.ICloneable {
     [LabSwitchType] $Type
     [Byte] $VLAN
     [String] $NATSubnetAddress
+    [String] $BindingAdapterName
+    [String] $BindingAdapterMac
     [LabSwitchAdapter[]] $Adapters
 
     LabSwitch() {}
@@ -436,6 +443,7 @@ class LabVM:System.ICloneable {
     [LabDSC] $DSC
     [String] $VMRootPath
     [String] $LabBuilderFilesPath
+    [LabCertificateSource] $CertificateSource = [LabCertificateSource]::Guest
 
     LabVM() {}
     
@@ -515,27 +523,6 @@ class LabDSCModule:System.ICloneable {
 # XML Stuff
 [String] $Script:ConfigurationXMLSchema = Join-Path -Path $PSScriptRoot -ChildPath 'schema\labbuilderconfig-schema.xsd'
 [String] $Script:ConfigurationXMLTemplate = Join-Path -Path $PSScriptRoot -ChildPath 'template\labbuilderconfig-template.xml'
-
-# The current list of Nano Servers available with TP4.
-[Array] $Script:NanoServerPackageList = @(
-    @{ Name = 'Compute'; Filename = 'Microsoft-NanoServer-Compute-Package.cab' },
-    @{ Name = 'OEM-Drivers'; Filename = 'Microsoft-NanoServer-OEM-Drivers-Package.cab' },
-    @{ Name = 'Storage'; Filename = 'Microsoft-NanoServer-Storage-Package.cab' },
-    @{ Name = 'FailoverCluster'; Filename = 'Microsoft-NanoServer-FailoverCluster-Package.cab' },
-    @{ Name = 'ReverseForwarders'; Filename = 'Microsoft-OneCore-ReverseForwarders-Package.cab' },
-    @{ Name = 'Guest'; Filename = 'Microsoft-NanoServer-Guest-Package.cab' },
-    @{ Name = 'Containers'; Filename = 'Microsoft-NanoServer-Containers-Package.cab' },
-    @{ Name = 'Defender'; Filename = 'Microsoft-NanoServer-Defender-Package.cab' },
-    @{ Name = 'DCB'; Filename = 'Microsoft-NanoServer-DCB-Package.cab' },
-    @{ Name = 'DNS'; Filename = 'Microsoft-NanoServer-DNS-Package.cab' },
-    @{ Name = 'DSC'; Filename = 'Microsoft-NanoServer-DSC-Package.cab' },
-    @{ Name = 'IIS'; Filename = 'Microsoft-NanoServer-IIS-Package.cab' },
-    @{ Name = 'NPDS'; Filename = 'Microsoft-NanoServer-NPDS-Package.cab' },
-    @{ Name = 'SCVMM'; Filename = 'Microsoft-Windows-Server-SCVMM-Package.cab' },
-    @{ Name = 'SCVMM-Compute'; Filename = 'Microsoft-Windows-Server-SCVMM-Compute-Package.cab' }
-)
-#endregion
-
 
 #region LabResourceFunctions
 <#
@@ -1146,6 +1133,8 @@ function Get-LabSwitch {
         [LabSwitch] $NewSwitch = [LabSwitch]::New($SwitchName,$SwitchType)
         $NewSwitch.VLAN = $ConfigSwitch.VLan
         $NewSwitch.NATSubnetAddress = $ConfigSwitch.NatSubnetAddress
+        $NewSwitch.BindingAdapterName = $ConfigSwitch.BindingAdapterName
+        $NewSwitch.BindingAdapterMac = $ConfigSwitch.BindingAdapterMac
         $NewSwitch.Adapters = $ConfigAdapters
         $Switches += @( $NewSwitch )
     } # foreach
@@ -1237,13 +1226,68 @@ function Initialize-LabSwitch {
             {
                 'External'
                 {
+                    # Determine which Physical Adapter to bind this switch to
+                    if ($VMSwitch.BindingAdapterMac)
+                    {
+                        $BindingAdapter = Get-NetAdapter `
+                            -Physical | Where-Object {
+                            ($_.MacAddress -replace '-','') -eq $VMSwitch.BindingAdapterMac
+                        }
+                        $ErrorDetail="with a MAC address '$($VMSwitch.BindingAdapterMac)' "
+                    }
+                    elseif ($VMSwitch.BindingAdapterName)
+                    {
+                        $BindingAdapter = Get-NetAdapter `
+                            -Physical `
+                            -Name $VMSwitch.BindingAdapterName `
+                            -ErrorAction SilentlyContinue
+                        $ErrorDetail="with a name '$($VMSwitch.BindingAdapterName)' "
+                    }
+                    else
+                    {
+                        $BindingAdapter = Get-NetAdapter | `
+                            Where-Object {
+                                ($_.Status -eq 'Up') `
+                                -and (-not $_.Virtual) `
+                            } | Select-Object -First 1
+                        $ErrorDetail=''
+                    } # if
+                    # Check that a Binding Adapter was found
+                    if (-not $BindingAdapter)
+                    {
+                        $ExceptionParameters = @{
+                            errorId = 'BindingAdapterNotFoundError'
+                            errorCategory = 'InvalidArgument'
+                            errorMessage = $($LocalizedData.BindingAdapterNotFoundError `
+                                -f $SwitchName,$ErrorDetail)
+                        }
+                        ThrowException @ExceptionParameters
+                    } # if
+                    # Check this adapter is not already bound to a switch
+                    $MacAddress = `
+                        (Get-VMNetworkAdapter `
+                            -ManagementOS `
+                            -Name (Get-VMSwitch | ? { 
+                            $_.SwitchType -eq 'External'
+                            }).Name).MacAddress
+
+                    $UsedAdapters = @((Get-NetAdapter -Physical | ? {
+                        ($_.MacAddress -replace '-','') -in $MacAddress
+                        }).Name)
+                    if ($BindingAdapter.Name -in $UsedAdapters)
+                    {
+                        $ExceptionParameters = @{
+                            errorId = 'BindingAdapterUsedError'
+                            errorCategory = 'InvalidArgument'
+                            errorMessage = $($LocalizedData.BindingAdapterUsedError `
+                                -f $SwitchName,$BindingAdapter.Name)
+                        }
+                        ThrowException @ExceptionParameters
+                    } # if
+                    # Create the swtich
                     $null = New-VMSwitch `
                         -Name $SwitchName `
-                        -NetAdapterName (`
-                            Get-NetAdapter | `
-                            Where-Object { $_.Status -eq 'Up' -and $_.InterfaceDescription -notlike "Hyper-V Virtual*" } | `
-                            Select-Object -First 1 -ExpandProperty Name `
-                            )
+                        -NetAdapterName ($BindingAdapter.Name)
                     if ($VMSwitch.Adapters)
                     {
                         foreach ($Adapter in $VMSwitch.Adapters)
@@ -1973,7 +2017,7 @@ function Initialize-LabVMTemplateVHD
 
         # Determine the path to the WIM
         [String] $SourcePath = "$ISODrive\Sources\Install.WIM"
-        if ($VMTemplateVHD.OSType -eq 'Nano')
+        if ($VMTemplateVHD.OSType -eq [LabOStype]::Nano)
         {
             $SourcePath = "$ISODrive\Nanoserver\NanoServer.WIM"
         } # if
@@ -2035,7 +2079,7 @@ function Initialize-LabVMTemplateVHD
         }
 
         # Perform Nano Server package prep
-        if ($VMTemplateVHD.OSType -eq 'Nano')
+        if ($VMTemplateVHD.OSType -eq [LabOStype]::Nano)
         {
             # Make a copy of the all the Nano packages in the VHD root folder
             # So that if any VMs need to add more packages they are accessible
@@ -2044,14 +2088,14 @@ function Initialize-LabVMTemplateVHD
                 -Path $VHDPath `
                 -Parent
 
-            [String] $LabPackagesFolder = Join-Path `
+            [String] $NanoPackagesFolder = Join-Path `
                 -Path $VHDFolder `
                 -ChildPath 'NanoServerPackages'
 
-            if (-not (Test-Path -Path $LabPackagesFolder -Type Container))
+            if (-not (Test-Path -Path $NanoPackagesFolder -Type Container))
             {
                 Write-Verbose -Message $($LocalizedData.CachingNanoServerPackagesMessage `
-                        -f "$ISODrive\Nanoserver\Packages",$LabPackagesFolder)
+                        -f "$ISODrive\Nanoserver\Packages",$NanoPackagesFolder)
                 Copy-Item `
                     -Path "$ISODrive\Nanoserver\Packages" `
                     -Destination $VHDFolder `
@@ -2061,88 +2105,111 @@ function Initialize-LabVMTemplateVHD
                     -Path "$VHDFolder\Packages" `
                     -NewName 'NanoServerPackages'
             } # if
+        } # if
 
-            # Now specify the Nano Server packages to add.
-            if (-not [String]::IsNullOrWhitespace($VMTemplateVHD.Packages))
-            {
-                $Packages = @()
-                $NanoPackages = @($VMTemplateVHD.Packages -split ',')
-
-                foreach ($Package in $Script:NanoServerPackageList) 
-                {
-                    If ($Package.Name -in $NanoPackages) 
-                    {
-                        $Packages += @(Join-Path -Path $LabPackagesFolder -ChildPath $Package.Filename)
-                        $Packages += @(Join-Path -Path $LabPackagesFolder -ChildPath "en-us\$($Package.Filename)")
-                    } # if
-                } # foreach
-                $ConvertParams += @{
-                    package = $Packages
-                }
-            } # if
-        }
-        else
+        # Do we need to add any packages?
+        if (-not [String]::IsNullOrWhitespace($VMTemplateVHD.Packages))
         {
-            if (-not [String]::IsNullOrWhitespace($VMTemplateVHD.Packages))
+            $Packages = @()
+
+            # Get the list of Lab Resource MSUs
+            $ResourceMSUs = Get-LabResourceMSU `
+                -Lab $Lab
+
+            try
             {
-                $Packages = @()
-
-                # Get the list of Lab Resource MSUs
-                $ResourceMSUs = Get-LabResourceMSU `
-                    -Lab $Lab
-
-                foreach ($Package in $VMTemplateVHD.Packages)
+                foreach ($Package in @($VMTemplateVHD.Packages -split ','))
                 {
-                    # Find the package in the Resources
-                    [Boolean] $Found = $False
-                    foreach ($ResourceMSU in $ResourceMSUs)
+                    if (([System.IO.Path]::GetExtension($Package) -eq '.cab') `
+                        -and ($VMTemplateVHD.OSType -eq [LabOSType]::Nano))
                     {
-                        if ($ResourceMSU.Name -eq $Package)
+                        # This is a Nano Server .CAB pacakge
+                        # Generate the path to the Nano Package
+                        $PackagePath = Join-Path `
+                            -Path $NanoPackagesFolder `
+                            -ChildPath $Package
+                        # Does it exist?
+                        if (-not (Test-Path -Path $PackagePath))
                         {
-                            # Found the package
-                            $Found = $True
-                            break
+                            $ExceptionParameters = @{
+                                errorId = 'NanoPackageNotFoundError'
+                                errorCategory = 'InvalidArgument'
+                                errorMessage = $($LocalizedData.NanoPackageNotFoundError `
+                                -f $PackagePath)
+                            }
+                            ThrowException @ExceptionParameters
+                        }
+                        $Packages += @( $PackagePath )
+
+                        # Generate the path to the Nano Language Package
+                        $PackageLangPath = Join-Path `
+                            -Path $NanoPackagesFolder `
+                            -ChildPath "en-us\$Package"
+                        # Does it exist?
+                        if (-not (Test-Path -Path $PackageLangPath))
+                        {
+                            $ExceptionParameters = @{
+                                errorId = 'NanoPackageNotFoundError'
+                                errorCategory = 'InvalidArgument'
+                                errorMessage = $($LocalizedData.NanoPackageNotFoundError `
+                                -f $PackageLangPath)
+                            }
+                            ThrowException @ExceptionParameters
+                        }
+                        $Packages += @( $PackageLangPath )
+                    }
+                    else
+                    {
+                        # Tihs is a ResourceMSU type package
+                        [Boolean] $Found = $False
+                        foreach ($ResourceMSU in $ResourceMSUs)
+                        {
+                            if ($ResourceMSU.Name -eq $Package)
+                            {
+                                # Found the package
+                                $Found = $True
+                                break
+                            } # if
+                        } # foreach
+                        if (-not $Found)
+                        {
+                            $ExceptionParameters = @{
+                                errorId = 'PackageNotFoundError'
+                                errorCategory = 'InvalidArgument'
+                                errorMessage = $($LocalizedData.PackageNotFoundError `
+                                -f $Package)
+                            }
+                            ThrowException @ExceptionParameters
                         } # if
-                    } # foreach
-                    if (-not $Found)
-                    {
-                        # Dismount Disk Image before throwing exception
-                        $null = Dismount-DiskImage `
-                            -ImagePath $ISOPath
 
-                        $ExceptionParameters = @{
-                            errorId = 'PackageNotFoundError'
-                            errorCategory = 'InvalidArgument'
-                            errorMessage = $($LocalizedData.PackageNotFoundError `
-                            -f $Package)
-                        }
-                        ThrowException @ExceptionParameters
-                    } # if
-
-                    $PackagePath = $ResourceMSU.Filename
-                    if (-not (Test-Path -Path $PackagePath))
-                    {
-                        # Dismount Disk Image before throwing exception
-                        $null = Dismount-DiskImage `
-                            -ImagePath $ISOPath
-
-                        $ExceptionParameters = @{
-                            errorId = 'PackageMSUNotFoundError'
-                            errorCategory = 'InvalidArgument'
-                            errorMessage = $($LocalizedData.PackageMSUNotFoundError `
-                            -f $Package,$PackagePath)
-                        }
-                        ThrowException @ExceptionParameters
-                    } # if
-
-                    $Packages += @( $PackagePath )
+                        $PackagePath = $ResourceMSU.Filename
+                        if (-not (Test-Path -Path $PackagePath))
+                        {
+                            $ExceptionParameters = @{
+                                errorId = 'PackageMSUNotFoundError'
+                                errorCategory = 'InvalidArgument'
+                                errorMessage = $($LocalizedData.PackageMSUNotFoundError `
+                                -f $Package,$PackagePath)
+                            }
+                            ThrowException @ExceptionParameters
+                        } # if
+                        $Packages += @( $PackagePath )
+                    }
                 } # foreach
                 $ConvertParams += @{
                     Package = $Packages
                 }
-            } # if
+            }
+            catch
+            {
+                # Dismount Disk Image before throwing exception
+                $null = Dismount-DiskImage `
+                    -ImagePath $ISOPath
+
+                Throw $_
+            } # try
         } # if
-        
+
         Write-Verbose -Message ($LocalizedData.ConvertingWIMtoVHDMessage `
             -f $SourcePath,$VHDPath,$VHDFormat,$Edition,$VHDPartitionStyle,$VHDType)
 
@@ -2675,7 +2742,7 @@ function Initialize-LabVMTemplate {
                     errorMessage = $($LocalizedData.TemplateSourceVHDNotFoundError `
                         -f $VMTemplate.Name,$VMTemplate.sourcevhd)
                 }
-                ThrowException @ExceptionParameters                
+                ThrowException @ExceptionParameters
             }
 
             Write-Verbose -Message $($LocalizedData.CopyingTemplateSourceVHDMessage `
@@ -2687,7 +2754,7 @@ function Initialize-LabVMTemplate {
             # Add any packages to the template if required
             if (-not [String]::IsNullOrWhitespace($VMTemplate.Packages))
             {
-                if ($VMTemplate.OSType -ne 'Nano')
+                if ($VMTemplate.OSType -ne [LabOStype]::Nano)
                 {
                     # Mount the Template Boot VHD so that files can be loaded into it
                     Write-Verbose -Message $($LocalizedData.MountingTemplateBootDiskMessage `
@@ -2822,20 +2889,20 @@ function Initialize-LabVMTemplate {
 
         # if this is a Nano Server template, we need to ensure that the
         # NanoServerPackages folder is copied to our Lab folder
-        if ($VMTemplate.OSType -eq 'Nano')
+        if ($VMTemplate.OSType -eq [LabOStype]::Nano)
         {
             [String] $VHDPackagesFolder = Join-Path `
                 -Path (Split-Path -Path $VMTemplate.SourceVhd -Parent)`
                 -ChildPath 'NanoServerPackages'
 
-            [String] $LabPackagesFolder = Join-Path `
+            [String] $NanoPackagesFolder = Join-Path `
                 -Path $LabPath `
                 -ChildPath 'NanoServerPackages'
 
-            if (-not (Test-Path -Path $LabPackagesFolder -Type Container))
+            if (-not (Test-Path -Path $NanoPackagesFolder -Type Container))
             {
                 Write-Verbose -Message $($LocalizedData.CachingNanoServerPackagesMessage `
-                        -f $VHDPackagesFolder,$LabPackagesFolder)
+                        -f $VHDPackagesFolder,$NanoPackagesFolder)
                 Copy-Item `
                     -Path $VHDPackagesFolder `
                     -Destination $LabPath `
@@ -3752,6 +3819,18 @@ function Get-LabVM {
             $Packages = $VMTemplate.packages
         } # if
 
+        # Get the Certificate Source
+        $CertificateSource = [LabCertificateSource]::Guest
+        if ($OSType -eq [LabOSType]::Nano)
+        {
+            # Nano Server can't generate certificates so must always be set to Host
+            $CertificateSource = [LabCertificateSource]::Host
+        }
+        elseif ($VM.CertificateSource)
+        {
+            $CertificateSource = $VM.CertificateSource
+        } # if
+
         $LabVM = [LabVM]::New($VMName,$VM.ComputerName)
         $LabVM.Template = $VM.Template
         $LabVM.ParentVHD = $ParentVHDPath
@@ -3775,6 +3854,7 @@ function Get-LabVM {
         $LabVM.DSC = $LabDSC
         $LabVM.VMRootPath = (Join-Path -Path $LabPath -ChildPath $VMName)
         $LabVM.LabBuilderFilesPath = (Join-Path -Path $LabPath -ChildPath "$VMName\LabBuilder Files")
+        $LabVM.CertificateSource = $CertificateSource
         $LabVMs += @( $LabVM )
     } # foreach
 
@@ -4267,26 +4347,29 @@ function Install-LabVM {
         # Has this VM been initialized before (do we have a cert for it)
         if (-not (Test-Path "$LabPath\$($VM.Name)\LabBuilder Files\$Script:DSCEncryptionCert"))
         {
-            # No, so check it is initialized and download the cert.
+            # No, so check it is initialized and download the cert if required
             if (WaitVMInitializationComplete -VM $VM -ErrorAction Continue)
             {
                 Write-Verbose -Message $($LocalizedData.CertificateDownloadStartedMessage `
                     -f $VM.Name)
-                    
-                if (GetSelfSignedCertificate -Lab $Lab -VM $VM)
+
+                if ($VM.CertificateSource -eq [LabCertificateSource]::Guest)
                 {
-                    Write-Verbose -Message $($LocalizedData.CertificateDownloadCompleteMessage `
-                        -f $VM.Name)
-                }
-                else
-                {
-                    $ExceptionParameters = @{
-                        errorId = 'CertificateDownloadError'
-                        errorCategory = 'InvalidArgument'
-                        errorMessage = $($LocalizedData.CertificateDownloadError `
-                            -f $VM.name)
+                    if (GetSelfSignedCertificate -Lab $Lab -VM $VM)
+                    {
+                        Write-Verbose -Message $($LocalizedData.CertificateDownloadCompleteMessage `
+                            -f $VM.Name)
                     }
-                    ThrowException @ExceptionParameters
+                    else
+                    {
+                        $ExceptionParameters = @{
+                            errorId = 'CertificateDownloadError'
+                            errorCategory = 'InvalidArgument'
+                            errorMessage = $($LocalizedData.CertificateDownloadError `
+                                -f $VM.name)
+                        }
+                        ThrowException @ExceptionParameters
+                    } # if
                 } # if
             }
             else
@@ -5112,7 +5195,7 @@ Function Install-Lab {
             -ErrorAction Stop
 
         Write-Verbose -Message $($LocalizedData.LabInstallCompleteMessage `
-            -f $Lab.labbuilderconfig.name,$Lab.labbuilderconfig.settings.fullconfigpath)
+            -f $Lab.labbuilderconfig.name,$Lab.labbuilderconfig.settings.labpath)
     } # process
     end 
     {

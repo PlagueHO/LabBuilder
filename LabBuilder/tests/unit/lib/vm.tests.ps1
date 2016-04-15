@@ -88,7 +88,7 @@ InModuleScope LabBuilder {
             @{ Name = 'Key-Value Pair Exchange'; Enabled = $True }
             @{ Name = 'Shutdown'; Enabled = $True }
             @{ Name = 'Time Synchronization'; Enabled = $True }
-            @{ Name = 'VSS'; Enabled = $True }                             
+            @{ Name = 'VSS'; Enabled = $True }
         ) }
         Mock Enable-VMIntegrationService
         Mock Disable-VMIntegrationService

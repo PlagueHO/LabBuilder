@@ -101,7 +101,7 @@ function CreateVMInitializationFiles {
     # Assemble the SetupComplete.* scripts.
     [String] $SetupCompleteCmd = ''
 
-    # Write out the CMD Setup Complete File
+    # Write out the PS1 Setup Complete File
     if ($VM.OSType -eq [LabOSType]::Nano)
     {
         # For a Nano Server we also need to create the certificates
@@ -109,28 +109,21 @@ function CreateVMInitializationFiles {
         $null = CreateHostSelfSignedCertificate `
             -Lab $Lab `
             -VM $VM
-        
-        [String] $SetupCompletePs = @"
-Add-Content ``
-    -Path "C:\WINDOWS\Setup\Scripts\SetupComplete.log" ``
-    -Value 'SetupComplete.ps1 Script Started...' ``
-    -Encoding Ascii
-if (Test-Path -Path `"`$(`$ENV:SystemRoot)\$Script:DSCEncryptionPfxCert`")
-{
-    `$CertificatePassword = ConvertTo-SecureString ``
-        -String '$Script:DSCCertificatePassword' ``
-        -Force ``
-        -AsPlainText
-    & certoc.exe @('-ImportPFX','-p','$Script:DSCCertificatePassword','root',`"`$(`$ENV:SystemRoot)\$Script:DSCEncryptionPfxCert`")
-    Add-Content ``
-        -Path `"`$(`$ENV:SystemRoot)\Setup\Scripts\SetupComplete.log`" ``
-        -Value 'Importing Encryption Certificate from PFX ...' ``
-        -Encoding Ascii    
-}
-"@
+
+        # PowerShell currently can't find any basic Cmdlets when executed by
+        # SetupComplete.cmd during the initialization phase, so create an empty
+        # a SetupComplete.ps1
+        [String] $SetupCompletePs = ''
     }
     else
     {
+        if ($VM.CertificateSource -eq [LabCertificateSource]::Host)
+        {
+            # Generate the PFX certificate on the host
+            $null = CreateHostSelfSignedCertificate `
+                -Lab $Lab `
+                -VM $VM
+        }
         [String] $GetCertPs = GetCertificatePsFileContent `
             -Lab $Lab `
             -VM $VM
@@ -150,7 +143,8 @@ Add-Content ``
     -Value 'Windows Remoting Enabled ...' ``
     -Encoding Ascii
 "@
-    }
+    } # if
+
     if ($VM.SetupComplete)
     {
         [String] $SetupComplete = $VM.SetupComplete
@@ -181,12 +175,12 @@ Add-Content ``
     } # If
 
     # Write out the CMD Setup Complete File
-    if ($VM.OType -eq [LabOSType]::Nano)
+    if ($VM.OSType -eq [LabOSType]::Nano)
     {
         $SetupCompleteCmd = @"
 @echo SetupComplete.cmd Script Started... >> %SYSTEMROOT%\Setup\Scripts\SetupComplete.log
 $SetupCompleteCmd
-powerShell.exe -Command `"%SYSTEMROOT%\Setup\Scripts\SetupComplete.ps1`"
+certoc.exe -ImportPFX -p $Script:DSCCertificatePassword root $ENV:SystemRoot\$Script:DSCEncryptionPfxCert >> %SYSTEMROOT%\Setup\Scripts\SetupComplete.log
 @echo SetupComplete.cmd Script Finished... >> %SYSTEMROOT%\Setup\Scripts\SetupComplete.log
 @echo Initial Setup Completed - this file indicates that setup has completed. >> %SYSTEMROOT%\Setup\Scripts\InitialSetupCompleted.txt
 "@
@@ -370,10 +364,10 @@ function GetUnattendFileContent {
     Contains the Lab object that was produced by the Get-Lab cmdlet.
 .PARAMETER VM
     A LabVM object pulled from the Lab Configuration file using Get-LabVM
+.PARAMETER CertificateSource
+    A CertificateSource to use instead of the one contained in the VM.
 .OUTPUTS
     A string containing the Create Self-Signed Certificate PowerShell code.
-.TODO
-    Add support for using an existing certificate if one exists.
 #>
 function GetCertificatePsFileContent {
     [CmdLetBinding()]
@@ -384,9 +378,18 @@ function GetCertificatePsFileContent {
         $Lab,
 
         [Parameter(Mandatory)]
-        [LabVM] $VM
+        [LabVM] $VM,
+        
+        [LabCertificateSource] $CertificateSource
     )
-    [String] $CreateCertificatePs = @"
+    # If a CertificateSource is not provided get it from the VM.
+    if (-not $CertificateSource)
+    {
+        $CertificateSource = $VM.CertificateSource
+    } # if
+    if ($CertificateSource -eq [LabCertificateSource]::Guest)
+    {
+        [String] $CreateCertificatePs = @"
 `$CertificateFriendlyName = '$($Script:DSCCertificateFriendlyName)'
 `$Cert = Get-ChildItem -Path cert:\LocalMachine\My ``
     | Where-Object { `$_.FriendlyName -eq `$CertificateFriendlyName } ``
@@ -419,7 +422,36 @@ Export-Certificate ``
     -Type CERT ``
     -Cert `$Cert ``
     -FilePath `"`$(`$ENV:SystemRoot)\$Script:DSCEncryptionCert`"
+Add-Content ``
+    -Path `"`$(`$ENV:SystemRoot)\Setup\Scripts\SetupComplete.log`" ``
+    -Value 'Encryption Certificate Imported from CER ...' ``
+    -Encoding Ascii
 "@
+    }
+    else
+    {
+        [String] $CreateCertificatePs = @"
+if (Test-Path -Path `"`$(`$ENV:SystemRoot)\$Script:DSCEncryptionPfxCert`")
+{
+    `$CertificatePassword = ConvertTo-SecureString ``
+        -String '$Script:DSCCertificatePassword' ``
+        -Force ``
+        -AsPlainText
+    Add-Content ``
+        -Path `"`$(`$ENV:SystemRoot)\Setup\Scripts\SetupComplete.log`" ``
+        -Value 'Importing Encryption Certificate from PFX ...' ``
+        -Encoding Ascii
+    Import-PfxCertificate ``
+        -Password '$Script:DSCCertificatePassword' ``
+        -FilePath `"`$(`$ENV:SystemRoot)\$Script:DSCEncryptionPfxCert`" ``
+        -CertStoreLocation cert:\localMachine\root
+    Add-Content ``
+        -Path `"`$(`$ENV:SystemRoot)\Setup\Scripts\SetupComplete.log`" ``
+        -Value 'Encryption Certificate from PFX Imported...' ``
+        -Encoding Ascii
+}
+"@
+    } # if
     Return $CreateCertificatePs
 } # GetCertificatePsFileContent
 
@@ -607,8 +639,9 @@ function RecreateSelfSignedCertificate
     # Ensure the certificate generation script has been created
     [String] $GetCertPs = GetCertificatePsFileContent `
         -Lab $Lab `
-        -VM $VM
-        
+        -VM $VM `
+        -CertificateSource Guest
+
     $null = Set-Content `
         -Path "$VMLabBuilderFiles\GetDSCEncryptionCert.ps1" `
         -Value $GetCertPs `
