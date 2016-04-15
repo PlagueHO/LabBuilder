@@ -1191,6 +1191,10 @@ function Initialize-LabSwitch {
         [LabSwitch[]] $Switches
     )
 
+	Write-Verbose "Starting initialization for Lab Switches"
+
+
+
     # if switches was not passed, pull it.
     if (-not $PSBoundParameters.ContainsKey('switches'))
     {
@@ -1201,8 +1205,12 @@ function Initialize-LabSwitch {
     # Create Hyper-V Switches
     foreach ($VMSwitch in $Switches)
     {
+		Write-Verbose "Starting switch $VMSwitch"
+		Write-Verbose "Name is: $Name"
+		Write-Verbose "VMSwitch.Name is $($VMSwitch.Name)"
         if ($Name -and ($VMSwitch.name -notin $Name))
         {
+			Write-Verbose "Continue"
             # A names list was passed but this swtich wasn't included
             continue
         } # if
@@ -1263,17 +1271,22 @@ function Initialize-LabSwitch {
                         }
                         ThrowException @ExceptionParameters
                     } # if
-                    # Check this adapter is not already bound to a switch
-                    $MacAddress = `
-                        (Get-VMNetworkAdapter `
+                    
+					# Check this adapter is not already bound to a switch
+                    $VMSwitchNames = (Get-VMSwitch | Where-Object{$_.SwitchType -eq 'External'}).Name
+					ForEach ($VmSwitchName in $VmSwitchNames)
+					{
+						$MacAddress += `
+							(Get-VMNetworkAdapter `
                             -ManagementOS `
-                            -Name (Get-VMSwitch | ? { 
-                            $_.SwitchType -eq 'External'
-                            }).Name).MacAddress
+                            -Name $VmSwitchName -ErrorAction SilentlyContinue).MacAddress
+						
+					}
 
                     $UsedAdapters = @((Get-NetAdapter -Physical | ? {
                         ($_.MacAddress -replace '-','') -in $MacAddress
                         }).Name)
+
                     if ($BindingAdapter.Name -in $UsedAdapters)
                     {
                         $ExceptionParameters = @{
@@ -1285,6 +1298,7 @@ function Initialize-LabSwitch {
                         ThrowException @ExceptionParameters
                     } # if
                     # Create the swtich
+					Write-Verbose "Create the switch"
                     $null = New-VMSwitch `
                         -Name $SwitchName `
                         -NetAdapterName ($BindingAdapter.Name)
@@ -5163,6 +5177,9 @@ Function Install-Lab {
         # Initialize the Switches
         $Switches = Get-LabSwitch `
             -Lab $Lab
+
+		Write-Verbose "Switches are: $Switches"
+
         Initialize-LabSwitch `
             -Lab $Lab `
             -Switches $Switches `
