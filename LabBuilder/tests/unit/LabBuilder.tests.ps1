@@ -85,6 +85,8 @@ InModuleScope LabBuilder {
             -ArgumentList $exception, $errorId, $errorCategory, $null
         return $errorRecord
     }
+    # Run tests assuming Build 10586 is installed
+    $Script:CurrentBuild = 10586
 
 
     # Perform Configuration XML Schema validation
@@ -2049,8 +2051,6 @@ InModuleScope LabBuilder {
         Mock Initialize-LabVMDSC
         Mock Install-LabVMDSC
         #endregion
-        # Run tests assuming Build 10586 is installed
-        $Script:CurrentBuild = 10586
 
         Context 'Valid configuration is passed' {
             $Lab = Get-Lab -ConfigPath $Global:TestConfigOKPath

@@ -43,9 +43,10 @@ InModuleScope LabBuilder {
             -ArgumentList $exception, $errorId, $errorCategory, $null
         return $errorRecord
     }
+    # Run tests assuming Build 10586 is installed
+    $Script:CurrentBuild = 10586
 
 
-    
     Describe 'GetModulesInDSCConfig' {
         Context 'Called with Test DSC Resource File' {
             It 'Returns DSCModules Object that matches Expected Object' {
