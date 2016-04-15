@@ -1,5 +1,7 @@
 ### Unreleased
 * Added VM InstanceCount attribute for creating multiple copies a VM in a Lab.
+* Added $Script:CurrentBuild variable to allow easier access to OS build version.
+* Fix to prevent ExposeVirtualizationExtensions from being applied on Lab Hosts that don't support it.
 
 ### 0.7.4.0
 * lib\vm.ps1: WaitWMStarted - name of integrationservice "heartbeat" detected by id to be culture neutral

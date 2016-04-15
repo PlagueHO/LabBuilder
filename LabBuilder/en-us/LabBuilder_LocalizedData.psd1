@@ -83,6 +83,7 @@ ConvertFrom-StringData -StringData @'
     VMDVDDriveISOResourceNotFOundError=The ISO Resource '{1}' to be mounted into a Virtual DVD Drive specified in VM '{0}' does not exist.
     NanoServerPackagesFolderMissingError=The NanoServerPackages folder '{0}' does not exist.
     VMDoesNotExistError=The VM '{0}' does not exist.
+    VMVirtualizationExtError=The VM '{0}' requires Virtualization Extensions to be exposed, but this is not supported by your version of Windows. Either set the ExposeVirtualizationExtensions attribute to 'N' for the VM or update to a Windows Build 10565 or above.
     NanoPackageNotFoundError=The Nano Server Package '{0}' could not be found.
     PackageNotFoundError=The Package MSU '{0}' is not listed in the Lab Resource MSU list.
     PackageMSUNotFoundError=The file '{1}' for Package MSU '{0}' does not exist.

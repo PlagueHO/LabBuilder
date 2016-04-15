@@ -425,7 +425,7 @@ class LabVM:System.ICloneable {
     [Byte] $ProcessorCount
     [Uint64] $MemoryStartupBytes = 1GB
     [Boolean] $DynamicMemoryEnabled = $True
-    [Boolean] $ExposeVirtualizationExtensions = $True
+    [Boolean] $ExposeVirtualizationExtensions = $False
     [String] $ParentVHD
     [Boolean] $UseDifferencingDisk = $True
     [String] $AdministratorPassword
@@ -497,11 +497,17 @@ class LabDSCModule:System.ICloneable {
 [String] $Script:WorkingFolder = $ENV:Temp
 
 # Supporting files
-[String] $Script:SupportConvertWindowsImagePath = Join-Path -Path $PSScriptRoot -ChildPath 'Support\Convert-WindowsImage.ps1'
-[String] $Script:SupportGertGenPath = Join-Path -Path $PSScriptRoot -ChildPath 'Support\New-SelfSignedCertificateEx.ps1'
+[String] $Script:SupportConvertWindowsImagePath = Join-Path `
+    -Path $PSScriptRoot `
+    -ChildPath 'Support\Convert-WindowsImage.ps1'
+[String] $Script:SupportGertGenPath = Join-Path `
+    -Path $PSScriptRoot `
+    -ChildPath 'Support\New-SelfSignedCertificateEx.ps1'
 
 # DSC Library
-[String] $Script:DSCLibraryPath = Join-Path -Path $PSScriptRoot -ChildPath 'DSCLibrary'
+[String] $Script:DSCLibraryPath = Join-Path `
+    -Path $PSScriptRoot `
+    -ChildPath 'DSCLibrary'
 
 # Virtual Networking Parameters
 [Int] $Script:DefaultManagementVLan = 99
@@ -520,9 +526,17 @@ class LabDSCModule:System.ICloneable {
 [Int] $Script:RetryHeartbeatSeconds = 1
 [Int] $Script:StartupTimeout = 90
 
+# System Info
+[Int] $Script:CurrentBuild = (Get-ItemProperty `
+    -Path 'hklm:\SOFTWARE\Microsoft\Windows NT\CurrentVersion').CurrentBuild
+
 # XML Stuff
-[String] $Script:ConfigurationXMLSchema = Join-Path -Path $PSScriptRoot -ChildPath 'schema\labbuilderconfig-schema.xsd'
-[String] $Script:ConfigurationXMLTemplate = Join-Path -Path $PSScriptRoot -ChildPath 'template\labbuilderconfig-template.xml'
+[String] $Script:ConfigurationXMLSchema = Join-Path `
+    -Path $PSScriptRoot `
+    -ChildPath 'schema\labbuilderconfig-schema.xsd'
+[String] $Script:ConfigurationXMLTemplate = Join-Path `
+    -Path $PSScriptRoot `
+    -ChildPath 'template\labbuilderconfig-template.xml'
 
 #region LabResourceFunctions
 <#
@@ -3763,24 +3777,36 @@ function Get-LabVM {
             
             # Get the Memory Startup Bytes (from the template or VM)
             [Int] $ProcessorCount = 1
-            if ($VM.processorcount) 
+            if ($VM.processorcount)
             {
                 $ProcessorCount = (Invoke-Expression $VM.processorcount)
             }
-            elseif ($VMTemplate.processorcount) 
+            elseif ($VMTemplate.processorcount)
             {
                 $ProcessorCount = $VMTemplate.processorcount
             } # if
 
             # Get the Expose Virtualization Extensions flag
-            [String] $ExposeVirtualizationExtensions = $null
             if ($VM.ExposeVirtualizationExtensions)
             {
-                $ExposeVirtualizationExtensions = $VM.ExposeVirtualizationExtensions
+                $ExposeVirtualizationExtensions = ($VM.ExposeVirtualizationExtensions -eq 'Y')
             }
             elseif ($VMTemplate.ExposeVirtualizationExtensions)
             {
-                $ExposeVirtualizationExtensions=$VMTemplate.ExposeVirtualizationExtensions
+                $ExposeVirtualizationExtensions = $VMTemplate.ExposeVirtualizationExtensions
+            } # if
+
+            # If VM requires ExposeVirtualizationExtensions but
+            # it is not supported on Host then throw an exception.
+            if ($ExposeVirtualizationExtensions -and ($Script:CurrentBuild -lt 10565))
+            {
+                $ExceptionParameters = @{
+                    errorId = 'VMVirtualizationExtError'
+                    errorCategory = 'InvalidArgument'
+                    errorMessage = $($LocalizedData.VMVirtualizationExtError `
+                        -f $VMName)
+                }
+                ThrowException @ExceptionParameters
             } # if
 
             [Boolean] $UseDifferencingDisk = $True
@@ -4092,13 +4118,34 @@ function Initialize-LabVM {
                 -DynamicMemoryEnabled:$($VM.DynamicMemoryEnabled)
         } # if
 
-        # if the ExposeVirtualizationExtensions is configured then try and set this on 
-        # Virtual Processor. Only supported in certain builds on Windows 10/Server 2016 TP4.
-        if ($VM.ExposeVirtualizationExtensions -ne (Get-VMProcessor -VMName $VM.Name).ExposeVirtualizationExtensions)
+        # Is ExposeVirtualizationExtensions supported?
+        if ($Script:CurrentBuild -lt 10565)
         {
-            Set-VMProcessor `
-                -VMName $VM.Name `
-                -ExposeVirtualizationExtensions:$VM.ExposeVirtualizationExtensions
+            # No, it is not supported - is it required by VM?
+            if ($VM.ExposeVirtualizationExtensions)
+            {
+                # ExposeVirtualizationExtensions is required for this VM
+                $ExceptionParameters = @{
+                    errorId = 'VMVirtualizationExtError'
+                    errorCategory = 'InvalidArgument'
+                    errorMessage = $($LocalizedData.VMVirtualizationExtError `
+                        -f $VM.Name)
+                }
+                ThrowException @ExceptionParameters
+            } # if
+        }
+        else
+        {
+            # Yes, it is - is the setting different?
+            if ($VM.ExposeVirtualizationExtensions `
+                -ne (Get-VMProcessor -VMName $VM.Name).ExposeVirtualizationExtensions)
+            {
+                # Try and update it
+                Set-VMProcessor `
+                    -VMName $VM.Name `
+                    -ExposeVirtualizationExtensions:$VM.ExposeVirtualizationExtensions `
+                    -ErrorAction Stop
+            } # if
         } # if
 
         # Enable/Disable the Integration Services
