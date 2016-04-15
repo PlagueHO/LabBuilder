@@ -3245,11 +3245,14 @@ function Get-LabVM {
                 Remove-Variable -Name IPv4 -ErrorAction SilentlyContinue
                 if ($VMAdapter.IPv4) 
                 {
-                    $IPv4 = [LabVMAdapterIPv4]::New(`
-                        (IncreaseIpAddress `
-                            -IpAddress $VMAdapter.IPv4.Address`
-                            -Step $IncNetIds)`
-                        ,$VMAdapter.IPv4.SubnetMask)
+                    if ($VMAdapter.IPv4.Address)
+                    {
+                        $IPv4 = [LabVMAdapterIPv4]::New(`
+                            (IncreaseIpAddress `
+                                -IpAddress $VMAdapter.IPv4.Address`
+                                -Step $IncNetIds)`
+                            ,$VMAdapter.IPv4.SubnetMask)
+                    } # if
                     $IPv4.defaultgateway = $VMAdapter.IPv4.DefaultGateway
                     $IPv4.dnsserver = $VMAdapter.IPv4.DNSServer
                 } # if
@@ -3258,20 +3261,26 @@ function Get-LabVM {
                 Remove-Variable -Name IPv6 -ErrorAction SilentlyContinue
                 if ($VMAdapter.IPv6)
                 {
-                    $IPv6 = [LabVMAdapterIPv6]::New(`
-                        (IncreaseIpAddress `
-                            -IpAddress $VMAdapter.IPv6.Address`
-                            -Step $IncNetIds)`
-                        ,$VMAdapter.IPv6.SubnetMask)
+                    if ($VMAdapter.IPv6.Address)
+                    {
+                        $IPv6 = [LabVMAdapterIPv6]::New(`
+                            (IncreaseIpAddress `
+                                -IpAddress $VMAdapter.IPv6.Address`
+                                -Step $IncNetIds)`
+                            ,$VMAdapter.IPv6.SubnetMask)
+                    } # if
                     $IPv6.defaultgateway = $VMAdapter.IPv6.DefaultGateway
                     $IPv6.dnsserver = $VMAdapter.IPv6.DNSServer
                 } # if
 
                 $NewVMAdapter = [LabVMAdapter]::New($AdapterName)
                 $NewVMAdapter.SwitchName = $AdapterSwitchName
-                $NewVMAdapter.MACAddress = IncreaseMacAddress `
-                    -MacAddress $VMAdapter.macaddress `
-                    -Step $IncNetIds
+                if($VMAdapter.macaddress)
+                {
+                    $NewVMAdapter.MACAddress = IncreaseMacAddress `
+                        -MacAddress $VMAdapter.macaddress `
+                        -Step $IncNetIds
+                } # if
                 $NewVMAdapter.MACAddressSpoofing = $MACAddressSpoofing
                 $NewVMAdapter.VLan = $VLan
                 $NewVMAdapter.IPv4 = $IPv4
