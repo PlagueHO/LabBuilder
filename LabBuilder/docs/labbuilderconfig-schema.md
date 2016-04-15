@@ -944,6 +944,24 @@ The attribute is ignored for Nano Servers because certificate generation can not
                       
 ``` certificatesource="Host" ```
 
+### 7.1.17a - INSTANCECOUNT Optional Attribute
+> instancecount="xs:unsignedByte"
+
+
+This optional attribute causes more than one copy of the Virtual Machine to be generated.
+If set to a value more than one, it will cause this Virtual Machine to be replicated this number of times, with the machine number appended onto the end of the Virtual Machine and folder.
+Any IP addresses and MAC addresses statically assigned to the network adapters in this machine will also be adjusted by increasing by one each time.
+
+**Care should be taken to ensure that IP addresses and MAC addresses do not overlap or stretch outside of subnet boundaries.**
+**It is strongly recommended that the adapter MAC addresses on Lab VMs that have an instance count of more than one is not set, but allowed to be managed by the Hyper-V Host.**
+**DHCP address assignment is also recommneded on all adapters connected to Lab VMs with an instance count of more than one.**
+**If DHCP address assignement is not used then extreme care must be taken to ensure that all adapters are assigned to different subnets and will not overlap any other Lab Virtual Machine IP address assignments.**
+
+ - Default Value: 1
+ - Valid Values: 1 - 255
+                      
+``` instancecount="5" ```
+
 ### 7.1.1e - DATAVHDS Optional Element
 
 This optional element contains a collection of zero or more DataVHD nodes, each representing a Data Virtual Hard Drive that will be created and attached to this Virtual Machine when this Lab is installed.

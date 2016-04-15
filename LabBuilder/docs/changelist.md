@@ -1,3 +1,6 @@
+### Unreleased
+* Added VM InstanceCount attribute for creating multiple copies a VM in a Lab.
+
 ### 0.7.4.0
 * lib\vm.ps1: WaitWMStarted - name of integrationservice "heartbeat" detected by id to be culture neutral
 * DSCLibrary\MEMBER_ADFS.DSC.ps1: Enable ADFS Firewall Rules.

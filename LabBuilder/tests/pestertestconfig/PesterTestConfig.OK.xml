@@ -174,7 +174,8 @@
         integrationservices="Guest Service Interface,Heartbeat,Key-Value Pair Exchange,Shutdown,Time Synchronization,VSS" 
         packages=""
         bootorder="9"
-        certificatesource="Host" >
+        certificatesource="Host"
+        instancecount="1" >
       <datavhds>
         <datavhd vhd="DataDiskCopy.vhdx" sourcevhd="VhdFiles\DataDisk.vhdx" copyfolders="isofiles" />
         <datavhd vhd="DataDiskFixed.vhdx" type="fixed" size="10GB" supportpr="N" partitionstyle="MBR" filesystem="NTFS" />
@@ -189,7 +190,7 @@
       </dvddrives>
       <adapters>
         <adapter name="External" switchname="External" macaddress="00155D010801" />
-        <adapter name="Private Vlan" switchname="Private Vlan" macaddress="00155D010801" macaddressspoofing="Y" >
+        <adapter name="Private Vlan" switchname="Private Vlan" macaddress="00155D010901" macaddressspoofing="Y" >
           <ipv4 address="192.168.16.1"
                 defaultgateway=""
                 subnetmask="24"
@@ -199,35 +200,35 @@
                 subnetmask="64"
                 dnsserver="fd53:ccc5:895a:0000::1"/>
         </adapter>
-        <adapter name="Internal Vlan" switchname="Internal Vlan" macaddress="00155D010802" macaddressspoofing="On">
-          <ipv4 address="192.168.16.2"
+        <adapter name="Internal Vlan" switchname="Internal Vlan" macaddress="00155D011001" macaddressspoofing="On">
+          <ipv4 address="192.168.17.1"
                 defaultgateway=""
                 subnetmask="24"
-                dnsserver="192.168.16.2"/>
-          <ipv6 address="fd53:ccc5:895a:0000::2"
+                dnsserver="192.168.17.1"/>
+          <ipv6 address="fd53:ccc5:895a:0001::1"
                 defaultgateway=""
                 subnetmask="64"
-                dnsserver="fd53:ccc5:895a:0000::2"/>
+                dnsserver="fd53:ccc5:895a:0001::1"/>
         </adapter>
-        <adapter name="Private" switchname="Private" macaddress="00155D010803" vlan="3" >
-          <ipv4 address="192.168.16.3"
+        <adapter name="Private" switchname="Private" macaddress="00155D011101" vlan="3" >
+          <ipv4 address="192.168.18.1"
                 defaultgateway=""
                 subnetmask="24"
-                dnsserver="192.168.16.3"/>
-          <ipv6 address="fd53:ccc5:895a:0000::3"
+                dnsserver="192.168.18.1"/>
+          <ipv6 address="fd53:ccc5:895a:0002::1"
                 defaultgateway=""
                 subnetmask="64"
-                dnsserver="fd53:ccc5:895a:0000::3"/>
+                dnsserver="fd53:ccc5:895a:0002::1"/>
         </adapter>
-        <adapter name="Internal" switchname="Internal" macaddress="00155D010804" vlan="4" >
-          <ipv4 address="192.168.16.4"
+        <adapter name="Internal" switchname="Internal" macaddress="00155D011201" vlan="4" >
+          <ipv4 address="192.168.19.1"
                 defaultgateway=""
                 subnetmask="24"
-                dnsserver="192.168.16.4"/>
-          <ipv6 address="fd53:ccc5:895a:0000::4"
+                dnsserver="192.168.19.1"/>
+          <ipv6 address="fd53:ccc5:895a:0003::1"
                 defaultgateway=""
                 subnetmask="64"
-                dnsserver="fd53:ccc5:895a:0000::4"/>
+                dnsserver="fd53:ccc5:895a:0003::1"/>
         </adapter>
       </adapters>
       <dsc configname="STANDALONE_DEFAULT"
