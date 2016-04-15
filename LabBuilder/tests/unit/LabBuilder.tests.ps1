@@ -1968,10 +1968,13 @@ InModuleScope LabBuilder {
             [Array]$VMs = Get-LabVM -Lab $Lab
             # Remove the Source VHD and Parent VHD values for any data disks because they
             # will usually be relative to the test folder and won't exist
-            foreach ($DataVhd in $VMs[0].DataVhds)
+            foreach ($VM in $VMs)
             {
-                $DataVhd.ParentVHD = 'Intentionally Removed'
-                $DataVhd.SourceVHD = 'Intentionally Removed'
+                foreach ($DataVhd in $VM.DataVhds)
+                {
+                    $DataVhd.ParentVHD = 'Intentionally Removed'
+                    $DataVhd.SourceVHD = 'Intentionally Removed'
+                }
             }
             # Remove the DSC.ConfigFile path as this will be relative as well
             $VMs[0].DSC.ConfigFile = ''
@@ -1990,10 +1993,13 @@ InModuleScope LabBuilder {
             [Array]$VMs = Get-LabVM -Lab $Lab -VMTemplates $Templates -Switches $Switches
             # Remove the Source VHD and Parent VHD values for any data disks because they
             # will usually be relative to the test folder and won't exist
-            foreach ($DataVhd in $VMs[0].DataVhds)
+            foreach ($VM in $VMs)
             {
-                $DataVhd.ParentVHD = 'Intentionally Removed'
-                $DataVhd.SourceVHD = 'Intentionally Removed'
+                foreach ($DataVhd in $VM.DataVhds)
+                {
+                    $DataVhd.ParentVHD = 'Intentionally Removed'
+                    $DataVhd.SourceVHD = 'Intentionally Removed'
+                }
             }
             # Remove the DSC.ConfigFile path as this will be relative as well
             $VMs[0].DSC.ConfigFile = ''
