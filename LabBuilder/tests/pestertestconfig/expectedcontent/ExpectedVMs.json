@@ -425,7 +425,7 @@
         "DSC":  {
                     "Logging":  true,
                     "ConfigName":  "STANDALONE_DEFAULT",
-                    "ConfigFile":  "C:\\Users\\Daniel\\Source\\GitHub\\LabBuilder\\LabBuilder\\Tests\\PesterTestConfig\\DSCLibrary\\PesterTest.DSC.ps1",
+                    "ConfigFile":  "",
                     "Parameters":  "\r\n          Dummy = \"Dummy\"\r\n        "
                 },
         "VMRootPath":  "C:\\Pester Lab\\TestLab PESTER01 2",

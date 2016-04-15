@@ -1975,9 +1975,9 @@ InModuleScope LabBuilder {
                     $DataVhd.ParentVHD = 'Intentionally Removed'
                     $DataVhd.SourceVHD = 'Intentionally Removed'
                 }
+                # Remove the DSC.ConfigFile path as this will be relative as well
+                $VM.DSC.ConfigFile = ''
             }
-            # Remove the DSC.ConfigFile path as this will be relative as well
-            $VMs[0].DSC.ConfigFile = ''
             It 'Returns Template Object that matches Expected Object' {
                 Set-Content -Path "$Global:ArtifactPath\ExpectedVMs.json" -Value ($VMs | ConvertTo-Json -Depth 6)
                 $ExpectedVMs = Get-Content -Path "$Global:ExpectedContentPath\ExpectedVMs.json"
@@ -2000,9 +2000,9 @@ InModuleScope LabBuilder {
                     $DataVhd.ParentVHD = 'Intentionally Removed'
                     $DataVhd.SourceVHD = 'Intentionally Removed'
                 }
+                # Remove the DSC.ConfigFile path as this will be relative as well
+                $VM.DSC.ConfigFile = ''
             }
-            # Remove the DSC.ConfigFile path as this will be relative as well
-            $VMs[0].DSC.ConfigFile = ''
             It 'Returns Template Object that matches Expected Object' {
                 Set-Content -Path "$Global:ArtifactPath\ExpectedVMs.json" -Value ($VMs | ConvertTo-Json -Depth 6)
                 $ExpectedVMs = Get-Content -Path "$Global:ExpectedContentPath\ExpectedVMs.json"
