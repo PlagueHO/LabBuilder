@@ -538,6 +538,119 @@ InModuleScope LabBuilder {
 
     Describe 'ValidateConfigurationXMLSchema' -Tag 'Incomplete' {
     }
+
+
+
+    Describe 'IncreaseMacAddress' {
+        Context 'MAC address 00155D0106ED is passed' {
+            It 'Returns MAC address 00155D0106EE' {
+                IncreaseMacAddress `
+                    -MacAddress '00155D0106ED' | Should Be '00155D0106EE'
+            }
+        }
+        Context 'MAC address 00155D0106ED and step 10 is passed' {
+            It 'Returns IP address 00155D0106F7' {
+                IncreaseMacAddress `
+                    -MacAddress '00155D0106ED' `
+                    -Step 10 | Should Be '00155D0106F7'
+            }
+        }
+        Context 'MAC address 00155D0106ED and step 0 is passed' {
+            It 'Returns IP address 00155D0106ED' {
+                IncreaseMacAddress `
+                    -MacAddress '00155D0106ED' `
+                    -Step 0 | Should Be '00155D0106ED'
+            }
+        }
+    }
+
+
+
+    Describe 'IncreaseIpAddress' {
+        Context 'Invalid IP Address is passed' {
+            It 'Throws a IPAddressError Exception' {
+                $ExceptionParameters = @{
+                    errorId = 'IPAddressError'
+                    errorCategory = 'InvalidArgument'
+                    errorMessage = $($LocalizedData.IPAddressError `
+                        -f '192.168.1.999' )
+                }
+                $Exception = GetException @ExceptionParameters
+
+                {
+                    IncreaseIpAddress `
+                        -IpAddress '192.168.1.999'
+                } | Should Throw $Exception
+            }
+        }
+        Context 'IP address 192.168.1.1 is passed' {
+            It 'Returns IP address 192.168.1.2' {
+                IncreaseIpAddress `
+                    -IpAddress '192.168.1.1' | Should Be '192.168.1.2'
+            }
+        }
+        Context 'IP address 192.168.1.255 is passed' {
+            It 'Returns IP address 192.168.2.0' {
+                IncreaseIpAddress `
+                    -IpAddress '192.168.1.255' | Should Be '192.168.2.0'
+            }
+        }
+        Context 'IP address 192.168.1.255 and Step 10 is passed' {
+            It 'Returns IP address 192.168.2.9' {
+                IncreaseIpAddress `
+                    -IpAddress '192.168.1.255' `
+                    -Step 10 | Should Be '192.168.2.9'
+            }
+        }
+        Context 'IP address 192.168.1.255 and Step 0 is passed' {
+            It 'Returns IP address 192.168.1.255' {
+                IncreaseIpAddress `
+                    -IpAddress '192.168.1.255' `
+                    -Step 0 | Should Be '192.168.1.255'
+            }
+        }
+        Context 'IP address 10.255.255.255 is passed' {
+            It 'Returns IP address 11.0.0.0' {
+                IncreaseIpAddress `
+                    -IpAddress '10.255.255.255' | Should Be '11.0.0.0'
+            }
+        }
+        Context 'IP address fe80::15b4:b934:5d23:1a31 is passed' {
+            It 'Returns IP address fe80::15b4:b934:5d23:1a32' {
+                IncreaseIpAddress `
+                    -IpAddress 'fe80::15b4:b934:5d23:1a31' | Should Be 'fe80::15b4:b934:5d23:1a32'
+            }
+        }
+    }
+
+
+
+    Describe 'ValidateIpAddress' {
+        Context 'IP address 192.168.1.1 is passed' {
+            It 'Returns True' {
+                ValidateIpAddress `
+                    -IpAddress '192.168.1.1' | Should Be $True
+            }
+        }
+        Context 'IP address 192.168.1.1000 is passed' {
+            It 'Returns False' {
+                ValidateIpAddress `
+                    -IpAddress '192.168.1.1000' | Should Be $False
+            }
+        }
+        Context 'IP address fe80::15b4:b934:5d23:1a31 is passed' {
+            It 'Returns True' {
+                ValidateIpAddress `
+                    -IpAddress 'fe80::15b4:b934:5d23:1a31' | Should Be $True
+            }
+        }
+        Context 'IP address fe80::15b4:b934:5d23:1a3x is passed' {
+            It 'Returns False' {
+                ValidateIpAddress `
+                    -IpAddress 'fe80::15b4:b934:5d23:1a3x' | Should Be $False
+            }
+        }
+    }
 }
 
 Set-Location -Path $OldLocation

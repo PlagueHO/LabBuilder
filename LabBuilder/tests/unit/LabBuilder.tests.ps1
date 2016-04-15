@@ -1405,6 +1405,7 @@ InModuleScope LabBuilder {
 #endregion
 
 
+
 #region LabVMFunctions
     Describe 'Get-LabVM' {
 
@@ -1962,6 +1963,8 @@ InModuleScope LabBuilder {
         }
         Context 'Valid configuration is passed but switches and VMTemplates not passed' {
             $Lab = Get-Lab -ConfigPath $Global:TestConfigOKPath
+            # Set the Instance Count to 2 to check
+            $Lab.labbuilderconfig.vms.vm.instancecount = '2'
             [Array]$VMs = Get-LabVM -Lab $Lab
             # Remove the Source VHD and Parent VHD values for any data disks because they
             # will usually be relative to the test folder and won't exist
@@ -1982,6 +1985,8 @@ InModuleScope LabBuilder {
             $Lab = Get-Lab -ConfigPath $Global:TestConfigOKPath
             [Array]$Switches = Get-LabSwitch -Lab $Lab
             [Array]$Templates = Get-LabVMTemplate -Lab $Lab
+            # Set the Instance Count to 2 to check
+            $Lab.labbuilderconfig.vms.vm.instancecount = '2'
             [Array]$VMs = Get-LabVM -Lab $Lab -VMTemplates $Templates -Switches $Switches
             # Remove the Source VHD and Parent VHD values for any data disks because they
             # will usually be relative to the test folder and won't exist
@@ -2000,7 +2005,8 @@ InModuleScope LabBuilder {
         }
     }
 
-  
+
+
     Describe 'Initialize-LabVM'  -Tags 'Incomplete' {
         #region Mocks
         Mock New-VHD
@@ -2049,6 +2055,7 @@ InModuleScope LabBuilder {
             Remove-Item -Path $Lab.labbuilderconfig.settings.vhdparentpath -Recurse -Force -ErrorAction SilentlyContinue
         }
     }
+
 
 
     Describe 'Remove-LabVM' {
@@ -2115,6 +2122,7 @@ InModuleScope LabBuilder {
     }
 
 
+
     Describe 'Install-LabVM' -Tags 'Incomplete' {
         #region Mocks
         Mock Get-VM -ParameterFilter { $Name -eq 'PESTER01' } -MockWith { [PSObject]@{ Name='PESTER01'; State='Off' } }
@@ -2152,8 +2160,9 @@ InModuleScope LabBuilder {
             Remove-Item -Path $Lab.labbuilderconfig.settings.vhdparentpath -Recurse -Force -ErrorAction SilentlyContinue
         }
     }
-    
-    
+
+
+
     Describe 'Connect-LabVM' -Tags 'Incomplete'  {
     }
 
@@ -2213,9 +2222,9 @@ InModuleScope LabBuilder {
             }
         }
     }
-    
-    
-    
+
+
+
     Describe 'New-Lab' -Tags 'Incomplete'  {
     }
 
@@ -2258,12 +2267,12 @@ InModuleScope LabBuilder {
 
     Describe 'Start-Lab' -Tags 'Incomplete'  {
     }
-    
-    
-    
+
+
+
     Describe 'Stop-Lab' -Tags 'Incomplete'  {
-    }    
-#endregion    
+    }
+#endregion
 }
 
 Set-Location -Path $OldLocation

@@ -3082,14 +3082,7 @@ function Get-LabVM {
 
     foreach ($VM in $VMs)
     {
-        $VMName = $VM.Name
-        if ($Name -and ($VMName -notin $Name))
-        {
-            # A names list was passed but this VM wasn't included
-            continue
-        } # if
-
-        if ($VMName -eq 'VM')
+        if ($VM.Name -eq 'VM')
         {
             $ExceptionParameters = @{
                 errorId = 'VMNameError'
@@ -3099,763 +3092,808 @@ function Get-LabVM {
             ThrowException @ExceptionParameters
         } # if
 
-        # if a LabId is set for the lab, prepend it to the VM name.
-        if ($LabId)
+        # Get the Instance Count attribute
+        $InstanceCount = $VM.InstanceCount
+        if (-not $InstanceCount)
         {
-            $VMName = "$LabId $VMName"
+            $InstanceCount = 1
         }
 
-        if (-not $VM.Template) 
+        foreach ($Instance in 1..$InstanceCount)
         {
-            $ExceptionParameters = @{
-                errorId = 'VMTemplateNameEmptyError'
-                errorCategory = 'InvalidArgument'
-                errorMessage = $($LocalizedData.VMTemplateNameEmptyError `
-                    -f $VMName)
+            # If InstanceCount is 1 then don't append a number to the VM name
+            if ($InstanceCount -eq 1)
+            {
+                $VMName = $VM.Name
+                $ComputerName = $VM.ComputerName
+                $IncNetIds = 0
             }
-            ThrowException @ExceptionParameters
-        } # if
-
-        # Find the template that this VM uses and get the VHD Path
-        [String] $ParentVHDPath = ''
-        [Boolean] $Found = $false
-        foreach ($VMTemplate in $VMTemplates) {
-            if ($VMTemplate.Name -eq $VM.Template) {
-                $ParentVHDPath = $VMTemplate.ParentVHD
-                $Found = $true
-                Break
+            else
+            {
+                $VMName = "$($VM.Name) $Instance"
+                $ComputerName = "$($VM.ComputerName)$Instance"
+                # This value is used to increment IP and MAC addresses
+                $IncNetIds = $Instance - 1
             } # if
-        } # foreach
 
-        if (-not $Found) 
-        {
-            $ExceptionParameters = @{
-                errorId = 'VMTemplateNotFoundError'
-                errorCategory = 'InvalidArgument'
-                errorMessage = $($LocalizedData.VMTemplateNotFoundError `
-                    -f $VMName,$VM.template)
+            if ($Name -and ($VMName -notin $Name))
+            {
+                # A names list was passed but this VM wasn't included
+                continue
+            } # if
+
+            # if a LabId is set for the lab, prepend it to the VM name.
+            if ($LabId)
+            {
+                $VMName = "$LabId $VMName"
             }
-            ThrowException @ExceptionParameters
-        } # if
 
-        # Assemble the Network adapters that this VM will use
-        [LabVMAdapter[]] $VMAdapters = @()
-        [Int] $AdapterCount = 0
-        foreach ($VMAdapter in $VM.Adapters.Adapter) 
-        {
-            $AdapterCount++
-            $AdapterName = $VMAdapter.Name 
-            $AdapterSwitchName = $VMAdapter.SwitchName
-            if ($AdapterName -eq 'adapter') 
+            if (-not $VM.Template) 
             {
                 $ExceptionParameters = @{
-                    errorId = 'VMAdapterNameError'
+                    errorId = 'VMTemplateNameEmptyError'
                     errorCategory = 'InvalidArgument'
-                    errorMessage = $($LocalizedData.VMAdapterNameError `
+                    errorMessage = $($LocalizedData.VMTemplateNameEmptyError `
                         -f $VMName)
                 }
                 ThrowException @ExceptionParameters
-            }
-            
-            if (-not $AdapterSwitchName) 
-            {
-                $ExceptionParameters = @{
-                    errorId = 'VMAdapterSwitchNameError'
-                    errorCategory = 'InvalidArgument'
-                    errorMessage = $($LocalizedData.VMAdapterSwitchNameError `
-                        -f $VMName,$AdapterName)
-                }
-                ThrowException @ExceptionParameters
-            }
+            } # if
 
-            # if a LabId is set for the lab, prepend it to the adapter name
-            # name and switch name.
-            if ($LabId)
-            {
-                $AdapterName = "$LabId $AdapterName"
-                $AdapterSwitchName = "$LabId $AdapterSwitchName"
-            }
-
-            # Check the switch is in the switch list
-            [Boolean] $Found = $False
-            foreach ($Switch in $Switches) 
-            {
-                # Match the switch name to the Adapter Switch Name or
-                # the LabId and Adapter Switch Name
-                if ($Switch.Name -eq $AdapterSwitchName) `
-                {
-                    # The switch is found in the switch list - record the VLAN (if there is one)
-                    $Found = $True
-                    $SwitchVLan = $Switch.Vlan
+            # Find the template that this VM uses and get the VHD Path
+            [String] $ParentVHDPath = ''
+            [Boolean] $Found = $false
+            foreach ($VMTemplate in $VMTemplates) {
+                if ($VMTemplate.Name -eq $VM.Template) {
+                    $ParentVHDPath = $VMTemplate.ParentVHD
+                    $Found = $true
                     Break
                 } # if
-                elseif ($Switch.Name -eq $VMAdapter.SwitchName)
-                {
-                    # The switch is found in the switch list - record the VLAN (if there is one)
-                    $Found = $True
-                    $SwitchVLan = $Switch.Vlan
-                    $AdapterSwitchName = $VMAdapter.SwitchName
-                    Break
-                }
             } # foreach
+
             if (-not $Found) 
             {
                 $ExceptionParameters = @{
-                    errorId = 'VMAdapterSwitchNotFoundError'
+                    errorId = 'VMTemplateNotFoundError'
                     errorCategory = 'InvalidArgument'
-                    errorMessage = $($LocalizedData.VMAdapterSwitchNotFoundError `
-                        -f $VMName,$AdapterName,$AdapterSwitchName)
+                    errorMessage = $($LocalizedData.VMTemplateNotFoundError `
+                        -f $VMName,$VM.template)
                 }
                 ThrowException @ExceptionParameters
             } # if
 
-            # Figure out the VLan - If defined in the VM use it, otherwise use the one defined in the Switch, otherwise keep blank.
-            [String] $VLan = $VMAdapter.VLan
-            if (-not $VLan) 
+            # Assemble the Network adapters that this VM will use
+            [LabVMAdapter[]] $VMAdapters = @()
+            [Int] $AdapterCount = 0
+            foreach ($VMAdapter in $VM.Adapters.Adapter) 
             {
-                $VLan = $SwitchVLan
-            } # if
-
-            [Boolean] $MACAddressSpoofing = ($VMAdapter.macaddressspoofing -eq 'On') 
-
-            # Have we got any IPv4 settings?
-            Remove-Variable -Name IPv4 -ErrorAction SilentlyContinue
-            if ($VMAdapter.IPv4) 
-            {
-                $IPv4 = [LabVMAdapterIPv4]::New($VMAdapter.IPv4.Address,$VMAdapter.IPv4.SubnetMask)
-                $IPv4.defaultgateway = $VMAdapter.IPv4.DefaultGateway
-                $IPv4.dnsserver = $VMAdapter.IPv4.DNSServer
-            }
-
-            # Have we got any IPv6 settings?
-            Remove-Variable -Name IPv6 -ErrorAction SilentlyContinue
-            if ($VMAdapter.IPv6)
-            {
-                $IPv6 = [LabVMAdapterIPv6]::New($VMAdapter.IPv6.Address,$VMAdapter.IPv6.SubnetMask)
-                $IPv6.defaultgateway = $VMAdapter.IPv6.DefaultGateway
-                $IPv6.dnsserver = $VMAdapter.IPv6.DNSServer
-            }
-
-            $NewVMAdapter = [LabVMAdapter]::New($AdapterName)
-            $NewVMAdapter.SwitchName = $AdapterSwitchName
-            $NewVMAdapter.MACAddress = $VMAdapter.macaddress
-            $NewVMAdapter.MACAddressSpoofing = $MACAddressSpoofing
-            $NewVMAdapter.VLan = $VLan
-            $NewVMAdapter.IPv4 = $IPv4
-            $NewVMAdapter.IPv6 = $IPv6
-            $VMAdapters += @( $NewVMAdapter )
-        } # foreach
-
-        # Assemble the Data Disks this VM will use
-        [LabDataVHD[]] $DataVhds = @()
-        [Int] $DataVhdCount = 0
-        foreach ($VMDataVhd in $VM.DataVhds.DataVhd)
-        {
-            $DataVhdCount++
-
-            # Load all the VHD properties and check they are valid
-            [String] $Vhd = $VMDataVhd.Vhd
-            if (-not $VMDataVhd.Vhd)
-            {
-                $ExceptionParameters = @{
-                    errorId = 'VMDataDiskVHDEmptyError'
-                    errorCategory = 'InvalidArgument'
-                    errorMessage = $($LocalizedData.VMDataDiskVHDEmptyError `
-                        -f $VMName)
+                $AdapterCount++
+                $AdapterName = $VMAdapter.Name 
+                $AdapterSwitchName = $VMAdapter.SwitchName
+                if ($AdapterName -eq 'adapter') 
+                {
+                    $ExceptionParameters = @{
+                        errorId = 'VMAdapterNameError'
+                        errorCategory = 'InvalidArgument'
+                        errorMessage = $($LocalizedData.VMAdapterNameError `
+                            -f $VMName)
+                    }
+                    ThrowException @ExceptionParameters
                 }
-                ThrowException @ExceptionParameters
-            } # if
-
-            # Adjust the path to be relative to the Virtual Hard Disks folder of the VM
-            # if it doesn't contain a root (e.g. c:\)
-            if (-not [System.IO.Path]::IsPathRooted($Vhd))
-            {
-                $Vhd = Join-Path `
-                    -Path $LabPath `
-                    -ChildPath "$($VMName)\Virtual Hard Disks\$Vhd"
-            } # if
-
-            # Does the VHD already exist?
-            $Exists = Test-Path `
-                -Path $Vhd
-
-            # Create the new Data VHD object
-            $NewDataVHD = [LabDataVHD]::New($Vhd)
-
-            # Get the Parent VHD and check it exists if passed
-            if ($VMDataVhd.ParentVHD)
-            {
-                $NewDataVHD.ParentVhd = $VMDataVhd.ParentVHD
-                # Adjust the path to be relative to the Virtual Hard Disks folder of the VM
-                # if it doesn't contain a root (e.g. c:\)
-                if (-not [System.IO.Path]::IsPathRooted($NewDataVHD.ParentVhd))
+                
+                if (-not $AdapterSwitchName) 
                 {
-                    $NewDataVHD.ParentVhd = Join-Path `
-                        -Path $Lab.labbuilderconfig.settings.fullconfigpath `
-                        -ChildPath $NewDataVHD.ParentVhd
+                    $ExceptionParameters = @{
+                        errorId = 'VMAdapterSwitchNameError'
+                        errorCategory = 'InvalidArgument'
+                        errorMessage = $($LocalizedData.VMAdapterSwitchNameError `
+                            -f $VMName,$AdapterName)
+                    }
+                    ThrowException @ExceptionParameters
                 }
-                if (-not (Test-Path -Path $NewDataVHD.ParentVhd))
+
+                # if a LabId is set for the lab, prepend it to the adapter name
+                # name and switch name.
+                if ($LabId)
                 {
-                    $ExceptionParameters = @{
-                        errorId = 'VMDataDiskParentVHDNotFoundError'
-                        errorCategory = 'InvalidArgument'
-                        errorMessage = $($LocalizedData.VMDataDiskParentVHDNotFoundError `
-                            -f $VMName,$NewDataVHD.ParentVhd)
-                    }
-                    ThrowException @ExceptionParameters
-                } # if
-            } # if
-
-            # Get the Source VHD and check it exists if passed
-            if ($VMDataVhd.SourceVHD)
-            {
-                $NewDataVHD.SourceVhd = $VMDataVhd.SourceVHD
-                # Adjust the path to be relative to the Virtual Hard Disks folder of the VM
-                # if it doesn't contain a root (e.g. c:\)
-                if (-not [System.IO.Path]::IsPathRooted($NewDataVHD.SourceVhd))
-                {
-                    $NewDataVHD.SourceVhd = Join-Path `
-                        -Path $Lab.labbuilderconfig.settings.fullconfigpath `
-                        -ChildPath $NewDataVHD.SourceVhd
-                } # if
-                if (-not (Test-Path -Path $NewDataVHD.SourceVhd))
-                {
-                    $ExceptionParameters = @{
-                        errorId = 'VMDataDiskSourceVHDNotFoundError'
-                        errorCategory = 'InvalidArgument'
-                        errorMessage = $($LocalizedData.VMDataDiskSourceVHDNotFoundError `
-                            -f $VMName,$NewDataVHD.SourceVhd)
-                    }
-                    ThrowException @ExceptionParameters
-                } # if
-            } # if
-
-            # Get the disk size if provided
-            if ($VMDataVhd.Size)
-            {
-                $NewDataVHD.Size = (Invoke-Expression $VMDataVhd.Size)
-            } # if
-
-            # Get the Shared flag
-            $NewDataVHD.Shared = ($VMDataVhd.Shared -eq 'Y')
-
-            # Get the Support Persistent Reservations
-            $NewDataVHD.SupportPR = ($VMDataVhd.SupportPR -eq 'Y')
-            if ($NewDataVHD.SupportPR -and -not $NewDataVHD.Shared)
-            {
-                $ExceptionParameters = @{
-                    errorId = 'VMDataDiskSupportPRError'
-                    errorCategory = 'InvalidArgument'
-                    errorMessage = $($LocalizedData.VMDataDiskSupportPRError `
-                        -f $VMName,$VHD)
+                    $AdapterName = "$LabId $AdapterName"
+                    $AdapterSwitchName = "$LabId $AdapterSwitchName"
                 }
-                ThrowException @ExceptionParameters
-            } # if
 
-            # Validate the data disk type specified
-            if ($VMDataVhd.Type)
-            {
-                switch ($VMDataVhd.Type)
+                # Check the switch is in the switch list
+                [Boolean] $Found = $False
+                foreach ($Switch in $Switches) 
                 {
-                    'fixed'
+                    # Match the switch name to the Adapter Switch Name or
+                    # the LabId and Adapter Switch Name
+                    if ($Switch.Name -eq $AdapterSwitchName) `
                     {
-                        break;
-                    }
-                    'dynamic'
-                    {
-                        break;
-                    }
-                    'differencing'
-                    {
-                        if (-not $NewDataVHD.ParentVhd)
-                        {
-                            $ExceptionParameters = @{
-                                errorId = 'VMDataDiskParentVHDMissingError'
-                                errorCategory = 'InvalidArgument'
-                                errorMessage = $($LocalizedData.VMDataDiskParentVHDMissingError `
-                                    -f $VMName)
-                            }
-                            ThrowException @ExceptionParameters
-                        } # if
-                        if ($NewDataVHD.Shared)
-                        {
-                            $ExceptionParameters = @{
-                                errorId = 'VMDataDiskSharedDifferencingError'
-                                errorCategory = 'InvalidArgument'
-                                errorMessage = $($LocalizedData.VMDataDiskSharedDifferencingError `
-                                    -f $VMName,$VHD)
-                            }
-                            ThrowException @ExceptionParameters
-                        } # if
-                    }
-                    Default
-                    {
-                        $ExceptionParameters = @{
-                            errorId = 'VMDataDiskUnknownTypeError'
-                            errorCategory = 'InvalidArgument'
-                            errorMessage = $($LocalizedData.VMDataDiskUnknownTypeError `
-                                -f $VMName,$VHD,$VMDataVhd.Type)
-                        }
-                        ThrowException @ExceptionParameters
-                    }
-                } # switch
-                $NewDataVHD.VHDType = [LabVHDType]::$($VMDataVhd.Type)
-            } # if
-
-            # Get Partition Style for the new disk.
-            if ($VMDataVhd.PartitionStyle)
-            {
-                $PartitionStyle = [LabPartitionStyle]::$($VMDataVhd.PartitionStyle)
-                if (-not $PartitionStyle)
-                {
-                    $ExceptionParameters = @{
-                        errorId = 'VMDataDiskPartitionStyleError'
-                        errorCategory = 'InvalidArgument'
-                        errorMessage = $($LocalizedData.VMDataDiskPartitionStyleError `
-                            -f $VMName,$VHD,$VMDataVhd.PartitionStyle)
-                    }
-                    ThrowException @ExceptionParameters
-                } # if
-                $NewDataVHD.PartitionStyle = $PartitionStyle
-            } # if
-
-            # Get file system for the new disk.
-            if ($VMDataVhd.FileSystem)
-            {
-                $FileSystem = [LabFileSystem]::$($VMDataVhd.FileSystem)
-                if (-not $FileSystem)
-                {
-                    $ExceptionParameters = @{
-                        errorId = 'VMDataDiskFileSystemError'
-                        errorCategory = 'InvalidArgument'
-                        errorMessage = $($LocalizedData.VMDataDiskFileSystemError `
-                            -f $VMName,$VHD,$VMDataVhd.FileSystem)
-                    }
-                    ThrowException @ExceptionParameters
-                } # if
-                $NewDataVHD.FileSystem = $FileSystem
-            } # if
-
-            # Has a file system label been provided?
-            if ($VMDataVhd.FileSystemLabel)
-            {
-                $NewDataVHD.FileSystemLabel = $VMDataVhd.FileSystemLabel
-            } # if
-
-            # if the Partition Style, File System or File System Label has been
-            # provided then ensure Partition Style and File System are set.
-            if ($NewDataVHD.PartitionStyle `
-                -or $NewDataVHD.FileSystem `
-                -or $NewDataVHD.FileSystemLabel)
-            {
-                if (-not $NewDataVHD.PartitionStyle)
-                {
-                    $ExceptionParameters = @{
-                        errorId = 'VMDataDiskPartitionStyleMissingError'
-                        errorCategory = 'InvalidArgument'
-                        errorMessage = $($LocalizedData.VMDataDiskPartitionStyleMissingError `
-                            -f $VMName,$VHD)
-                    }
-                    ThrowException @ExceptionParameters
-                } # if
-                if (-not $NewDataVHD.FileSystem)
-                {
-                    $ExceptionParameters = @{
-                        errorId = 'VMDataDiskFileSystemMissingError'
-                        errorCategory = 'InvalidArgument'
-                        errorMessage = $($LocalizedData.VMDataDiskFileSystemMissingError `
-                            -f $VMName,$VHD)
-                    }
-                    ThrowException @ExceptionParameters
-                } # if
-            } # if
-
-            # Get the Folder to copy and check it exists if passed
-            if ($VMDataVhd.CopyFolders)
-            {
-                foreach ($CopyFolder in ($VMDataVhd.CopyFolders -Split ','))
-                {
-                    # Adjust the path to be relative to the configuration folder 
-                    # if it doesn't contain a root (e.g. c:\)
-                    if (-not [System.IO.Path]::IsPathRooted($CopyFolder))
-                    {
-                        $CopyFolder = Join-Path `
-                            -Path $Lab.labbuilderconfig.settings.fullconfigpath `
-                            -ChildPath $CopyFolder
+                        # The switch is found in the switch list - record the VLAN (if there is one)
+                        $Found = $True
+                        $SwitchVLan = $Switch.Vlan
+                        Break
                     } # if
-                    if (-not (Test-Path -Path $CopyFolder -Type Container))
+                    elseif ($Switch.Name -eq $VMAdapter.SwitchName)
                     {
-                    $ExceptionParameters = @{
-                        errorId = 'VMDataDiskCopyFolderMissingError'
-                        errorCategory = 'InvalidArgument'
-                        errorMessage = $($LocalizedData.VMDataDiskCopyFolderMissingError `
-                            -f $VMName,$VHD,$CopyFolder)
-                        }
-                    ThrowException @ExceptionParameters 
+                        # The switch is found in the switch list - record the VLAN (if there is one)
+                        $Found = $True
+                        $SwitchVLan = $Switch.Vlan
+                        $AdapterSwitchName = $VMAdapter.SwitchName
+                        Break
                     }
                 } # foreach
-                $NewDataVHD.CopyFolders = $VMDataVhd.CopyFolders
-            } # if
-
-            # Should the Source VHD be moved rather than copied
-            if ($VMDataVhd.MoveSourceVHD)
-            {
-                $NewDataVHD.MoveSourceVHD = ($VMDataVhd.MoveSourceVHD -eq 'Y')
-                if (-not $NewDataVHD.SourceVHD)
+                if (-not $Found)
                 {
                     $ExceptionParameters = @{
-                        errorId = 'VMDataDiskSourceVHDIfMoveError'
+                        errorId = 'VMAdapterSwitchNotFoundError'
                         errorCategory = 'InvalidArgument'
-                        errorMessage = $($LocalizedData.VMDataDiskSourceVHDIfMoveError `
+                        errorMessage = $($LocalizedData.VMAdapterSwitchNotFoundError `
+                            -f $VMName,$AdapterName,$AdapterSwitchName)
+                    }
+                    ThrowException @ExceptionParameters
+                } # if
+
+                # Figure out the VLan - If defined in the VM use it, otherwise use the one defined in the Switch, otherwise keep blank.
+                [String] $VLan = $VMAdapter.VLan
+                if (-not $VLan) 
+                {
+                    $VLan = $SwitchVLan
+                } # if
+
+                [Boolean] $MACAddressSpoofing = ($VMAdapter.macaddressspoofing -eq 'On') 
+
+                # Have we got any IPv4 settings?
+                Remove-Variable -Name IPv4 -ErrorAction SilentlyContinue
+                if ($VMAdapter.IPv4) 
+                {
+                    $IPv4 = [LabVMAdapterIPv4]::New(`
+                        (IncreaseIpAddress `
+                            -IpAddress $VMAdapter.IPv4.Address`
+                            -Step $IncNetIds)`
+                        ,$VMAdapter.IPv4.SubnetMask)
+                    $IPv4.defaultgateway = $VMAdapter.IPv4.DefaultGateway
+                    $IPv4.dnsserver = $VMAdapter.IPv4.DNSServer
+                } # if
+
+                # Have we got any IPv6 settings?
+                Remove-Variable -Name IPv6 -ErrorAction SilentlyContinue
+                if ($VMAdapter.IPv6)
+                {
+                    $IPv6 = [LabVMAdapterIPv6]::New(`
+                        (IncreaseIpAddress `
+                            -IpAddress $VMAdapter.IPv6.Address`
+                            -Step $IncNetIds)`
+                        ,$VMAdapter.IPv6.SubnetMask)
+                    $IPv6.defaultgateway = $VMAdapter.IPv6.DefaultGateway
+                    $IPv6.dnsserver = $VMAdapter.IPv6.DNSServer
+                } # if
+
+                $NewVMAdapter = [LabVMAdapter]::New($AdapterName)
+                $NewVMAdapter.SwitchName = $AdapterSwitchName
+                $NewVMAdapter.MACAddress = IncreaseMacAddress `
+                    -MacAddress $VMAdapter.macaddress `
+                    -Step $IncNetIds
+                $NewVMAdapter.MACAddressSpoofing = $MACAddressSpoofing
+                $NewVMAdapter.VLan = $VLan
+                $NewVMAdapter.IPv4 = $IPv4
+                $NewVMAdapter.IPv6 = $IPv6
+                $VMAdapters += @( $NewVMAdapter )
+            } # foreach
+
+            # Assemble the Data Disks this VM will use
+            [LabDataVHD[]] $DataVhds = @()
+            [Int] $DataVhdCount = 0
+            foreach ($VMDataVhd in $VM.DataVhds.DataVhd)
+            {
+                $DataVhdCount++
+
+                # Load all the VHD properties and check they are valid
+                [String] $Vhd = $VMDataVhd.Vhd
+                if (-not $VMDataVhd.Vhd)
+                {
+                    $ExceptionParameters = @{
+                        errorId = 'VMDataDiskVHDEmptyError'
+                        errorCategory = 'InvalidArgument'
+                        errorMessage = $($LocalizedData.VMDataDiskVHDEmptyError `
+                            -f $VMName)
+                    }
+                    ThrowException @ExceptionParameters
+                } # if
+
+                # Adjust the path to be relative to the Virtual Hard Disks folder of the VM
+                # if it doesn't contain a root (e.g. c:\)
+                if (-not [System.IO.Path]::IsPathRooted($Vhd))
+                {
+                    $Vhd = Join-Path `
+                        -Path $LabPath `
+                        -ChildPath "$($VMName)\Virtual Hard Disks\$Vhd"
+                } # if
+
+                # Does the VHD already exist?
+                $Exists = Test-Path `
+                    -Path $Vhd
+
+                # Create the new Data VHD object
+                $NewDataVHD = [LabDataVHD]::New($Vhd)
+
+                # Get the Parent VHD and check it exists if passed
+                if ($VMDataVhd.ParentVHD)
+                {
+                    $NewDataVHD.ParentVhd = $VMDataVhd.ParentVHD
+                    # Adjust the path to be relative to the Virtual Hard Disks folder of the VM
+                    # if it doesn't contain a root (e.g. c:\)
+                    if (-not [System.IO.Path]::IsPathRooted($NewDataVHD.ParentVhd))
+                    {
+                        $NewDataVHD.ParentVhd = Join-Path `
+                            -Path $Lab.labbuilderconfig.settings.fullconfigpath `
+                            -ChildPath $NewDataVHD.ParentVhd
+                    }
+                    if (-not (Test-Path -Path $NewDataVHD.ParentVhd))
+                    {
+                        $ExceptionParameters = @{
+                            errorId = 'VMDataDiskParentVHDNotFoundError'
+                            errorCategory = 'InvalidArgument'
+                            errorMessage = $($LocalizedData.VMDataDiskParentVHDNotFoundError `
+                                -f $VMName,$NewDataVHD.ParentVhd)
+                        }
+                        ThrowException @ExceptionParameters
+                    } # if
+                } # if
+
+                # Get the Source VHD and check it exists if passed
+                if ($VMDataVhd.SourceVHD)
+                {
+                    $NewDataVHD.SourceVhd = $VMDataVhd.SourceVHD
+                    # Adjust the path to be relative to the Virtual Hard Disks folder of the VM
+                    # if it doesn't contain a root (e.g. c:\)
+                    if (-not [System.IO.Path]::IsPathRooted($NewDataVHD.SourceVhd))
+                    {
+                        $NewDataVHD.SourceVhd = Join-Path `
+                            -Path $Lab.labbuilderconfig.settings.fullconfigpath `
+                            -ChildPath $NewDataVHD.SourceVhd
+                    } # if
+                    if (-not (Test-Path -Path $NewDataVHD.SourceVhd))
+                    {
+                        $ExceptionParameters = @{
+                            errorId = 'VMDataDiskSourceVHDNotFoundError'
+                            errorCategory = 'InvalidArgument'
+                            errorMessage = $($LocalizedData.VMDataDiskSourceVHDNotFoundError `
+                                -f $VMName,$NewDataVHD.SourceVhd)
+                        }
+                        ThrowException @ExceptionParameters
+                    } # if
+                } # if
+
+                # Get the disk size if provided
+                if ($VMDataVhd.Size)
+                {
+                    $NewDataVHD.Size = (Invoke-Expression $VMDataVhd.Size)
+                } # if
+
+                # Get the Shared flag
+                $NewDataVHD.Shared = ($VMDataVhd.Shared -eq 'Y')
+
+                # Get the Support Persistent Reservations
+                $NewDataVHD.SupportPR = ($VMDataVhd.SupportPR -eq 'Y')
+                if ($NewDataVHD.SupportPR -and -not $NewDataVHD.Shared)
+                {
+                    $ExceptionParameters = @{
+                        errorId = 'VMDataDiskSupportPRError'
+                        errorCategory = 'InvalidArgument'
+                        errorMessage = $($LocalizedData.VMDataDiskSupportPRError `
                             -f $VMName,$VHD)
                     }
                     ThrowException @ExceptionParameters
                 } # if
-            } # if
 
-            # if the data disk file doesn't exist then some basic parameters MUST be provided
-            if (-not $Exists `
-                -and ( ( ( -not $NewDataVHD.VhdType ) -or ( $NewDataVHD.Size -eq 0) ) `
-                -and -not $NewDataVHD.SourceVhd ) )
-            {
-                $ExceptionParameters = @{
-                    errorId = 'VMDataDiskCantBeCreatedError'
-                    errorCategory = 'InvalidArgument'
-                    errorMessage = $($LocalizedData.VMDataDiskCantBeCreatedError `
-                        -f $VMName,$VHD)
-                }
-                ThrowException @ExceptionParameters
-            } # if
-
-            $DataVHDs += @( $NewDataVHD )
-        } # foreach
-
-        # Assemble the DVD Drives this VM will use
-        [LabDVDDrive[]] $DVDDrives = @()
-        [Int] $DVDDriveCount = 0
-        foreach ($VMDVDDrive in $VM.DVDDrives.DVDDrive)
-        {
-            $DVDDriveCount++
-
-            # Create the new DVD Drive object
-            $NewDVDDrive = [LabDVDDRive]::New()
-
-            # Load all the DVD Drive properties and check they are valid
-            if ($VMDVDDrive.ISO)
-            {
-                # Look the ISO up in the ISO Resources
-                # Pull the list of Resource ISOs available if not already pulled from Lab.
-                if (-not $ResourceISOs)
+                # Validate the data disk type specified
+                if ($VMDataVhd.Type)
                 {
-                    $ResourceISOs = Get-LabResourceISO `
-                        -Lab $Lab
+                    switch ($VMDataVhd.Type)
+                    {
+                        'fixed'
+                        {
+                            break;
+                        }
+                        'dynamic'
+                        {
+                            break;
+                        }
+                        'differencing'
+                        {
+                            if (-not $NewDataVHD.ParentVhd)
+                            {
+                                $ExceptionParameters = @{
+                                    errorId = 'VMDataDiskParentVHDMissingError'
+                                    errorCategory = 'InvalidArgument'
+                                    errorMessage = $($LocalizedData.VMDataDiskParentVHDMissingError `
+                                        -f $VMName)
+                                }
+                                ThrowException @ExceptionParameters
+                            } # if
+                            if ($NewDataVHD.Shared)
+                            {
+                                $ExceptionParameters = @{
+                                    errorId = 'VMDataDiskSharedDifferencingError'
+                                    errorCategory = 'InvalidArgument'
+                                    errorMessage = $($LocalizedData.VMDataDiskSharedDifferencingError `
+                                        -f $VMName,$VHD)
+                                }
+                                ThrowException @ExceptionParameters
+                            } # if
+                        }
+                        Default
+                        {
+                            $ExceptionParameters = @{
+                                errorId = 'VMDataDiskUnknownTypeError'
+                                errorCategory = 'InvalidArgument'
+                                errorMessage = $($LocalizedData.VMDataDiskUnknownTypeError `
+                                    -f $VMName,$VHD,$VMDataVhd.Type)
+                            }
+                            ThrowException @ExceptionParameters
+                        }
+                    } # switch
+                    $NewDataVHD.VHDType = [LabVHDType]::$($VMDataVhd.Type)
                 } # if
 
-                # Lookup the Resource ISO record
-                $ResourceISO = $ResourceISOs | Where-Object -Property Name -eq $VMDVDDrive.ISO
-                if (-not $ResourceISO)
+                # Get Partition Style for the new disk.
+                if ($VMDataVhd.PartitionStyle)
                 {
-                    # The ISO Resource was not found
+                    $PartitionStyle = [LabPartitionStyle]::$($VMDataVhd.PartitionStyle)
+                    if (-not $PartitionStyle)
+                    {
+                        $ExceptionParameters = @{
+                            errorId = 'VMDataDiskPartitionStyleError'
+                            errorCategory = 'InvalidArgument'
+                            errorMessage = $($LocalizedData.VMDataDiskPartitionStyleError `
+                                -f $VMName,$VHD,$VMDataVhd.PartitionStyle)
+                        }
+                        ThrowException @ExceptionParameters
+                    } # if
+                    $NewDataVHD.PartitionStyle = $PartitionStyle
+                } # if
+
+                # Get file system for the new disk.
+                if ($VMDataVhd.FileSystem)
+                {
+                    $FileSystem = [LabFileSystem]::$($VMDataVhd.FileSystem)
+                    if (-not $FileSystem)
+                    {
+                        $ExceptionParameters = @{
+                            errorId = 'VMDataDiskFileSystemError'
+                            errorCategory = 'InvalidArgument'
+                            errorMessage = $($LocalizedData.VMDataDiskFileSystemError `
+                                -f $VMName,$VHD,$VMDataVhd.FileSystem)
+                        }
+                        ThrowException @ExceptionParameters
+                    } # if
+                    $NewDataVHD.FileSystem = $FileSystem
+                } # if
+
+                # Has a file system label been provided?
+                if ($VMDataVhd.FileSystemLabel)
+                {
+                    $NewDataVHD.FileSystemLabel = $VMDataVhd.FileSystemLabel
+                } # if
+
+                # if the Partition Style, File System or File System Label has been
+                # provided then ensure Partition Style and File System are set.
+                if ($NewDataVHD.PartitionStyle `
+                    -or $NewDataVHD.FileSystem `
+                    -or $NewDataVHD.FileSystemLabel)
+                {
+                    if (-not $NewDataVHD.PartitionStyle)
+                    {
+                        $ExceptionParameters = @{
+                            errorId = 'VMDataDiskPartitionStyleMissingError'
+                            errorCategory = 'InvalidArgument'
+                            errorMessage = $($LocalizedData.VMDataDiskPartitionStyleMissingError `
+                                -f $VMName,$VHD)
+                        }
+                        ThrowException @ExceptionParameters
+                    } # if
+                    if (-not $NewDataVHD.FileSystem)
+                    {
+                        $ExceptionParameters = @{
+                            errorId = 'VMDataDiskFileSystemMissingError'
+                            errorCategory = 'InvalidArgument'
+                            errorMessage = $($LocalizedData.VMDataDiskFileSystemMissingError `
+                                -f $VMName,$VHD)
+                        }
+                        ThrowException @ExceptionParameters
+                    } # if
+                } # if
+
+                # Get the Folder to copy and check it exists if passed
+                if ($VMDataVhd.CopyFolders)
+                {
+                    foreach ($CopyFolder in ($VMDataVhd.CopyFolders -Split ','))
+                    {
+                        # Adjust the path to be relative to the configuration folder 
+                        # if it doesn't contain a root (e.g. c:\)
+                        if (-not [System.IO.Path]::IsPathRooted($CopyFolder))
+                        {
+                            $CopyFolder = Join-Path `
+                                -Path $Lab.labbuilderconfig.settings.fullconfigpath `
+                                -ChildPath $CopyFolder
+                        } # if
+                        if (-not (Test-Path -Path $CopyFolder -Type Container))
+                        {
+                        $ExceptionParameters = @{
+                            errorId = 'VMDataDiskCopyFolderMissingError'
+                            errorCategory = 'InvalidArgument'
+                            errorMessage = $($LocalizedData.VMDataDiskCopyFolderMissingError `
+                                -f $VMName,$VHD,$CopyFolder)
+                            }
+                        ThrowException @ExceptionParameters 
+                        }
+                    } # foreach
+                    $NewDataVHD.CopyFolders = $VMDataVhd.CopyFolders
+                } # if
+
+                # Should the Source VHD be moved rather than copied
+                if ($VMDataVhd.MoveSourceVHD)
+                {
+                    $NewDataVHD.MoveSourceVHD = ($VMDataVhd.MoveSourceVHD -eq 'Y')
+                    if (-not $NewDataVHD.SourceVHD)
+                    {
+                        $ExceptionParameters = @{
+                            errorId = 'VMDataDiskSourceVHDIfMoveError'
+                            errorCategory = 'InvalidArgument'
+                            errorMessage = $($LocalizedData.VMDataDiskSourceVHDIfMoveError `
+                                -f $VMName,$VHD)
+                        }
+                        ThrowException @ExceptionParameters
+                    } # if
+                } # if
+
+                # if the data disk file doesn't exist then some basic parameters MUST be provided
+                if (-not $Exists `
+                    -and ( ( ( -not $NewDataVHD.VhdType ) -or ( $NewDataVHD.Size -eq 0) ) `
+                    -and -not $NewDataVHD.SourceVhd ) )
+                {
                     $ExceptionParameters = @{
-                        errorId = 'VMDVDDriveISOResourceNotFOundError'
+                        errorId = 'VMDataDiskCantBeCreatedError'
                         errorCategory = 'InvalidArgument'
-                        errorMessage = $($LocalizedData.VMDVDDriveISOResourceNotFOundError `
-                            -f $VMName,$VMDVDDrive.ISO)
+                        errorMessage = $($LocalizedData.VMDataDiskCantBeCreatedError `
+                            -f $VMName,$VHD)
                     }
                     ThrowException @ExceptionParameters
                 } # if
-                # The ISO resource was found so populate the ISO details
-                $NewDVDDrive.ISO = $VMDVDDrive.ISO
-                $NewDVDDrive.Path = $ResourceISO.Path
+
+                $DataVHDs += @( $NewDataVHD )
+            } # foreach
+
+            # Assemble the DVD Drives this VM will use
+            [LabDVDDrive[]] $DVDDrives = @()
+            [Int] $DVDDriveCount = 0
+            foreach ($VMDVDDrive in $VM.DVDDrives.DVDDrive)
+            {
+                $DVDDriveCount++
+
+                # Create the new DVD Drive object
+                $NewDVDDrive = [LabDVDDRive]::New()
+
+                # Load all the DVD Drive properties and check they are valid
+                if ($VMDVDDrive.ISO)
+                {
+                    # Look the ISO up in the ISO Resources
+                    # Pull the list of Resource ISOs available if not already pulled from Lab.
+                    if (-not $ResourceISOs)
+                    {
+                        $ResourceISOs = Get-LabResourceISO `
+                            -Lab $Lab
+                    } # if
+
+                    # Lookup the Resource ISO record
+                    $ResourceISO = $ResourceISOs | Where-Object -Property Name -eq $VMDVDDrive.ISO
+                    if (-not $ResourceISO)
+                    {
+                        # The ISO Resource was not found
+                        $ExceptionParameters = @{
+                            errorId = 'VMDVDDriveISOResourceNotFOundError'
+                            errorCategory = 'InvalidArgument'
+                            errorMessage = $($LocalizedData.VMDVDDriveISOResourceNotFOundError `
+                                -f $VMName,$VMDVDDrive.ISO)
+                        }
+                        ThrowException @ExceptionParameters
+                    } # if
+                    # The ISO resource was found so populate the ISO details
+                    $NewDVDDrive.ISO = $VMDVDDrive.ISO
+                    $NewDVDDrive.Path = $ResourceISO.Path
+                } # if
+
+                $DVDDrives += @( $NewDVDDrive )
+            } # foreach
+
+            # Does the VM have an Unattend file specified?
+            [String] $UnattendFile = ''
+            if ($VM.UnattendFile)
+            {
+                if ([System.IO.Path]::IsPathRooted($VM.UnattendFile))
+                {
+                    $UnattendFile = $VM.UnattendFile
+                }
+                else
+                {
+                    $UnattendFile = Join-Path `
+                        -Path $Lab.labbuilderconfig.settings.fullconfigpath `
+                        -ChildPath $VM.UnattendFile
+                } # if
+                if (-not (Test-Path $UnattendFile)) 
+                {
+                    $ExceptionParameters = @{
+                        errorId = 'UnattendFileMissingError'
+                        errorCategory = 'InvalidArgument'
+                        errorMessage = $($LocalizedData.UnattendFileMissingError `
+                            -f $VMName,$UnattendFile)
+                    }
+                    ThrowException @ExceptionParameters
+                } # if
+            } # if
+            
+            # Does the VM specify a Setup Complete Script?
+            [String] $SetupComplete = ''
+            if ($VM.SetupComplete) 
+            {
+                if ([System.IO.Path]::IsPathRooted($VM.SetupComplete))
+                {
+                    $SetupComplete = $VM.SetupComplete
+                }
+                else
+                {
+                    $SetupComplete = Join-Path `
+                        -Path $Lab.labbuilderconfig.settings.fullconfigpath `
+                        -ChildPath $VM.SetupComplete
+                } # if
+                if ([System.IO.Path]::GetExtension($SetupComplete).ToLower() -notin '.ps1','.cmd' )
+                {
+                    $ExceptionParameters = @{
+                        errorId = 'SetupCompleteFileBadTypeError'
+                        errorCategory = 'InvalidArgument'
+                        errorMessage = $($LocalizedData.SetupCompleteFileBadTypeError `
+                            -f $VMName,$SetupComplete)
+                    }
+                    ThrowException @ExceptionParameters
+                } # if
+                if (-not (Test-Path $SetupComplete))
+                {
+                    $ExceptionParameters = @{
+                        errorId = 'SetupCompleteFileMissingError'
+                        errorCategory = 'InvalidArgument'
+                        errorMessage = $($LocalizedData.SetupCompleteFileMissingError `
+                            -f $VMName,$SetupComplete)
+                    }
+                    ThrowException @ExceptionParameters
+                } # if
             } # if
 
-            $DVDDrives += @( $NewDVDDrive )
+            # Create the Lab DSC object
+            $LabDSC = [LabDSC]::New($VM.DSC.ConfigName)
+
+            # Load the DSC Config File setting and check it
+            [String] $LabDSC.ConfigFile = ''
+            if ($VM.DSC.ConfigFile) 
+            {
+                if (-not [System.IO.Path]::IsPathRooted($VM.DSC.ConfigFile))
+                {
+                    $LabDSC.ConfigFile = Join-Path `
+                        -Path $Lab.labbuilderconfig.settings.dsclibrarypathfull `
+                        -ChildPath $VM.DSC.ConfigFile
+                }
+                else
+                {
+                    $LabDSC.ConfigFile = $VM.DSC.ConfigFile
+                } # if
+
+                if ([System.IO.Path]::GetExtension($LabDSC.ConfigFile).ToLower() -ne '.ps1' )
+                {
+                    $ExceptionParameters = @{
+                        errorId = 'DSCConfigFileBadTypeError'
+                        errorCategory = 'InvalidArgument'
+                        errorMessage = $($LocalizedData.DSCConfigFileBadTypeError `
+                            -f $VMName,$LabDSC.ConfigFile)
+                    }
+                    ThrowException @ExceptionParameters
+                } # if
+
+                if (-not (Test-Path $LabDSC.ConfigFile))
+                {
+                    $ExceptionParameters = @{
+                        errorId = 'DSCConfigFileMissingError'
+                        errorCategory = 'InvalidArgument'
+                        errorMessage = $($LocalizedData.DSCConfigFileMissingError `
+                            -f $VMName,$LabDSC.ConfigFile)
+                    }
+                    ThrowException @ExceptionParameters
+                } # if
+                if (-not $VM.DSC.ConfigName)
+                {
+                    $ExceptionParameters = @{
+                        errorId = 'DSCConfigNameIsEmptyError'
+                        errorCategory = 'InvalidArgument'
+                        errorMessage = $($LocalizedData.DSCConfigNameIsEmptyError `
+                            -f $VMName)
+                    }
+                    ThrowException @ExceptionParameters
+                } # if
+            } # if
+
+            # Load the DSC Parameters
+            [String] $LabDSC.Parameters = ''
+            if ($VM.DSC.Parameters)
+            {
+                # Correct any LFs into CRLFs to ensure the new line format is the same when
+                # pulled from the XML.
+                $LabDSC.Parameters = ($VM.DSC.Parameters -replace "`r`n","`n") -replace "`n","`r`n"
+            } # if
+
+            # Load the DSC Parameters
+            [Boolean] $LabDSC.Logging = ($VM.DSC.Logging -eq 'Y')
+
+            # Get the Memory Startup Bytes (from the template or VM)
+            [Int64] $MemoryStartupBytes = 1GB
+            if ($VM.memorystartupbytes)
+            {
+                $MemoryStartupBytes = (Invoke-Expression $VM.memorystartupbytes)
+            }
+            elseif ($VMTemplate.memorystartupbytes)
+            {
+                $MemoryStartupBytes = $VMTemplate.memorystartupbytes
+            } # if
+
+            # Get the Dynamic Memory Enabled flag
+            [Boolean] $DynamicMemoryEnabled = $True
+            if ($VM.DynamicMemoryEnabled)
+            {
+                $DynamicMemoryEnabled = ($VM.DynamicMemoryEnabled -eq 'Y')
+            }
+            elseif ($VMTemplate.DynamicMemoryEnabled)
+            {
+                $DynamicMemoryEnabled = $VMTemplate.DynamicMemoryEnabled
+            } # if
+            
+            # Get the Memory Startup Bytes (from the template or VM)
+            [Int] $ProcessorCount = 1
+            if ($VM.processorcount) 
+            {
+                $ProcessorCount = (Invoke-Expression $VM.processorcount)
+            }
+            elseif ($VMTemplate.processorcount) 
+            {
+                $ProcessorCount = $VMTemplate.processorcount
+            } # if
+
+            # Get the Expose Virtualization Extensions flag
+            [String] $ExposeVirtualizationExtensions = $null
+            if ($VM.ExposeVirtualizationExtensions)
+            {
+                $ExposeVirtualizationExtensions = $VM.ExposeVirtualizationExtensions
+            }
+            elseif ($VMTemplate.ExposeVirtualizationExtensions)
+            {
+                $ExposeVirtualizationExtensions=$VMTemplate.ExposeVirtualizationExtensions
+            } # if
+
+            [Boolean] $UseDifferencingDisk = $True
+            if ($VM.UseDifferencingDisk -eq 'N')
+            {
+                $UseDifferencingDisk = $False
+            } # if
+
+            # Get the Integration Services flags
+            if ($null -ne $VM.IntegrationServices)
+            {
+                $IntegrationServices = $VM.IntegrationServices
+            } 
+            elseif ($null -ne $VMTemplate.IntegrationServices)
+            {
+                $IntegrationServices = $VMTemplate.IntegrationServices
+            } # if
+
+            # Get the Administrator password (from the template or VM)
+            [String] $AdministratorPassword = ''
+            if ($VM.administratorpassword) 
+            {
+                $AdministratorPassword = $VM.administratorpassword
+            }
+            elseif ($VMTemplate.administratorpassword)
+            {
+                $AdministratorPassword = $VMTemplate.administratorpassword
+            } # if
+
+            # Get the Product Key (from the template or VM)
+            [String] $ProductKey = ''
+            if ($VM.productkey) 
+            {
+                $ProductKey = $VM.productkey
+            }
+            elseif ($VMTemplate.productkey)
+            {
+                $ProductKey = $VMTemplate.productkey
+            } # if
+
+            # Get the Timezone (from the template or VM)
+            [String] $Timezone = 'Pacific Standard Time'
+            if ($VM.timezone) 
+            {
+                $Timezone = $VM.timezone
+            }
+            elseif ($VMTemplate.timezone) 
+            {
+                $Timezone = $VMTemplate.timezone
+            } # if
+
+            # Get the OS Type
+            $OSType = [LabOStype]::Server
+            if ($VM.OSType)
+            {
+                $OSType = $VM.OSType
+            }
+            elseif ($VMTemplate.OSType)
+            {
+                $OSType = $VMTemplate.OSType
+            } # if
+
+            # Get the Bootorder
+            [Byte] $Bootorder = [Byte]::MaxValue
+            if ($VM.bootorder)
+            {
+                $Bootorder = $VM.bootorder
+            } # if
+
+            # Get the Packages
+            [String] $Packages = $null
+            if ($VM.packages)
+            {
+                $Packages = $VM.packages
+            }
+            elseif ($VMTemplate.packages)
+            {
+                $Packages = $VMTemplate.packages
+            } # if
+
+            # Get the Certificate Source
+            $CertificateSource = [LabCertificateSource]::Guest
+            if ($OSType -eq [LabOSType]::Nano)
+            {
+                # Nano Server can't generate certificates so must always be set to Host
+                $CertificateSource = [LabCertificateSource]::Host
+            }
+            elseif ($VM.CertificateSource)
+            {
+                $CertificateSource = $VM.CertificateSource
+            } # if
+
+            $LabVM = [LabVM]::New($VMName,$ComputerName)
+            $LabVM.Template = $VM.Template
+            $LabVM.ParentVHD = $ParentVHDPath
+            $LabVM.UseDifferencingDisk = $UseDifferencingDisk
+            $LabVM.MemoryStartupBytes = $MemoryStartupBytes
+            $LabVM.DynamicMemoryEnabled = $DynamicMemoryEnabled
+            $LabVM.ProcessorCount = $ProcessorCount
+            $LabVM.ExposeVirtualizationExtensions = $ExposeVirtualizationExtensions
+            $LabVM.IntegrationServices = $IntegrationServices
+            $LabVM.AdministratorPassword = $AdministratorPassword
+            $LabVM.ProductKey = $ProductKey
+            $LabVM.TimeZone =$Timezone
+            $LabVM.UnattendFile = $UnattendFile
+            $LabVM.SetupComplete = $SetupComplete
+            $LabVM.OSType = $OSType
+            $LabVM.CertificateSource = $CertificateSource
+            $LabVM.Bootorder = $Bootorder
+            $LabVM.Packages = $Packages
+            $LabVM.Adapters = $VMAdapters
+            $LabVM.DataVHDs = $DataVHDs
+            $LabVM.DVDDrives = $DVDDrives
+            $LabVM.DSC = $LabDSC
+            $LabVM.VMRootPath = Join-Path `
+                -Path $LabPath `
+                -ChildPath $VMName
+            $LabVM.LabBuilderFilesPath = Join-Path `
+                -Path $LabPath `
+                -ChildPath "$VMName\LabBuilder Files"
+            $LabVMs += @( $LabVM )
         } # foreach
-
-        # Does the VM have an Unattend file specified?
-        [String] $UnattendFile = ''
-        if ($VM.UnattendFile)
-        {
-            if ([System.IO.Path]::IsPathRooted($VM.UnattendFile))
-            {
-                $UnattendFile = $VM.UnattendFile
-            }
-            else
-            {
-                $UnattendFile = Join-Path `
-                    -Path $Lab.labbuilderconfig.settings.fullconfigpath `
-                    -ChildPath $VM.UnattendFile
-            } # if
-            if (-not (Test-Path $UnattendFile)) 
-            {
-                $ExceptionParameters = @{
-                    errorId = 'UnattendFileMissingError'
-                    errorCategory = 'InvalidArgument'
-                    errorMessage = $($LocalizedData.UnattendFileMissingError `
-                        -f $VMName,$UnattendFile)
-                }
-                ThrowException @ExceptionParameters
-            } # if
-        } # if
-        
-        # Does the VM specify a Setup Complete Script?
-        [String] $SetupComplete = ''
-        if ($VM.SetupComplete) 
-        {
-            if ([System.IO.Path]::IsPathRooted($VM.SetupComplete))
-            {
-                $SetupComplete = $VM.SetupComplete
-            }
-            else
-            {
-                $SetupComplete = Join-Path `
-                    -Path $Lab.labbuilderconfig.settings.fullconfigpath `
-                    -ChildPath $VM.SetupComplete
-            } # if
-            if ([System.IO.Path]::GetExtension($SetupComplete).ToLower() -notin '.ps1','.cmd' )
-            {
-                $ExceptionParameters = @{
-                    errorId = 'SetupCompleteFileBadTypeError'
-                    errorCategory = 'InvalidArgument'
-                    errorMessage = $($LocalizedData.SetupCompleteFileBadTypeError `
-                        -f $VMName,$SetupComplete)
-                }
-                ThrowException @ExceptionParameters
-            } # if
-            if (-not (Test-Path $SetupComplete))
-            {
-                $ExceptionParameters = @{
-                    errorId = 'SetupCompleteFileMissingError'
-                    errorCategory = 'InvalidArgument'
-                    errorMessage = $($LocalizedData.SetupCompleteFileMissingError `
-                        -f $VMName,$SetupComplete)
-                }
-                ThrowException @ExceptionParameters
-            } # if
-        } # if
-
-        # Create the Lab DSC object
-        $LabDSC = [LabDSC]::New($VM.DSC.ConfigName)
-
-        # Load the DSC Config File setting and check it
-        [String] $LabDSC.ConfigFile = ''
-        if ($VM.DSC.ConfigFile) 
-        {
-            if (-not [System.IO.Path]::IsPathRooted($VM.DSC.ConfigFile))
-            {
-                $LabDSC.ConfigFile = Join-Path `
-                    -Path $Lab.labbuilderconfig.settings.dsclibrarypathfull `
-                    -ChildPath $VM.DSC.ConfigFile
-            }
-            else
-            {
-                $LabDSC.ConfigFile = $VM.DSC.ConfigFile
-            } # if
-
-            if ([System.IO.Path]::GetExtension($LabDSC.ConfigFile).ToLower() -ne '.ps1' )
-            {
-                $ExceptionParameters = @{
-                    errorId = 'DSCConfigFileBadTypeError'
-                    errorCategory = 'InvalidArgument'
-                    errorMessage = $($LocalizedData.DSCConfigFileBadTypeError `
-                        -f $VMName,$LabDSC.ConfigFile)
-                }
-                ThrowException @ExceptionParameters
-            } # if
-
-            if (-not (Test-Path $LabDSC.ConfigFile))
-            {
-                $ExceptionParameters = @{
-                    errorId = 'DSCConfigFileMissingError'
-                    errorCategory = 'InvalidArgument'
-                    errorMessage = $($LocalizedData.DSCConfigFileMissingError `
-                        -f $VMName,$LabDSC.ConfigFile)
-                }
-                ThrowException @ExceptionParameters
-            } # if
-            if (-not $VM.DSC.ConfigName)
-            {
-                $ExceptionParameters = @{
-                    errorId = 'DSCConfigNameIsEmptyError'
-                    errorCategory = 'InvalidArgument'
-                    errorMessage = $($LocalizedData.DSCConfigNameIsEmptyError `
-                        -f $VMName)
-                }
-                ThrowException @ExceptionParameters
-            } # if
-        } # if
-
-        # Load the DSC Parameters
-        [String] $LabDSC.Parameters = ''
-        if ($VM.DSC.Parameters)
-        {
-            # Correct any LFs into CRLFs to ensure the new line format is the same when
-            # pulled from the XML.
-            $LabDSC.Parameters = ($VM.DSC.Parameters -replace "`r`n","`n") -replace "`n","`r`n"
-        } # if
-
-        # Load the DSC Parameters
-        [Boolean] $LabDSC.Logging = ($VM.DSC.Logging -eq 'Y')
-
-        # Get the Memory Startup Bytes (from the template or VM)
-        [Int64] $MemoryStartupBytes = 1GB
-        if ($VM.memorystartupbytes)
-        {
-            $MemoryStartupBytes = (Invoke-Expression $VM.memorystartupbytes)
-        }
-        elseif ($VMTemplate.memorystartupbytes)
-        {
-            $MemoryStartupBytes = $VMTemplate.memorystartupbytes
-        } # if
-
-        # Get the Dynamic Memory Enabled flag
-        [Boolean] $DynamicMemoryEnabled = $True
-        if ($VM.DynamicMemoryEnabled)
-        {
-            $DynamicMemoryEnabled = ($VM.DynamicMemoryEnabled -eq 'Y')
-        }
-        elseif ($VMTemplate.DynamicMemoryEnabled)
-        {
-            $DynamicMemoryEnabled = $VMTemplate.DynamicMemoryEnabled
-        } # if
-        
-        # Get the Memory Startup Bytes (from the template or VM)
-        [Int] $ProcessorCount = 1
-        if ($VM.processorcount) 
-        {
-            $ProcessorCount = (Invoke-Expression $VM.processorcount)
-        }
-        elseif ($VMTemplate.processorcount) 
-        {
-            $ProcessorCount = $VMTemplate.processorcount
-        } # if
-
-        # Get the Expose Virtualization Extensions flag
-        [String] $ExposeVirtualizationExtensions = $null
-        if ($VM.ExposeVirtualizationExtensions)
-        {
-            $ExposeVirtualizationExtensions = $VM.ExposeVirtualizationExtensions
-        }
-        elseif ($VMTemplate.ExposeVirtualizationExtensions)
-        {
-            $ExposeVirtualizationExtensions=$VMTemplate.ExposeVirtualizationExtensions
-        } # if
-
-        [Boolean] $UseDifferencingDisk = $True
-        if ($VM.UseDifferencingDisk -eq 'N')
-        {
-            $UseDifferencingDisk = $False
-        } # if
-
-        # Get the Integration Services flags
-        if ($null -ne $VM.IntegrationServices)
-        {
-            $IntegrationServices = $VM.IntegrationServices
-        } 
-        elseif ($null -ne $VMTemplate.IntegrationServices)
-        {
-            $IntegrationServices = $VMTemplate.IntegrationServices
-        } # if
-
-        # Get the Administrator password (from the template or VM)
-        [String] $AdministratorPassword = ''
-        if ($VM.administratorpassword) 
-        {
-            $AdministratorPassword = $VM.administratorpassword
-        }
-        elseif ($VMTemplate.administratorpassword)
-        {
-            $AdministratorPassword = $VMTemplate.administratorpassword
-        } # if
-
-        # Get the Product Key (from the template or VM)
-        [String] $ProductKey = ''
-        if ($VM.productkey) 
-        {
-            $ProductKey = $VM.productkey
-        }
-        elseif ($VMTemplate.productkey)
-        {
-            $ProductKey = $VMTemplate.productkey
-        } # if
-
-        # Get the Timezone (from the template or VM)
-        [String] $Timezone = 'Pacific Standard Time'
-        if ($VM.timezone) 
-        {
-            $Timezone = $VM.timezone
-        }
-        elseif ($VMTemplate.timezone) 
-        {
-            $Timezone = $VMTemplate.timezone
-        } # if
-
-        # Get the OS Type
-        $OSType = [LabOStype]::Server
-        if ($VM.OSType)
-        {
-            $OSType = $VM.OSType
-        }
-        elseif ($VMTemplate.OSType)
-        {
-            $OSType = $VMTemplate.OSType
-        } # if
-
-        # Get the Bootorder
-        [Byte] $Bootorder = [Byte]::MaxValue
-        if ($VM.bootorder)
-        {
-            $Bootorder = $VM.bootorder
-        } # if
-
-        # Get the Packages
-        [String] $Packages = $null
-        if ($VM.packages)
-        {
-            $Packages = $VM.packages
-        }
-        elseif ($VMTemplate.packages)
-        {
-            $Packages = $VMTemplate.packages
-        } # if
-
-        # Get the Certificate Source
-        $CertificateSource = [LabCertificateSource]::Guest
-        if ($OSType -eq [LabOSType]::Nano)
-        {
-            # Nano Server can't generate certificates so must always be set to Host
-            $CertificateSource = [LabCertificateSource]::Host
-        }
-        elseif ($VM.CertificateSource)
-        {
-            $CertificateSource = $VM.CertificateSource
-        } # if
-
-        $LabVM = [LabVM]::New($VMName,$VM.ComputerName)
-        $LabVM.Template = $VM.Template
-        $LabVM.ParentVHD = $ParentVHDPath
-        $LabVM.UseDifferencingDisk = $UseDifferencingDisk
-        $LabVM.MemoryStartupBytes = $MemoryStartupBytes
-        $LabVM.DynamicMemoryEnabled = $DynamicMemoryEnabled
-        $LabVM.ProcessorCount = $ProcessorCount
-        $LabVM.ExposeVirtualizationExtensions = $ExposeVirtualizationExtensions
-        $LabVM.IntegrationServices = $IntegrationServices
-        $LabVM.AdministratorPassword = $AdministratorPassword
-        $LabVM.ProductKey = $ProductKey
-        $LabVM.TimeZone =$Timezone
-        $LabVM.UnattendFile = $UnattendFile
-        $LabVM.SetupComplete = $SetupComplete
-        $LabVM.OSType = $OSType
-        $LabVM.Adapters = $VMAdapters
-        $LabVM.DataVHDs = $DataVHDs
-        $LabVM.DVDDrives = $DVDDrives
-        $LabVM.Packages = $Packages
-        $LabVM.Bootorder = $Bootorder
-        $LabVM.DSC = $LabDSC
-        $LabVM.VMRootPath = (Join-Path -Path $LabPath -ChildPath $VMName)
-        $LabVM.LabBuilderFilesPath = (Join-Path -Path $LabPath -ChildPath "$VMName\LabBuilder Files")
-        $LabVM.CertificateSource = $CertificateSource
-        $LabVMs += @( $LabVM )
     } # foreach
 
     Return $LabVMs
