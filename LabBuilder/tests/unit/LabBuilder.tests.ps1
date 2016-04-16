@@ -85,6 +85,8 @@ InModuleScope LabBuilder {
             -ArgumentList $exception, $errorId, $errorCategory, $null
         return $errorRecord
     }
+    # Run tests assuming Build 10586 is installed
+    $Script:CurrentBuild = 10586
 
 
     # Perform Configuration XML Schema validation
@@ -1413,6 +1415,9 @@ InModuleScope LabBuilder {
         Mock Get-VM
         #endregion
 
+        # Run tests assuming Build 10586 is installed
+        $Script:CurrentBuild = 10586
+
         # Figure out the TestVMName (saves typing later on)
         $Lab = Get-Lab -ConfigPath $Global:TestConfigOKPath
         $TestVMName = "$($Lab.labbuilderconfig.settings.labid) $($Lab.labbuilderconfig.vms.vm.name)"
@@ -1961,6 +1966,23 @@ InModuleScope LabBuilder {
                 $VMs.Count | Should Be 0
             }
         }
+        $Script:CurrentBuild = 10560
+        Context 'Configuration passed with ExposeVirtualizationExtensions required but Build is 10560.' {
+            It 'Throw DSCConfigNameIsEmptyError Exception' {
+                $Lab = Get-Lab -ConfigPath $Global:TestConfigOKPath
+                [Array]$Switches = Get-LabSwitch -Lab $Lab
+                [Array]$Templates = Get-LabVMTemplate -Lab $Lab
+                $ExceptionParameters = @{
+                    errorId = 'VMVirtualizationExtError'
+                    errorCategory = 'InvalidArgument'
+                    errorMessage = $($LocalizedData.VMVirtualizationExtError `
+                        -f $TestVMName)
+                }
+                $Exception = GetException @ExceptionParameters
+                { Get-LabVM -Lab $Lab -VMTemplates $Templates -Switches $Switches } | Should Throw $Exception
+            }
+        }
+        $Script:CurrentBuild = 10586
         Context 'Valid configuration is passed but switches and VMTemplates not passed' {
             $Lab = Get-Lab -ConfigPath $Global:TestConfigOKPath
             # Set the Instance Count to 2 to check
@@ -2030,7 +2052,7 @@ InModuleScope LabBuilder {
         Mock Install-LabVMDSC
         #endregion
 
-        Context 'Valid configuration is passed' {	
+        Context 'Valid configuration is passed' {
             $Lab = Get-Lab -ConfigPath $Global:TestConfigOKPath
             New-Item -Path $Lab.labbuilderconfig.settings.labpath -ItemType Directory -Force -ErrorAction SilentlyContinue
             New-Item -Path $Lab.labbuilderconfig.settings.vhdparentpath -ItemType Directory -Force -ErrorAction SilentlyContinue
