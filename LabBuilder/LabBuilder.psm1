@@ -425,7 +425,7 @@ class LabVM:System.ICloneable {
     [Byte] $ProcessorCount
     [Uint64] $MemoryStartupBytes = 1GB
     [Boolean] $DynamicMemoryEnabled = $True
-    [Boolean] $ExposeVirtualizationExtensions = $True
+    [Boolean] $ExposeVirtualizationExtensions = $true
     [String] $ParentVHD
     [Boolean] $UseDifferencingDisk = $True
     [String] $AdministratorPassword
@@ -4054,7 +4054,8 @@ function Initialize-LabVM {
 
         # if the ExposeVirtualizationExtensions is configured then try and set this on 
         # Virtual Processor. Only supported in certain builds on Windows 10/Server 2016 TP4.
-        if ($VM.ExposeVirtualizationExtensions -ne (Get-VMProcessor -VMName $VM.Name).ExposeVirtualizationExtensions)
+        if ( ($VM.ExposeVirtualizationExtensions -ne (Get-VMProcessor -VMName $VM.Name).ExposeVirtualizationExtensions) -and `
+			 ((Get-VMProcessor -VMName $VM.Name).ExposeVirtualizationExtensions -ne $null) )
         {
             Set-VMProcessor `
                 -VMName $VM.Name `
