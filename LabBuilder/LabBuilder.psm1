@@ -1267,6 +1267,7 @@ function Initialize-LabSwitch {
                     
 					# Check this adapter is not already bound to a switch
                     $VMSwitchNames = (Get-VMSwitch | Where-Object{$_.SwitchType -eq 'External'}).Name
+					$MacAddress = @()
 					ForEach ($VmSwitchName in $VmSwitchNames)
 					{
 						$MacAddress += `
