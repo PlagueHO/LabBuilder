@@ -1205,6 +1205,7 @@ function Initialize-LabSwitch {
         [LabSwitch[]] $Switches
     )
 
+
     # if switches was not passed, pull it.
     if (-not $PSBoundParameters.ContainsKey('switches'))
     {
@@ -1277,17 +1278,23 @@ function Initialize-LabSwitch {
                         }
                         ThrowException @ExceptionParameters
                     } # if
-                    # Check this adapter is not already bound to a switch
-                    $MacAddress = `
-                        (Get-VMNetworkAdapter `
+                    
+					# Check this adapter is not already bound to a switch
+                    $VMSwitchNames = (Get-VMSwitch | Where-Object{$_.SwitchType -eq 'External'}).Name
+					$MacAddress = @()
+					ForEach ($VmSwitchName in $VmSwitchNames)
+					{
+						$MacAddress += `
+							(Get-VMNetworkAdapter `
                             -ManagementOS `
-                            -Name (Get-VMSwitch | ? { 
-                            $_.SwitchType -eq 'External'
-                            }).Name).MacAddress
+                            -Name $VmSwitchName -ErrorAction SilentlyContinue).MacAddress
+						
+					}
 
                     $UsedAdapters = @((Get-NetAdapter -Physical | ? {
                         ($_.MacAddress -replace '-','') -in $MacAddress
                         }).Name)
+
                     if ($BindingAdapter.Name -in $UsedAdapters)
                     {
                         $ExceptionParameters = @{
@@ -5257,6 +5264,7 @@ Function Install-Lab {
         # Initialize the Switches
         $Switches = Get-LabSwitch `
             -Lab $Lab
+
         Initialize-LabSwitch `
             -Lab $Lab `
             -Switches $Switches `
