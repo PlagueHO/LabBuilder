@@ -2,6 +2,9 @@
 * Added VM InstanceCount attribute for creating multiple copies a VM in a Lab.
 * Added $Script:CurrentBuild variable to allow easier access to OS build version.
 * Fix to prevent ExposeVirtualizationExtensions from being applied on Lab Hosts that don't support it.
+* Samples\Sample_WS2012R2_DCandDHCPandEdge.ps1: Added sample for creating Lab with DC, DHCP and Edge servers.
+* DSCLibrary\MEMBER_JENKINS.DSC.ps1: Added DSC Library configuration for creating a Domain Joined Jenkins CI Server.
+* DSCLibrary\STANDALONE_JENKINS.DSC.ps1: Added DSC Library configuration for creating a Standalone Jenkins CI Server.
 
 ### 0.7.4.0
 * lib\vm.ps1: WaitWMStarted - name of integrationservice "heartbeat" detected by id to be culture neutral
@@ -23,7 +26,7 @@
 * Generalized Nano Server package support.
 * Both ResourceMSU and Nano Server packages can now be installed on Template VHDs and Virtual Machines.
 * Automatically add Microsoft-NanoServer-DSC-Package.cab to new Nano Server VMs.
-* Added BindingAdapterName and BindingAdapterMac attribute to swtich element to allow control over bound adapter.
+* Added BindingAdapterName and BindingAdapterMac attribute to switch element to allow control over bound adapter.
 * GetCertificatePsFileContent Changed so that PFX certificate imported into Root store for non Nano Servers.
 * Automatically set xNetworking version in DSC Networking config to that of the highest version available on the Lab Host.
 
