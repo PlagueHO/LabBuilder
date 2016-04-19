@@ -425,11 +425,7 @@ class LabVM:System.ICloneable {
     [Byte] $ProcessorCount
     [Uint64] $MemoryStartupBytes = 1GB
     [Boolean] $DynamicMemoryEnabled = $True
-<<<<<<< HEAD
-    [Boolean] $ExposeVirtualizationExtensions = $true
-=======
     [Boolean] $ExposeVirtualizationExtensions = $False
->>>>>>> refs/remotes/PlagueHO/dev
     [String] $ParentVHD
     [Boolean] $UseDifferencingDisk = $True
     [String] $AdministratorPassword
@@ -1209,7 +1205,6 @@ function Initialize-LabSwitch {
         [LabSwitch[]] $Switches
     )
 
-
     # if switches was not passed, pull it.
     if (-not $PSBoundParameters.ContainsKey('switches'))
     {
@@ -1282,20 +1277,6 @@ function Initialize-LabSwitch {
                         }
                         ThrowException @ExceptionParameters
                     } # if
-<<<<<<< HEAD
-                    
-					# Check this adapter is not already bound to a switch
-                    $VMSwitchNames = (Get-VMSwitch | Where-Object{$_.SwitchType -eq 'External'}).Name
-					$MacAddress = @()
-					ForEach ($VmSwitchName in $VmSwitchNames)
-					{
-						$MacAddress += `
-							(Get-VMNetworkAdapter `
-                            -ManagementOS `
-                            -Name $VmSwitchName -ErrorAction SilentlyContinue).MacAddress
-						
-					}
-=======
                     # Check this adapter is not already bound to a switch
                     $VMSwitchNames = (Get-VMSwitch | Where-Object {
                         $_.SwitchType -eq 'External'
@@ -1308,12 +1289,10 @@ function Initialize-LabSwitch {
                             -ManagementOS `
                             -Name $VmSwitchName -ErrorAction SilentlyContinue).MacAddress
                     } # foreach
->>>>>>> refs/remotes/PlagueHO/dev
 
                     $UsedAdapters = @((Get-NetAdapter -Physical | ? {
                         ($_.MacAddress -replace '-','') -in $MacAddress
                         }).Name)
-
                     if ($BindingAdapter.Name -in $UsedAdapters)
                     {
                         $ExceptionParameters = @{
@@ -4144,15 +4123,8 @@ function Initialize-LabVM {
                 -DynamicMemoryEnabled:$($VM.DynamicMemoryEnabled)
         } # if
 
-<<<<<<< HEAD
-        # if the ExposeVirtualizationExtensions is configured then try and set this on 
-        # Virtual Processor. Only supported in certain builds on Windows 10/Server 2016 TP4.
-        if ( ($VM.ExposeVirtualizationExtensions -ne (Get-VMProcessor -VMName $VM.Name).ExposeVirtualizationExtensions) -and `
-			 ((Get-VMProcessor -VMName $VM.Name).ExposeVirtualizationExtensions -ne $null) )
-=======
         # Is ExposeVirtualizationExtensions supported?
         if ($Script:CurrentBuild -lt 10565)
->>>>>>> refs/remotes/PlagueHO/dev
         {
             # No, it is not supported - is it required by VM?
             if ($VM.ExposeVirtualizationExtensions)
@@ -5303,7 +5275,6 @@ Function Install-Lab {
         # Initialize the Switches
         $Switches = Get-LabSwitch `
             -Lab $Lab
-
         Initialize-LabSwitch `
             -Lab $Lab `
             -Switches $Switches `
