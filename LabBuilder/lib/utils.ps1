@@ -475,3 +475,121 @@ function ValidateConfigurationXMLSchema {
         ThrowException @ExceptionParameters
     } # if
 } # ValidateConfigurationXMLSchema
+
+
+<#
+.SYNOPSIS
+   Increases the MAC Address.
+.PARAMETER MACAddress
+   Contains the MAC Address to increase.
+.PARAMETER Step
+   Contains the number of steps to increase the MAC address by.
+.EXAMPLE
+   IncreaseMacAddress -MacAddress '00155D0106ED' -Step 2
+   Returns the MAC Address '00155D0106EF'
+.OUTPUTS
+   The increased MAC Address.
+#>
+function IncreaseMacAddress
+{
+    [CmdLetBinding()]
+    param
+    (
+        [Parameter(Mandatory)]
+        [ValidateNotNullOrEmpty()]
+        [String] $MacAddress,
+        
+        [Byte] $Step = 1
+    )
+    Return [String]::Format("{0:X}",[Convert]::ToUInt64($MACAddress,16)+$Step).PadLeft(12,'0')
+} # IncreaseMacAddress
+
+
+
+<#
+.SYNOPSIS
+   Increases the IP Address.
+.PARAMETER IpAddress
+   Contains the IP Address to increase.
+.PARAMETER Step
+   Contains the number of steps to increase the IP address by.
+.EXAMPLE
+   IncreaseIpAddress -IpAddress '192.168.123.44' -Step 2
+   Returns the IP Address '192.168.123.44'
+.EXAMPLE
+   IncreaseIpAddress -IpAddress 'fe80::15b4:b934:5d23:1a2f' -Step 2
+   Returns the IP Address 'fe80::15b4:b934:5d23:1a31'
+.OUTPUTS
+   The increased IP Address.
+#>
+function IncreaseIpAddress
+{
+    [CmdLetBinding()]
+    param
+    (
+        [Parameter(Mandatory)]
+        [ValidateNotNullOrEmpty()]
+        [String] $IpAddress,
+        
+        [Byte] $Step = 1
+    )
+    $IP = [System.Net.IPAddress]::Any
+    if (-not [System.Net.IPAddress]::TryParse($IpAddress,[ref]$IP))
+    {
+        $ExceptionParameters = @{
+            errorId = 'IPAddressError'
+            errorCategory = 'InvalidArgument'
+            errorMessage = $($LocalizedData.IPAddressError `
+                -f $IpAddress)
+        }
+        ThrowException @ExceptionParameters
+    }
+    # This code will increase the next IP address by the step amount.
+    # It uses the IP Address byte array to do this.
+    $Bytes = $IP.GetAddressBytes()
+    $Pos = $Bytes.Length-1
+    while ($Step -gt 0)
+    {
+        if ($Bytes[$Pos] + $Step -gt 255)
+        {
+            $Bytes[$Pos] = $Bytes[$Pos] + $Step - 256
+            $Step = $Step - $Bytes[$Pos]
+            $Pos--
+        }
+        else
+        {
+            $Bytes[$Pos] = $Bytes[$Pos] + $Step
+            $Step = 0
+        } # if
+    } # while
+    Return [System.Net.IPAddress]::new($Bytes).IPAddressToString
+} # IncreaseIpAddress
+
+
+
+<#
+.SYNOPSIS
+   Validates the IP Address.
+.PARAMETER IpAddress
+   Contains the IP Address to validate.
+.EXAMPLE
+   ValidateIpAddress -IpAddress '192.168.123.44'
+   Returns True
+.EXAMPLE
+   ValidateIpAddress -IpAddress '192.168.123.4432'
+   Returns False
+.OUTPUTS
+   True if the IP Address is valid
+#>
+function ValidateIpAddress
+{
+    [CmdLetBinding()]
+    param
+    (
+        [Parameter(Mandatory)]
+        [ValidateNotNullOrEmpty()]
+        [String] $IpAddress
+    )
+    $IP = [System.Net.IPAddress]::Any
+    return [System.Net.IPAddress]::TryParse($IpAddress,[ref]$IP)
+} # ValidateIpAddress

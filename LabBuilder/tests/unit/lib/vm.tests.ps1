@@ -43,7 +43,10 @@ InModuleScope LabBuilder {
             -ArgumentList $exception, $errorId, $errorCategory, $null
         return $errorRecord
     }
-    
+    # Run tests assuming Build 10586 is installed
+    $Script:CurrentBuild = 10586
+
+
     Describe 'CreateVMInitializationFiles' -Tags 'Incomplete' {
     }
 
@@ -78,10 +81,60 @@ InModuleScope LabBuilder {
 
     Describe 'WaitVMOff' -Tags 'Incomplete'  {
     }
-    
-    
+
+
+    Describe 'GetIntegrationServiceNames' {
+        #region Mocks
+        Mock Get-CimInstance `
+            -ParameterFilter { $Class -eq 'Msvm_VssComponentSettingData' } `
+            -MockWith { @{ Caption = 'VSS' }}
+        Mock Get-CimInstance `
+            -ParameterFilter { $Class -eq 'Msvm_ShutdownComponentSettingData' } `
+            -MockWith { @{ Caption = 'Shutdown' }}
+        Mock Get-CimInstance `
+            -ParameterFilter { $Class -eq 'Msvm_TimeSyncComponentSettingData' } `
+            -MockWith { @{ Caption = 'Time Synchronization' }}
+        Mock Get-CimInstance `
+            -ParameterFilter { $Class -eq 'Msvm_HeartbeatComponentSettingData' } `
+            -MockWith { @{ Caption = 'Heartbeat' }}
+        Mock Get-CimInstance `
+            -ParameterFilter { $Class -eq 'Msvm_GuestServiceInterfaceComponentSettingData' } `
+            -MockWith { @{ Caption = 'Guest Service Interface' }}
+        Mock Get-CimInstance `
+            -ParameterFilter { $Class -eq 'Msvm_KvpExchangeComponentSettingData' } `
+            -MockWith { @{ Caption = 'Key-Value Pair Exchange' }}
+        #endregion
+
+        Context 'Called' {
+            It 'Returns expected Integration Service names' {
+                GetIntegrationServiceNames | Should Be @(
+                    'VSS'
+                    'Shutdown'
+                    'Time Synchronization'
+                    'Heartbeat'
+                    'Guest Service Interface'
+                    'Key-Value Pair Exchange'
+                )
+            }
+            It 'Calls Mocked commands' {
+                Assert-MockCalled Get-CimInstance -Exactly 6
+            }
+        }
+    }
+
+
     Describe 'UpdateVMIntegrationServices' {
         #region Mocks
+        Mock GetIntegrationServiceNames -MockWith {
+            @(
+                'VSS'
+                'Shutdown'
+                'Time Synchronization'
+                'Heartbeat'
+                'Guest Service Interface'
+                'Key-Value Pair Exchange'
+            )
+        }
         Mock Get-VMIntegrationService -MockWith { @(
             @{ Name = 'Guest Service Interface'; Enabled = $False }
             @{ Name = 'Heartbeat'; Enabled = $True }
