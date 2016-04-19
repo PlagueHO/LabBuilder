@@ -1,10 +1,26 @@
-### Unreleased
+### 0.7.4.0
+* lib\vm.ps1: WaitWMStarted - name of integrationservice "heartbeat" detected by id to be culture neutral
 * DSCLibrary\MEMBER_ADFS.DSC.ps1: Enable ADFS Firewall Rules.
 * AppVeyor.yml: Module Manifest version number always set to match build version.
 * DSCLibrary\MEMBER_IPAM.DSC.ps1:Added DSC Library Configuration for IPAM Server.
 * DSCLibrary\MEMBER_FAILOVERCLUSTER_*.DSC.ps1: Added iSCSI Firewall Rules to allow iSNS registration.
 * DSCLibrary\MEMBER_ADFS.DSC.ps1: Added DSC Library configuration for ADRMS.
 * DSCLibrary\MEMBER_SQLSERVER2014.DSC.ps1: Added Incomplete DSC Library configuration for SQL Server 2014.
+* Support\Convert-WindowsImage.ps1: Updated to March 2016 version so that DISM path can be specified.
+* labbuilder-schema.xsd: Added Settings\DismPath attribute so that path to DISM can be specified.
+* Failure to validate Lab configuration XML will terminate any cmdlet immediately.
+* Any failure in Install-Lab will cause immediate build termination.
+* Support\Convert-WindowsImage.ps1: Fixed incorrect error reported when invalid Edition is specified.
+* SetModulesInDSCConfig: Ensure each Import-DSCResource ends up on a new line.
+* DSCLibrary\MEMBER_NANO.DSC.ps1: Added DSC Library configuration for joining a Nano server to n AD Domain.
+* labbuilder-schema.xsd: Fixed VM attribute descriptions.
+* Added CertificateSource attribute to VM to support controlling where any Lab Certificates should be generated from when initializing a Lab VM.
+* Generalized Nano Server package support.
+* Both ResourceMSU and Nano Server packages can now be installed on Template VHDs and Virtual Machines.
+* Automatically add Microsoft-NanoServer-DSC-Package.cab to new Nano Server VMs.
+* Added BindingAdapterName and BindingAdapterMac attribute to swtich element to allow control over bound adapter.
+* GetCertificatePsFileContent Changed so that PFX certificate imported into Root store for non Nano Servers.
+* Automatically set xNetworking version in DSC Networking config to that of the highest version available on the Lab Host.
 
 ### 0.7.3.0
 * DSCLibrary\MEMBER_FAILOVERCLUSTER_FS.DSC.ps1: Added ServerName property to contain name of ISCSI Server.

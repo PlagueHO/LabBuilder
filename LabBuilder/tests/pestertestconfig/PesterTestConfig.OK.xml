@@ -10,8 +10,9 @@
             email="tester@pester.local"
             labpath="C:\Pester Lab"
             vhdparentpath="C:\Pester Lab\Virtual Hard Disk Templates"
-            dsclibrarypath="DSCLibrary" 
-            resourcepath="Resource" />
+            dsclibrarypath="DSCLibrary"
+            resourcepath="Resource"
+            dismpath="C:\dism" />
 
   <resources>
     <module name="xNetworking" url="https://github.com/PlagueHO/xNetworking/archive/dev.zip" folder="xNetworking-dev" />
@@ -27,7 +28,7 @@
   </resources>
 
   <switches>
-    <switch name="External" type="External" >
+    <switch name="External" type="External" bindingadaptername="Ethernet">
       <adapters>
         <adapter name="Cluster" macaddress="00155D010701" vlan="5"/>
         <adapter name="Management" macaddress="00155D010702" vlan="6"/>
@@ -172,7 +173,8 @@
         setupcomplete="" 
         integrationservices="Guest Service Interface,Heartbeat,Key-Value Pair Exchange,Shutdown,Time Synchronization,VSS" 
         packages=""
-        bootorder="9" >
+        bootorder="9"
+        certificatesource="Host" >
       <datavhds>
         <datavhd vhd="DataDiskCopy.vhdx" sourcevhd="VhdFiles\DataDisk.vhdx" copyfolders="isofiles" />
         <datavhd vhd="DataDiskFixed.vhdx" type="fixed" size="10GB" supportpr="N" partitionstyle="MBR" filesystem="NTFS" />

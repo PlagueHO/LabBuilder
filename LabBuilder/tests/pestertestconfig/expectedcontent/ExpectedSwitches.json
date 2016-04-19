@@ -4,6 +4,8 @@
         "Type":  3,
         "VLAN":  0,
         "NATSubnetAddress":  "",
+        "BindingAdapterName":  "Ethernet",
+        "BindingAdapterMac":  "",
         "Adapters":  [
                          {
                              "Name":  "Cluster",
@@ -32,6 +34,8 @@
         "Type":  1,
         "VLAN":  2,
         "NATSubnetAddress":  "",
+        "BindingAdapterName":  "",
+        "BindingAdapterMac":  "",
         "Adapters":  null
     },
     {
@@ -39,6 +43,8 @@
         "Type":  1,
         "VLAN":  0,
         "NATSubnetAddress":  "",
+        "BindingAdapterName":  "",
+        "BindingAdapterMac":  "",
         "Adapters":  null
     },
     {
@@ -46,6 +52,8 @@
         "Type":  2,
         "VLAN":  3,
         "NATSubnetAddress":  "",
+        "BindingAdapterName":  "",
+        "BindingAdapterMac":  "",
         "Adapters":  null
     },
     {
@@ -53,6 +61,8 @@
         "Type":  2,
         "VLAN":  0,
         "NATSubnetAddress":  "",
+        "BindingAdapterName":  "",
+        "BindingAdapterMac":  "",
         "Adapters":  null
     }
 ]

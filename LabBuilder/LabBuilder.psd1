@@ -1,6 +1,6 @@
 @{
     RootModule = 'LabBuilder.psm1'
-    ModuleVersion = '0.7.3'
+    ModuleVersion = '0.7.4'
     GUID = 'e229850e-7a90-4123-9a30-37814119d3a3'
     Author = 'Daniel Scott-Raynsford'
     CompanyName = ''
@@ -50,7 +50,7 @@
     FileList = @()
     PrivateData = @{
         PSData = @{
-            Tags = @('Hyper-V','Lab','Desired State Configuration','DSC')
+            Tags = @('Hyper-V','Lab','DesiredStateConfiguration','DSC')
             # LicenseUri = https://github.com/PlagueHO/LabBuilder/blob/master/LICENSE
             ProjectUri = 'https://github.com/PlagueHO/LabBuilder'
             # IconUri = ''

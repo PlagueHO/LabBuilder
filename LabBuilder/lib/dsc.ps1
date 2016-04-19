@@ -116,7 +116,7 @@ function SetModulesInDSCConfig()
     {
         [String] $DSCConfigContent = Get-Content -Path $DSCConfigFile -RAW
     } # if
-    $Regex = "[ \t]*?Import\-DscResource[ \t]+(?:\-ModuleName[ \t])?'?`"?([A-Za-z0-9._-]+)`"?'?(([ \t]+-ModuleVersion)?[ \t]+'?`"?([0-9.]+)`"?`?)?[ \t]*?[\r\n]+?"
+    $Regex = "[ \t]*?Import\-DscResource[ \t]+(?:\-ModuleName[ \t]+)?'?`"?([A-Za-z0-9._-]+)`"?'?([ \t]+(-ModuleVersion[ \t]+)?'?`"?([0-9.]+)`"?'?)?[ \t]*[\r\n]+"
     $Matches = [regex]::matches($DSCConfigContent, $Regex, 'IgnoreCase')
     foreach ($Module in $Modules)
     {
@@ -125,7 +125,9 @@ function SetModulesInDSCConfig()
         {
             $ImportCommand = "$ImportCommand -ModuleVersion '$($Module.ModuleVersion)'"
         } # if
-        $ImportCommand = "`r`n$ImportCommand"
+
+        $ImportCommand = "    $ImportCommand`r`n"
+
         # is this module already in there?
         [Boolean] $Found = $False
         foreach ($Match in $Matches)
@@ -153,7 +155,7 @@ function SetModulesInDSCConfig()
             {
                 # There are no existing DSC Resource lines, so add it after
                 # Configuration ... { line
-                $Match = [regex]::matches($DSCConfigContent, "[ \t]*?Configuration[ \t]+?'?`"?[A-Za-z0-9._-]+`"?'?[ \t]*?[\r\n]*?{[\r\n]?", 'IgnoreCase')
+                $Match = [regex]::matches($DSCConfigContent, "[ \t]*?Configuration[ \t]+?'?`"?[A-Za-z0-9._-]+`"?'?[ \t]*?[\r\n]*?{[\r\n]*?", 'IgnoreCase')
                 if (-not $Match)
                 {
                     $ExceptionParameters = @{
@@ -336,23 +338,27 @@ function CreateDSCMOFFiles {
             -Recurse -Force
     } # Foreach
 
-    if (-not (RecreateSelfSignedCertificate -Lab $Lab -VM $VM))
+    if ($VM.CertificateSource -eq [LabCertificateSource]::Guest)
     {
-        $ExceptionParameters = @{
-            errorId = 'CertificateCreateError'
-            errorCategory = 'InvalidArgument'
-            errorMessage = $($LocalizedData.CertificateCreateError `
-                -f $VM.Name)
+        # Recreate the certificate if it the source is the Guest
+        if (-not (RecreateSelfSignedCertificate -Lab $Lab -VM $VM))
+        {
+            $ExceptionParameters = @{
+                errorId = 'CertificateCreateError'
+                errorCategory = 'InvalidArgument'
+                errorMessage = $($LocalizedData.CertificateCreateError `
+                    -f $VM.Name)
+            }
+            ThrowException @ExceptionParameters
         }
-        ThrowException @ExceptionParameters
-    }
 
-    # Remove any old self-signed certifcates for this VM
-    Get-ChildItem -Path cert:\LocalMachine\My `
-        | Where-Object { $_.FriendlyName -eq $Script:DSCCertificateFriendlyName } `
-        | Remove-Item
+        # Remove any old self-signed certifcates for this VM
+        Get-ChildItem -Path cert:\LocalMachine\My `
+            | Where-Object { $_.FriendlyName -eq $Script:DSCCertificateFriendlyName } `
+            | Remove-Item
+    } # if
 
-    # Add the VM Self-Signed Certificate to the Local Machine store and get the Thumbprint    
+    # Add the VM Self-Signed Certificate to the Local Machine store and get the Thumbprint
     [String] $CertificateFile = Join-Path `
         -Path $VMLabBuilderFiles `
         -ChildPath $Script:DSCEncryptionCert
@@ -610,8 +616,12 @@ Get-NetAdapter ``
     } # Foreach
 
     # Enable DSC logging (as long as it hasn't been already)
-    [String] $Logging = ($VM.DSC.Logging).ToString() 
-    $DSCStartPs += @"
+    # Nano Server doesn't have the Microsoft-Windows-Dsc/Analytic channels so
+    # Logging can't be enabled.
+    if ($VM.OSType -ne [LabOSType]::Nano)
+    {
+        [String] $Logging = ($VM.DSC.Logging).ToString() 
+        $DSCStartPs += @"
 `$Result = & "wevtutil.exe" get-log "Microsoft-Windows-Dsc/Analytic"
 if (-not (`$Result -like '*enabled: true*')) {
     & "wevtutil.exe" set-log "Microsoft-Windows-Dsc/Analytic" /q:true /e:$Logging
@@ -622,6 +632,7 @@ if (-not (`$Result -like '*enabled: true*')) {
 }
 
 "@
+    } # if
 
     # Start the actual DSC Configuration
     $DSCStartPs += @"
@@ -973,9 +984,14 @@ function GetDSCNetworkingConfig {
         [Parameter(Mandatory)]
         [LabVM] $VM
     )
+    $xNetworkingVersion = (`
+        Get-Module xNetworking -ListAvailable `
+        | Sort-Object version -Descending `
+        | Select-Object -First 1 `
+        ).Version.ToString()
     [String] $DSCNetworkingConfig = @"
 Configuration Networking {
-    Import-DscResource -ModuleName xNetworking -ModuleVersion 2.7.0.0  #Current as of 13-Feb-2016
+    Import-DscResource -ModuleName xNetworking -ModuleVersion $xNetworkingVersion
 
 "@
     [Int] $AdapterCount = 0
