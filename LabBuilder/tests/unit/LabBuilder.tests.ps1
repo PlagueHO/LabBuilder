@@ -377,6 +377,7 @@ InModuleScope LabBuilder {
         Mock Get-VMSwitch -MockWith {
             @{
                 Name = 'Dummy Switch'
+                SwitchType = 'External'
             }
         }
         Mock New-VMSwitch

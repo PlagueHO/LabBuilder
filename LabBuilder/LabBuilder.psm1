@@ -1278,12 +1278,17 @@ function Initialize-LabSwitch {
                         ThrowException @ExceptionParameters
                     } # if
                     # Check this adapter is not already bound to a switch
-                    $MacAddress = `
-                        (Get-VMNetworkAdapter `
+                    $VMSwitchNames = (Get-VMSwitch | Where-Object {
+                        $_.SwitchType -eq 'External'
+                    }).Name
+                    $MacAddress = @()
+                    ForEach ($VmSwitchName in $VmSwitchNames)
+                    {
+                        $MacAddress += `
+                            (Get-VMNetworkAdapter `
                             -ManagementOS `
-                            -Name (Get-VMSwitch | ? { 
-                            $_.SwitchType -eq 'External'
-                            }).Name).MacAddress
+                            -Name $VmSwitchName -ErrorAction SilentlyContinue).MacAddress
+                    } # foreach
 
                     $UsedAdapters = @((Get-NetAdapter -Physical | ? {
                         ($_.MacAddress -replace '-','') -in $MacAddress
@@ -4755,6 +4760,16 @@ function Get-Lab {
             Position=3)]
         [Switch] $SkipXMLValidation
     ) # Param
+
+    # If a relative path to the config has been specified
+    # then convert it to absolute path
+    if (-not [System.IO.Path]::IsPathRooted($ConfigPath))
+    {
+        $ConfigPath = Join-Path `
+            -Path (Get-Location).Path `
+            -ChildPath $ConfigPath
+    } # if
+
     if (-not (Test-Path -Path $ConfigPath))
     {
         $ExceptionParameters = @{
@@ -5213,7 +5228,8 @@ Function Install-Lab {
         {
             $null = New-VMSwitch `
                 -SwitchType Internal `
-                -Name $ManagementSwitchName
+                -Name $ManagementSwitchName `
+                -ErrorAction Stop
                 
             Write-Verbose -Message $($LocalizedData.CreatingLabManagementSwitchMessage `
                 -f $ManagementSwitchName,$ManagementVlan)
@@ -5221,7 +5237,8 @@ Function Install-Lab {
         # Check the Vlan ID of the adapter on the switch
         $ExistingManagementAdapter = Get-VMNetworkAdapter `
             -ManagementOS `
-            -Name $ManagementSwitchName
+            -Name $ManagementSwitchName `
+            -ErrorAction Stop
         $ExistingVlan = (Get-VMNetworkAdapterVlan `
             -VMNetworkAdaptername $ExistingManagementAdapter.Name `
             -ManagementOS).AccessVlanId
@@ -5235,7 +5252,8 @@ Function Install-Lab {
                 -VMNetworkAdapterName $ManagementSwitchName `
                 -ManagementOS `
                 -Access `
-                -VlanId $ManagementVlan
+                -VlanId $ManagementVlan `
+                -ErrorAction Stop
         }
 
         # Download any Resource Modules required by this Lab
