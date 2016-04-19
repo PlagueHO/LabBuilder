@@ -2204,6 +2204,14 @@ InModuleScope LabBuilder {
 
 #region LabFunctions
     Describe 'Get-Lab' {
+        Context 'Relative Path is provided and valid XML file exists' {
+            Mock Get-Location -MockWith { @{ Path = $Global:TestConfigPath} }
+            It 'Returns XmlDocument object with valid content' {
+                $Lab = Get-Lab -ConfigPath (Split-Path -Path $Global:TestConfigOKPath -Leaf)
+                $Lab.GetType().Name | Should Be 'XmlDocument'
+                $Lab.labbuilderconfig | Should Not Be $null
+            }
+        }
         Context 'Path is provided and valid XML file exists' {
             It 'Returns XmlDocument object with valid content' {
                 $Lab = Get-Lab -ConfigPath $Global:TestConfigOKPath

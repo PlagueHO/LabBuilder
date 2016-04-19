@@ -8,6 +8,7 @@
 * Install-Lab will now stop if error occurs creating Lab Management switch or adapter.
 * Added support for Get-Lab to work with config files with a relative path.
 * Improved handling of Initialize-LabSwitches when Multiple External adapters are available and/or already in use by external switches.
+* Improved Localization support for Integration Services.
 
 ### 0.7.4.0
 * lib\vm.ps1: WaitWMStarted - name of integrationservice "heartbeat" detected by id to be culture neutral
