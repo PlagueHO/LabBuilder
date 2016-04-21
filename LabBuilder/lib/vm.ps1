@@ -1232,8 +1232,7 @@ function UpdateVMIntegrationServices {
             if (-not $ExistingIntegrationService.Enabled)
             {
                 # It is disabled so enable it
-                Get-VMIntegrationService -VMName $VM.Name -Name $ExistingIntegrationService.Name | `
-				Enable-VMIntegrationService 
+                $ExistingIntegrationService | Enable-VMIntegrationService
 
                 Write-Verbose -Message $($LocalizedData.EnableVMIntegrationServiceMessage `
                     -f $VM.Name,$ExistingIntegrationService.Name)
@@ -1245,9 +1244,7 @@ function UpdateVMIntegrationServices {
             if ($ExistingIntegrationService.Enabled)
             {
                 # It is enabled so disable it
-                Disable-VMIntegrationService `
-                    -VMName $VM.Name `
-                    -Name $ExistingIntegrationService.Name
+                $ExistingIntegrationService | Disable-VMIntegrationService
 
                 Write-Verbose -Message $($LocalizedData.DisableVMIntegrationServiceMessage `
                     -f $VM.Name,$ExistingIntegrationService.Name)
