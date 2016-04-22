@@ -43,7 +43,10 @@ InModuleScope LabBuilder {
             -ArgumentList $exception, $errorId, $errorCategory, $null
         return $errorRecord
     }
-    
+    # Run tests assuming Build 10586 is installed
+    $Script:CurrentBuild = 10586
+
+
     Describe 'CreateVMInitializationFiles' -Tags 'Incomplete' {
     }
 
@@ -78,19 +81,75 @@ InModuleScope LabBuilder {
 
     Describe 'WaitVMOff' -Tags 'Incomplete'  {
     }
-    
-    
+
+
+    Describe 'GetIntegrationServiceNames' {
+        #region Mocks
+        Mock Get-CimInstance `
+            -ParameterFilter { $Class -eq 'Msvm_VssComponentSettingData' } `
+            -MockWith { @{ Caption = 'VSS' }}
+        Mock Get-CimInstance `
+            -ParameterFilter { $Class -eq 'Msvm_ShutdownComponentSettingData' } `
+            -MockWith { @{ Caption = 'Shutdown' }}
+        Mock Get-CimInstance `
+            -ParameterFilter { $Class -eq 'Msvm_TimeSyncComponentSettingData' } `
+            -MockWith { @{ Caption = 'Time Synchronization' }}
+        Mock Get-CimInstance `
+            -ParameterFilter { $Class -eq 'Msvm_HeartbeatComponentSettingData' } `
+            -MockWith { @{ Caption = 'Heartbeat' }}
+        Mock Get-CimInstance `
+            -ParameterFilter { $Class -eq 'Msvm_GuestServiceInterfaceComponentSettingData' } `
+            -MockWith { @{ Caption = 'Guest Service Interface' }}
+        Mock Get-CimInstance `
+            -ParameterFilter { $Class -eq 'Msvm_KvpExchangeComponentSettingData' } `
+            -MockWith { @{ Caption = 'Key-Value Pair Exchange' }}
+        #endregion
+
+        Context 'Called' {
+            It 'Returns expected Integration Service names' {
+                GetIntegrationServiceNames | Should Be @(
+                    'VSS'
+                    'Shutdown'
+                    'Time Synchronization'
+                    'Heartbeat'
+                    'Guest Service Interface'
+                    'Key-Value Pair Exchange'
+                )
+            }
+            It 'Calls Mocked commands' {
+                Assert-MockCalled Get-CimInstance -Exactly 6
+            }
+        }
+    }
+
+
     Describe 'UpdateVMIntegrationServices' {
         #region Mocks
+        Mock GetIntegrationServiceNames -MockWith {
+            @(
+                'VSS'
+                'Shutdown'
+                'Time Synchronization'
+                'Heartbeat'
+                'Guest Service Interface'
+                'Key-Value Pair Exchange'
+            )
+        }
         Mock Get-VMIntegrationService -MockWith { @(
             @{ Name = 'Guest Service Interface'; Enabled = $False }
             @{ Name = 'Heartbeat'; Enabled = $True }
-            @{ Name = 'Key-Value Pair Exchange'; Enabled = $True }
+            @{ Name = 'Key-Value Pair Exchange'; Enabled = $False }
             @{ Name = 'Shutdown'; Enabled = $True }
             @{ Name = 'Time Synchronization'; Enabled = $True }
             @{ Name = 'VSS'; Enabled = $True }
         ) }
+        Function Enable-VMIntegrationService {
+            [CmdletBinding()] param ( [Parameter(ValueFromPipeline = $true)] $Name, $VM)
+        }
         Mock Enable-VMIntegrationService
+        Function Disable-VMIntegrationService {
+            [CmdletBinding()] param ( [Parameter(ValueFromPipeline = $true)] $Name, $VM)
+        }
         Mock Disable-VMIntegrationService
         #endregion
 
@@ -106,7 +165,7 @@ InModuleScope LabBuilder {
             }
             It 'Calls Mocked commands' {
                 Assert-MockCalled Get-VMIntegrationService -Exactly 1
-                Assert-MockCalled Enable-VMIntegrationService -Exactly 1
+                Assert-MockCalled Enable-VMIntegrationService -Exactly 2
                 Assert-MockCalled Disable-VMIntegrationService -Exactly 0
             }
         }
@@ -119,8 +178,8 @@ InModuleScope LabBuilder {
             }
             It 'Calls Mocked commands' {
                 Assert-MockCalled Get-VMIntegrationService -Exactly 1
-                Assert-MockCalled Enable-VMIntegrationService -Exactly 0 
-                Assert-MockCalled Disable-VMIntegrationService -Exactly 5
+                Assert-MockCalled Enable-VMIntegrationService -Exactly 0
+                Assert-MockCalled Disable-VMIntegrationService -Exactly 4
             }
         }
 
@@ -132,8 +191,8 @@ InModuleScope LabBuilder {
             }
             It 'Calls Mocked commands' {
                 Assert-MockCalled Get-VMIntegrationService -Exactly 1
-                Assert-MockCalled Enable-VMIntegrationService -Exactly 0 
-                Assert-MockCalled Disable-VMIntegrationService -Exactly 4
+                Assert-MockCalled Enable-VMIntegrationService -Exactly 0
+                Assert-MockCalled Disable-VMIntegrationService -Exactly 3
             }
         }
         Context 'Valid configuration is passed with Guest Service Interface only enabled' {
@@ -144,8 +203,8 @@ InModuleScope LabBuilder {
             }
             It 'Calls Mocked commands' {
                 Assert-MockCalled Get-VMIntegrationService -Exactly 1
-                Assert-MockCalled Enable-VMIntegrationService -Exactly 1 
-                Assert-MockCalled Disable-VMIntegrationService -Exactly 5
+                Assert-MockCalled Enable-VMIntegrationService -Exactly 1
+                Assert-MockCalled Disable-VMIntegrationService -Exactly 4
             }
         }
     }

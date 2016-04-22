@@ -1130,6 +1130,44 @@ function WaitVMOff {
 
 <#
 .SYNOPSIS
+    Get list of Integration Service names (localized)
+.DESCRIPTION
+    This cmdlet will get the list of Integration services available on a Hyper-V host.
+    The list of Integration Services will contain the localized names.
+.EXAMPLE
+    GetIntegrationServiceNames
+.OUTPUTS
+    An array of localized Integration Serivce names.
+#>
+function GetIntegrationServiceNames {
+    [CmdLetBinding()]
+    param
+    (
+    )
+    $Captions = @()
+    $Classes = @(
+        'Msvm_VssComponentSettingData'
+        'Msvm_ShutdownComponentSettingData'
+        'Msvm_TimeSyncComponentSettingData'
+        'Msvm_HeartbeatComponentSettingData'
+        'Msvm_GuestServiceInterfaceComponentSettingData'
+        'Msvm_KvpExchangeComponentSettingData'
+    )
+    foreach ($Class in $Classes)
+    {
+        $Captions += (Get-CimInstance `
+            -Class $Class `
+            -Namespace Root\Virtualization\V2 `
+            -Property Caption | Select-Object -First 1).Caption
+    } # foreach
+    # This Integration Service is registered in CIM but are not exposed in Hyper-V
+    # 'Msvm_RdvComponentSettingData'
+    return $Captions
+} # GetIntegrationServiceNames
+
+
+<#
+.SYNOPSIS
     Updates the VM Integration Services to match the VM Configuration.
 .DESCRIPTION
     This cmdlet will take the VM object provided and ensure the integration services specified
@@ -1178,7 +1216,8 @@ function UpdateVMIntegrationServices {
     $IntegrationServices = $VM.IntegrationServices
     if ($null -eq $IntegrationServices)
     {
-        $IntegrationServices = 'Guest Service Interface,Heartbeat,Key-Value Pair Exchange,Shutdown,Time Synchronization,VSS'
+        # Get the full list of Integration Service names localized
+        $IntegrationServices = ((GetIntegrationServiceNames) -Join ',')
     }
     $EnabledIntegrationServices = $IntegrationServices -split ','
     $ExistingIntegrationServices = Get-VMIntegrationService `
@@ -1193,9 +1232,7 @@ function UpdateVMIntegrationServices {
             if (-not $ExistingIntegrationService.Enabled)
             {
                 # It is disabled so enable it
-                Enable-VMIntegrationService `
-                    -VMName $VM.Name `
-                    -Name $ExistingIntegrationService.Name 
+                $ExistingIntegrationService | Enable-VMIntegrationService
 
                 Write-Verbose -Message $($LocalizedData.EnableVMIntegrationServiceMessage `
                     -f $VM.Name,$ExistingIntegrationService.Name)
@@ -1207,9 +1244,7 @@ function UpdateVMIntegrationServices {
             if ($ExistingIntegrationService.Enabled)
             {
                 # It is enabled so disable it
-                Disable-VMIntegrationService `
-                    -VMName $VM.Name `
-                    -Name $ExistingIntegrationService.Name
+                $ExistingIntegrationService | Disable-VMIntegrationService
 
                 Write-Verbose -Message $($LocalizedData.DisableVMIntegrationServiceMessage `
                     -f $VM.Name,$ExistingIntegrationService.Name)

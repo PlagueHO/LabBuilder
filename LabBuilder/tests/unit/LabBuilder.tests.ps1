@@ -85,6 +85,8 @@ InModuleScope LabBuilder {
             -ArgumentList $exception, $errorId, $errorCategory, $null
         return $errorRecord
     }
+    # Run tests assuming Build 10586 is installed
+    $Script:CurrentBuild = 10586
 
 
     # Perform Configuration XML Schema validation
@@ -375,6 +377,7 @@ InModuleScope LabBuilder {
         Mock Get-VMSwitch -MockWith {
             @{
                 Name = 'Dummy Switch'
+                SwitchType = 'External'
             }
         }
         Mock New-VMSwitch
@@ -1405,12 +1408,16 @@ InModuleScope LabBuilder {
 #endregion
 
 
+
 #region LabVMFunctions
     Describe 'Get-LabVM' {
 
         #region mocks
         Mock Get-VM
         #endregion
+
+        # Run tests assuming Build 10586 is installed
+        $Script:CurrentBuild = 10586
 
         # Figure out the TestVMName (saves typing later on)
         $Lab = Get-Lab -ConfigPath $Global:TestConfigOKPath
@@ -1960,18 +1967,40 @@ InModuleScope LabBuilder {
                 $VMs.Count | Should Be 0
             }
         }
+        $Script:CurrentBuild = 10560
+        Context 'Configuration passed with ExposeVirtualizationExtensions required but Build is 10560.' {
+            It 'Throw DSCConfigNameIsEmptyError Exception' {
+                $Lab = Get-Lab -ConfigPath $Global:TestConfigOKPath
+                [Array]$Switches = Get-LabSwitch -Lab $Lab
+                [Array]$Templates = Get-LabVMTemplate -Lab $Lab
+                $ExceptionParameters = @{
+                    errorId = 'VMVirtualizationExtError'
+                    errorCategory = 'InvalidArgument'
+                    errorMessage = $($LocalizedData.VMVirtualizationExtError `
+                        -f $TestVMName)
+                }
+                $Exception = GetException @ExceptionParameters
+                { Get-LabVM -Lab $Lab -VMTemplates $Templates -Switches $Switches } | Should Throw $Exception
+            }
+        }
+        $Script:CurrentBuild = 10586
         Context 'Valid configuration is passed but switches and VMTemplates not passed' {
             $Lab = Get-Lab -ConfigPath $Global:TestConfigOKPath
+            # Set the Instance Count to 2 to check
+            $Lab.labbuilderconfig.vms.vm.instancecount = '2'
             [Array]$VMs = Get-LabVM -Lab $Lab
             # Remove the Source VHD and Parent VHD values for any data disks because they
             # will usually be relative to the test folder and won't exist
-            foreach ($DataVhd in $VMs[0].DataVhds)
+            foreach ($VM in $VMs)
             {
-                $DataVhd.ParentVHD = 'Intentionally Removed'
-                $DataVhd.SourceVHD = 'Intentionally Removed'
+                foreach ($DataVhd in $VM.DataVhds)
+                {
+                    $DataVhd.ParentVHD = 'Intentionally Removed'
+                    $DataVhd.SourceVHD = 'Intentionally Removed'
+                }
+                # Remove the DSC.ConfigFile path as this will be relative as well
+                $VM.DSC.ConfigFile = ''
             }
-            # Remove the DSC.ConfigFile path as this will be relative as well
-            $VMs[0].DSC.ConfigFile = ''
             It 'Returns Template Object that matches Expected Object' {
                 Set-Content -Path "$Global:ArtifactPath\ExpectedVMs.json" -Value ($VMs | ConvertTo-Json -Depth 6)
                 $ExpectedVMs = Get-Content -Path "$Global:ExpectedContentPath\ExpectedVMs.json"
@@ -1982,16 +2011,21 @@ InModuleScope LabBuilder {
             $Lab = Get-Lab -ConfigPath $Global:TestConfigOKPath
             [Array]$Switches = Get-LabSwitch -Lab $Lab
             [Array]$Templates = Get-LabVMTemplate -Lab $Lab
+            # Set the Instance Count to 2 to check
+            $Lab.labbuilderconfig.vms.vm.instancecount = '2'
             [Array]$VMs = Get-LabVM -Lab $Lab -VMTemplates $Templates -Switches $Switches
             # Remove the Source VHD and Parent VHD values for any data disks because they
             # will usually be relative to the test folder and won't exist
-            foreach ($DataVhd in $VMs[0].DataVhds)
+            foreach ($VM in $VMs)
             {
-                $DataVhd.ParentVHD = 'Intentionally Removed'
-                $DataVhd.SourceVHD = 'Intentionally Removed'
+                foreach ($DataVhd in $VM.DataVhds)
+                {
+                    $DataVhd.ParentVHD = 'Intentionally Removed'
+                    $DataVhd.SourceVHD = 'Intentionally Removed'
+                }
+                # Remove the DSC.ConfigFile path as this will be relative as well
+                $VM.DSC.ConfigFile = ''
             }
-            # Remove the DSC.ConfigFile path as this will be relative as well
-            $VMs[0].DSC.ConfigFile = ''
             It 'Returns Template Object that matches Expected Object' {
                 Set-Content -Path "$Global:ArtifactPath\ExpectedVMs.json" -Value ($VMs | ConvertTo-Json -Depth 6)
                 $ExpectedVMs = Get-Content -Path "$Global:ExpectedContentPath\ExpectedVMs.json"
@@ -2000,7 +2034,8 @@ InModuleScope LabBuilder {
         }
     }
 
-  
+
+
     Describe 'Initialize-LabVM'  -Tags 'Incomplete' {
         #region Mocks
         Mock New-VHD
@@ -2018,7 +2053,7 @@ InModuleScope LabBuilder {
         Mock Install-LabVMDSC
         #endregion
 
-        Context 'Valid configuration is passed' {	
+        Context 'Valid configuration is passed' {
             $Lab = Get-Lab -ConfigPath $Global:TestConfigOKPath
             New-Item -Path $Lab.labbuilderconfig.settings.labpath -ItemType Directory -Force -ErrorAction SilentlyContinue
             New-Item -Path $Lab.labbuilderconfig.settings.vhdparentpath -ItemType Directory -Force -ErrorAction SilentlyContinue
@@ -2049,6 +2084,7 @@ InModuleScope LabBuilder {
             Remove-Item -Path $Lab.labbuilderconfig.settings.vhdparentpath -Recurse -Force -ErrorAction SilentlyContinue
         }
     }
+
 
 
     Describe 'Remove-LabVM' {
@@ -2115,6 +2151,7 @@ InModuleScope LabBuilder {
     }
 
 
+
     Describe 'Install-LabVM' -Tags 'Incomplete' {
         #region Mocks
         Mock Get-VM -ParameterFilter { $Name -eq 'PESTER01' } -MockWith { [PSObject]@{ Name='PESTER01'; State='Off' } }
@@ -2152,8 +2189,9 @@ InModuleScope LabBuilder {
             Remove-Item -Path $Lab.labbuilderconfig.settings.vhdparentpath -Recurse -Force -ErrorAction SilentlyContinue
         }
     }
-    
-    
+
+
+
     Describe 'Connect-LabVM' -Tags 'Incomplete'  {
     }
 
@@ -2166,6 +2204,14 @@ InModuleScope LabBuilder {
 
 #region LabFunctions
     Describe 'Get-Lab' {
+        Context 'Relative Path is provided and valid XML file exists' {
+            Mock Get-Location -MockWith { @{ Path = $Global:TestConfigPath} }
+            It 'Returns XmlDocument object with valid content' {
+                $Lab = Get-Lab -ConfigPath (Split-Path -Path $Global:TestConfigOKPath -Leaf)
+                $Lab.GetType().Name | Should Be 'XmlDocument'
+                $Lab.labbuilderconfig | Should Not Be $null
+            }
+        }
         Context 'Path is provided and valid XML file exists' {
             It 'Returns XmlDocument object with valid content' {
                 $Lab = Get-Lab -ConfigPath $Global:TestConfigOKPath
@@ -2213,9 +2259,9 @@ InModuleScope LabBuilder {
             }
         }
     }
-    
-    
-    
+
+
+
     Describe 'New-Lab' -Tags 'Incomplete'  {
     }
 
@@ -2258,12 +2304,12 @@ InModuleScope LabBuilder {
 
     Describe 'Start-Lab' -Tags 'Incomplete'  {
     }
-    
-    
-    
+
+
+
     Describe 'Stop-Lab' -Tags 'Incomplete'  {
-    }    
-#endregion    
+    }
+#endregion
 }
 
 Set-Location -Path $OldLocation
