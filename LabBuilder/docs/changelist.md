@@ -1,4 +1,4 @@
-### Unreleased
+### 0.7.5.0
 * Added VM InstanceCount attribute for creating multiple copies a VM in a Lab.
 * Added $Script:CurrentBuild variable to allow easier access to OS build version.
 * Fix to prevent ExposeVirtualizationExtensions from being applied on Lab Hosts that don't support it.
