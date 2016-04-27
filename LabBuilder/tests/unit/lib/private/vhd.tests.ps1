@@ -1,4 +1,4 @@
-$Global:ModuleRoot = Split-Path -Parent (Split-Path -Parent (Split-Path -Parent (Split-Path -Parent $Script:MyInvocation.MyCommand.Path)))
+$Global:ModuleRoot = Resolve-Path -Path "$($Script:MyInvocation.MyCommand.Path)\..\..\..\..\..\"
 
 $OldLocation = Get-Location
 Set-Location -Path $ModuleRoot
@@ -7,12 +7,17 @@ if (Get-Module LabBuilder -All)
     Get-Module LabBuilder -All | Remove-Module
 }
 
-Import-Module "$Global:ModuleRoot\LabBuilder.psd1" -Force -DisableNameChecking
+Import-Module "$Global:ModuleRoot\LabBuilder.psd1" `
+    -Force `
+    -DisableNameChecking
 $Global:TestConfigPath = "$Global:ModuleRoot\Tests\PesterTestConfig"
 $Global:TestConfigOKPath = "$Global:TestConfigPath\PesterTestConfig.OK.xml"
 $Global:ArtifactPath = "$Global:ModuleRoot\Artifacts"
 $Global:ExpectedContentPath = "$Global:TestConfigPath\ExpectedContent"
-$null = New-Item -Path "$Global:ArtifactPath" -ItemType Directory -Force -ErrorAction SilentlyContinue
+$null = New-Item -Path "$Global:ArtifactPath" `
+    -ItemType Directory `
+    -Force `
+    -ErrorAction SilentlyContinue
 
 InModuleScope LabBuilder {
 <#
