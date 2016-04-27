@@ -236,7 +236,7 @@ try
 }
 catch
 {
-    
+    throw $_
 }
 finally
 {
