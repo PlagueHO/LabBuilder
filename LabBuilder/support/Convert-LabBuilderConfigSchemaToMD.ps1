@@ -10,3 +10,4 @@ $OutputFile = Join-Path -Path $PSScriptRoot -ChildPath '..\docs\labbuilderconfig
     -XmlFile $XMLFile `
     -XslFile $XSLFile `
     -OutputFile $OutputFile
+Write-Verbose -Verbose "'..\schema\labbuilderconfig-schema.xsd' has been converted to '..\docs\labbuilderconfig-schema.md' successfully"
