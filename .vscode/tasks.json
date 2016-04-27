@@ -1,9 +1,15 @@
 {
-    // See http://go.microsoft.com/fwlink/?LinkId=733558
-    // for the documentation about the tasks.json format
-    "version": "1.0.0",
-    "command": "powershell",
+    "version": "0.1.0",
+    "command": "powershell.exe",
     "isShellCommand": true,
-    "args": ["-command",".\\LabBuilder\\LabBuilder\\Support\\Convert-LabBuilderConfigSchemaToMD.ps1"],
-    "showOutput": "always"
+    "showOutput": "always",
+    "tasks": [
+        {
+            "taskName": "powershell",
+            "args": [
+                "-command",".\\LabBuilder\\LabBuilder\\Support\\Convert-LabBuilderConfigSchemaToMD.ps1"
+            ],
+            "isBuildCommand": true
+        }
+    ]
 }
