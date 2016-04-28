@@ -85,7 +85,7 @@
         "VHDPath":  "Intentionally Removed",
         "Edition":  "",
         "Packages":  [
-                         "Guest"
+                         "Microsoft-NanoServer-Guest-Package.cab"
                      ],
         "Features":  null
     }

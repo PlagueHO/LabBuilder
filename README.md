@@ -155,7 +155,7 @@ By default LabBuilder will look in the **isofiles** subfolder of your Lab folder
 You can change the folder that a Lab looks in for the ISO files by changing/setting the _isopath_ attribute of the _<templatevhds>_ node in the configuration
 If it can't find an ISO file it needs, you will be notified of an official download location for trial or preview editions of the ISO files (as long as the LabBuilder configuration you're using contains the download URLs).
 
-Some common ISO download locations:  
+Some common ISO download locations:
  - Windows Server 2012 R2: https://www.microsoft.com/en-us/evalcenter/evaluate-windows-server-2012-r2
  - Windows 10 Enterprise: https://www.microsoft.com/en-us/evalcenter/evaluate-windows-10-enterprise
  - Windows Server 2016 TP5: https://www.microsoft.com/en-us/evalcenter/evaluate-windows-server-technical-preview
@@ -179,6 +179,8 @@ If you are converting a Windows Server 2016 image and your Lab Host is running e
  - Windows Server 2012 R2 or older
  - Windows 8.1 or older
 
+**Important:** Only Windows Server 2016 Technical Preview 5 and above are supported with LabBilder.
+ 
 You will need to install an updated version of the DISM before you will be able to add any packages to a Windows Server 2016 ISO.
 This includes building Nano Server Images.
 

@@ -87,7 +87,7 @@
                  url="https://www.microsoft.com/en-us/evalcenter/evaluate-windows-server-technical-preview"
                  vhd="Nano Server 2016 TP5 Basic.vhdx"
                  ostype="Nano"
-                 packages="Guest"
+                 packages="Microsoft-NanoServer-Guest-Package.cab"
                  vhdformat="vhdx" 
                  vhdtype="dynamic" 
                  generation="2"

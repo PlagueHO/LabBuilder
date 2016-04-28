@@ -537,3 +537,6 @@ class LabDSCModule:System.ICloneable {
 [String] $Script:ConfigurationXMLTemplate = Join-Path `
     -Path $PSScriptRoot `
     -ChildPath 'template\labbuilderconfig-template.xml'
+
+# Nano Stuff
+[String] $Script:NanoPackageCulture = 'en-us'
