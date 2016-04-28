@@ -1,0 +1,15 @@
+{
+    "version": "0.1.0",
+    "command": "powershell.exe",
+    "isShellCommand": true,
+    "showOutput": "always",
+    "tasks": [
+        {
+            "taskName": "powershell",
+            "args": [
+                "-command",".\\LabBuilder\\LabBuilder\\Support\\Convert-LabBuilderConfigSchemaToMD.ps1"
+            ],
+            "isBuildCommand": true
+        }
+    ]
+}
