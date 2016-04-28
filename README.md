@@ -47,7 +47,7 @@ To use this Module you will require on your Lab Host:
  1. Operating Systems supported:
     - Windows Server 2012
     - Windows Server 2012 R2
-    - Windows Server 2016 TP4
+    - Windows Server 2016 TP5
     - Windows 8.0
     - Windows 8.1
     - Windows 10
@@ -158,7 +158,7 @@ If it can't find an ISO file it needs, you will be notified of an official downl
 Some common ISO download locations:  
  - Windows Server 2012 R2: https://www.microsoft.com/en-us/evalcenter/evaluate-windows-server-2012-r2
  - Windows 10 Enterprise: https://www.microsoft.com/en-us/evalcenter/evaluate-windows-10-enterprise
- - Windows Server 2016 TP4: https://www.microsoft.com/en-us/evalcenter/evaluate-windows-server-technical-preview
+ - Windows Server 2016 TP5: https://www.microsoft.com/en-us/evalcenter/evaluate-windows-server-technical-preview
 
 **Important**: If you are converting Windows Server 2016 ISO files or adding packages to VHDs please see the [Windows Server 2016](#Windows Server 2016) section.
 
