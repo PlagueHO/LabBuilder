@@ -1,14 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
 
 <labbuilderconfig xmlns="labbuilderconfig"
-                  name="Sample_WS2016TP4_DCandDHCPOnly"
+                  name="Sample_WS2016TP5_DCandDHCPOnly"
                   version="1.0">
-  <description>Sample Windows Server 2016 TP4 Lab Configuration DC and DHCP Only</description>
+  <description>Sample Windows Server 2016 TP5 Lab Configuration DC and DHCP Only</description>
 
-  <settings labid="LABBUILDER-WS2016TP4.COM"
-            domainname="LABBUILDER-WS2016TP4.COM"
-            email="admin@LABBUILDER-WS2016TP4.COM"
-            labpath="c:\vm\LABBUILDER-WS2016TP4.COM"
+  <settings labid="LABBUILDER-WS2016TP5.COM"
+            domainname="LABBUILDER-WS2016TP5.COM"
+            email="admin@LABBUILDER-WS2016TP5.COM"
+            labpath="c:\vm\LABBUILDER-WS2016TP5.COM"
             dsclibrarypath="..\DSCLibrary\" />
 
   <resources>
@@ -32,55 +32,55 @@
   <templatevhds isopath="ISOFiles" 
                 vhdpath="VHDFiles" 
                 prefix="Template " >
-    <templatevhd name="Windows Server 2016 TP4 Datacenter FULL"
-                 iso="10586.0.151029-1700.TH2_RELEASE_SERVER_OEMRET_X64FRE_EN-US.ISO"
+    <templatevhd name="Windows Server 2016 TP5 Datacenter FULL"
+                 iso="14300.1000.160324-1723.RS1_RELEASE_SVC_SERVER_OEMRET_X64FRE_EN-US.ISO"
                  url="https://www.microsoft.com/en-us/evalcenter/evaluate-windows-server-technical-preview"
-                 vhd="Windows Server 2016 TP4 Datacenter Full.vhdx"
+                 vhd="Windows Server 2016 TP5 Datacenter Full.vhdx"
                  edition="Windows Server 2016 Technical Preview 4 SERVERDATACENTER"
                  ostype="Server"
                  vhdformat="vhdx" 
                  vhdtype="dynamic" 
                  generation="2" 
                  vhdsize="40GB" />
-    <templatevhd name="Windows Server 2016 TP4 Datacenter CORE"
-                 iso="10586.0.151029-1700.TH2_RELEASE_SERVER_OEMRET_X64FRE_EN-US.ISO"
+    <templatevhd name="Windows Server 2016 TP5 Datacenter CORE"
+                 iso="14300.1000.160324-1723.RS1_RELEASE_SVC_SERVER_OEMRET_X64FRE_EN-US.ISO"
                  url="https://www.microsoft.com/en-us/evalcenter/evaluate-windows-server-technical-preview"
-                 vhd="Windows Server 2016 TP4 Datacenter Core.vhdx"
+                 vhd="Windows Server 2016 TP5 Datacenter Core.vhdx"
                  edition="Windows Server 2016 Technical Preview 4 SERVERDATACENTERCORE"
                  ostype="Server"
                  vhdformat="vhdx" 
                  vhdtype="dynamic" 
                  generation="2" 
                  vhdsize="25GB" />
-    <templatevhd name="Nano Server 2016 TP4 Basic"
-                 iso="10586.0.151029-1700.TH2_RELEASE_SERVER_OEMRET_X64FRE_EN-US.ISO"
+    <templatevhd name="Nano Server 2016 TP5 Basic"
+                 iso="14300.1000.160324-1723.RS1_RELEASE_SVC_SERVER_OEMRET_X64FRE_EN-US.ISO"
                  url="https://www.microsoft.com/en-us/evalcenter/evaluate-windows-server-technical-preview"
-                 vhd="Nano Server 2016 TP4 Basic.vhdx"
+                 vhd="Nano Server 2016 TP5 Basic.vhdx"
                  ostype="Nano"
-                 packages="Guest"
+                 packages="Microsoft-NanoServer-Guest-Package.cab"
                  vhdformat="vhdx" 
                  vhdtype="dynamic" 
                  generation="2"
-                 vhdsize="25GB" />             
+                 vhdsize="25GB" />
   </templatevhds>
   
   <templates>
-    <template name="Template Windows Server 2016 TP4 Datacenter FULL"
-              templatevhd="Windows Server 2016 TP4 Datacenter FULL"
+    <template name="Template Windows Server 2016 TP5 Datacenter FULL"
+              templatevhd="Windows Server 2016 TP5 Datacenter FULL"
               memorystartupbytes="1GB"
               processorcount="1"
               administratorpassword="P@ssword!1"
               timezone="New Zealand Standard Time" 
               ostype="Server" />
-    <template name="Template Windows Server 2016 TP4 Datacenter CORE"
-              templatevhd="Windows Server 2016 TP4 Datacenter CORE"
+    <template name="Template Windows Server 2016 TP5 Datacenter CORE"
+              templatevhd="Windows Server 2016 TP5 Datacenter CORE"
               memorystartupbytes="1GB"
               processorcount="1"
               administratorpassword="P@ssword!1"
               timezone="New Zealand Standard Time" 
               ostype="Server" />
-    <template name="Template Nano Server 2016 TP4 Basic"
-              templatevhd="Nano Server 2016 TP4 Basic"
+    <template name="Template Nano Server 2016 TP5 Basic"
+              templatevhd="Nano Server 2016 TP5 Basic"
               memorystartupbytes="2GB"
               processorcount="1"
               administratorpassword="P@ssword!1"
@@ -90,7 +90,7 @@
 
   <vms>   
     <vm name="SA-DC1"
-        template="Windows Server 2016 TP4 Datacenter FULL"
+        template="Windows Server 2016 TP5 Datacenter FULL"
         computername="SA-DC1">
       <dsc configname="DC_FORESTPRIMARY"
            configfile="DC_FORESTPRIMARY.DSC.ps1">
@@ -117,7 +117,7 @@
     </vm>
 
     <vm name="SA-DHCP1"
-        template="Windows Server 2016 TP4 Datacenter CORE"
+        template="Windows Server 2016 TP5 Datacenter CORE"
         computername="SA-DHCP1" >
       <dsc configname="MEMBER_DHCP"
            configfile="MEMBER_DHCP.DSC.ps1">
