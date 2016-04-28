@@ -600,9 +600,10 @@ function Initialize-LabVMTemplateVHD
                         $Packages += @( $PackagePath )
 
                         # Generate the path to the Nano Language Package
+                        $PackageLangFile = $Package -replace '.cab',"_$($Script:NanoPackageCulture).cab"
                         $PackageLangPath = Join-Path `
                             -Path $NanoPackagesFolder `
-                            -ChildPath "en-us\$Package"
+                            -ChildPath "$($Script:NanoPackageCulture)\$PackageLangFile"
                         # Does it exist?
                         if (-not (Test-Path -Path $PackageLangPath))
                         {
