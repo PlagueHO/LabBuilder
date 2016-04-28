@@ -1,4 +1,4 @@
-# Unreleased
+# 0.7.6.0
 * Added .vscode\tasks.json file to allow quick conversion of LabBuilder Schema to MD.
 * Moved existing Libs into Libs\Private folder.
 * Updated samples and tests to support Windows Server 2016 TP5.
