@@ -548,7 +548,11 @@ try
                 }
             }
             Context 'Valid Configuration Passed with Nano Server VHDx not generated and no edition set' {
+                Mock Test-Path -ParameterFilter { $Path -eq $NanoServerPackagesFolder } -MockWith { $True }
+                Mock Test-Path -ParameterFilter { $Path -like "$NanoServerPackagesFolder\*.cab" } -MockWith { $True }
+
                 It 'Does Not Throw Exception' {
+                    $VMTemplateVHDs[5].Packages = ''
                     $VMTemplateVHDs[5].Edition = $null
                     { Initialize-LabVMTemplateVHD -Lab $Lab -VMTemplateVHDs $VMTemplateVHDs } | Should Not Throw
                 }
