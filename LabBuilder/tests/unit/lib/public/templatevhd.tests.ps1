@@ -521,7 +521,7 @@ try
                     Assert-MockCalled Get-Diskimage -Exactly 1
                     Assert-MockCalled Get-Volume -Exactly 1
                     Assert-MockCalled Dismount-DiskImage -Exactly 1
-                    Assert-MockCalled Get-WindowsImage -Exactly 1
+                    Assert-MockCalled Get-WindowsImage -Exactly 0
                     Assert-MockCalled Copy-Item -Exactly 0
                     Assert-MockCalled Rename-Item -Exactly 0
                     Assert-MockCalled Convert-WindowsImage -Exactly 1
@@ -534,6 +534,22 @@ try
 
                 It 'Does Not Throw Exception' {
                     $VMTemplateVHDs[5].Packages = 'Microsoft-NanoServer-Containers-Package.cab,Microsoft-NanoServer-Guest-Package.cab,WMF5.0-WS2012R2-W81'
+                    { Initialize-LabVMTemplateVHD -Lab $Lab -VMTemplateVHDs $VMTemplateVHDs } | Should Not Throw
+                }
+                It 'Calls Mocked commands' {
+                    Assert-MockCalled Mount-DiskImage -Exactly 1
+                    Assert-MockCalled Get-Diskimage -Exactly 1
+                    Assert-MockCalled Get-Volume -Exactly 1
+                    Assert-MockCalled Dismount-DiskImage -Exactly 1
+                    Assert-MockCalled Get-WindowsImage -Exactly 0
+                    Assert-MockCalled Copy-Item -Exactly 0
+                    Assert-MockCalled Rename-Item -Exactly 0
+                    Assert-MockCalled Convert-WindowsImage -Exactly 1
+                }
+            }
+            Context 'Valid Configuration Passed with Nano Server VHDx not generated and no edition set' {
+                It 'Does Not Throw Exception' {
+                    $VMTemplateVHDs[5].Edition = $null
                     { Initialize-LabVMTemplateVHD -Lab $Lab -VMTemplateVHDs $VMTemplateVHDs } | Should Not Throw
                 }
                 It 'Calls Mocked commands' {
