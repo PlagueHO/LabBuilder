@@ -1,3 +1,10 @@
+# 0.7.6.0
+* Added .vscode\tasks.json file to allow quick conversion of LabBuilder Schema to MD.
+* Moved existing Libs into Libs\Private folder.
+* Updated samples and tests to support Windows Server 2016 TP5.
+* Updated Visual Studio Project and Soltion files.
+* Fix Nano Server localization package filename support for TP5.
+
 ### 0.7.5.0
 * Added VM InstanceCount attribute for creating multiple copies a VM in a Lab.
 * Added $Script:CurrentBuild variable to allow easier access to OS build version.
