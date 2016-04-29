@@ -1,3 +1,7 @@
+# 0.7.7.0
+* Samples\Sample_WS2016TP5_DCandDHCPOnly.xml: Set edition in Nano Server Template VHD.
+                                              Fixed WS2016 Template VHD edition names.
+
 # 0.7.6.0
 * Added .vscode\tasks.json file to allow quick conversion of LabBuilder Schema to MD.
 * Moved existing Libs into Libs\Private folder.
