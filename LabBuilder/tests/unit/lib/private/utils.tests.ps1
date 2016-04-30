@@ -554,6 +554,38 @@ try
 
 
 
+        Describe 'EnableWSMan' {
+            Context 'WS-Man is already enabled' {
+                Mock Get-PSProvider -MockWith { @{ Name = 'wsman' } }
+                Mock Set-WSManQuickConfig
+                It 'Does not throw an Exception' {
+                    { EnableWSMan } | Should Not Throw
+                }
+                It 'Calls appropriate mocks' {
+                    Assert-MockCalled Set-WSManQuickConfig -Exactly 0
+                }
+            }
+            Context 'WS-Man is not enabled, user declines install' {
+                Mock Get-PSProvider
+                Mock Set-WSManQuickConfig
+                It 'Should throw WSManNotEnabledError exception' {
+                    $ExceptionParameters = @{
+                        errorId = 'WSManNotEnabledError'
+                        errorCategory = 'InvalidArgument'
+                        errorMessage = $($LocalizedData.WSManNotEnabledError)
+                    }
+                    $Exception = GetException @ExceptionParameters
+
+                    { EnableWSMan } | Should Throw $Exception
+                }
+                It 'Calls appropriate mocks' {
+                    Assert-MockCalled Set-WSManQuickConfig -Exactly 1
+                }
+            }
+        }
+
+
+
         Describe 'ValidateConfigurationXMLSchema' -Tag 'Incomplete' {
         }
 
