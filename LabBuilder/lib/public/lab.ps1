@@ -388,9 +388,11 @@ function New-Lab {
     The optional path to install the Lab to - overrides the LabPath setting in the
     configuration file.
 .PARAMETER Lab
-    The Lab object returned by Get-Lab of the lab to install.    
+    The Lab object returned by Get-Lab of the lab to install.
 .PARAMETER CheckEnvironment
     Whether or not to check if Hyper-V is installed and install it if missing.
+.PARAMETER Force
+    This will force the Lab to be installed, automatically suppressing any confirmations.
 .EXAMPLE
     Install-Lab -ConfigPath c:\mylab\config.xml
     Install the lab defined in the c:\mylab\config.xml LabBuilder configuration file.
@@ -427,19 +429,37 @@ Function Install-Lab {
 
         [Parameter(
             Position=4)]
-        [Switch] $CheckEnvironment
+        [Switch] $CheckEnvironment,
+
+        [Parameter(
+            Position=5)]
+        [Switch] $Force
     ) # Param
 
     begin
     {
+        # Create a splat array containing force if it is set
+        $ForceSplat = @{}
+        if ($PSBoundParameters.ContainsKey('Force'))
+        {
+            $ForceSplat = @{ Force = $true }
+        } # if
+
         # Remove some PSBoundParameters so we can Splat
         $null = $PSBoundParameters.Remove('CheckEnvironment')
-    
+        $null = $PSBoundParameters.Remove('Force')
+
         if ($CheckEnvironment)
         {
             # Check Hyper-V
-            InstallHyperV
+            InstallHyperV `
+                -ErrorAction Stop
         } # if
+
+        # Ensure WS-Man is enabled
+        EnableWSMan `
+            @ForceSplat `
+            -ErrorAction Stop
 
         if ($PSCmdlet.ParameterSetName -eq 'File')
         {
