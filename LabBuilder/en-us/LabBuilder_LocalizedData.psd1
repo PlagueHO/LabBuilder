@@ -96,8 +96,10 @@ ConvertFrom-StringData -StringData @'
     BindingAdapterNotFoundError=A physical network adapter {1}was not found to bind to the External Switch {0}.
     BindingAdapterUsedError=Error binding physical network adapter '{1}' to External Swtich '{0}' because it is already bound to another External Switch.
     IPAddressError=The IP Address '{0}' is invalid.
+    WSManNotEnabledError=WS-Man is not enabled.
 
     ImportingLibFileMessage=Importing function library '{0}'.
+    EnablingWSManMessage=Enabling WS-Man for communication with Lab Guests.
     InstallingHyperVComponentsMesage=Installing {0} Hyper-V Components.
     InitializingLabFoldersMesage=Initializing Lab Folders.
     CreatingLabFolderMessage=Creating {0} folder '{1}' for Lab. 
@@ -206,7 +208,7 @@ ConvertFrom-StringData -StringData @'
     LabStartCompleteMessage=The Lab '{0}' in folder '{1}' has been started.
     LabStopCompleteMessage=The Lab '{0}' in folder '{1}' has been stopped.
     ConfigurationXMLValidationMessage=Lab Configuration XML '{0}'- {1}
-    
+
     ShouldUninstallLab=Uninstall the Lab '{0}' in folder '{1}'
     ShouldRemoveVMTemplate=Delete the Parent VM Template VHDs useb by Lab '{0}' in folder '{1}'
     ShouldRemoveSwitch=Delete the virtual switches used by Lab '{0}'

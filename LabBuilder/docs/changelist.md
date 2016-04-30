@@ -1,3 +1,7 @@
+# Unreleased
+* Install-Lab: Force flag added to suppress confirmation messages.
+               Will attempt to install WS-Man if not installed. Failure will cause install to fail.
+
 # 0.7.7.0
 * Samples\Sample_WS2016TP5_DCandDHCPOnly.xml: Set edition in Nano Server Template VHD.
                                               Fixed WS2016 Template VHD edition names.
