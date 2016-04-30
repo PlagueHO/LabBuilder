@@ -91,7 +91,7 @@
 
   <vms>   
     <vm name="SA-DC1"
-        template="Windows Server 2016 TP5 Datacenter FULL"
+        template="Template Windows Server 2016 TP5 Datacenter FULL"
         computername="SA-DC1">
       <dsc configname="DC_FORESTPRIMARY"
            configfile="DC_FORESTPRIMARY.DSC.ps1">
@@ -118,7 +118,7 @@
     </vm>
 
     <vm name="SA-DHCP1"
-        template="Windows Server 2016 TP5 Datacenter CORE"
+        template="Template Windows Server 2016 TP5 Datacenter CORE"
         computername="SA-DHCP1" >
       <dsc configname="MEMBER_DHCP"
            configfile="MEMBER_DHCP.DSC.ps1">
