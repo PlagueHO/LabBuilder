@@ -162,12 +162,12 @@ function Get-LabVM {
             # Assemble the Network adapters that this VM will use
             [LabVMAdapter[]] $VMAdapters = @()
             [Int] $AdapterCount = 0
-            foreach ($VMAdapter in $VM.Adapters.Adapter) 
+            foreach ($VMAdapter in $VM.Adapters.Adapter)
             {
                 $AdapterCount++
                 $AdapterName = $VMAdapter.Name 
                 $AdapterSwitchName = $VMAdapter.SwitchName
-                if ($AdapterName -eq 'adapter') 
+                if ($AdapterName -eq 'adapter')
                 {
                     $ExceptionParameters = @{
                         errorId = 'VMAdapterNameError'
@@ -178,7 +178,7 @@ function Get-LabVM {
                     ThrowException @ExceptionParameters
                 }
                 
-                if (-not $AdapterSwitchName) 
+                if (-not $AdapterSwitchName)
                 {
                     $ExceptionParameters = @{
                         errorId = 'VMAdapterSwitchNameError'
@@ -199,7 +199,7 @@ function Get-LabVM {
 
                 # Check the switch is in the switch list
                 [Boolean] $Found = $False
-                foreach ($Switch in $Switches) 
+                foreach ($Switch in $Switches)
                 {
                     # Match the switch name to the Adapter Switch Name or
                     # the LabId and Adapter Switch Name
@@ -215,7 +215,11 @@ function Get-LabVM {
                         # The switch is found in the switch list - record the VLAN (if there is one)
                         $Found = $True
                         $SwitchVLan = $Switch.Vlan
-                        $AdapterSwitchName = $VMAdapter.SwitchName
+                        if ($Switch.Type -eq [LabSwitchType]::External)
+                        {
+                            $AdapterName = $VMAdapter.Name
+                            $AdapterSwitchName = $VMAdapter.SwitchName
+                        } # if
                         Break
                     }
                 } # foreach
@@ -232,16 +236,16 @@ function Get-LabVM {
 
                 # Figure out the VLan - If defined in the VM use it, otherwise use the one defined in the Switch, otherwise keep blank.
                 [String] $VLan = $VMAdapter.VLan
-                if (-not $VLan) 
+                if (-not $VLan)
                 {
                     $VLan = $SwitchVLan
                 } # if
 
-                [Boolean] $MACAddressSpoofing = ($VMAdapter.macaddressspoofing -eq 'On') 
+                [Boolean] $MACAddressSpoofing = ($VMAdapter.macaddressspoofing -eq 'On')
 
                 # Have we got any IPv4 settings?
                 Remove-Variable -Name IPv4 -ErrorAction SilentlyContinue
-                if ($VMAdapter.IPv4) 
+                if ($VMAdapter.IPv4)
                 {
                     if ($VMAdapter.IPv4.Address)
                     {
@@ -1679,11 +1683,8 @@ function Disconnect-LabVM
         $TrustedHosts = (Get-Item -Path WSMAN::localhost\Client\TrustedHosts).Value
         if (($TrustedHosts -like "*$IPAddress*") -and ($TrustedHosts -ne '*'))
         {
-            # Lazy code to remove IP address if it is in the middle
-            # at the end or the beginning of the TrustedHosts list
-            $TrustedHosts = $TrustedHosts -replace ",$IPAddress,",','
-            $TrustedHosts = $TrustedHosts -replace "$IPAddress,",''
-            $TrustedHosts = $TrustedHosts -replace ",$IPAddress",''
+            $IPAddresses = @($TrustedHosts -split ',')
+            $TrustedHosts = ($IPAddresses | Where-Object { $_ -ne $IPAddress }) -join ','
             Set-Item `
                 -Path WSMAN::localhost\Client\TrustedHosts `
                 -Value $TrustedHosts `

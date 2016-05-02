@@ -51,18 +51,20 @@ To use this Module you will require on your Lab Host:
     - Windows 8.0
     - Windows 8.1
     - Windows 10
- 2. Windows Management Framewok 5.0 (WMF5.0) Installed on your Lab Host.
- 
+ 2. **Windows Management Framewok 5.0 (WMF5.0)** installed.
+
     _WMF 5.0 is installed on Windows 10 and Windows Server 2016 out of the box, but for Windows Server 2012/R2 and Windows 8/8.1 it will need to be installed separately._
     _WMF 5.0 can be downloaded from [here](https://www.microsoft.com/en-us/download/details.aspx?id=50395)._
     
- 3. Hyper-V available (which requires intel-VT CPU support).
+ 3. **Hyper-V** available (which requires intel-VT CPU support).
  4. To use labs that contain Nested Hyper-V hosts only Windows 10 built 10586 or later and Windows Server 2016 TP3 or later are supported.
- 5. Copies of the Windows installation media for any Operating Systems that will be used in your Labs.
+ 5. Copies of the **Windows installation media** for any Operating Systems that will be used in your Labs.
     * Note: Most Lab configuration files can contain a URL where the relevant trial media can be downloaded from, but you can use any Windows Install Media source you choose (including custom built ISOs).
- 6. An internet connection to download the WMF 5.0 MSU and any other optional MSU packages required by the Lab.
+ 6. An **internet connection** to download the WMF 5.0 MSU and any other optional MSU packages required by the Lab.
     * Note: This only needs to be done during the Install-Lab phase and can be disabled after this phase is complete.
-
+ 7. **WS-Man** enabled to allow communication with the Lab Virtual Machines.
+    * Note: if WS-Man is not enabled, the Install-Lab cmdlet will attempt to install it with confirmation being required from the user.
+    Confirmation can be suppressed using the -force option.
 
 Contributing
 ============

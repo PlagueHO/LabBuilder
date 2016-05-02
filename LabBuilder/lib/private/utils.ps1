@@ -349,6 +349,45 @@ function DownloadResourceModule {
 
 <#
 .SYNOPSIS
+   Ensures the WS-Man is configured on this system.
+.DESCRIPTION
+   If WS-Man is not enabled on this system it will be enabled.
+   This is required to communicate with the managed Lab Virtual Machines.
+.EXAMPLE
+   EnableWSMan
+   Enables WS-Man on this machine.
+.OUTPUTS
+   None
+#>
+function EnableWSMan {
+    [CmdLetBinding()]
+    Param (
+        [Switch] $Force
+    )
+
+    if (-not (Get-PSPRovider -PSProvider WSMan -ErrorAction SilentlyContinue))
+    {
+        Write-Verbose -Message ($LocalizedData.EnablingWSManMessage)
+        $null = Set-WSManQuickConfig `
+            @PSBoundParameters `
+            -ErrorAction Stop
+
+        # Check WS-Man was enabled
+        if (-not (Get-PSPRovider -PSProvider WSMan -ErrorAction SilentlyContinue))
+        {
+            $ExceptionParameters = @{
+                errorId = 'WSManNotEnabledError'
+                errorCategory = 'InvalidArgument'
+                errorMessage = $($LocalizedData.WSManNotEnabledError)
+            }
+            ThrowException @ExceptionParameters
+        } # if
+    } # if
+} # EnableWSMan
+
+
+<#
+.SYNOPSIS
    Ensures the Hyper-V features are installed onto the system.
 .DESCRIPTION
    If the Hyper-V features are not installed onto this system they will be installed.
