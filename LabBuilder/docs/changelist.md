@@ -1,4 +1,4 @@
-# Unreleased
+# 0.7.8.0
 * Install-Lab: Force flag added to suppress confirmation messages.
                Will attempt to install WS-Man if not installed, failure will cause install to fail.
 * Disconnect-LabVM: Improve handling of adding IPAddress to trusted hosts.
