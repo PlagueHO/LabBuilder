@@ -1,6 +1,8 @@
 # Unreleased
 * Install-Lab: Force flag added to suppress confirmation messages.
-               Will attempt to install WS-Man if not installed. Failure will cause install to fail.
+               Will attempt to install WS-Man if not installed, failure will cause install to fail.
+* Disconnect-LabVM: Improve handling of adding IPAddress to trusted hosts.
+* Get-LabVM: LabID will only be prepended to VM Adapter name for adapters not attached to an External switch.
 
 # 0.7.7.0
 * Samples\Sample_WS2016TP5_DCandDHCPOnly.xml: Set edition in Nano Server Template VHD.
