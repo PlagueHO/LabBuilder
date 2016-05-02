@@ -1,9 +1,13 @@
+<<<<<<< HEAD
 # 0.7.6.0
 * Added .vscode\tasks.json file to allow quick conversion of LabBuilder Schema to MD.
 * Moved existing Libs into Libs\Private folder.
 * Updated samples and tests to support Windows Server 2016 TP5.
 * Updated Visual Studio Project and Soltion files.
 * Fix Nano Server localization package filename support for TP5.
+=======
+###Unreleased
+*Fixed failure when creating self-signed certificate on localized systems, by replacing EKU Names with IDs
 
 ### 0.7.5.0
 * Added VM InstanceCount attribute for creating multiple copies a VM in a Lab.
