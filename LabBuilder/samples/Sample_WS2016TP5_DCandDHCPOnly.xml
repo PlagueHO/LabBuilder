@@ -36,7 +36,7 @@
                  iso="14300.1000.160324-1723.RS1_RELEASE_SVC_SERVER_OEMRET_X64FRE_EN-US.ISO"
                  url="https://www.microsoft.com/en-us/evalcenter/evaluate-windows-server-technical-preview"
                  vhd="Windows Server 2016 TP5 Datacenter Full.vhdx"
-                 edition="Windows Server 2016 Technical Preview 4 SERVERDATACENTER"
+                 edition="Windows Server 2016 Technical Preview 5 SERVERDATACENTER"
                  ostype="Server"
                  vhdformat="vhdx" 
                  vhdtype="dynamic" 
@@ -46,7 +46,7 @@
                  iso="14300.1000.160324-1723.RS1_RELEASE_SVC_SERVER_OEMRET_X64FRE_EN-US.ISO"
                  url="https://www.microsoft.com/en-us/evalcenter/evaluate-windows-server-technical-preview"
                  vhd="Windows Server 2016 TP5 Datacenter Core.vhdx"
-                 edition="Windows Server 2016 Technical Preview 4 SERVERDATACENTERCORE"
+                 edition="Windows Server 2016 Technical Preview 5 SERVERDATACENTERCORE"
                  ostype="Server"
                  vhdformat="vhdx" 
                  vhdtype="dynamic" 
@@ -56,6 +56,7 @@
                  iso="14300.1000.160324-1723.RS1_RELEASE_SVC_SERVER_OEMRET_X64FRE_EN-US.ISO"
                  url="https://www.microsoft.com/en-us/evalcenter/evaluate-windows-server-technical-preview"
                  vhd="Nano Server 2016 TP5 Basic.vhdx"
+                 edition="Windows Server 2016 Technical Preview 5 SERVERDATACENTERNANO"
                  ostype="Nano"
                  packages="Microsoft-NanoServer-Guest-Package.cab"
                  vhdformat="vhdx" 
@@ -90,7 +91,7 @@
 
   <vms>   
     <vm name="SA-DC1"
-        template="Windows Server 2016 TP5 Datacenter FULL"
+        template="Template Windows Server 2016 TP5 Datacenter FULL"
         computername="SA-DC1">
       <dsc configname="DC_FORESTPRIMARY"
            configfile="DC_FORESTPRIMARY.DSC.ps1">
@@ -117,7 +118,7 @@
     </vm>
 
     <vm name="SA-DHCP1"
-        template="Windows Server 2016 TP5 Datacenter CORE"
+        template="Template Windows Server 2016 TP5 Datacenter CORE"
         computername="SA-DHCP1" >
       <dsc configname="MEMBER_DHCP"
            configfile="MEMBER_DHCP.DSC.ps1">

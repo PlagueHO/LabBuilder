@@ -102,6 +102,7 @@
                  iso="14300.1000.160324-1723.RS1_RELEASE_SVC_SERVER_OEMRET_X64FRE_EN-US.ISO"
                  url="https://www.microsoft.com/en-us/evalcenter/evaluate-windows-server-technical-preview"
                  vhd="Nano Server 2016 TP5 Basic.vhdx"
+                 edition="Windows Server 2016 Technical Preview 5 SERVERDATACENTERNANO"
                  ostype="Nano"
                  packages="Microsoft-NanoServer-Guest-Package.cab"
                  vhdformat="vhdx" 

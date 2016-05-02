@@ -83,7 +83,7 @@
         "Name":  "Nano Server 2016 TP5 Basic",
         "ISOPath":  "Intentionally Removed",
         "VHDPath":  "Intentionally Removed",
-        "Edition":  "",
+        "Edition":  "Windows Server 2016 Technical Preview 5 SERVERDATACENTERNANO",
         "Packages":  [
                          "Microsoft-NanoServer-Guest-Package.cab"
                      ],
