@@ -334,6 +334,11 @@ Change List
 For a list of changes to versions, see the [docs/changelist.md](LabBuilder/docs/changelist.md) file.
 
 
+Project Management Dashboard
+============================
+[![Throughput Graph](https://graphs.waffle.io/PlagueHO/LabBuilder/throughput.svg)](https://waffle.io/PlagueHO/LabBuilder/metrics/throughput)
+
+
 Links
 =====
 - [GitHub Repository](https://github.com/PlagueHO/LabBuilder/)
