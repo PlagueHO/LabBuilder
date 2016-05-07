@@ -399,7 +399,7 @@ if (-not `$Cert)
     . `"`$(`$ENV:SystemRoot)\Setup\Scripts\New-SelfSignedCertificateEx.ps1`"
     New-SelfsignedCertificateEx ``
         -Subject 'CN=$($VM.ComputerName)' ``
-        -EKU 'Document Encryption','Server Authentication','Client Authentication' ``
+        -EKU '1.3.6.1.4.1.311.80.1','1.3.6.1.5.5.7.3.1','1.3.6.1.5.5.7.3.2' ``
         -KeyUsage 'DigitalSignature, KeyEncipherment, DataEncipherment' ``
         -SAN '$($VM.ComputerName)' ``
         -FriendlyName `$CertificateFriendlyName ``

@@ -1,3 +1,7 @@
+###Unreleased
+*Fixed failure when creating self-signed certificate on localized systems, by replacing EKU Names with IDs
+
+
 # 0.7.8.0
 * Install-Lab: Force flag added to suppress confirmation messages.
                Will attempt to install WS-Man if not installed, failure will cause install to fail.
