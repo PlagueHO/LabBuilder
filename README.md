@@ -3,7 +3,7 @@ LabBuilder
 
 [![Join the chat at https://gitter.im/PlagueHO/LabBuilder](https://badges.gitter.im/PlagueHO/LabBuilder.svg)](https://gitter.im/PlagueHO/LabBuilder?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 [![Build status](https://ci.appveyor.com/api/projects/status/rcg7xmm97qhg2bjr/branch/master?svg=true)](https://ci.appveyor.com/project/PlagueHO/labbuilder/branch/master)
-
+[![Stories in Ready](https://badge.waffle.io/PlagueHO/LabBuilder.svg?label=ready&title=Ready)](http://waffle.io/PlagueHO/LabBuilder) 
 
 Summary
 =======
