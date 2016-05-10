@@ -60,8 +60,8 @@ try
             return $errorRecord
         }
 
-        # Run tests assuming Build 10586 is installed
-        $Script:CurrentBuild = 10586
+        # Run tests assuming Build 14295 is installed
+        $Script:CurrentBuild = 14295
 
 
         Describe 'Get-LabSwitch' {
@@ -157,6 +157,40 @@ try
             $Lab = Get-Lab -ConfigPath $Global:TestConfigOKPath
             [LabSwitch[]] $Switches = Get-LabSwitch -Lab $Lab
 
+            function Get-NetAdapter {
+                [cmdletbinding()]
+                param (
+                    [Parameter(ValueFromPipeline=$True)]
+                    $InputObject,
+                    [Switch] $Physical,
+                    [String] $Name
+                )
+            }
+            function Get-NetIPAddress {
+                [cmdletbinding()]
+                param (
+                    [Parameter(ValueFromPipeline=$True)]
+                    $InputObject
+                )
+            }
+            function New-NetIPAddress {
+                [cmdletbinding()]
+                param (
+                    [Parameter(ValueFromPipeline=$True)]
+                    $InputObject,
+                    [String] $IPAddress,
+                    $PrefixLength
+                )
+            }
+            function Set-NetIPAddress {
+                [cmdletbinding()]
+                param (
+                    [Parameter(ValueFromPipeline=$True)]
+                    $InputObject,
+                    [String] $IPAddress,
+                    $PrefixLength
+                )
+            }
             Mock Get-VMSwitch -MockWith {
                 @{
                     Name = 'Dummy Switch'
@@ -164,9 +198,13 @@ try
                 }
             }
             Mock New-VMSwitch
-            Mock Get-VMNetworkAdapter
-            Mock Add-VMNetworkAdapter
-            Mock Set-VMNetworkAdapterVlan
+            Mock Get-VMNetworkAdapter -ParameterFilter { $SwitchName -eq 'Dummy Switch' }
+            Mock Get-VMNetworkAdapter -ParameterFilter { $SwitchName -eq 'TestLab NAT' } -MockWith { @{ MacAddress = '0012345679A0' } }
+            Mock UpdateSwitchManagementAdapter
+            Mock Get-NetIPAddress
+            Mock New-NetIPAddress
+            Mock Set-NetIPAddress
+            Mock New-NetNat
             Mock Get-NetAdapter -MockWith {
                 @{
                     Name       = 'Ethernet'
@@ -181,12 +219,16 @@ try
                     { Initialize-LabSwitch -Lab $Lab -Switches $Switches } | Should Not Throw
                 }
                 It 'Calls Mocked commands' {
-                    Assert-MockCalled Get-VMSwitch -Exactly 6
-                    Assert-MockCalled New-VMSwitch -Exactly 5
-                    Assert-MockCalled Get-VMNetworkAdapter -Exactly 1
-                    Assert-MockCalled Add-VMNetworkAdapter -Exactly 4
-                    Assert-MockCalled Set-VMNetworkAdapterVlan -Exactly 0
-                    Assert-MockCalled Get-NetAdapter -Exactly 2
+                    Assert-MockCalled Get-VMSwitch -Exactly 7
+                    Assert-MockCalled New-VMSwitch -Exactly 6
+                    Assert-MockCalled Get-VMNetworkAdapter -ParameterFilter { $SwitchName -eq 'Dummy Switch' } -Exactly 1
+                    Assert-MockCalled Get-VMNetworkAdapter -ParameterFilter { $SwitchName -eq 'TestLab NAT' } -Exactly 1
+                    Assert-MockCalled UpdateSwitchManagementAdapter -Exactly 8
+                    Assert-MockCalled Get-NetAdapter -Exactly 3
+                    Assert-MockCalled Get-NetIPAddress -Exactly 1
+                    Assert-MockCalled New-NetIPAddress -Exactly 1
+                    Assert-MockCalled Set-NetIPAddress -Exactly 0
+                    Assert-MockCalled New-NetNat -Exactly 1
                 }
             }
 
@@ -195,22 +237,27 @@ try
                     { Initialize-LabSwitch -Lab $Lab } | Should Not Throw
                 }
                 It 'Calls Mocked commands' {
-                    Assert-MockCalled Get-VMSwitch -Exactly 6
-                    Assert-MockCalled New-VMSwitch -Exactly 5
-                    Assert-MockCalled Get-VMNetworkAdapter -Exactly 1
-                    Assert-MockCalled Add-VMNetworkAdapter -Exactly 4
-                    Assert-MockCalled Set-VMNetworkAdapterVlan -Exactly 0
-                    Assert-MockCalled Get-NetAdapter -Exactly 2
+                    Assert-MockCalled Get-VMSwitch -Exactly 7
+                    Assert-MockCalled New-VMSwitch -Exactly 6
+                    Assert-MockCalled Get-VMNetworkAdapter -ParameterFilter { $SwitchName -eq 'Dummy Switch' } -Exactly 1
+                    Assert-MockCalled Get-VMNetworkAdapter -ParameterFilter { $SwitchName -eq 'TestLab NAT' } -Exactly 1
+                    Assert-MockCalled UpdateSwitchManagementAdapter -Exactly 8
+                    Assert-MockCalled Get-NetAdapter -Exactly 3
+                    Assert-MockCalled Get-NetIPAddress -Exactly 1
+                    Assert-MockCalled New-NetIPAddress -Exactly 1
+                    Assert-MockCalled Set-NetIPAddress -Exactly 0
+                    Assert-MockCalled New-NetNat -Exactly 1
                 }
             }
 
-            Context 'Valid configuration NAT with blank NAT Subnet Address' {
+            Context 'Valid configuration NAT with blank NAT Subnet' {
                 $Switches[0].Type = [LabSwitchType]::NAT
-                It 'Throws a NatSubnetAddressEmptyError Exception' {
+                $Switches[0].NatSubnet = ''
+                It 'Throws a NatSubnetEmptyError Exception' {
                     $ExceptionParameters = @{
-                        errorId = 'NatSubnetAddressEmptyError'
+                        errorId = 'NatSubnetEmptyError'
                         errorCategory = 'InvalidArgument'
-                        errorMessage = $($LocalizedData.NatSubnetAddressEmptyError `
+                        errorMessage = $($LocalizedData.NatSubnetEmptyError `
                             -f $Switches[0].Name)
                     }
                     $Exception = GetException @ExceptionParameters
@@ -220,12 +267,157 @@ try
                 It 'Calls Mocked commands' {
                     Assert-MockCalled Get-VMSwitch -Exactly 1
                     Assert-MockCalled New-VMSwitch -Exactly 0
-                    Assert-MockCalled Get-VMNetworkAdapter -Exactly 0
-                    Assert-MockCalled Add-VMNetworkAdapter -Exactly 0
-                    Assert-MockCalled Set-VMNetworkAdapterVlan -Exactly 0
+                    Assert-MockCalled Get-VMNetworkAdapter -ParameterFilter { $SwitchName -eq 'Dummy Switch' } -Exactly 0
+                    Assert-MockCalled Get-VMNetworkAdapter -ParameterFilter { $SwitchName -eq 'TestLab NAT' } -Exactly 0
+                    Assert-MockCalled UpdateSwitchManagementAdapter -Exactly 0
                     Assert-MockCalled Get-NetAdapter -Exactly 0
+                    Assert-MockCalled Get-NetIPAddress -Exactly 0
+                    Assert-MockCalled New-NetIPAddress -Exactly 0
+                    Assert-MockCalled Set-NetIPAddress -Exactly 0
+                    Assert-MockCalled New-NetNat -Exactly 0
                 }
             }
+
+            $Script:CurrentBuild = 10586
+            Context 'Valid configuration NAT on unsupported build' {
+                $Switches[0].Type = [LabSwitchType]::NAT
+                It 'Throws a NatSubnetEmptyError Exception' {
+                    $ExceptionParameters = @{
+                        errorId = 'NatSwitchNotSupportedError'
+                        errorCategory = 'InvalidArgument'
+                        errorMessage = $($LocalizedData.NatSwitchNotSupportedError `
+                            -f $Switches[0].Name)
+                    }
+                    $Exception = GetException @ExceptionParameters
+
+                    { Initialize-LabSwitch -Lab $Lab -Switches $Switches } | Should Throw $Exception
+                }
+                It 'Calls Mocked commands' {
+                    Assert-MockCalled Get-VMSwitch -Exactly 1
+                    Assert-MockCalled New-VMSwitch -Exactly 0
+                    Assert-MockCalled Get-VMNetworkAdapter -ParameterFilter { $SwitchName -eq 'Dummy Switch' } -Exactly 0
+                    Assert-MockCalled Get-VMNetworkAdapter -ParameterFilter { $SwitchName -eq 'TestLab NAT' } -Exactly 0
+                    Assert-MockCalled UpdateSwitchManagementAdapter -Exactly 0
+                    Assert-MockCalled Get-NetAdapter -Exactly 0
+                    Assert-MockCalled Get-NetIPAddress -Exactly 0
+                    Assert-MockCalled New-NetIPAddress -Exactly 0
+                    Assert-MockCalled Set-NetIPAddress -Exactly 0
+                    Assert-MockCalled New-NetNat -Exactly 0                }
+            }
+            $Script:CurrentBuild = 14295
+
+            Context 'Valid configuration NAT with invalid NAT Subnet' {
+                $Switches[0].Type = [LabSwitchType]::NAT
+                $Switches[0].NatSubnet = 'Invalid'
+                It 'Throws a NatSubnetInvalidError Exception' {
+                    $ExceptionParameters = @{
+                        errorId = 'NatSubnetInvalidError'
+                        errorCategory = 'InvalidArgument'
+                        errorMessage = $($LocalizedData.NatSubnetInvalidError `
+                            -f $Switches[0].Name,'Invalid')
+                    }
+                    $Exception = GetException @ExceptionParameters
+
+                    { Initialize-LabSwitch -Lab $Lab -Switches $Switches } | Should Throw $Exception
+                }
+                It 'Calls Mocked commands' {
+                    Assert-MockCalled Get-VMSwitch -Exactly 1
+                    Assert-MockCalled New-VMSwitch -Exactly 0
+                    Assert-MockCalled Get-VMNetworkAdapter -ParameterFilter { $SwitchName -eq 'Dummy Switch' } -Exactly 0
+                    Assert-MockCalled Get-VMNetworkAdapter -ParameterFilter { $SwitchName -eq 'TestLab NAT' } -Exactly 0
+                    Assert-MockCalled UpdateSwitchManagementAdapter -Exactly 0
+                    Assert-MockCalled Get-NetAdapter -Exactly 0
+                    Assert-MockCalled Get-NetIPAddress -Exactly 0
+                    Assert-MockCalled New-NetIPAddress -Exactly 0
+                    Assert-MockCalled Set-NetIPAddress -Exactly 0
+                    Assert-MockCalled New-NetNat -Exactly 0                }
+            }
+
+            Context 'Valid configuration NAT with invalid NAT Subnet Address' {
+                $Switches[0].Type = [LabSwitchType]::NAT
+                $Switches[0].NatSubnet = '192.168.1.1000/24'
+                It 'Throws a NatSubnetAddressInvalidError Exception' {
+                    $ExceptionParameters = @{
+                        errorId = 'NatSubnetAddressInvalidError'
+                        errorCategory = 'InvalidArgument'
+                        errorMessage = $($LocalizedData.NatSubnetAddressInvalidError `
+                            -f $Switches[0].Name,'192.168.1.1000')
+                    }
+                    $Exception = GetException @ExceptionParameters
+
+                    { Initialize-LabSwitch -Lab $Lab -Switches $Switches } | Should Throw $Exception
+                }
+                It 'Calls Mocked commands' {
+                    Assert-MockCalled Get-VMSwitch -Exactly 1
+                    Assert-MockCalled New-VMSwitch -Exactly 0
+                    Assert-MockCalled Get-VMNetworkAdapter -ParameterFilter { $SwitchName -eq 'Dummy Switch' } -Exactly 0
+                    Assert-MockCalled Get-VMNetworkAdapter -ParameterFilter { $SwitchName -eq 'TestLab NAT' } -Exactly 0
+                    Assert-MockCalled UpdateSwitchManagementAdapter -Exactly 0
+                    Assert-MockCalled Get-NetAdapter -Exactly 0
+                    Assert-MockCalled Get-NetIPAddress -Exactly 0
+                    Assert-MockCalled New-NetIPAddress -Exactly 0
+                    Assert-MockCalled Set-NetIPAddress -Exactly 0
+                    Assert-MockCalled New-NetNat -Exactly 0                }
+            }
+
+            Context 'Valid configuration NAT with invalid NAT Subnet Address' {
+                $Switches[0].Type = [LabSwitchType]::NAT
+                $Switches[0].NatSubnet = '192.168.1.0/33'
+                It 'Throws a NatSubnetPrefixLengthInvalidError Exception' {
+                    $ExceptionParameters = @{
+                        errorId = 'NatSubnetPrefixLengthInvalidError'
+                        errorCategory = 'InvalidArgument'
+                        errorMessage = $($LocalizedData.NatSubnetPrefixLengthInvalidError `
+                            -f $Switches[0].Name,33)
+                    }
+                    $Exception = GetException @ExceptionParameters
+
+                    { Initialize-LabSwitch -Lab $Lab -Switches $Switches } | Should Throw $Exception
+                }
+                It 'Calls Mocked commands' {
+                    Assert-MockCalled Get-VMSwitch -Exactly 1
+                    Assert-MockCalled New-VMSwitch -Exactly 0
+                    Assert-MockCalled Get-VMNetworkAdapter -ParameterFilter { $SwitchName -eq 'Dummy Switch' } -Exactly 0
+                    Assert-MockCalled Get-VMNetworkAdapter -ParameterFilter { $SwitchName -eq 'TestLab NAT' } -Exactly 0
+                    Assert-MockCalled UpdateSwitchManagementAdapter -Exactly 0
+                    Assert-MockCalled Get-NetAdapter -Exactly 0
+                    Assert-MockCalled Get-NetIPAddress -Exactly 0
+                    Assert-MockCalled New-NetIPAddress -Exactly 0
+                    Assert-MockCalled Set-NetIPAddress -Exactly 0
+                    Assert-MockCalled New-NetNat -Exactly 0                }
+            }
+
+            Mock Get-VMNetworkAdapter -ParameterFilter { $SwitchName -eq 'TestLab NAT' } -MockWith { @{ MacAddress = '' } }
+
+            Context 'Valid configuration NAT with switch default network adapter missing MAC address' {
+                $Switches[0].Name = 'TestLab NAT'
+                $Switches[0].Type = [LabSwitchType]::NAT
+                $Switches[0].NatSubnet = '192.168.1.0/24'
+                It 'Throws a NatSwitchDefaultAdapterMacEmptyError Exception' {
+                    $ExceptionParameters = @{
+                        errorId = 'NatSwitchDefaultAdapterMacEmptyError'
+                        errorCategory = 'InvalidArgument'
+                        errorMessage = $($LocalizedData.NatSwitchDefaultAdapterMacEmptyError `
+                            -f $Switches[0].Name)
+                    }
+                    $Exception = GetException @ExceptionParameters
+
+                    { Initialize-LabSwitch -Lab $Lab -Switches $Switches } | Should Throw $Exception
+                }
+                It 'Calls Mocked commands' {
+                    Assert-MockCalled Get-VMSwitch -Exactly 1
+                    Assert-MockCalled New-VMSwitch -Exactly 1
+                    Assert-MockCalled Get-VMNetworkAdapter -ParameterFilter { $SwitchName -eq 'Dummy Switch' } -Exactly 0
+                    Assert-MockCalled Get-VMNetworkAdapter -ParameterFilter { $SwitchName -eq 'TestLab NAT' } -Exactly 1
+                    Assert-MockCalled UpdateSwitchManagementAdapter -Exactly 0
+                    Assert-MockCalled Get-NetAdapter -Exactly 0
+                    Assert-MockCalled Get-NetIPAddress -Exactly 0
+                    Assert-MockCalled New-NetIPAddress -Exactly 0
+                    Assert-MockCalled Set-NetIPAddress -Exactly 0
+                    Assert-MockCalled New-NetNat -Exactly 0                }
+            }
+
+            Mock Get-VMNetworkAdapter -ParameterFilter { $SwitchName -eq 'TestLab NAT' } -MockWith { @{ MacAddress = '001122334455' } }
 
             Context 'Valid configuration with blank switch name passed' {
                 $Switches[0].Type = [LabSwitchType]::External
@@ -243,10 +435,14 @@ try
                 It 'Calls Mocked commands' {
                     Assert-MockCalled Get-VMSwitch -Exactly 1
                     Assert-MockCalled New-VMSwitch -Exactly 0
-                    Assert-MockCalled Get-VMNetworkAdapter -Exactly 0
-                    Assert-MockCalled Add-VMNetworkAdapter -Exactly 0
-                    Assert-MockCalled Set-VMNetworkAdapterVlan -Exactly 0
+                    Assert-MockCalled Get-VMNetworkAdapter -ParameterFilter { $SwitchName -eq 'Dummy Switch' } -Exactly 0
+                    Assert-MockCalled Get-VMNetworkAdapter -ParameterFilter { $SwitchName -eq 'TestLab NAT' } -Exactly 0
+                    Assert-MockCalled UpdateSwitchManagementAdapter -Exactly 0
                     Assert-MockCalled Get-NetAdapter -Exactly 0
+                    Assert-MockCalled Get-NetIPAddress -Exactly 0
+                    Assert-MockCalled New-NetIPAddress -Exactly 0
+                    Assert-MockCalled Set-NetIPAddress -Exactly 0
+                    Assert-MockCalled New-NetNat -Exactly 0
                 }
             }
 
@@ -268,11 +464,14 @@ try
                 It 'Calls Mocked commands' {
                     Assert-MockCalled Get-VMSwitch -Exactly 1
                     Assert-MockCalled New-VMSwitch -Exactly 0
-                    Assert-MockCalled Get-VMNetworkAdapter -Exactly 0
-                    Assert-MockCalled Add-VMNetworkAdapter -Exactly 0
-                    Assert-MockCalled Set-VMNetworkAdapterVlan -Exactly 0
+                    Assert-MockCalled Get-VMNetworkAdapter -ParameterFilter { $SwitchName -eq 'Dummy Switch' } -Exactly 0
+                    Assert-MockCalled Get-VMNetworkAdapter -ParameterFilter { $SwitchName -eq 'TestLab NAT' } -Exactly 0
+                    Assert-MockCalled UpdateSwitchManagementAdapter -Exactly 0
                     Assert-MockCalled Get-NetAdapter -Exactly 1
-                }
+                    Assert-MockCalled Get-NetIPAddress -Exactly 0
+                    Assert-MockCalled New-NetIPAddress -Exactly 0
+                    Assert-MockCalled Set-NetIPAddress -Exactly 0
+                    Assert-MockCalled New-NetNat -Exactly 0                }
             }
 
             Context 'Valid configuration with External switch with binding Adapter MAC bad' {
@@ -293,10 +492,14 @@ try
                 It 'Calls Mocked commands' {
                     Assert-MockCalled Get-VMSwitch -Exactly 1
                     Assert-MockCalled New-VMSwitch -Exactly 0
-                    Assert-MockCalled Get-VMNetworkAdapter -Exactly 0
-                    Assert-MockCalled Add-VMNetworkAdapter -Exactly 0
-                    Assert-MockCalled Set-VMNetworkAdapterVlan -Exactly 0
+                    Assert-MockCalled Get-VMNetworkAdapter -ParameterFilter { $SwitchName -eq 'Dummy Switch' } -Exactly 0
+                    Assert-MockCalled Get-VMNetworkAdapter -ParameterFilter { $SwitchName -eq 'TestLab NAT' } -Exactly 0
+                    Assert-MockCalled UpdateSwitchManagementAdapter -Exactly 0
                     Assert-MockCalled Get-NetAdapter -Exactly 1
+                    Assert-MockCalled Get-NetIPAddress -Exactly 0
+                    Assert-MockCalled New-NetIPAddress -Exactly 0
+                    Assert-MockCalled Set-NetIPAddress -Exactly 0
+                    Assert-MockCalled New-NetNat -Exactly 0
                 }
             }
         }
@@ -311,30 +514,33 @@ try
             Mock Get-VMSwitch -MockWith { $Switches }
             Mock Remove-VMSwitch
             Mock Remove-VMNetworkAdapter
+            Mock Remove-NetNat
 
-            Context 'Valid configuration is passed' {	
+            Context 'Valid configuration is passed' {
                 It 'Does not throw an Exception' {
                     { Remove-LabSwitch -Lab $Lab -Switches $Switches } | Should Not Throw
                 }
                 It 'Calls Mocked commands' {
-                    Assert-MockCalled Get-VMSwitch -Exactly 5
-                    Assert-MockCalled Remove-VMSwitch -Exactly 5
+                    Assert-MockCalled Get-VMSwitch -Exactly 6
+                    Assert-MockCalled Remove-VMSwitch -Exactly 6
                     Assert-MockCalled Remove-VMNetworkAdapter -Exactly 4
+                    Assert-MockCalled Remove-NetNat -Exactly 1
                 }
             }
 
-            Context 'Valid configuration is passed without switches' {	
+            Context 'Valid configuration is passed without switches' {
                 It 'Does not throw an Exception' {
                     { Remove-LabSwitch -Lab $Lab } | Should Not Throw
                 }
                 It 'Calls Mocked commands' {
-                    Assert-MockCalled Get-VMSwitch -Exactly 5
-                    Assert-MockCalled Remove-VMSwitch -Exactly 5
+                    Assert-MockCalled Get-VMSwitch -Exactly 6
+                    Assert-MockCalled Remove-VMSwitch -Exactly 6
                     Assert-MockCalled Remove-VMNetworkAdapter -Exactly 4
+                    Assert-MockCalled Remove-NetNat -Exactly 1
                 }
             }
 
-            Context 'Valid configuration with blank switch name passed' {	
+            Context 'Valid configuration with blank switch name passed' {
                 $Switches[0].Name = ''
                 It 'Throws a SwitchNameIsEmptyError Exception' {
                     $ExceptionParameters = @{
@@ -350,6 +556,7 @@ try
                     Assert-MockCalled Get-VMSwitch -Exactly 1
                     Assert-MockCalled Remove-VMSwitch -Exactly 0
                     Assert-MockCalled Remove-VMNetworkAdapter -Exactly 0
+                    Assert-MockCalled Remove-NetNat -Exactly 0
                 }
             }
         }

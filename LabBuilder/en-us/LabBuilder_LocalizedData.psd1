@@ -18,8 +18,13 @@ ConvertFrom-StringData -StringData @'
     ModuleNotAvailableError=Error installing Module '{0}' ({1}); {2}.
     SwitchNameIsEmptyError=Switch name is missing or empty.
     UnknownSwitchTypeError=Unknown switch type '{0}' specified for switch '{1}'.
-    AdapterSpecifiedError=Adapter specified on '{0}' switch '{1}'.
-    NatSubnetAddressEmptyError=Switch NAT Subnet Address is empty '{0}'.
+    AdapterSpecifiedError=Adater specified on '{0}' switch '{1}'.
+    NatSwitchNotSupportedError=NAT Switch '{0}' is not supported. NAT Switches are only supported on build Windows 10 or Windows Server 2016 build 14295 and above.
+    NatSubnetEmptyError=NAT Switch '{0}' subnet is empty.
+    NatSubnetInvalidError=NAT Switch '{0}' subnet format '{1}' is invalid. It must contain IP address and prefix length. E.g '192.168.1.1/24'.
+    NatSubnetAddressInvalidError=NAT Switch '{0}' subnet address '{1}' is invalid.
+    NatSubnetPrefixLengthInvalidError=NAT Switch '{0}' subnet prefix length '{1}' is invalid.
+    NatSwitchDefaultAdapterMacEmptyError=NAT Switch '{0}' default virtual network adapter MAC address is empty.
     EmptyVMTemplateVHDNameError=Template VHD name is missing or empty.
     EmptyVMTemplateVHDISOPathError=The ISO Path in VM Template VHD '{0}' is empty.
     EmptyVMTemplateVHDPathError=The VHD Path in VM Template VHD '{0}' is empty.
