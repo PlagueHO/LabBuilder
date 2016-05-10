@@ -1,6 +1,8 @@
-###Unreleased
-*Fixed failure when creating self-signed certificate on localized systems, by replacing EKU Names with IDs
-
+# Unreleased
+* Fixed failure when creating self-signed certificate on localized systems, by replacing EKU Names with IDs.
+* Fixed support for NAT switches and added Switch attributes NatSubnet and NatGatewayAddress.
+* Private function UpdateSwitchManagementAdapter added.
+* Samples\Sample_WS2012R2_DCandDHCPOnly_NAT.xml: Added sample for testing NAT based Lab switches.
 
 # 0.7.8.0
 * Install-Lab: Force flag added to suppress confirmation messages.
