@@ -395,14 +395,20 @@ function Initialize-LabSwitch {
                         }
                         ThrowException @ExceptionParameters
                     }
-                    else
+                    $null = $Adapter | New-NetIPAddress `
+                            -IPAddress $NatGatewayAddress `
+                            -PrefixLength $NatSubnetPrefixLength `
+                            -ErrorAction Stop
+                    # Does the NAT already exist?
+                    $NetNat = Get-NetNat `
+                        -Name $SwitchName `
+                        -ErrorAction SilentlyContinue
+                    if ($NetNat)
                     {
-                        $Adapter | New-NetIPAddress `
-                                -IPAddress $NatGatewayAddress `
-                                -PrefixLength $NatSubnetPrefixLength `
-                                -ErrorAction Stop
-                    } # if
-                    # Convert the Internal switch to a NAT switch
+                        # If the NAT already exists, remove it so it can be recreated
+                        $null = $NetNat | Remove-NetNat
+                    }
+                    # Create the new NAT
                     $null = New-NetNat `
                         -Name $SwitchName `
                         -InternalIPInterfaceAddressPrefix $NatSubnet `

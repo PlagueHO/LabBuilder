@@ -108,8 +108,10 @@ try
             Mock Set-VMNetworkAdapterVlan -ParameterFilter { $VlanId -eq 10 }
             Mock Set-VMNetworkAdapterVlan -ParameterFilter { $Untagged }
 
-            Context 'Switch Management Adapter does not exist, VlanId passed, StaticMacAddress passed' {
+            Context 'Switch Management Adapter does not exist, VlanId not passed, StaticMacAddress not passed' {
                 $Splat = $TestAdapter.Clone()
+                $Splat.Remove('VlanId')
+                $Splat.Remove('StaticMacAddress')
                 It 'Does Not Throw Exception' {
                     { UpdateSwitchManagementAdapter @Splat } | Should Not Throw
                 }
@@ -117,9 +119,43 @@ try
                     Assert-MockCalled Get-VMNetworkAdapter -Exactly 1
                     Assert-MockCalled Add-VMNetworkAdapter -Exactly 1
                     Assert-MockCalled Set-VMNetworkAdapter -ParameterFilter { $DynamicMacAddress } -Exactly 0
-                    Assert-MockCalled Set-VMNetworkAdapter -ParameterFilter { $StaticMacAddress -eq '1234567890AB' } -Exactly 1
+                    Assert-MockCalled Set-VMNetworkAdapter -ParameterFilter { $StaticMacAddress -eq '1234567890AB' } -Exactly 0
+                    Assert-MockCalled Set-VMNetworkAdapterVlan -ParameterFilter { $VlanId -eq 10 } -Exactly 0
+                    Assert-MockCalled Set-VMNetworkAdapterVlan -ParameterFilter { $Untagged } -Exactly 0
+                }
+            }
+
+            Context 'Switch Management Adapter does not exist, VlanId 10 passed, StaticMacAddress not passed' {
+                $Splat = $TestAdapter.Clone()
+                $Splat.VlanId = 10
+                $Splat.Remove('StaticMacAddress')
+                It 'Does Not Throw Exception' {
+                    { UpdateSwitchManagementAdapter @Splat } | Should Not Throw
+                }
+                It 'Calls Mocked commands' {
+                    Assert-MockCalled Get-VMNetworkAdapter -Exactly 1
+                    Assert-MockCalled Add-VMNetworkAdapter -Exactly 1
+                    Assert-MockCalled Set-VMNetworkAdapter -ParameterFilter { $DynamicMacAddress } -Exactly 0
+                    Assert-MockCalled Set-VMNetworkAdapter -ParameterFilter { $StaticMacAddress -eq '1234567890AB' } -Exactly 0
                     Assert-MockCalled Set-VMNetworkAdapterVlan -ParameterFilter { $VlanId -eq 10 } -Exactly 1
                     Assert-MockCalled Set-VMNetworkAdapterVlan -ParameterFilter { $Untagged } -Exactly 0
+                }
+            }
+
+            Context 'Switch Management Adapter does not exist, VlanId null passed, StaticMacAddress not passed' {
+                $Splat = $TestAdapter.Clone()
+                $Splat.VlanId = $null
+                $Splat.Remove('StaticMacAddress')
+                It 'Does Not Throw Exception' {
+                    { UpdateSwitchManagementAdapter @Splat } | Should Not Throw
+                }
+                It 'Calls Mocked commands' {
+                    Assert-MockCalled Get-VMNetworkAdapter -Exactly 1
+                    Assert-MockCalled Add-VMNetworkAdapter -Exactly 1
+                    Assert-MockCalled Set-VMNetworkAdapter -ParameterFilter { $DynamicMacAddress } -Exactly 0
+                    Assert-MockCalled Set-VMNetworkAdapter -ParameterFilter { $StaticMacAddress -eq '1234567890AB' } -Exactly 0
+                    Assert-MockCalled Set-VMNetworkAdapterVlan -ParameterFilter { $VlanId -eq 10 } -Exactly 0
+                    Assert-MockCalled Set-VMNetworkAdapterVlan -ParameterFilter { $Untagged } -Exactly 1
                 }
             }
 
@@ -135,30 +171,14 @@ try
                     Assert-MockCalled Set-VMNetworkAdapter -ParameterFilter { $DynamicMacAddress } -Exactly 0
                     Assert-MockCalled Set-VMNetworkAdapter -ParameterFilter { $StaticMacAddress -eq '1234567890AB' } -Exactly 1
                     Assert-MockCalled Set-VMNetworkAdapterVlan -ParameterFilter { $VlanId -eq 10 } -Exactly 0
-                    Assert-MockCalled Set-VMNetworkAdapterVlan -ParameterFilter { $Untagged } -Exactly 1
-                }
-            }
-
-            Context 'Switch Management Adapter does not exist, VlanId not passed, StaticMacAddress not passed' {
-                $Splat = $TestAdapter.Clone()
-                $Splat.Remove('StaticMacAddress')
-                It 'Does Not Throw Exception' {
-                    { UpdateSwitchManagementAdapter @Splat } | Should Not Throw
-                }
-                It 'Calls Mocked commands' {
-                    Assert-MockCalled Get-VMNetworkAdapter -Exactly 1
-                    Assert-MockCalled Add-VMNetworkAdapter -Exactly 1
-                    Assert-MockCalled Set-VMNetworkAdapter -ParameterFilter { $DynamicMacAddress } -Exactly 1
-                    Assert-MockCalled Set-VMNetworkAdapter -ParameterFilter { $StaticMacAddress -eq '1234567890AB' } -Exactly 0
-                    Assert-MockCalled Set-VMNetworkAdapterVlan -ParameterFilter { $VlanId -eq 10 } -Exactly 1
                     Assert-MockCalled Set-VMNetworkAdapterVlan -ParameterFilter { $Untagged } -Exactly 0
                 }
             }
 
-            Context 'Switch Management Adapter does not exist, VlanId not passed, StaticMacAddress not passed' {
+            Context 'Switch Management Adapter does not exist, VlanId not passed, empty StaticMacAddress passed' {
                 $Splat = $TestAdapter.Clone()
                 $Splat.Remove('VlanId')
-                $Splat.Remove('StaticMacAddress')
+                $Splat.StaticMacAddress = ''
                 It 'Does Not Throw Exception' {
                     { UpdateSwitchManagementAdapter @Splat } | Should Not Throw
                 }
@@ -168,7 +188,7 @@ try
                     Assert-MockCalled Set-VMNetworkAdapter -ParameterFilter { $DynamicMacAddress } -Exactly 1
                     Assert-MockCalled Set-VMNetworkAdapter -ParameterFilter { $StaticMacAddress -eq '1234567890AB' } -Exactly 0
                     Assert-MockCalled Set-VMNetworkAdapterVlan -ParameterFilter { $VlanId -eq 10 } -Exactly 0
-                    Assert-MockCalled Set-VMNetworkAdapterVlan -ParameterFilter { $Untagged } -Exactly 1
+                    Assert-MockCalled Set-VMNetworkAdapterVlan -ParameterFilter { $Untagged } -Exactly 0
                 }
             }
 

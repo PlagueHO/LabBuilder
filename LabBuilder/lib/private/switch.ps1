@@ -64,8 +64,12 @@ function UpdateSwitchManagementAdapter {
 
         [String] $StaticMacAddress,
 
-        [Byte] $VLanId
+        $VLanId
     )
+    # Determine if we should set the MAC address and VLan Id
+    [Boolean] $SetVlanId = ($PSBoundParameters.ContainsKey('VLanId'))
+    [Boolean] $SetMacAddress = ($PSBoundParameters.ContainsKey('StaticMacAddress'))
+
     # Remove VLanId Parameter so this can be splatted
     $PSBoundParameters.Remove('VLanId')
     $PSBoundParameters.Remove('StaticMacAddress')
@@ -84,29 +88,37 @@ function UpdateSwitchManagementAdapter {
     } # if
 
     # Set or clear the static mac address
-    if ([String]::IsNullOrEmpty($StaticMacAddress))
+    if ($SetMacAddress)
     {
-        $MacSplat = @{ DynamicMacAddress = $true }
-    }
-    else
-    { 
-        $MacSplat = @{ StaticMacAddress = $StaticMacAddress }
-    } # if
-    $Adapter | Set-VMNetworkAdapter `
-        @MacSplat `
-        -ErrorAction Stop
+        if ([String]::IsNullOrEmpty($StaticMacAddress))
+        {
+            $MacSplat = @{ DynamicMacAddress = $true }
+        }
+        else
+        { 
+            $MacSplat = @{ StaticMacAddress = $StaticMacAddress }
+        } # if
+        $null = $Adapter | Set-VMNetworkAdapter `
+            @MacSplat `
+            -ErrorAction Stop
+    } # If
 
     # Set or clear the VLanId
-    if ($VLanId)
+    if ($SetVlanId)
     {
-        $VlanSplat = @{ VlanId = $VlanId }
-    }
-    else
-    { 
-        $VlanSplat = @{ Untagged = $True }
+        if ([String]::IsNullOrEmpty($VLanId))
+        {
+            $VlanSplat = @{ Untagged = $True }
+        }
+        else
+        {
+            $VlanSplat = @{
+                Access = $True
+                VlanId = $VlanId
+            }
+        } # if
+        $null = $Adapter | Set-VMNetworkAdapterVlan `
+            @VlanSplat `
+            -ErrorAction Stop
     } # if
-    $Adapter | Set-VMNetworkAdapterVlan `
-        -Access `
-        @VlanSplat `
-        -ErrorAction Stop
 } # UpdateSwitchManagementAdapter

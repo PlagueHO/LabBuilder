@@ -175,11 +175,24 @@ try
                     $PrefixLength
                 )
             }
+            function Get-NetNat {
+                [cmdletbinding()]
+                param (
+                    [String] $Name
+                )
+            }
             function New-NetNat {
                 [cmdletbinding()]
                 param (
                     [String] $Name,
                     [String] $InternalIPInterfaceAddressPrefix
+                )
+            }
+            function Remove-NetNat {
+                [cmdletbinding()]
+                param (
+                    [Parameter(ValueFromPipeline=$True)]
+                    $InputObject
                 )
             }
             Mock Get-VMSwitch -MockWith {
@@ -193,7 +206,9 @@ try
             Mock Get-VMNetworkAdapter -ParameterFilter { $SwitchName -eq 'TestLab NAT' } -MockWith { @{ MacAddress = '0012345679A0' } }
             Mock UpdateSwitchManagementAdapter
             Mock New-NetIPAddress
+            Mock Get-NetNat
             Mock New-NetNat
+            Mock Remove-NetNat
             Mock Get-NetAdapter -MockWith {
                 @{
                     Name       = 'Ethernet'
@@ -215,7 +230,9 @@ try
                     Assert-MockCalled UpdateSwitchManagementAdapter -Exactly 8
                     Assert-MockCalled Get-NetAdapter -Exactly 3
                     Assert-MockCalled New-NetIPAddress -Exactly 1
+                    Assert-MockCalled Get-NetNat -Exactly 1
                     Assert-MockCalled New-NetNat -Exactly 1
+                    Assert-MockCalled Remove-NetNat -Exactly 0
                 }
             }
 
@@ -231,7 +248,9 @@ try
                     Assert-MockCalled UpdateSwitchManagementAdapter -Exactly 8
                     Assert-MockCalled Get-NetAdapter -Exactly 3
                     Assert-MockCalled New-NetIPAddress -Exactly 1
+                    Assert-MockCalled Get-NetNat -Exactly 1
                     Assert-MockCalled New-NetNat -Exactly 1
+                    Assert-MockCalled Remove-NetNat -Exactly 0
                 }
             }
 
@@ -257,7 +276,9 @@ try
                     Assert-MockCalled UpdateSwitchManagementAdapter -Exactly 0
                     Assert-MockCalled Get-NetAdapter -Exactly 0
                     Assert-MockCalled New-NetIPAddress -Exactly 0
+                    Assert-MockCalled Get-NetNat -Exactly 0
                     Assert-MockCalled New-NetNat -Exactly 0
+                    Assert-MockCalled Remove-NetNat -Exactly 0
                 }
             }
 
@@ -283,7 +304,10 @@ try
                     Assert-MockCalled UpdateSwitchManagementAdapter -Exactly 0
                     Assert-MockCalled Get-NetAdapter -Exactly 0
                     Assert-MockCalled New-NetIPAddress -Exactly 0
-                    Assert-MockCalled New-NetNat -Exactly 0                }
+                    Assert-MockCalled Get-NetNat -Exactly 0
+                    Assert-MockCalled New-NetNat -Exactly 0
+                    Assert-MockCalled Remove-NetNat -Exactly 0
+                }
             }
             $Script:CurrentBuild = 14295
 
@@ -309,7 +333,10 @@ try
                     Assert-MockCalled UpdateSwitchManagementAdapter -Exactly 0
                     Assert-MockCalled Get-NetAdapter -Exactly 0
                     Assert-MockCalled New-NetIPAddress -Exactly 0
-                    Assert-MockCalled New-NetNat -Exactly 0                }
+                    Assert-MockCalled Get-NetNat -Exactly 0
+                    Assert-MockCalled New-NetNat -Exactly 0
+                    Assert-MockCalled Remove-NetNat -Exactly 0
+                }
             }
 
             Context 'Valid configuration NAT with invalid NAT Subnet Address' {
@@ -334,7 +361,10 @@ try
                     Assert-MockCalled UpdateSwitchManagementAdapter -Exactly 0
                     Assert-MockCalled Get-NetAdapter -Exactly 0
                     Assert-MockCalled New-NetIPAddress -Exactly 0
-                    Assert-MockCalled New-NetNat -Exactly 0                }
+                    Assert-MockCalled Get-NetNat -Exactly 0
+                    Assert-MockCalled New-NetNat -Exactly 0
+                    Assert-MockCalled Remove-NetNat -Exactly 0
+                }
             }
 
             Context 'Valid configuration NAT with invalid NAT Subnet Address' {
@@ -359,7 +389,10 @@ try
                     Assert-MockCalled UpdateSwitchManagementAdapter -Exactly 0
                     Assert-MockCalled Get-NetAdapter -Exactly 0
                     Assert-MockCalled New-NetIPAddress -Exactly 0
-                    Assert-MockCalled New-NetNat -Exactly 0                }
+                    Assert-MockCalled Get-NetNat -Exactly 0
+                    Assert-MockCalled New-NetNat -Exactly 0
+                    Assert-MockCalled Remove-NetNat -Exactly 0
+                }
             }
 
             Mock Get-VMNetworkAdapter -ParameterFilter { $SwitchName -eq 'TestLab NAT' } -MockWith { @{ MacAddress = '' } }
@@ -387,7 +420,10 @@ try
                     Assert-MockCalled UpdateSwitchManagementAdapter -Exactly 0
                     Assert-MockCalled Get-NetAdapter -Exactly 0
                     Assert-MockCalled New-NetIPAddress -Exactly 0
-                    Assert-MockCalled New-NetNat -Exactly 0                }
+                    Assert-MockCalled Get-NetNat -Exactly 0
+                    Assert-MockCalled New-NetNat -Exactly 0
+                    Assert-MockCalled Remove-NetNat -Exactly 0
+                }
             }
 
             Mock Get-VMNetworkAdapter -ParameterFilter { $SwitchName -eq 'TestLab NAT' } -MockWith { @{ MacAddress = '001122334455' } }
@@ -413,7 +449,9 @@ try
                     Assert-MockCalled UpdateSwitchManagementAdapter -Exactly 0
                     Assert-MockCalled Get-NetAdapter -Exactly 0
                     Assert-MockCalled New-NetIPAddress -Exactly 0
+                    Assert-MockCalled Get-NetNat -Exactly 0
                     Assert-MockCalled New-NetNat -Exactly 0
+                    Assert-MockCalled Remove-NetNat -Exactly 0
                 }
             }
 
@@ -440,7 +478,10 @@ try
                     Assert-MockCalled UpdateSwitchManagementAdapter -Exactly 0
                     Assert-MockCalled Get-NetAdapter -Exactly 1
                     Assert-MockCalled New-NetIPAddress -Exactly 0
-                    Assert-MockCalled New-NetNat -Exactly 0                }
+                    Assert-MockCalled Get-NetNat -Exactly 0
+                    Assert-MockCalled New-NetNat -Exactly 0
+                    Assert-MockCalled Remove-NetNat -Exactly 0
+                }
             }
 
             Context 'Valid configuration with External switch with binding Adapter MAC bad' {
@@ -466,7 +507,9 @@ try
                     Assert-MockCalled UpdateSwitchManagementAdapter -Exactly 0
                     Assert-MockCalled Get-NetAdapter -Exactly 1
                     Assert-MockCalled New-NetIPAddress -Exactly 0
+                    Assert-MockCalled Get-NetNat -Exactly 0
                     Assert-MockCalled New-NetNat -Exactly 0
+                    Assert-MockCalled Remove-NetNat -Exactly 0
                 }
             }
         }
