@@ -406,7 +406,7 @@ function Initialize-LabSwitch {
                     if ($NetNat)
                     {
                         # If the NAT already exists, remove it so it can be recreated
-                        $null = $NetNat | Remove-NetNat
+                        $null = $NetNat | Remove-NetNat -Confirm:$False
                     }
                     # Create the new NAT
                     $null = New-NetNat `
