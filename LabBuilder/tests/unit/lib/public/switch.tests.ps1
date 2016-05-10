@@ -191,6 +191,13 @@ try
                     $PrefixLength
                 )
             }
+            function New-NetNat {
+                [cmdletbinding()]
+                param (
+                    [String] $Name,
+                    [String] $InternalIPInterfaceAddressPrefix
+                )
+            }
             Mock Get-VMSwitch -MockWith {
                 @{
                     Name = 'Dummy Switch'
