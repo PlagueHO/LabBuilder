@@ -395,13 +395,6 @@ function Initialize-LabSwitch {
                         }
                         ThrowException @ExceptionParameters
                     }
-                    elseif ($Adapter | Get-NetIPAddress)
-                    {
-                        $Adapter | Set-NetIPAddress `
-                                -IPAddress $NatGatewayAddress `
-                                -PrefixLength $NatSubnetPrefixLength `
-                                -ErrorAction Stop
-                    }
                     else
                     {
                         $Adapter | New-NetIPAddress `

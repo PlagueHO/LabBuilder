@@ -166,23 +166,7 @@ try
                     [String] $Name
                 )
             }
-            function Get-NetIPAddress {
-                [cmdletbinding()]
-                param (
-                    [Parameter(ValueFromPipeline=$True)]
-                    $InputObject
-                )
-            }
             function New-NetIPAddress {
-                [cmdletbinding()]
-                param (
-                    [Parameter(ValueFromPipeline=$True)]
-                    $InputObject,
-                    [String] $IPAddress,
-                    $PrefixLength
-                )
-            }
-            function Set-NetIPAddress {
                 [cmdletbinding()]
                 param (
                     [Parameter(ValueFromPipeline=$True)]
@@ -208,9 +192,7 @@ try
             Mock Get-VMNetworkAdapter -ParameterFilter { $SwitchName -eq 'Dummy Switch' }
             Mock Get-VMNetworkAdapter -ParameterFilter { $SwitchName -eq 'TestLab NAT' } -MockWith { @{ MacAddress = '0012345679A0' } }
             Mock UpdateSwitchManagementAdapter
-            Mock Get-NetIPAddress
             Mock New-NetIPAddress
-            Mock Set-NetIPAddress
             Mock New-NetNat
             Mock Get-NetAdapter -MockWith {
                 @{
@@ -232,9 +214,7 @@ try
                     Assert-MockCalled Get-VMNetworkAdapter -ParameterFilter { $SwitchName -eq 'TestLab NAT' } -Exactly 1
                     Assert-MockCalled UpdateSwitchManagementAdapter -Exactly 8
                     Assert-MockCalled Get-NetAdapter -Exactly 3
-                    Assert-MockCalled Get-NetIPAddress -Exactly 1
                     Assert-MockCalled New-NetIPAddress -Exactly 1
-                    Assert-MockCalled Set-NetIPAddress -Exactly 0
                     Assert-MockCalled New-NetNat -Exactly 1
                 }
             }
@@ -250,9 +230,7 @@ try
                     Assert-MockCalled Get-VMNetworkAdapter -ParameterFilter { $SwitchName -eq 'TestLab NAT' } -Exactly 1
                     Assert-MockCalled UpdateSwitchManagementAdapter -Exactly 8
                     Assert-MockCalled Get-NetAdapter -Exactly 3
-                    Assert-MockCalled Get-NetIPAddress -Exactly 1
                     Assert-MockCalled New-NetIPAddress -Exactly 1
-                    Assert-MockCalled Set-NetIPAddress -Exactly 0
                     Assert-MockCalled New-NetNat -Exactly 1
                 }
             }
@@ -278,9 +256,7 @@ try
                     Assert-MockCalled Get-VMNetworkAdapter -ParameterFilter { $SwitchName -eq 'TestLab NAT' } -Exactly 0
                     Assert-MockCalled UpdateSwitchManagementAdapter -Exactly 0
                     Assert-MockCalled Get-NetAdapter -Exactly 0
-                    Assert-MockCalled Get-NetIPAddress -Exactly 0
                     Assert-MockCalled New-NetIPAddress -Exactly 0
-                    Assert-MockCalled Set-NetIPAddress -Exactly 0
                     Assert-MockCalled New-NetNat -Exactly 0
                 }
             }
@@ -306,9 +282,7 @@ try
                     Assert-MockCalled Get-VMNetworkAdapter -ParameterFilter { $SwitchName -eq 'TestLab NAT' } -Exactly 0
                     Assert-MockCalled UpdateSwitchManagementAdapter -Exactly 0
                     Assert-MockCalled Get-NetAdapter -Exactly 0
-                    Assert-MockCalled Get-NetIPAddress -Exactly 0
                     Assert-MockCalled New-NetIPAddress -Exactly 0
-                    Assert-MockCalled Set-NetIPAddress -Exactly 0
                     Assert-MockCalled New-NetNat -Exactly 0                }
             }
             $Script:CurrentBuild = 14295
@@ -334,9 +308,7 @@ try
                     Assert-MockCalled Get-VMNetworkAdapter -ParameterFilter { $SwitchName -eq 'TestLab NAT' } -Exactly 0
                     Assert-MockCalled UpdateSwitchManagementAdapter -Exactly 0
                     Assert-MockCalled Get-NetAdapter -Exactly 0
-                    Assert-MockCalled Get-NetIPAddress -Exactly 0
                     Assert-MockCalled New-NetIPAddress -Exactly 0
-                    Assert-MockCalled Set-NetIPAddress -Exactly 0
                     Assert-MockCalled New-NetNat -Exactly 0                }
             }
 
@@ -361,9 +333,7 @@ try
                     Assert-MockCalled Get-VMNetworkAdapter -ParameterFilter { $SwitchName -eq 'TestLab NAT' } -Exactly 0
                     Assert-MockCalled UpdateSwitchManagementAdapter -Exactly 0
                     Assert-MockCalled Get-NetAdapter -Exactly 0
-                    Assert-MockCalled Get-NetIPAddress -Exactly 0
                     Assert-MockCalled New-NetIPAddress -Exactly 0
-                    Assert-MockCalled Set-NetIPAddress -Exactly 0
                     Assert-MockCalled New-NetNat -Exactly 0                }
             }
 
@@ -388,9 +358,7 @@ try
                     Assert-MockCalled Get-VMNetworkAdapter -ParameterFilter { $SwitchName -eq 'TestLab NAT' } -Exactly 0
                     Assert-MockCalled UpdateSwitchManagementAdapter -Exactly 0
                     Assert-MockCalled Get-NetAdapter -Exactly 0
-                    Assert-MockCalled Get-NetIPAddress -Exactly 0
                     Assert-MockCalled New-NetIPAddress -Exactly 0
-                    Assert-MockCalled Set-NetIPAddress -Exactly 0
                     Assert-MockCalled New-NetNat -Exactly 0                }
             }
 
@@ -418,9 +386,7 @@ try
                     Assert-MockCalled Get-VMNetworkAdapter -ParameterFilter { $SwitchName -eq 'TestLab NAT' } -Exactly 1
                     Assert-MockCalled UpdateSwitchManagementAdapter -Exactly 0
                     Assert-MockCalled Get-NetAdapter -Exactly 0
-                    Assert-MockCalled Get-NetIPAddress -Exactly 0
                     Assert-MockCalled New-NetIPAddress -Exactly 0
-                    Assert-MockCalled Set-NetIPAddress -Exactly 0
                     Assert-MockCalled New-NetNat -Exactly 0                }
             }
 
@@ -446,9 +412,7 @@ try
                     Assert-MockCalled Get-VMNetworkAdapter -ParameterFilter { $SwitchName -eq 'TestLab NAT' } -Exactly 0
                     Assert-MockCalled UpdateSwitchManagementAdapter -Exactly 0
                     Assert-MockCalled Get-NetAdapter -Exactly 0
-                    Assert-MockCalled Get-NetIPAddress -Exactly 0
                     Assert-MockCalled New-NetIPAddress -Exactly 0
-                    Assert-MockCalled Set-NetIPAddress -Exactly 0
                     Assert-MockCalled New-NetNat -Exactly 0
                 }
             }
@@ -475,9 +439,7 @@ try
                     Assert-MockCalled Get-VMNetworkAdapter -ParameterFilter { $SwitchName -eq 'TestLab NAT' } -Exactly 0
                     Assert-MockCalled UpdateSwitchManagementAdapter -Exactly 0
                     Assert-MockCalled Get-NetAdapter -Exactly 1
-                    Assert-MockCalled Get-NetIPAddress -Exactly 0
                     Assert-MockCalled New-NetIPAddress -Exactly 0
-                    Assert-MockCalled Set-NetIPAddress -Exactly 0
                     Assert-MockCalled New-NetNat -Exactly 0                }
             }
 
@@ -503,9 +465,7 @@ try
                     Assert-MockCalled Get-VMNetworkAdapter -ParameterFilter { $SwitchName -eq 'TestLab NAT' } -Exactly 0
                     Assert-MockCalled UpdateSwitchManagementAdapter -Exactly 0
                     Assert-MockCalled Get-NetAdapter -Exactly 1
-                    Assert-MockCalled Get-NetIPAddress -Exactly 0
                     Assert-MockCalled New-NetIPAddress -Exactly 0
-                    Assert-MockCalled Set-NetIPAddress -Exactly 0
                     Assert-MockCalled New-NetNat -Exactly 0
                 }
             }
