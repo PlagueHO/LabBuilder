@@ -102,6 +102,9 @@ ConvertFrom-StringData -StringData @'
     BindingAdapterUsedError=Error binding physical network adapter '{1}' to External Swtich '{0}' because it is already bound to another External Switch.
     IPAddressError=The IP Address '{0}' is invalid.
     WSManNotEnabledError=WS-Man is not enabled.
+    PackageProviderNotInstalledError=The required package provider '{0}' is not installed.
+    PackageSourceNotTrustedError=The required package source '{0}' is not trusted.
+    PackageSourceNotRegisteredError=The required package source '{0}' is not registered.
 
     ImportingLibFileMessage=Importing function library '{0}'.
     EnablingWSManMessage=Enabling WS-Man for communication with Lab Guests.
@@ -213,6 +216,8 @@ ConvertFrom-StringData -StringData @'
     LabStartCompleteMessage=The Lab '{0}' in folder '{1}' has been started.
     LabStopCompleteMessage=The Lab '{0}' in folder '{1}' has been stopped.
     ConfigurationXMLValidationMessage=Lab Configuration XML '{0}'- {1}
+    InstallPackageProviderMessage=Installing Package Provider '{0}'.
+    RegisterPackageSourceMessage=Registering Package Source '{0}' with '{1}'.
 
     ShouldUninstallLab=Uninstall the Lab '{0}' in folder '{1}'
     ShouldRemoveVMTemplate=Delete the Parent VM Template VHDs useb by Lab '{0}' in folder '{1}'
@@ -222,4 +227,7 @@ ConvertFrom-StringData -StringData @'
     ShouldOverwriteLab=Install a new Lab into the existing folder '{0}'
     ShouldOverwriteLabConfig=Overwrite the existing Lab Configuration file '{0}'
     DismountingVMTemplateVHDISOMessage=Dismounting {1} used for source WIM to create Template VHD {0}
+    ShouldInstallPackageProvider=Install Package Provider '{0}'
+    ShouldRegisterPackageSource=Register Package Source '{0}' with '{1}'
+    ShouldTrustPackageSource=Trust Package Source '{0}' with '{1}'
 '@

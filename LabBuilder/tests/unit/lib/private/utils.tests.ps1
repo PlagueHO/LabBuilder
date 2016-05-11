@@ -701,6 +701,124 @@ try
                 }
             }
         }
+
+
+
+        Describe 'InstallPackageProviders' {
+            Context 'Required package providers already installed' {
+                Mock Get-PackageProvider -MockWith {
+                    @(
+                        @{ Name = 'PowerShellGet' },
+                        @{ Name = 'NuGet' }
+                    )
+                }
+                Mock Install-PackageProvider
+                It 'Does not throw an Exception' {
+                    { InstallPackageProviders -Force } | Should Not Throw
+                }
+                It 'Calls appropriate mocks' {
+                    Assert-MockCalled Get-PackageProvider -Exactly 1
+                    Assert-MockCalled Install-PackageProvider -Exactly 0
+                }
+            }
+            Context 'Required package providers not installed' {
+                Mock Get-PackageProvider
+                Mock Install-PackageProvider
+                It 'Does not throw an Exception' {
+                    { InstallPackageProviders -Force } | Should Not Throw
+                }
+                It 'Calls appropriate mocks' {
+                    Assert-MockCalled Get-PackageProvider -Exactly 1
+                    Assert-MockCalled Install-PackageProvider -Exactly 2
+                }
+            }
+        }
+
+
+
+        Describe 'RegisterPackageSources' {
+            # Define this function because the built in definition does not
+            # mock properly - the ProviderName parameter is not definied.
+            function Register-PackageSource {
+                [CmdletBinding()]
+                param (
+                    [String] $Name,
+                    [String] $Location,
+                    [String] $ProviderName,
+                    [Switch] $Trusted,
+                    [Switch] $Force
+                )
+            }
+            Context 'Required package sources already registered and trusted' {
+                Mock Get-PackageSource -MockWith {
+                    @(
+                        @{
+                            Name         = 'nuget.org'
+                            ProviderName = 'NuGet'
+                            Location     = 'https://www.nuget.org/api/v2/'
+                            IsTrusted    = $True
+                        },
+                        @{
+                            Name         = 'PSGallery'
+                            ProviderName = 'PowerShellGet'
+                            Location     = 'https://www.powershellgallery.com/api/v2/'
+                            IsTrusted    = $True
+                        }
+                    )
+                }
+                Mock Set-PackageSource
+                Mock Register-PackageSource
+                It 'Does not throw an Exception' {
+                    { RegisterPackageSources -Force } | Should Not Throw
+                }
+                It 'Calls appropriate mocks' {
+                    Assert-MockCalled Get-PackageSource -Exactly 1
+                    Assert-MockCalled Set-PackageSource -Exactly 0
+                    Assert-MockCalled Register-PackageSource -Exactly 0
+                }
+            }
+            Context 'Required package sources already registered but not trusted' {
+                Mock Get-PackageSource -MockWith {
+                    @(
+                        @{
+                            Name         = 'nuget.org'
+                            ProviderName = 'NuGet'
+                            Location     = 'https://www.nuget.org/api/v2/'
+                            IsTrusted    = $False
+                        },
+                        @{
+                            Name         = 'PSGallery'
+                            ProviderName = 'PowerShellGet'
+                            Location     = 'https://www.powershellgallery.com/api/v2/'
+                            IsTrusted    = $False
+                        }
+                    )
+                }
+                Mock Set-PackageSource
+                Mock Register-PackageSource
+                It 'Does not throw an Exception' {
+                    { RegisterPackageSources -Force } | Should Not Throw
+                }
+                It 'Calls appropriate mocks' {
+                    Assert-MockCalled Get-PackageSource -Exactly 1
+                    Assert-MockCalled Set-PackageSource -Exactly 2
+                    Assert-MockCalled Register-PackageSource -Exactly 0
+                }
+            }
+            Context 'Required package sources are not registered' {
+                Mock Get-PackageSource
+                Mock Set-PackageSource
+                Mock Register-PackageSource
+                It 'Does not throw an Exception' {
+                    { RegisterPackageSources -Force } | Should Not Throw
+                }
+                It 'Calls appropriate mocks' {
+                    Assert-MockCalled Get-PackageSource -Exactly 1
+                    Assert-MockCalled Set-PackageSource -Exactly 0
+                    Assert-MockCalled Register-PackageSource -Exactly 2
+                }
+            }
+        }
     }
 }
 catch
