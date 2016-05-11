@@ -277,7 +277,8 @@ function New-Lab {
     if (Test-Path -Path $LabPath -Type Container)
     {
         # It does - exit if the user declines
-        if (-not $PSCmdlet.ShouldProcess( ( $LocalizedData.ShouldOverwriteLab `
+        if (-not $PSCmdlet.ShouldProcess( 'LocalHost', `
+            ($LocalizedData.ShouldOverwriteLab `
             -f $LabPath )))
         {
             return
@@ -305,7 +306,8 @@ function New-Lab {
     if (Test-Path -Path $ConfigPath)
     {
         # It does - exit if the user declines
-        if (-not $PSCmdlet.ShouldProcess( ( $LocalizedData.ShouldOverwriteLabConfig `
+        if (-not $PSCmdlet.ShouldProcess( 'LocalHost', `
+            ($LocalizedData.ShouldOverwriteLabConfig `
             -f $ConfigPath )))
         {
             return
@@ -458,6 +460,16 @@ Function Install-Lab {
 
         # Ensure WS-Man is enabled
         EnableWSMan `
+            @ForceSplat `
+            -ErrorAction Stop
+
+        # Install Package Providers
+        InstallPackageProviders `
+            @ForceSplat `
+            -ErrorAction Stop
+
+        # Register Package Sources
+        RegisterPackageSources `
             @ForceSplat `
             -ErrorAction Stop
 
@@ -814,7 +826,8 @@ Function Uninstall-Lab {
     
     process
     {
-        if ($PSCmdlet.ShouldProcess( ( $LocalizedData.ShouldUninstallLab `
+        if ($PSCmdlet.ShouldProcess( 'LocalHost', `
+            ($LocalizedData.ShouldUninstallLab `
             -f $Lab.labbuilderconfig.name,$Lab.labbuilderconfig.settings.labpath )))
         {
             # Remove the VMs
@@ -830,7 +843,8 @@ Function Uninstall-Lab {
             # Remove the VM Templates
             if ($RemoveVMTemplate)
             {
-                if ($PSCmdlet.ShouldProcess( $($LocalizedData.ShouldRemoveVMTemplate `
+                if ($PSCmdlet.ShouldProcess( 'LocalHost', `
+                    ($LocalizedData.ShouldRemoveVMTemplate `
                     -f $Lab.labbuilderconfig.name,$Lab.labbuilderconfig.settings.labpath )))
                 {
                     $null = Remove-LabVMTemplate `
@@ -841,7 +855,8 @@ Function Uninstall-Lab {
             # Remove the VM Switches
             if ($RemoveSwitch)
             {
-                if ($PSCmdlet.ShouldProcess( $($LocalizedData.ShouldRemoveSwitch `
+                if ($PSCmdlet.ShouldProcess( 'LocalHost', `
+                    ($LocalizedData.ShouldRemoveSwitch `
                     -f $Lab.labbuilderconfig.name,$Lab.labbuilderconfig.settings.labpath )))
                 {
                     $null = Remove-LabSwitch `
@@ -852,7 +867,8 @@ Function Uninstall-Lab {
             # Remove the VM Template VHDs
             if ($RemoveVMTemplateVHD)
             {
-                if ($PSCmdlet.ShouldProcess( $($LocalizedData.ShouldRemoveVMTemplateVHD `
+                if ($PSCmdlet.ShouldProcess( 'LocalHost', `
+                    ($LocalizedData.ShouldRemoveVMTemplateVHD `
                     -f $Lab.labbuilderconfig.name,$Lab.labbuilderconfig.settings.labpath )))
                 {
                     $null = Remove-LabVMTemplateVHD `
@@ -865,7 +881,8 @@ Function Uninstall-Lab {
             {
                 if (Test-Path -Path $Lab.labbuilderconfig.settings.labpath)
                 {
-                    if ($PSCmdlet.ShouldProcess( $($LocalizedData.ShouldRemoveLabFolder `
+                    if ($PSCmdlet.ShouldProcess( 'LocalHost', `
+                        ($LocalizedData.ShouldRemoveLabFolder `
                         -f $Lab.labbuilderconfig.name,$Lab.labbuilderconfig.settings.labpath )))
                     {
                         Remove-Item `

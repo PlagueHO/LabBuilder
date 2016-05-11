@@ -307,7 +307,7 @@ It can be set to:
  - Internal
  - Private
  - External
- - NAT (only available on some Windows 10 versions and Windows Server 2016)
+ - NAT (only available on Windows 10 and Windows Server 2016 build 14295 and above)
                       
 ``` type="Internal" ```
 
@@ -338,6 +338,28 @@ This attribute should only be set if the switch type is External.
 If the bindingadaptername attribute is set then this attribute should not be set.
                       
 ``` bindingadaptermac="C86000A1A895" ```
+
+### 4.1.6a - NATSUBNET Optional Attribute
+> natsubnet="xs:string"
+
+
+This optional attribute is used to configure the subnet that will be assigned to this NAT switch.
+It must contain an IP address (192.168.10.0) followed by a slash (/) then the subnet prefix length (e.g. 24).
+This attribute should only be set if the switch type is NAT.
+If this attribute is set the natgatewayaddress attribute must also be set.
+                      
+``` natsubnet="192.168.10.0/24" ```
+
+### 4.1.7a - NATGATEWAYADDRESS Optional Attribute
+> natgatewayaddress="xs:string"
+
+
+This optional attribute is used to configure the IP address that will be used as a gateway address on this NAT switch.
+This IP Address must be within the defined NAT subnet set in the natsubnet attribute.
+This attribute should only be set if the switch type is NAT.
+If this attribute is set the natsubnet attribute must also be set.
+                      
+``` natgatewayaddress="192.168.10.1" ```
 
 ### 4.1.1e - ADAPTERS Optional Element
 

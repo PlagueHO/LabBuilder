@@ -40,6 +40,7 @@
     <switch name="Private" type="Private" />
     <switch name="Internal Vlan" type="Internal" vlan="3" />
     <switch name="Internal" type="Internal" />
+    <switch name="NAT" type="NAT" natsubnet="192.168.22.0/24" natgatewayaddress="192.168.22.1"/>
   </switches>
 
   <templatevhds isopath="ISOFiles" 
