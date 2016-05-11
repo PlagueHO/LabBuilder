@@ -3,6 +3,10 @@
 * Fixed support for NAT switches and added Switch attributes NatSubnet and NatGatewayAddress.
 * Private function UpdateSwitchManagementAdapter added.
 * Samples\Sample_WS2012R2_DCandDHCPOnly_NAT.xml: Added sample for testing NAT based Lab switches.
+* Improved ShouldProcess messages to be easier to read.
+* Utils\InstallPackageProviders: Added function for ensuring Package Providers are installed.
+* Utils\RegisterPackageSources: Added function for ensuring Package surces are registered. 
+* Install-Lab: Added checks to ensure required PackageProviders and PackageSources are available.
 
 # 0.7.8.0
 * Install-Lab: Force flag added to suppress confirmation messages.

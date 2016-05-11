@@ -71,8 +71,8 @@ function UpdateSwitchManagementAdapter {
     [Boolean] $SetMacAddress = ($PSBoundParameters.ContainsKey('StaticMacAddress'))
 
     # Remove VLanId Parameter so this can be splatted
-    $PSBoundParameters.Remove('VLanId')
-    $PSBoundParameters.Remove('StaticMacAddress')
+    $null = $PSBoundParameters.Remove('VLanId')
+    $null = $PSBoundParameters.Remove('StaticMacAddress')
 
     $Adapter = Get-VMNetworkAdapter `
         -ManagementOS `
