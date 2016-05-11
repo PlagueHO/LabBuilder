@@ -1,4 +1,4 @@
-# Unreleased
+# 0.7.9.0
 * Fixed failure when creating self-signed certificate on localized systems, by replacing EKU Names with IDs.
 * Fixed support for NAT switches and added Switch attributes NatSubnet and NatGatewayAddress.
 * Private function UpdateSwitchManagementAdapter added.
