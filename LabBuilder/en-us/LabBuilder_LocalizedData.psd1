@@ -8,6 +8,7 @@ ConvertFrom-StringData -StringData @'
     FileExtractError=Error extracting {0}; {1}.
     ConfigurationFileNotFoundError=Configuration file {0} is not found.
     ConfigurationFileEmptyError=Configuration file {0} is empty.
+    RequiredBuildNotMetError=The Windows build of this host '{0}' does not meet the minimum required build of '{1}' to install this Lab.
     ConfigurationFileAlreadyExistsError=Configuration file {0} already exists.
     ConfigurationInvalidError=Configuration is invalid.
     PathNotFoundError={0} path '{1}' is not found.
