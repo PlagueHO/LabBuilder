@@ -12,7 +12,8 @@
             vhdparentpath="C:\Pester Lab\Virtual Hard Disk Templates"
             dsclibrarypath="DSCLibrary"
             resourcepath="Resource"
-            dismpath="C:\dism" />
+            dismpath="C:\dism" 
+            requiredwindowsbuild="10560" />
 
   <resources>
     <module name="xNetworking" url="https://github.com/PlagueHO/xNetworking/archive/dev.zip" folder="xNetworking-dev" />

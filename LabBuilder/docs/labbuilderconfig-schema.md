@@ -38,7 +38,8 @@ This required element contains settings attributes controlling general settings 
 > labid="xs:string"
 
 
-This optional attribute contains a Lab Identifier for the Lab. This identifier will be pre-pended to the names of any Virtual Machines, Switches and Network Adapter names created for this Lab.
+This optional attribute contains a Lab Identifier for the Lab.
+This identifier will be pre-pended to the names of any Virtual Machines, Switches and Network Adapter names created for this Lab.
                 
 ``` labid="WS2012R2-CLUSTER-TEST" ```
 
@@ -118,6 +119,17 @@ Once the ADK is installed this setting can be configured to tell LabBuilder wher
 You should not include the DISM.EXE application name in the path.
                 
 ``` resourcepath="C:\Program Files (x86)\Windows Kits\10\Assessment and Deployment Kit\Deployment Tools\amd64\DISM\" ```
+
+### 2.9a - REQUIREDWINDOWSBUILD Optional Attribute
+> requiredwindowsbuild="xs:integer"
+
+
+This optional attribute contains the minimum build required on the Lab host to install or use this Lab.
+If the Lab Host does not meet this build number an error will be thrown when loading the Lab configuration.
+This ensures that all features required to install a Lab are available on the Lab Host before installation will proceed.
+If this attribute is not set then the Lab Configuration will be able to installed on any Windows build version Lab Host.
+                
+``` requiredwindowsbuild="14295" ```
 
 ### 3.0e - RESOURCES Optional Element
 

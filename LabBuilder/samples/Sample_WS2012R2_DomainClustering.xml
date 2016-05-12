@@ -9,7 +9,8 @@
             domainname="LABBUILDER-DOMAINCLUSTERING.COM"
             email="admin@LABBUILDER-DOMAINCLUSTERING.COM"
             labpath="c:\vm\LABBUILDER-DOMAINCLUSTERING.COM"
-            dsclibrarypath="..\DSCLibrary\" />
+            dsclibrarypath="..\DSCLibrary\" 
+            requiredwindowsbuild="10586" />
 
   <resources>
     <msu name="WMF5.0-WS2012R2-W81"
