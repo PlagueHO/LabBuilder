@@ -79,6 +79,7 @@
         <parameters>
           DomainName = "LABBUILDER.COM"
           DomainAdminPassword = "P@ssword!1"
+          Forwarders = @('8.8.8.8','8.8.4.4')
         </parameters>
       </dsc>
       <adapters>

@@ -32,10 +32,10 @@ Configuration MEMBER_DNS
             [PSCredential]$DomainAdminCredential = New-Object System.Management.Automation.PSCredential ("$($Node.DomainName)\Administrator", (ConvertTo-SecureString $Node.DomainAdminPassword -AsPlainText -Force))
         }
 
-        WindowsFeature DNSInstall 
+        WindowsFeature DNSInstall
         { 
-            Ensure = "Present" 
-            Name   = "DNS" 
+            Ensure = "Present"
+            Name   = "DNS"
         }
 
         WaitForAll DC
@@ -50,8 +50,8 @@ Configuration MEMBER_DNS
         {
             Name       = $Node.NodeName
             DomainName = $Node.DomainName
-            Credential = $DomainAdminCredential 
-            DependsOn  = '[WaitForAll]DC' 
+            Credential = $DomainAdminCredential
+            DependsOn  = '[WaitForAll]DC'
         }
 
         # DNS Server Settings
@@ -61,7 +61,7 @@ Configuration MEMBER_DNS
             {
                 IsSingleInstance = 'Yes'
                 IPAddresses      = $Node.Forwarders
-                Credential       = $DomainAdminCredential 
+                Credential       = $DomainAdminCredential
                 DependsOn        = '[xComputer]JoinDomain'
             }
         }
@@ -74,7 +74,7 @@ Configuration MEMBER_DNS
                 Name          = $PrimaryZone.Name
                 ZoneFile      = $PrimaryZone.ZoneFile
                 DynamicUpdate = $PrimaryZone.DynamicUpdate
-                Credential    = $DomainAdminCredential 
+                Credential    = $DomainAdminCredential
                 DependsOn     = '[xComputer]JoinDomain'
             }
         }

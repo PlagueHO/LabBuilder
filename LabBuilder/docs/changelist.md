@@ -1,3 +1,8 @@
+# Unreleased
+* DSCLibrary\MEMBER_SQLSERVER2014.DSC.ps1: Completed DSC Library configuration for installing a SQL Server 2014 from an ISO.
+* Samples\Sample_WS2012R2_DomainSQL2014.xml: Added new Sample for building a simple domain with a SQL Server.
+* Samples\*.xml: DNS Forwarders set to Google for all Samples with Edge nodes.
+
 # 0.7.9.0
 * Fixed failure when creating self-signed certificate on localized systems, by replacing EKU Names with IDs.
 * Fixed support for NAT switches and added Switch attributes NatSubnet and NatGatewayAddress.

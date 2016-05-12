@@ -1,19 +1,33 @@
 <?xml version="1.0" encoding="utf-8"?>
 
 <labbuilderconfig xmlns="labbuilderconfig"
-                  name="Sample_WS2012R2_DCandDHCPOnly"
+                  name="Sample_WS2012R2_DomainSQL2014"
                   version="1.0">
-  <description>Sample Windows Server 2012 R2 Lab Configuration DC and DHCP Only</description>
+  <description>
+  Sample Windows Server 2012 R2 Lab Configuration DC, DHCP and Edge.
 
-  <settings labid="LABBUILDER-DCANDDHCPONLY.COM"
-            domainname="LABBUILDER-DCANDDHCPONLY.COM"
-            email="admina@LABBUILDER-DCANDDHCPONLY.COM"
-            labpath="c:\vm\LABBUILDER-DCANDDHCPONLY.COM"
+  A SQL Server 2014 node will also be installed from a SQL Server 2014 ISO with data stored on a local data disk.
+
+  Download the SQL Server 2014 ISO from here:
+  https://www.microsoft.com/en-us/evalcenter/evaluate-sql-server-2014
+
+  **Update the Resource ISO path below with the location of the SQL Server 2014 ISO.**
+
+  Please Note: This sample could be updated to Windows Server 2016 TP5, but there is a problen with installing the .NET 3.5 Framework on that version.
+  This problem can be worked around by manually installing this feature using the Source set to E:\Sources\Sxs.
+  </description>
+
+  <settings labid="DOMAINSQL2014.COM"
+            domainname="DOMAINSQL2014.COM"
+            email="admina@DOMAINSQL2014.COM"
+            labpath="c:\vm\DOMAINSQL2014.COM"
             dsclibrarypath="..\DSCLibrary\" />
 
   <resources>
     <msu name="WMF5.0-WS2012R2-W81"
          url="https://download.microsoft.com/download/2/C/6/2C6E1B4A-EBE5-48A6-B225-2D2058A9CEFB/Win8.1AndW2K12R2-KB3134758-x64.msu" />
+    <iso name="SQL2014SP1_FULL_ENU"
+         path="D:\ISOs\SQLServer2014SP1-FullSlipstream-x64-ENU.iso" />
   </resources>
   
   <switches>
@@ -25,10 +39,7 @@
         <adapter name="LM" macaddress="00155D010704" />
       </adapters>
     </switch>
-    <switch name="Domain Internal" type="Internal" /> 
     <switch name="Domain Private Site A" type="Private" vlan="2" />
-    <switch name="Domain Private Site B" type="Private" vlan="3" />
-    <switch name="Domain Private Site C" type="Private" vlan="4" />
   </switches>
 
   <templatevhds isopath="ISOFiles" 
@@ -84,21 +95,20 @@
       <dsc configname="DC_FORESTPRIMARY"
            configfile="DC_FORESTPRIMARY.DSC.ps1">
         <parameters>
-          DomainName = "LABBUILDER.COM"
+          DomainName = "DOMAINSQL2014.COM"
           DomainAdminPassword = "P@ssword!1"
+          Forwarders = @('8.8.8.8','8.8.4.4')
         </parameters>
       </dsc>
       <adapters>
-        <adapter name="External"
-                 switchname="External" />
         <adapter name="Domain Private Site A"
                  switchname="Domain Private Site A">
           <ipv4 address="192.168.128.10"
-                defaultgateway=""
+                defaultgateway="192.168.128.19"
                 subnetmask="24"
                 dnsserver="192.168.128.10"/>
           <ipv6 address="fd53:ccc5:895a:bc00::a"
-                defaultgateway=""
+                defaultgateway="fd53:ccc5:895a:bc00::13"
                 subnetmask="64"
                 dnsserver="fd53:ccc5:895a:bc00::a"/>
         </adapter>
@@ -111,7 +121,7 @@
       <dsc configname="MEMBER_DHCP"
            configfile="MEMBER_DHCP.DSC.ps1">
         <parameters>
-          DomainName = "LABBUILDER.COM"
+          DomainName = "DOMAINSQL2014.COM"
           DCname = "SA-DC1"
           DomainAdminPassword = "P@ssword!1"
           PSDscAllowDomainUser = $True
@@ -135,32 +145,119 @@
                  ClientMACAddress = '000000000002';
                  IPAddress = '192.168.128.16';
                  AddressFamily = 'IPv4'
+              },
+              @{ Name = 'SA-EDGE1';
+                 ScopeID = '192.168.128.0';
+                 ClientMACAddress = '000000000005';
+                 IPAddress = '192.168.128.19';
+                 AddressFamily = 'IPv4'
+              }
+              @{ Name = 'SA-SQL1';
+                 ScopeID = '192.168.128.0';
+                 ClientMACAddress = '00000000000A';
+                 IPAddress = '192.168.128.20';
+                 AddressFamily = 'IPv4'
               }
             )
           ScopeOptions = @(
               @{ ScopeID = '192.168.128.0';
                  DNServerIPAddress = @('192.168.128.10');
-                 Router = '';
+                 Router = '192.168.128.19';
                  AddressFamily = 'IPv4'
               }
             )
         </parameters>
       </dsc>
       <adapters>
-        <adapter name="External"
-                 switchname="External" />
         <adapter name="Domain Private Site A"
                  switchname="Domain Private Site A">
           <ipv4 address="192.168.128.16"
-                defaultgateway=""
+                defaultgateway="192.168.128.19"
                 subnetmask="24"
                 dnsserver="192.168.128.10"/>
           <ipv6 address="fd53:ccc5:895a:bc00::10"
-                defaultgateway=""
+                defaultgateway="fd53:ccc5:895a:bc00::13"
                 subnetmask="64"
                 dnsserver="fd53:ccc5:895a:bc00::a"/>
         </adapter>
       </adapters>
+    </vm>
+
+    <vm name="SA-EDGE1"
+      template="Template Windows Server 2012 R2 Datacenter CORE"
+      computername="SA-EDGE1"
+      bootorder="3">
+      <dsc configname="MEMBER_REMOTEACCESS"
+           configfile="MEMBER_REMOTEACCESS.DSC.ps1">
+        <parameters>
+          DomainName = "DOMAINSQL2014.COM"
+          DomainAdminPassword = "P@ssword!1"
+          DCName = "SA-DC1"
+          PSDscAllowDomainUser = $True
+        </parameters>
+      </dsc>
+      <adapters>
+        <adapter name="Domain Private Site A"
+                 switchname="Domain Private Site A">
+          <ipv4 address="192.168.128.19"
+                defaultgateway=""
+                subnetmask="24"
+                dnsserver="192.168.128.10"/>
+          <ipv6 address="fd53:ccc5:895a:bc00::13"
+                defaultgateway=""
+                subnetmask="64"
+                dnsserver="fd53:ccc5:895a:bc00::a"/>
+        </adapter>
+        <adapter name="External"
+                 switchname="External" />
+      </adapters>
+    </vm>
+
+    <vm name="SA-SQL1"
+      template="Template Windows Server 2012 R2 Datacenter FULL"
+      computername="SA-SQL1"
+      bootorder="4">
+      <dsc configname="MEMBER_SQLSERVER2014"
+           configfile="MEMBER_SQLSERVER2014.DSC.ps1">
+        <parameters>
+          DomainName = "DOMAINSQL2014.COM"
+          DomainAdminPassword = "P@ssword!1"
+          DCName = "SA-DC1"
+          PSDscAllowDomainUser = $True
+          InstallerUsername = 'Administrator'
+          InstallerPassword = 'P@ssword!1'
+          SQLAdminAccount = 'Administrator'
+          SQLDataDrive = 'E'
+          SourcePath = 'D:\'
+          SourceFolder = ''
+          Instances = @(
+            @{
+              Name = 'MSSQLSERVER'
+              Features = 'SQLENGINE,FULLTEXT,RS,AS,IS'
+            }
+          )
+          InstallManagementTools = $True
+        </parameters>
+      </dsc>
+      <adapters>
+        <adapter name="Domain Private"
+                 switchname="Domain Private">
+          <ipv4 address="192.168.128.21"
+                defaultgateway="192.168.128.19"
+                subnetmask="24"
+                dnsserver="192.168.128.10"/>
+          <ipv6 address="fd53:ccc5:895a:bc00::15"
+                defaultgateway="fd53:ccc5:895a:bc00::13"
+                subnetmask="64"
+                dnsserver="fd53:ccc5:895a:bc00::a"/>
+        </adapter>
+      </adapters>
+      <datavhds>
+        <datavhd vhd="SQLData.vhdx" type="dynamic" size="10GB" partitionstyle="GPT" filesystem="NTFS" filesystemlabel="SQLData" />
+      </datavhds>
+      <dvddrives>
+        <dvddrive iso="SQL2014SP1_FULL_ENU" />
+      </dvddrives>
     </vm>
   </vms>
 
