@@ -4,11 +4,12 @@ DSC Template Configuration File For use by LabBuilder
     MEMBER_ROOTCA
 .Desription
     Builds an Enterprise Root CA.
-.Parameters:    
+.Parameters:
     DomainName = "LABBUILDER.COM"
     DomainAdminPassword = "P@ssword!1"
     DCName = 'SA-DC1'
     PSDscAllowDomainUser = $True
+    InstallRSATTools = $True
     CACommonName = "LABBUILDER.COM Root CA"
     CADistinguishedNameSuffix = "DC=LABBUILDER,DC=COM"
     CRLPublicationURLs = "65:C:\Windows\system32\CertSrv\CertEnroll\%3%8%9.crl\n79:ldap:///CN=%7%8,CN=%2,CN=CDP,CN=Public Key Services,CN=Services,%6%10\n6:http://pki.labbuilder.com/CertEnroll/%3%8%9.crl"
@@ -57,6 +58,16 @@ Configuration MEMBER_ROOTCA
             Ensure = "Present" 
             Name = "Web-Mgmt-Service" 
             DependsOn = '[WindowsFeature]ADCSWebEnrollment'
+        }
+
+        if ($InstallRSATTools)
+        {
+            WindowsFeature RSAT-ManagementTools
+            {
+                Ensure    = "Present"
+                Name      = "RSAT-AD-Tools"
+                DependsOn = "[WindowsFeature]ADCSCA"
+            }
         }
 
         if ($Node.InstallOnlineResponder) {
