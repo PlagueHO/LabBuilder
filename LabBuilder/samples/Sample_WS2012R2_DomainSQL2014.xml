@@ -23,11 +23,12 @@
             labpath="c:\vm\DOMAINSQL2014.COM"
             dsclibrarypath="..\DSCLibrary\" />
 
-  <resources>
+  <resources isopath="ISOFiles">
     <msu name="WMF5.0-WS2012R2-W81"
          url="https://download.microsoft.com/download/2/C/6/2C6E1B4A-EBE5-48A6-B225-2D2058A9CEFB/Win8.1AndW2K12R2-KB3134758-x64.msu" />
     <iso name="SQL2014SP1_FULL_ENU"
-         path="D:\ISOs\SQLServer2014SP1-FullSlipstream-x64-ENU.iso" />
+         path="SQLServer2014SP1-FullSlipstream-x64-ENU.iso"
+         url="https://www.microsoft.com/en-us/evalcenter/evaluate-sql-server-2014" />
   </resources>
   
   <switches>

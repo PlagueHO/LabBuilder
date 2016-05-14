@@ -11,7 +11,7 @@ DSC Template Configuration File For use by LabBuilder
     PSDscAllowDomainUser = $True
 ###################################################################################################>
 
-Configuration MEMBER_FILESERVER
+Configuration MEMBER_DEFAULT
 {
     Import-DscResource -ModuleName 'PSDesiredStateConfiguration'
     Import-DscResource -ModuleName xComputerManagement

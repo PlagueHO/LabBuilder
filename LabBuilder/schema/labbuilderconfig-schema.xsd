@@ -264,19 +264,33 @@ This attribute should not be used if the path attribute is also set.
                       <xs:appinfo>url="https://download.microsoft.com/download/4/C/7/4C7D40B9-BCF8-4F8A-9E76-06E9B92FE5AE/ENU/SQLFULL_ENU.iso"</xs:appinfo>
                     </xs:annotation>
                   </xs:attribute>
-                  <xs:attribute name="path" type="xs:string" use="optional">
+                  <xs:attribute name="path" type="xs:string" use="required">
                     <xs:annotation>
                       <xs:documentation>
-This optional attribute can be used to set the path and filename of the source ISO.
+This required attribute is used to set the filename (and optionally path) of the source ISO.
 The ISO will be used from that location and not copied into the Resources folder of the Lab.
-This attribute should not be used if the URL attribute is also set.
+If this path does not contain a root it will be appended onto the _ISOFiles_ attribute on the _Resources_ node or the path set in the _ResourcePath_ attribute on the _Settings_ node.
+If the ISO file does not exist but a URL is provided that contains a filename with an extension of ISO or ZIP it will be downloaded to this location and optionally unzipped.
+If the ISO file does not exist but a URL is provided that does not contain an ISO or ZIP filename the user will be requested to manually download the file from the URL and Lab installation will terminate.
                       </xs:documentation>
-                      <xs:appinfo>path="f:\isos\SQLSERVER2012-FULL-ENU.iso"</xs:appinfo>
+                      <xs:appinfo>path="f:\isos\SQLFULL_ENU.iso"</xs:appinfo>
                     </xs:annotation>
                   </xs:attribute>
                 </xs:complexType>
               </xs:element>
             </xs:sequence>
+            <xs:attribute name="isopath" type="xs:string" use="optional">
+              <xs:annotation>
+                <xs:documentation>
+This optional attribute can be used to set the path to the folder that LabBuilder will look for the Resource ISO files.
+If not set this will default to the ResourcePath specified in the Lab configuration file.
+If a ResourcePath is not set then this will be the Resource folder within the Lab folder.
+This can be a relative or full path.
+If a relative path is set, it will be relative to the full path of the Lab configuration file.
+                </xs:documentation>
+                <xs:appinfo>isopath="d:\LabShared\ISOs"</xs:appinfo>
+              </xs:annotation>
+            </xs:attribute>
           </xs:complexType>
         </xs:element>
         <xs:element minOccurs="0" maxOccurs="1" name="switches">
@@ -285,7 +299,7 @@ This attribute should not be used if the URL attribute is also set.
 This optional element contains a collection of zero or more Switch nodes representing the Hyper-V Virtual Switches that are required for this Lab.
 Any missing switches in this list will be created on the Lab Host when this Lab is installed.
 
-Note: A Private Management Virtual Switch will always be created for each installed Lab for LabBuilder to install and configure the Virtual Machines in a Lab. This Management Virtual Switch will not appear in this list but will always be created.  
+Note: A Private Management Virtual Switch will always be created for each installed Lab for LabBuilder to install and configure the Virtual Machines in a Lab. This Management Virtual Switch will not appear in this list but will always be created.
             </xs:documentation>
             <xs:appinfo>&lt;switches&gt;...&lt;/switches&gt;</xs:appinfo>
           </xs:annotation>
