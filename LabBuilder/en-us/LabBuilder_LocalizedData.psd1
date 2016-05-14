@@ -8,13 +8,16 @@ ConvertFrom-StringData -StringData @'
     FileExtractError=Error extracting {0}; {1}.
     ConfigurationFileNotFoundError=Configuration file {0} is not found.
     ConfigurationFileEmptyError=Configuration file {0} is empty.
+    RequiredBuildNotMetError=The Windows build of this host '{0}' does not meet the minimum required build of '{1}' to install this Lab.
     ConfigurationFileAlreadyExistsError=Configuration file {0} already exists.
     ConfigurationInvalidError=Configuration is invalid.
     PathNotFoundError={0} path '{1}' is not found.
     ResourceModuleNameIsEmptyError=Resource Module Name is missing or empty.
     ResourceMSUNameIsEmptyError=Resource MSU Name is missing or empty.
     ResourceISONameIsEmptyError=Resource ISO Name is missing or empty.
-    ResourceISOFileNotFoundError=Resource ISO file '{0}' is not found.
+    ResourceISOPathIsEmptyError=Resource ISO '{0}' path is missing or empty.
+    ResourceISOFileNotFoundAndNoURLError=Resource ISO '{0}' file '{1}' is not found and no URL provided.
+    ResourceISOFileNotDownloadedError=Resource ISO '{0}' file '{1}' was not downloaded successfully from '{2}'. Please download this file manually and check the content and filename.
     ModuleNotAvailableError=Error installing Module '{0}' ({1}); {2}.
     SwitchNameIsEmptyError=Switch name is missing or empty.
     UnknownSwitchTypeError=Unknown switch type '{0}' specified for switch '{1}'.

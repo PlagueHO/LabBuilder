@@ -81,8 +81,7 @@ function DownloadAndUnzipFile()
         [ValidateNotNullOrEmpty()]
         [String] $DestinationPath
     )
-        
-    $FileName = $URL.Substring($URL.LastIndexOf('/') + 1)
+    $FileName = [System.IO.Path]::GetFileName($URL)
 
     if (-not (Test-Path -Path $DestinationPath))
     {

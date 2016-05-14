@@ -152,7 +152,7 @@ function Get-LabVMTemplateVHD {
                 -Path $ISORootPath `
                 -ChildPath $ISOPath
         } # if
-        
+
         # Does the ISO Exist?
         if (-not (Test-Path -Path $ISOPath))
         {
@@ -171,8 +171,8 @@ function Get-LabVMTemplateVHD {
                     -f $TemplateVHD.Name,$ISOPath)
             }
             ThrowException @ExceptionParameters
-        }
-        
+        } # if
+
         # Get the VHD Path
         [String] $VHDPath = $TemplateVHD.VHD
         if (-not $VHDPath)

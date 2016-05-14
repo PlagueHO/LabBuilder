@@ -94,6 +94,7 @@
         <parameters>
           DomainName = "ALPHA.LOCAL"
           DomainAdminPassword = "P@ssword!1"
+          Forwarders = @('8.8.8.8','8.8.4.4')
         </parameters>
       </dsc>
       <adapters>
@@ -342,6 +343,7 @@
         <parameters>
           DomainName = "BRAVO.LOCAL"
           DomainAdminPassword = "P@ssword!1"
+          Forwarders = @('8.8.8.8','8.8.4.4')
         </parameters>
       </dsc>
       <adapters>

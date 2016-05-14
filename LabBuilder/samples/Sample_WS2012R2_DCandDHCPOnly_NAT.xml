@@ -3,13 +3,14 @@
 <labbuilderconfig xmlns="labbuilderconfig"
                   name="Sample_WS2012R2_DCandDHCPOnly_NAT"
                   version="1.0">
-  <description>Sample Windows Server 2012 R2 Lab Configuration DC and DHCP Only and using a NAT virtual switch</description>
+  <description>Sample Windows Server 2012 R2 Lab Configuration DC and DHCP Only and using a NAT virtual switch.</description>
 
   <settings labid="LABBUILDER-NAT.COM"
             domainname="LABBUILDER-NAT.COM"
             email="admina@LABBUILDER-NAT.COM"
             labpath="c:\vm\LABBUILDER-NAT.COM"
-            dsclibrarypath="..\DSCLibrary\" />
+            dsclibrarypath="..\DSCLibrary\"
+            requiredwindowsbuild="14295" />
 
   <resources>
     <msu name="WMF5.0-WS2012R2-W81"
@@ -79,6 +80,7 @@
         <parameters>
           DomainName = "LABBUILDER.COM"
           DomainAdminPassword = "P@ssword!1"
+          Forwarders = @('8.8.8.8','8.8.4.4')
         </parameters>
       </dsc>
       <adapters>

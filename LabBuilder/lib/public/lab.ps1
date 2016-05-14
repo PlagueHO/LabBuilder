@@ -87,6 +87,20 @@ function Get-Lab {
     $Lab.PreserveWhitespace = $true
     $Lab.LoadXML($Content)
 
+    # Check the Required Windows Build
+    $RequiredWindowsBuild = $Lab.labbuilderconfig.settings.requiredwindowsbuild
+    if ($RequiredWindowsBuild -and `
+        ($Script:CurrentBuild -lt $RequiredWindowsBuild))
+    {
+        $ExceptionParameters = @{
+            errorId = 'RequiredBuildNotMetError'
+            errorCategory = 'InvalidArgument'
+            errorMessage = $($LocalizedData.RequiredBuildNotMetError `
+                -f $Script:CurrentBuild,$RequiredWindowsBuild)
+        }
+        ThrowException @ExceptionParameters
+    } # if
+
     # Figure out the Config path and load it into the XML object (if we can)
     # This path is used to find any additional configuration files that might
     # be provided with config
