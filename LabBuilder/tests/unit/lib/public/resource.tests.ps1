@@ -165,7 +165,7 @@ try
             Context 'Configuration passed with resource ISO missing Name.' {
                 It 'Throws a ResourceISONameIsEmptyError Exception' {
                     $Lab = Get-Lab -ConfigPath $Global:TestConfigOKPath
-                    $Lab.labbuilderconfig.resources.iso.RemoveAttribute('name')
+                    $Lab.labbuilderconfig.resources.iso[0].RemoveAttribute('name')
                     $ExceptionParameters = @{
                         errorId = 'ResourceISONameIsEmptyError'
                         errorCategory = 'InvalidArgument'
@@ -176,29 +176,29 @@ try
                     { Get-LabResourceISO -Lab $Lab } | Should Throw $Exception
                 }
             }
-            Context 'Configuration passed with resource ISO file that does not exist.' {
-                It 'Throws a ResourceISOFileNotFoundError Exception' {
-                    $Path = "$Global:TestConfigPath\ISOFiles\DOESNOTEXIST.iso"
+            Context 'Configuration passed with resource ISO with Empty Path' {
+                It 'Throws a ResourceISOPathIsEmptyError Exception' {
                     $Lab = Get-Lab -ConfigPath $Global:TestConfigOKPath
-                    $Lab.labbuilderconfig.resources.iso.RemoveAttribute('url')
-                    $Lab.labbuilderconfig.resources.iso.SetAttribute('path',$Path)
+                    $Lab.labbuilderconfig.resources.iso[0].path=''
                     $ExceptionParameters = @{
-                        errorId = 'ResourceISOFileNotFoundError'
+                        errorId = 'ResourceISOPathIsEmptyError'
                         errorCategory = 'InvalidArgument'
-                        errorMessage = $($LocalizedData.ResourceISOFileNotFoundError `
-                            -f $Path)
+                        errorMessage = $($LocalizedData.ResourceISOPathIsEmptyError `
+                            -f $Lab.labbuilderconfig.resources.iso[0].name)
                     }
                     $Exception = GetException @ExceptionParameters
 
                     { Get-LabResourceISO -Lab $Lab } | Should Throw $Exception
                 }
             }
-            Context 'Configuration passed with resource ISO file that does not exist.' {
-                It 'Throws a ResourceISOFileNotFoundError Exception' {
-                    $Path = "$Global:TestConfigPath\ISOFiles\SQL2014_FULL_ENU.iso"
+            Context 'Configuration passed with resource ISO files that do exist.' {
+                It 'Does not throw an Exception' {
+                    $Path = "$Global:TestConfigPath\ISOFiles\SQLServer2014SP1-FullSlipstream-x64-ENU.iso"
                     $Lab = Get-Lab -ConfigPath $Global:TestConfigOKPath
-                    $Lab.labbuilderconfig.resources.iso.RemoveAttribute('url')
-                    $Lab.labbuilderconfig.resources.iso.SetAttribute('path',$Path)
+                    $Lab.labbuilderconfig.resources.iso[0].RemoveAttribute('url')
+                    $Lab.labbuilderconfig.resources.iso[0].SetAttribute('path',"$Global:TestConfigPath\ISOFiles\SQLServer2014SP1-FullSlipstream-x64-ENU.iso")
+                    $Lab.labbuilderconfig.resources.iso[1].RemoveAttribute('url')
+                    $Lab.labbuilderconfig.resources.iso[1].SetAttribute('path',"$Global:TestConfigPath\ISOFiles\SQLFULL_ENU.iso")
 
                     { Get-LabResourceISO -Lab $Lab } | Should Not Throw
                 }
@@ -206,7 +206,28 @@ try
             Context 'Valid configuration is passed' {
                 It 'Returns Resource ISO Array that matches Expected Array' {
                     $Lab = Get-Lab -ConfigPath $Global:TestConfigOKPath
+                    $Lab.labbuilderconfig.resources.iso[0].SetAttribute('path',"$($Global:TestConfigPath)\ISOFiles\SQLServer2014SP1-FullSlipstream-x64-ENU.iso")
+                    $Lab.labbuilderconfig.resources.iso[1].SetAttribute('path',"$($Global:TestConfigPath)\ISOFiles\SQLFULL_ENU.iso")
                     [Array] $ResourceISOs = Get-LabResourceISO -Lab $Lab
+                    # Adjust the path to remove machine specific path
+                    $ResourceISOs.foreach({
+                        $_.Path = $_.Path.Replace($Global:TestConfigPath,'.')
+                    })
+                    Set-Content -Path "$Global:ArtifactPath\ExpectedResourceISOs.json" -Value ($ResourceISOs | ConvertTo-Json -Depth 4)
+                    $ExpectedResourceISOs = Get-Content -Path "$Global:ExpectedContentPath\ExpectedResourceISOs.json"
+                    [String]::Compare((Get-Content -Path "$Global:ArtifactPath\ExpectedResourceISOs.json"),$ExpectedResourceISOs,$true) | Should Be 0
+                }
+            }
+            Context 'Valid configuration is passed with ISOPath set' {
+                It 'Returns Resource ISO Array that matches Expected Array' {
+                    $Path = "$Global:TestConfigPath\ISOFiles"
+                    $Lab = Get-Lab -ConfigPath $Global:TestConfigOKPath
+                    $Lab.labbuilderconfig.resources.SetAttribute('isopath',$Path)
+                    [Array] $ResourceISOs = Get-LabResourceISO -Lab $Lab
+                    # Adjust the path to remove machine specific path
+                    $ResourceISOs.foreach({
+                        $_.Path = $_.Path.Replace($Global:TestConfigPath,'.')
+                    })
                     Set-Content -Path "$Global:ArtifactPath\ExpectedResourceISOs.json" -Value ($ResourceISOs | ConvertTo-Json -Depth 4)
                     $ExpectedResourceISOs = Get-Content -Path "$Global:ExpectedContentPath\ExpectedResourceISOs.json"
                     [String]::Compare((Get-Content -Path "$Global:ArtifactPath\ExpectedResourceISOs.json"),$ExpectedResourceISOs,$true) | Should Be 0
@@ -217,18 +238,19 @@ try
 
 
         Describe 'Initialize-LabResourceISO' {
-
+            $Path = "$Global:TestConfigPath\ISOFiles"
             $Lab = Get-Lab -ConfigPath $Global:TestConfigOKPath
+            $Lab.labbuilderconfig.resources.SetAttribute('isopath',$Path)
             [LabResourceISO[]]$ResourceISOs = Get-LabResourceISO -Lab $Lab
 
             Mock DownloadAndUnzipFile
 
-            Context 'Valid configuration is passed' {	
+            Context 'Valid configuration is passed and all ISOs exist' {
                 It 'Does not throw an Exception' {
                     { Initialize-LabResourceISO -Lab $Lab -ResourceISOs $ResourceISOs } | Should Not Throw
                 }
                 It 'Calls Mocked commands' {
-                    Assert-MockCalled DownloadAndUnzipFile -Exactly 1
+                    Assert-MockCalled DownloadAndUnzipFile -Exactly 0
                 }
             }
         }

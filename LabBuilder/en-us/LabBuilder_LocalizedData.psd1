@@ -15,7 +15,9 @@ ConvertFrom-StringData -StringData @'
     ResourceModuleNameIsEmptyError=Resource Module Name is missing or empty.
     ResourceMSUNameIsEmptyError=Resource MSU Name is missing or empty.
     ResourceISONameIsEmptyError=Resource ISO Name is missing or empty.
-    ResourceISOFileNotFoundError=Resource ISO file '{0}' is not found.
+    ResourceISOPathIsEmptyError=Resource ISO '{0}' path is missing or empty.
+    ResourceISOFileNotFoundAndNoURLError=Resource ISO '{0}' file '{1}' is not found and no URL provided.
+    ResourceISOFileNotDownloadedError=Resource ISO '{0}' file '{1}' was not downloaded successfully from '{2}'. Please download this file manually and check the content and filename.
     ModuleNotAvailableError=Error installing Module '{0}' ({1}); {2}.
     SwitchNameIsEmptyError=Switch name is missing or empty.
     UnknownSwitchTypeError=Unknown switch type '{0}' specified for switch '{1}'.

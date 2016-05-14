@@ -1,5 +1,12 @@
-{
-    "Name":  "SQL2012_FULL_ENU",
-    "URL":  "https://download.microsoft.com/download/4/C/7/4C7D40B9-BCF8-4F8A-9E76-06E9B92FE5AE/ENU/SQLFULL_ENU.iso",
-    "Path":  "C:\\Pester Lab\\Resource\\SQLFULL_ENU.iso"
-}
+[
+    {
+        "Name":  "SQL2014SP1_FULL_ENU",
+        "URL":  "https://www.microsoft.com/en-us/evalcenter/evaluate-sql-server-2014",
+        "Path":  ".\\ISOFiles\\SQLServer2014SP1-FullSlipstream-x64-ENU.iso"
+    },
+    {
+        "Name":  "SQL2012_FULL_ENU",
+        "URL":  "https://download.microsoft.com/download/4/C/7/4C7D40B9-BCF8-4F8A-9E76-06E9B92FE5AE/ENU/SQLFULL_ENU.iso",
+        "Path":  ".\\ISOFiles\\SQLFULL_ENU.iso"
+    }
+]

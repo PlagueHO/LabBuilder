@@ -144,6 +144,18 @@ Currently the Resource types that are supported are:
             
 ``` <resources>...</resources> ```
 
+### 3.1a - ISOPATH Optional Attribute
+> isopath="xs:string"
+
+
+This optional attribute can be used to set the path to the folder that LabBuilder will look for the Resource ISO files.
+If not set this will default to the ResourcePath specified in the Lab configuration file.
+If a ResourcePath is not set then this will be the Resource folder within the Lab folder.
+This can be a relative or full path.
+If a relative path is set, it will be relative to the full path of the Lab configuration file.
+                
+``` isopath="d:\LabShared\ISOs" ```
+
 ### 3.1e - MODULE Optional Element
 
 A PowerShell (DSC) Module that will be downloaded and installed to the Lab Host when this Lab is installed.
