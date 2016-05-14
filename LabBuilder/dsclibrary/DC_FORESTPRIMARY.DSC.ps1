@@ -10,6 +10,7 @@ DSC Template Configuration File For use by LabBuilder
 .Parameters:
     DomainName = "LABBUILDER.COM"
     DomainAdminPassword = "P@ssword!1"
+    InstallRSATTools = $True
     Forwarders = @('8.8.8.8','8.8.4.4')
     ADZones = @(
         @{ Name = 'ALPHA.LOCAL';
@@ -63,6 +64,16 @@ Configuration DC_FORESTPRIMARY
             Ensure    = "Present"
             Name      = "RSAT-AD-PowerShell"
             DependsOn = "[WindowsFeature]ADDSInstall"
+        }
+
+        if ($InstallRSATTools)
+        {
+            WindowsFeature RSAT-ManagementTools
+            {
+                Ensure    = "Present"
+                Name      = "RSAT-AD-Tools","RSAT-DNS-Server"
+                DependsOn = "[WindowsFeature]ADDSInstall"
+            }
         }
 
         xADDomain PrimaryDC

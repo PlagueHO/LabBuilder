@@ -11,6 +11,7 @@ DSC Template Configuration File For use by LabBuilder
     DomainName = "LABBUILDER.COM"
     DomainAdminPassword = "P@ssword!1"
     PSDscAllowDomainUser = $True
+    InstallRSATTools = $True
     Forwarders = @('8.8.8.8','8.8.4.4')
     ADZones = @(
         @{ Name = 'ALPHA.LOCAL';
@@ -42,21 +43,21 @@ Configuration DC_SECONDARY
 
         WindowsFeature BackupInstall
         { 
-            Ensure = "Present" 
-            Name   = "Windows-Server-Backup" 
+            Ensure = "Present"
+            Name   = "Windows-Server-Backup"
         } 
 
-        WindowsFeature DNSInstall 
+        WindowsFeature DNSInstall
         { 
-            Ensure = "Present" 
-            Name   = "DNS" 
+            Ensure = "Present"
+            Name   = "DNS"
         }
 
-        WindowsFeature ADDSInstall 
+        WindowsFeature ADDSInstall
         {
-            Ensure    = "Present" 
-            Name      = "AD-Domain-Services" 
-            DependsOn = "[WindowsFeature]DNSInstall" 
+            Ensure    = "Present"
+            Name      = "AD-Domain-Services"
+            DependsOn = "[WindowsFeature]DNSInstall"
         }
 
         WindowsFeature RSAT-AD-PowerShellInstall
@@ -66,12 +67,22 @@ Configuration DC_SECONDARY
             DependsOn = "[WindowsFeature]ADDSInstall"
         }
 
+        if ($InstallRSATTools)
+        {
+            WindowsFeature RSAT-ManagementTools
+            {
+                Ensure    = "Present"
+                Name      = "RSAT-AD-Tools","RSAT-DNS-Server"
+                DependsOn = "[WindowsFeature]ADDSInstall"
+            }
+        }
+
         xWaitForADDomain DscDomainWait
         {
             DomainName           = $Node.DomainName
-            DomainUserCredential = $DomainAdminCredential 
-            RetryCount           = 100 
-            RetryIntervalSec     = 10 
+            DomainUserCredential = $DomainAdminCredential
+            RetryCount           = 100
+            RetryIntervalSec     = 10
             DependsOn            = "[WindowsFeature]ADDSInstall"
         }
 
@@ -79,7 +90,7 @@ Configuration DC_SECONDARY
         {
             DomainName                    = $Node.DomainName
             DomainAdministratorCredential = $DomainAdminCredential
-            SafemodeAdministratorPassword = $LocalAdminCredential 
+            SafemodeAdministratorPassword = $LocalAdminCredential
             DependsOn                     = "[xWaitForADDomain]DscDomainWait"
         }
 

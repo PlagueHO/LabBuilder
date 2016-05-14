@@ -9,6 +9,17 @@
 * Added LabBuilderConfig\Resources attribute ISOPath.
 * DSCLibrary\MEMBER.DSC.ps1: Corrected filename.
 * DSCLibrary\MEMBER.DSC.ps1: Fixed Configuration name.
+* Added InstallRSATTools parameter DSC configurations to enable installation of applicable RSAT Management tools:
+  - DC_FORESTCHILDDOMAIN.DSC.ps1
+  - DC_FORESTPRIMARY.DSC.ps1
+  - DC_SECONDARY.DSC.ps1
+  - RODC_SECONDARY.DSC.ps1
+  - MEMBER_DNS.DSC.ps1
+  - MEMBER_DHCPNPAS.DSC.ps1
+  - MEMBER_DHCPDNS.DSC.ps1
+  - MEMBER_DHCP.DSC.ps1
+  - MEMBER_ROOTCA.DSC.ps1
+  - MEMBER_SUBCA.ps1
 
 # 0.7.9.0
 * Fixed failure when creating self-signed certificate on localized systems, by replacing EKU Names with IDs.

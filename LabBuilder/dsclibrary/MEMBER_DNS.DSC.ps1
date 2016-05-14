@@ -9,6 +9,7 @@ DSC Template Configuration File For use by LabBuilder
     DomainAdminPassword = "P@ssword!1"
     DCName = 'SA-DC1'
     PSDscAllowDomainUser = $True
+    InstallRSATTools = $True
     Forwarders = @('8.8.8.8','8.8.4.4')
     PrimaryZones = @(
         @{ Name = 'BRAVO.LOCAL';
@@ -36,6 +37,16 @@ Configuration MEMBER_DNS
         { 
             Ensure = "Present"
             Name   = "DNS"
+        }
+
+        if ($InstallRSATTools)
+        {
+            WindowsFeature RSAT-ManagementTools
+            {
+                Ensure    = "Present"
+                Name      = "RSAT-DNS-Server"
+                DependsOn = "[WindowsFeature]DNSInstall"
+            }
         }
 
         WaitForAll DC
