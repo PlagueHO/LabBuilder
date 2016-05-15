@@ -108,7 +108,7 @@ function Get-LabVM {
             }
             else
             {
-                $VMName = "$($VM.Name) $Instance"
+                $VMName = "$($VM.Name)$Instance"
                 $ComputerName = "$($VM.ComputerName)$Instance"
                 # This value is used to increment IP and MAC addresses
                 $IncNetIds = $Instance - 1
