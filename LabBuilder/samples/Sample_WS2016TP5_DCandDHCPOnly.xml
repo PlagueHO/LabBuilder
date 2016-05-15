@@ -98,6 +98,7 @@
         <parameters>
           DomainName = "LABBUILDER.COM"
           DomainAdminPassword = "P@ssword!1"
+          Forwarders = @('8.8.8.8','8.8.4.4')
         </parameters>
       </dsc>
       <adapters>
@@ -125,7 +126,7 @@
         <parameters>
           DomainName = "LABBUILDER.COM"
           DomainAdminPassword = "P@ssword!1"
-		  DCName = "SA-DC1"
+          DCName = "SA-DC1"
           PSDscAllowDomainUser = $True
         </parameters>
       </dsc>

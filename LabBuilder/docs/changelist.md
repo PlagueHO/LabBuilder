@@ -1,6 +1,44 @@
 # Unreleased
+* Converted all Write-Verbose calls to WriteMessage function.
+
+# 0.8.0.0
+* DSCLibrary\MEMBER_SQLSERVER2014.DSC.ps1: Completed DSC Library configuration for installing a SQL Server 2014 from an ISO.
+* Samples\Sample_WS2012R2_DomainSQL2014.xml: Added new Sample for building a simple domain with a SQL Server.
+* Samples\*.xml: DNS Forwarders set to Google for all Samples with Edge nodes.
+* Added LabBuilderConfig\Settings attribute requiredwindowsbuild.
+* Get-Lab: Added support for preventing a Lab from being used on a host not at the requiredwindowsbuild build version.
+* Samples\Sample_WS2012R2_DomainClustering.xml: Required build version set to 10586.
+* Samples\Sample_WS2012R2_DCandDHCPOnly_NAT.xml: Required build version set to 14295.
+* Added LabBuilderConfig\Resources attribute ISOPath.
+* DSCLibrary\MEMBER.DSC.ps1: Corrected filename.
+* DSCLibrary\MEMBER.DSC.ps1: Fixed Configuration name.
+* Added InstallRSATTools parameter DSC configurations to enable installation of applicable RSAT Management tools:
+  - DC_FORESTCHILDDOMAIN.DSC.ps1
+  - DC_FORESTPRIMARY.DSC.ps1
+  - DC_SECONDARY.DSC.ps1
+  - RODC_SECONDARY.DSC.ps1
+  - MEMBER_DNS.DSC.ps1
+  - MEMBER_DHCPNPAS.DSC.ps1
+  - MEMBER_DHCPDNS.DSC.ps1
+  - MEMBER_DHCP.DSC.ps1
+  - MEMBER_ROOTCA.DSC.ps1
+  - MEMBER_SUBCA.ps1
+
+# 0.7.9.0
+* Fixed failure when creating self-signed certificate on localized systems, by replacing EKU Names with IDs.
+* Fixed support for NAT switches and added Switch attributes NatSubnet and NatGatewayAddress.
+* Private function UpdateSwitchManagementAdapter added.
+* Samples\Sample_WS2012R2_DCandDHCPOnly_NAT.xml: Added sample for testing NAT based Lab switches.
+* Improved ShouldProcess messages to be easier to read.
+* Utils\InstallPackageProviders: Added function for ensuring Package Providers are installed.
+* Utils\RegisterPackageSources: Added function for ensuring Package surces are registered. 
+* Install-Lab: Added checks to ensure required PackageProviders and PackageSources are available.
+
+# 0.7.8.0
 * Install-Lab: Force flag added to suppress confirmation messages.
-               Will attempt to install WS-Man if not installed. Failure will cause install to fail.
+               Will attempt to install WS-Man if not installed, failure will cause install to fail.
+* Disconnect-LabVM: Improve handling of adding IPAddress to trusted hosts.
+* Get-LabVM: LabID will only be prepended to VM Adapter name for adapters not attached to an External switch.
 
 # 0.7.7.0
 * Samples\Sample_WS2016TP5_DCandDHCPOnly.xml: Set edition in Nano Server Template VHD.

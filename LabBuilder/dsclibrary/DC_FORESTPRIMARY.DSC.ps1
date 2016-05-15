@@ -10,6 +10,7 @@ DSC Template Configuration File For use by LabBuilder
 .Parameters:
     DomainName = "LABBUILDER.COM"
     DomainAdminPassword = "P@ssword!1"
+    InstallRSATTools = $True
     Forwarders = @('8.8.8.8','8.8.4.4')
     ADZones = @(
         @{ Name = 'ALPHA.LOCAL';
@@ -65,6 +66,16 @@ Configuration DC_FORESTPRIMARY
             DependsOn = "[WindowsFeature]ADDSInstall"
         }
 
+        if ($InstallRSATTools)
+        {
+            WindowsFeature RSAT-ManagementTools
+            {
+                Ensure    = "Present"
+                Name      = "RSAT-AD-Tools","RSAT-DNS-Server"
+                DependsOn = "[WindowsFeature]ADDSInstall"
+            }
+        }
+
         xADDomain PrimaryDC
         {
             DomainName                    = $Node.DomainName 
@@ -102,7 +113,7 @@ Configuration DC_FORESTPRIMARY
             }
             TestScript = { 
                 If (-not (Get-KDSRootKey)) {
-                    Write-Verbose "KDS Root Key Needs to be installed..."
+                    Write-Verbose -Message "KDS Root Key Needs to be installed..."
                     Return $False
                 }
                 Return $True
@@ -168,7 +179,7 @@ Configuration DC_FORESTPRIMARY
         {
             PSDSCRunAsCredential = $DomainAdminCredential
             SetScript = {
-                Write-Verbose "Enabling Global Name Zone..."
+                Write-Verbose -Message "Enabling Global Name Zone..."
                 Set-DNSServerGlobalNameZone -Enable
             }
             GetScript = {
@@ -178,7 +189,7 @@ Configuration DC_FORESTPRIMARY
             }
             TestScript = { 
                 If (-not (Get-DNSServerGlobalNameZone).Enable) {
-                    Write-Verbose "Global Name Zone needs to be enabled..."
+                    Write-Verbose -Message "Global Name Zone needs to be enabled..."
                     Return $False
                 }
                 Return $True

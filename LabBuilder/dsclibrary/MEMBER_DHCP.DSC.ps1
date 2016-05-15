@@ -9,6 +9,7 @@ DSC Template Configuration File For use by LabBuilder
     DomainAdminPassword = "P@ssword!1"
     DCName = 'SA-DC1'
     PSDscAllowDomainUser = $True
+    InstallRSATTools = $True
     Scopes = @(
         @{ Name = 'Site A Primary';
             Start = '192.168.128.50';
@@ -66,10 +67,20 @@ Configuration MEMBER_DHCP
             [PSCredential]$DomainAdminCredential = New-Object System.Management.Automation.PSCredential ("$($Node.DomainName)\Administrator", (ConvertTo-SecureString $Node.DomainAdminPassword -AsPlainText -Force))
         }
 
-        WindowsFeature DHCPInstall 
+        WindowsFeature DHCPInstall
         {
-            Ensure = "Present" 
-            Name = "DHCP" 
+            Ensure = "Present"
+            Name = "DHCP"
+        }
+
+        if ($InstallRSATTools)
+        {
+            WindowsFeature RSAT-ManagementTools
+            {
+                Ensure    = "Present"
+                Name      = "RSAT-DHCP","RSAT-DNS-Server"
+                DependsOn = "[WindowsFeature]DHCPInstall"
+            }
         }
 
         WaitForAll DC
@@ -80,12 +91,12 @@ Configuration MEMBER_DHCP
             RetryCount        = 60
         }
 
-        xComputer JoinDomain 
+        xComputer JoinDomain
         { 
             Name          = $Node.NodeName
             DomainName    = $Node.DomainName
-            Credential    = $DomainAdminCredential 
-            DependsOn     = "[WaitForAll]DC" 
+            Credential    = $DomainAdminCredential
+            DependsOn     = "[WaitForAll]DC"
         }
 
         # DHCP Server Settings

@@ -152,16 +152,16 @@ function Get-LabVMTemplateVHD {
                 -Path $ISORootPath `
                 -ChildPath $ISOPath
         } # if
-        
+
         # Does the ISO Exist?
         if (-not (Test-Path -Path $ISOPath))
         {
             $URL = $TemplateVHD.URL
             if ($URL)
             {
-                Write-Output `
-                    -ForegroundColor Yellow `
-                    -Object $($LocalizedData.ISONotFoundDownloadURLMessage `
+                WriteMessage `
+                    -Type Alert `
+                    -Message $($LocalizedData.ISONotFoundDownloadURLMessage `
                         -f $TemplateVHD.Name,$ISOPath,$URL)
             } # if
             $ExceptionParameters = @{
@@ -171,8 +171,8 @@ function Get-LabVMTemplateVHD {
                     -f $TemplateVHD.Name,$ISOPath)
             }
             ThrowException @ExceptionParameters
-        }
-        
+        } # if
+
         # Get the VHD Path
         [String] $VHDPath = $TemplateVHD.VHD
         if (-not $VHDPath)
@@ -412,14 +412,14 @@ function Initialize-LabVMTemplateVHD
         if (Test-Path -Path ($VHDPath))
         {
             # The SourceVHD already exists
-            Write-Verbose -Message $($LocalizedData.SkipVMTemplateVHDFileMessage `
+            WriteMessage -Message $($LocalizedData.SkipVMTemplateVHDFileMessage `
                 -f $TemplateVHDName,$VHDPath)
 
             continue
         } # if
         
         # Create the VHD
-        Write-Verbose -Message $($LocalizedData.CreatingVMTemplateVHDMessage `
+        WriteMessage -Message $($LocalizedData.CreatingVMTemplateVHDMessage `
             -f $TemplateVHDName,$VHDPath)
             
         # Check the ISO exists.
@@ -436,7 +436,7 @@ function Initialize-LabVMTemplateVHD
         } # if
 
         # Mount the ISO so we can read the files.
-        Write-Verbose -Message $($LocalizedData.MountingVMTemplateVHDISOMessage `
+        WriteMessage -Message $($LocalizedData.MountingVMTemplateVHDISOMessage `
                 -f $TemplateVHDName,$ISOPath)
 
         $null = Mount-DiskImage `
@@ -552,7 +552,7 @@ function Initialize-LabVMTemplateVHD
 
             if (-not (Test-Path -Path $NanoPackagesFolder -Type Container))
             {
-                Write-Verbose -Message $($LocalizedData.CachingNanoServerPackagesMessage `
+                WriteMessage -Message $($LocalizedData.CachingNanoServerPackagesMessage `
                         -f "$ISODrive\Nanoserver\Packages",$NanoPackagesFolder)
                 Copy-Item `
                     -Path "$ISODrive\Nanoserver\Packages" `
@@ -669,7 +669,7 @@ function Initialize-LabVMTemplateVHD
             } # try
         } # if
 
-        Write-Verbose -Message ($LocalizedData.ConvertingWIMtoVHDMessage `
+        WriteMessage -Message ($LocalizedData.ConvertingWIMtoVHDMessage `
             -f $SourcePath,$VHDPath,$VHDFormat,$Edition,$VHDPartitionStyle,$VHDType)
 
         # Work around an issue with Convert-WindowsImage not seeing the drive
@@ -701,7 +701,7 @@ function Initialize-LabVMTemplateVHD
         finally
         {
             # Dismount the ISO.
-            Write-Verbose -Message $($LocalizedData.DismountingVMTemplateVHDISOMessage `
+            WriteMessage -Message $($LocalizedData.DismountingVMTemplateVHDISOMessage `
                     -f $TemplateVHDName,$ISOPath)
 
             $null = Dismount-DiskImage `
@@ -791,7 +791,7 @@ function Remove-LabVMTemplateVHD
             Remove-Item `
                 -Path $VHDPath `
                 -Force
-            Write-Verbose -Message $($LocalizedData.DeletingVMTemplateVHDFileMessage `
+            WriteMessage -Message $($LocalizedData.DeletingVMTemplateVHDFileMessage `
                 -f $TemplateVHDName,$VHDPath)
         } # if
     } # endfor

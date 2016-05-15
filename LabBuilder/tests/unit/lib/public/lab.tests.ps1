@@ -119,6 +119,20 @@ try
                     { Get-Lab -ConfigPath 'c:\isempty.xml' } | Should Throw $Exception
                 }
             }
+            $Script:CurrentBuild = 10000
+            Context 'Path is provided and file exists but host build version requirement not met' {
+                It 'Throws RequiredBuildNotMetError Exception' {
+                    $ExceptionParameters = @{
+                        errorId = 'RequiredBuildNotMetError'
+                        errorCategory = 'InvalidArgument'
+                        errorMessage = $($LocalizedData.RequiredBuildNotMetError `
+                            -f $Script:CurrentBuild,'10560')
+                    }
+                    $Exception = GetException @ExceptionParameters
+                    { Get-Lab -ConfigPath $Global:TestConfigOKPath } | Should Throw $Exception
+                }
+            }
+            $Script:CurrentBuild = 10586
         }
 
 

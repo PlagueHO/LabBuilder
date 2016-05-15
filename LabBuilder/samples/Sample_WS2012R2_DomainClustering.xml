@@ -9,7 +9,8 @@
             domainname="LABBUILDER-DOMAINCLUSTERING.COM"
             email="admin@LABBUILDER-DOMAINCLUSTERING.COM"
             labpath="c:\vm\LABBUILDER-DOMAINCLUSTERING.COM"
-            dsclibrarypath="..\DSCLibrary\" />
+            dsclibrarypath="..\DSCLibrary\" 
+            requiredwindowsbuild="10586" />
 
   <resources>
     <msu name="WMF5.0-WS2012R2-W81"
@@ -108,6 +109,7 @@
         <parameters>
           DomainName = "LABBUILDER.COM"
           DomainAdminPassword = "P@ssword!1"
+          Forwarders = @('8.8.8.8','8.8.4.4')
         </parameters>
       </dsc>
       <adapters>
@@ -136,6 +138,7 @@
           DCName = "SA-DC1"
           DomainAdminPassword = "P@ssword!1"
           PSDscAllowDomainUser = $True
+          Forwarders = @('8.8.8.8','8.8.4.4')
         </parameters>
       </dsc>
       <adapters>

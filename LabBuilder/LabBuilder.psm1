@@ -365,9 +365,10 @@ class LabSwitch:System.ICloneable {
     [String] $Name
     [LabSwitchType] $Type
     [Byte] $VLAN
-    [String] $NATSubnetAddress
     [String] $BindingAdapterName
     [String] $BindingAdapterMac
+    [String] $NatSubnet
+    [String] $NatGatewayAddress
     [LabSwitchAdapter[]] $Adapters
 
     LabSwitch() {}

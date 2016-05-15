@@ -38,7 +38,8 @@ This required element contains settings attributes controlling general settings 
 > labid="xs:string"
 
 
-This optional attribute contains a Lab Identifier for the Lab. This identifier will be pre-pended to the names of any Virtual Machines, Switches and Network Adapter names created for this Lab.
+This optional attribute contains a Lab Identifier for the Lab.
+This identifier will be pre-pended to the names of any Virtual Machines, Switches and Network Adapter names created for this Lab.
                 
 ``` labid="WS2012R2-CLUSTER-TEST" ```
 
@@ -119,6 +120,17 @@ You should not include the DISM.EXE application name in the path.
                 
 ``` resourcepath="C:\Program Files (x86)\Windows Kits\10\Assessment and Deployment Kit\Deployment Tools\amd64\DISM\" ```
 
+### 2.9a - REQUIREDWINDOWSBUILD Optional Attribute
+> requiredwindowsbuild="xs:integer"
+
+
+This optional attribute contains the minimum build required on the Lab host to install or use this Lab.
+If the Lab Host does not meet this build number an error will be thrown when loading the Lab configuration.
+This ensures that all features required to install a Lab are available on the Lab Host before installation will proceed.
+If this attribute is not set then the Lab Configuration will be able to installed on any Windows build version Lab Host.
+                
+``` requiredwindowsbuild="14295" ```
+
 ### 3.0e - RESOURCES Optional Element
 
 This optional element can contain one or more resources that will be required for this Lab to be installed.
@@ -131,6 +143,18 @@ Currently the Resource types that are supported are:
  - MSU: A Microsoft Update package that will be downloaded to the lab Resources folder and can be installed into the Boot VHD when it is created from an ISO, when it is copied to the Parent VHD folder or when the VM is prepared for first boot.
             
 ``` <resources>...</resources> ```
+
+### 3.1a - ISOPATH Optional Attribute
+> isopath="xs:string"
+
+
+This optional attribute can be used to set the path to the folder that LabBuilder will look for the Resource ISO files.
+If not set this will default to the ResourcePath specified in the Lab configuration file.
+If a ResourcePath is not set then this will be the Resource folder within the Lab folder.
+This can be a relative or full path.
+If a relative path is set, it will be relative to the full path of the Lab configuration file.
+                
+``` isopath="d:\LabShared\ISOs" ```
 
 ### 3.1e - MODULE Optional Element
 
@@ -307,7 +331,7 @@ It can be set to:
  - Internal
  - Private
  - External
- - NAT (only available on some Windows 10 versions and Windows Server 2016)
+ - NAT (only available on Windows 10 and Windows Server 2016 build 14295 and above)
                       
 ``` type="Internal" ```
 
@@ -338,6 +362,28 @@ This attribute should only be set if the switch type is External.
 If the bindingadaptername attribute is set then this attribute should not be set.
                       
 ``` bindingadaptermac="C86000A1A895" ```
+
+### 4.1.6a - NATSUBNET Optional Attribute
+> natsubnet="xs:string"
+
+
+This optional attribute is used to configure the subnet that will be assigned to this NAT switch.
+It must contain an IP address (192.168.10.0) followed by a slash (/) then the subnet prefix length (e.g. 24).
+This attribute should only be set if the switch type is NAT.
+If this attribute is set the natgatewayaddress attribute must also be set.
+                      
+``` natsubnet="192.168.10.0/24" ```
+
+### 4.1.7a - NATGATEWAYADDRESS Optional Attribute
+> natgatewayaddress="xs:string"
+
+
+This optional attribute is used to configure the IP address that will be used as a gateway address on this NAT switch.
+This IP Address must be within the defined NAT subnet set in the natsubnet attribute.
+This attribute should only be set if the switch type is NAT.
+If this attribute is set the natsubnet attribute must also be set.
+                      
+``` natgatewayaddress="192.168.10.1" ```
 
 ### 4.1.1e - ADAPTERS Optional Element
 

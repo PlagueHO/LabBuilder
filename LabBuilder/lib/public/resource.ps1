@@ -142,7 +142,7 @@ function Initialize-LabResourceModule {
                 $Splat += [PSObject] @{ MiniumVersion = $Module.MiniumVersion }
             }
 
-            Write-Verbose -Message $($LocalizedData.DownloadingResourceModuleMessage `
+            WriteMessage -Message $($LocalizedData.DownloadingResourceModuleMessage `
                 -f $Name,$URL)
 
             DownloadResourceModule @Splat
@@ -295,7 +295,7 @@ function Initialize-LabResourceMSU {
         {
             if (-not (Test-Path -Path $MSU.Filename))
             {
-                Write-Verbose -Message $($LocalizedData.DownloadingResourceMSUMessage `
+                WriteMessage -Message $($LocalizedData.DownloadingResourceMSUMessage `
                     -f $MSU.Name,$MSU.URL)
 
                 DownloadAndUnzipFile `
@@ -342,8 +342,27 @@ function Get-LabResourceISO {
         [String[]] $Name
     )
 
+    # Determine the ISORootPath where the ISO files should be found
+    # if no path is specified then look in the same path as the config
+    # if a path is specified but it is relative, make it relative to the
+    # config path. Otherwise use it as is.
+    [String] $ISORootPath = $Lab.labbuilderconfig.Resources.ISOPath
+    if ($ISORootPath)
+    {
+        if (-not [System.IO.Path]::IsPathRooted($ISORootPath))
+        {
+            $ISORootPath = Join-Path `
+                -Path $Lab.labbuilderconfig.settings.resourcepathfull `
+                -ChildPath $ISORootPath
+        } # if
+    }
+    else
+    {
+        $ISORootPath = $Lab.labbuilderconfig.settings.resourcepathfull
+    } # if
+
     [LabResourceISO[]] $ResourceISOs = @()
-    if ($Lab.labbuilderconfig.resources) 
+    if ($Lab.labbuilderconfig.resources)
     {
         foreach ($ISO in $Lab.labbuilderconfig.resources.iso)
         {
@@ -370,32 +389,25 @@ function Get-LabResourceISO {
                 if (-not [System.IO.Path]::IsPathRooted($Path))
                 {
                     $Path = Join-Path `
-                        -Path $Lab.labbuilderconfig.settings.resourcepathfull `
+                        -Path $ISORootPath `
                         -ChildPath $Path
-                } # if
-
-                if (-not (Test-Path -Path $Path))
-                {
-                    $ExceptionParameters = @{
-                        errorId = 'ResourceISOFileNotFoundError'
-                        errorCategory = 'InvalidArgument'
-                        errorMessage = $($LocalizedData.ResourceISOFileNotFoundError `
-                            -f $Path)
-                    }
-                    ThrowException @ExceptionParameters
                 } # if
             }
             else
             {
-                $Path = $Lab.labbuilderconfig.settings.resourcepathfull
-                if ($ISO.URL)
-                {
-                    $Path = Join-Path `
-                        -Path $Path `
-                        -ChildPath $ISO.URL.Substring($ISO.URL.LastIndexOf('/') + 1)
-                } # if
+                # A Path is not provided
+                $ExceptionParameters = @{
+                    errorId = 'ResourceISOPathIsEmptyError'
+                    errorCategory = 'InvalidArgument'
+                    errorMessage = $($LocalizedData.ResourceISOPathIsEmptyError `
+                        -f $ISOName)
+                }
+                ThrowException @ExceptionParameters
+            }
+            if ($ISO.URL)
+            {
+                $ResourceISO.URL = $ISO.URL
             } # if
-            $ResourceISO.URL = $ISO.URL
             $ResourceISO.Path = $Path
             $ResourceISOs += @( $ResourceISO )
         } # foreach
@@ -457,7 +469,7 @@ function Initialize-LabResourceISO {
     {
         $ResourceMSUs = Get-LabResourceISO `
             @PSBoundParameters
-    }
+    } # if
 
     if ($ResourceISOs)
     {
@@ -465,12 +477,46 @@ function Initialize-LabResourceISO {
         {
             if (-not (Test-Path -Path $ResourceISO.Path))
             {
-                Write-Verbose -Message $($LocalizedData.DownloadingResourceISOMessage `
-                    -f $ResourceISO.Name,$ResourceISO.URL)
+                # The Resource ISO does not exist
+                if (-not ($ResourceISO.URL))
+                {
+                    $ExceptionParameters = @{
+                        errorId = 'ResourceISOFileNotFoundAndNoURLError'
+                        errorCategory = 'InvalidArgument'
+                        errorMessage = $($LocalizedData.ResourceISOFileNotFoundAndNoURLError `
+                            -f $ISOName,$Path)
+                    }
+                    ThrowException @ExceptionParameters
+                } # if
 
-                DownloadAndUnzipFile `
-                    -URL $ResourceISO.URL `
-                    -DestinationPath (Split-Path -Path $ResourceISO.Path)
+                $URLLeaf = [System.IO.Path]::GetFileName($ResourceISO.URL)
+                $URLExtension = [System.IO.Path]::GetExtension($URLLeaf)
+                if ($URLExtension -in @('.zip','.iso'))
+                {
+                    WriteMessage -Message $($LocalizedData.DownloadingResourceISOMessage `
+                        -f $ResourceISO.Name,$ResourceISO.URL)
+
+                    DownloadAndUnzipFile `
+                        -URL $ResourceISO.URL `
+                        -DestinationPath (Split-Path -Path $ResourceISO.Path)
+                }
+                elseif ([String]::IsNullOrEmpty($URLExtension))
+                {
+                    WriteMessage `
+                        -Type Alert `
+                        -Message $($LocalizedData.ISONotFoundDownloadURLMessage `
+                            -f $ResourceISO.Name,$ResourceISO.Path,$ResourceISO.URL)
+                } # if
+                if (-not (Test-Path -Path $ResourceISO.Path))
+                {
+                    $ExceptionParameters = @{
+                        errorId = 'ResourceISOFileNotDownloadedError'
+                        errorCategory = 'InvalidArgument'
+                        errorMessage = $($LocalizedData.ResourceISOFileNotDownloadedError `
+                            -f $ResourceISO.Name,$ResourceISO.Path,$ResourceISO.URL)
+                    }
+                    ThrowException @ExceptionParameters
+                } # if
             } # if
         } # foreach
     } # if
