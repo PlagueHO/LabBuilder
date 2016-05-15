@@ -25,7 +25,7 @@
         "BootOrder":  9,
         "Adapters":  [
                          {
-                             "Name":  "TestLab External",
+                             "Name":  "External",
                              "SwitchName":  "External",
                              "MACAddress":  "00155D010801",
                              "MACAddressSpoofing":  false,
@@ -199,7 +199,7 @@
         "DVDDrives":  [
                           {
                               "ISO":  "SQL2012_FULL_ENU",
-                              "Path":  "C:\\Pester Lab\\Resource\\SQLFULL_ENU.iso"
+                              "Path":  "C:\\Pester Lab\\Resource\\ISOFiles\\SQLFULL_ENU.iso"
                           },
                           {
                               "ISO":  null,
@@ -241,7 +241,7 @@
         "BootOrder":  9,
         "Adapters":  [
                          {
-                             "Name":  "TestLab External",
+                             "Name":  "External",
                              "SwitchName":  "External",
                              "MACAddress":  "00155D010802",
                              "MACAddressSpoofing":  false,
@@ -415,7 +415,7 @@
         "DVDDrives":  [
                           {
                               "ISO":  "SQL2012_FULL_ENU",
-                              "Path":  "C:\\Pester Lab\\Resource\\SQLFULL_ENU.iso"
+                              "Path":  "C:\\Pester Lab\\Resource\\ISOFiles\\SQLFULL_ENU.iso"
                           },
                           {
                               "ISO":  null,

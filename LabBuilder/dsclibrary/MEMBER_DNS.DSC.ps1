@@ -9,6 +9,7 @@ DSC Template Configuration File For use by LabBuilder
     DomainAdminPassword = "P@ssword!1"
     DCName = 'SA-DC1'
     PSDscAllowDomainUser = $True
+    InstallRSATTools = $True
     Forwarders = @('8.8.8.8','8.8.4.4')
     PrimaryZones = @(
         @{ Name = 'BRAVO.LOCAL';
@@ -32,10 +33,20 @@ Configuration MEMBER_DNS
             [PSCredential]$DomainAdminCredential = New-Object System.Management.Automation.PSCredential ("$($Node.DomainName)\Administrator", (ConvertTo-SecureString $Node.DomainAdminPassword -AsPlainText -Force))
         }
 
-        WindowsFeature DNSInstall 
+        WindowsFeature DNSInstall
         { 
-            Ensure = "Present" 
-            Name   = "DNS" 
+            Ensure = "Present"
+            Name   = "DNS"
+        }
+
+        if ($InstallRSATTools)
+        {
+            WindowsFeature RSAT-ManagementTools
+            {
+                Ensure    = "Present"
+                Name      = "RSAT-DNS-Server"
+                DependsOn = "[WindowsFeature]DNSInstall"
+            }
         }
 
         WaitForAll DC
@@ -50,8 +61,8 @@ Configuration MEMBER_DNS
         {
             Name       = $Node.NodeName
             DomainName = $Node.DomainName
-            Credential = $DomainAdminCredential 
-            DependsOn  = '[WaitForAll]DC' 
+            Credential = $DomainAdminCredential
+            DependsOn  = '[WaitForAll]DC'
         }
 
         # DNS Server Settings
@@ -61,7 +72,7 @@ Configuration MEMBER_DNS
             {
                 IsSingleInstance = 'Yes'
                 IPAddresses      = $Node.Forwarders
-                Credential       = $DomainAdminCredential 
+                Credential       = $DomainAdminCredential
                 DependsOn        = '[xComputer]JoinDomain'
             }
         }
@@ -74,7 +85,7 @@ Configuration MEMBER_DNS
                 Name          = $PrimaryZone.Name
                 ZoneFile      = $PrimaryZone.ZoneFile
                 DynamicUpdate = $PrimaryZone.DynamicUpdate
-                Credential    = $DomainAdminCredential 
+                Credential    = $DomainAdminCredential
                 DependsOn     = '[xComputer]JoinDomain'
             }
         }

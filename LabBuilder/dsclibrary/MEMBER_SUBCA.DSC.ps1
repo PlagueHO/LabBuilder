@@ -9,6 +9,7 @@ DSC Template Configuration File For use by LabBuilder
     DomainAdminPassword = "P@ssword!1"
     DCName = 'SA-DC1'
     PSDscAllowDomainUser = $True
+    InstallRSATTools = $True
     CACommonName = "LABBUILDER.COM Issuing CA"
     CADistinguishedNameSuffix = "DC=LABBUILDER,DC=COM"
     CRLPublicationURLs = "65:C:\Windows\system32\CertSrv\CertEnroll\%3%8%9.crl\n79:ldap:///CN=%7%8,CN=%2,CN=CDP,CN=Public Key Services,CN=Services,%6%10\n6:http://pki.labbuilder.com/CertEnroll/%3%8%9.crl"
@@ -48,9 +49,19 @@ Configuration MEMBER_SUBCA
 
         WindowsFeature InstallWebMgmtService
         {
-            Ensure = "Present" 
-            Name = "Web-Mgmt-Service" 
+            Ensure = "Present"
+            Name = "Web-Mgmt-Service"
             DependsOn = '[WindowsFeature]ADCSWebEnrollment'
+        }
+
+        if ($InstallRSATTools)
+        {
+            WindowsFeature RSAT-ManagementTools
+            {
+                Ensure    = "Present"
+                Name      = "RSAT-AD-Tools"
+                DependsOn = "[WindowsFeature]ADCSCA"
+            }
         }
 
         if ($Node.InstallOnlineResponder) {
@@ -147,13 +158,13 @@ Configuration MEMBER_SUBCA
         {
             PSDSCRunAsCredential = $DomainAdminCredential
             SetScript = {
-                Write-Verbose "Registering the Root CA Certificate C:\Windows\System32\CertSrv\CertEnroll\$($Using:Node.RootCAName)_$($Using:Node.RootCACommonName).crt in DS..."
+                Write-Verbose -Message "Registering the Root CA Certificate C:\Windows\System32\CertSrv\CertEnroll\$($Using:Node.RootCAName)_$($Using:Node.RootCACommonName).crt in DS..."
                 & "$($ENV:SystemRoot)\system32\certutil.exe" -f -dspublish "C:\Windows\System32\CertSrv\CertEnroll\$($Using:Node.RootCAName)_$($Using:Node.RootCACommonName).crt" RootCA
-                Write-Verbose "Registering the Root CA CRL C:\Windows\System32\CertSrv\CertEnroll\$($Node.RootCACommonName).crl in DS..."
+                Write-Verbose -Message "Registering the Root CA CRL C:\Windows\System32\CertSrv\CertEnroll\$($Node.RootCACommonName).crl in DS..."
                 & "$($ENV:SystemRoot)\system32\certutil.exe" -f -dspublish "C:\Windows\System32\CertSrv\CertEnroll\$($Node.RootCACommonName).crl" "$($Using:Node.RootCAName)"
-                Write-Verbose "Installing the Root CA Certificate C:\Windows\System32\CertSrv\CertEnroll\$($Using:Node.RootCAName)_$($Using:Node.RootCACommonName).crt..."
+                Write-Verbose -Message "Installing the Root CA Certificate C:\Windows\System32\CertSrv\CertEnroll\$($Using:Node.RootCAName)_$($Using:Node.RootCACommonName).crt..."
                 & "$($ENV:SystemRoot)\system32\certutil.exe" -addstore -f root "C:\Windows\System32\CertSrv\CertEnroll\$($Using:Node.RootCAName)_$($Using:Node.RootCACommonName).crt"
-                Write-Verbose "Installing the Root CA CRL C:\Windows\System32\CertSrv\CertEnroll\$($Node.RootCACommonName).crl..."
+                Write-Verbose -Message "Installing the Root CA CRL C:\Windows\System32\CertSrv\CertEnroll\$($Node.RootCACommonName).crl..."
                 & "$($ENV:SystemRoot)\system32\certutil.exe" -addstore -f root "C:\Windows\System32\CertSrv\CertEnroll\$($Node.RootCACommonName).crl"
             }
             GetScript = {
@@ -163,7 +174,7 @@ Configuration MEMBER_SUBCA
             }
             TestScript = { 
                 If ((Get-ChildItem -Path Cert:\LocalMachine\Root | Where-Object -FilterScript { ($_.Subject -Like "CN=$($Using:Node.RootCACommonName),*") -and ($_.Issuer -Like "CN=$($Using:Node.RootCACommonName),*") } ).Count -EQ 0) {
-                    Write-Verbose "Root CA Certificate Needs to be installed..."
+                    Write-Verbose -Message "Root CA Certificate Needs to be installed..."
                     Return $False
                 }
                 Return $True
@@ -241,7 +252,7 @@ Configuration MEMBER_SUBCA
         {
             PSDSCRunAsCredential = $DomainAdminCredential
             SetScript = {
-                Write-Verbose "Registering the Sub CA Certificate with the Certification Authority C:\Windows\System32\CertSrv\CertEnroll\$($Using:Node.NodeName)_$($Using:Node.CACommonName).crt..."
+                Write-Verbose -Message "Registering the Sub CA Certificate with the Certification Authority C:\Windows\System32\CertSrv\CertEnroll\$($Using:Node.NodeName)_$($Using:Node.CACommonName).crt..."
                 & "$($ENV:SystemRoot)\system32\certutil.exe" -installCert "C:\Windows\System32\CertSrv\CertEnroll\$($Using:Node.NodeName)_$($Using:Node.CACommonName).crt"
             }
             GetScript = {
@@ -250,7 +261,7 @@ Configuration MEMBER_SUBCA
             }
             TestScript = { 
                 If (-not (Get-ChildItem 'HKLM:\System\CurrentControlSet\Services\CertSvc\Configuration').GetValue('CACertHash')) {
-                    Write-Verbose "Sub CA Certificate needs to be registered with the Certification Authority..."
+                    Write-Verbose -Message "Sub CA Certificate needs to be registered with the Certification Authority..."
                     Return $False
                 }
                 Return $True

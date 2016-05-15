@@ -122,9 +122,11 @@ function Get-LabSwitch {
         # Create the new Switch object
         [LabSwitch] $NewSwitch = [LabSwitch]::New($SwitchName,$SwitchType)
         $NewSwitch.VLAN = $ConfigSwitch.VLan
-        $NewSwitch.NATSubnetAddress = $ConfigSwitch.NatSubnetAddress
         $NewSwitch.BindingAdapterName = $ConfigSwitch.BindingAdapterName
         $NewSwitch.BindingAdapterMac = $ConfigSwitch.BindingAdapterMac
+        $NewSwitch.BindingAdapterMac = $ConfigSwitch.BindingAdapterMac
+        $NewSwitch.NatSubnet = $ConfigSwitch.NatSubnet
+        $NewSwitch.NatGatewayAddress = $ConfigSwitch.NatGatewayAddress
         $NewSwitch.Adapters = $ConfigAdapters
         $Switches += @( $NewSwitch )
     } # foreach
@@ -210,7 +212,7 @@ function Initialize-LabSwitch {
                 ThrowException @ExceptionParameters
             }
             [LabSwitchType] $SwitchType = $VMSwitch.Type
-            Write-Verbose -Message $($LocalizedData.CreatingVirtualSwitchMessage `
+            WriteMessage -Message $($LocalizedData.CreatingVirtualSwitchMessage `
                 -f $SwitchType,$SwitchName)
             Switch ($SwitchType)
             {
@@ -260,10 +262,11 @@ function Initialize-LabSwitch {
                     $MacAddress = @()
                     ForEach ($VmSwitchName in $VmSwitchNames)
                     {
-                        $MacAddress += `
-                            (Get-VMNetworkAdapter `
+                        $MacAddress += (Get-VMNetworkAdapter `
                             -ManagementOS `
-                            -Name $VmSwitchName -ErrorAction SilentlyContinue).MacAddress
+                            -SwitchName $VmSwitchName `
+                            -Name $VmSwitchName `
+                            -ErrorAction SilentlyContinue).MacAddress
                     } # foreach
 
                     $UsedAdapters = @((Get-NetAdapter -Physical | ? {
@@ -282,36 +285,7 @@ function Initialize-LabSwitch {
                     # Create the swtich
                     $null = New-VMSwitch `
                         -Name $SwitchName `
-                        -NetAdapterName ($BindingAdapter.Name)
-                    if ($VMSwitch.Adapters)
-                    {
-                        foreach ($Adapter in $VMSwitch.Adapters)
-                        {
-                            if ($VMSwitch.VLan)
-                            {
-                                # A default VLAN is assigned to this Switch so assign it to the
-                                # management adapters
-                                $null = Add-VMNetworkAdapter `
-                                    -ManagementOS `
-                                    -SwitchName $SwitchName `
-                                    -Name $Adapter.Name `
-                                    -StaticMacAddress $Adapter.MacAddress `
-                                    
-                                    -Passthru | `
-                                    Set-VMNetworkAdapterVlan `
-                                        -Access `
-                                        -VlanId $($VMSwitch.Vlan)
-                            }
-                            else
-                            { 
-                                $null = Add-VMNetworkAdapter `
-                                    -ManagementOS `
-                                    -SwitchName $SwitchName `
-                                    -Name $Adapter.Name `
-                                    -StaticMacAddress $Adapter.MacAddress
-                            } # if
-                        } # foreach
-                    } # if
+                        -NetAdapterName $BindingAdapter.Name
                     break
                 } # 'External'
                 'Private'
@@ -326,55 +300,119 @@ function Initialize-LabSwitch {
                     $null = New-VMSwitch `
                         -Name $SwitchName `
                         -SwitchType Internal
-                    if ($VMSwitch.Adapters)
-                    {
-                        foreach ($Adapter in $VMSwitch.Adapters)
-                        {
-                            if ($VMSwitch.VLan)
-                            {
-                                # A default VLAN is assigned to this Switch so assign it to the
-                                # management adapters
-                                $null = Add-VMNetworkAdapter `
-                                    -ManagementOS `
-                                    -SwitchName $SwitchName `
-                                    -Name $($Adapter.Name) `
-                                    -StaticMacAddress $($Adapter.MacAddress) `
-                                    -Passthru | `
-                                    Set-VMNetworkAdapterVlan `
-                                        -Access `
-                                        -VlanId $($VMSwitch.Vlan)
-                            }
-                            Else
-                            { 
-                                $null = Add-VMNetworkAdapter `
-                                    -ManagementOS `
-                                    -SwitchName $SwitchName `
-                                    -Name $($Adapter.Name) `
-                                    -StaticMacAddress $($Adapter.MacAddress)
-                            } # if
-                        } # foreach
-                    } # if
                     Break
                 } # 'Internal'
                 'NAT'
                 {
-                    $NatSubnetAddress = $VMSwitch.NatSubnetAddress
-                    if (-not $NatSubnetAddress) {
+                    if ($Script:CurrentBuild -lt 14295)
+                    {
                         $ExceptionParameters = @{
-                            errorId = 'NatSubnetAddressEmptyError'
+                            errorId = 'NatSwitchNotSupportedError'
                             errorCategory = 'InvalidArgument'
-                            errorMessage = $($LocalizedData.NatSubnetAddressEmptyError `
+                            errorMessage = $($LocalizedData.NatSwitchNotSupportedError `
                                 -f $SwitchName)
                         }
                         ThrowException @ExceptionParameters
                     }
+                    $NatSubnet = $VMSwitch.NatSubnet
+                    # Check Nat Subnet is set
+                    if (-not $NatSubnet) {
+                        $ExceptionParameters = @{
+                            errorId = 'NatSubnetEmptyError'
+                            errorCategory = 'InvalidArgument'
+                            errorMessage = $($LocalizedData.NatSubnetEmptyError `
+                                -f $SwitchName)
+                        }
+                        ThrowException @ExceptionParameters
+                    } # if
+                    # Ensure Nat Subnet looks valid
+                    if ($NatSubnet -notmatch '[0-9]+.[0-9]+.[0-9]+.[0-9]+/[0-9]+') {
+                        $ExceptionParameters = @{
+                            errorId = 'NatSubnetInvalidError'
+                            errorCategory = 'InvalidArgument'
+                            errorMessage = $($LocalizedData.NatSubnetInvalidError `
+                                -f $SwitchName,$NatSubnet)
+                        }
+                        ThrowException @ExceptionParameters
+                    } # if
+                    $NatSubnetComponents = ($NatSubnet -split '/')
+                    $NatSubnetAddress = $NatSubnetComponents[0]
+                    # Validate the Nat Subnet Address
+                    if (-not ([System.Net.Ipaddress]::TryParse($NatSubnetAddress, [ref]0)))
+                    {
+                        $ExceptionParameters = @{
+                            errorId = 'NatSubnetAddressInvalidError'
+                            errorCategory = 'InvalidArgument'
+                            errorMessage = $($LocalizedData.NatSubnetAddressInvalidError `
+                                -f $SwitchName,$NatSubnetAddress)
+                        }
+                        ThrowException @ExceptionParameters
+                    } # if
+                    # Validate the Nat Subnet Prefix Length
+                    [int] $NatSubnetPrefixLength = $NatSubnetComponents[1]
+                    if (($NatSubnetPrefixLength -lt 1) -or ($NatSubnetPrefixLength -gt 31))
+                    {
+                        $ExceptionParameters = @{
+                            errorId = 'NatSubnetPrefixLengthInvalidError'
+                            errorCategory = 'InvalidArgument'
+                            errorMessage = $($LocalizedData.NatSubnetPrefixLengthInvalidError `
+                                -f $SwitchName,$NatSubnetPrefixLength)
+                        }
+                        ThrowException @ExceptionParameters
+                    } # if
+                    $NatGatewayAddress = $VMSwitch.NatGatewayAddress
+
+                    # Create the Internal Switch
                     $null = New-VMSwitch `
                         -Name $SwitchName `
-                        -SwitchType NAT `
-                        -NATSubnetAddress $NatSubnetAddress
+                        -SwitchType Internal `
+                        -ErrorAction Stop
+                    # Set the IP Address on the default adapter connected to the NAT switch
+                    $MacAddress = (Get-VMNetworkAdapter `
+                        -ManagementOS `
+                        -SwitchName $SwitchName `
+                        -Name $SwitchName `
+                        -ErrorAction Stop).MacAddress
+                    if ([String]::IsNullOrEmpty($MacAddress))
+                    {
+                        $ExceptionParameters = @{
+                            errorId = 'NatSwitchDefaultAdapterMacEmptyError'
+                            errorCategory = 'InvalidArgument'
+                            errorMessage = $($LocalizedData.NatSwitchDefaultAdapterMacEmptyError `
+                                -f $SwitchName)
+                        }
+                        ThrowException @ExceptionParameters
+                    } # if
+                    $Adapter = Get-NetAdapter |
+                        Where-Object { ($_.MacAddress -replace '-','') -eq $MacAddress }
+                    if (-not $Adapter)
+                    {
+                        $ExceptionParameters = @{
+                            errorId = 'NatSwitchDefaultAdapterNotFoundError'
+                            errorCategory = 'InvalidArgument'
+                            errorMessage = $($LocalizedData.NatSwitchDefaultAdapterNotFoundError `
+                                -f $SwitchName)
+                        }
+                        ThrowException @ExceptionParameters
+                    }
+                    $null = $Adapter | New-NetIPAddress `
+                            -IPAddress $NatGatewayAddress `
+                            -PrefixLength $NatSubnetPrefixLength `
+                            -ErrorAction Stop
+                    # Does the NAT already exist?
+                    $NetNat = Get-NetNat `
+                        -Name $SwitchName `
+                        -ErrorAction SilentlyContinue
+                    if ($NetNat)
+                    {
+                        # If the NAT already exists, remove it so it can be recreated
+                        $null = $NetNat | Remove-NetNat -Confirm:$False
+                    }
+                    # Create the new NAT
                     $null = New-NetNat `
                         -Name $SwitchName `
-                        -InternalIPInterfaceAddressPrefix $NatSubnetAddress
+                        -InternalIPInterfaceAddressPrefix $NatSubnet `
+                        -ErrorAction Stop
                     Break
                 } # 'NAT'
                 Default
@@ -387,7 +425,42 @@ function Initialize-LabSwitch {
                     }
                     ThrowException @ExceptionParameters
                 }
-            } # Switch
+            } # switch
+
+            if ($SwitchType -ne 'Private')
+            {
+                # Configure the VLan on the default Management Adapter
+                $Splat = @{
+                    Name = $SwitchName
+                    SwitchName = $SwitchName
+                }
+                if ($VMSwitch.VLan)
+                {
+                    $Splat += @{ VlanId = $VMSwitch.Vlan }
+                } # if
+                UpdateSwitchManagementAdapter @Splat
+            
+                # Add any management OS adapters to the switch
+                if ($VMSwitch.Adapters)
+                {
+                    foreach ($Adapter in $VMSwitch.Adapters)
+                    {
+                        $Splat = @{
+                            Name = $Adapter.Name
+                            SwitchName = $SwitchName
+                        }
+                        if ($Adapter.MacAddress)
+                        {
+                            $Splat += @{ StaticMacAddress = $Adapter.MacAddress }
+                        } # if
+                        if ($VMSwitch.VLan)
+                        {
+                            $Splat += @{ VlanId = $VMSwitch.Vlan }
+                        } # if
+                        UpdateSwitchManagementAdapter @Splat
+                    } # foreach
+                } # if
+            } # if
         } # if
     } # foreach
 } # Initialize-LabSwitch
@@ -470,7 +543,7 @@ function Remove-LabSwitch {
                 ThrowException @ExceptionParameters
             }
             [LabSwitchType] $SwitchType = $VMSwitch.Type
-            Write-Verbose -Message $($LocalizedData.DeleteingVirtualSwitchMessage `
+            WriteMessage -Message $($LocalizedData.DeleteingVirtualSwitchMessage `
                 -f $SwitchType,$SwitchName)
             Switch ($SwitchType)
             {
@@ -510,7 +583,7 @@ function Remove-LabSwitch {
                 } # 'Internal'
                 'NAT'
                 {
-                    Remove-NetNAT `
+                    Remove-NetNat `
                         -Name $SwitchName
                     Remove-VMSwitch `
                         -Name $SwitchName

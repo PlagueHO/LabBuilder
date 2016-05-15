@@ -10,6 +10,7 @@ DSC Template Configuration File For use by LabBuilder
     DomainAdminPassword = "P@ssword!1"
     DCName = 'SA-DC1'
     PSDscAllowDomainUser = $True
+    InstallRSATTools = $True
 ###################################################################################################>
 
 Configuration RODC_SECONDARY
@@ -27,21 +28,21 @@ Configuration RODC_SECONDARY
 
         WindowsFeature BackupInstall
         { 
-            Ensure = "Present" 
-            Name   = "Windows-Server-Backup" 
+            Ensure = "Present"
+            Name   = "Windows-Server-Backup"
         }
 
-        WindowsFeature DNSInstall 
+        WindowsFeature DNSInstall
         {
-            Ensure = "Present" 
-            Name   = "DNS" 
+            Ensure = "Present"
+            Name   = "DNS"
         }
 
-        WindowsFeature ADDSInstall 
+        WindowsFeature ADDSInstall
         {
-            Ensure    = "Present" 
-            Name      = "AD-Domain-Services" 
-            DependsOn = "[WindowsFeature]DNSInstall" 
+            Ensure    = "Present"
+            Name      = "AD-Domain-Services"
+            DependsOn = "[WindowsFeature]DNSInstall"
         }
 
         WindowsFeature RSAT-AD-PowerShellInstall
@@ -49,6 +50,16 @@ Configuration RODC_SECONDARY
             Ensure    = "Present"
             Name      = "RSAT-AD-PowerShell"
             DependsOn = "[WindowsFeature]ADDSInstall"
+        }
+
+        if ($InstallRSATTools)
+        {
+            WindowsFeature RSAT-ManagementTools
+            {
+                Ensure    = "Present"
+                Name      = "RSAT-AD-Tools","RSAT-DNS-Server"
+                DependsOn = "[WindowsFeature]ADDSInstall"
+            }
         }
 
         # Wait for the Domain to be available so we can join it.

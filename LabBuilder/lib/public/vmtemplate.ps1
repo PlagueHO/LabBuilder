@@ -404,7 +404,7 @@ function Initialize-LabVMTemplate {
                 ThrowException @ExceptionParameters
             }
 
-            Write-Verbose -Message $($LocalizedData.CopyingTemplateSourceVHDMessage `
+            WriteMessage -Message $($LocalizedData.CopyingTemplateSourceVHDMessage `
                 -f $VMTemplate.SourceVhd,$VMTemplate.ParentVhd)
             Copy-Item `
                 -Path $VMTemplate.SourceVhd `
@@ -416,7 +416,7 @@ function Initialize-LabVMTemplate {
                 if ($VMTemplate.OSType -ne [LabOStype]::Nano)
                 {
                     # Mount the Template Boot VHD so that files can be loaded into it
-                    Write-Verbose -Message $($LocalizedData.MountingTemplateBootDiskMessage `
+                    WriteMessage -Message $($LocalizedData.MountingTemplateBootDiskMessage `
                         -f $VMTemplate.Name,$VMTemplate.ParentVhd)
 
                     # Create a mount point for mounting the Boot VHD
@@ -460,7 +460,7 @@ function Initialize-LabVMTemplate {
                         if (-not $Found)
                         {
                             # Dismount before throwing the error
-                            Write-Verbose -Message $($LocalizedData.DismountingTemplateBootDiskMessage `
+                            WriteMessage -Message $($LocalizedData.DismountingTemplateBootDiskMessage `
                                 -f $VMTemplate.Name,$VMTemplate.parentvhd)
                             $null = Dismount-WindowsImage `
                                 -Path $MountPoint `
@@ -483,7 +483,7 @@ function Initialize-LabVMTemplate {
                         if (-not (Test-Path -Path $PackagePath))
                         {
                             # Dismount before throwing the error
-                            Write-Verbose -Message $($LocalizedData.DismountingTemplateBootDiskMessage `
+                            WriteMessage -Message $($LocalizedData.DismountingTemplateBootDiskMessage `
                                 -f $VMTemplate.Name,$VMTemplate.ParentVhd)
                             $null = Dismount-WindowsImage `
                                 -Path $MountPoint `
@@ -503,7 +503,7 @@ function Initialize-LabVMTemplate {
                         } # if
 
                         # Apply a Pacakge
-                        Write-Verbose -Message $($LocalizedData.ApplyingTemplateBootDiskFileMessage `
+                        WriteMessage -Message $($LocalizedData.ApplyingTemplateBootDiskFileMessage `
                             -f $VMTemplate.Name,$Package,$PackagePath)
 
                         $null = Add-WindowsPackage `
@@ -512,7 +512,7 @@ function Initialize-LabVMTemplate {
                     } # foreach
 
                     # Dismount the VHD
-                    Write-Verbose -Message $($LocalizedData.DismountingTemplateBootDiskMessage `
+                    WriteMessage -Message $($LocalizedData.DismountingTemplateBootDiskMessage `
                         -f $VMTemplate.Name,$VMTemplate.parentvhd)
                     $null = Dismount-WindowsImage `
                         -Path $MountPoint `
@@ -524,7 +524,7 @@ function Initialize-LabVMTemplate {
                 } # if
             } # if
 
-            Write-Verbose -Message $($LocalizedData.OptimizingParentVHDMessage `
+            WriteMessage -Message $($LocalizedData.OptimizingParentVHDMessage `
                 -f $VMTemplate.parentvhd)
             Set-ItemProperty `
                 -Path $VMTemplate.parentvhd `
@@ -533,7 +533,7 @@ function Initialize-LabVMTemplate {
             Optimize-VHD `
                 -Path $VMTemplate.parentvhd `
                 -Mode Full
-            Write-Verbose -Message $($LocalizedData.SettingParentVHDReadonlyMessage `
+            WriteMessage -Message $($LocalizedData.SettingParentVHDReadonlyMessage `
                 -f $VMTemplate.parentvhd)
             Set-ItemProperty `
                 -Path $VMTemplate.parentvhd `
@@ -542,7 +542,7 @@ function Initialize-LabVMTemplate {
         }
         Else
         {
-            Write-Verbose -Message $($LocalizedData.SkipParentVHDFileMessage `
+            WriteMessage -Message $($LocalizedData.SkipParentVHDFileMessage `
                 -f $VMTemplate.Name,$VMTemplate.parentvhd)
         }
 
@@ -560,7 +560,7 @@ function Initialize-LabVMTemplate {
 
             if (-not (Test-Path -Path $NanoPackagesFolder -Type Container))
             {
-                Write-Verbose -Message $($LocalizedData.CachingNanoServerPackagesMessage `
+                WriteMessage -Message $($LocalizedData.CachingNanoServerPackagesMessage `
                         -f $VHDPackagesFolder,$NanoPackagesFolder)
                 Copy-Item `
                     -Path $VHDPackagesFolder `
@@ -646,7 +646,7 @@ function Remove-LabVMTemplate {
                 -Path $VMTemplate.parentvhd `
                 -Name IsReadOnly `
                 -Value $False
-            Write-Verbose -Message $($LocalizedData.DeletingParentVHDMessage `
+            WriteMessage -Message $($LocalizedData.DeletingParentVHDMessage `
                 -f $VMTemplate.ParentVhd)
             Remove-Item `
                 -Path $VMTemplate.ParentVhd `
