@@ -2,7 +2,7 @@
 .SYNOPSIS
     Throws a custom exception.
 .DESCRIPTION
-    This cmdlet throw a terminating or non-terminating exception. 
+    This cmdlet throws a terminating or non-terminating exception.
 .PARAMETER errorId
     The Id of the exception.
 .PARAMETER errorCategory
@@ -74,9 +74,9 @@ function DownloadAndUnzipFile()
     Param
     (
         [Parameter(Mandatory=$True)]
-        [ValidateNotNullOrEmpty()]	
+        [ValidateNotNullOrEmpty()]
         [String] $URL,
-        
+
         [Parameter(Mandatory=$True)]
         [ValidateNotNullOrEmpty()]
         [String] $DestinationPath
@@ -106,7 +106,7 @@ function DownloadAndUnzipFile()
         $DownloadPath = Join-Path -Path $DestinationPath -ChildPath $FileName
     }
 
-    Write-Verbose -Message ($LocalizedData.DownloadingFileMessage `
+    WriteMessage -Message ($LocalizedData.DownloadingFileMessage `
         -f $Filename,$URL,$DownloadPath)
 
     Try
@@ -126,10 +126,10 @@ function DownloadAndUnzipFile()
         }
         ThrowException @ExceptionParameters
     } # Try
-    
+
     if ($Extension -eq '.zip')
-    {        
-        Write-Verbose -Message ($LocalizedData.ExtractingFileMessage `
+    {
+        WriteMessage -Message ($LocalizedData.ExtractingFileMessage `
             -f $Filename,$DownloadPath)
 
         # Extract this to the destination folder
@@ -171,11 +171,11 @@ function CreateCredential()
     Param
     (
         [Parameter(Mandatory=$True)]
-        [ValidateNotNullOrEmpty()]	
+        [ValidateNotNullOrEmpty()]
         [String] $Username,
-        
+
         [Parameter(Mandatory=$True)]
-        [ValidateNotNullOrEmpty()]	
+        [ValidateNotNullOrEmpty()]
         [String] $Password
     )
     [PSCredential] $Credential = New-Object `
@@ -263,7 +263,7 @@ function DownloadResourceModule {
     # Is the module installed?
     if ($InstalledModules.Where($Query).Count -eq 0)
     {
-        Write-Verbose -Message ($LocalizedData.ModuleNotInstalledMessage `
+        WriteMessage -Message ($LocalizedData.ModuleNotInstalledMessage `
             -f $Name,$VersionMessage)
 
         # If a URL was specified, download this module via HTTP
@@ -273,7 +273,7 @@ function DownloadResourceModule {
             # This is usually for downloading modules directly from github
             $FileName = $URL.Substring($URL.LastIndexOf('/') + 1)
 
-            Write-Verbose -Message ($LocalizedData.DownloadingLabResourceWebMessage `
+            WriteMessage -Message ($LocalizedData.DownloadingLabResourceWebMessage `
                 -f $Name,$VersionMessage,$URL)
 
             [String] $ModulesFolder = "$($ENV:ProgramFiles)\WindowsPowerShell\Modules\"
@@ -298,7 +298,7 @@ function DownloadResourceModule {
                     -Force
             } # If
 
-            Write-Verbose -Message ($LocalizedData.InstalledLabResourceWebMessage `
+            WriteMessage -Message ($LocalizedData.InstalledLabResourceWebMessage `
                 -f $Name,$VersionMessage,$ModulePath)
         }
         else
@@ -366,7 +366,7 @@ function EnableWSMan {
 
     if (-not (Get-PSPRovider -PSProvider WSMan -ErrorAction SilentlyContinue))
     {
-        Write-Verbose -Message ($LocalizedData.EnablingWSManMessage)
+        WriteMessage -Message ($LocalizedData.EnablingWSManMessage)
         $null = Set-WSManQuickConfig `
             @PSBoundParameters `
             -ErrorAction Stop
@@ -408,7 +408,7 @@ function InstallHyperV {
             | Where-Object -Property State -Eq 'Disabled'
         if ($Feature.Count -gt 0 )
         {
-            Write-Verbose -Message ($LocalizedData.InstallingHyperVComponentsMesage `
+            WriteMessage -Message ($LocalizedData.InstallingHyperVComponentsMesage `
                 -f 'Desktop')
             $Feature.Foreach( { 
                 Enable-WindowsOptionalFeature -Online -FeatureName $_.FeatureName
@@ -422,7 +422,7 @@ function InstallHyperV {
             | Where-Object -Property Installed -EQ $false
         if ($Feature.Count -gt 0 )
         {
-            Write-Verbose -Message ($LocalizedData.InstallingHyperVComponentsMesage `
+            WriteMessage -Message ($LocalizedData.InstallingHyperVComponentsMesage `
                 -f 'Desktop')
             $Feature.Foreach( {
                 Install-WindowsFeature -IncludeAllSubFeature -IncludeManagementTools -Name $_.Name
@@ -473,7 +473,7 @@ function ValidateConfigurationXMLSchema {
         {    
             $Script:XMLFirstError = $_.Message
         } # if
-        Write-Verbose -Message ($Script:ConfigurationXMLValidationMessage `
+        WriteMessage -Message ($Script:ConfigurationXMLValidationMessage `
             -f $Script:XMLPath,$_.Message)
         $Script:XMLErrorCount++
     });
@@ -668,7 +668,7 @@ function InstallPackageProviders {
                 ($LocalizedData.ShouldInstallPackageProvider `
                 -f $PackageProvider )))
             {
-            Write-Verbose -Message ($LocalizedData.InstallPackageProviderMessage `
+            WriteMessage -Message ($LocalizedData.InstallPackageProviderMessage `
                 -f $RequiredPackageProvider)
 
             $null = Install-PackageProvider `
@@ -740,7 +740,7 @@ function RegisterPackageSources {
                     -f $RequiredPackageSource.Name,$RequiredPackageSource.Location )))
                 {
                     # The Package source is not trusted so trust it
-                    Write-Verbose -Message ($LocalizedData.RegisterPackageSourceMessage `
+                    WriteMessage -Message ($LocalizedData.RegisterPackageSourceMessage `
                         -f $RequiredPackageSource.Name,$RequiredPackageSource.Location)
 
                     $null = Set-PackageSource `
@@ -769,7 +769,7 @@ function RegisterPackageSources {
                 ($LocalizedData.ShouldRegisterPackageSource `
                 -f $RequiredPackageSource.Name,$RequiredPackageSource.Location )))
             {
-                Write-Verbose -Message ($LocalizedData.RegisterPackageSourceMessage `
+                WriteMessage -Message ($LocalizedData.RegisterPackageSourceMessage `
                     -f $RequiredPackageSource.Name,$RequiredPackageSource.Location)
 
                 $null = Register-PackageSource `
@@ -794,3 +794,86 @@ function RegisterPackageSources {
         } # if
     } # foreach
 } # InstallPackageProviders
+
+
+
+<#
+.SYNOPSIS
+    Writes a Message of the specified Type.
+.DESCRIPTION
+    This cmdlet will write a message along with the time to the specified output stream.
+.PARAMETER Type
+    This can be one of the following:
+    Error - Writes to the Error Stream.
+    Warning - Writes to the Warning Stream.
+    Verbose - Writes to the Verbose Stream (default)
+    Debug - Writes to the Debug Stream.
+    Information - Writes to the Information Stream.
+    Output - Writes to the Output Stream (so should be used for a terminating message)
+.PARAMETER Message
+    The Message to output.
+.PARAMETER ForegroundColor
+    The foreground color of the message if being writen to the output stream.
+.EXAMPLE
+    WriteMessage -Type Verbose -Message 'Downloading file'
+    ThrowException @ExceptionParameters
+    Outputs the message 'Downloading file' to the Verbose stream.
+.OUTPUTS
+    None
+#>
+function WriteMessage
+{
+    [CmdLetBinding()]
+    param
+    (
+        [ValidateSet('Error','Warning','Verbose','Debug','Info','Alert')]
+        [String] $Type = 'Verbose',
+
+        [Parameter(Mandatory)]
+        [ValidateNotNullOrEmpty()]
+        [String] $Message,
+        
+        [String] $ForegroundColor = 'Yellow'
+    )
+
+    $Time = Get-Date -UFormat %T
+    switch ($Type)
+    {
+        'Error'
+        {
+            Write-Error -Message $Message
+            break
+        }
+        'Warning'
+        {
+            Write-Warning -Message ('[{0}]: {1}' `
+                -f $Time,$Message)
+            break
+        }
+        'Verbose'
+        {
+            Write-Verbose -Message ('[{0}]: {1}' `
+                -f $Time,$Message)
+            break
+        }
+        'Debug'
+        {
+            Write-Debug -Message ('[{0}]: {1}' `
+                -f $Time,$Message)
+            break
+        }
+        'Info'
+        {
+            Write-Information -Message ('INFO: [{0}]: {1}' `
+                -f $Time,$Message)
+            break
+        }
+        'Alert'
+        {
+            Write-Host `
+                -ForegroundColor $ForegroundColor `
+                -Object $Message
+            break
+        }
+    } # switch
+} # WriteMessage

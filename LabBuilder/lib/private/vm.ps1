@@ -217,7 +217,7 @@ Add-Content ``
         -Path (Join-Path -Path $VMLabBuilderFiles -ChildPath 'SetupComplete.ps1') `
         -Value $SetupCompletePs -Force
                 
-    Write-Verbose -Message $($LocalizedData.CreatedVMInitializationFiles `
+    WriteMessage -Message $($LocalizedData.CreatedVMInitializationFiles `
         -f $VM.Name)
 
 } # CreateVMInitializationFiles
@@ -545,7 +545,7 @@ function GetSelfSignedCertificate
                 }
                 catch
                 {
-                    Write-Verbose -Message $($LocalizedData.WaitingForCertificateMessage `
+                    WriteMessage -Message $($LocalizedData.WaitingForCertificateMessage `
                         -f $VM.Name,$Script:RetryConnectSeconds)
                         
                     Start-Sleep -Seconds $Script:RetryConnectSeconds
@@ -689,7 +689,7 @@ function RecreateSelfSignedCertificate
                 }
                 catch
                 {
-                    Write-Verbose -Message $($LocalizedData.FailedToUploadCertificateCreateScriptMessage `
+                    WriteMessage -Message $($LocalizedData.FailedToUploadCertificateCreateScriptMessage `
                         -f $VM.Name,$Script:RetryConnectSeconds)
 
                     Start-Sleep -Seconds $Script:RetryConnectSeconds
@@ -716,7 +716,7 @@ function RecreateSelfSignedCertificate
                 }
                 catch
                 {
-                    Write-Verbose -Message $($LocalizedData.FailedToExecuteCertificateCreateScriptMessage `
+                    WriteMessage -Message $($LocalizedData.FailedToExecuteCertificateCreateScriptMessage `
                         -f $VM.Name,$Script:RetryConnectSeconds)
 
                     Start-Sleep -Seconds $Script:RetryConnectSeconds
@@ -744,7 +744,7 @@ function RecreateSelfSignedCertificate
                 }
                 catch
                 {
-                    Write-Verbose -Message $($LocalizedData.FailedToDownloadCertificateMessage `
+                    WriteMessage -Message $($LocalizedData.FailedToDownloadCertificateMessage `
                         -f $VM.Name,$Script:RetryConnectSeconds)
 
                     Start-Sleep -Seconds $Script:RetryConnectSeconds
@@ -983,7 +983,7 @@ function WaitVMInitializationComplete
     # Check the initial setup on this VM hasn't already completed
     if (Test-Path -Path $InitialSetupCompletePath)
     {
-        Write-Verbose -Message $($LocalizedData.InitialSetupIsAlreadyCompleteMessaage `
+        WriteMessage -Message $($LocalizedData.InitialSetupIsAlreadyCompleteMessaage `
             -f $VM.Name)
         return $InitialSetupCompletePath 
     }
@@ -1029,7 +1029,7 @@ function WaitVMInitializationComplete
                 }
                 catch
                 {
-                    Write-Verbose -Message $($LocalizedData.WaitingForInitialSetupCompleteMessage `
+                    WriteMessage -Message $($LocalizedData.WaitingForInitialSetupCompleteMessage `
                         -f $VM.Name,$Script:RetryConnectSeconds)                                
                     Start-Sleep `
                         -Seconds $Script:RetryConnectSeconds
@@ -1234,7 +1234,7 @@ function UpdateVMIntegrationServices {
                 # It is disabled so enable it
                 $ExistingIntegrationService | Enable-VMIntegrationService
 
-                Write-Verbose -Message $($LocalizedData.EnableVMIntegrationServiceMessage `
+                WriteMessage -Message $($LocalizedData.EnableVMIntegrationServiceMessage `
                     -f $VM.Name,$ExistingIntegrationService.Name)
             } # if
         }
@@ -1246,7 +1246,7 @@ function UpdateVMIntegrationServices {
                 # It is enabled so disable it
                 $ExistingIntegrationService | Disable-VMIntegrationService
 
-                Write-Verbose -Message $($LocalizedData.DisableVMIntegrationServiceMessage `
+                WriteMessage -Message $($LocalizedData.DisableVMIntegrationServiceMessage `
                     -f $VM.Name,$ExistingIntegrationService.Name)
             } # if
         } # if
@@ -1314,7 +1314,7 @@ function UpdateVMDataDisks {
         $Vhd = $DataVhd.Vhd
         if (Test-Path -Path $Vhd)
         {
-            Write-Verbose -Message $($LocalizedData.VMDiskAlreadyExistsMessage `
+            WriteMessage -Message $($LocalizedData.VMDiskAlreadyExistsMessage `
                 -f $VM.Name,$Vhd,'Data')
 
             # Check the parameters of the VHD match
@@ -1340,7 +1340,7 @@ function UpdateVMDataDisks {
                 if ($ExistingVhd.Size -lt $DataVhd.Size)
                 {
                     # Expand the disk
-                    Write-Verbose -Message $($LocalizedData.ExpandingVMDiskMessage `
+                    WriteMessage -Message $($LocalizedData.ExpandingVMDiskMessage `
                         -f $VM.Name,$Vhd,'Data',$DataVhd.Size)
 
                     $null = Resize-VHD `
@@ -1381,7 +1381,7 @@ function UpdateVMDataDisks {
                 # Should the Source VHD be copied or moved
                 if ($DataVhd.MoveSourceVHD)
                 {
-                    Write-Verbose -Message $($LocalizedData.CreatingVMDiskByMovingSourceVHDMessage `
+                    WriteMessage -Message $($LocalizedData.CreatingVMDiskByMovingSourceVHDMessage `
                         -f $VM.Name,$Vhd,$SourceVhd)
 
                     $null = Move-Item `
@@ -1392,7 +1392,7 @@ function UpdateVMDataDisks {
                 }
                 else
                 {
-                    Write-Verbose -Message $($LocalizedData.CreatingVMDiskByCopyingSourceVHDMessage `
+                    WriteMessage -Message $($LocalizedData.CreatingVMDiskByCopyingSourceVHDMessage `
                         -f $VM.Name,$Vhd,$SourceVhd)
 
                     $null = Copy-Item `
@@ -1410,7 +1410,7 @@ function UpdateVMDataDisks {
                     'fixed'
                     {
                         # Create a new Fixed VHD
-                        Write-Verbose -Message $($LocalizedData.CreatingVMDiskMessage `
+                        WriteMessage -Message $($LocalizedData.CreatingVMDiskMessage `
                             -f $VM.Name,$Vhd,'Fixed Data')
 
                         $null = New-VHD `
@@ -1423,7 +1423,7 @@ function UpdateVMDataDisks {
                     'dynamic'
                     {
                         # Create a new Dynamic VHD
-                        Write-Verbose -Message $($LocalizedData.CreatingVMDiskMessage `
+                        WriteMessage -Message $($LocalizedData.CreatingVMDiskMessage `
                             -f $VM.Name,$Vhd,'Dynamic Data')
 
                         $null = New-VHD `
@@ -1460,7 +1460,7 @@ function UpdateVMDataDisks {
                         } # if
                         
                         # Create a new Differencing VHD
-                        Write-Verbose -Message $($LocalizedData.CreatingVMDiskMessage `
+                        WriteMessage -Message $($LocalizedData.CreatingVMDiskMessage `
                             -f $VM.Name,$Vhd,"Differencing Data using Parent '$ParentVhd'")
 
                         $null = New-VHD `
@@ -1523,7 +1523,7 @@ function UpdateVMDataDisks {
                         }
                     }
                 }
-                Write-Verbose -Message $($LocalizedData.InitializingVMDiskMessage `
+                WriteMessage -Message $($LocalizedData.InitializingVMDiskMessage `
                     -f $VM.Name,$VHD)
 
                 InitializeVHD `
@@ -1533,7 +1533,7 @@ function UpdateVMDataDisks {
                 # Copy each folder to the VM Data Disk
                 foreach ($CopyFolder in @($DataVHD.CopyFolders))
                 {
-                    Write-Verbose -Message $($LocalizedData.CopyingFoldersToVMDiskMessage `
+                    WriteMessage -Message $($LocalizedData.CopyingFoldersToVMDiskMessage `
                         -f $VM.Name,$VHD,$CopyFolder)
 
                     Copy-item `
@@ -1544,7 +1544,7 @@ function UpdateVMDataDisks {
                 }
                 
                 # Dismount the VM Data Disk
-                Write-Verbose -Message $($LocalizedData.DismountingVMDiskMessage `
+                WriteMessage -Message $($LocalizedData.DismountingVMDiskMessage `
                     -f $VM.Name,$VHD)
 
                 Dismount-VHD `
@@ -1570,7 +1570,7 @@ function UpdateVMDataDisks {
                         }
                     } # if
 
-                    Write-Verbose -Message $($LocalizedData.InitializingVMDiskMessage `
+                    WriteMessage -Message $($LocalizedData.InitializingVMDiskMessage `
                         -f $VM.Name,$VHD)
 
                     InitializeVHD `
@@ -1578,7 +1578,7 @@ function UpdateVMDataDisks {
                         -ErrorAction Stop
 
                     # Dismount the VM Data Disk
-                    Write-Verbose -Message $($LocalizedData.DismountingVMDiskMessage `
+                    WriteMessage -Message $($LocalizedData.DismountingVMDiskMessage `
                         -f $VM.Name,$VHD)
 
                     Dismount-VHD `
@@ -1596,7 +1596,7 @@ function UpdateVMDataDisks {
         if (($VMHardDiskDrives | Where-Object -Property Path -eq $Vhd).Count -eq 0)
         {
             # The data disk is not yet attached
-            Write-Verbose -Message $($LocalizedData.AddingVMDiskMessage `
+            WriteMessage -Message $($LocalizedData.AddingVMDiskMessage `
                 -f $VM.Name,$Vhd,'Data')
 
             # Determine the ControllerLocation and ControllerNumber to
@@ -1691,12 +1691,12 @@ function UpdateVMDVDDrives {
             {
                 if ($DVDDrive.Path)
                 {
-                    Write-Verbose -Message $($LocalizedData.MountingVMDVDDriveISOMessage `
+                    WriteMessage -Message $($LocalizedData.MountingVMDVDDriveISOMessage `
                         -f $VM.Name,$DVDDrive.Path)
                 }
                 else
                 {
-                    Write-Verbose -Message $($LocalizedData.DismountingVMDVDDriveISOMessage `
+                    WriteMessage -Message $($LocalizedData.DismountingVMDVDDriveISOMessage `
                         -f $VM.Name,$VMDVDDrives[$DVDDriveCount].Path)
                 } # if
                 Set-VMDVDDrive `
@@ -1709,7 +1709,7 @@ function UpdateVMDVDDrives {
         else
         {
             # The DVD Drive does not exist
-            Write-Verbose -Message $($LocalizedData.AddingVMDVDDriveMessage `
+            WriteMessage -Message $($LocalizedData.AddingVMDVDDriveMessage `
                 -f $VM.Name)
 
             $NewDVDDriveParams = @{
@@ -1719,7 +1719,7 @@ function UpdateVMDVDDrives {
 
             if ($DVDDrive.Path)
             {
-                Write-Verbose -Message $($LocalizedData.MountingVMDVDDriveISOMessage `
+                WriteMessage -Message $($LocalizedData.MountingVMDVDDriveISOMessage `
                     -f $VM.Name,$DVDDrive.Path)
 
                 $NewDVDDriveParams += @{

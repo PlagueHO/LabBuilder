@@ -212,7 +212,7 @@ function Initialize-LabSwitch {
                 ThrowException @ExceptionParameters
             }
             [LabSwitchType] $SwitchType = $VMSwitch.Type
-            Write-Verbose -Message $($LocalizedData.CreatingVirtualSwitchMessage `
+            WriteMessage -Message $($LocalizedData.CreatingVirtualSwitchMessage `
                 -f $SwitchType,$SwitchName)
             Switch ($SwitchType)
             {
@@ -543,7 +543,7 @@ function Remove-LabSwitch {
                 ThrowException @ExceptionParameters
             }
             [LabSwitchType] $SwitchType = $VMSwitch.Type
-            Write-Verbose -Message $($LocalizedData.DeleteingVirtualSwitchMessage `
+            WriteMessage -Message $($LocalizedData.DeleteingVirtualSwitchMessage `
                 -f $SwitchType,$SwitchName)
             Switch ($SwitchType)
             {

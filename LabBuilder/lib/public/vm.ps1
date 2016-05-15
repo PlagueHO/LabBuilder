@@ -1027,7 +1027,7 @@ function Initialize-LabVM {
 
         if (($CurrentVMs | Where-Object -Property Name -eq $VM.Name).Count -eq 0)
         {
-            Write-Verbose -Message $($LocalizedData.CreatingVMMessage `
+            WriteMessage -Message $($LocalizedData.CreatingVMMessage `
                 -f $VM.Name)
 
             # Make sure the appropriate folders exist
@@ -1040,7 +1040,7 @@ function Initialize-LabVM {
             {
                 if ($VM.UseDifferencingDisk)
                 {
-                    Write-Verbose -Message $($LocalizedData.CreatingVMDiskMessage `
+                    WriteMessage -Message $($LocalizedData.CreatingVMDiskMessage `
                         -f $VM.Name,$VMBootDiskPath,'Differencing Boot')
 
                     $Null = New-VHD `
@@ -1050,7 +1050,7 @@ function Initialize-LabVM {
                 }
                 else
                 {
-                    Write-Verbose -Message $($LocalizedData.CreatingVMDiskMessage `
+                    WriteMessage -Message $($LocalizedData.CreatingVMDiskMessage `
                         -f $VM.Name,$VMBootDiskPath,'Boot')
 
                     $Null = Copy-Item `
@@ -1071,7 +1071,7 @@ function Initialize-LabVM {
             }
             else
             {
-                Write-Verbose -Message $($LocalizedData.VMDiskAlreadyExistsMessage `
+                WriteMessage -Message $($LocalizedData.VMDiskAlreadyExistsMessage `
                     -f $VM.Name,$VMBootDiskPath,'Boot')
             } # if
 
@@ -1153,7 +1153,7 @@ function Initialize-LabVM {
         # Create/Update the Management Network Adapter
         if ((Get-VMNetworkAdapter -VMName $VM.Name | Where-Object -Property Name -EQ $ManagementSwitchName).Count -eq 0)
         {
-            Write-Verbose -Message $($LocalizedData.AddingVMNetworkAdapterMessage `
+            WriteMessage -Message $($LocalizedData.AddingVMNetworkAdapterMessage `
                 -f $VM.Name,$ManagementSwitchName,'Management')
 
             Add-VMNetworkAdapter `
@@ -1169,7 +1169,7 @@ function Initialize-LabVM {
                 -Access `
                 -VlanId $ManagementVlan
 
-        Write-Verbose -Message $($LocalizedData.SettingVMNetworkAdapterVlanMessage `
+        WriteMessage -Message $($LocalizedData.SettingVMNetworkAdapterVlanMessage `
             -f $VM.Name,$ManagementSwitchName,'Management',$ManagementVlan)
 
         # Create any network adapters
@@ -1177,7 +1177,7 @@ function Initialize-LabVM {
         {
             if ((Get-VMNetworkAdapter -VMName $VM.Name | Where-Object -Property Name -EQ $VMAdapter.Name).Count -eq 0)
             {
-                Write-Verbose -Message $($LocalizedData.AddingVMNetworkAdapterMessage `
+                WriteMessage -Message $($LocalizedData.AddingVMNetworkAdapterMessage `
                     -f $VM.Name,$VMAdapter.SwitchName,$VMAdapter.Name)
 
                 Add-VMNetworkAdapter `
@@ -1196,7 +1196,7 @@ function Initialize-LabVM {
                         -Access `
                         -VlanId $VMAdapter.VLan
 
-                Write-Verbose -Message $($LocalizedData.SettingVMNetworkAdapterVlanMessage `
+                WriteMessage -Message $($LocalizedData.SettingVMNetworkAdapterVlanMessage `
                     -f $VM.Name,$VMAdapter.Name,'',$VMAdapter.VLan)
             }
             else
@@ -1205,7 +1205,7 @@ function Initialize-LabVM {
                     Set-VMNetworkAdapterVlan `
                         -Untagged
 
-                Write-Verbose -Message $($LocalizedData.ClearingVMNetworkAdapterVlanMessage `
+                WriteMessage -Message $($LocalizedData.ClearingVMNetworkAdapterVlanMessage `
                     -f $VM.Name,$VMAdapter.Name,'')
             } # if
 
@@ -1329,7 +1329,7 @@ function Remove-LabVM {
             # if the VM is running we need to shut it down.
             if ((Get-VM -Name $VM.Name).State -eq 'Running')
             {
-                Write-Verbose -Message $($LocalizedData.StoppingVMMessage `
+                WriteMessage -Message $($LocalizedData.StoppingVMMessage `
                     -f $VM.Name)
 
                 Stop-VM `
@@ -1339,19 +1339,19 @@ function Remove-LabVM {
                     -VM $VM
             }
 
-            Write-Verbose -Message $($LocalizedData.RemovingVMMessage `
+            WriteMessage -Message $($LocalizedData.RemovingVMMessage `
                 -f $VM.Name)
            
             # Now delete the actual VM
             Get-VM `
                 -Name $VM.Name | Remove-VM -Force -Confirm:$False
 
-            Write-Verbose -Message $($LocalizedData.RemovedVMMessage `
+            WriteMessage -Message $($LocalizedData.RemovedVMMessage `
                 -f $VM.Name)
         }
         else
         {
-            Write-Verbose -Message $($LocalizedData.VMNotFoundMessage `
+            WriteMessage -Message $($LocalizedData.VMNotFoundMessage `
                 -f $VM.Name)
         }
     }
@@ -1360,7 +1360,7 @@ function Remove-LabVM {
     {
         if (Test-Path -Path $VM.VMRootPath)
         {
-            Write-Verbose -Message $($LocalizedData.DeletingVMFolderMessage `
+            WriteMessage -Message $($LocalizedData.DeletingVMFolderMessage `
                 -f $VM.Name)
 
             Remove-Item `
@@ -1417,7 +1417,7 @@ function Install-LabVM {
     # The VM is now ready to be started
     if ((Get-VM -Name $VM.Name).State -eq 'Off')
     {
-        Write-Verbose -Message $($LocalizedData.StartingVMMessage `
+        WriteMessage -Message $($LocalizedData.StartingVMMessage `
             -f $VM.Name)
 
         Start-VM -VMName $VM.Name
@@ -1432,14 +1432,14 @@ function Install-LabVM {
             # No, so check it is initialized and download the cert if required
             if (WaitVMInitializationComplete -VM $VM -ErrorAction Continue)
             {
-                Write-Verbose -Message $($LocalizedData.CertificateDownloadStartedMessage `
+                WriteMessage -Message $($LocalizedData.CertificateDownloadStartedMessage `
                     -f $VM.Name)
 
                 if ($VM.CertificateSource -eq [LabCertificateSource]::Guest)
                 {
                     if (GetSelfSignedCertificate -Lab $Lab -VM $VM)
                     {
-                        Write-Verbose -Message $($LocalizedData.CertificateDownloadCompleteMessage `
+                        WriteMessage -Message $($LocalizedData.CertificateDownloadCompleteMessage `
                             -f $VM.Name)
                     }
                     else
@@ -1561,11 +1561,11 @@ function Connect-LabVM
                     -Path WSMAN::localhost\Client\TrustedHosts `
                     -Value $TrustedHosts `
                     -Force
-                Write-Verbose -Message $($LocalizedData.AddingIPAddressToTrustedHostsMessage `
+                WriteMessage -Message $($LocalizedData.AddingIPAddressToTrustedHostsMessage `
                     -f $VM.Name,$IPAddress)
             }
         
-            Write-Verbose -Message $($LocalizedData.ConnectingVMMessage `
+            WriteMessage -Message $($LocalizedData.ConnectingVMMessage `
                 -f $VM.Name,$IPAddress)
 
             $Session = New-PSSession `
@@ -1578,12 +1578,12 @@ function Connect-LabVM
         {
             if (-not $IPAddress)
             {
-                Write-Verbose -Message $($LocalizedData.WaitingForIPAddressAssignedMessage `
+                WriteMessage -Message $($LocalizedData.WaitingForIPAddressAssignedMessage `
                     -f $VM.Name,$Script:RetryConnectSeconds)                                
             }
             else
             {
-                Write-Verbose -Message $($LocalizedData.ConnectingVMFailedMessage `
+                WriteMessage -Message $($LocalizedData.ConnectingVMFailedMessage `
                     -f $VM.Name,$Script:RetryConnectSeconds,$_.Exception.Message)
             }
             Start-Sleep -Seconds $Script:RetryConnectSeconds
@@ -1657,7 +1657,7 @@ function Disconnect-LabVM
         if (-not $Session)
         {
             # No session found to this machine so nothing to do.
-            Write-Verbose -Message $($LocalizedData.VMSessionDoesNotExistMessage `
+            WriteMessage -Message $($LocalizedData.VMSessionDoesNotExistMessage `
                 -f $VM.Name)
         }
         else
@@ -1666,7 +1666,7 @@ function Disconnect-LabVM
             {
                 # Disconnect the session
                 $null = $Session | Disconnect-PSSession
-                Write-Verbose -Message $($LocalizedData.DisconnectingVMMessage `
+                WriteMessage -Message $($LocalizedData.DisconnectingVMMessage `
                     -f $VM.Name,$IPAddress)
             }
             # Remove the session
@@ -1689,7 +1689,7 @@ function Disconnect-LabVM
                 -Path WSMAN::localhost\Client\TrustedHosts `
                 -Value $TrustedHosts `
                 -Force
-            Write-Verbose -Message $($LocalizedData.RemovingIPAddressFromTrustedHostsMessage `
+            WriteMessage -Message $($LocalizedData.RemovingIPAddressFromTrustedHostsMessage `
                 -f $VM.Name,$IPAddress)
         }
     } # try
