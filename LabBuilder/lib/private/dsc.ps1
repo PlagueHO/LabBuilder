@@ -229,7 +229,7 @@ function CreateDSCMOFFiles {
 
     # Make sure all the modules required to create the MOF file are installed
     $InstalledModules = Get-Module -ListAvailable
-    Write-Verbose -Message $($LocalizedData.DSCConfigIdentifyModulesMessage `
+    WriteMessage -Message $($LocalizedData.DSCConfigIdentifyModulesMessage `
         -f $VM.DSC.ConfigFile,$VM.Name)
 
     [String] $DSCConfigContent = Get-Content `
@@ -267,14 +267,14 @@ function CreateDSCMOFFiles {
         else
         {
             # The Module isn't available on this computer, so try and install it
-            Write-Verbose -Message $($LocalizedData.DSCConfigSearchingForModuleMessage `
+            WriteMessage -Message $($LocalizedData.DSCConfigSearchingForModuleMessage `
                 -f $VM.DSC.ConfigFile,$VM.Name,$ModuleName)
 
             $NewModule = Find-Module `
                 @ModuleSplat
             if ($NewModule)
             {
-                Write-Verbose -Message $($LocalizedData.DSCConfigInstallingModuleMessage `
+                WriteMessage -Message $($LocalizedData.DSCConfigInstallingModuleMessage `
                     -f $VM.DSC.ConfigFile,$VM.Name,$ModuleName)
 
                 try
@@ -305,7 +305,7 @@ function CreateDSCMOFFiles {
             $DSCModule.ModuleVersion = $NewModule.Version
         } # if
 
-        Write-Verbose -Message $($LocalizedData.DSCConfigSavingModuleMessage `
+        WriteMessage -Message $($LocalizedData.DSCConfigSavingModuleMessage `
             -f $VM.DSC.ConfigFile,$VM.Name,$ModuleName)
 
         # Find where the module is actually stored
@@ -372,7 +372,7 @@ function CreateDSCMOFFiles {
     $DSCMOFMetaFile = ([System.IO.Path]::ChangeExtension($DSCMOFFile,'meta.mof'))
 
     # Generate the LCM MOF File
-    Write-Verbose -Message $($LocalizedData.DSCConfigCreatingLCMMOFMessage `
+    WriteMessage -Message $($LocalizedData.DSCConfigCreatingLCMMOFMessage `
         -f $DSCMOFMetaFile,$VM.Name)
 
     $null = ConfigLCM `
@@ -391,7 +391,7 @@ function CreateDSCMOFFiles {
     } # If
 
     # A DSC Config File was provided so create a MOF File out of it.
-    Write-Verbose -Message $($LocalizedData.DSCConfigCreatingMOFMessage `
+    WriteMessage -Message $($LocalizedData.DSCConfigCreatingMOFMessage `
         -f $VM.DSC.ConfigFile,$VM.Name)
 
     # Now create the Networking DSC Config file
@@ -447,7 +447,7 @@ function CreateDSCMOFFiles {
 
     [String] $DSCConfigName = $VM.DSC.ConfigName
 
-    Write-Verbose -Message $($LocalizedData.DSCConfigPrepareMessage `
+    WriteMessage -Message $($LocalizedData.DSCConfigPrepareMessage `
         -f $DSCConfigname,$VM.Name)
 
     # Generate the Configuration Nodes data that always gets passed to the DSC configuration.
@@ -494,7 +494,7 @@ function CreateDSCMOFFiles {
         -Path "Cert:LocalMachine\My\$CertificateThumbprint" `
         -Force
 
-    Write-Verbose -Message $($LocalizedData.DSCConfigMOFCreatedMessage `
+    WriteMessage -Message $($LocalizedData.DSCConfigMOFCreatedMessage `
         -f $VM.DSC.ConfigFile,$VM.Name)
 
     # Copy the files to the LabBuilder Files folder
@@ -806,7 +806,7 @@ function StartDSC {
             {
                 Try
                 {
-                    Write-Verbose -Message $($LocalizedData.CopyingFilesToVMMessage `
+                    WriteMessage -Message $($LocalizedData.CopyingFilesToVMMessage `
                         -f $VM.Name,'DSC')
 
                     $null = Copy-Item `
@@ -837,7 +837,7 @@ function StartDSC {
                 }
                 Catch
                 {
-                    Write-Verbose -Message $($LocalizedData.CopyingFilesToVMFailedMessage `
+                    WriteMessage -Message $($LocalizedData.CopyingFilesToVMFailedMessage `
                         -f $VM.Name,'DSC',$Script:RetryConnectSeconds)
 
                     Start-Sleep -Seconds $Script:RetryConnectSeconds
@@ -888,7 +888,7 @@ function StartDSC {
                     $ModuleVersion = $DSCModule.Version
                     try
                     {
-                        Write-Verbose -Message $($LocalizedData.CopyingFilesToVMMessage `
+                        WriteMessage -Message $($LocalizedData.CopyingFilesToVMMessage `
                             -f $VM.Name,"DSC Module $ModuleName")
 
                         $null = Copy-Item `
@@ -903,7 +903,7 @@ function StartDSC {
                     }
                     catch
                     {
-                        Write-Verbose -Message $($LocalizedData.CopyingFilesToVMFailedMessage `
+                        WriteMessage -Message $($LocalizedData.CopyingFilesToVMFailedMessage `
                             -f $VM.Name,"DSC Module $ModuleName",$Script:RetryConnectSeconds)
 
                         Start-Sleep -Seconds $Script:RetryConnectSeconds
@@ -937,7 +937,7 @@ function StartDSC {
             -and ($ConfigCopyComplete) `
             -and ($ModuleCopyComplete))
         {
-            Write-Verbose -Message $($LocalizedData.StartingDSCMessage `
+            WriteMessage -Message $($LocalizedData.StartingDSCMessage `
                 -f $VM.Name)
 
             Invoke-Command -Session $Session { c:\windows\setup\scripts\StartDSC.ps1 }

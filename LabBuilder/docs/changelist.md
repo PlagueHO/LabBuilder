@@ -1,3 +1,6 @@
+# Unreleased
+* Converted all Write-Verbose calls to WriteMessage function.
+
 # 0.8.0.0
 * DSCLibrary\MEMBER_SQLSERVER2014.DSC.ps1: Completed DSC Library configuration for installing a SQL Server 2014 from an ISO.
 * Samples\Sample_WS2012R2_DomainSQL2014.xml: Added new Sample for building a simple domain with a SQL Server.
