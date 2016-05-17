@@ -1,5 +1,6 @@
-# Unreleased
+# 0.8.1.0
 * Converted all Write-Verbose calls to WriteMessage function.
+* Fix bug when creating a new Management adapter for a new Lab.
 
 # 0.8.0.0
 * DSCLibrary\MEMBER_SQLSERVER2014.DSC.ps1: Completed DSC Library configuration for installing a SQL Server 2014 from an ISO.
