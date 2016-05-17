@@ -142,7 +142,7 @@ function Initialize-LabResourceModule {
                 $Splat += [PSObject] @{ MiniumVersion = $Module.MiniumVersion }
             }
 
-            Write-Verbose -Message $($LocalizedData.DownloadingResourceModuleMessage `
+            WriteMessage -Message $($LocalizedData.DownloadingResourceModuleMessage `
                 -f $Name,$URL)
 
             DownloadResourceModule @Splat
@@ -295,7 +295,7 @@ function Initialize-LabResourceMSU {
         {
             if (-not (Test-Path -Path $MSU.Filename))
             {
-                Write-Verbose -Message $($LocalizedData.DownloadingResourceMSUMessage `
+                WriteMessage -Message $($LocalizedData.DownloadingResourceMSUMessage `
                     -f $MSU.Name,$MSU.URL)
 
                 DownloadAndUnzipFile `
@@ -493,7 +493,7 @@ function Initialize-LabResourceISO {
                 $URLExtension = [System.IO.Path]::GetExtension($URLLeaf)
                 if ($URLExtension -in @('.zip','.iso'))
                 {
-                    Write-Verbose -Message $($LocalizedData.DownloadingResourceISOMessage `
+                    WriteMessage -Message $($LocalizedData.DownloadingResourceISOMessage `
                         -f $ResourceISO.Name,$ResourceISO.URL)
 
                     DownloadAndUnzipFile `
@@ -502,9 +502,9 @@ function Initialize-LabResourceISO {
                 }
                 elseif ([String]::IsNullOrEmpty($URLExtension))
                 {
-                    Write-Output `
-                        -ForegroundColor Yellow `
-                        -Object $($LocalizedData.ISONotFoundDownloadURLMessage `
+                    WriteMessage `
+                        -Type Alert `
+                        -Message $($LocalizedData.ISONotFoundDownloadURLMessage `
                             -f $ResourceISO.Name,$ResourceISO.Path,$ResourceISO.URL)
                 } # if
                 if (-not (Test-Path -Path $ResourceISO.Path))

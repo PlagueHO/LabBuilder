@@ -81,7 +81,7 @@ Configuration MEMBER_JENKINS
         Script SetJenkinsPort
         {
             SetScript = {
-                Write-Verbose -Verbose "Setting Jenkins Port to $Using:JenkinsPort"
+                Write-Verbose -Message "Setting Jenkins Port to $Using:JenkinsPort"
                 $Config = Get-Content `
                     -Path "${ENV:ProgramFiles(x86)}\Jenkins\Jenkins.xml"
                 $NewConfig = $Config `
@@ -90,7 +90,7 @@ Configuration MEMBER_JENKINS
                     -Path "${ENV:ProgramFiles(x86)}\Jenkins\Jenkins.xml" `
                     -Value $NewConfig `
                     -Force
-                Write-Verbose -Verbose "Restarting Jenkins"
+                Write-Verbose -Message "Restarting Jenkins"
                 Restart-Service `
                     -Name Jenkins
             }

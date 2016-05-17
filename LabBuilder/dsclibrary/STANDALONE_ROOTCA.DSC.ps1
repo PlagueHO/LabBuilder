@@ -197,21 +197,21 @@ Configuration STANDALONE_ROOTCA
             Script "IssueCert_$SubCA"
             {
                 SetScript = {
-                    Write-Verbose "Submitting C:\Windows\System32\CertSrv\CertEnroll\$Using:SubCA.req to $($Using:Node.CACommonName)"
+                    Write-Verbose -Message "Submitting C:\Windows\System32\CertSrv\CertEnroll\$Using:SubCA.req to $($Using:Node.CACommonName)"
                     [String]$RequestResult = & "$($ENV:SystemRoot)\System32\Certreq.exe" -Config ".\$($Using:Node.CACommonName)" -Submit "C:\Windows\System32\CertSrv\CertEnroll\$Using:SubCA.req"
                     $Matches = [Regex]::Match($RequestResult, 'RequestId:\s([0-9]*)')
                     If ($Matches.Groups.Count -lt 2) {
-                        Write-Verbose "Error getting Request ID from SubCA certificate submission."
+                        Write-Verbose -Message "Error getting Request ID from SubCA certificate submission."
                         Throw "Error getting Request ID from SubCA certificate submission."
                     }
                     [int]$RequestId = $Matches.Groups[1].Value
-                    Write-Verbose "Issuing $RequestId in $($Using:Node.CACommonName)"
+                    Write-Verbose -Message "Issuing $RequestId in $($Using:Node.CACommonName)"
                     [String]$SubmitResult = & "$($ENV:SystemRoot)\System32\CertUtil.exe" -Resubmit $RequestId
                     If ($SubmitResult -notlike 'Certificate issued.*') {
-                        Write-Verbose "Unexpected result issuing SubCA request."
+                        Write-Verbose -Message "Unexpected result issuing SubCA request."
                         Throw "Unexpected result issuing SubCA request."
                     }
-                    Write-Verbose "Retrieving C:\Windows\System32\CertSrv\CertEnroll\$Using:SubCA.req from $($Using:Node.CACommonName)"
+                    Write-Verbose -Message "Retrieving C:\Windows\System32\CertSrv\CertEnroll\$Using:SubCA.req from $($Using:Node.CACommonName)"
                     [String]$RetrieveResult = & "$($ENV:SystemRoot)\System32\Certreq.exe" -Config ".\$($Using:Node.CACommonName)" -Retrieve $RequestId "C:\Windows\System32\CertSrv\CertEnroll\$Using:SubCA.crt"
                 }
                 GetScript = {

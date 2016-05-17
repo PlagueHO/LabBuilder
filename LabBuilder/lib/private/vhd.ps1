@@ -47,7 +47,7 @@ function InitializeBootVHD {
     [String] $VMLabBuilderFiles = $VM.LabBuilderFilesPath
     
     # Mount the VMs Boot VHD so that files can be loaded into it
-    Write-Verbose -Message $($LocalizedData.MountingVMBootDiskMessage `
+    WriteMessage -Message $($LocalizedData.MountingVMBootDiskMessage `
         -f $VM.Name,$VMBootDiskPath)
       
     # Create a mount point for mounting the Boot VHD
@@ -132,7 +132,7 @@ function InitializeBootVHD {
                     }
 
                     # Add the package
-                    Write-Verbose -Message $($LocalizedData.ApplyingVMBootDiskFileMessage `
+                    WriteMessage -Message $($LocalizedData.ApplyingVMBootDiskFileMessage `
                         -f $VM.Name,$Package,$PackagePath)
 
                     $null = Add-WindowsPackage `
@@ -157,7 +157,7 @@ function InitializeBootVHD {
                         ThrowException @ExceptionParameters
                     }
                     
-                    Write-Verbose -Message $($LocalizedData.ApplyingVMBootDiskFileMessage `
+                    WriteMessage -Message $($LocalizedData.ApplyingVMBootDiskFileMessage `
                         -f $VM.Name,$Package,$PackageLangFile)
 
                     # Add the package
@@ -201,7 +201,7 @@ function InitializeBootVHD {
                         ThrowException @ExceptionParameters
                     } # if
                     # Apply a Pacakge
-                    Write-Verbose -Message $($LocalizedData.ApplyingVMBootDiskFileMessage `
+                    WriteMessage -Message $($LocalizedData.ApplyingVMBootDiskFileMessage `
                         -f $VM.Name,$Package,$PackagePath)
 
                     $null = Add-WindowsPackage `
@@ -214,7 +214,7 @@ function InitializeBootVHD {
     catch
     {
         # Dismount Disk Image before throwing exception
-        Write-Verbose -Message $($LocalizedData.DismountingVMBootDiskMessage `
+        WriteMessage -Message $($LocalizedData.DismountingVMBootDiskMessage `
             -f $VM.Name,$VMBootDiskPath)
         $null = Dismount-WindowsImage -Path $MountPoint -Save
         $null = Remove-Item -Path $MountPoint -Recurse -Force
@@ -228,12 +228,12 @@ function InitializeBootVHD {
         -ItemType Directory
 
     # Apply an unattended setup file
-    Write-Verbose -Message $($LocalizedData.ApplyingVMBootDiskFileMessage `
+    WriteMessage -Message $($LocalizedData.ApplyingVMBootDiskFileMessage `
         -f $VM.Name,'Unattend','Unattend.xml')
 
     if (-not (Test-Path -Path "$MountPoint\Windows\Panther" -PathType Container))
     {
-        Write-Verbose -Message $($LocalizedData.CreatingVMBootDiskPantherFolderMessage `
+        WriteMessage -Message $($LocalizedData.CreatingVMBootDiskPantherFolderMessage `
             -f $VM.Name)
 
         $null = New-Item `
@@ -253,7 +253,7 @@ function InitializeBootVHD {
     if (Test-Path -Path $CertificatePfxPath)
     {
         # Apply the CMD Setup Complete File
-        Write-Verbose -Message $($LocalizedData.ApplyingVMBootDiskFileMessage `
+        WriteMessage -Message $($LocalizedData.ApplyingVMBootDiskFileMessage `
             -f $VM.Name,'Credential Certificate PFX',$Script:DSCEncryptionPfxCert)
         $null = Copy-Item `
             -Path $CertificatePfxPath `
@@ -262,7 +262,7 @@ function InitializeBootVHD {
     }
 
     # Apply the CMD Setup Complete File
-    Write-Verbose -Message $($LocalizedData.ApplyingVMBootDiskFileMessage `
+    WriteMessage -Message $($LocalizedData.ApplyingVMBootDiskFileMessage `
         -f $VM.Name,'Setup Complete CMD','SetupComplete.cmd')
     $null = Copy-Item `
         -Path (Join-Path -Path $VMLabBuilderFiles -ChildPath 'SetupComplete.cmd') `
@@ -270,7 +270,7 @@ function InitializeBootVHD {
         -Force
 
     # Apply the PowerShell Setup Complete file
-    Write-Verbose -Message $($LocalizedData.ApplyingVMBootDiskFileMessage `
+    WriteMessage -Message $($LocalizedData.ApplyingVMBootDiskFileMessage `
         -f $VM.Name,'Setup Complete PowerShell','SetupComplete.ps1')
     $null = Copy-Item `
         -Path (Join-Path -Path $VMLabBuilderFiles -ChildPath 'SetupComplete.ps1') `
@@ -281,7 +281,7 @@ function InitializeBootVHD {
     if ($VM.OSType -ne [LabOSType]::Nano)
     {
         $CertGenFilename = Split-Path -Path $Script:SupportGertGenPath -Leaf
-        Write-Verbose -Message $($LocalizedData.ApplyingVMBootDiskFileMessage `
+        WriteMessage -Message $($LocalizedData.ApplyingVMBootDiskFileMessage `
             -f $VM.Name,'Certificate Create Script',$CertGenFilename)
         $null = Copy-Item `
             -Path $Script:SupportGertGenPath `
@@ -290,7 +290,7 @@ function InitializeBootVHD {
     }
             
     # Dismount the VHD in preparation for boot
-    Write-Verbose -Message $($LocalizedData.DismountingVMBootDiskMessage `
+    WriteMessage -Message $($LocalizedData.DismountingVMBootDiskMessage `
         -f $VM.Name,$VMBootDiskPath)
     $null = Dismount-WindowsImage -Path $MountPoint -Save
     $null = Remove-Item -Path $MountPoint -Recurse -Force
@@ -406,7 +406,7 @@ function InitializeVhd
         -Path $Path
     if (-not $VHD.Attached)
     {
-        Write-Verbose -Message ($LocalizedData.InitializeVHDMountingMessage `
+        WriteMessage -Message ($LocalizedData.InitializeVHDMountingMessage `
             -f $Path)
 
         $null = Mount-VHD `
@@ -430,7 +430,7 @@ function InitializeVhd
             }
             ThrowException @ExceptionParameters
         } # if
-        Write-Verbose -Message ($LocalizedData.InitializeVHDInitializingMessage `
+        WriteMessage -Message ($LocalizedData.InitializeVHDInitializingMessage `
             -f $Path,$PartitionStyle)
 
         $null = Initialize-Disk `
@@ -446,7 +446,7 @@ function InitializeVhd
     if (-not ($Partitions) `
         -or (($Partitions | Where-Object -Property Type -ne 'Reserved').Count -eq 0))
     {
-        Write-Verbose -Message ($LocalizedData.InitializeVHDCreatePartitionMessage `
+        WriteMessage -Message ($LocalizedData.InitializeVHDCreatePartitionMessage `
             -f $Path)
 
         $Partitions = @(New-Partition `
@@ -526,7 +526,7 @@ function InitializeVhd
         }
 
         # Format the volume
-        Write-Verbose -Message ($LocalizedData.InitializeVHDFormatVolumeMessage `
+        WriteMessage -Message ($LocalizedData.InitializeVHDFormatVolumeMessage `
             -f $Path,$FileSystem,$PartitionNumber)
         $FormatProperties = @{
             InputObject = $Volume
@@ -548,7 +548,7 @@ function InitializeVhd
         if (($FileSystemLabel) -and `
             ($Volume.FileSystemLabel -ne $FileSystemLabel))
         {
-            Write-Verbose -Message ($LocalizedData.InitializeVHDSetLabelVolumeMessage `
+            WriteMessage -Message ($LocalizedData.InitializeVHDSetLabelVolumeMessage `
                 -f $Path,$FileSystemLabel)
             $Volume = Set-Volume `
                 -InputObject $Volume `
@@ -574,7 +574,7 @@ function InitializeVhd
                 $Volume = Get-Volume `
                     -Partition $Partition
 
-                Write-Verbose -Message ($LocalizedData.InitializeVHDDriveLetterMessage `
+                WriteMessage -Message ($LocalizedData.InitializeVHDDriveLetterMessage `
                     -f $Path,$DriveLetter.ToUpper())
             }
             'AccessPath'
@@ -598,7 +598,7 @@ function InitializeVhd
                     -AccessPath $AccessPath `
                     -ErrorAction Stop
 
-                Write-Verbose -Message ($LocalizedData.InitializeVHDAccessPathMessage `
+                WriteMessage -Message ($LocalizedData.InitializeVHDAccessPathMessage `
                     -f $Path,$AccessPath)
             }
         }
