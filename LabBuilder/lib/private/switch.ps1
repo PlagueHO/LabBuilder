@@ -77,7 +77,7 @@ function UpdateSwitchManagementAdapter {
     $Adapter = Get-VMNetworkAdapter `
         -ManagementOS `
         @PSBoundParameters `
-        -ErrorAction Stop
+        -ErrorAction SilentlyContinue
     if (-not $Adapter)
     {
         # Adapter does not exist so add it
