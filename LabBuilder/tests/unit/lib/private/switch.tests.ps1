@@ -169,7 +169,7 @@ try
                     Assert-MockCalled Get-VMNetworkAdapter -Exactly 1
                     Assert-MockCalled Add-VMNetworkAdapter -Exactly 1
                     Assert-MockCalled Set-VMNetworkAdapter -ParameterFilter { $DynamicMacAddress } -Exactly 0
-                    Assert-MockCalled Set-VMNetworkAdapter -ParameterFilter { $StaticMacAddress -eq '1234567890AB' } -Exactly 1
+                    Assert-MockCalled Set-VMNetworkAdapter -ParameterFilter { $StaticMacAddress -eq '1234567890AB' } -Exactly 0
                     Assert-MockCalled Set-VMNetworkAdapterVlan -ParameterFilter { $VlanId -eq 10 } -Exactly 0
                     Assert-MockCalled Set-VMNetworkAdapterVlan -ParameterFilter { $Untagged } -Exactly 0
                 }
@@ -185,7 +185,7 @@ try
                 It 'Calls Mocked commands' {
                     Assert-MockCalled Get-VMNetworkAdapter -Exactly 1
                     Assert-MockCalled Add-VMNetworkAdapter -Exactly 1
-                    Assert-MockCalled Set-VMNetworkAdapter -ParameterFilter { $DynamicMacAddress } -Exactly 1
+                    Assert-MockCalled Set-VMNetworkAdapter -ParameterFilter { $DynamicMacAddress } -Exactly 0
                     Assert-MockCalled Set-VMNetworkAdapter -ParameterFilter { $StaticMacAddress -eq '1234567890AB' } -Exactly 0
                     Assert-MockCalled Set-VMNetworkAdapterVlan -ParameterFilter { $VlanId -eq 10 } -Exactly 0
                     Assert-MockCalled Set-VMNetworkAdapterVlan -ParameterFilter { $Untagged } -Exactly 0
@@ -204,7 +204,7 @@ try
                     Assert-MockCalled Get-VMNetworkAdapter -Exactly 1
                     Assert-MockCalled Add-VMNetworkAdapter -Exactly 0
                     Assert-MockCalled Set-VMNetworkAdapter -ParameterFilter { $DynamicMacAddress } -Exactly 0
-                    Assert-MockCalled Set-VMNetworkAdapter -ParameterFilter { $StaticMacAddress -eq '1234567890AB' } -Exactly 1
+                    Assert-MockCalled Set-VMNetworkAdapter -ParameterFilter { $StaticMacAddress -eq '1234567890AB' } -Exactly 0
                     Assert-MockCalled Set-VMNetworkAdapterVlan -ParameterFilter { $VlanId -eq 10 } -Exactly 1
                     Assert-MockCalled Set-VMNetworkAdapterVlan -ParameterFilter { $Untagged } -Exactly 0
                 }

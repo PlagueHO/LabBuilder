@@ -81,27 +81,27 @@ function UpdateSwitchManagementAdapter {
     if (-not $Adapter)
     {
         # Adapter does not exist so add it
+        if ($SetMacAddress)
+        {
+            # For a management adapter a Static MAC address can only be assigned
+            # at creation time.
+            if (-not ([String]::IsNullOrEmpty($StaticMacAddress)))
+            {
+                $PSBoundParameters.Add('StaticMacAddress',$StaticMacAddress)
+            } # if
+        } # If
+
         $Adapter = Add-VMNetworkAdapter `
             -ManagementOS `
             @PSBoundParameters `
             -Passthru
-    } # if
-
-    # Set or clear the static mac address
-    if ($SetMacAddress)
+    }
+    else
     {
-        if ([String]::IsNullOrEmpty($StaticMacAddress))
-        {
-            $MacSplat = @{ DynamicMacAddress = $true }
-        }
-        else
-        { 
-            $MacSplat = @{ StaticMacAddress = $StaticMacAddress }
-        } # if
-        $null = $Adapter | Set-VMNetworkAdapter `
-            @MacSplat `
-            -ErrorAction Stop
-    } # If
+        # The MAC Address for an existing Management Adapter can not be changed
+        # This shouldn't ever happen unless the configuration is changed.
+        # Not sure of the solution to this problem.
+    } # if
 
     # Set or clear the VLanId
     if ($SetVlanId)
