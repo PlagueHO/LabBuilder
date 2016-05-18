@@ -1,6 +1,6 @@
 @{
     RootModule = 'LabBuilder.psm1'
-    ModuleVersion = '0.8.1'
+    ModuleVersion = '0.8.2'
     GUID = 'e229850e-7a90-4123-9a30-37814119d3a3'
     Author = 'Daniel Scott-Raynsford'
     CompanyName = ''

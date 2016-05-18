@@ -49,8 +49,8 @@ Configuration MEMBER_IPAM
         { 
             Name          = $Node.NodeName
             DomainName    = $Node.DomainName
-            Credential    = $DomainAdminCredential 
-            DependsOn     = "[WaitForAll]DC" 
+            Credential    = $DomainAdminCredential
+            DependsOn     = "[WaitForAll]DC"
         }
     }
 }

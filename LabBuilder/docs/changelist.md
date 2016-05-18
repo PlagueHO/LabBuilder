@@ -1,3 +1,6 @@
+# 0.8.2.0
+* Fix bug when creating a new Management adapter for a new Lab and setting a static MAC address on it.
+
 # 0.8.1.0
 * Converted all Write-Verbose calls to WriteMessage function.
 * Fix bug when creating a new Management adapter for a new Lab.
