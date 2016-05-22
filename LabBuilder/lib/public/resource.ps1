@@ -26,7 +26,7 @@ function Get-LabResourceModule {
             Mandatory=$true)]
         [ValidateNotNullOrEmpty()]
         $Lab,
-        
+
         [Parameter(
             Position=2)]
         [ValidateNotNullOrEmpty()]
@@ -34,7 +34,7 @@ function Get-LabResourceModule {
     )
 
     [LabResourceModule[]] $ResourceModules = @()
-    if ($Lab.labbuilderconfig.resources) 
+    if ($Lab.labbuilderconfig.resources)
     {
         foreach ($Module in $Lab.labbuilderconfig.resources.module)
         {
@@ -102,7 +102,7 @@ function Initialize-LabResourceModule {
             Mandatory=$true)]
         [ValidateNotNullOrEmpty()]
         $Lab,
-        
+
         [Parameter(
             Position=2)]
         [ValidateNotNullOrEmpty()]
@@ -179,7 +179,7 @@ function Get-LabResourceMSU {
             Mandatory=$true)]
         [ValidateNotNullOrEmpty()]
         $Lab,
-        
+
         [Parameter(
             Position=2)]
         [ValidateNotNullOrEmpty()]
@@ -187,7 +187,7 @@ function Get-LabResourceMSU {
     )
 
     [LabResourceMSU[]] $ResourceMSUs = @()
-    if ($Lab.labbuilderconfig.resources) 
+    if ($Lab.labbuilderconfig.resources)
     {
         foreach ($MSU in $Lab.labbuilderconfig.resources.msu)
         {
@@ -271,7 +271,7 @@ function Initialize-LabResourceMSU {
             Mandatory=$true)]
         [ValidateNotNullOrEmpty()]
         $Lab,
-        
+
         [Parameter(
             Position=2)]
         [ValidateNotNullOrEmpty()]
@@ -335,17 +335,17 @@ function Get-LabResourceISO {
             Mandatory=$true)]
         [ValidateNotNullOrEmpty()]
         $Lab,
-        
+
         [Parameter(
             Position=2)]
         [ValidateNotNullOrEmpty()]
         [String[]] $Name
     )
 
-    # Determine the ISORootPath where the ISO files should be found
-    # if no path is specified then look in the same path as the config
-    # if a path is specified but it is relative, make it relative to the
-    # config path. Otherwise use it as is.
+    # Determine the ISORootPath where the ISO files should be found.
+    # If no path is specified then look in the resource path.
+    # If a path is specified but it is relative, make it relative to the resource path.
+    # Otherwise use it as is.
     [String] $ISORootPath = $Lab.labbuilderconfig.Resources.ISOPath
     if ($ISORootPath)
     {
@@ -453,7 +453,7 @@ function Initialize-LabResourceISO {
             Mandatory=$true)]
         [ValidateNotNullOrEmpty()]
         $Lab,
-        
+
         [Parameter(
             Position=2)]
         [ValidateNotNullOrEmpty()]
