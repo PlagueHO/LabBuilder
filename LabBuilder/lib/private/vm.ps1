@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-    Creates the folder structure that will contain a Lab Virtual Machine. 
+    Creates the folder structure that will contain a Lab Virtual Machine.
 .DESCRIPTION
     Creates a standard Hyper-V Virtual Machine folder structure as well as additional folders
     for containing configuration files for DSC.
@@ -88,8 +88,8 @@ function CreateVMInitializationFiles {
     )
 
     # Get Path to LabBuilder files
-    [String] $VMLabBuilderFiles = $VM.LabBuilderFilesPath 
-    
+    [String] $VMLabBuilderFiles = $VM.LabBuilderFilesPath
+
     # Generate an unattended setup file
     [String] $UnattendFile = GetUnattendFileContent `
         -Lab $Lab `
@@ -216,7 +216,7 @@ Add-Content ``
     $null = Set-Content `
         -Path (Join-Path -Path $VMLabBuilderFiles -ChildPath 'SetupComplete.ps1') `
         -Value $SetupCompletePs -Force
-                
+
     WriteMessage -Message $($LocalizedData.CreatedVMInitializationFiles `
         -f $VM.Name)
 
@@ -293,9 +293,9 @@ function GetUnattendFileContent {
             <ComputerName>$($VM.ComputerName)</ComputerName>
         </component>
 "@
-        
 
-        if ($VM.OSType -eq [LabOSType]::Clien)
+
+        if ($VM.OSType -eq [LabOSType]::Client)
         {
             $UnattendContent += @"
             <component name="Microsoft-Windows-Deployment" processorArchitecture="x86" publicKeyToken="31bf3856ad364e35" language="neutral" versionScope="nonSxS" xmlns:wcm="http://schemas.microsoft.com/WMIConfig/2002/State" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
@@ -379,7 +379,7 @@ function GetCertificatePsFileContent {
 
         [Parameter(Mandatory)]
         [LabVM] $VM,
-        
+
         [LabCertificateSource] $CertificateSource
     )
     # If a CertificateSource is not provided get it from the VM.
@@ -547,7 +547,7 @@ function GetSelfSignedCertificate
                 {
                     WriteMessage -Message $($LocalizedData.WaitingForCertificateMessage `
                         -f $VM.Name,$Script:RetryConnectSeconds)
-                        
+
                     Start-Sleep -Seconds $Script:RetryConnectSeconds
                 } # try
             } # while
@@ -696,7 +696,7 @@ function RecreateSelfSignedCertificate
                 } # try
             } # while
         } # if
-        
+
         $Complete = $False
 
         if (($Session) `
@@ -839,8 +839,8 @@ function CreateHostSelfSignedCertificate
         -ProviderName $Script:SelfSignedCertProviderName `
         -AlgorithmName $Script:SelfSignedCertAlgorithmName `
         -SignatureAlgorithm $Script:SelfSignedCertSignatureAlgorithm `
-        -ErrorAction Stop        
-    
+        -ErrorAction Stop
+
     # Locate the newly created certificate
     $Certificate = Get-ChildItem -Path cert:\LocalMachine\My `
         | Where-Object {
@@ -862,7 +862,7 @@ function CreateHostSelfSignedCertificate
         -Cert $Certificate `
         -Password $CertificatePassword `
         -ErrorAction Stop
-    
+
     # Export the certificate without a private key
     $CertificateDestination = Join-Path `
         -Path $VMLabBuilderFiles `
@@ -985,7 +985,7 @@ function WaitVMInitializationComplete
     {
         WriteMessage -Message $($LocalizedData.InitialSetupIsAlreadyCompleteMessaage `
             -f $VM.Name)
-        return $InitialSetupCompletePath 
+        return $InitialSetupCompletePath
     }
 
     while ((-not $Complete) `
@@ -1006,7 +1006,7 @@ function WaitVMInitializationComplete
                     -f $VM.Name)
             }
             ThrowException @ExceptionParameters
-            return            
+            return
         }
 
         if (($Session) `
@@ -1030,7 +1030,7 @@ function WaitVMInitializationComplete
                 catch
                 {
                     WriteMessage -Message $($LocalizedData.WaitingForInitialSetupCompleteMessage `
-                        -f $VM.Name,$Script:RetryConnectSeconds)                                
+                        -f $VM.Name,$Script:RetryConnectSeconds)
                     Start-Sleep `
                         -Seconds $Script:RetryConnectSeconds
                 } # try
@@ -1088,7 +1088,7 @@ function WaitVMStarted {
         [Parameter(Mandatory)]
         [LabVM] $VM
     )
-	
+
 	#Names of IntegrationServices are not culture neutral, but have an ID
 	$HeartbeatCultureNeutral = ( Get-VMIntegrationService -VMName $VM.Name | Where-Object { $_.ID -match "84EAAE65-2F2E-45F5-9BB5-0E857DC8EB47" } ).Name
 	$Heartbeat = Get-VMIntegrationService -VMName $VM.Name -Name $HeartbeatCultureNeutral
@@ -1265,7 +1265,7 @@ function UpdateVMIntegrationServices {
     attach any data disk VHDs that are missing.
 
     If the data disk VHD file exists but is not attached it will be attached to the VM. If the
-    data disk VHD file does not exist then it will be created and attached. 
+    data disk VHD file does not exist then it will be created and attached.
 .EXAMPLE
     $Lab = Get-Lab -ConfigPath c:\mylab\config.xml
     $VMs = Get-LabVM -Lab $Lab
@@ -1399,7 +1399,7 @@ function UpdateVMDataDisks {
                         -Path $SourceVhd `
                         -Destination $VHDPath `
                         -Force `
-                        -ErrorAction Stop 
+                        -ErrorAction Stop
                 } # if
             }
             else
@@ -1458,7 +1458,7 @@ function UpdateVMDataDisks {
                             }
                             ThrowException @ExceptionParameters
                         } # if
-                        
+
                         # Create a new Differencing VHD
                         WriteMessage -Message $($LocalizedData.CreatingVMDiskMessage `
                             -f $VM.Name,$Vhd,"Differencing Data using Parent '$ParentVhd'")
@@ -1529,7 +1529,7 @@ function UpdateVMDataDisks {
                 InitializeVHD `
                     @InitializeVHDParams `
                     -ErrorAction Stop
-                
+
                 # Copy each folder to the VM Data Disk
                 foreach ($CopyFolder in @($DataVHD.CopyFolders))
                 {
@@ -1542,7 +1542,7 @@ function UpdateVMDataDisks {
                         -Recurse `
                         -Force
                 }
-                
+
                 # Dismount the VM Data Disk
                 WriteMessage -Message $($LocalizedData.DismountingVMDiskMessage `
                     -f $VM.Name,$VHD)
@@ -1601,7 +1601,7 @@ function UpdateVMDataDisks {
 
             # Determine the ControllerLocation and ControllerNumber to
             # attach the VHD to.
-            $ControllerLocation = ($VMHardDiskDrives | 
+            $ControllerLocation = ($VMHardDiskDrives |
                 Measure-Object -Property ControllerLocation -Maximum).Maximum + 1
 
             $NewHardDiskParams = @{
