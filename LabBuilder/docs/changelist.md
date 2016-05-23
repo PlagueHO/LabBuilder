@@ -1,4 +1,4 @@
-# Unreleased
+# 0.8.3.0
 * Fix bug where Administrator account is not enabled in Windows client OS.
 * Added support for ModulePath attribute on Settings node.
 
