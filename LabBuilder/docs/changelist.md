@@ -1,5 +1,6 @@
 # Unreleased
 * Fix bug where Administrator account is not enabled in Windows client OS.
+* Added support for ModulePath attribute on Settings node.
 
 # 0.8.2.0
 * Fix bug when creating a new Management adapter for a new Lab and setting a static MAC address on it.
