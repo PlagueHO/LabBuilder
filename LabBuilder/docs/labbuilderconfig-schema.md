@@ -89,7 +89,7 @@ This optional attribute contains the path to the folder that will contain the DS
 If this folder is not rooted, it will be assumed to be a subfolder of the 'labpath'.
 If this setting is not set it will default to 'dsclibrary' and will therefore be a subfolder of the 'labpath'.
 Usually the content of this folder will either be provided with the Lab or created by copying the DSCLibrary folder provided with the LabBuilder module.
-                
+
 Each Virtual Machine that is set to be configured by DSC requires a DSC configuration file that must be found in this folder.
 
 - Default Value: DSCLibrary
@@ -108,7 +108,18 @@ If this folder is not rooted, it will be assumed to be a subfolder of the 'labpa
                 
 ``` resourcepath="f:\SharedResources\" ```
 
-### 2.8a - DISMPATH Optional Attribute
+### 2.8a - MODULEPATH Optional Attribute
+> modulepath="xs:string"
+
+
+This optional attribute can be used to add a path to the PowerShell Module Search path.
+It can be used to specify an alternate path for DSC Resource Modules for the use in this Lab.
+If specified, LabBuilder will search for DSC Resource Modules in this path before searching all other default PowerShell Module Paths.
+If this folder is not rooted, it will be assumed to be a subfolder of the 'labpath'.
+                
+``` modulepath="f:\SharedModules\" ```
+
+### 2.9a - DISMPATH Optional Attribute
 > dismpath="xs:string"
 
 
@@ -120,7 +131,7 @@ You should not include the DISM.EXE application name in the path.
                 
 ``` resourcepath="C:\Program Files (x86)\Windows Kits\10\Assessment and Deployment Kit\Deployment Tools\amd64\DISM\" ```
 
-### 2.9a - REQUIREDWINDOWSBUILD Optional Attribute
+### 2.10a - REQUIREDWINDOWSBUILD Optional Attribute
 > requiredwindowsbuild="xs:integer"
 
 
@@ -135,7 +146,7 @@ If this attribute is not set then the Lab Configuration will be able to installe
 
 This optional element can contain one or more resources that will be required for this Lab to be installed.
 These resources may be downloaded from the Internet automatically depending on the resource type.
-            
+
 There can be different types of Resources that can be contained in the Resources element.
 
 Currently the Resource types that are supported are:
@@ -152,14 +163,14 @@ This optional attribute can be used to set the path to the folder that LabBuilde
 If not set this will default to the ResourcePath specified in the Lab configuration file.
 If a ResourcePath is not set then this will be the Resource folder within the Lab folder.
 This can be a relative or full path.
-If a relative path is set, it will be relative to the full path of the Lab configuration file.
+If a relative path is set, it will be relative to the full path of the Lab Resource folder.
                 
 ``` isopath="d:\LabShared\ISOs" ```
 
 ### 3.1e - MODULE Optional Element
 
 A PowerShell (DSC) Module that will be downloaded and installed to the Lab Host when this Lab is installed.
-                  
+
 Note: This is not required for any PowerShell DSC Modules that are referenced in a DSC configuration used by a Virtual Machine if the version required is available in the PowerShell Gallery and is just the latest version.
 This is usually only required if the Lab requires the use of development resources or versions that are either not available on PowerShell Gallery or a specific version is requred.
                   
@@ -188,7 +199,7 @@ This is commonly used to download PowerShell (DSC) Modules directly from GitHub 
 
 
 This optional attribute only needs to be set if the zip file downloaded by the URL in the URL attribute contains a folder that the PowerShell (DSC) Module is in.
-This is usually used when the URL specifies a GitHub repository branch, which will cause the downloaded zip file to contain a folder named 'name-branch' (e.g. xNetworking-dev). 
+This is usually used when the URL specifies a GitHub repository branch, which will cause the downloaded zip file to contain a folder named 'name-branch' (e.g. xNetworking-dev).
                       
 ``` folder="xNetworking-dev" ```
 
@@ -198,7 +209,7 @@ This is usually used when the URL specifies a GitHub repository branch, which wi
 
 This optional attribute contains the minimum PowerShell module version that is required by this Lab.
 If a version of the Module is not found that is at least this version then a newer version will be downloaded using PowerShell Get.
-This attribute should only be used if URL is not set.    
+This attribute should only be used if URL is not set.
                       
 ``` minimumversion="2.0.0.0" ```
 
@@ -208,7 +219,7 @@ This attribute should only be used if URL is not set.
 
 This optional attribute contains the specific PowerShell module version that is required by this Lab.
 If a version of the Module is not found that is exactly this version then this version will be downloaded using PowerShell Get.
-This attribute should only be used if URL is not set.    
+This attribute should only be used if URL is not set.
                       
 ``` requiredversion="2.1.0.0" ```
 
@@ -276,22 +287,24 @@ This attribute should not be used if the path attribute is also set.
                       
 ``` url="https://download.microsoft.com/download/4/C/7/4C7D40B9-BCF8-4F8A-9E76-06E9B92FE5AE/ENU/SQLFULL_ENU.iso" ```
 
-### 3.3.3a - PATH Optional Attribute
+### 3.3.3a - PATH Required Attribute
 > path="xs:string"
 
 
-This optional attribute can be used to set the path and filename of the source ISO.
+This required attribute is used to set the filename (and optionally path) of the source ISO.
 The ISO will be used from that location and not copied into the Resources folder of the Lab.
-This attribute should not be used if the URL attribute is also set.
+If this path does not contain a root it will be appended onto the _ISOFiles_ attribute on the _Resources_ node or the path set in the _ResourcePath_ attribute on the _Settings_ node.
+If the ISO file does not exist but a URL is provided that contains a filename with an extension of ISO or ZIP it will be downloaded to this location and optionally unzipped.
+If the ISO file does not exist but a URL is provided that does not contain an ISO or ZIP filename the user will be requested to manually download the file from the URL and Lab installation will terminate.
                       
-``` path="f:\isos\SQLSERVER2012-FULL-ENU.iso" ```
+``` path="f:\isos\SQLFULL_ENU.iso" ```
 
 ### 4.0e - SWITCHES Optional Element
 
 This optional element contains a collection of zero or more Switch nodes representing the Hyper-V Virtual Switches that are required for this Lab.
 Any missing switches in this list will be created on the Lab Host when this Lab is installed.
 
-Note: A Private Management Virtual Switch will always be created for each installed Lab for LabBuilder to install and configure the Virtual Machines in a Lab. This Management Virtual Switch will not appear in this list but will always be created.  
+Note: A Private Management Virtual Switch will always be created for each installed Lab for LabBuilder to install and configure the Virtual Machines in a Lab. This Management Virtual Switch will not appear in this list but will always be created.
             
 ``` <switches>...</switches> ```
 
@@ -316,9 +329,9 @@ A Lab may contain one or more Internal, Private, External or NAT Virtual Switche
 > name="xs:string"
 
 
-This required attribute is used to configure the Name of the Hyper-V Virtual Switch to be created for this Lab. 
+This required attribute is used to configure the Name of the Hyper-V Virtual Switch to be created for this Lab.
 
-Note: If this Lab configuration has got a LabId setting defined, it will be pre-pended to this value when the Switch is created if the Switch type is a Private, Internal or NAT. 
+Note: If this Lab configuration has got a LabId setting defined, it will be pre-pended to this value when the Switch is created if the Switch type is a Private, Internal or NAT.
                       
 ``` name="Domain Cluster" ```
 
@@ -405,7 +418,7 @@ These Management Adapters are usually used to allow access to the Internet by th
 
 This required attribute is used to set the Name of the Management Virtual Adapter connected to this Hyper-V Virtual Switch.
 
-Note: If this Lab configuration has got a LabId setting defined, it will be pre-pended to this value when the Switch is created if the Switch type is a Private, Internal or NAT. 
+Note: If this Lab configuration has got a LabId setting defined, it will be pre-pended to this value when the Switch is created if the Switch type is a Private, Internal or NAT.
                                   
 ``` name="Cluster Network" ```
 
@@ -413,7 +426,7 @@ Note: If this Lab configuration has got a LabId setting defined, it will be pre-
 > macaddress="xs:string"
 
 
-This required attribute is used to set the MAC Address of the Management Virtual Adapter connected to this Hyper-V Virtual Switch. 
+This required attribute is used to set the MAC Address of the Management Virtual Adapter connected to this Hyper-V Virtual Switch.
                                   
 ``` macaddress="00155D010703" ```
 
@@ -421,14 +434,14 @@ This required attribute is used to set the MAC Address of the Management Virtual
 > vlan="xs:unsignedByte"
 
 
-This optional attribute is used to set a VLAN ID of the Management Virtual Adapter connected to this Hyper-V Virtual Switch. 
+This optional attribute is used to set a VLAN ID of the Management Virtual Adapter connected to this Hyper-V Virtual Switch.
                                   
 ``` vlan="10" ```
 
 ### 5.0e - TEMPLATEVHDS Optional Element
 
 This optional element contains a collection of zero or more TemplateVHD nodes representing the Template Virtual Hard Disk files that are required by the Templates and/or Virtual Machines in this Lab.
-These Template VHD files will be created from Windows Install Media ISO files if they can't be found in the specified VHDPath folder during the Lab Install process. 
+These Template VHD files will be created from Windows Install Media ISO files if they can't be found in the specified VHDPath folder during the Lab Install process.
             
 ``` <templatevhds>...</templatevhds> ```
 
@@ -436,7 +449,7 @@ These Template VHD files will be created from Windows Install Media ISO files if
 > isopath="xs:string"
 
 
-This optional attribute can be used to set the path to the folder that LabBuilder will look for the Windows Install Media ISO files for any missing Template VHD files. 
+This optional attribute can be used to set the path to the folder that LabBuilder will look for the Windows Install Media ISO files for any missing Template VHD files.
 If not set this will default to the same path as the Lab configuration file.
 This can be a relative or full path.
 If a relative path is set, it will be relative to the full path of the Lab configuration file.
@@ -447,7 +460,7 @@ If a relative path is set, it will be relative to the full path of the Lab confi
 > vhdpath="xs:string"
 
 
-This optional attribute can be used to set the path to the folder that LabBuilder will create or look for any Template VHD files in. 
+This optional attribute can be used to set the path to the folder that LabBuilder will create or look for any Template VHD files in.
 If not set this will default to the same path as the Lab configuration file.
 This can be a relative or full path.
 If a relative path is set, it will be relative to the full path of the Lab configuration file.
@@ -458,7 +471,7 @@ If a relative path is set, it will be relative to the full path of the Lab confi
 > prefix="xs:string"
 
 
-This optional attribute can be used to pre-pend a string to the VHD Template file that is created. 
+This optional attribute can be used to pre-pend a string to the VHD Template file that is created.
                 
 ``` prefix="Templates " ```
 
@@ -536,7 +549,7 @@ It is also used to determine if Nano Server packages should be applied.
 
 
 This optional attribute can contain a comma delimited list of Windows Server Features that should be installed into this Virtual Machine Template VHD.
-Normally, additional Windows Server Features are installed via DSC Library Configurations, so this attribute should not normally be used. 
+Normally, additional Windows Server Features are installed via DSC Library Configurations, so this attribute should not normally be used.
                       
 ``` features="Web-Application-Proxy,Routing" ```
 
@@ -607,7 +620,7 @@ Valid Values for Nano Server:
 This optional element contains a collection of zero or more Template nodes representing the Virtual Machine Templates used to build the Virtual Machines in this Lab.
 The Virtual Machine Templates in this list may refer to a TemplateVHD or define a direct path to a Source VHD file.
 If a TemplateVHD is specified, this TemplateVHD must be found in the TemplateVHDs collection.
-Every Virtual Machine defined in this Lab must refer to a Template in this collection. 
+Every Virtual Machine defined in this Lab must refer to a Template in this collection.
             
 ``` <templates>...</templates> ```
 
@@ -618,7 +631,7 @@ Every Virtual Machine defined in this Lab must refer to a Template in this colle
 This optional attribute enables the list of Template Virtual Machines to be pulled from the Virtual Machines defined in Hyper-V.
 The list of Hyper-V Virtual Machines to use as templates can be specified using a wild card value. E.g. 'Template *'
 If specified, when the Lab is installed the list of available Virtual Machine Templates will be pulled from Hyper-V by matching the names against the FromVM attribute.
-After the list of Hyper-V Virtual Machines to use a templates is pulled in, any Templates defined in this container will be merged into this list. 
+After the list of Hyper-V Virtual Machines to use a templates is pulled in, any Templates defined in this container will be merged into this list.
                 
 ``` fromvm="Template *" ```
 
@@ -641,7 +654,7 @@ Virtual Machines will refer to this value if they are going to use this Virtual 
 > vhd="xs:string"
 
 
-This optional attribute contains the file name of the VHD Boot file that will be used for any Virtual Machines using this Template. 
+This optional attribute contains the file name of the VHD Boot file that will be used for any Virtual Machines using this Template.
 If this attribute is not set it will default to the filename specified in the SourceVHD attribute or the filename of the Template VHD linked to by the TemplateVHD attribute.
                       
 ``` vhd="Windows Server 2012 R2 Datacenter CORE.vhdx" ```
@@ -660,7 +673,7 @@ Note: This attribute should not be set if the TemplateVHD attribute is set.
 > memorystartupbytes="xs:string"
 
 
-This optional attribute contains the amount of startup memory to assign to Virtual Machines based on this Template. 
+This optional attribute contains the amount of startup memory to assign to Virtual Machines based on this Template.
 
  - Default Value: 1GB.
  - Valid Values: PowerShell numeric values (e.g. 2GB, 1TB, 300MB, 160000000).
@@ -695,7 +708,7 @@ This optional attribute determines the number of virtual processors assigned to 
 
 
 This optional attribute specifies the local Administrator password to assign when Virtual Machines based on this Template are installed.
-If this is not defined for the Template it should be defined in the Virtual Machine definition. 
+If this is not defined for the Template it should be defined in the Virtual Machine definition.
                       
 ``` administratorpassword="MyP@ssw0rd!1" ```
 
@@ -808,7 +821,7 @@ All Lab configurations should include at least one Virtual Machine, although an 
 This required attribute contains the name of the Lab Virtual Machine.
 This is the name that will appear in the Hyper-V manager for this Virtual Machine when this Lab is installed.
 
-Note: If this Lab configuration has got a LabId setting defined, it will be pre-pended to this value when the Virtual Machines is created. 
+Note: If this Lab configuration has got a LabId setting defined, it will be pre-pended to this value when the Virtual Machines is created.
                       
 ``` name="SA-DC1" ```
 
@@ -816,7 +829,7 @@ Note: If this Lab configuration has got a LabId setting defined, it will be pre-
 > template="xs:string"
 
 
-This required attribute is used to specify the template from the templates collection that will be used to create this Virtual Machine from. 
+This required attribute is used to specify the template from the templates collection that will be used to create this Virtual Machine from.
 The Template must match the name of one of the Templates in the Template collection, otherwise an error will occur when the Lab is installed.
 
 Note: many of the attributes defined in for the Virtual Machine may also be defined in the Template.
@@ -838,7 +851,7 @@ This is the name that will be set on the Virtual Machine once it has been first 
 > memorystartupbytes="xs:string"
 
 
-This optional attribute contains the amount of startup memory to assign to Virtual Machine. 
+This optional attribute contains the amount of startup memory to assign to Virtual Machine.
 If this attribute is not defined, but it is defined in the Template then the template value will be used, otherwise the default value will be used.
 
  - Default Value: 1GB.
@@ -919,7 +932,7 @@ If this attribute is not defined, but it is defined in the Template then the tem
 
 
 This optional attribute allows a specific unattend XML file to be used instead of the default XML file.
-If a relative path is used for this attribute then it will be appended onto the path of this the Lab config file, otherwise the full rooted path to the file will be used. 
+If a relative path is used for this attribute then it will be appended onto the path of this the Lab config file, otherwise the full rooted path to the file will be used.
                       
 ``` unattendfile="Unattend\SpecialUnattend.xml" ```
 
@@ -928,7 +941,7 @@ If a relative path is used for this attribute then it will be appended onto the 
 
 
 This optional attribute allows a specific Setup Complete script file to be used instead of the default Setup Complete script.
-If a relative path is used for this attribute then it will be appended onto the path of this the Lab config file, otherwise the full rooted path to the file will be used. 
+If a relative path is used for this attribute then it will be appended onto the path of this the Lab config file, otherwise the full rooted path to the file will be used.
                       
 ``` setupcomplete="Scripts\SetupScompleteDebug.cmd" ```
 
@@ -1202,7 +1215,7 @@ This required attribute controls the name of this Virtual Network Adapter within
 The Virtual Network Adapter name within the Host will be changed immediately, but the Adapter name within the Guest Operating System will only be configured when the Guest is first installed.
 
 Changing the Name of the Adapter after the Guest Operating System has been installed is not possible, by changing this Name value.
- 
+
 Note: If this Lab configuration has got a LabId setting defined, it will be pre-pended to this value when the Virtual Machine is created.
                                   
 ``` name="Cluster Comms" ```
@@ -1212,7 +1225,7 @@ Note: If this Lab configuration has got a LabId setting defined, it will be pre-
 
 
 This required attribute controls the which Virtual Switch this Virtual Network Adapter should connect to.
- 
+
 Note: If this Lab configuration has got a LabId setting defined, it will be pre-pended to this value when the Virtual Machine is created as long as the switch being connected to is an Internal, Private or NAT switch.
                                   
 ``` switchname="Cluster" ```
@@ -1266,8 +1279,8 @@ This required attribute contains the configuration name that is set in the DSC L
 > configfile="xs:string"
 
 
-This required attribute contains the filename for the DSC Library Configuration file to use to configure this Virtual Machine. 
-If a relative path is used for this attribute then it will be appended onto the DSCLibrary path specified in the Lab settings, otherwise the full rooted path to the file will be used. 
+This required attribute contains the filename for the DSC Library Configuration file to use to configure this Virtual Machine.
+If a relative path is used for this attribute then it will be appended onto the DSCLibrary path specified in the Lab settings, otherwise the full rooted path to the file will be used.
                             
 ``` configfile="DC_FORESTPRIMARY.DSC.ps1" ```
 
@@ -1290,6 +1303,6 @@ This optional attribute enables DSC Logging on the Virtual Machine in the DSC Ev
 This optional element contains any parameters that should be passed to the DSC Library Configuration script being used to configure this Virtual Machine.
 These parameters get loaded into the ConfigData object and can be then used by the DSC Library Configuration script.
 The parameters that are available to be set depends on the DSC Library Configuration script that is assigned to this Virtual Machine.
-Review the documentation within the DSC Library Configuration script to see what parameters are available. 
+Review the documentation within the DSC Library Configuration script to see what parameters are available.
                               
 ``` <parameters>...</parameters> ```

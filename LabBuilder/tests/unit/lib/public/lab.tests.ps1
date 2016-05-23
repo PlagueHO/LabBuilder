@@ -48,7 +48,7 @@ try
 
                 [Parameter(Mandatory)]
                 [String] $errorMessage,
-                
+
                 [Switch]
                 $terminate
             )
@@ -82,10 +82,14 @@ try
             }
             Context 'Path and LabPath are provided and valid XML file exists' {
                 It 'Returns XmlDocument object with valid content' {
-                    $Lab = Get-Lab -ConfigPath $Global:TestConfigOKPath -LabPath 'c:\MyLab'
+                    $Lab = Get-Lab -ConfigPath $Global:TestConfigOKPath `
+                        -LabPath 'c:\Pester Lab'
                     $Lab.GetType().Name | Should Be 'XmlDocument'
-                    $Lab.labbuilderconfig.settings.labpath | Should Be 'c:\MyLab'
+                    $Lab.labbuilderconfig.settings.labpath | Should Be 'c:\Pester Lab'
                     $Lab.labbuilderconfig | Should Not Be $null
+                }
+                It 'Prepends Module Path to $ENV:PSModulePath' {
+                    $env:PSModulePath.ToLower().Contains('c:\Pester Lab\Modules'.ToLower() + ';') | Should Be $True
                 }
             }
             Context 'Path is provided but file does not exist' {
