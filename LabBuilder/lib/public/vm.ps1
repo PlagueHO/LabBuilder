@@ -48,7 +48,7 @@ function Get-LabVM {
             Position=2)]
         [ValidateNotNullOrEmpty()]
         [String[]] $Name,
-        
+
         [Parameter(
             Position=3)]
         [LabVMTemplate[]] $VMTemplates,
@@ -75,7 +75,7 @@ function Get-LabVM {
     [LabVM[]] $LabVMs = @()
     [String] $LabPath = $Lab.labbuilderconfig.settings.labpath
     [String] $VHDParentPath = $Lab.labbuilderconfig.settings.vhdparentpathfull
-    [String] $LabId = $Lab.labbuilderconfig.settings.labid 
+    [String] $LabId = $Lab.labbuilderconfig.settings.labid
     $VMs = $Lab.labbuilderconfig.vms.vm
 
     foreach ($VM in $VMs)
@@ -126,7 +126,7 @@ function Get-LabVM {
                 $VMName = "$LabId $VMName"
             }
 
-            if (-not $VM.Template) 
+            if (-not $VM.Template)
             {
                 $ExceptionParameters = @{
                     errorId = 'VMTemplateNameEmptyError'
@@ -148,7 +148,7 @@ function Get-LabVM {
                 } # if
             } # foreach
 
-            if (-not $Found) 
+            if (-not $Found)
             {
                 $ExceptionParameters = @{
                     errorId = 'VMTemplateNotFoundError'
@@ -165,7 +165,7 @@ function Get-LabVM {
             foreach ($VMAdapter in $VM.Adapters.Adapter)
             {
                 $AdapterCount++
-                $AdapterName = $VMAdapter.Name 
+                $AdapterName = $VMAdapter.Name
                 $AdapterSwitchName = $VMAdapter.SwitchName
                 if ($AdapterName -eq 'adapter')
                 {
@@ -177,7 +177,7 @@ function Get-LabVM {
                     }
                     ThrowException @ExceptionParameters
                 }
-                
+
                 if (-not $AdapterSwitchName)
                 {
                     $ExceptionParameters = @{
@@ -519,7 +519,7 @@ function Get-LabVM {
                 {
                     foreach ($CopyFolder in ($VMDataVhd.CopyFolders -Split ','))
                     {
-                        # Adjust the path to be relative to the configuration folder 
+                        # Adjust the path to be relative to the configuration folder
                         # if it doesn't contain a root (e.g. c:\)
                         if (-not [System.IO.Path]::IsPathRooted($CopyFolder))
                         {
@@ -535,7 +535,7 @@ function Get-LabVM {
                             errorMessage = $($LocalizedData.VMDataDiskCopyFolderMissingError `
                                 -f $VMName,$VHD,$CopyFolder)
                             }
-                        ThrowException @ExceptionParameters 
+                        ThrowException @ExceptionParameters
                         }
                     } # foreach
                     $NewDataVHD.CopyFolders = $VMDataVhd.CopyFolders
@@ -630,7 +630,7 @@ function Get-LabVM {
                         -Path $Lab.labbuilderconfig.settings.fullconfigpath `
                         -ChildPath $VM.UnattendFile
                 } # if
-                if (-not (Test-Path $UnattendFile)) 
+                if (-not (Test-Path $UnattendFile))
                 {
                     $ExceptionParameters = @{
                         errorId = 'UnattendFileMissingError'
@@ -641,10 +641,10 @@ function Get-LabVM {
                     ThrowException @ExceptionParameters
                 } # if
             } # if
-            
+
             # Does the VM specify a Setup Complete Script?
             [String] $SetupComplete = ''
-            if ($VM.SetupComplete) 
+            if ($VM.SetupComplete)
             {
                 if ([System.IO.Path]::IsPathRooted($VM.SetupComplete))
                 {
@@ -683,7 +683,7 @@ function Get-LabVM {
 
             # Load the DSC Config File setting and check it
             [String] $LabDSC.ConfigFile = ''
-            if ($VM.DSC.ConfigFile) 
+            if ($VM.DSC.ConfigFile)
             {
                 if (-not [System.IO.Path]::IsPathRooted($VM.DSC.ConfigFile))
                 {
@@ -762,7 +762,7 @@ function Get-LabVM {
             {
                 $DynamicMemoryEnabled = $VMTemplate.DynamicMemoryEnabled
             } # if
-            
+
             # Get the Memory Startup Bytes (from the template or VM)
             [Int] $ProcessorCount = 1
             if ($VM.processorcount)
@@ -807,7 +807,7 @@ function Get-LabVM {
             if ($null -ne $VM.IntegrationServices)
             {
                 $IntegrationServices = $VM.IntegrationServices
-            } 
+            }
             elseif ($null -ne $VMTemplate.IntegrationServices)
             {
                 $IntegrationServices = $VMTemplate.IntegrationServices
@@ -815,7 +815,7 @@ function Get-LabVM {
 
             # Get the Administrator password (from the template or VM)
             [String] $AdministratorPassword = ''
-            if ($VM.administratorpassword) 
+            if ($VM.administratorpassword)
             {
                 $AdministratorPassword = $VM.administratorpassword
             }
@@ -826,7 +826,7 @@ function Get-LabVM {
 
             # Get the Product Key (from the template or VM)
             [String] $ProductKey = ''
-            if ($VM.productkey) 
+            if ($VM.productkey)
             {
                 $ProductKey = $VM.productkey
             }
@@ -837,11 +837,11 @@ function Get-LabVM {
 
             # Get the Timezone (from the template or VM)
             [String] $Timezone = 'Pacific Standard Time'
-            if ($VM.timezone) 
+            if ($VM.timezone)
             {
                 $Timezone = $VM.timezone
             }
-            elseif ($VMTemplate.timezone) 
+            elseif ($VMTemplate.timezone)
             {
                 $Timezone = $VMTemplate.timezone
             } # if
@@ -966,25 +966,25 @@ function Initialize-LabVM {
             Position=2)]
         [ValidateNotNullOrEmpty()]
         [String[]] $Name,
-        
+
         [Parameter(
             Position=3)]
         [LabVM[]] $VMs
     )
-    
+
     # if VMs array not passed, pull it from config.
     if (-not $PSBoundParameters.ContainsKey('VMs'))
     {
         [LabVM[]] $VMs = Get-LabVM `
             @PSBoundParameters
     } # if
-    
+
     # if there are not VMs just return
     if (-not $VMs)
     {
         return
     } # if
-    
+
     $CurrentVMs = Get-VM
 
     [String] $LabPath = $Lab.labbuilderconfig.settings.labpath
@@ -1008,7 +1008,7 @@ function Initialize-LabVM {
             # A names list was passed but this VM wasn't included
             continue
         } # if
-        
+
         # Get the root path of the VM
         [String] $VMRootPath = $VM.VMRootPath
 
@@ -1016,7 +1016,7 @@ function Initialize-LabVM {
         [String] $VMPath = Join-Path `
             -Path $VMRootPath `
             -ChildPath 'Virtual Machines'
-            
+
         # Get the Virtual Hard Disk Path
         [String] $VHDPath = Join-Path `
             -Path $VMRootPath `
@@ -1057,7 +1057,7 @@ function Initialize-LabVM {
                         -Path $VM.ParentVHD `
                         -Destination $VMBootDiskPath
                 }
-                
+
                 # Create all the required initialization files for this VM
                 CreateVMInitializationFiles `
                     -Lab $Lab `
@@ -1097,7 +1097,7 @@ function Initialize-LabVM {
                     -ProcessorCount $VM.ProcessorCount
             } # if
         } # if
-        
+
         # Enable/Disable Dynamic Memory
         if ($VM.DynamicMemoryEnabled -ne (Get-VMMemory -VMName $VM.Name).DynamicMemoryEnabled)
         {
@@ -1293,7 +1293,7 @@ function Remove-LabVM {
             Position=2)]
         [ValidateNotNullOrEmpty()]
         [String[]] $Name,
-        
+
         [Parameter(
             Position=3)]
         [LabVM[]] $VMs,
@@ -1302,7 +1302,7 @@ function Remove-LabVM {
             Position=4)]
         [Switch] $RemoveVMFolder
     )
-    
+
     # if VMs array not passed, pull it from config.
     if (-not $PSBoundParameters.ContainsKey('VMs'))
     {
@@ -1315,7 +1315,7 @@ function Remove-LabVM {
 
     # Get the LabPath
     [String] $LabPath = $Lab.labbuilderconfig.settings.labpath
-    
+
     foreach ($VM in $VMs)
     {
         if ($Name -and ($VM.Name -notin $Name))
@@ -1341,7 +1341,7 @@ function Remove-LabVM {
 
             WriteMessage -Message $($LocalizedData.RemovingVMMessage `
                 -f $VM.Name)
-           
+
             # Now delete the actual VM
             Get-VM `
                 -Name $VM.Name | Remove-VM -Force -Confirm:$False
@@ -1378,12 +1378,12 @@ function Remove-LabVM {
    Starts a Lab VM and ensures it has been Initialized.
 .DESCRIPTION
    This cmdlet is used to start up a Lab VM for the first time.
-   
+
    It will start the VM if it is off.
-   
+
    If the VM is a Server OS or Nano Server then it will also perform an initial setup:
     - It will ensure that initial setup has been completed and a self-signed certificate has
-      been created by the VM and downloaded to the LabBuilder folder.   
+      been created by the VM and downloaded to the LabBuilder folder.
 
     - It will also ensure DSC is configured for the VM.
 .PARAMETER VM
@@ -1486,11 +1486,11 @@ function Install-LabVM {
 .DESCRIPTION
    This cmdlet will connect to a running VM using PSRemoting. A PSSession object will be returned
    if the connection was successful.
-   
+
    If the connection fails, it will be retried until the ConnectTimeout is reached. If the
-   ConnectTimeout is reached and a connection has not been established then a ConnectionError 
+   ConnectTimeout is reached and a connection has not been established then a ConnectionError
    exception will be thrown.
-   
+
    The IP Address to this VM will be added to the WSMan TrustedHosts list if it isn't already
    added or if it isn't set to '*'.
 .PARAMETER VM
@@ -1517,7 +1517,7 @@ function Connect-LabVM
             Position=1,
             Mandatory=$true)]
         [LabVM] $VM,
-        
+
         [Parameter(
             Position=2)]
         [Int] $ConnectTimeout = 300
@@ -1529,7 +1529,7 @@ function Connect-LabVM
         -Username '.\Administrator' `
         -Password $VM.AdministratorPassword
     [Boolean] $FatalException = $False
-    
+
     while (($null -eq $Session) `
         -and (((Get-Date) - $StartTime).TotalSeconds) -lt $ConnectTimeout `
         -and -not $FatalException)
@@ -1537,7 +1537,7 @@ function Connect-LabVM
         try
         {
             # Get the Management IP Address of the VM
-            # We repeat this because the IP Address will only be assiged 
+            # We repeat this because the IP Address will only be assiged
             # once the VM is fully booted.
             $IPAddress = GetVMManagementIPAddress `
                 -Lab $Lab `
@@ -1564,7 +1564,7 @@ function Connect-LabVM
                 WriteMessage -Message $($LocalizedData.AddingIPAddressToTrustedHostsMessage `
                     -f $VM.Name,$IPAddress)
             }
-        
+
             WriteMessage -Message $($LocalizedData.ConnectingVMMessage `
                 -f $VM.Name,$IPAddress)
 
@@ -1579,7 +1579,7 @@ function Connect-LabVM
             if (-not $IPAddress)
             {
                 WriteMessage -Message $($LocalizedData.WaitingForIPAddressAssignedMessage `
-                    -f $VM.Name,$Script:RetryConnectSeconds)                                
+                    -f $VM.Name,$Script:RetryConnectSeconds)
             }
             else
             {
@@ -1612,8 +1612,8 @@ function Connect-LabVM
    Disconnects from a running Lab VM.
 .DESCRIPTION
    This cmdlet will disconnect a session from a running VM using PSRemoting.
-   
-   The IP Address to this VM will be removed from the WSMan TrustedHosts list 
+
+   The IP Address to this VM will be removed from the WSMan TrustedHosts list
    if it exists in it.
 .PARAMETER VM
    The LabVM Object referring to the VM to disconnect from.
