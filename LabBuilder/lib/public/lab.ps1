@@ -3,10 +3,10 @@
     Loads a Lab Builder Configuration file and returns a Lab object
 .DESCRIPTION
     Takes the path to a valid LabBuilder Configiration XML file and loads it.
-    
+
     It will perform simple validation on the XML file and throw an exception
     if any of the validation tests fail.
-    
+
     At load time it will also add temporary configuration attributes to the in
     memory configuration that are used by other LabBuilder functions. So loading
     XML Configurartion without using this function is not advised.
@@ -31,12 +31,12 @@ function Get-Lab {
             Mandatory=$true)]
         [ValidateNotNullOrEmpty()]
         [String] $ConfigPath,
-        
+
         [Parameter(
             Position=2)]
         [ValidateNotNullOrEmpty()]
         [String] $LabPath,
-        
+
         [Parameter(
             Position=3)]
         [Switch] $SkipXMLValidation
@@ -177,6 +177,25 @@ function Get-Lab {
     } # if
     $Lab.labbuilderconfig.settings.setattribute('resourcepathfull',$ResourcePath)
 
+    # Determine the ModulePath where alternate Lab PowerShell Modules can be found.
+    # If a path is specified but it is relative, make it relative to the lab path.
+    # Otherwise use it as is.
+    [String] $ModulePath = $Lab.labbuilderconfig.settings.modulepath
+    if ($ModulePath)
+    {
+        if (-not [System.IO.Path]::IsPathRooted($ModulePath))
+        {
+            $ModulePath = Join-Path `
+                -Path $LabPath `
+                -ChildPath $ModulePath
+        } # if
+        # If the path is not included in the PSModulePath add it
+        if (-not $env:PSModulePath.ToLower().Contains($ModulePath.ToLower() + ';'))
+        {
+            $env:PSModulePath = "$ModulePath;" + $env:PSModulePath
+        } # if
+    } # if
+
     Return $Lab
 } # Get-Lab
 
@@ -185,13 +204,13 @@ function Get-Lab {
 .SYNOPSIS
     Creates a new Lab Builder Configuration file and Lab folder.
 .DESCRIPTION
-    This function will take a path to a new Lab folder and a path or filename 
+    This function will take a path to a new Lab folder and a path or filename
     for a new Lab Configuration file and creates them using the standard XML
     template.
-    
+
     It will also copy the DSCLibrary folder as well as the create an empty
     ISOFiles and VHDFiles folder in the Lab folder.
-    
+
     After running this function the VMs, VMTemplates, Switches and VMTemplateVHDs
     in the new Lab Configuration file would normally be customized to for the new
     Lab.
@@ -240,13 +259,13 @@ function New-Lab {
             Mandatory=$true)]
         [ValidateNotNullOrEmpty()]
         [String] $ConfigPath,
-        
+
         [Parameter(
             Position=2,
             Mandatory=$true)]
         [ValidateNotNullOrEmpty()]
         [String] $LabPath,
-        
+
         [Parameter(
             Position=3,
             Mandatory=$true)]
@@ -257,7 +276,7 @@ function New-Lab {
             Position=4)]
         [ValidateNotNullOrEmpty()]
         [String] $Version = '1.0',
-        
+
         [Parameter(
             Position=5)]
         [ValidateNotNullOrEmpty()]
@@ -267,7 +286,7 @@ function New-Lab {
             Position=6)]
         [ValidateNotNullOrEmpty()]
         [String] $Description,
-        
+
         [Parameter(
             Position=7)]
         [ValidateNotNullOrEmpty()]
@@ -286,7 +305,7 @@ function New-Lab {
             -Path Get-Location `
             -ChildPath $LabPath
     } # if
-    
+
     # Does the Lab Path exist?
     if (Test-Path -Path $LabPath -Type Container)
     {
@@ -327,7 +346,7 @@ function New-Lab {
             return
         }
     } # if
-    
+
     # Get the Config Template into a variable
     $Content = Get-Content `
         -Path $Script:ConfigurationXMLTemplate
@@ -360,19 +379,19 @@ function New-Lab {
 
     # Save Configiration XML
     $Lab.Save($ConfigPath)
-   
+
     # Create ISOFiles folder
     New-Item `
         -Path (Join-Path -Path $LabPath -ChildPath 'ISOFiles')`
         -Type Directory `
-        -ErrorAction SilentlyContinue 
-        
+        -ErrorAction SilentlyContinue
+
     # Create VDFFiles folder
     New-Item `
         -Path (Join-Path -Path $LabPath -ChildPath 'VHDFiles')`
         -Type Directory `
-        -ErrorAction SilentlyContinue 
-        
+        -ErrorAction SilentlyContinue
+
     # Copy the DSCLibrary
     Copy-Item `
         -Path $Script:DSCLibraryPath `
@@ -393,10 +412,10 @@ function New-Lab {
 .DESCRIPTION
     This cmdlet will install an entire Hyper-V lab environment defined by the
     LabBuilder configuration file provided.
-    
+
     If components of the Lab already exist, they will be updated if they differ
     from the settings in the Configuration file.
-   
+
     The Hyper-V component can also be optionally installed if it is not.
 .PARAMETER ConfigPath
     The path to the LabBuilder configuration XML file.
@@ -495,7 +514,7 @@ Function Install-Lab {
                 -ErrorAction Stop
         } # if
     } # begin
-    
+
     process
     {
         # Initialize the core Lab components
@@ -524,7 +543,7 @@ Function Install-Lab {
                 -Path $VHDParentPath `
                 -Type Directory
         }
-        
+
         [String] $ResourcePath = $Lab.labbuilderconfig.settings.resourcepathfull
         if (-not (Test-Path -Path $ResourcePath))
         {
@@ -557,7 +576,7 @@ Function Install-Lab {
                 -SwitchType Internal `
                 -Name $ManagementSwitchName `
                 -ErrorAction Stop
-                
+
             WriteMessage -Message $($LocalizedData.CreatingLabManagementSwitchMessage `
                 -f $ManagementSwitchName,$ManagementVlan)
         }
@@ -636,7 +655,7 @@ Function Install-Lab {
         WriteMessage -Message $($LocalizedData.LabInstallCompleteMessage `
             -f $Lab.labbuilderconfig.name,$Lab.labbuilderconfig.settings.labpath)
     } # process
-    end 
+    end
     {
     } # end
 } # Install-Lab
@@ -648,9 +667,9 @@ Function Install-Lab {
 .DESCRIPTION
     This cmdlet will update the existing Hyper-V lab environment defined by the
     LabBuilder configuration file provided.
-    
+
     If components of the Lab are missing they will be added.
-    
+
     If components of the Lab already exist, they will be updated if they differ
     from the settings in the Configuration file.
 .PARAMETER ConfigPath
@@ -659,7 +678,7 @@ Function Install-Lab {
     The optional path to update the Lab in - overrides the LabPath setting in the
     configuration file.
 .PARAMETER Lab
-    The Lab object returned by Get-Lab of the lab to update.    
+    The Lab object returned by Get-Lab of the lab to update.
 .EXAMPLE
     Update-Lab -ConfigPath c:\mylab\config.xml
     Update the lab defined in the c:\mylab\config.xml LabBuilder configuration file.
@@ -726,7 +745,7 @@ Function Update-Lab {
 .DESCRIPTION
     This function will attempt to remove the components of the lab specified
     in the provided LabBuilder configuration file.
-    
+
     It will always remove any Lab Virtual Machines, but can also optionally
     remove:
     Switches
@@ -738,11 +757,11 @@ Function Update-Lab {
     The optional path to uninstall the Lab from - overrides the LabPath setting in the
     configuration file.
 .PARAMETER Lab
-    The Lab object returned by Get-Lab of the lab to uninstall. 
+    The Lab object returned by Get-Lab of the lab to uninstall.
 .PARAMETER RemoveSwitch
     Causes the switches defined by this to be removed.
 .PARAMETER RemoveVMTemplate
-    Causes the VM Templates created by this to be be removed. 
+    Causes the VM Templates created by this to be be removed.
 .PARAMETER RemoveVMFolder
     Causes the VM folder created to contain the files for any the
     VMs in this Lab to be removed.
@@ -811,11 +830,11 @@ Function Uninstall-Lab {
         [Parameter(
             Position=6)]
         [Switch] $RemoveVMFolder,
-        
+
         [Parameter(
             Position=7)]
         [Switch] $RemoveVMTemplateVHD,
-        
+
         [Parameter(
             Position=8)]
         [Switch] $RemoveLabFolder
@@ -837,7 +856,7 @@ Function Uninstall-Lab {
                 @PSBoundParameters
         } # if
     } # begin
-    
+
     process
     {
         if ($PSCmdlet.ShouldProcess( 'LocalHost', `
@@ -845,7 +864,7 @@ Function Uninstall-Lab {
             -f $Lab.labbuilderconfig.name,$Lab.labbuilderconfig.settings.labpath )))
         {
             # Remove the VMs
-            $VMSplat = @{} 
+            $VMSplat = @{}
             if ($RemoveVMFolder)
             {
                 $VMSplat += @{ RemoveVMFolder = $true }
@@ -889,7 +908,7 @@ Function Uninstall-Lab {
                         -Lab $Lab
                 } # if
             } # if
-            
+
             # Remove the Lab Folder
             if ($RemoveLabFolder)
             {
@@ -921,7 +940,7 @@ Function Uninstall-Lab {
 
             WriteMessage -Message $($LocalizedData.LabUninstallCompleteMessage `
                 -f $Lab.labbuilderconfig.name,$Lab.labbuilderconfig.settings.labpath )
-        } # if   
+        } # if
     } # process
 
     end
@@ -956,7 +975,7 @@ Function Uninstall-Lab {
 
     If a Virtual Machine specified in the configuration is not found an
     exception will be thrown.
-    
+
     If a Virtual Machine takes longer than the StartupTimeout then an exception
     will be thown but the Start process will continue.
 
@@ -969,7 +988,7 @@ Function Uninstall-Lab {
     The optional path to install the Lab to - overrides the LabPath setting in the
     configuration file.
 .PARAMETER Lab
-    The Lab object returned by Get-Lab of the lab to start.     
+    The Lab object returned by Get-Lab of the lab to start.
 .PARAMETER StartupTimeout
     The maximum number of seconds that the process will wait for a VM to startup.
     Defaults to 90 seconds.
@@ -1066,7 +1085,7 @@ Function Start-Lab {
                 # Get the actual Hyper-V VM object
                 $VMObject = Get-VM `
                     -Name $VMName `
-                    -ErrorAction SilentlyContinue 
+                    -ErrorAction SilentlyContinue
                 if (-not $VMObject)
                 {
                     # if the VM does not exist then throw a non-terminating exception
@@ -1141,7 +1160,7 @@ Function Start-Lab {
         WriteMessage -Message $($LocalizedData.LabStartCompleteMessage `
             -f $Lab.labbuilderconfig.name,$Lab.labbuilderconfig.settings.fullconfigpath)
     } # process
-    
+
     end
     {
     } # end
@@ -1185,7 +1204,7 @@ Function Start-Lab {
     The optional path to install the Lab to - overrides the LabPath setting in the
     configuration file.
 .PARAMETER Lab
-    The Lab object returned by Get-Lab of the lab to start.     
+    The Lab object returned by Get-Lab of the lab to start.
 .PARAMETER ShutdownTimeout
     The maximum number of seconds that the process will wait for a VM to shutdown.
     Defaults to 30 seconds.
@@ -1223,7 +1242,7 @@ Function Stop-Lab {
         [ValidateNotNullOrEmpty()]
         $Lab
     ) # Param
-    
+
     begin
     {
         # Remove some PSBoundParameters so we can Splat
@@ -1274,7 +1293,7 @@ Function Stop-Lab {
                 # Get the actual Hyper-V VM object
                 $VMObject = Get-VM `
                     -Name $VMName `
-                    -ErrorAction SilentlyContinue 
+                    -ErrorAction SilentlyContinue
                 if (-not $VMObject)
                 {
                     # if the VM does not exist then throw a non-terminating exception

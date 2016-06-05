@@ -36,8 +36,8 @@ Configuration MEMBER_DEFAULT
         {
             Name       = $Node.NodeName
             DomainName = $Node.DomainName
-            Credential = $DomainAdminCredential 
-            DependsOn  = "[WaitForAll]DC" 
+            Credential = $DomainAdminCredential
+            DependsOn  = "[WaitForAll]DC"
         }
     }
 }

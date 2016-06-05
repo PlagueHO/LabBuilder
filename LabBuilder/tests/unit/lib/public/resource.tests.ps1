@@ -48,7 +48,7 @@ try
 
                 [Parameter(Mandatory)]
                 [String] $errorMessage,
-                
+
                 [Switch]
                 $terminate
             )
@@ -100,7 +100,7 @@ try
 
             Mock DownloadResourceModule
 
-            Context 'Valid configuration is passed' {	
+            Context 'Valid configuration is passed' {
                 It 'Does not throw an Exception' {
                     { Initialize-LabResourceModule -Lab $Lab -ResourceModules $ResourceModules } | Should Not Throw
                 }
@@ -148,7 +148,7 @@ try
 
             Mock DownloadAndUnzipFile
 
-            Context 'Valid configuration is passed' {	
+            Context 'Valid configuration is passed' {
                 It 'Does not throw an Exception' {
                     { Initialize-LabResourceMSU -Lab $Lab -ResourceMSUs $ResourceMSUs } | Should Not Throw
                 }

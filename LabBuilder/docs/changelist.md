@@ -1,3 +1,10 @@
+# 0.8.3.0
+* Fix bug where Administrator account is not enabled in Windows client OS.
+* Added support for ModulePath attribute on Settings node.
+
+# 0.8.2.0
+* Fix bug when creating a new Management adapter for a new Lab and setting a static MAC address on it.
+
 # 0.8.1.0
 * Converted all Write-Verbose calls to WriteMessage function.
 * Fix bug when creating a new Management adapter for a new Lab.
@@ -32,7 +39,7 @@
 * Samples\Sample_WS2012R2_DCandDHCPOnly_NAT.xml: Added sample for testing NAT based Lab switches.
 * Improved ShouldProcess messages to be easier to read.
 * Utils\InstallPackageProviders: Added function for ensuring Package Providers are installed.
-* Utils\RegisterPackageSources: Added function for ensuring Package surces are registered. 
+* Utils\RegisterPackageSources: Added function for ensuring Package surces are registered.
 * Install-Lab: Added checks to ensure required PackageProviders and PackageSources are available.
 
 # 0.7.8.0
@@ -169,7 +176,7 @@
                          Now returns PSDesiredStateConfiguration module if listed -expected that calling function will ignore if required.
                          Added function to set the Module versions in a DSC Config.
 * CreateDSCMOFFiles: Updated to set Module versions in DSC Config files.
-* DSC Library: Module Version numbers removed from all DSC Library Configrations. 
+* DSC Library: Module Version numbers removed from all DSC Library Configrations.
 * Test Sample file code updated to remove switches when lab uninstalled.
 * Uninstall-Lab: Management Switch automatically removed when Lab uninstalled.
 * Configuration Schema: Added Resources\MSU element.
@@ -187,7 +194,7 @@
                     Added support for installing Packages from Resources\MSU element.
 * Initialize-LabVMTemplateVHD: MSU Resources specified in Packages attribute are added to Template VHD when converted.
 * Initialize-LabVMTemplate: MSU Resources specified in Packages attribute are added to Template  when copied.
- 
+
 ### 0.5.0.0
 * BREKAING: Renamed Config parameter to Lab parameter to indicate the object is actually an object that also stores Lab state information.
 * Remove-LabVM: Removed parameter 'RemoveVHDs'. Added parameter RemoveVMFolder which causes the VM folder and all contents to be deleted.
@@ -205,7 +212,7 @@
 * Get-LabVM: XML now validated against labbuilderconfig-schema.xsd in Schemas folder when loaded -unless SkipXMLValidation switch is passed.
 * All sample and test configuration XML files validated against labbuilderconfig-schema.xsd in schemas folder when unit tests run.
 * All sample and test configuration XML files updated with namespace -> xmlns="labbuilderconfig".
- 
+
 ### 0.4.2.0
 * Add bootorder VM attribute for controlling stop-lab/start-lab order.
 * Added Start-Lab and Stop-Lab cmdlets.
@@ -217,7 +224,7 @@
 * Removed Test-LabConfiguration function and tests moved to Get-LabConfiguration.
 * Added Disconnect-LabVM function to disconnect from a connect Lab VM.
 * Fixed bug setting TrustedHosts when connecting to Lab VM.
-* Added code to revert TrustedHosts when disconnecting from Lab VM. 
+* Added code to revert TrustedHosts when disconnecting from Lab VM.
 * All non-exported supporting functions moved into separate support libraries.
 * Add support for LabId setting that gets prepended to Lab resources.
 * Added LabBuilderConfig schema in schema folder.
@@ -232,23 +239,23 @@
 * Some secondary non-exported functions moved into separate support libraries.
 * Initialize-LabVMTemplate caches NanoServerPackages from VHD template folder to Lab folder.
 * Fix exception connecting to VM when TrustedHosts is set to '*'.
-* Fix path Lab VM files are created. 
+* Fix path Lab VM files are created.
 * Support for creating Certificates for Nano Servers on the host added.
- 
+
 ### 0.3.3.0
 * Changed Get-LabSwitch Unit tests to use PesterTestConfig.OK.xml.
 * Added support for configuring Nano Server packages for each VM.
 * Removed MAC Address minimum/maximum value settings from configuration.
 * Fix bug with Wait-LabInitVM failing to copy InitialSetupComplete.txt file.
 * Added VMRootPath and LabBuilderFilesPath properties Get-LabVM array containing path where VM and LabBuilder files should be stored respectively.
-* Added TemplateVHD in templates/template config node for specifying the template VHD. 
+* Added TemplateVHD in templates/template config node for specifying the template VHD.
 
 ### 0.3.2.0
 * Added Initialize-VHD function.
 * Added support for formatting Data VHDs.
 * Added support for copying multiple folders to DataVHDs.
 * Updated Download-ResourceModule to use DownloadAndUnzipFile function.
-* Changed name of Settings\VMPath attribute to LabPath. 
+* Changed name of Settings\VMPath attribute to LabPath.
 
 ### 0.3.1.0
 * Disable 'Access Denied' test when connecting to new VM because this error is reported by VM that is still booting up.
