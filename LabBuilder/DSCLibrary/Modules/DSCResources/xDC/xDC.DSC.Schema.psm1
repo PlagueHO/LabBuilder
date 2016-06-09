@@ -30,9 +30,16 @@ Configuration DC
         
         # Domain Administrator Credentials
         [Parameter(Mandatory=$True)]
-        [ParameterType]
-        $DomainAdminPassword
+        [String]
+        $DomainAdminPassword,
         
+        #OUs to Create
+        [Parameter(Mandatory=$False)]
+        [string]
+        $OUName,
+        
+        
+
         
     )
     
@@ -93,4 +100,17 @@ Configuration DC
             RetryIntervalSec = 30 
             DependsOn = "[xADDomain]CreateDC" 
         } 
+        
+        
+		xADOrganizationalUnit NewOU
+        {
+			Name = $OUName
+			Path = $OUPath
+			ProtectedFromAccidentalDeletion = $true
+			Description = $OUDescription 
+			Ensure = 'Present'
+			DependsOn = "[xADDomain]CreateDC" 
+        }
+
+      
 }
