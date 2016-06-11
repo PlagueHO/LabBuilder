@@ -8,9 +8,9 @@ if (-not (Get-Module -Name Pester -ListAvailable -ErrorAction SilentlyContinue))
 }
 Install-WindowsFeature -Name Hyper-V-PowerShell
 $testResultsFile = "$PSScriptRoot\..\LabBuilder\TestsResults.xml"
-Invoke-Pester
+Invoke-Pester `
+    -ExcludeTag Incomplete
     -OutputFormat NUnitXml `
     -OutputFile $testResultsFile `
     -PassThru `
-    -ExcludeTag Incomplete
 Pop-Location
