@@ -1128,6 +1128,12 @@ function Initialize-LabVM {
             if ($VM.ExposeVirtualizationExtensions `
                 -ne (Get-VMProcessor -VMName $VM.Name).ExposeVirtualizationExtensions)
             {
+                if ($Script:CurrentBuild -ge 14352)
+                {
+                    Set-VMSecurity `
+                        -VMName $VM.Name `
+                        -VirtualizationBasedSecurityOptOut $true
+                } # if
                 # Try and update it
                 Set-VMProcessor `
                     -VMName $VM.Name `
