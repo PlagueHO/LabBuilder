@@ -1,5 +1,6 @@
 # Unreleased
 * Added Jenkins build scripts.
+* Fix ExposeVirtualizationExtensions when on Windows 10 build 14352 and above.
 
 # 0.8.3.0
 * Fix bug where Administrator account is not enabled in Windows client OS.
