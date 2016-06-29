@@ -4,7 +4,7 @@ DSC Template Configuration File For use by LabBuilder
     MEMBER_SUBCA
 .Desription
     Builds a Enterprise Subordinate\Issuing CA.
-.Parameters:    
+.Parameters:
     DomainName = "LABBUILDER.COM"
     DomainAdminPassword = "P@ssword!1"
     DCName = 'SA-DC1'
@@ -96,14 +96,14 @@ Configuration MEMBER_SUBCA
         RetryIntervalSec  = 15
         RetryCount        = 60
         }
-        
+
         # Join this Server to the Domain
-        xComputer JoinDomain 
+        xComputer JoinDomain
         {
             Name          = $Node.NodeName
             DomainName    = $Node.DomainName
-            Credential    = $DomainAdminCredential 
-            DependsOn = "[WaitForAll]DC" 
+            Credential    = $DomainAdminCredential
+            DependsOn = "[WaitForAll]DC"
         }
 
         # Create the CAPolicy.inf file that sets basic parameters for certificate issuance for this CA.
@@ -172,7 +172,7 @@ Configuration MEMBER_SUBCA
                     Installed = ((Get-ChildItem -Path Cert:\LocalMachine\Root | Where-Object -FilterScript { ($_.Subject -Like "CN=$($Using:Node.RootCACommonName),*") -and ($_.Issuer -Like "CN=$($Using:Node.RootCACommonName),*") } ).Count -EQ 0)
                 }
             }
-            TestScript = { 
+            TestScript = {
                 If ((Get-ChildItem -Path Cert:\LocalMachine\Root | Where-Object -FilterScript { ($_.Subject -Like "CN=$($Using:Node.RootCACommonName),*") -and ($_.Issuer -Like "CN=$($Using:Node.RootCACommonName),*") } ).Count -EQ 0) {
                     Write-Verbose -Message "Root CA Certificate Needs to be installed..."
                     Return $False
@@ -202,7 +202,8 @@ Configuration MEMBER_SUBCA
         # Configure the Web Enrollment Feature
         xADCSWebEnrollment ConfigWebEnrollment {
             Ensure = 'Present'
-            Name = 'ConfigWebEnrollment'
+            IsSingleInstance = 'Yes'
+            CAConfig = 'CertSrv'
             Credential = $LocalAdminCredential
             DependsOn = '[xADCSCertificationAuthority]ConfigCA'
         }
@@ -218,7 +219,7 @@ Configuration MEMBER_SUBCA
                     'MimeType' = ((Get-WebConfigurationProperty -Filter "//staticContent/mimeMap[@fileExtension='.req']" -PSPath IIS:\ -Name *).mimeType);
                 }
             }
-            TestScript = { 
+            TestScript = {
                 If (-not (Get-WebConfigurationProperty -Filter "//staticContent/mimeMap[@fileExtension='.req']" -PSPath IIS:\ -Name *)) {
                     # Mime type is not set
                     Return $False
@@ -259,7 +260,7 @@ Configuration MEMBER_SUBCA
                 Return @{
                 }
             }
-            TestScript = { 
+            TestScript = {
                 If (-not (Get-ChildItem 'HKLM:\System\CurrentControlSet\Services\CertSvc\Configuration').GetValue('CACertHash')) {
                     Write-Verbose -Message "Sub CA Certificate needs to be registered with the Certification Authority..."
                     Return $False
@@ -295,7 +296,7 @@ Configuration MEMBER_SUBCA
                     'CACertPublicationURLs'  = (Get-ChildItem 'HKLM:\System\CurrentControlSet\Services\CertSvc\Configuration').GetValue('CACertPublicationURLs')
                 }
             }
-            TestScript = { 
+            TestScript = {
                 If (((Get-ChildItem 'HKLM:\System\CurrentControlSet\Services\CertSvc\Configuration').GetValue('DSConfigDN') -ne "CN=Configuration,$($Using:Node.CADistinguishedNameSuffix)")) {
                     Return $False
                 }
@@ -312,7 +313,7 @@ Configuration MEMBER_SUBCA
             }
             DependsOn = '[Script]RegisterSubCA'
         }
-        
+
         if ($Node.InstallOnlineResponder) {
             # Configure the Online Responder Feature
             xADCSOnlineResponder ConfigOnlineResponder {
@@ -327,21 +328,21 @@ Configuration MEMBER_SUBCA
             {
                 Name = "Microsoft-Windows-OnlineRevocationServices-OcspSvc-DCOM-In"
                 Enabled = "True"
-                DependsOn = "[xADCSOnlineResponder]ConfigOnlineResponder" 
+                DependsOn = "[xADCSOnlineResponder]ConfigOnlineResponder"
             }
 
             xFirewall OnlineResponderirewall2
             {
                 Name = "Microsoft-Windows-CertificateServices-OcspSvc-RPC-TCP-In"
                 Enabled = "True"
-                DependsOn = "[xADCSOnlineResponder]ConfigOnlineResponder" 
+                DependsOn = "[xADCSOnlineResponder]ConfigOnlineResponder"
             }
 
             xFirewall OnlineResponderFirewall3
             {
                 Name = "Microsoft-Windows-OnlineRevocationServices-OcspSvc-TCP-Out"
                 Enabled = "True"
-                DependsOn = "[xADCSOnlineResponder]ConfigOnlineResponder" 
+                DependsOn = "[xADCSOnlineResponder]ConfigOnlineResponder"
             }
         }
     }
