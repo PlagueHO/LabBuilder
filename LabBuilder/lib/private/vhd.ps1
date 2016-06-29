@@ -299,7 +299,7 @@ function InitializeBootVHD {
 
 <#
 .SYNOPSIS
-    This function mount the VHDx passed and enure it is OK to be written to.
+    This function mounts the VHDx passed and ensures it is OK to be written to.
 .DESCRIPTION
     The function checks that the disk has been paritioned and that it contains
     a volume that has been formatted.
