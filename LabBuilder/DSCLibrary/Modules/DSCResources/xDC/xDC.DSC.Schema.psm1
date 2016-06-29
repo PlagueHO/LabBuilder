@@ -36,7 +36,7 @@ Configuration DC
         #OUs to Create
         [Parameter(Mandatory=$False)]
         [string]
-        $OUName,
+        $OUName
         
         
 

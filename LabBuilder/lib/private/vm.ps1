@@ -136,7 +136,7 @@ $GetCertPs
 Add-Content ``
     -Path `"`$(`$ENV:SystemRoot)\Setup\Scripts\SetupComplete.log`" ``
     -Value 'Certificate identified and saved to C:\Windows\$Script:DSCEncryptionCert ...' ``
-    -Encoding Ascii
+    -Encoinitding Ascii
 Enable-PSRemoting -SkipNetworkProfileCheck -Force
 Add-Content ``
     -Path `"`$(`$ENV:SystemRoot)\Setup\Scripts\SetupComplete.log`" ``

@@ -96,7 +96,7 @@ function InitializeBootVHD {
             {
                 if (@($Packages -split ',') -notcontains 'Microsoft-NanoServer-DSC-Package.cab')
                 {
-                    $Pacakges = "$Packages,Microsoft-NanoServer-DSC-Package.cab"
+                    $Packages = "$Packages,Microsoft-NanoServer-DSC-Package.cab"
                 } # if
             } # if
         } # if
@@ -299,7 +299,7 @@ function InitializeBootVHD {
 
 <#
 .SYNOPSIS
-    This function mount the VHDx passed and enure it is OK to be writen to.
+    This function mount the VHDx passed and enure it is OK to be written to.
 .DESCRIPTION
     The function checks that the disk has been paritioned and that it contains
     a volume that has been formatted.
@@ -317,7 +317,7 @@ function InitializeBootVHD {
     If the FileSystemLabel passed is different to the current label then it will
     be updated.
     
-    This function will not changed the File System and/or Partition Type on the VHDx
+    This function will not change the File System and/or Partition Type on the VHDx
     if it is different to the values provided.
 .PARAMETER Path
     This is the path to the VHD/VHDx file to mount and initialize.
