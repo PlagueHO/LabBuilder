@@ -55,8 +55,8 @@ Configuration MEMBER_ROOTCA
 
         WindowsFeature InstallWebMgmtService
         {
-            Ensure = "Present" 
-            Name = "Web-Mgmt-Service" 
+            Ensure = "Present"
+            Name = "Web-Mgmt-Service"
             DependsOn = '[WindowsFeature]ADCSWebEnrollment'
         }
 
@@ -102,16 +102,16 @@ Configuration MEMBER_ROOTCA
         RetryIntervalSec  = 15
         RetryCount        = 60
         }
-        
+
         # Join this Server to the Domain
-        xComputer JoinDomain 
-        { 
+        xComputer JoinDomain
+        {
             Name          = $Node.NodeName
             DomainName    = $Node.DomainName
-            Credential    = $DomainAdminCredential 
-            DependsOn = "[WaitForAll]DC" 
+            Credential    = $DomainAdminCredential
+            DependsOn = "[WaitForAll]DC"
         }
-            
+
         # Create the CAPolicy.inf file that sets basic parameters for certificate issuance for this CA.
         File CAPolicy
         {
@@ -147,11 +147,12 @@ Configuration MEMBER_ROOTCA
             KeyLength = 4096
             DependsOn = '[File]CertEnrollFolder'
         }
-        
+
         # Configure the Web Enrollment Feature
         xADCSWebEnrollment ConfigWebEnrollment {
             Ensure = 'Present'
-            Name = 'ConfigWebEnrollment'
+            IsSingleInstance = 'Yes'
+            CAConfig = 'CertSrv'
             Credential = $LocalAdminCredential
             DependsOn = '[xADCSCertificationAuthority]ConfigCA'
         }
@@ -204,7 +205,7 @@ Configuration MEMBER_ROOTCA
                     'AuditFilter'  = (Get-ChildItem 'HKLM:\System\CurrentControlSet\Services\CertSvc\Configuration').GetValue('AuditFilter')
                 }
             }
-            TestScript = { 
+            TestScript = {
                 If (((Get-ChildItem 'HKLM:\System\CurrentControlSet\Services\CertSvc\Configuration').GetValue('DSConfigDN') -ne "CN=Configuration,$($Using:Node.CADistinguishedNameSuffix)")) {
                     Return $False
                 }
@@ -242,7 +243,7 @@ Configuration MEMBER_ROOTCA
             }
             DependsOn = '[xADCSWebEnrollment]ConfigWebEnrollment'
         }
-        
+
         if ($Node.InstallOnlineResponder) {
             # Configure the Online Responder Feature
             xADCSOnlineResponder ConfigOnlineResponder {
@@ -257,21 +258,21 @@ Configuration MEMBER_ROOTCA
             {
                 Name = "Microsoft-Windows-OnlineRevocationServices-OcspSvc-DCOM-In"
                 Enabled = "True"
-                DependsOn = "[xADCSOnlineResponder]ConfigOnlineResponder" 
+                DependsOn = "[xADCSOnlineResponder]ConfigOnlineResponder"
             }
 
             xFirewall OnlineResponderirewall2
             {
                 Name = "Microsoft-Windows-CertificateServices-OcspSvc-RPC-TCP-In"
                 Enabled = "True"
-                DependsOn = "[xADCSOnlineResponder]ConfigOnlineResponder" 
+                DependsOn = "[xADCSOnlineResponder]ConfigOnlineResponder"
             }
 
             xFirewall OnlineResponderFirewall3
             {
                 Name = "Microsoft-Windows-OnlineRevocationServices-OcspSvc-TCP-Out"
                 Enabled = "True"
-                DependsOn = "[xADCSOnlineResponder]ConfigOnlineResponder" 
+                DependsOn = "[xADCSOnlineResponder]ConfigOnlineResponder"
             }
         }
     }
