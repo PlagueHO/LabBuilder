@@ -3,6 +3,8 @@
 * Fix ExposeVirtualizationExtensions when on Windows 10 build 14352 and above.
 * DSCLibrary\*_ROOTCA.DSC.ps1: Fix to support 2.0.0.0 of xADCSDeployment resource.
 * DSCLibrary\*_SUBCA.DSC.ps1: Fix to support 2.0.0.0 of xADCSDeployment resource.
+* Converted AppVeyor.yml to pull Pester from PSGallery instead of Chocolatey.
+* Changed AppVeyor.yml to use default image
 
 # 0.8.3.0
 * Fix bug where Administrator account is not enabled in Windows client OS.
