@@ -1614,19 +1614,10 @@ function UpdateVMDataDisks {
             }
             if ($DataVhd.Shared -or $DataVHD.SupportPR)
             {
-                #$NewHardDiskParams += @{
-                 #   ShareVirtualDisk = $true
-                #}
                     $NewHardDiskParams += @{
-                        SupportPersistentReservations = $true
+                    SupportPersistentReservations = $true
                     }
 
-         #       if ($DataVhd.SupportPR)
-         #       {
-         #          $NewHardDiskParams += @{
-         #                SupportPersistentReservations = $true
-         #           }
-         #       } # if
             } # if
             $Null = Add-VMHardDiskDrive @NewHardDiskParams
         } # if

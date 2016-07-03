@@ -385,7 +385,7 @@ function Get-LabVM {
 
                 # Get the Support Persistent Reservations
                 $NewDataVHD.SupportPR = ($VMDataVhd.SupportPR -eq 'Y')
-                if ($NewDataVHD.SupportPR -and -not $NewDataVHD.Shared)
+               <# if ($NewDataVHD.SupportPR -and -not $NewDataVHD.Shared) # this isn't necessary Support PR is the only setting required.
                 {
                     $ExceptionParameters = @{
                         errorId = 'VMDataDiskSupportPRError'
@@ -395,7 +395,7 @@ function Get-LabVM {
                     }
                     ThrowException @ExceptionParameters
                 } # if
-
+                #>
                 # Validate the data disk type specified
                 if ($VMDataVhd.Type)
                 {
@@ -774,18 +774,6 @@ function Get-LabVM {
                 $ProcessorCount = $VMTemplate.processorcount
             } # if
 
-            # Get the VM Generation (from the template or VM)
-            [Int] $Generation = 2
-            if ($VM.generation)
-            {
-                $Generation = (Invoke-Expression $VM.generation)
-            }
-            elseif ($VMTemplate.generation)
-            {
-                $Generation = $VMTemplate.generation
-            } # if
-
-
             # Get the Expose Virtualization Extensions flag
             if ($VM.ExposeVirtualizationExtensions)
             {
@@ -922,17 +910,6 @@ function Get-LabVM {
                 $CertificateSource = $VM.CertificateSource
             } # if
 
-            # Get the Version Number VM to create (from the template or VM)
-            [string] $Version = "8.0"
-            if ($VM.version)
-            {
-                $Version = (Invoke-Expression $VM.version)
-            }
-            elseif ($VMTemplate.version)
-            {
-                $Version = $VMTemplate.version
-            } # if
-
 
             $LabVM = [LabVM]::New($VMName,$ComputerName)
             $LabVM.Template = $VM.Template
@@ -941,7 +918,6 @@ function Get-LabVM {
             $LabVM.MemoryStartupBytes = $MemoryStartupBytes
             $LabVM.DynamicMemoryEnabled = $DynamicMemoryEnabled
             $LabVM.ProcessorCount = $ProcessorCount
-            $LabVM.Generation=$Generation
             $LabVM.ExposeVirtualizationExtensions = $ExposeVirtualizationExtensions
             $LabVM.IntegrationServices = $IntegrationServices
             $LabVM.AdministratorPassword = $AdministratorPassword
