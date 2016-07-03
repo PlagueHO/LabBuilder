@@ -273,6 +273,15 @@ function Get-LabVMTemplate {
         {
             $VMTemplate.TimeZone = $Template.TimeZone
         } # if
+        if ($Template.version)
+        {
+            $VMTemplate.Version = $Template.version
+        } # if
+        if ($Template.generation)
+        {
+            $VMTemplate.Generation = $Template.generation
+        } # if
+
         if ($Template.OSType)
         {
             $VMTemplate.OSType = [LabOSType]::$($Template.OSType)
