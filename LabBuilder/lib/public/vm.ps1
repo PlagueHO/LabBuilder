@@ -763,7 +763,7 @@ function Get-LabVM {
                 $DynamicMemoryEnabled = $VMTemplate.DynamicMemoryEnabled
             } # if
 
-            # Get the Memory Startup Bytes (from the template or VM)
+            # Get the vCPU Count (from the template or VM)
             [Int] $ProcessorCount = 1
             if ($VM.processorcount)
             {

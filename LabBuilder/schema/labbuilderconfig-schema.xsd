@@ -723,6 +723,28 @@ Note: Disabling this value is usually only used when Nested Virtualization is re
                       <xs:appinfo>dynamicmemoryenabled="N"</xs:appinfo>
                     </xs:annotation>
                   </xs:attribute>
+                  <xs:attribute name="generation" type="xs:unsignedByte" use="optional"> 
+                    <xs:annotation> 
+                      <xs:documentation> 
+This optional attribute controls the Virtual Machine generation to create. 
+ 
+ - Default Value: 2 
+ - Valid Values: 1 | 2 
+                      </xs:documentation> 
+                      <xs:appinfo>generation="1"</xs:appinfo> 
+                    </xs:annotation> 
+                  </xs:attribute> 
+                  <xs:attribute name="Version" type="xs:string" use="optional"> 
+                    <xs:annotation> 
+                      <xs:documentation> 
+This optional attribute controls the Virtual Machine Version to create, this is only applicable to Windows 10 build 14352 or higher/Server 2016 post TP5. 
+ 
+ - Default Value: 8.0 
+ - Valid Values: 5.0, 6.2, 7.0, 7.1, 8.0, 254.0, and 255.0 
+                      </xs:documentation> 
+                      <xs:appinfo>version="5.0"</xs:appinfo> 
+                    </xs:annotation> 
+                  </xs:attribute> 
                   <xs:attribute name="processorcount" type="xs:unsignedByte" use="optional">
                     <xs:annotation>
                       <xs:documentation>
@@ -1336,7 +1358,28 @@ If this attribute is not defined, but it is defined in the Template then the tem
                       <xs:appinfo>memorystartupbytes="8GB"</xs:appinfo>
                     </xs:annotation>
                   </xs:attribute>
-                  <xs:attribute name="dynamicmemoryenabled" type="xs:string" use="optional">
+                  <xs:attribute name="generation" type="xs:unsignedByte" use="optional"> 
+                    <xs:annotation> 
+                      <xs:documentation> 
+This optional attribute controls the Virtual Machine generation to create. 
+ 
+ - Default Value: 2 
+ - Valid Values: 1 | 2 
+                      </xs:documentation> 
+                      <xs:appinfo>generation="1"</xs:appinfo> 
+                    </xs:annotation> 
+                  </xs:attribute> 
+                  <xs:attribute name="Version" type="xs:string" use="optional"> 
+                    <xs:annotation> 
+                      <xs:documentation> 
+This optional attribute controls the Virtual Machine Version to create, this is only applicable to Windows 10 build 14352 or higher/Server 2016 post TP5. 
+ 
+ - Default Value: 8.0 
+ - Valid Values: 5.0, 6.2, 7.0, 7.1, 8.0, 254.0, and 255.0 
+                      </xs:documentation> 
+                      <xs:appinfo>version="5.0"</xs:appinfo> 
+                    </xs:annotation> 
+                  </xs:attribute> <xs:attribute name="dynamicmemoryenabled" type="xs:string" use="optional">
                     <xs:annotation>
                       <xs:documentation>
 This optional attribute contains a flag to enable or disable Dynamic Memory for Virtual Machine.

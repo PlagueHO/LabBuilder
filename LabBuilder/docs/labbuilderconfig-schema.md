@@ -692,7 +692,29 @@ Note: Disabling this value is usually only used when Nested Virtualization is re
                       
 ``` dynamicmemoryenabled="N" ```
 
-### 6.1.6a - PROCESSORCOUNT Optional Attribute
+### 6.1.6a - GENERATION Optional Attribute
+> generation="xs:unsignedByte"
+
+ 
+This optional attribute controls the Virtual Machine generation to create. 
+ 
+ - Default Value: 2 
+ - Valid Values: 1 | 2 
+                      
+``` generation="1" ```
+
+### 6.1.7a - VERSION Optional Attribute
+> Version="xs:string"
+
+ 
+This optional attribute controls the Virtual Machine Version to create, this is only applicable to Windows 10 build 14352 or higher/Server 2016 post TP5. 
+ 
+ - Default Value: 8.0 
+ - Valid Values: 5.0, 6.2, 7.0, 7.1, 8.0, 254.0, and 255.0 
+                      
+``` version="5.0" ```
+
+### 6.1.8a - PROCESSORCOUNT Optional Attribute
 > processorcount="xs:unsignedByte"
 
 
@@ -703,7 +725,7 @@ This optional attribute determines the number of virtual processors assigned to 
                       
 ``` processorcount="2" ```
 
-### 6.1.7a - ADMINISTRATORPASSWORD Optional Attribute
+### 6.1.9a - ADMINISTRATORPASSWORD Optional Attribute
 > administratorpassword="xs:string"
 
 
@@ -712,7 +734,7 @@ If this is not defined for the Template it should be defined in the Virtual Mach
                       
 ``` administratorpassword="MyP@ssw0rd!1" ```
 
-### 6.1.8a - PRODUCTKEY Optional Attribute
+### 6.1.10a - PRODUCTKEY Optional Attribute
 > productkey="xs:string"
 
 
@@ -720,7 +742,7 @@ This optional attribute specifies the Windows product key to set on any Virtual 
                       
 ``` productkey="AAAAA-AAAAA-AAAAA-AAAAA-AAAAA" ```
 
-### 6.1.9a - TIMEZONE Optional Attribute
+### 6.1.11a - TIMEZONE Optional Attribute
 > timezone="xs:string"
 
 
@@ -730,7 +752,7 @@ This optional attribute sets the timezone assigned to Virtual Machines based on 
                       
 ``` timezone="CST" ```
 
-### 6.1.10a - OSTYPE Required Attribute
+### 6.1.12a - OSTYPE Required Attribute
 > ostype="xs:string"
 
 
@@ -742,7 +764,7 @@ It is used by LabBuilder to determine how to configure Virtual Machines based on
                       
 ``` ostype="Server" ```
 
-### 6.1.11a - INTEGRATIONSERVICES Optional Attribute
+### 6.1.13a - INTEGRATIONSERVICES Optional Attribute
 > integrationservices="xs:string"
 
 
@@ -756,7 +778,7 @@ If this attribute is not defined all Integration Services will be enabled.
                       
 ``` ostype="Server" ```
 
-### 6.1.12a - TEMPLATEVHD Optional Attribute
+### 6.1.14a - TEMPLATEVHD Optional Attribute
 > templatevhd="xs:string"
 
 
@@ -766,7 +788,7 @@ If this attribute is defined, the SourceVHD attribute should not be defined.
                       
 ``` templatevhd="Windows Server 2012 R2 Datacenter Core" ```
 
-### 6.1.13a - EXPOSEVIRTUALIZATIONEXTENSIONS Optional Attribute
+### 6.1.15a - EXPOSEVIRTUALIZATIONEXTENSIONS Optional Attribute
 > exposevirtualizationextensions="xs:string"
 
 
@@ -779,7 +801,7 @@ Currently this is only supported on Windows 10 built 10586 or above and Windows 
                       
 ``` exposevirtualizationextensions="Y" ```
 
-### 6.1.14a - PACKAGES Optional Attribute
+### 6.1.16a - PACKAGES Optional Attribute
 > packages="xs:string"
 
 
@@ -859,7 +881,29 @@ If this attribute is not defined, but it is defined in the Template then the tem
                       
 ``` memorystartupbytes="8GB" ```
 
-### 7.1.5a - DYNAMICMEMORYENABLED Optional Attribute
+### 7.1.5a - GENERATION Optional Attribute
+> generation="xs:unsignedByte"
+
+ 
+This optional attribute controls the Virtual Machine generation to create. 
+ 
+ - Default Value: 2 
+ - Valid Values: 1 | 2 
+                      
+``` generation="1" ```
+
+### 7.1.6a - VERSION Optional Attribute
+> Version="xs:string"
+
+ 
+This optional attribute controls the Virtual Machine Version to create, this is only applicable to Windows 10 build 14352 or higher/Server 2016 post TP5. 
+ 
+ - Default Value: 8.0 
+ - Valid Values: 5.0, 6.2, 7.0, 7.1, 8.0, 254.0, and 255.0 
+                      
+``` version="5.0" ```
+
+### 7.1.7a - DYNAMICMEMORYENABLED Optional Attribute
 > dynamicmemoryenabled="xs:string"
 
 
@@ -872,7 +916,7 @@ Note: Disabling this value is usually only used when Nested Virtualization is re
                       
 ``` dynamicmemoryenabled="N" ```
 
-### 7.1.6a - EXPOSEVIRTUALIZATIONEXTENSIONS Optional Attribute
+### 7.1.8a - EXPOSEVIRTUALIZATIONEXTENSIONS Optional Attribute
 > exposevirtualizationextensions="xs:string"
 
 
@@ -886,7 +930,7 @@ Currently this is only supported on Windows 10 built 10586 or above and Windows 
                       
 ``` exposevirtualizationextensions="Y" ```
 
-### 7.1.7a - USEDIFFERENCINGDISK Optional Attribute
+### 7.1.9a - USEDIFFERENCINGDISK Optional Attribute
 > usedifferencingdisk="xs:string"
 
 
@@ -898,7 +942,7 @@ Using a Differencing Disk for the Boot VHD will conserve disk space.
                       
 ``` usedifferencingdisk="Y" ```
 
-### 7.1.8a - ADMINISTRATORPASSWORD Optional Attribute
+### 7.1.10a - ADMINISTRATORPASSWORD Optional Attribute
 > administratorpassword="xs:string"
 
 
@@ -907,7 +951,7 @@ If this attribute is not defined, but it is defined in the Template then the tem
                       
 ``` administratorpassword="MyP@ssw0rd!1" ```
 
-### 7.1.9a - PRODUCTKEY Optional Attribute
+### 7.1.11a - PRODUCTKEY Optional Attribute
 > productkey="xs:string"
 
 
@@ -916,7 +960,7 @@ If this attribute is not defined, but it is defined in the Template then the tem
                       
 ``` productkey="AAAAA-AAAAA-AAAAA-AAAAA-AAAAA" ```
 
-### 7.1.10a - TIMEZONE Optional Attribute
+### 7.1.12a - TIMEZONE Optional Attribute
 > timezone="xs:string"
 
 
@@ -927,7 +971,7 @@ If this attribute is not defined, but it is defined in the Template then the tem
                       
 ``` timezone="CST" ```
 
-### 7.1.11a - UNATTENDFILE Optional Attribute
+### 7.1.13a - UNATTENDFILE Optional Attribute
 > unattendfile="xs:string"
 
 
@@ -936,7 +980,7 @@ If a relative path is used for this attribute then it will be appended onto the 
                       
 ``` unattendfile="Unattend\SpecialUnattend.xml" ```
 
-### 7.1.12a - SETUPCOMPLETE Optional Attribute
+### 7.1.14a - SETUPCOMPLETE Optional Attribute
 > setupcomplete="xs:string"
 
 
@@ -945,7 +989,7 @@ If a relative path is used for this attribute then it will be appended onto the 
                       
 ``` setupcomplete="Scripts\SetupScompleteDebug.cmd" ```
 
-### 7.1.13a - INTEGRATIONSERVICES Optional Attribute
+### 7.1.15a - INTEGRATIONSERVICES Optional Attribute
 > integrationservices="xs:string"
 
 
@@ -960,7 +1004,7 @@ If this attribute is not defined, but it is defined in the Template then the tem
                       
 ``` integrationservices="Guest Service Interface,Heartbeat" ```
 
-### 7.1.14a - PACKAGES Optional Attribute
+### 7.1.16a - PACKAGES Optional Attribute
 > packages="xs:string"
 
 
@@ -980,7 +1024,7 @@ Valid Values for Nano Server:
                       
 ``` packages="Microsoft-NanoServer-DNS-Package.cab,SomePackage.msu" ```
 
-### 7.1.15a - BOOTORDER Optional Attribute
+### 7.1.17a - BOOTORDER Optional Attribute
 > bootorder="xs:unsignedByte"
 
 
@@ -990,7 +1034,7 @@ Any Lab Virtual Machines without a boot order will be started last or shutdown f
                       
 ``` bootorder="4" ```
 
-### 7.1.16a - CERTIFICATESOURCE Optional Attribute
+### 7.1.18a - CERTIFICATESOURCE Optional Attribute
 > certificatesource="xs:string"
 
 
@@ -1003,7 +1047,7 @@ The attribute is ignored for Nano Servers because certificate generation can not
                       
 ``` certificatesource="Host" ```
 
-### 7.1.17a - INSTANCECOUNT Optional Attribute
+### 7.1.19a - INSTANCECOUNT Optional Attribute
 > instancecount="xs:unsignedByte"
 
 
