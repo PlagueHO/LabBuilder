@@ -3,6 +3,9 @@
 * Fix ExposeVirtualizationExtensions when on Windows 10 build 14352 and above.
 * DSCLibrary\*_ROOTCA.DSC.ps1: Fix to support 2.0.0.0 of xADCSDeployment resource.
 * DSCLibrary\*_SUBCA.DSC.ps1: Fix to support 2.0.0.0 of xADCSDeployment resource.
+* Converted AppVeyor.yml to pull Pester from PSGallery instead of Chocolatey.
+* Changed AppVeyor.yml to use default image
+* - MSFT-MWalker changes Below
 * Added support for Version of VM - Only works on latest Windows 10 builds post 14352
 * Added support for generation of VM so Generation 1 VMs can now be created
 * Fixed issue with Shared VHDX that prevented their creation. 
