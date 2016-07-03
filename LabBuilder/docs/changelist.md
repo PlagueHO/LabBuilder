@@ -3,6 +3,12 @@
 * Fix ExposeVirtualizationExtensions when on Windows 10 build 14352 and above.
 * DSCLibrary\*_ROOTCA.DSC.ps1: Fix to support 2.0.0.0 of xADCSDeployment resource.
 * DSCLibrary\*_SUBCA.DSC.ps1: Fix to support 2.0.0.0 of xADCSDeployment resource.
+* Added support for Version of VM - Only works on latest Windows 10 builds post 14352
+* Added support for generation of VM so Generation 1 VMs can now be created
+* Fixed issue with Shared VHDX that prevented their creation. 
+* Updated SCHEMA for information on Version and Generation
+* Fixed several typos in comment sections
+* DSC resources created for working with composite DSC resources - non-functional at this time
 
 # 0.8.3.0
 * Fix bug where Administrator account is not enabled in Windows client OS.
