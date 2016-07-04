@@ -1110,7 +1110,7 @@ function Initialize-LabVM {
                     -MemoryStartupBytes $VM.MemoryStartupBytes `
                     -Generation $VM.Generation `
                     -Path $LabPath `
-                    -VHDPath $VMBootDiskPath
+                    -VHDPath $VMBootDiskPath `
                     -Version $VM.Version
             }
 
