@@ -567,7 +567,7 @@ function InitializeVhd
                 # Mount the partition to a Drive Letter
                 $null = Set-Partition `
                     -DiskNumber $Disknumber `
-                    -PartitionNumber 1 `
+                    -PartitionNumber $PartitionNumber `
                     -NewDriveLetter $DriveLetter `
                     -ErrorAction Stop
 
@@ -594,7 +594,7 @@ function InitializeVhd
                 # Add the Partition Access Path
                 $null = Add-PartitionAccessPath `
                     -DiskNumber $DiskNumber `
-                    -PartitionNumber 1 `
+                    -PartitionNumber $partitionNumber `
                     -AccessPath $AccessPath `
                     -ErrorAction Stop
 

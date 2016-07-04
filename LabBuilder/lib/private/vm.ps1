@@ -1538,7 +1538,7 @@ function UpdateVMDataDisks {
 
                     Copy-item `
                         -Path $CopyFolder `
-                        -Destination $MountFolder `
+                        -Destination $MountPoint `
                         -Recurse `
                         -Force
                 }
