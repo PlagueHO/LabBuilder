@@ -385,17 +385,6 @@ function Get-LabVM {
 
                 # Get the Support Persistent Reservations
                 $NewDataVHD.SupportPR = ($VMDataVhd.SupportPR -eq 'Y')
-               <# if ($NewDataVHD.SupportPR -and -not $NewDataVHD.Shared) # this isn't necessary Support PR is the only setting required.
-                {
-                    $ExceptionParameters = @{
-                        errorId = 'VMDataDiskSupportPRError'
-                        errorCategory = 'InvalidArgument'
-                        errorMessage = $($LocalizedData.VMDataDiskSupportPRError `
-                            -f $VMName,$VHD)
-                    }
-                    ThrowException @ExceptionParameters
-                } # if
-                #>
                 # Validate the data disk type specified
                 if ($VMDataVhd.Type)
                 {
