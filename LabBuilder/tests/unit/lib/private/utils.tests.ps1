@@ -48,7 +48,7 @@ try
 
                 [Parameter(Mandatory)]
                 [String] $errorMessage,
-                
+
                 [Switch]
                 $terminate
             )
@@ -65,7 +65,7 @@ try
 
 
         Describe 'DownloadAndUnzipFile' {
-            $URL = 'https://raw.githubusercontent.com/PlagueHO/LabBuilder/dev/LICENSE'      
+            $URL = 'https://raw.githubusercontent.com/PlagueHO/LabBuilder/dev/LICENSE'
             Context 'Download folder does not exist' {
                 Mock Invoke-WebRequest
                 Mock Expand-Archive
@@ -119,7 +119,7 @@ try
                 It 'Calls appropriate mocks' {
                     Assert-MockCalled Invoke-WebRequest -Exactly 1
                     Assert-MockCalled Expand-Archive -Exactly 0
-                    Assert-MockCalled Remove-Item -Exactly 0                
+                    Assert-MockCalled Remove-Item -Exactly 0
                 }
             }
             $URL = 'https://raw.githubusercontent.com/PlagueHO/LabBuilder/dev/LICENSE.ZIP'
@@ -157,7 +157,7 @@ try
                     Assert-MockCalled Expand-Archive -Exactly 1
                 }
             }
-        }    
+        }
 
 
 
@@ -168,7 +168,7 @@ try
 
         Describe 'DownloadResourceModule' {
             $URL = 'https://github.com/PowerShell/xNetworking/archive/dev.zip'
-            
+
             Mock Get-Module -MockWith { @( New-Object -TypeName PSObject -Property @{ Name = 'xNetworking'; Version = '2.4.0.0'; } ) }
             Mock Invoke-WebRequest
             Mock Expand-Archive
@@ -524,7 +524,7 @@ try
 
             if ((Get-CimInstance Win32_OperatingSystem).ProductType -eq 1) {
                 Mock Get-WindowsOptionalFeature { [PSObject]@{ FeatureName = 'Mock'; State = 'Disabled'; } }
-                Mock Enable-WindowsOptionalFeature 
+                Mock Enable-WindowsOptionalFeature
             }
             else
             {
@@ -556,6 +556,7 @@ try
 
         Describe 'EnableWSMan' {
             Context 'WS-Man is already enabled' {
+                Mock Start-Service
                 Mock Get-PSProvider -MockWith { @{ Name = 'wsman' } }
                 Mock Set-WSManQuickConfig
                 It 'Does not throw an Exception' {
@@ -566,6 +567,7 @@ try
                 }
             }
             Context 'WS-Man is not enabled, user declines install' {
+                Mock Start-Service -MockWith { Throw }
                 Mock Get-PSProvider
                 Mock Set-WSManQuickConfig
                 It 'Should throw WSManNotEnabledError exception' {

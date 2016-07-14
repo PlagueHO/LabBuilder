@@ -77,7 +77,6 @@ ConvertFrom-StringData -StringData @'
     VMDataDiskParentVHDMissingError=The Differencing Data Disk Parent VHD specified in VM '{0}' is empty.
     VMDataDiskSourceVHDNotFoundError=The Data Disk Source VHD '{1}' specified in VM '{0}' could not be found.
     VMDataDiskUnknownTypeError=Unknown Data Disk type '{2}' specified in VM '{0}' for VHD '{1}'.
-    VMDataDiskSupportPRError=The SupportPR flag is not supported for non-shared Data Disk VHD '{1}' specified in VM '{0}'.
     VMDataDiskSharedDifferencingError=The Differencing Data Disk VHD '{1}' specified in VM '{0}' can not be set as Shared.
     VMDataDiskSourceVHDIfMoveError=The Data Disk VHD '{1}' specified in VM '{0}' must have a Source VHD specified if MoveSourceVHD is set.
     VMDataDiskVHDConvertError=The Data Disk '{1}' in VM '{0}' cannot be converted to a {2} type.
@@ -113,7 +112,7 @@ ConvertFrom-StringData -StringData @'
     EnablingWSManMessage=Enabling WS-Man for communication with Lab Guests.
     InstallingHyperVComponentsMesage=Installing {0} Hyper-V Components.
     InitializingLabFoldersMesage=Initializing Lab Folders.
-    CreatingLabFolderMessage=Creating {0} folder '{1}' for Lab. 
+    CreatingLabFolderMessage=Creating {0} folder '{1}' for Lab.
     InitializingHyperVComponentsMesage=Initializing Hyper-V Components.
     InitializeVHDMountingMessage=Mounting VHD {0} for Initialization.
     InitializeVHDInitializingMessage=Initializing {1} partition table on VHD {0}.
@@ -179,9 +178,9 @@ ConvertFrom-StringData -StringData @'
     StoppingVMMessage=Stopping VM '{0}'.
     RemovingVMMessage=Removing VM '{0}'.
     RemovedVMMessage=Removed VM '{0}'.
-    StartingBootPhaseVMsMessage=Starting Virtual Machines with Bootorder '{0}'.    
+    StartingBootPhaseVMsMessage=Starting Virtual Machines with Bootorder '{0}'.
     AllBootPhaseVMsStartedMessage=All Virtual Machines with Bootorder '{0}' have started.
-    StoppingBootPhaseVMsMessage=Stopping Virtual Machines with Bootorder '{0}'.    
+    StoppingBootPhaseVMsMessage=Stopping Virtual Machines with Bootorder '{0}'.
     AllBootPhaseVMsStoppedMessage=All Virtual Machines with Bootorder '{0}' have stopped.
     StartingDSCMessage=Starting DSC on VM '{0}'.
     MountingVMBootDiskMessage=Mounting VM '{0}' VHD Boot Disk '{1}'.
