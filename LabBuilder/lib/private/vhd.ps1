@@ -96,7 +96,7 @@ function InitializeBootVHD {
             {
                 if (@($Packages -split ',') -notcontains 'Microsoft-NanoServer-DSC-Package.cab')
                 {
-                    $Pacakges = "$Packages,Microsoft-NanoServer-DSC-Package.cab"
+                    $Packages = "$Packages,Microsoft-NanoServer-DSC-Package.cab"
                 } # if
             } # if
         } # if
@@ -113,7 +113,7 @@ function InitializeBootVHD {
                 if (([System.IO.Path]::GetExtension($Package) -eq '.cab') `
                     -and ($VM.OSType -eq [LabOSType]::Nano))
                 {
-                    # This is a Nano Server .CAB pacakge
+                    # This is a Nano Server .CAB package
                     # Generate the path to the Nano Package
                     $PackagePath = Join-Path `
                         -Path $NanoPackagesFolder `
@@ -200,7 +200,7 @@ function InitializeBootVHD {
                         }
                         ThrowException @ExceptionParameters
                     } # if
-                    # Apply a Pacakge
+                    # Apply a Package
                     WriteMessage -Message $($LocalizedData.ApplyingVMBootDiskFileMessage `
                         -f $VM.Name,$Package,$PackagePath)
 
@@ -299,7 +299,7 @@ function InitializeBootVHD {
 
 <#
 .SYNOPSIS
-    This function mount the VHDx passed and enure it is OK to be writen to.
+    This function mounts the VHDx passed and ensures it is OK to be written to.
 .DESCRIPTION
     The function checks that the disk has been paritioned and that it contains
     a volume that has been formatted.
@@ -317,7 +317,7 @@ function InitializeBootVHD {
     If the FileSystemLabel passed is different to the current label then it will
     be updated.
     
-    This function will not changed the File System and/or Partition Type on the VHDx
+    This function will not change the File System and/or Partition Type on the VHDx
     if it is different to the values provided.
 .PARAMETER Path
     This is the path to the VHD/VHDx file to mount and initialize.
@@ -567,7 +567,7 @@ function InitializeVhd
                 # Mount the partition to a Drive Letter
                 $null = Set-Partition `
                     -DiskNumber $Disknumber `
-                    -PartitionNumber 1 `
+                    -PartitionNumber $PartitionNumber `
                     -NewDriveLetter $DriveLetter `
                     -ErrorAction Stop
 
@@ -594,7 +594,7 @@ function InitializeVhd
                 # Add the Partition Access Path
                 $null = Add-PartitionAccessPath `
                     -DiskNumber $DiskNumber `
-                    -PartitionNumber 1 `
+                    -PartitionNumber $partitionNumber `
                     -AccessPath $AccessPath `
                     -ErrorAction Stop
 

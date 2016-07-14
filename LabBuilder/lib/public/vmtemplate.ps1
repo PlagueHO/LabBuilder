@@ -253,6 +253,23 @@ function Get-LabVMTemplate {
         {
             $VMTemplate.DynamicMemoryEnabled = $True
         } # if
+        if ($Template.version)
+        {
+            $VMTemplate.version = $Template.version
+        }
+        elseif (-not $Template.version)
+        {
+            $VMTemplate.version = "8.0"
+        } # if
+        if ($Template.generation)
+        {
+            $VMTemplate.generation = $Template.generation
+        }
+        elseif (-not $Template.generation)
+        {
+            $VMTemplate.generation = 2
+        } # if
+
         if ($Template.ProcessorCount)
         {
             $VMTemplate.ProcessorCount = $Template.ProcessorCount
@@ -273,6 +290,7 @@ function Get-LabVMTemplate {
         {
             $VMTemplate.TimeZone = $Template.TimeZone
         } # if
+
         if ($Template.OSType)
         {
             $VMTemplate.OSType = [LabOSType]::$($Template.OSType)

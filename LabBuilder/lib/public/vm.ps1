@@ -108,7 +108,7 @@ function Get-LabVM {
             }
             else
             {
-                $VMName = "$($VM.Name) $Instance"
+                $VMName = "$($VM.Name)$Instance"
                 $ComputerName = "$($VM.ComputerName)$Instance"
                 # This value is used to increment IP and MAC addresses
                 $IncNetIds = $Instance - 1
@@ -385,17 +385,6 @@ function Get-LabVM {
 
                 # Get the Support Persistent Reservations
                 $NewDataVHD.SupportPR = ($VMDataVhd.SupportPR -eq 'Y')
-                if ($NewDataVHD.SupportPR -and -not $NewDataVHD.Shared)
-                {
-                    $ExceptionParameters = @{
-                        errorId = 'VMDataDiskSupportPRError'
-                        errorCategory = 'InvalidArgument'
-                        errorMessage = $($LocalizedData.VMDataDiskSupportPRError `
-                            -f $VMName,$VHD)
-                    }
-                    ThrowException @ExceptionParameters
-                } # if
-
                 # Validate the data disk type specified
                 if ($VMDataVhd.Type)
                 {
@@ -763,7 +752,7 @@ function Get-LabVM {
                 $DynamicMemoryEnabled = $VMTemplate.DynamicMemoryEnabled
             } # if
 
-            # Get the Memory Startup Bytes (from the template or VM)
+            # Get the Number of vCPUs (from the template or VM)
             [Int] $ProcessorCount = 1
             if ($VM.processorcount)
             {
@@ -875,6 +864,29 @@ function Get-LabVM {
                 $Packages = $VMTemplate.packages
             } # if
 
+            # Get the Version (from the template or VM)
+            [String] $Version = '8.0'
+            if ($VM.version)
+            {
+                $Version = $VM.version
+            }
+            elseif ($VMTemplate.version)
+            {
+                $Version = $VMTemplate.version
+            } # if
+
+            # Get the Generation (from the template or VM)
+            [String] $Generation = 2
+            if ($VM.generation)
+            {
+                $Generation = $VM.generation
+            }
+            elseif ($VMTemplate.generation)
+            {
+                $Generation = $VMTemplate.generation
+            } # if
+
+
             # Get the Certificate Source
             $CertificateSource = [LabCertificateSource]::Guest
             if ($OSType -eq [LabOSType]::Nano)
@@ -886,6 +898,7 @@ function Get-LabVM {
             {
                 $CertificateSource = $VM.CertificateSource
             } # if
+
 
             $LabVM = [LabVM]::New($VMName,$ComputerName)
             $LabVM.Template = $VM.Template
@@ -905,9 +918,12 @@ function Get-LabVM {
             $LabVM.CertificateSource = $CertificateSource
             $LabVM.Bootorder = $Bootorder
             $LabVM.Packages = $Packages
+            $LabVM.Version = $Version
+            $LabVM.Generation = $Generation
             $LabVM.Adapters = $VMAdapters
             $LabVM.DataVHDs = $DataVHDs
             $LabVM.DVDDrives = $DVDDrives
+            $LabVM.Version=$Version
             $LabVM.DSC = $LabDSC
             $LabVM.VMRootPath = Join-Path `
                 -Path $LabPath `
@@ -1075,12 +1091,30 @@ function Initialize-LabVM {
                     -f $VM.Name,$VMBootDiskPath,'Boot')
             } # if
 
-            $null = New-VM `
-                -Name $VM.Name `
-                -MemoryStartupBytes $VM.MemoryStartupBytes `
-                -Generation 2 `
-                -Path $LabPath `
-                -VHDPath $VMBootDiskPath
+            # Create New VM from settings 
+            if ($VM.Version -and ($Script:CurrentBuild -ge 14352)) 
+            {
+                $null = New-VM `
+                    -Name $VM.Name `
+                    -MemoryStartupBytes $VM.MemoryStartupBytes `
+                    -Generation $VM.Generation `
+                    -Path $LabPath `
+                    -VHDPath $VMBootDiskPath `
+                    -Version $VM.Version
+            }
+
+            else 
+            {
+                $null = New-VM `
+                    -Name $VM.Name `
+                    -MemoryStartupBytes $VM.MemoryStartupBytes `
+                    -Generation $VM.Generation `
+                    -Path $LabPath `
+                    -VHDPath $VMBootDiskPath `
+                    
+
+            }
+
             # Remove the default network adapter created with the VM because we don't need it
             Remove-VMNetworkAdapter `
                 -VMName $VM.Name `
@@ -1128,7 +1162,7 @@ function Initialize-LabVM {
             if ($VM.ExposeVirtualizationExtensions `
                 -ne (Get-VMProcessor -VMName $VM.Name).ExposeVirtualizationExtensions)
             {
-                if ($Script:CurrentBuild -ge 14352)
+                if ($Script:CurrentBuild -ge 14352 -and ($VM.Version -eq "8.0"))
                 {
                     Set-VMSecurity `
                         -VMName $VM.Name `
@@ -1228,8 +1262,8 @@ function Initialize-LabVM {
                         -StaticMacAddress $VMAdapter.MACAddress
             } # if
 
-            # Enable Device Naming
-            if ((Get-Command -Name Set-VMNetworkAdapter).Parameters.ContainsKey('DeviceNaming'))
+            # Enable Device Naming if supported by VM version and generation
+            if (((Get-Command -Name Set-VMNetworkAdapter).Parameters.ContainsKey('DeviceNaming')) -and (($VM.Version -ge "6.2") -and ($VM.Generation -eq 2)))
             {
                 $null = $VMNetworkAdapter |
                     Set-VMNetworkAdapter `

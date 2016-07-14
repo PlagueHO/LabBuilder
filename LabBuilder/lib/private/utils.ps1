@@ -367,9 +367,16 @@ function EnableWSMan {
     if (-not (Get-PSPRovider -PSProvider WSMan -ErrorAction SilentlyContinue))
     {
         WriteMessage -Message ($LocalizedData.EnablingWSManMessage)
-        $null = Set-WSManQuickConfig `
+        try
+        {
+            Start-Service -Name WinRm -ErrorAction Stop
+        }
+        catch
+        {
+            $null = Set-WSManQuickConfig `
             @PSBoundParameters `
             -ErrorAction Stop
+        }
 
         # Check WS-Man was enabled
         if (-not (Get-PSProvider -PSProvider WSMan -ErrorAction SilentlyContinue))
