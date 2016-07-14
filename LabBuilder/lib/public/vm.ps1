@@ -923,7 +923,6 @@ function Get-LabVM {
             $LabVM.Adapters = $VMAdapters
             $LabVM.DataVHDs = $DataVHDs
             $LabVM.DVDDrives = $DVDDrives
-            $LabVM.Version=$Version
             $LabVM.DSC = $LabDSC
             $LabVM.VMRootPath = Join-Path `
                 -Path $LabPath `
@@ -1091,8 +1090,8 @@ function Initialize-LabVM {
                     -f $VM.Name,$VMBootDiskPath,'Boot')
             } # if
 
-            # Create New VM from settings 
-            if ($VM.Version -and ($Script:CurrentBuild -ge 14352)) 
+            # Create New VM from settings
+            if ($VM.Version -and ($Script:CurrentBuild -ge 14352))
             {
                 $null = New-VM `
                     -Name $VM.Name `
@@ -1103,7 +1102,7 @@ function Initialize-LabVM {
                     -Version $VM.Version
             }
 
-            else 
+            else
             {
                 $null = New-VM `
                     -Name $VM.Name `
@@ -1111,7 +1110,7 @@ function Initialize-LabVM {
                     -Generation $VM.Generation `
                     -Path $LabPath `
                     -VHDPath $VMBootDiskPath `
-                    
+
 
             }
 

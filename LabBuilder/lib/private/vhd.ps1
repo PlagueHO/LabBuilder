@@ -10,7 +10,7 @@
                                 SetupComplete.cmd.
     The files should have already been prepared by the CreateVMInitializationFiles function.
     The VM VHD image should contain an installed copy of Windows still in OOBE mode.
-    
+
     This function also applies optional MSU package files from the Lab resource folder if specified in the packages list in the VM.
 .PARAMETER Lab
     Contains the Lab object that was produced by the Get-Lab cmdlet.
@@ -45,11 +45,11 @@ function InitializeBootVHD {
 
     # Get Path to LabBuilder files
     [String] $VMLabBuilderFiles = $VM.LabBuilderFilesPath
-    
+
     # Mount the VMs Boot VHD so that files can be loaded into it
     WriteMessage -Message $($LocalizedData.MountingVMBootDiskMessage `
         -f $VM.Name,$VMBootDiskPath)
-      
+
     # Create a mount point for mounting the Boot VHD
     [String] $MountPoint = Join-Path `
         -Path $VMLabBuilderFiles `
@@ -100,7 +100,7 @@ function InitializeBootVHD {
                 } # if
             } # if
         } # if
-        
+
         # Apply any listed packages to the Image
         if (-not [String]::IsNullOrWhitespace($Packages))
         {
@@ -156,7 +156,7 @@ function InitializeBootVHD {
                         }
                         ThrowException @ExceptionParameters
                     }
-                    
+
                     WriteMessage -Message $($LocalizedData.ApplyingVMBootDiskFileMessage `
                         -f $VM.Name,$Package,$PackageLangFile)
 
@@ -288,7 +288,7 @@ function InitializeBootVHD {
             -Destination "$MountPoint\Windows\Setup\Scripts\"`
             -Force
     }
-            
+
     # Dismount the VHD in preparation for boot
     WriteMessage -Message $($LocalizedData.DismountingVMBootDiskMessage `
         -f $VM.Name,$VMBootDiskPath)
@@ -303,7 +303,7 @@ function InitializeBootVHD {
 .DESCRIPTION
     The function checks that the disk has been paritioned and that it contains
     a volume that has been formatted.
-    
+
     This function will work for the following situations:
     0. VHDx is not mounted.
     1. VHDx is not initialized and PartitionStyle is passed.
@@ -311,12 +311,12 @@ function InitializeBootVHD {
     3. VHDx has 1 partition but 0 volumes and FileSystem is passed.
     4. VHDx has 1 partition and 1 volume that is unformatted and FileSystem is passed.
     5. VHDx has 1 partition and 1 volume that is formatted.
-    
+
     If the VHDx is any other state an exception will be thrown.
-    
+
     If the FileSystemLabel passed is different to the current label then it will
     be updated.
-    
+
     This function will not change the File System and/or Partition Type on the VHDx
     if it is different to the values provided.
 .PARAMETER Path
@@ -376,14 +376,14 @@ function InitializeVhd
         [LabPartitionStyle] $PartitionStyle,
 
         [LabFileSystem] $FileSystem,
-        
+
         [ValidateNotNullOrEmpty()]
         [String] $FileSystemLabel,
-        
+
         [Parameter(ParameterSetName = 'DriveLetter')]
         [ValidateNotNullOrEmpty()]
         [String] $DriveLetter,
-        
+
         [Parameter(ParameterSetName = 'AccessPath')]
         [ValidateNotNullOrEmpty()]
         [String] $AccessPath
@@ -454,7 +454,7 @@ function InitializeVhd
             -UseMaximumSize `
             -ErrorAction Stop)
     } # if
-    
+
     # Find the best partition to work with
     # This will usually be the one just created if it was
     # Otherwise we'll try and match by FileSystem and then
@@ -502,13 +502,13 @@ function InitializeVhd
         # There are no formatted partitions so use the first one
         $Partition = $Partitions[0]
     } # if
-    
+
     $PartitionNumber = $Partition.PartitionNumber
-    
+
     # Check for volume
     $Volume = Get-Volume `
         -Partition $Partition
-        
+
     # Check for file system
     if ([String]::IsNullOrWhitespace($Volume.FileSystem))
     {
@@ -536,7 +536,7 @@ function InitializeVhd
         {
             $FormatProperties += @{
                 NewFileSystemLabel = $FileSystemLabel
-            }            
+            }
         }
         $Volume = Format-Volume `
             @FormatProperties `
@@ -604,5 +604,5 @@ function InitializeVhd
         }
     }
     # Return the Volume to the pipeline
-    Return $Volume 
+    Return $Volume
 } # InitializeVhd
