@@ -6,11 +6,13 @@
         "UseDifferencingDisk":  true,
         "Timezone":  "Pacific Standard Time",
         "OSType":  1,
+        "Generation":  2,
+        "Version":  "8.0",
         "IntegrationServices":  [
                                     "Guest Service Interface,Heartbeat,Key-Value Pair Exchange,Shutdown,Time Synchronization,VSS"
                                 ],
         "CertificateSource":  2,
-        "Name":  "TestLab PESTER01 1",
+        "Name":  "TestLab PESTER011",
         "Template":  "Pester Windows Server 2012 R2 Datacenter Full",
         "ComputerName":  "PESTER011",
         "ProcessorCount":  1,
@@ -114,7 +116,7 @@
                          {
                              "Shared":  false,
                              "SupportPR":  false,
-                             "VHD":  "C:\\Pester Lab\\TestLab PESTER01 1\\Virtual Hard Disks\\DataDiskCopy.vhdx",
+                             "VHD":  "C:\\Pester Lab\\TestLab PESTER011\\Virtual Hard Disks\\DataDiskCopy.vhdx",
                              "VHDType":  0,
                              "Size":  0,
                              "SourceVHD":  "Intentionally Removed",
@@ -128,7 +130,7 @@
                          {
                              "Shared":  false,
                              "SupportPR":  false,
-                             "VHD":  "C:\\Pester Lab\\TestLab PESTER01 1\\Virtual Hard Disks\\DataDiskFixed.vhdx",
+                             "VHD":  "C:\\Pester Lab\\TestLab PESTER011\\Virtual Hard Disks\\DataDiskFixed.vhdx",
                              "VHDType":  1,
                              "Size":  10737418240,
                              "SourceVHD":  "Intentionally Removed",
@@ -142,7 +144,7 @@
                          {
                              "Shared":  false,
                              "SupportPR":  false,
-                             "VHD":  "C:\\Pester Lab\\TestLab PESTER01 1\\Virtual Hard Disks\\DataDiskDynamic.vhdx",
+                             "VHD":  "C:\\Pester Lab\\TestLab PESTER011\\Virtual Hard Disks\\DataDiskDynamic.vhdx",
                              "VHDType":  2,
                              "Size":  10737418240,
                              "SourceVHD":  "Intentionally Removed",
@@ -156,7 +158,7 @@
                          {
                              "Shared":  false,
                              "SupportPR":  false,
-                             "VHD":  "C:\\Pester Lab\\TestLab PESTER01 1\\Virtual Hard Disks\\DataDiskDifferencing.vhdx",
+                             "VHD":  "C:\\Pester Lab\\TestLab PESTER011\\Virtual Hard Disks\\DataDiskDifferencing.vhdx",
                              "VHDType":  3,
                              "Size":  10737418240,
                              "SourceVHD":  "Intentionally Removed",
@@ -170,7 +172,7 @@
                          {
                              "Shared":  false,
                              "SupportPR":  false,
-                             "VHD":  "C:\\Pester Lab\\TestLab PESTER01 1\\Virtual Hard Disks\\DataDiskMove.vhdx",
+                             "VHD":  "C:\\Pester Lab\\TestLab PESTER011\\Virtual Hard Disks\\DataDiskMove.vhdx",
                              "VHDType":  0,
                              "Size":  0,
                              "SourceVHD":  "Intentionally Removed",
@@ -184,7 +186,7 @@
                          {
                              "Shared":  true,
                              "SupportPR":  true,
-                             "VHD":  "C:\\Pester Lab\\TestLab PESTER01 1\\Virtual Hard Disks\\DataDiskShared.vhdx",
+                             "VHD":  "C:\\Pester Lab\\TestLab PESTER011\\Virtual Hard Disks\\DataDiskShared.vhdx",
                              "VHDType":  1,
                              "Size":  10737418240,
                              "SourceVHD":  "Intentionally Removed",
@@ -212,8 +214,8 @@
                     "ConfigFile":  "",
                     "Parameters":  "\r\n          Dummy = \"Dummy\"\r\n        "
                 },
-        "VMRootPath":  "C:\\Pester Lab\\TestLab PESTER01 1",
-        "LabBuilderFilesPath":  "C:\\Pester Lab\\TestLab PESTER01 1\\LabBuilder Files"
+        "VMRootPath":  "C:\\Pester Lab\\TestLab PESTER011",
+        "LabBuilderFilesPath":  "C:\\Pester Lab\\TestLab PESTER011\\LabBuilder Files"
     },
     {
         "MemoryStartupBytes":  2147483648,
@@ -222,11 +224,13 @@
         "UseDifferencingDisk":  true,
         "Timezone":  "Pacific Standard Time",
         "OSType":  1,
+        "Generation":  2,
+        "Version":  "8.0",
         "IntegrationServices":  [
                                     "Guest Service Interface,Heartbeat,Key-Value Pair Exchange,Shutdown,Time Synchronization,VSS"
                                 ],
         "CertificateSource":  2,
-        "Name":  "TestLab PESTER01 2",
+        "Name":  "TestLab PESTER012",
         "Template":  "Pester Windows Server 2012 R2 Datacenter Full",
         "ComputerName":  "PESTER012",
         "ProcessorCount":  1,
@@ -330,7 +334,7 @@
                          {
                              "Shared":  false,
                              "SupportPR":  false,
-                             "VHD":  "C:\\Pester Lab\\TestLab PESTER01 2\\Virtual Hard Disks\\DataDiskCopy.vhdx",
+                             "VHD":  "C:\\Pester Lab\\TestLab PESTER012\\Virtual Hard Disks\\DataDiskCopy.vhdx",
                              "VHDType":  0,
                              "Size":  0,
                              "SourceVHD":  "Intentionally Removed",
@@ -344,7 +348,7 @@
                          {
                              "Shared":  false,
                              "SupportPR":  false,
-                             "VHD":  "C:\\Pester Lab\\TestLab PESTER01 2\\Virtual Hard Disks\\DataDiskFixed.vhdx",
+                             "VHD":  "C:\\Pester Lab\\TestLab PESTER012\\Virtual Hard Disks\\DataDiskFixed.vhdx",
                              "VHDType":  1,
                              "Size":  10737418240,
                              "SourceVHD":  "Intentionally Removed",
@@ -358,7 +362,7 @@
                          {
                              "Shared":  false,
                              "SupportPR":  false,
-                             "VHD":  "C:\\Pester Lab\\TestLab PESTER01 2\\Virtual Hard Disks\\DataDiskDynamic.vhdx",
+                             "VHD":  "C:\\Pester Lab\\TestLab PESTER012\\Virtual Hard Disks\\DataDiskDynamic.vhdx",
                              "VHDType":  2,
                              "Size":  10737418240,
                              "SourceVHD":  "Intentionally Removed",
@@ -372,7 +376,7 @@
                          {
                              "Shared":  false,
                              "SupportPR":  false,
-                             "VHD":  "C:\\Pester Lab\\TestLab PESTER01 2\\Virtual Hard Disks\\DataDiskDifferencing.vhdx",
+                             "VHD":  "C:\\Pester Lab\\TestLab PESTER012\\Virtual Hard Disks\\DataDiskDifferencing.vhdx",
                              "VHDType":  3,
                              "Size":  10737418240,
                              "SourceVHD":  "Intentionally Removed",
@@ -386,7 +390,7 @@
                          {
                              "Shared":  false,
                              "SupportPR":  false,
-                             "VHD":  "C:\\Pester Lab\\TestLab PESTER01 2\\Virtual Hard Disks\\DataDiskMove.vhdx",
+                             "VHD":  "C:\\Pester Lab\\TestLab PESTER012\\Virtual Hard Disks\\DataDiskMove.vhdx",
                              "VHDType":  0,
                              "Size":  0,
                              "SourceVHD":  "Intentionally Removed",
@@ -400,7 +404,7 @@
                          {
                              "Shared":  true,
                              "SupportPR":  true,
-                             "VHD":  "C:\\Pester Lab\\TestLab PESTER01 2\\Virtual Hard Disks\\DataDiskShared.vhdx",
+                             "VHD":  "C:\\Pester Lab\\TestLab PESTER012\\Virtual Hard Disks\\DataDiskShared.vhdx",
                              "VHDType":  1,
                              "Size":  10737418240,
                              "SourceVHD":  "Intentionally Removed",
@@ -428,7 +432,7 @@
                     "ConfigFile":  "",
                     "Parameters":  "\r\n          Dummy = \"Dummy\"\r\n        "
                 },
-        "VMRootPath":  "C:\\Pester Lab\\TestLab PESTER01 2",
-        "LabBuilderFilesPath":  "C:\\Pester Lab\\TestLab PESTER01 2\\LabBuilder Files"
+        "VMRootPath":  "C:\\Pester Lab\\TestLab PESTER012",
+        "LabBuilderFilesPath":  "C:\\Pester Lab\\TestLab PESTER012\\LabBuilder Files"
     }
 ]
