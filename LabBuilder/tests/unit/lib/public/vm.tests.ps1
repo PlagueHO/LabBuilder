@@ -48,7 +48,7 @@ try
 
                 [Parameter(Mandatory)]
                 [String] $errorMessage,
-                
+
                 [Switch]
                 $terminate
             )
@@ -248,22 +248,6 @@ try
                     { Get-LabVM -Lab $Lab -VMTemplates $Templates -Switches $Switches } | Should Throw $Exception
                 }
             }
-            Context "Configuration passed with VM Data Disk is not Shared but SupportPR is Y." {
-                It 'Throw VMDataDiskSupportPRError Exception' {
-                    $Lab = Get-Lab -ConfigPath $Global:TestConfigOKPath
-                    $Lab.labbuilderconfig.vms.vm.datavhds.datavhd[1].supportpr = 'Y'
-                    [Array]$Switches = Get-LabSwitch -Lab $Lab
-                    [array]$Templates = Get-LabVMTemplate -Lab $Lab
-                    $ExceptionParameters = @{
-                        errorId = 'VMDataDiskSupportPRError'
-                        errorCategory = 'InvalidArgument'
-                        errorMessage = $($LocalizedData.VMDataDiskSupportPRError `
-                            -f $TestVMName,"$($Lab.labbuilderconfig.settings.labpath)\$TestVMName\Virtual Hard Disks\$($Lab.labbuilderconfig.vms.vm.datavhds.datavhd[1].vhd)")
-                    }
-                    $Exception = GetException @ExceptionParameters
-                    { Get-LabVM -Lab $Lab -VMTemplates $Templates -Switches $Switches } | Should Throw $Exception
-                }
-            }        
             Context "Configuration passed with VM Data Disk that has an invalid Partition Style." {
                 It 'Throw VMDataDiskPartitionStyleError Exception' {
                     $Lab = Get-Lab -ConfigPath $Global:TestConfigOKPath
@@ -711,7 +695,7 @@ try
                 [Array]$Templates = Get-LabVMTemplate -Lab $Lab
                 [Array]$Switches = Get-LabSwitch -Lab $Lab
                 [Array]$VMs = Get-LabVM -Lab $Lab -VMTemplates $Templates -Switches $Switches
-                        
+
                 It 'Returns True' {
                     Initialize-LabVM -Lab $Lab -VMs $VMs | Should Be $True
                 }
@@ -729,7 +713,7 @@ try
                     Assert-MockCalled Initialize-LabVMDSC -Exactly 1
                     Assert-MockCalled Install-LabVMDSC -Exactly 1
                 }
-                
+
                 Remove-Item -Path $Lab.labbuilderconfig.settings.labpath -Recurse -Force -ErrorAction SilentlyContinue
                 Remove-Item -Path $Lab.labbuilderconfig.settings.vhdparentpath -Recurse -Force -ErrorAction SilentlyContinue
             }
@@ -747,13 +731,13 @@ try
             Mock Test-Path -MockWith { Return $True }
             #endregion
 
-            Context 'Valid configuration is passed' {	
+            Context 'Valid configuration is passed' {
                 $Lab = Get-Lab -ConfigPath $Global:TestConfigOKPath
                 [Array]$Templates = Get-LabVMTemplate -Lab $Lab
                 [Array]$Switches = Get-LabSwitch -Lab $Lab
                 [Array]$VMs = Get-LabVM -Lab $Lab -VMTemplates $Templates -Switches $Switches
 
-                # Create the dummy VM's that the Remove-LabVM function 
+                # Create the dummy VM's that the Remove-LabVM function
                 It 'Returns True' {
                     Remove-LabVM -Lab $Lab -VMs $VMs | Should Be $True
                 }
@@ -765,10 +749,10 @@ try
                     Assert-MockCalled Remove-Item -Exactly 0
                 }
             }
-            Context 'Valid configuration is passed but VMs not passed' {	
+            Context 'Valid configuration is passed but VMs not passed' {
                 $Lab = Get-Lab -ConfigPath $Global:TestConfigOKPath
 
-                # Create the dummy VM's that the Remove-LabVM function 
+                # Create the dummy VM's that the Remove-LabVM function
                 It 'Returns True' {
                     Remove-LabVM -Lab $Lab | Should Be $True
                 }
@@ -780,13 +764,13 @@ try
                     Assert-MockCalled Remove-Item -Exactly 0
                 }
             }
-            Context 'Valid configuration is passed with RemoveVHDs switch' {	
+            Context 'Valid configuration is passed with RemoveVHDs switch' {
                 $Lab = Get-Lab -ConfigPath $Global:TestConfigOKPath
                 [Array]$Templates = Get-LabVMTemplate -Lab $Lab
                 [Array]$Switches = Get-LabSwitch -Lab $Lab
                 [Array]$VMs = Get-LabVM -Lab $Lab -VMTemplates $Templates -Switches $Switches
 
-                # Create the dummy VM's that the Remove-LabVM function 
+                # Create the dummy VM's that the Remove-LabVM function
                 It 'Returns True' {
                     Remove-LabVM -Lab $Lab -VMs $VMs -RemoveVMFolder | Should Be $True
                 }
@@ -813,7 +797,7 @@ try
             Mock Install-LabVMDSC
             #endregion
 
-            Context 'Valid configuration is passed' {	
+            Context 'Valid configuration is passed' {
                 $Lab = Get-Lab -ConfigPath $Global:TestConfigOKPath
                 New-Item -Path $Lab.labbuilderconfig.settings.labpath -ItemType Directory -Force -ErrorAction SilentlyContinue
                 New-Item -Path $Lab.labbuilderconfig.settings.vhdparentpath -ItemType Directory -Force -ErrorAction SilentlyContinue
@@ -821,7 +805,7 @@ try
                 [Array]$Templates = Get-LabVMTemplate -Lab $Lab
                 [Array]$Switches = Get-LabSwitch -Lab $Lab
                 [Array]$VMs = Get-LabVM -Lab $Lab -VMTemplates $Templates -Switches $Switches
-                        
+
                 It 'Returns True' {
                     Install-LabVM -Lab $Lab -VM $VMs[0] | Should Be $True
                 }
@@ -834,7 +818,7 @@ try
                     Assert-MockCalled Initialize-LabVMDSC -Exactly 1
                     Assert-MockCalled Install-LabVMDSC -Exactly 1
                 }
-                
+
                 Remove-Item -Path $Lab.labbuilderconfig.settings.labpath -Recurse -Force -ErrorAction SilentlyContinue
                 Remove-Item -Path $Lab.labbuilderconfig.settings.vhdparentpath -Recurse -Force -ErrorAction SilentlyContinue
             }

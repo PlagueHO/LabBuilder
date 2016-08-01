@@ -147,8 +147,9 @@ try
             [LabResourceMSU[]]$ResourceMSUs = Get-LabResourceMSU -Lab $Lab
 
             Mock DownloadAndUnzipFile
+            Mock Test-Path -MockWith { $False }
 
-            Context 'Valid configuration is passed' {
+            Context 'Valid configuration is passed and resources are missing' {
                 It 'Does not throw an Exception' {
                     { Initialize-LabResourceMSU -Lab $Lab -ResourceMSUs $ResourceMSUs } | Should Not Throw
                 }
