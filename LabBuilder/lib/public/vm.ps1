@@ -123,7 +123,7 @@ function Get-LabVM {
             # if a LabId is set for the lab, prepend it to the VM name.
             if ($LabId)
             {
-                $VMName = "$LabId $VMName"
+                $VMName = "$LabId$VMName"
             }
 
             if (-not $VM.Template)
@@ -193,8 +193,8 @@ function Get-LabVM {
                 # name and switch name.
                 if ($LabId)
                 {
-                    $AdapterName = "$LabId $AdapterName"
-                    $AdapterSwitchName = "$LabId $AdapterSwitchName"
+                    $AdapterName = "$LabId$AdapterName"
+                    $AdapterSwitchName = "$LabId$AdapterSwitchName"
                 }
 
                 # Check the switch is in the switch list
