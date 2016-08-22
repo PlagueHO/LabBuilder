@@ -99,11 +99,11 @@ function Get-LabVM {
 
         foreach ($Instance in 1..$InstanceCount)
         {
-            # If InstanceCount is 1 then don't append a number to the VM name
+            # If InstanceCount is 1 then don't increment the IP or MAC addresses
             if ($InstanceCount -eq 1)
             {
-                $VMName = $VM.Name
-                $ComputerName = $VM.ComputerName
+                $VMName = "$($VM.Name)$Instance"
+                $ComputerName = "$($VM.ComputerName)$Instance"
                 $IncNetIds = 0
             }
             else
