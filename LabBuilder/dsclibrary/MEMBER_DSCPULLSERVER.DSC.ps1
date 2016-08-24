@@ -19,13 +19,55 @@ DSC Template Configuration File For use by LabBuilder
 Configuration MEMBER_DSCPULLSERVER
 {
     Import-DSCResource -ModuleName xPSDesiredStateConfiguration
+    Import-DscResource -ModuleName xComputerManagement
+    Import-DscResource -ModuleName xWebAdministration
+    Node $AllNodes.NodeName {
+        # Assemble the Local Admin Credentials
+        If ($Node.LocalAdminPassword) {
+            [PSCredential]$LocalAdminCredential = New-Object System.Management.Automation.PSCredential ("Administrator", (ConvertTo-SecureString $Node.LocalAdminPassword -AsPlainText -Force))
+        }
+        If ($Node.DomainAdminPassword) {
+            [PSCredential]$DomainAdminCredential = New-Object System.Management.Automation.PSCredential ("$($Node.DomainName)\Administrator", (ConvertTo-SecureString $Node.DomainAdminPassword -AsPlainText -Force))
+        }
 
-    Node $NodeName
-    {
+        WindowsFeature IISInstall
+        {
+            Ensure          = "Present"
+            Name            = "Web-Server"
+        }
+
+        WindowsFeature AspNet45Install
+        {
+            Ensure          = "Present"
+            Name            = "Web-Asp-Net45"
+        }
+
+        WindowsFeature WebMgmtServiceInstall
+        {
+            Ensure          = "Present"
+            Name            = "Web-Mgmt-Service"
+        }
+
         WindowsFeature DSCServiceFeature
         {
-            Ensure = 'Present'
-            Name   = 'DSC-Service'
+            Ensure          = 'Present'
+            Name            = 'DSC-Service'
+        }
+
+        WaitForAll DC
+        {
+            ResourceName      = '[xADDomain]PrimaryDC'
+            NodeName          = $Node.DCname
+            RetryIntervalSec  = 15
+            RetryCount        = 60
+        }
+
+        xComputer JoinDomain
+        {
+            Name          = $Node.NodeName
+            DomainName    = $Node.DomainName
+            Credential    = $DomainAdminCredential
+            DependsOn     = "[WaitForAll]DC"
         }
 
         xDscWebService PSDSCPullServer
@@ -46,7 +88,7 @@ Configuration MEMBER_DSCPULLSERVER
             Ensure          = 'Present'
             Type            = 'File'
             DestinationPath = "$env:ProgramFiles\WindowsPowerShell\DscService\RegistrationKeys.txt"
-            Contents        = $RegistrationKey
+            Contents        = $Node.RegistrationKey
         }
     }
 }
