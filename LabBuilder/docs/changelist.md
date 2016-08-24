@@ -13,6 +13,7 @@
 * Fixed several typos in comment sections
 * DSC resources created for working with composite DSC resources - non-functional at this time
 * Correctly enable PS Remoting using Enable-PSRemoting cmdlet.
+* DSCLibrary\MEMEBER_DSCPULLSERVER.DSC.ps1: Added DSC Library resource for creating DSC Pull Servers.
 
 # 0.8.3.0
 * Fix bug where Administrator account is not enabled in Windows client OS.
