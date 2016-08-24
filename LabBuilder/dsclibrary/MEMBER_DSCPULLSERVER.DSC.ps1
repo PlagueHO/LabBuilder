@@ -11,7 +11,8 @@ DSC Template Configuration File For use by LabBuilder
     PSDscAllowDomainUser = $True
     Port = 8080
     PhysicalPath = "D:\inetpub\PSDSCPullServer"
-    CertificateThumbprint = 'A7000024B753FA6FFF88E966FD6E19301FAE9CCC'
+    # Set to a valid certificate thumbprint to allow HTTP traffic
+    CertificateThumbprint = 'AllowUnencryptedTraffic'
     RegistrationKey = '140a952b-b9d6-406b-b416-e0f759c9c0e4'
 ###################################################################################################>
 
