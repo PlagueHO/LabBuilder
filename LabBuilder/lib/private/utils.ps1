@@ -373,8 +373,9 @@ function EnableWSMan {
         }
         catch
         {
-            $null = Set-WSManQuickConfig `
+            $null = Enable-PSRemoting `
                 @PSBoundParameters `
+                -SkipNetworkProfileCheck `
                 -ErrorAction Stop
         }
 

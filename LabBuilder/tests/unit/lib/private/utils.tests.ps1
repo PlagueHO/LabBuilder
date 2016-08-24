@@ -558,18 +558,18 @@ try
             Context 'WS-Man is already enabled' {
                 Mock Start-Service
                 Mock Get-PSProvider -MockWith { @{ Name = 'wsman' } }
-                Mock Set-WSManQuickConfig
+                Mock Enable-PSRemoting
                 It 'Does not throw an Exception' {
                     { EnableWSMan } | Should Not Throw
                 }
                 It 'Calls appropriate mocks' {
-                    Assert-MockCalled Set-WSManQuickConfig -Exactly 0
+                    Assert-MockCalled Enable-PSRemoting -Exactly 0
                 }
             }
             Context 'WS-Man is not enabled, user declines install' {
                 Mock Start-Service -MockWith { Throw }
                 Mock Get-PSProvider
-                Mock Set-WSManQuickConfig
+                Mock Enable-PSRemoting
                 It 'Should throw WSManNotEnabledError exception' {
                     $ExceptionParameters = @{
                         errorId = 'WSManNotEnabledError'
@@ -581,7 +581,7 @@ try
                     { EnableWSMan } | Should Throw $Exception
                 }
                 It 'Calls appropriate mocks' {
-                    Assert-MockCalled Set-WSManQuickConfig -Exactly 1
+                    Assert-MockCalled Enable-PSRemoting -Exactly 1
                 }
             }
         }
