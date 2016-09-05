@@ -449,6 +449,7 @@ class LabVM:System.ICloneable {
     [String] $VMRootPath
     [String] $LabBuilderFilesPath
     [LabCertificateSource] $CertificateSource = [LabCertificateSource]::Guest
+    [String] $NanoODJPath
 
     LabVM() {}
     
