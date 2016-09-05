@@ -884,5 +884,3 @@ function WriteMessage
         }
     } # switch
 } # WriteMessage
-
-
