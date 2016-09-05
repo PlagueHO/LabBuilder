@@ -196,6 +196,7 @@ ConvertFrom-StringData -StringData @'
     WaitingForIPAddressAssignedMessage=Waiting for valid IP Address to be assigned to VM '{0}', retrying in {1} seconds.
     WaitingForInitialSetupCompleteMessage=Waiting for Initial Setup to be complete on VM '{0}', retrying in {1} seconds.
     WaitingForCertificateMessage=Waiting for Certificate file on VM '{0}', retrying in {1} seconds.
+    WaitingForODJMessage=Waiting for Online Domain Join file on VM '{0}', retrying in {1} seconds.
     FailedToUploadCertificateCreateScriptMessage=Failed to upload certificate create script to VM '{0}', retrying in {1} seconds.
     FailedToDownloadCertificateMessage=Failed to download certificate from VM '{0}', retrying in {1} seconds.
     FailedToExecuteCertificateCreateScriptMessage=Failed to execute certificate create script to VM '{0}', retrying in {1} seconds.

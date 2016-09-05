@@ -227,6 +227,11 @@ function InitializeBootVHD {
         -Path "$MountPoint\Windows\Setup\Scripts" `
         -ItemType Directory
 
+    # Create the ODJ folder where Offline domain join files can be put
+    $null = New-Item `
+        -Path "$MountPoint\Windows\Setup\ODJFiles" `
+        -ItemType Directory
+
     # Apply an unattended setup file
     WriteMessage -Message $($LocalizedData.ApplyingVMBootDiskFileMessage `
         -f $VM.Name,'Unattend','Unattend.xml')

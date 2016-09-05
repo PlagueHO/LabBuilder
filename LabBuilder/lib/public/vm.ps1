@@ -159,6 +159,13 @@ function Get-LabVM {
                 ThrowException @ExceptionParameters
             } # if
 
+            # Get path to Offline Domain Join file if it exists
+            [String]$NanoODJPath = $null
+            If($VM.NanoODJPath){
+                $NanoODJPath = $VM.NanoODJPath
+            }
+
+
             # Assemble the Network adapters that this VM will use
             [LabVMAdapter[]] $VMAdapters = @()
             [Int] $AdapterCount = 0
@@ -886,7 +893,6 @@ function Get-LabVM {
                 $Generation = $VMTemplate.generation
             } # if
 
-
             # Get the Certificate Source
             $CertificateSource = [LabCertificateSource]::Guest
             if ($OSType -eq [LabOSType]::Nano)
@@ -924,6 +930,7 @@ function Get-LabVM {
             $LabVM.DataVHDs = $DataVHDs
             $LabVM.DVDDrives = $DVDDrives
             $LabVM.DSC = $LabDSC
+            $LabVM.NanoODJPath = $NanoODJPath
             $LabVM.VMRootPath = Join-Path `
                 -Path $LabPath `
                 -ChildPath $VMName
@@ -1505,6 +1512,14 @@ function Install-LabVM {
             } # if
         } # if
 
+        if ($VM.OSType -in ([LabOStype]::Nano))
+        {
+        # Copy ODJ Files if it Exists
+            CopyODJ `
+            -Lab $Lab `
+            -VM $VM
+        } # if
+
         # Create any DSC Files for the VM
         InitializeDSC `
             -Lab $Lab `
@@ -1514,6 +1529,15 @@ function Install-LabVM {
         StartDSC `
             -Lab $Lab `
             -VM $VM
+
+        if ($VM.OSType -in ([LabOStype]::Nano))
+        {
+        # Copy ODJ Files if it Exists
+            CopyODJ `
+            -Lab $Lab `
+            -VM $VM
+        } # if
+
     } # if
 } # Install-LabVM
 
