@@ -145,6 +145,7 @@ ConvertFrom-StringData -StringData @'
     DSCConfigSearchingForModuleMessage=Searching for Module '{2}' required by DSC Config File '{0}' in VM '{1}'.
     DSCConfigInstallingModuleMessage=Installing Module '{2}' required by DSC Config File '{0}' in VM '{1}'.
     DSCConfigSavingModuleMessage=Saving Module '{2}' required by DSC Config File '{0}' in VM '{1}' to LabBuilder files.
+    DSCConfigCopyingModuleMessage=Copying Module '{2}' required by DSC Config File '{0}' in VM '{1}' from '{3}' to '{4}'.
     DSCConfigCreatingLCMMOFMessage=Creating DSC LCM Config file '{0}' in VM '{1}'.
     DSCConfigPrepareMessage=Preparing to compile DSC Config '{0}' for VM '{1}'.
     DSCConfigCreatingMOFMessage=Creating DSC Config file '{0}' in VM '{1}'.

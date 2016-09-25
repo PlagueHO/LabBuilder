@@ -13,6 +13,8 @@
 * Fixed several typos in comment sections
 * DSC resources created for working with composite DSC resources - non-functional at this time
 * DSCLibrary\MEMEBER_DSCPULLSERVER.DSC.ps1: Added DSC Library resource for creating DSC Pull Servers.
+* Added additional logging information when copying DSC Resource modules.
+* Fix bug when copying DSC Resource modules to LabBuilder Files for VM when DSC Modules folder does not exist.
 
 # 0.8.3.0
 * Fix bug where Administrator account is not enabled in Windows client OS.
