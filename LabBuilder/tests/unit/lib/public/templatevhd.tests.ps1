@@ -48,7 +48,7 @@ try
 
                 [Parameter(Mandatory)]
                 [String] $errorMessage,
-                
+
                 [Switch]
                 $terminate
             )
@@ -64,7 +64,7 @@ try
         $Script:CurrentBuild = 10586
 
 
-        Describe 'Get-LabVMTemplateVHD' {
+        Describe '\Lib\Public\TemplateVhd.ps1\Get-LabVMTemplateVHD' {
 
             Context 'Configuration passed with rooted ISO Root Path that does not exist' {
                 It 'Throws a VMTemplateVHDISORootPathNotFoundError Exception' {
@@ -276,7 +276,7 @@ try
             Context 'Valid configuration is passed and template VHD ISOs are found' {
                 It 'Returns VMTemplateVHDs array that matches Expected array' {
                     $Lab = Get-Lab -ConfigPath $Global:TestConfigOKPath
-                    [Array] $TemplateVHDs = Get-LabVMTemplateVHD -Lab $Lab 
+                    [Array] $TemplateVHDs = Get-LabVMTemplateVHD -Lab $Lab
                     # Remove the VHDPath and ISOPath values for any VMtemplatesVHD
                     #  because they will usually be relative to the test folder and
                     # won't exist on any other test system
@@ -294,7 +294,7 @@ try
 
 
 
-        Describe 'Initialize-LabVMTemplateVHD' {
+        Describe '\Lib\Public\TemplateVhd.ps1\Initialize-LabVMTemplateVHD' {
             $Lab = Get-Lab -ConfigPath $Global:TestConfigOKPath
             $ResourceMSUFile = Join-Path -Path $Lab.labbuilderconfig.settings.resourcepathfull -ChildPath "Win8.1AndW2K12R2-KB3134758-x64.msu"
 
@@ -320,7 +320,7 @@ try
             Mock Get-WindowsImage -MockWith { @{ ImageName = 'DOESNOTMATTER' } }
             Mock Copy-Item
             Mock Rename-Item
-            
+
             # Mock Convert-WindowsImage
             if (-not (Test-Path -Path Function:Convert-WindowsImage))
             {
@@ -507,7 +507,7 @@ try
             $NanoServerPackagesFolder = Join-Path `
                     -Path (Split-Path -Path $VMTemplateVHDs[5].vhdpath -Parent) `
                     -ChildPath 'NanoServerPackages'
-            
+
             Context 'Valid Configuration Passed with Nano Server VHDx not generated and two packages' {
                 Mock Test-Path -ParameterFilter { $Path -eq $NanoServerPackagesFolder } -MockWith { $True }
                 Mock Test-Path -ParameterFilter { $Path -like "$NanoServerPackagesFolder\*.cab" } -MockWith { $True }
@@ -597,7 +597,7 @@ try
         }
 
 
-        Describe 'Remove-LabVMTemplateVHD' {
+        Describe '\Lib\Public\TemplateVhd.ps1\Remove-LabVMTemplateVHD' {
             $Lab = Get-Lab -ConfigPath $Global:TestConfigOKPath
             $VMTemplateVHDs = Get-LabVMTemplateVHD -Lab $Lab
             Mock Remove-Item

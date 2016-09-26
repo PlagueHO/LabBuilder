@@ -64,7 +64,7 @@ try
 
 
 
-        Describe 'InitializeBootVHD' {
+        Describe '\Lib\Private\Vhd.ps1\InitializeBootVHD' {
             $Lab = Get-Lab -ConfigPath $Global:TestConfigOKPath
             [array] $VMs = Get-LabVM -Lab $Lab
             $NanoServerPackagesFolder = Join-Path -Path $Lab.labbuilderconfig.settings.labpath -ChildPath 'NanoServerPackages'
@@ -243,7 +243,11 @@ try
 
 
 
-        Describe 'InitializeVHD' {
+        Describe '\Lib\Private\Vhd.ps1\InitializeVHD' {
+            # Mock functions
+            function Get-VHD {}
+            function Mount-VHD {}
+
             $VHD = @{
                 Path = 'c:\DataVHDx.vhdx'
             }

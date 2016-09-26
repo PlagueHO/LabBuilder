@@ -9,11 +9,11 @@ install:
   - ps: |
         Install-PackageProvider -Name NuGet -MinimumVersion 2.8.5.201 -Force
         Install-Module -Name Pester -Repository PSGallery -Force
+        Install-Module -Name PSScriptAnalyzer -Repository PSGallery -Force
 
         # Update AppVeyor Build Version by pulling from Manifest
         $ManifestPath = Join-Path -Path $ENV:APPVEYOR_BUILD_FOLDER -ChildPath 'LabBuilder\LabBuilder.psd1'
         $ManifestContent = Get-Content -Path $ManifestPath -Raw
-
         $Regex = '(?<=ModuleVersion\s+=\s+'')(?<ModuleVersion>.*)(?='')'
         $Matches = @([regex]::matches($ManifestContent, $Regex, 'IgnoreCase'))
         $version = $null
@@ -22,15 +22,30 @@ install:
             $version = $Matches[0].Value
         }
 
-        # new version
-        $version = "$version.$env:APPVEYOR_BUILD_NUMBER"
+        # Determine the new version number
+        $versionArray = $version -split '\.'
+        $newVersion = ''
+        Foreach ($ver in (0..2)) {
+            $sem = $versionArray[$ver]
+            if ([String]::IsNullOrEmpty($sem)) {
+                $sem = '0'
+            }
+            $newVersion += "$sem."
+        }
+        $newVersion += $env:APPVEYOR_BUILD_NUMBER
 
         # update AppVeyor build
-        Update-AppveyorBuild -Version $version
+        Update-AppveyorBuild -Version $newVersion
 
-        # Set version number
-        $ManifestContent = $ManifestContent -replace '(?<=ModuleVersion\s+=\s+'')(?<ModuleVersion>.*)(?='')', ('${{ModuleVersion}}.{0}' -f $env:APPVEYOR_BUILD_NUMBER)
+        # Set the new version number in the Module Manifest
+        $manifestContent = $ManifestContent -replace '(?<=ModuleVersion\s+=\s+'')(?<ModuleVersion>.*)(?='')', $newVersion
         Set-Content -Path $ManifestPath -Value $ManifestContent
+
+        # Set the new version number in the Readme.md
+        $readmePath = Join-Path -Path $ENV:APPVEYOR_BUILD_FOLDER -ChildPath 'labbuilder\docs\changelist.md'
+        $readmeContent = Get-Content -Path $readmePath -Raw
+        $readmeContent = $readmeContent -replace '### Unreleased', "### $newVersion"
+        Set-Content -Path $readmePath -Value $readmeContent
 
         Install-WindowsFeature -Name hyper-v-powershell
 
@@ -89,30 +104,68 @@ deploy_script:
         $null = Add-Type -assemblyname System.IO.Compression.FileSystem
         [System.IO.Compression.ZipFile]::CreateFromDirectory($StagingFolder, $zipFilePath)
 
+        # Remove the Staging folder
+        $null = Remove-Item -Path $StagingFolder -Recurse -Force
+
         # Create Publish Script Artifact
         $PublishScriptName = $env:APPVEYOR_PROJECT_NAME + "." + $env:APPVEYOR_BUILD_VERSION + "_publish.ps1"
         $PublishScriptPath = Join-Path -Path $buildFolder -ChildPath $PublishScriptName
         Set-Content -Path $PublishScriptPath -Value "Publish-Module -Name 'LabBuilder' -RequiredVersion ${env:APPVEYOR_BUILD_VERSION} -NuGetApiKey (Read-Host -Prompt 'NuGetApiKey')"
-
         @(
             # You can add other artifacts here
             $zipFilePath,
-            $PublishScriptPath
+            $PublishScriptPath,
+            $testResultsFile
         ) | % {
             Write-Host "Pushing package $_ as Appveyor artifact"
             Push-AppveyorArtifact $_
+            Remove-Item -Path $_ -Force
         }
 
         # If this is a build of the Master branch and not a PR push
         # then publish the Module to the PowerShell Gallery.
-        if ((! $ENV:APPVEYOR_PULL_REQUEST_NUMBER) `
-            -and ($ENV:APPVEYOR_REPO_BRANCH -eq 'master'))
-        {
-            Write-Host "Publishing Module to PowerShell Gallery"
-            Copy-Item -Path $ModuleFolder -Destination ($ENV:PSModulePath -split ';')[0] -Recurse
-            Get-PackageProvider -Name NuGet -ForceBootstrap
-            Publish-Module -Name 'LabBuilder' -RequiredVersion ${ENV:APPVEYOR_BUILD_VERSION} -NuGetApiKey $ENV:PowerShellGalleryApiKey -Confirm:$false
-        }
+        # Deployment management
+        if ($ENV:APPVEYOR_REPO_BRANCH -eq 'master') {
+            if ($ENV:APPVEYOR_PULL_REQUEST_NUMBER) {
+                # This is a PR so do nothing
+            } elseif ($ENV:APPVEYOR_REPO_COMMIT_MESSAGE -like '* Deploy!') {
+                # This was a deploy commit so no need to do anything
+            } else {
+                # This is not a PR so deploy
+                Write-Host "Beginning deploy process"
 
-        # Remove Staging Folder
-        $null = Remove-Item -Path $StagingFolder -Recurse -Force
+                # Pull the master branch, update the readme.md and manifest
+                Set-Location -Path $ENV:APPVEYOR_BUILD_FOLDER
+                & git @('config','--global','credential.helper','store')
+                Add-Content "$env:USERPROFILE\.git-credentials" "https://$($env:GitHubPushFromPlagueHO):x-oauth-basic@github.com`n"
+                & git @('config','--global','user.email','plagueho@gmail.com')
+                & git @('config','--global','user.name','Daniel Scott-Raynsford')
+
+                & git @('checkout','-f','master')
+                Set-Content -Path $ManifestPath -Value $ManifestContent
+                Set-Content -Path $readmePath -Value $readmeContent
+
+                # Update the master branch
+                Write-Host "Pushing deployment changes to Master"
+                & git @('add','.')
+                & git @('commit','-m',"$NewVersion Deploy!")
+                & git @('status')
+                & git @('push','origin','master')
+
+                # Create the version tag and push it
+                Write-Host "Pushing $newVersion tag to Master"
+                & git @('tag','-a',$newVersion,'-m',$newVersion)
+                & git @('push','origin',$newVersion)
+
+                # Merge the changes to the Dev branch as well
+                Write-Host "Pushing deployment changes to Dev"
+                & git @('checkout','-f','dev')
+                & git @('merge','master')
+                & git @('push','origin','dev')
+
+                # This is a commit to Master
+                Write-Host "Publishing Module to PowerShell Gallery"
+                Get-PackageProvider -Name NuGet -ForceBootstrap
+                Publish-Module -Name 'LabBuilder' -RequiredVersion $newVersion -NuGetApiKey $ENV:PowerShellGalleryApiKey -Confirm:$false
+            }
+        }

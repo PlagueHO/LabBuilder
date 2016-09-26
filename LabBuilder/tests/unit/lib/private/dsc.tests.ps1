@@ -48,7 +48,7 @@ try
 
                 [Parameter(Mandatory)]
                 [String] $errorMessage,
-                
+
                 [Switch]
                 $terminate
             )
@@ -59,11 +59,12 @@ try
                 -ArgumentList $exception, $errorId, $errorCategory, $null
             return $errorRecord
         }
+
         # Run tests assuming Build 10586 is installed
         $Script:CurrentBuild = 10586
 
 
-        Describe 'GetModulesInDSCConfig' {
+        Describe '\Lib\Private\Dsc.ps1\GetModulesInDSCConfig' {
             Context 'Called with Test DSC Resource File' {
                 It 'Returns DSCModules Object that matches Expected Object' {
                     $DSCModules = GetModulesInDSCConfig `
@@ -93,8 +94,8 @@ try
         }
 
 
-        
-        Describe 'SetModulesInDSCConfig' {
+
+        Describe '\Lib\Private\Dsc.ps1\SetModulesInDSCConfig' {
             $Module1 = [LabDSCModule]::New('PSDesiredStateConfiguration','1.0')
             $Module2 = [LabDSCModule]::New('xActiveDirectory')
             $Module3 = [LabDSCModule]::New('xComputerManagement','1.4.0.0')
@@ -111,7 +112,7 @@ try
                     $ExpectedDSCConfig = Get-Content -Path "$Global:ExpectedContentPath\ExpectedDSCConfig.txt"
                     @(Compare-Object `
                         -ReferenceObject $ExpectedDSCConfig `
-                        -DifferenceObject (Get-Content -Path "$Global:ArtifactPath\ExpectedDSCConfig.txt")).Count  | Should Be 0 
+                        -DifferenceObject (Get-Content -Path "$Global:ArtifactPath\ExpectedDSCConfig.txt")).Count  | Should Be 0
                 }
             }
             Context 'Called with Test DSC Resource Content' {
@@ -125,14 +126,17 @@ try
                     $ExpectedDSCConfig = Get-Content -Path "$Global:ExpectedContentPath\ExpectedDSCConfig.txt"
                     @(Compare-Object `
                         -ReferenceObject $ExpectedDSCConfig `
-                        -DifferenceObject (Get-Content -Path "$Global:ArtifactPath\ExpectedDSCConfig.txt")).Count  | Should Be 0 
+                        -DifferenceObject (Get-Content -Path "$Global:ArtifactPath\ExpectedDSCConfig.txt")).Count  | Should Be 0
                 }
             }
         }
 
 
 
-        Describe 'CreateDSCMOFFiles' -Tags 'Incomplete' {
+        Describe '\Lib\Private\Dsc.ps1\CreateDSCMOFFiles' -Tags 'Incomplete' {
+            # Mock functions
+            function Get-VM {}
+            function Get-VMNetworkAdapter {}
 
             Mock Get-VM
 
@@ -140,7 +144,7 @@ try
             [Array]$Switches = Get-LabSwitch -Lab $Lab
             [Array]$Templates = Get-LabVMTemplate -Lab $Lab
             [Array]$VMs = Get-LabVM -Lab $Lab -VMTemplates $Templates -Switches $Switches
-            
+
             Mock Get-Module
             Mock GetModulesInDSCConfig -MockWith { @('TestModule') }
 
@@ -156,7 +160,7 @@ try
             }
 
             Mock Find-Module
-            
+
             Context 'DSC Module Not Found' {
                 $VM = $VMS[0].Clone()
                 $ExceptionParameters = @{
@@ -179,7 +183,7 @@ try
 
             Mock Find-Module -MockWith { @{ name = 'TestModule' } }
             Mock Install-Module -MockWith { Throw }
-            
+
             Context 'DSC Module Download Error' {
                 $VM = $VMS[0].Clone()
                 $ExceptionParameters = @{
@@ -204,7 +208,7 @@ try
             Mock Test-Path `
                 -ParameterFilter { $Path -like '*TestModule' } `
                 -MockWith { $false }
-            
+
             Context 'DSC Module Not Found in Path' {
                 $VM = $VMS[0].Clone()
                 $ExceptionParameters = @{
@@ -231,7 +235,7 @@ try
                 -MockWith { $true }
             Mock Copy-Item
             Mock Get-LabVMCertificate
-            
+
             Context 'Certificate Create Failed' {
                 $VM = $VMS[0].Clone()
                 $ExceptionParameters = @{
@@ -259,13 +263,13 @@ try
             Mock Import-Certificate
             Mock Get-ChildItem `
                 -ParameterFilter { $path -eq 'cert:\LocalMachine\My' } `
-                -MockWith { @{ 
+                -MockWith { @{
                     FriendlyName = 'DSC Credential Encryption'
-                    Thumbprint = '1FE3BA1B6DBE84FCDF675A1C944A33A55FD4B872'	
+                    Thumbprint = '1FE3BA1B6DBE84FCDF675A1C944A33A55FD4B872'
                 } }
             Mock Remove-Item
             Mock ConfigLCM
-            
+
             Context 'Meta MOF Create Failed' {
                 $VM = $VMS[0].Clone()
                 $ExceptionParameters = @{
@@ -286,7 +290,7 @@ try
                     Assert-MockCalled Install-Module -Exactly 1
                     Assert-MockCalled Copy-Item -Exactly 1
                     Assert-MockCalled Get-LabVMCertificate -Exactly 1
-                    Assert-MockCalled Import-Certificate -Exactly 1			
+                    Assert-MockCalled Import-Certificate -Exactly 1
                     Assert-MockCalled Get-ChildItem -ParameterFilter { $path -eq 'cert:\LocalMachine\My' } -Exactly 1
                     Assert-MockCalled Remove-Item
                     Assert-MockCalled ConfigLCM -Exactly 1
@@ -296,7 +300,11 @@ try
 
 
 
-        Describe 'SetDSCStartFile' {
+        Describe '\Lib\Private\Dsc.ps1\SetDSCStartFile' {
+
+            # Mock functions
+            function Get-VM {}
+            function Get-VMNetworkAdapter {}
 
             Mock Get-VM
 
@@ -348,10 +356,10 @@ try
 
             Mock Get-VMNetworkAdapter -MockWith { @{ Name = 'Exists'; MacAddress = '111111111111' }}
             Mock Set-Content
-            
+
             Context 'Valid Configuration Passed' {
                 $VM = $VMS[0].Clone()
-                
+
                 It 'Does Not Throw Exception' {
                     { SetDSCStartFile -Lab $Lab -VM $VM } | Should Not Throw
                 }
@@ -364,7 +372,7 @@ try
 
 
 
-        Describe 'InitializeDSC' -Tag 'Incomplete' {
+        Describe '\Lib\Private\Dsc.ps1\InitializeDSC' -Tag 'Incomplete' {
             $Lab = Get-Lab -ConfigPath $Global:TestConfigOKPath
             [LabVM[]] $VMs = Get-LabVM -Lab $Lab
 
@@ -376,7 +384,7 @@ try
 
             Context 'Valid Configuration Passed' {
                 $VM = $VMs[0].Clone()
-                
+
                 It 'Does Not Throw Exception' {
                     { InitializeDSC -Lab $Lab -VM $VM } | Should Not Throw
                 }
@@ -389,11 +397,11 @@ try
 
 
 
-        Describe 'StartDSC' -Tags 'Incomplete' {
+        Describe '\Lib\Private\Dsc.ps1\StartDSC' -Tags 'Incomplete' {
         }
 
 
-        Describe 'GetDSCNetworkingConfig' -Tags 'Incomplete' {
+        Describe '\Lib\Private\Dsc.ps1\GetDSCNetworkingConfig' -Tags 'Incomplete' {
         }
     }
 }

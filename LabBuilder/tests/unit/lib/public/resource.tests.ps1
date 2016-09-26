@@ -64,7 +64,7 @@ try
         $Script:CurrentBuild = 10586
 
 
-        Describe 'Get-LabResourceModule' {
+        Describe '\Lib\Public\Resource.ps1\Get-LabResourceModule' {
 
             Context 'Configuration passed with resource module missing Name.' {
                 It 'Throws a ResourceModuleNameIsEmptyError Exception' {
@@ -93,7 +93,7 @@ try
 
 
 
-        Describe 'Initialize-LabResourceModule' {
+        Describe '\Lib\Public\Resource.ps1\Initialize-LabResourceModule' {
 
             $Lab = Get-Lab -ConfigPath $Global:TestConfigOKPath
             [LabResourceModule[]]$ResourceModules = Get-LabResourceModule -Lab $Lab
@@ -112,7 +112,7 @@ try
 
 
 
-        Describe 'Get-LabResourceMSU' {
+        Describe '\Lib\Public\Resource.ps1\Get-LabResourceMSU' {
 
             Context 'Configuration passed with resource MSU missing Name.' {
                 It 'Throws a ResourceMSUNameIsEmptyError Exception' {
@@ -141,7 +141,7 @@ try
 
 
 
-        Describe 'Initialize-LabResourceMSU' {
+        Describe '\Lib\Public\Resource.ps1\Initialize-LabResourceMSU' {
 
             $Lab = Get-Lab -ConfigPath $Global:TestConfigOKPath
             [LabResourceMSU[]]$ResourceMSUs = Get-LabResourceMSU -Lab $Lab
@@ -161,7 +161,7 @@ try
 
 
 
-        Describe 'Get-LabResourceISO' {
+        Describe '\Lib\Public\Resource.ps1\Get-LabResourceISO' {
 
             Context 'Configuration passed with resource ISO missing Name.' {
                 It 'Throws a ResourceISONameIsEmptyError Exception' {
@@ -238,7 +238,7 @@ try
 
 
 
-        Describe 'Initialize-LabResourceISO' {
+        Describe '\Lib\Public\Resource.ps1\Initialize-LabResourceISO' {
             $Path = "$Global:TestConfigPath\ISOFiles"
             $Lab = Get-Lab -ConfigPath $Global:TestConfigOKPath
             $Lab.labbuilderconfig.resources.SetAttribute('isopath',$Path)
