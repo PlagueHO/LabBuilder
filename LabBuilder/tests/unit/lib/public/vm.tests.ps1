@@ -60,7 +60,9 @@ try
             return $errorRecord
         }
 
-        Describe 'Get-LabVM' {
+        Describe '\Lib\Public\Vm.ps1\Get-LabVM' {
+            # Mock functions
+            function Get-VM {}
 
             #region mocks
             Mock Get-VM
@@ -670,7 +672,7 @@ try
 
 
 
-        Describe 'Initialize-LabVM'  -Tags 'Incomplete' {
+        Describe '\Lib\Public\Vm.ps1\Initialize-LabVM'  -Tags 'Incomplete' {
             #region Mocks
             Mock New-VHD
             Mock New-VM
@@ -721,7 +723,12 @@ try
 
 
 
-        Describe 'Remove-LabVM' {
+        Describe '\Lib\Public\Vm.ps1\Remove-LabVM' {
+            # Mock functions
+            function Get-VM {}
+            function Stop-VM {}
+            function Remove-VM {}
+
             #region Mocks
             Mock Get-VM -MockWith { [PSObject]@{ Name = 'TestLab PESTER01'; State = 'Running'; } }
             Mock Stop-VM
@@ -786,7 +793,7 @@ try
 
 
 
-        Describe 'Install-LabVM' -Tags 'Incomplete' {
+        Describe '\Lib\Public\Vm.ps1\Install-LabVM' -Tags 'Incomplete' {
             #region Mocks
             Mock Get-VM -ParameterFilter { $Name -eq 'PESTER01' } -MockWith { [PSObject]@{ Name='PESTER01'; State='Off' } }
             Mock Get-VM -ParameterFilter { $Name -eq 'pester template *' }
@@ -826,12 +833,12 @@ try
 
 
 
-        Describe 'Connect-LabVM' -Tags 'Incomplete'  {
+        Describe '\Lib\Public\Vm.ps1\Connect-LabVM' -Tags 'Incomplete'  {
         }
 
 
 
-        Describe 'Disconnect-LabVM' -Tags 'Incomplete'  {
+        Describe '\Lib\Public\Vm.ps1\Disconnect-LabVM' -Tags 'Incomplete'  {
         }
     }
 }

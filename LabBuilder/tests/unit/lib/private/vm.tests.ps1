@@ -48,7 +48,7 @@ try
 
                 [Parameter(Mandatory)]
                 [String] $errorMessage,
-                
+
                 [Switch]
                 $terminate
             )
@@ -63,43 +63,43 @@ try
         $Script:CurrentBuild = 10586
 
 
-        Describe 'CreateVMInitializationFiles' -Tags 'Incomplete' {
+        Describe '\Lib\Private\Vm.ps1\CreateVMInitializationFiles' -Tags 'Incomplete' {
         }
 
 
-        Describe 'GetUnattendFileContent' -Tags 'Incomplete' {
+        Describe '\Lib\Private\Vm.ps1\GetUnattendFileContent' -Tags 'Incomplete' {
         }
 
 
-        Describe 'GetCertificatePsFileContent' -Tags 'Incomplete' {
-        }
-        
-        
-        Describe 'GetSelfSignedCertificate' -Tags 'Incomplete' {
-        }
-        
-        
-        Describe 'RecreateSelfSignedCertificate' -Tags 'Incomplete' {
-        }
-        
-
-        Describe 'CreateHostSelfSignedCertificate' -Tags 'Incomplete' {
+        Describe '\Lib\Private\Vm.ps1\GetCertificatePsFileContent' -Tags 'Incomplete' {
         }
 
 
-        Describe 'WaitVMInitializationComplete' -Tags 'Incomplete' {
+        Describe '\Lib\Private\Vm.ps1\GetSelfSignedCertificate' -Tags 'Incomplete' {
         }
 
 
-        Describe 'WaitVMStarted' -Tags 'Incomplete'  {
+        Describe '\Lib\Private\Vm.ps1\RecreateSelfSignedCertificate' -Tags 'Incomplete' {
         }
 
 
-        Describe 'WaitVMOff' -Tags 'Incomplete'  {
+        Describe '\Lib\Private\Vm.ps1\CreateHostSelfSignedCertificate' -Tags 'Incomplete' {
         }
 
 
-        Describe 'GetIntegrationServiceNames' {
+        Describe '\Lib\Private\Vm.ps1\WaitVMInitializationComplete' -Tags 'Incomplete' {
+        }
+
+
+        Describe '\Lib\Private\Vm.ps1\WaitVMStarted' -Tags 'Incomplete'  {
+        }
+
+
+        Describe '\Lib\Private\Vm.ps1\WaitVMOff' -Tags 'Incomplete'  {
+        }
+
+
+        Describe '\Lib\Private\Vm.ps1\GetIntegrationServiceNames' {
             #region Mocks
             Mock Get-CimInstance `
                 -ParameterFilter { $Class -eq 'Msvm_VssComponentSettingData' } `
@@ -139,7 +139,10 @@ try
         }
 
 
-        Describe 'UpdateVMIntegrationServices' {
+        Describe '\Lib\Private\Vm.ps1\UpdateVMIntegrationServices' {
+            # Mock functions
+            function Get-VMIntegrationService {}
+
             #region Mocks
             Mock GetIntegrationServiceNames -MockWith {
                 @(
@@ -177,7 +180,7 @@ try
                 [Array]$VMs = Get-LabVM -Lab $Lab -VMTemplates $Templates -Switches $Switches
                 $VMs[0].IntegrationServices = $null
                 It 'Does not throw an Exception' {
-                    { UpdateVMIntegrationServices -VM $VMs[0] } | Should Not Throw 
+                    { UpdateVMIntegrationServices -VM $VMs[0] } | Should Not Throw
                 }
                 It 'Calls Mocked commands' {
                     Assert-MockCalled Get-VMIntegrationService -Exactly 1
@@ -190,7 +193,7 @@ try
                 [Array]$VMs = Get-LabVM -Lab $Lab -VMTemplates $Templates -Switches $Switches
                 $VMs[0].IntegrationServices = ''
                 It 'Does not throw an Exception' {
-                    { UpdateVMIntegrationServices -VM $VMs[0] } | Should Not Throw 
+                    { UpdateVMIntegrationServices -VM $VMs[0] } | Should Not Throw
                 }
                 It 'Calls Mocked commands' {
                     Assert-MockCalled Get-VMIntegrationService -Exactly 1
@@ -203,7 +206,7 @@ try
                 [Array]$VMs = Get-LabVM -Lab $Lab -VMTemplates $Templates -Switches $Switches
                 $VMs[0].IntegrationServices = 'VSS'
                 It 'Does not throw an Exception' {
-                    { UpdateVMIntegrationServices -VM $VMs[0] } | Should Not Throw 
+                    { UpdateVMIntegrationServices -VM $VMs[0] } | Should Not Throw
                 }
                 It 'Calls Mocked commands' {
                     Assert-MockCalled Get-VMIntegrationService -Exactly 1
@@ -215,7 +218,7 @@ try
                 [Array]$VMs = Get-LabVM -Lab $Lab -VMTemplates $Templates -Switches $Switches
                 $VMs[0].IntegrationServices = 'Guest Service Interface'
                 It 'Does not throw an Exception' {
-                    { UpdateVMIntegrationServices -VM $VMs[0] } | Should Not Throw 
+                    { UpdateVMIntegrationServices -VM $VMs[0] } | Should Not Throw
                 }
                 It 'Calls Mocked commands' {
                     Assert-MockCalled Get-VMIntegrationService -Exactly 1
@@ -226,7 +229,17 @@ try
         }
 
 
-        Describe 'UpdateVMDataDisks' {
+        Describe '\Lib\Private\Vm.ps1\UpdateVMDataDisks' {
+            # Mock functions
+            function Get-VM {}
+            function Get-VHD {}
+            function Resize-VHD {}
+            function New-VHD {}
+            function Get-VMHardDiskDrive {}
+            function Add-VMHardDiskDrive {}
+            function Mount-VHD {}
+            function Dismount-VHD {}
+
             #region Mocks
             Mock Get-VM
             Mock Get-VHD
@@ -236,8 +249,8 @@ try
             Mock New-VHD
             Mock Get-VMHardDiskDrive
             Mock Add-VMHardDiskDrive
-            Mock Test-Path -ParameterFilter { $Path -eq 'DoesNotExist.Vhdx' } -MockWith { $False }        
-            Mock Test-Path -ParameterFilter { $Path -eq 'DoesExist.Vhdx' } -MockWith { $True }        
+            Mock Test-Path -ParameterFilter { $Path -eq 'DoesNotExist.Vhdx' } -MockWith { $False }
+            Mock Test-Path -ParameterFilter { $Path -eq 'DoesExist.Vhdx' } -MockWith { $True }
             Mock InitializeVHD
             Mock Mount-VHD
             Mock Dismount-VHD
@@ -255,7 +268,7 @@ try
             Context 'Valid configuration is passed with no DataVHDs' {
                 $VMs[0].DataVHDs = @()
                 It 'Does not throw an Exception' {
-                    { UpdateVMDataDisks -Lab $Lab -VM $VMs[0] } | Should Not Throw 
+                    { UpdateVMDataDisks -Lab $Lab -VM $VMs[0] } | Should Not Throw
                 }
                 It 'Calls Mocked commands' {
                     Assert-MockCalled Get-VHD -Exactly 0
@@ -287,7 +300,7 @@ try
                             -f $VMs[0].Name,$VMs[0].DataVHDs.Vhd,$VMs[0].DataVHDs.VhdType)
                     }
                     $Exception = GetException @ExceptionParameters
-                    { UpdateVMDataDisks -Lab $Lab -VM $VMs[0] } | Should Throw 
+                    { UpdateVMDataDisks -Lab $Lab -VM $VMs[0] } | Should Throw
                 }
                 It 'Calls Mocked commands' {
                     Assert-MockCalled Get-VHD -Exactly 1
@@ -664,7 +677,12 @@ try
 
 
 
-        Describe 'UpdateVMDVDDrives' {
+        Describe '\Lib\Private\Vm.ps1\UpdateVMDVDDrives' {
+            # Mock functions
+            function Get-VMDVDDrive {}
+            function Add-VMDVDDrive {}
+            function Set-VMDVDDrive {}
+
             #region Mocks
             Mock Get-VMDVDDrive
             Mock Add-VMDVDDrive

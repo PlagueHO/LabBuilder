@@ -15,8 +15,10 @@
 * DSCLibrary\MEMEBER_DSCPULLSERVER.DSC.ps1: Added DSC Library resource for creating DSC Pull Servers.
 * Added additional logging information when copying DSC Resource modules.
 * Fix bug when copying DSC Resource modules to LabBuilder Files for VM when DSC Modules folder does not exist.
-* Fix bug when copying DSC Resource modules to LabBuilder Files for VM when DSC Modules folder does not exist.
 * DSCLibrary\MEMBER_SQLSERVER2016.DSC.ps1: Added DSC Library configuration for installing a SQL Server 2016 from an ISO.
+* Fix bug using a NIC team as network adapter bound to an external switch.
+* Change AppVeyor script to improve and automate deployment process.
+* Mock functions added to unit tests so that can run on machines without Hyper-V installed.
 
 # 0.8.3.0
 * Fix bug where Administrator account is not enabled in Windows client OS.

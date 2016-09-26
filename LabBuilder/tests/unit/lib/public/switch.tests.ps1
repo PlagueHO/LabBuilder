@@ -48,7 +48,7 @@ try
 
                 [Parameter(Mandatory)]
                 [String] $errorMessage,
-                
+
                 [Switch]
                 $terminate
             )
@@ -64,7 +64,7 @@ try
         $Script:CurrentBuild = 14295
 
 
-        Describe 'Get-LabSwitch' {
+        Describe '\Lib\Public\Switch.ps1\Get-LabSwitch' {
 
             Context 'Configuration passed with switch missing Switch Name.' {
                 It 'Throws a SwitchNameIsEmptyError Exception' {
@@ -152,11 +152,22 @@ try
 
 
 
-        Describe 'Initialize-LabSwitch' {
+        Describe '\Lib\Public\Switch.ps1\Initialize-LabSwitch' {
 
             $Lab = Get-Lab -ConfigPath $Global:TestConfigOKPath
             [LabSwitch[]] $Switches = Get-LabSwitch -Lab $Lab
 
+            # Mock functions
+            function Get-VMSwitch {}
+            function New-VMSwitch {}
+            function Get-VMNetworkAdapter {
+                [cmdletbinding()]
+                param (
+                    [String] $Name,
+                    [String] $SwitchName,
+                    [Switch] $ManagementOS
+                )
+            }
             function Get-NetAdapter {
                 [cmdletbinding()]
                 param (
@@ -516,7 +527,12 @@ try
 
 
 
-        Describe 'Remove-LabSwitch' {
+        Describe '\Lib\Public\Switch.ps1\Remove-LabSwitch' {
+            # Mock functions
+            function Get-VMSwitch {}
+            function Remove-VMSwitch {}
+            function Remove-VMNetworkAdapter {}
+            function Remove-NetNat {}
 
             $Lab = Get-Lab -ConfigPath $Global:TestConfigOKPath
             [LabSwitch[]] $Switches = Get-LabSwitch -Lab $Lab
