@@ -41,11 +41,11 @@ install:
         $manifestContent = $ManifestContent -replace '(?<=ModuleVersion\s+=\s+'')(?<ModuleVersion>.*)(?='')', $newVersion
         Set-Content -Path $ManifestPath -Value $ManifestContent
 
-        # Set the new version number in the Readme.md
-        $readmePath = Join-Path -Path $ENV:APPVEYOR_BUILD_FOLDER -ChildPath 'labbuilder\docs\changelist.md'
-        $readmeContent = Get-Content -Path $readmePath -Raw
-        $readmeContent = $readmeContent -replace '### Unreleased', "### $newVersion"
-        Set-Content -Path $readmePath -Value $readmeContent
+        # Set the new version number in the Changelist.md
+        $changeListPath = Join-Path -Path $ENV:APPVEYOR_BUILD_FOLDER -ChildPath 'labbuilder\docs\changelist.md'
+        $changeListContent = Get-Content -Path $changeListPath -Raw
+        $changeListContent = $changeListContent -replace '# Unreleased', "# $newVersion"
+        Set-Content -Path $changeListPath -Value $changeListContent
 
         Install-WindowsFeature -Name hyper-v-powershell
 
