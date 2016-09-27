@@ -29,7 +29,7 @@
   <templatevhds isopath="d:\ISOs"
                 vhdpath="d:\VHDs"
                 prefix="Template " >
-    <templatevhd name="Windows Server 2016 Datacenter FULL"
+    <templatevhd name="Windows Server 2016 Datacenter Full"
                  iso="14393.0.160715-1616.RS1_RELEASE_SERVER_EVAL_X64FRE_EN-US.ISO"
                  url="https://www.microsoft.com/en-us/evalcenter/evaluate-windows-server-2016"
                  vhd="Windows Server 2016 Datacenter Full.vhdx"
@@ -43,7 +43,7 @@
                  iso="14393.0.160715-1616.RS1_RELEASE_SERVER_EVAL_X64FRE_EN-US.ISO"
                  url="https://www.microsoft.com/en-us/evalcenter/evaluate-windows-server-2016"
                  vhd="Nano Server 2016 Basic.vhdx"
-                 edition="Windows Server 2016 Technical Preview 5 SERVERDATACENTERNANO"
+                 edition="Windows Server 2016"
                  ostype="Nano"
                  packages="Microsoft-NanoServer-Guest-Package.cab"
                  vhdformat="vhdx"
@@ -53,8 +53,8 @@
   </templatevhds>
 
   <templates>
-    <template name="Template Windows Server 2016 Datacenter FULL"
-              templatevhd="VHD Windows Server 2016 Datacenter FULL"
+    <template name="Template Windows Server 2016 Datacenter Full"
+              templatevhd="VHD Windows Server 2016 Datacenter Full"
               memorystartupbytes="1GB"
               processorcount="1"
               administratorpassword="P@ssword!1"
@@ -71,7 +71,7 @@
 
   <vms>
     <vm name="SA-DC1"
-        template="Template Windows Server 2016 Datacenter FULL"
+        template="Template Windows Server 2016 Datacenter Full"
         computername="SA-DC1"
         bootorder="1">
       <dsc configname="DC_FORESTPRIMARY"
@@ -100,7 +100,7 @@
     </vm>
 
     <vm name="SA-DHCP1"
-        template="Template Windows Server 2016 Datacenter FULL"
+        template="Template Windows Server 2016 Datacenter Full"
         computername="SA-DHCP1"
         bootorder="2">
       <dsc configname="MEMBER_DHCP"
@@ -187,7 +187,7 @@
     </vm>
 
     <vm name="SA-EDGE1"
-      template="Template Windows Server 2016 Datacenter FULL"
+      template="Template Windows Server 2016 Datacenter Full"
       computername="SA-EDGE1"
       bootorder="3">
       <dsc configname="MEMBER_REMOTEACCESS"
@@ -220,7 +220,7 @@
     </vm>
 
     <vm name="SA-ROOTCA"
-      template="Template Windows Server 2016 Datacenter FULL"
+      template="Template Windows Server 2016 Datacenter Full"
       computername="SA-ROOTCA"
       bootorder="3">
       <dsc configname="MEMBER_ROOTCA"
@@ -262,7 +262,7 @@
     </vm>
 
     <vm name="SA-SQL1"
-      template="Template Windows Server 2016 Datacenter FULL"
+      template="Template Windows Server 2016 Datacenter Full"
       computername="SA-SQL1"
       bootorder="3">
       <dsc configname="MEMBER_SQLSERVER2014"
@@ -281,7 +281,7 @@
           Instances = @(
             @{
               Name = 'MSSQLSERVER'
-              Features = 'SQLENGINE,FULLTEXT,RS,AS,IS'
+              Features = 'SQLENGINE,FullTEXT,RS,AS,IS'
             }
           )
           InstallManagementTools = $True
@@ -304,7 +304,7 @@
         <datavhd vhd="SQLData.vhdx" type="dynamic" size="10GB" partitionstyle="GPT" filesystem="NTFS" filesystemlabel="SQLData" />
       </datavhds>
       <dvddrives>
-        <dvddrive iso="SQL2014SP1_FULL_ENU" />
+        <dvddrive iso="SQL2014SP1_Full_ENU" />
       </dvddrives>
     </vm>
 

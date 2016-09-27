@@ -25,7 +25,7 @@
             dsclibrarypath="..\DSCLibrary\" />
 
   <resources isopath="ISOFiles">
-    <iso name="SQL2016_FULL_ENU"
+    <iso name="SQL2016_Full_ENU"
          path="SQLServer2016-x64-ENU.iso"
          url="https://www.microsoft.com/en-us/evalcenter/evaluate-sql-server-2016" />
   </resources>
@@ -45,7 +45,7 @@
   <templatevhds isopath="ISOFiles"
                 vhdpath="VHDFiles"
                 prefix="Template " >
-    <templatevhd name="Windows Server 2016 Datacenter FULL"
+    <templatevhd name="Windows Server 2016 Datacenter Full"
                  iso="14393.0.160715-1616.RS1_RELEASE_SERVER_EVAL_X64FRE_EN-US.ISO"
                  url="https://www.microsoft.com/en-us/evalcenter/evaluate-windows-server-2016"
                  vhd="Windows Server 2016 Datacenter Full.vhdx"
@@ -68,8 +68,8 @@
   </templatevhds>
 
   <templates>
-    <template name="Template Windows Server 2016 Datacenter FULL"
-              templatevhd="Windows Server 2016 Datacenter FULL"
+    <template name="Template Windows Server 2016 Datacenter Full"
+              templatevhd="Windows Server 2016 Datacenter Full"
               memorystartupbytes="1GB"
               processorcount="1"
               administratorpassword="P@ssword!1"
@@ -210,7 +210,7 @@
     </vm>
 
     <vm name="SA-SQL1"
-      template="Template Windows Server 2016 Datacenter FULL"
+      template="Template Windows Server 2016 Datacenter Full"
       computername="SA-SQL1"
       bootorder="4">
       <dsc configname="MEMBER_SQLSERVER2016"
@@ -251,7 +251,7 @@
         <datavhd vhd="SQLData.vhdx" type="dynamic" size="10GB" partitionstyle="GPT" filesystem="NTFS" filesystemlabel="SQLData" />
       </datavhds>
       <dvddrives>
-        <dvddrive iso="SQL2016_FULL_ENU" />
+        <dvddrive iso="SQL2016_Full_ENU" />
       </dvddrives>
     </vm>
   </vms>
