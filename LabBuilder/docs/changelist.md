@@ -19,6 +19,8 @@
 * Fix bug using a NIC team as network adapter bound to an external switch.
 * Change AppVeyor script to improve and automate deployment process.
 * Mock functions added to unit tests so that can run on machines without Hyper-V installed.
+* Added Windows Server 2016 sample labs.
+* Removed old Lab test scripts and replaced with a single Lab test script ```Invoke-LabSample.ps1```.
 
 # 0.8.3.0
 * Fix bug where Administrator account is not enabled in Windows client OS.
