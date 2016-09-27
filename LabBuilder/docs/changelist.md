@@ -14,6 +14,14 @@
 * DSC resources created for working with composite DSC resources - non-functional at this time
 * Correctly enable PS Remoting using Enable-PSRemoting cmdlet.
 * DSCLibrary\MEMEBER_DSCPULLSERVER.DSC.ps1: Added DSC Library resource for creating DSC Pull Servers.
+* Added additional logging information when copying DSC Resource modules.
+* Fix bug when copying DSC Resource modules to LabBuilder Files for VM when DSC Modules folder does not exist.
+* DSCLibrary\MEMBER_SQLSERVER2016.DSC.ps1: Added DSC Library configuration for installing a SQL Server 2016 from an ISO.
+* Fix bug using a NIC team as network adapter bound to an external switch.
+* Change AppVeyor script to improve and automate deployment process.
+* Mock functions added to unit tests so that can run on machines without Hyper-V installed.
+* Added Windows Server 2016 sample labs.
+* Removed old Lab test scripts and replaced with a single Lab test script ```Invoke-LabSample.ps1```.
 
 # 0.8.3.0
 * Fix bug where Administrator account is not enabled in Windows client OS.
