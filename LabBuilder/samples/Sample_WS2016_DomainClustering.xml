@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 
 <labbuilderconfig xmlns="labbuilderconfig"
-                  name="Sample_WS2012R2_DomainClustering"
+                  name="Sample_WS2016_DomainClustering"
                   version="1.0">
-  <description>Sample Windows Server 2012 R2 Lab Configuration Domain with Cluster Server and NLB nodes</description>
+  <description>Sample Windows Server 2016 Lab Configuration Domain with Cluster Server and NLB nodes</description>
 
   <settings labid="LABBUILDER-DOMAINCLUSTERING.COM"
             domainname="LABBUILDER-DOMAINCLUSTERING.COM"
@@ -11,11 +11,6 @@
             labpath="c:\vm\LABBUILDER-DOMAINCLUSTERING.COM"
             dsclibrarypath="..\DSCLibrary\"
             requiredwindowsbuild="10586" />
-
-  <resources>
-    <msu name="WMF5.0-WS2012R2-W81"
-         url="https://download.microsoft.com/download/2/C/6/2C6E1B4A-EBE5-48A6-B225-2D2058A9CEFB/Win8.1AndW2K12R2-KB3134758-x64.msu" />
-  </resources>
 
   <switches>
     <switch name="External" type="External">
@@ -35,24 +30,22 @@
   <templatevhds isopath="ISOFiles"
                 vhdpath="VHDFiles"
                 prefix="Template " >
-    <templatevhd name="Windows Server 2012 R2 Datacenter Full"
-                 iso="9600.16384.130821-1623_x64fre_Server_EN-US_IRM_SSS_DV5.iso"
-                 url="https://www.microsoft.com/en-us/evalcenter/evaluate-windows-server-2012-r2"
-                 vhd="Windows Server 2012 R2 Datacenter Full.vhdx"
-                 edition="Windows Server 2012 R2 SERVERDATACENTER"
+    <templatevhd name="Windows Server 2016 Datacenter FULL"
+                 iso="14393.0.160715-1616.RS1_RELEASE_SERVER_EVAL_X64FRE_EN-US.ISO"
+                 url="https://www.microsoft.com/en-us/evalcenter/evaluate-windows-server-2016"
+                 vhd="Windows Server 2016 Datacenter Full.vhdx"
+                 edition="Windows Server 2016 SERVERDATACENTER"
                  ostype="Server"
-                 packages="WMF5.0-WS2012R2-W81"
                  vhdformat="vhdx"
                  vhdtype="dynamic"
                  generation="2"
                  vhdsize="40GB" />
-    <templatevhd name="Windows Server 2012 R2 Datacenter Core"
-                 iso="9600.16384.130821-1623_x64fre_Server_EN-US_IRM_SSS_DV5.iso"
-                 url="https://www.microsoft.com/en-us/evalcenter/evaluate-windows-server-2012-r2"
-                 vhd="Windows Server 2012 R2 Datacenter Core.vhdx"
-                 edition="Windows Server 2012 R2 SERVERDATACENTERCORE"
+    <templatevhd name="Windows Server 2016 Datacenter CORE"
+                 iso="14393.0.160715-1616.RS1_RELEASE_SERVER_EVAL_X64FRE_EN-US.ISO"
+                 url="https://www.microsoft.com/en-us/evalcenter/evaluate-windows-server-2016"
+                 vhd="Windows Server 2016 Datacenter Core.vhdx"
+                 edition="Windows Server 2016 SERVERDATACENTERCORE"
                  ostype="Server"
-                 packages="WMF5.0-WS2012R2-W81"
                  vhdformat="vhdx"
                  vhdtype="dynamic"
                  generation="2"
@@ -60,27 +53,25 @@
   </templatevhds>
 
   <templates>
-    <template name="Template Windows Server 2012 R2 Datacenter Full"
-              templatevhd="Windows Server 2012 R2 Datacenter FULL"
+    <template name="Template Windows Server 2016 Datacenter FULL"
+              templatevhd="Windows Server 2016 Datacenter FULL"
               memorystartupbytes="1GB"
               processorcount="1"
               administratorpassword="P@ssword!1"
               timezone="New Zealand Standard Time"
-              ostype="Server"
-              packages="WMF5.0-WS2012R2-W81" />
-    <template name="Template Windows Server 2012 R2 Datacenter Core"
-              templatevhd="Windows Server 2012 R2 Datacenter CORE"
+              ostype="Server" />
+    <template name="Template Windows Server 2016 Datacenter CORE"
+              templatevhd="Windows Server 2016 Datacenter CORE"
               memorystartupbytes="1GB"
               processorcount="1"
               administratorpassword="P@ssword!1"
               timezone="New Zealand Standard Time"
-              ostype="Server"
-              packages="WMF5.0-WS2012R2-W81" />
+              ostype="Server" />
   </templates>
 
   <vms>
     <vm name="SA-DC1"
-        template="Template Windows Server 2012 R2 Datacenter CORE"
+        template="Template Windows Server 2016 Datacenter CORE"
         computername="SA-DC1"
         bootorder="1">
       <dsc configname="DC_FORESTPRIMARY"
@@ -107,7 +98,7 @@
     </vm>
 
     <vm name="SA-DC2"
-        template="Template Windows Server 2012 R2 Datacenter CORE"
+        template="Template Windows Server 2016 Datacenter CORE"
         computername="SA-DC2"
         bootorder="1">
       <dsc configname="DC_SECONDARY"
@@ -136,7 +127,7 @@
     </vm>
 
     <vm name="SA-DHCP1"
-        template="Template Windows Server 2012 R2 Datacenter CORE"
+        template="Template Windows Server 2016 Datacenter CORE"
         computername="SA-DHCP1"
         bootorder="2">
       <dsc configname="MEMBER_DHCP"
@@ -265,7 +256,7 @@
     </vm>
 
     <vm name="SA-EDGE1"
-      template="Template Windows Server 2012 R2 Datacenter CORE"
+      template="Template Windows Server 2016 Datacenter CORE"
       computername="SA-EDGE1"
       bootorder="3">
       <dsc configname="MEMBER_REMOTEACCESS"
@@ -295,7 +286,7 @@
     </vm>
 
     <vm name="SA-ROOTCA"
-      template="Template Windows Server 2012 R2 Datacenter CORE"
+      template="Template Windows Server 2016 Datacenter CORE"
       computername="SA-ROOTCA"
       bootorder="3">
       <dsc configname="MEMBER_ROOTCA"
@@ -337,7 +328,7 @@
     </vm>
 
     <vm name="SA-FS1"
-        template="Template Windows Server 2012 R2 Datacenter CORE"
+        template="Template Windows Server 2016 Datacenter CORE"
         computername="SA-FS1"
         bootorder="4">
       <datavhds>
@@ -400,7 +391,7 @@
     </vm>
 
     <vm name="SA-NLB1"
-        template="Template Windows Server 2012 R2 Datacenter CORE"
+        template="Template Windows Server 2016 Datacenter CORE"
         computername="SA-NLB1"
         bootorder="5">
       <dsc configname="MEMBER_NLB"
@@ -441,7 +432,7 @@
     </vm>
 
     <vm name="SA-NLB2"
-        template="Template Windows Server 2012 R2 Datacenter CORE"
+        template="Template Windows Server 2016 Datacenter CORE"
         computername="SA-NLB2"
         bootorder="5">
       <dsc configname="MEMBER_NLB"
@@ -482,7 +473,7 @@
     </vm>
 
     <vm name="SA-FOC1"
-        template="Template Windows Server 2012 R2 Datacenter CORE"
+        template="Template Windows Server 2016 Datacenter CORE"
         computername="SA-FOC1"
         bootorder="6">
       <dsc configname="MEMBER_FAILOVERCLUSTER_FS"
@@ -529,7 +520,7 @@
     </vm>
 
     <vm name="SA-FOC2"
-        template="Template Windows Server 2012 R2 Datacenter CORE"
+        template="Template Windows Server 2016 Datacenter CORE"
         computername="SA-FOC2"
         bootorder="6">
       <dsc configname="MEMBER_FAILOVERCLUSTER_FS"
@@ -576,7 +567,7 @@
     </vm>
 
     <vm name="SA-FOC3"
-        template="Template Windows Server 2012 R2 Datacenter CORE"
+        template="Template Windows Server 2016 Datacenter CORE"
         computername="SA-FOC3"
         bootorder="6">
       <dsc configname="MEMBER_FAILOVERCLUSTER_FS"
@@ -623,7 +614,7 @@
     </vm>
 
     <vm name="SA-FOHV1"
-        template="Template Windows Server 2012 R2 Datacenter CORE"
+        template="Template Windows Server 2016 Datacenter CORE"
         computername="SA-FOHV1"
         memorystartupbytes="4GB"
         dynamicmemoryenabled="N"
@@ -670,7 +661,7 @@
     </vm>
 
     <vm name="SA-FOHV2"
-        template="Template Windows Server 2012 R2 Datacenter CORE"
+        template="Template Windows Server 2016 Datacenter CORE"
         computername="SA-FOHV2"
         memorystartupbytes="4GB"
         dynamicmemoryenabled="N"
