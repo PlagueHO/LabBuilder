@@ -126,7 +126,7 @@
     <Compile Include="Tests\PesterTestConfig\isofiles\10586.0.151029-1700.TH2_RELEASE_CLIENTENTERPRISEEVAL_OEMRET_X64FRE_EN-US.ISO" />
     <Compile Include="tests\pestertestconfig\isofiles\10586.0.151029-1700.TH2_RELEASE_SERVER_OEMRET_X64FRE_EN-US.ISO" />
     <Compile Include="Tests\PesterTestConfig\isofiles\14300.1000.160324-1723.RS1_RELEASE_SVC_SERVER_OEMRET_X64FRE_EN-US.ISO" />
-    <Compile Include="Tests\PesterTestConfig\isofiles\9600.16384.130821-1623_x64fre_Server_EN-US_IRM_SSS_DV5.iso" />
+    <Compile Include="Tests\PesterTestConfig\isofiles\9600.17050.WINBLUE_REFRESH.140317-1640_X64FRE_SERVER_EVAL_EN-US-IR3_SSS_X64FREE_EN-US_DV9.iso" />
     <Compile Include="tests\pestertestconfig\isofiles\SQL2014_FULL_ENU.iso" />
     <Compile Include="Tests\PesterTestConfig\vhdfiles\DataDisk.vhdx" />
     <Compile Include="Tests\PesterTestConfig\vhdfiles\Nano Server 2016 TP5 Basic.vhdx" />
