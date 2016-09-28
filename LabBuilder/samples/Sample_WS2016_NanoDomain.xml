@@ -143,12 +143,6 @@
                  IPAddress = '192.168.128.23';
                  AddressFamily = 'IPv4'
               },
-              @{ Name = 'SA-SQL1';
-                 ScopeID = '192.168.128.0';
-                 ClientMACAddress = '00000000000A';
-                 IPAddress = '192.168.128.21';
-                 AddressFamily = 'IPv4'
-              }
               @{ Name = 'SA-NANO1';
                  ScopeID = '192.168.128.0';
                  ClientMACAddress = '000000000008';
@@ -259,53 +253,6 @@
                 dnsserver="fd53:ccc5:895a:bc00::a"/>
         </adapter>
       </adapters>
-    </vm>
-
-    <vm name="SA-SQL1"
-      template="Template Windows Server 2016 Datacenter Full"
-      computername="SA-SQL1"
-      bootorder="3">
-      <dsc configname="MEMBER_SQLSERVER2014"
-           configfile="MEMBER_SQLSERVER2014.DSC.ps1">
-        <parameters>
-          DomainName = "NANOTEST.COM"
-          DomainAdminPassword = "P@ssword!1"
-          DCName = "SA-DC1"
-          PSDscAllowDomainUser = $True
-          InstallerUsername = 'Administrator'
-          InstallerPassword = 'P@ssword!1'
-          SQLAdminAccount = 'Administrator'
-          SQLDataDrive = 'E'
-          SourcePath = 'D:\'
-          SourceFolder = ''
-          Instances = @(
-            @{
-              Name = 'MSSQLSERVER'
-              Features = 'SQLENGINE,FullTEXT,RS,AS,IS'
-            }
-          )
-          InstallManagementTools = $True
-        </parameters>
-      </dsc>
-      <adapters>
-        <adapter name="Domain Private"
-                 switchname="Domain Private">
-          <ipv4 address="192.168.128.21"
-                defaultgateway="192.168.128.19"
-                subnetmask="24"
-                dnsserver="192.168.128.10"/>
-          <ipv6 address="fd53:ccc5:895a:bc00::15"
-                defaultgateway="fd53:ccc5:895a:bc00::13"
-                subnetmask="64"
-                dnsserver="fd53:ccc5:895a:bc00::a"/>
-        </adapter>
-      </adapters>
-      <datavhds>
-        <datavhd vhd="SQLData.vhdx" type="dynamic" size="10GB" partitionstyle="GPT" filesystem="NTFS" filesystemlabel="SQLData" />
-      </datavhds>
-      <dvddrives>
-        <dvddrive iso="SQL2014SP1_Full_ENU" />
-      </dvddrives>
     </vm>
 
     <vm name="SA-NANO"
