@@ -21,6 +21,7 @@
 * Mock functions added to unit tests so that can run on machines without Hyper-V installed.
 * Added Windows Server 2016 sample labs.
 * Removed old Lab test scripts and replaced with a single Lab test script ```Invoke-LabSample.ps1```.
+* Updated all samples to use the filename of the latest Windows Server 2012 R2 Evaluation ISO.
 
 # 0.8.3.0
 * Fix bug where Administrator account is not enabled in Windows client OS.
