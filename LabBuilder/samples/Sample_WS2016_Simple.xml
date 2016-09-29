@@ -1,20 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
 
 <labbuilderconfig xmlns="labbuilderconfig"
-                  name="Sample_WS2012R2_Simple"
+                  name="Sample_WS2016_Simple"
                   version="1.0">
-  <description>Sample Windows Server 2012 R2 Lab Configuration Simple</description>
+  <description>Sample Windows Server 2016 Lab Configuration Simple</description>
 
   <settings labid="LABBUILDER-SIMPLE.COM"
             domainname="LABBUILDER-SIMPLE.COM"
             email="admin@LABBUILDER-SIMPLE.COM"
             labpath="c:\vm\LABBUILDER-SIMPLE.COM"
             dsclibrarypath="..\DSCLibrary\" />
-
-  <resources>
-    <msu name="WMF5.0-WS2012R2-W81"
-         url="https://download.microsoft.com/download/2/C/6/2C6E1B4A-EBE5-48A6-B225-2D2058A9CEFB/Win8.1AndW2K12R2-KB3134758-x64.msu" />
-  </resources>
 
   <switches>
     <switch name="External" type="External">
@@ -34,13 +29,12 @@
   <templatevhds isopath="ISOFiles"
                 vhdpath="VHDFiles"
                 prefix="Template " >
-    <templatevhd name="Windows Server 2012 R2 Datacenter Full"
-                 iso="9600.17050.WINBLUE_REFRESH.140317-1640_X64FRE_SERVER_EVAL_EN-US-IR3_SSS_X64FREE_EN-US_DV9.iso"
-                 url="https://www.microsoft.com/en-us/evalcenter/evaluate-windows-server-2012-r2"
-                 vhd="Windows Server 2012 R2 Datacenter Full.vhdx"
-                 edition="Windows Server 2012 R2 SERVERDATACENTER"
+    <templatevhd name="Windows Server 2016 Datacenter Full"
+                 iso="14393.0.160715-1616.RS1_RELEASE_SERVER_EVAL_X64FRE_EN-US.ISO"
+                 url="https://www.microsoft.com/en-us/evalcenter/evaluate-windows-server-2016"
+                 vhd="Windows Server 2016 Datacenter Full.vhdx"
+                 edition="Windows Server 2016 SERVERDATACENTER"
                  ostype="Server"
-                 packages="WMF5.0-WS2012R2-W81"
                  vhdformat="vhdx"
                  vhdtype="dynamic"
                  generation="2"
@@ -48,19 +42,18 @@
   </templatevhds>
 
   <templates>
-    <template name="Template Windows Server 2012 R2 Datacenter Full"
-              templatevhd="Windows Server 2012 R2 Datacenter FULL"
+    <template name="Template Windows Server 2016 Datacenter Full"
+              templatevhd="Windows Server 2016 Datacenter Full"
               memorystartupbytes="1GB"
               processorcount="1"
               administratorpassword="P@ssword!1"
               timezone="New Zealand Standard Time"
-              ostype="Server"
-              packages="WMF5.0-WS2012R2-W81" />
+              ostype="Server" />
   </templates>
 
   <vms>
     <vm name="SS-DEFAULT"
-        template="Template Windows Server 2012 R2 Datacenter FULL"
+        template="Template Windows Server 2016 Datacenter Full"
         computername="SS-DEFAULT">
       <dsc configname="STANDALONE_DEFAULT"
            configfile="STANDALONE_DEFAULT.DSC.ps1">

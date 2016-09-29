@@ -1,5 +1,7 @@
-﻿[String]$Script:ModulePath = "$PSScriptRoot\..\LabBuilder.psd1"
-[String]$Script:ConfigPath = "$PSScriptRoot\..\Samples\Sample_WS2012R2_Simple.xml"
+﻿# Set the name of the sample Lab from the samples folder:
+[String]$Script:ConfigPath = "$PSScriptRoot\..\Samples\Sample_WS2016_DCandDHCPOnly.xml"
+[String]$Script:ModulePath = "$PSScriptRoot\..\LabBuilder.psd1"
+
 ####################################################################################################
 Function Test-StartLabVM {
     Param (
@@ -39,14 +41,17 @@ Function Test-LabBuilderUninstall {
         -RemoveVMTemplate `
         -RemoveLabFolder `
         -RemoveSwitch `
-        -Verbose 
+        -Verbose
 } # Function Test-LabBuilderUnnstall
 ####################################################################################################
 Function Test-LabBuilderLoadModule {
     Import-Module $Script:ModulePath -Verbose -Force
 } # Function Test-LabBuilderLoadModule
 ####################################################################################################
+
 Test-LabBuilderLoadModule
+
+# Comment/Uncomment lines below and run this script to execute the LabBuilder commands
 Test-LabBuilderInstall
 # Test-LabBuilderUpdate
 # Test-LabBuilderStart

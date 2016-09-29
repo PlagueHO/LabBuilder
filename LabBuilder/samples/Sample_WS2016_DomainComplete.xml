@@ -1,12 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 
 <labbuilderconfig xmlns="labbuilderconfig"
-                  name="Sample_WS2012R2_DomainComplete"
+                  name="Sample_WS2016_DomainComplete"
                   version="1.0">
   <description>
-  Sample Windows Server 2012 R2 Lab Configuration Domain with multiple DCs, DHCP Servers, WSUS, WDS, Edge, File Servers and two-tier PKI with offline CA.
+  Sample Windows Server 2016 Lab Configuration Domain with multiple DCs, DHCP Servers, WSUS, WDS, Edge, File Servers and two-tier PKI with offline CA.
 
-  Useful for general experimentation and testing of Windows Server 2012 R2 features.
+  Useful for general experimentation and testing of Windows Server 2016 features.
   </description>
 
   <settings labid="LABBUILDER-DOMAINCOMPLETE.COM"
@@ -40,24 +40,22 @@
   <templatevhds isopath="ISOFiles"
                 vhdpath="VHDFiles"
                 prefix="Template " >
-    <templatevhd name="Windows Server 2012 R2 Datacenter Full"
-                 iso="9600.17050.WINBLUE_REFRESH.140317-1640_X64FRE_SERVER_EVAL_EN-US-IR3_SSS_X64FREE_EN-US_DV9.iso"
-                 url="https://www.microsoft.com/en-us/evalcenter/evaluate-windows-server-2012-r2"
-                 vhd="Windows Server 2012 R2 Datacenter Full.vhdx"
-                 edition="Windows Server 2012 R2 SERVERDATACENTER"
+    <templatevhd name="Windows Server 2016 Datacenter Full"
+                 iso="14393.0.160715-1616.RS1_RELEASE_SERVER_EVAL_X64FRE_EN-US.ISO"
+                 url="https://www.microsoft.com/en-us/evalcenter/evaluate-windows-server-2016"
+                 vhd="Windows Server 2016 Datacenter Full.vhdx"
+                 edition="Windows Server 2016 SERVERDATACENTER"
                  ostype="Server"
-                 packages="WMF5.0-WS2012R2-W81"
                  vhdformat="vhdx"
                  vhdtype="dynamic"
                  generation="2"
                  vhdsize="40GB" />
-    <templatevhd name="Windows Server 2012 R2 Datacenter Core"
-                 iso="9600.17050.WINBLUE_REFRESH.140317-1640_X64FRE_SERVER_EVAL_EN-US-IR3_SSS_X64FREE_EN-US_DV9.iso"
-                 url="https://www.microsoft.com/en-us/evalcenter/evaluate-windows-server-2012-r2"
-                 vhd="Windows Server 2012 R2 Datacenter Core.vhdx"
-                 edition="Windows Server 2012 R2 SERVERDATACENTERCORE"
+    <templatevhd name="Windows Server 2016 Datacenter CORE"
+                 iso="14393.0.160715-1616.RS1_RELEASE_SERVER_EVAL_X64FRE_EN-US.ISO"
+                 url="https://www.microsoft.com/en-us/evalcenter/evaluate-windows-server-2016"
+                 vhd="Windows Server 2016 Datacenter Core.vhdx"
+                 edition="Windows Server 2016 SERVERDATACENTERCORE"
                  ostype="Server"
-                 packages="WMF5.0-WS2012R2-W81"
                  vhdformat="vhdx"
                  vhdtype="dynamic"
                  generation="2"
@@ -76,22 +74,20 @@
   </templatevhds>
 
   <templates>
-    <template name="Template Windows Server 2012 R2 Datacenter Full"
-              templatevhd="Windows Server 2012 R2 Datacenter FULL"
+    <template name="Template Windows Server 2016 Datacenter Full"
+              templatevhd="Windows Server 2016 Datacenter Full"
               memorystartupbytes="1GB"
               processorcount="1"
               administratorpassword="P@ssword!1"
               timezone="New Zealand Standard Time"
-              ostype="Server"
-              packages="WMF5.0-WS2012R2-W81" />
-    <template name="Template Windows Server 2012 R2 Datacenter Core"
-              templatevhd="Windows Server 2012 R2 Datacenter Core"
+              ostype="Server" />
+    <template name="Template Windows Server 2016 Datacenter CORE"
+              templatevhd="Windows Server 2016 Datacenter CORE"
               memorystartupbytes="1GB"
               processorcount="1"
               administratorpassword="P@ssword!1"
               timezone="New Zealand Standard Time"
-              ostype="Server"
-              packages="WMF5.0-WS2012R2-W81" />
+              ostype="Server" />
     <template name="Template Windows 10 Enterprise"
               templatevhd="Windows 10 Enterprise"
               memorystartupbytes="2GB"
@@ -104,7 +100,7 @@
 
   <vms>
     <vm name="SS-ROOTCA"
-        template="Template Windows Server 2012 R2 Datacenter CORE"
+        template="Template Windows Server 2016 Datacenter CORE"
         computername="SS-ROOTCA">
       <dsc configname="STANDALONE_ROOTCA"
            configfile="STANDALONE_ROOTCA.DSC.ps1"
@@ -127,7 +123,7 @@
     </vm>
 
     <vm name="SS-INTERNET"
-        template="Template Windows Server 2012 R2 Datacenter Full"
+        template="Template Windows Server 2016 Datacenter Full"
         computername="SS-INTERNET">
       <dsc configname="STANDALONE_INTERNET"
            configfile="STANDALONE_INTERNET.DSC.ps1"
@@ -179,7 +175,7 @@
     </vm>
 
     <vm name="SA-DC1"
-        template="Template Windows Server 2012 R2 Datacenter CORE"
+        template="Template Windows Server 2016 Datacenter CORE"
         computername="SA-DC1">
       <dsc configname="DC_FORESTPRIMARY"
            configfile="DC_FORESTPRIMARY.DSC.ps1">
@@ -205,7 +201,7 @@
     </vm>
 
     <vm name="SA-DC2"
-        template="Template Windows Server 2012 R2 Datacenter CORE"
+        template="Template Windows Server 2016 Datacenter CORE"
         computername="SA-DC2">
       <dsc configname="DC_SECONDARY"
            configfile="DC_SECONDARY.DSC.ps1">
@@ -233,7 +229,7 @@
     </vm>
 
     <vm name="SA-RODC1"
-    template="Template Windows Server 2012 R2 Datacenter CORE"
+    template="Template Windows Server 2016 Datacenter CORE"
     computername="SA-RODC1">
       <dsc configname="RODC_SECONDARY"
            configfile="RODC_SECONDARY.DSC.ps1">
@@ -261,7 +257,7 @@
     </vm>
 
     <vm name="SA-DHCP1"
-        template="Template Windows Server 2012 R2 Datacenter CORE"
+        template="Template Windows Server 2016 Datacenter CORE"
         computername="SA-DHCP1">
       <dsc configname="MEMBER_DHCP"
            configfile="MEMBER_DHCP.DSC.ps1">
@@ -383,7 +379,7 @@
     </vm>
 
     <vm name="SA-DHCP2"
-      template="Template Windows Server 2012 R2 Datacenter CORE"
+      template="Template Windows Server 2016 Datacenter CORE"
       computername="SA-DHCP2">
       <dsc configname="MEMBER_DHCP"
            configfile="MEMBER_DHCP.DSC.ps1">
@@ -425,7 +421,7 @@
     </vm>
 
     <vm name="SA-NPS"
-      template="Template Windows Server 2012 R2 Datacenter Full"
+      template="Template Windows Server 2016 Datacenter Full"
       computername="SA-NPS">
       <dsc configname="MEMBER_NPS_DFSTEST"
            configfile="MEMBER_NPS_DFSTEST.DSC.ps1">
@@ -452,7 +448,7 @@
     </vm>
 
     <vm name="SA-EDGE1"
-      template="Template Windows Server 2012 R2 Datacenter CORE"
+      template="Template Windows Server 2016 Datacenter CORE"
       computername="SA-EDGE1">
       <dsc configname="MEMBER_REMOTEACCESS"
            configfile="MEMBER_REMOTEACCESS.DSC.ps1">
@@ -486,7 +482,7 @@
     </vm>
 
     <vm name="SA-EDGE2"
-      template="Template Windows Server 2012 R2 Datacenter CORE"
+      template="Template Windows Server 2016 Datacenter CORE"
       computername="SA-EDGE2">
       <dsc configname="MEMBER_REMOTEACCESS"
            configfile="MEMBER_REMOTEACCESS.DSC.ps1">
@@ -520,7 +516,7 @@
     </vm>
 
     <vm name="SA-WDS"
-      template="Template Windows Server 2012 R2 Datacenter Full"
+      template="Template Windows Server 2016 Datacenter Full"
       computername="SA-WDS">
       <datavhds>
         <datavhd vhd="LABBUILDER.COM SA-WDS Data Disk.vhdx" size="10GB" type="dynamic" />
@@ -550,7 +546,7 @@
     </vm>
 
     <vm name="SA-WSUS"
-      template="Template Windows Server 2012 R2 Datacenter CORE"
+      template="Template Windows Server 2016 Datacenter CORE"
       computername="SA-WSUS">
       <datavhds>
         <datavhd vhd="LABBUILDER.COM SA-WSUS Data Disk.vhdx" size="10GB" type="dynamic" />
@@ -580,7 +576,7 @@
     </vm>
 
     <vm name="SA-SUBCA"
-      template="Template Windows Server 2012 R2 Datacenter CORE"
+      template="Template Windows Server 2016 Datacenter CORE"
       computername="SA-SUBCA">
       <dsc configname="MEMBER_SUBCA"
            configfile="MEMBER_SUBCA.DSC.ps1"
@@ -616,7 +612,7 @@
     </vm>
 
     <vm name="SA-FS1"
-        template="Template Windows Server 2012 R2 Datacenter CORE"
+        template="Template Windows Server 2016 Datacenter CORE"
         computername="SA-FS1">
       <datavhds>
         <datavhd vhd="LABBUILDER.COM SA-FS1 Data Disk.vhdx" size="10GB" type="dynamic" />
@@ -647,7 +643,7 @@
     </vm>
 
     <vm name="SA-FS2"
-        template="Template Windows Server 2012 R2 Datacenter CORE"
+        template="Template Windows Server 2016 Datacenter CORE"
         computername="SA-FS2">
       <datavhds>
         <datavhd vhd="LABBUILDER.COM SA-FS2 Data Disk.vhdx" size="10GB" type="dynamic" />

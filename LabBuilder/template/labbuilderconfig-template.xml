@@ -28,29 +28,29 @@
     </switch>
   </switches>
 
-  <templatevhds isopath="ISOFiles" 
+  <templatevhds isopath="ISOFiles"
                 vhdpath="VHDFiles" >
     <templatevhd name="Windows Server 2012 R2 Datacenter Full"
-                 iso="9600.16384.130821-1623_x64fre_Server_EN-US_IRM_SSS_DV5.iso"
+                 iso="9600.17050.WINBLUE_REFRESH.140317-1640_X64FRE_SERVER_EVAL_EN-US-IR3_SSS_X64FREE_EN-US_DV9.iso"
                  url="https://www.microsoft.com/en-us/evalcenter/evaluate-windows-server-2012-r2"
-                 vhd="Windows Server 2012 R2 Datacenter Full.vhdx" 
-                 edition="Windows Server 2012 R2 SERVERDATACENTER" 
+                 vhd="Windows Server 2012 R2 Datacenter Full.vhdx"
+                 edition="Windows Server 2012 R2 SERVERDATACENTER"
                  ostype="Server"
                  packages="WMF5.0-WS2012R2-W81"
-                 vhdformat="vhdx" 
-                 vhdtype="dynamic" 
-                 generation="2" 
+                 vhdformat="vhdx"
+                 vhdtype="dynamic"
+                 generation="2"
                  vhdsize="40GB" />
     <templatevhd name="Windows Server 2012 R2 Datacenter Core"
-                 iso="9600.16384.130821-1623_x64fre_Server_EN-US_IRM_SSS_DV5.iso"
+                 iso="9600.17050.WINBLUE_REFRESH.140317-1640_X64FRE_SERVER_EVAL_EN-US-IR3_SSS_X64FREE_EN-US_DV9.iso"
                  url="https://www.microsoft.com/en-us/evalcenter/evaluate-windows-server-2012-r2"
                  vhd="Windows Server 2012 R2 Datacenter Core.vhdx"
                  edition="Windows Server 2012 R2 SERVERDATACENTERCORE"
                  ostype="Server"
                  packages="WMF5.0-WS2012R2-W81"
-                 vhdformat="vhdx" 
-                 vhdtype="dynamic" 
-                 generation="2" 
+                 vhdformat="vhdx"
+                 vhdtype="dynamic"
+                 generation="2"
                  vhdsize="25GB" />
     <templatevhd name="Windows Server 2016 TP5 Datacenter FULL"
                  iso="14300.1000.160324-1723.RS1_RELEASE_SVC_SERVER_OEMRET_X64FRE_EN-US.ISO"
@@ -58,9 +58,9 @@
                  vhd="Windows Server 2016 TP5 Datacenter Full.vhdx"
                  edition="Windows Server 2016 Technical Preview 4 SERVERDATACENTER"
                  ostype="Server"
-                 vhdformat="vhdx" 
-                 vhdtype="dynamic" 
-                 generation="2" 
+                 vhdformat="vhdx"
+                 vhdtype="dynamic"
+                 generation="2"
                  vhdsize="40GB" />
     <templatevhd name="Windows Server 2016 TP5 Datacenter CORE"
                  iso="14300.1000.160324-1723.RS1_RELEASE_SVC_SERVER_OEMRET_X64FRE_EN-US.ISO"
@@ -68,9 +68,9 @@
                  vhd="Windows Server 2016 TP5 Datacenter Core.vhdx"
                  edition="Windows Server 2016 Technical Preview 4 SERVERDATACENTERCORE"
                  ostype="Server"
-                 vhdformat="vhdx" 
-                 vhdtype="dynamic" 
-                 generation="2" 
+                 vhdformat="vhdx"
+                 vhdtype="dynamic"
+                 generation="2"
                  vhdsize="25GB" />
     <templatevhd name="Windows 10 Enterprise"
                  iso="10586.0.151029-1700.TH2_RELEASE_CLIENTENTERPRISEEVAL_OEMRET_X64FRE_EN-US.ISO"
@@ -78,8 +78,8 @@
                  vhd="Windows 10 Enterprise.vhdx"
                  edition="Windows 10 Enterprise"
                  ostype="Client"
-                 vhdformat="vhdx" 
-                 vhdtype="dynamic" 
+                 vhdformat="vhdx"
+                 vhdtype="dynamic"
                  generation="2"
                  vhdsize="25GB" />
     <templatevhd name="Nano Server 2016 TP5 Basic"
@@ -88,12 +88,12 @@
                  vhd="Nano Server 2016 TP5 Basic.vhdx"
                  ostype="Nano"
                  packages="Microsoft-NanoServer-Guest-Package.cab"
-                 vhdformat="vhdx" 
-                 vhdtype="dynamic" 
+                 vhdformat="vhdx"
+                 vhdtype="dynamic"
                  generation="2"
                  vhdsize="25GB" />
   </templatevhds>
-  
+
   <templates>
     <template name="Pester Windows Server 2012 R2 Datacenter Full"
               vhd="Server 2012 R2 Datacenter Full.vhdx"
@@ -104,7 +104,7 @@
               administratorpassword="None"
               productkey="AAAAA-AAAAA-AAAAA-AAAAA-AAAAA"
               timezone="Pacific Standard Time"
-              ostype="Server" 
+              ostype="Server"
               integrationservices="Guest Service Interface,Heartbeat,Key-Value Pair Exchange,Shutdown,Time Synchronization,VSS" />
     <template name="Windows Server 2012 R2 Datacenter Core"
               vhd="Windows Server 2012 R2 Datacenter Core.vhdx"
@@ -116,7 +116,7 @@
               administratorpassword="None"
               productkey="BBBBB-BBBBB-BBBBB-BBBBB-BBBBB"
               timezone="Pacific Standard Time"
-              ostype="Server" 
+              ostype="Server"
               integrationservices="Guest Service Interface,Heartbeat,Key-Value Pair Exchange,Shutdown,Time Synchronization,VSS" />
     <template name="Windows 10 Enterprise"
               templatevhd="Windows 10 Enterprise"
@@ -125,7 +125,7 @@
               administratorpassword="None"
               productkey="CCCCC-CCCCC-CCCCC-CCCCC-CCCCC"
               timezone="Pacific Standard Time"
-              ostype="Client" 
+              ostype="Client"
               integrationservices="Guest Service Interface,Heartbeat,Key-Value Pair Exchange,Shutdown,Time Synchronization,VSS" />
     <template name="Pester Nano Server"
               vhd="MyNanoServerVHD.vhdx"
@@ -134,12 +134,12 @@
               processorcount="1"
               administratorpassword="None"
               timezone="Pacific Standard Time"
-              ostype="Nano" 
-              integrationservices="Guest Service Interface,Heartbeat,Key-Value Pair Exchange,Shutdown,Time Synchronization,VSS" 
+              ostype="Nano"
+              integrationservices="Guest Service Interface,Heartbeat,Key-Value Pair Exchange,Shutdown,Time Synchronization,VSS"
               packages="Storage"/>
   </templates>
 
   <vms>
   </vms>
-  
+
 </labbuilderconfig>

@@ -48,7 +48,7 @@ try
 
                 [Parameter(Mandatory)]
                 [String] $errorMessage,
-                
+
                 [Switch]
                 $terminate
             )
@@ -64,10 +64,13 @@ try
         $Script:CurrentBuild = 10586
 
 
-        Describe 'Get-LabVMTemplate' {
+        Describe '\Lib\Public\VmTemplate.ps1\Get-LabVMTemplate' {
+            # Mock functions
+            function Get-VM {}
+            function Get-VMHardDiskDrive {}
 
             Mock Get-VM
-            
+
             Context 'Configuration passed with template missing Template Name.' {
                 It 'Throws a EmptyTemplateNameError Exception' {
                     $Lab = Get-Lab -ConfigPath $Global:TestConfigOKPath
@@ -161,7 +164,7 @@ try
             Context 'Valid configuration is passed but no templates found' {
                 It 'Returns Template Object that matches Expected Object' {
                     $Lab = Get-Lab -ConfigPath $Global:TestConfigOKPath
-                    [Array]$Templates = Get-LabVMTemplate -Lab $Lab 
+                    [Array]$Templates = Get-LabVMTemplate -Lab $Lab
                     # Remove the SourceVHD values for any templates because they
                     # will usually be relative to the test folder and won't exist
                     foreach ($Template in $Templates)
@@ -177,10 +180,10 @@ try
                 }
             }
 
-            Mock Get-VM -MockWith { @( 
+            Mock Get-VM -MockWith { @(
                     @{ name = 'Pester Windows Server 2012 R2 Datacenter Full' }
-                    @{ name = 'Pester Windows Server 2012 R2 Datacenter Core' } 
-                    @{ name = 'Pester Windows 10 Enterprise' } 
+                    @{ name = 'Pester Windows Server 2012 R2 Datacenter Core' }
+                    @{ name = 'Pester Windows 10 Enterprise' }
                 ) }
             Mock Get-VMHardDiskDrive -ParameterFilter { $VMName -eq 'Pester Windows Server 2012 R2 Datacenter Full' } `
                 -MockWith { @{ path = 'Pester Windows Server 2012 R2 Datacenter Full.vhdx' } }
@@ -213,7 +216,7 @@ try
                 It 'Returns Template Object that matches Expected Object' {
                     $Lab = Get-Lab -ConfigPath $Global:TestConfigOKPath
                     $Lab.labbuilderconfig.templates.SetAttribute('fromvm','Pester *')
-                    [Array]$Templates = Get-LabVMTemplate -Lab $Lab 
+                    [Array]$Templates = Get-LabVMTemplate -Lab $Lab
                     # Remove the SourceVHD values for any templates because they
                     # will usually be relative to the test folder and won't exist
                     foreach ($Template in $Templates)
@@ -226,14 +229,17 @@ try
                 }
                 It 'Calls Mocked commands' {
                     Assert-MockCalled Get-VM -Exactly 1
-                    Assert-MockCalled Get-VMHardDiskDrive -Exactly 3
+                    Assert-MockCalled Get-VMHardDiskDrive -Exactly 0
                 }
             }
         }
-        
-        
-        
-        Describe 'Initialize-LabVMTemplate' {
+
+
+
+        Describe '\Lib\Public\VmTemplate.ps1\Initialize-LabVMTemplate' {
+            # Mock functions
+            function Optimize-VHD {}
+            function Get-VM {}
 
             $Lab = Get-Lab -ConfigPath $Global:TestConfigOKPath
             [array] $VMTemplates = Get-LabVMTemplate -Lab $Lab
@@ -255,7 +261,7 @@ try
 
             Context 'Valid Template Array with non-existent VHD source file' {
                 $Template = [LabVMTemplate]::New('Bad VHD')
-                $Template.ParentVHD = 'This File Doesnt Exist.vhdx' 
+                $Template.ParentVHD = 'This File Doesnt Exist.vhdx'
                 $Template.SourceVHD = 'This File Doesnt Exist.vhdx'
                 [LabVMTemplate[]] $Templates = @( $Template )
 
@@ -282,7 +288,7 @@ try
                     Assert-MockCalled Remove-Item -Exactly 0
                 }
             }
-            Context 'Valid configuration is passed' {	
+            Context 'Valid configuration is passed' {
                 Mock Test-Path -ParameterFilter { $Path -eq $ResourceWMFMSUFile } -MockWith { $True }
                 Mock Test-Path -ParameterFilter { $Path -eq $ResourceRSATMSUFile } -MockWith { $True }
                 It 'Does not throw an Exception' {
@@ -300,7 +306,7 @@ try
                     Assert-MockCalled Remove-Item -Exactly 3
                 }
             }
-            Context 'Valid configuration is passed without VMTemplates' {	
+            Context 'Valid configuration is passed without VMTemplates' {
                 Mock Test-Path -ParameterFilter { $Path -eq $ResourceWMFMSUFile } -MockWith { $True }
                 Mock Test-Path -ParameterFilter { $Path -eq $ResourceRSATMSUFile } -MockWith { $True }
                 It 'Does not throw an Exception' {
@@ -322,7 +328,9 @@ try
 
 
 
-        Describe 'Remove-LabVMTemplate' {
+        Describe '\Lib\Public\VmTemplate.ps1\Remove-LabVMTemplate' {
+            # Mock functions
+            function Get-VM {}
 
             $Lab = Get-Lab -ConfigPath $Global:TestConfigOKPath
             $TemplateCount = $Lab.labbuilderconfig.templates.template.count
@@ -332,9 +340,9 @@ try
             Mock Test-Path -MockWith { $True }
             Mock Get-VM
 
-            Context 'Valid configuration is passed' {	
+            Context 'Valid configuration is passed' {
                 [Array]$Templates = Get-LabVMTemplate -Lab $Lab
-                
+
                 It 'Does not throw an Exception' {
                     { Remove-LabVMTemplate -Lab $Lab -VMTemplates $Templates } | Should Not Throw
                 }
