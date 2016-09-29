@@ -16,39 +16,39 @@
     <msu name="WMF5.0-WS2012R2-W81"
          url="https://download.microsoft.com/download/2/C/6/2C6E1B4A-EBE5-48A6-B225-2D2058A9CEFB/Win8.1AndW2K12R2-KB3134758-x64.msu" />
   </resources>
-  
+
   <switches>
     <switch name="Domain NAT"
             type="NAT"
             vlan="5"
-            natsubnet="192.168.140.0/24" 
+            natsubnet="192.168.140.0/24"
             natgatewayaddress="192.168.140.1" />
   </switches>
 
-  <templatevhds isopath="ISOFiles" 
-                vhdpath="VHDFiles" 
+  <templatevhds isopath="ISOFiles"
+                vhdpath="VHDFiles"
                 prefix="Template " >
     <templatevhd name="Windows Server 2012 R2 Datacenter Full"
-                 iso="9600.16384.130821-1623_x64fre_Server_EN-US_IRM_SSS_DV5.iso"
+                 iso="9600.17050.WINBLUE_REFRESH.140317-1640_X64FRE_SERVER_EVAL_EN-US-IR3_SSS_X64FREE_EN-US_DV9.iso"
                  url="https://www.microsoft.com/en-us/evalcenter/evaluate-windows-server-2012-r2"
-                 vhd="Windows Server 2012 R2 Datacenter Full.vhdx" 
-                 edition="Windows Server 2012 R2 SERVERDATACENTER" 
+                 vhd="Windows Server 2012 R2 Datacenter Full.vhdx"
+                 edition="Windows Server 2012 R2 SERVERDATACENTER"
                  ostype="Server"
                  packages="WMF5.0-WS2012R2-W81"
-                 vhdformat="vhdx" 
-                 vhdtype="dynamic" 
-                 generation="2" 
+                 vhdformat="vhdx"
+                 vhdtype="dynamic"
+                 generation="2"
                  vhdsize="40GB" />
     <templatevhd name="Windows Server 2012 R2 Datacenter Core"
-                 iso="9600.16384.130821-1623_x64fre_Server_EN-US_IRM_SSS_DV5.iso"
+                 iso="9600.17050.WINBLUE_REFRESH.140317-1640_X64FRE_SERVER_EVAL_EN-US-IR3_SSS_X64FREE_EN-US_DV9.iso"
                  url="https://www.microsoft.com/en-us/evalcenter/evaluate-windows-server-2012-r2"
                  vhd="Windows Server 2012 R2 Datacenter Core.vhdx"
                  edition="Windows Server 2012 R2 SERVERDATACENTERCORE"
                  ostype="Server"
                  packages="WMF5.0-WS2012R2-W81"
-                 vhdformat="vhdx" 
-                 vhdtype="dynamic" 
-                 generation="2" 
+                 vhdformat="vhdx"
+                 vhdtype="dynamic"
+                 generation="2"
                  vhdsize="25GB" />
   </templatevhds>
 
@@ -58,7 +58,7 @@
               memorystartupbytes="1GB"
               processorcount="1"
               administratorpassword="P@ssword!1"
-              timezone="New Zealand Standard Time" 
+              timezone="New Zealand Standard Time"
               ostype="Server"
               packages="WMF5.0-WS2012R2-W81" />
     <template name="Template Windows Server 2012 R2 Datacenter Core"
@@ -66,7 +66,7 @@
               memorystartupbytes="1GB"
               processorcount="1"
               administratorpassword="P@ssword!1"
-              timezone="New Zealand Standard Time" 
+              timezone="New Zealand Standard Time"
               ostype="Server"
               packages="WMF5.0-WS2012R2-W81" />
   </templates>

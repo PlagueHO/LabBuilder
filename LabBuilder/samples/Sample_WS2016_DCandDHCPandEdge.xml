@@ -1,20 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
 
 <labbuilderconfig xmlns="labbuilderconfig"
-                  name="Sample_WS2012R2_DCandDHCPOnly"
+                  name="Sample_WS2016_DCandDHCPandEdge"
                   version="1.0">
-  <description>Sample Windows Server 2012 R2 Lab Configuration DC and DHCP Only</description>
+  <description>Sample Windows Server 2016 Lab Configuration DC, DHCP and Edge.</description>
 
-  <settings labid="LABBUILDER-DCANDDHCPONLY.COM"
-            domainname="LABBUILDER-DCANDDHCPONLY.COM"
-            email="admina@LABBUILDER-DCANDDHCPONLY.COM"
-            labpath="c:\vm\LABBUILDER-DCANDDHCPONLY.COM"
+  <settings labid="LABBUILDER-DCDHCPEDGE.COM"
+            domainname="LABBUILDER-DCDHCPEDGE.COM"
+            email="admina@LABBUILDER-DCDHCPEDGE.COM"
+            labpath="c:\vm\LABBUILDER-DCDHCPEDGE.COM"
             dsclibrarypath="..\DSCLibrary\" />
-
-  <resources>
-    <msu name="WMF5.0-WS2012R2-W81"
-         url="https://download.microsoft.com/download/2/C/6/2C6E1B4A-EBE5-48A6-B225-2D2058A9CEFB/Win8.1AndW2K12R2-KB3134758-x64.msu" />
-  </resources>
 
   <switches>
     <switch name="External" type="External">
@@ -34,24 +29,22 @@
   <templatevhds isopath="ISOFiles"
                 vhdpath="VHDFiles"
                 prefix="Template " >
-    <templatevhd name="Windows Server 2012 R2 Datacenter Full"
-                 iso="9600.17050.WINBLUE_REFRESH.140317-1640_X64FRE_SERVER_EVAL_EN-US-IR3_SSS_X64FREE_EN-US_DV9.iso"
-                 url="https://www.microsoft.com/en-us/evalcenter/evaluate-windows-server-2012-r2"
-                 vhd="Windows Server 2012 R2 Datacenter Full.vhdx"
-                 edition="Windows Server 2012 R2 SERVERDATACENTER"
+    <templatevhd name="Windows Server 2016 Datacenter Full"
+                 iso="14393.0.160715-1616.RS1_RELEASE_SERVER_EVAL_X64FRE_EN-US.ISO"
+                 url="https://www.microsoft.com/en-us/evalcenter/evaluate-windows-server-2016"
+                 vhd="Windows Server 2016 Datacenter Full.vhdx"
+                 edition="Windows Server 2016 SERVERDATACENTER"
                  ostype="Server"
-                 packages="WMF5.0-WS2012R2-W81"
                  vhdformat="vhdx"
                  vhdtype="dynamic"
                  generation="2"
                  vhdsize="40GB" />
-    <templatevhd name="Windows Server 2012 R2 Datacenter Core"
-                 iso="9600.17050.WINBLUE_REFRESH.140317-1640_X64FRE_SERVER_EVAL_EN-US-IR3_SSS_X64FREE_EN-US_DV9.iso"
-                 url="https://www.microsoft.com/en-us/evalcenter/evaluate-windows-server-2012-r2"
-                 vhd="Windows Server 2012 R2 Datacenter Core.vhdx"
-                 edition="Windows Server 2012 R2 SERVERDATACENTERCORE"
+    <templatevhd name="Windows Server 2016 Datacenter CORE"
+                 iso="14393.0.160715-1616.RS1_RELEASE_SERVER_EVAL_X64FRE_EN-US.ISO"
+                 url="https://www.microsoft.com/en-us/evalcenter/evaluate-windows-server-2016"
+                 vhd="Windows Server 2016 Datacenter Core.vhdx"
+                 edition="Windows Server 2016 SERVERDATACENTERCORE"
                  ostype="Server"
-                 packages="WMF5.0-WS2012R2-W81"
                  vhdformat="vhdx"
                  vhdtype="dynamic"
                  generation="2"
@@ -59,33 +52,32 @@
   </templatevhds>
 
   <templates>
-    <template name="Template Windows Server 2012 R2 Datacenter Full"
-              templatevhd="Windows Server 2012 R2 Datacenter FULL"
+    <template name="Template Windows Server 2016 Datacenter Full"
+              templatevhd="Windows Server 2016 Datacenter Full"
               memorystartupbytes="1GB"
               processorcount="1"
               administratorpassword="P@ssword!1"
               timezone="New Zealand Standard Time"
-              ostype="Server"
-              packages="WMF5.0-WS2012R2-W81" />
-    <template name="Template Windows Server 2012 R2 Datacenter Core"
-              templatevhd="Windows Server 2012 R2 Datacenter CORE"
+              ostype="Server" />
+    <template name="Template Windows Server 2016 Datacenter CORE"
+              templatevhd="Windows Server 2016 Datacenter CORE"
               memorystartupbytes="1GB"
               processorcount="1"
               administratorpassword="P@ssword!1"
               timezone="New Zealand Standard Time"
-              ostype="Server"
-              packages="WMF5.0-WS2012R2-W81" />
+              ostype="Server" />
   </templates>
 
   <vms>
     <vm name="SA-DC1"
-        template="Template Windows Server 2012 R2 Datacenter CORE"
+        template="Template Windows Server 2016 Datacenter CORE"
         computername="SA-DC1">
       <dsc configname="DC_FORESTPRIMARY"
            configfile="DC_FORESTPRIMARY.DSC.ps1">
         <parameters>
           DomainName = "LABBUILDER.COM"
           DomainAdminPassword = "P@ssword!1"
+          Forwarders = @('8.8.8.8','8.8.4.4')
         </parameters>
       </dsc>
       <adapters>
@@ -94,11 +86,11 @@
         <adapter name="Domain Private Site A"
                  switchname="Domain Private Site A">
           <ipv4 address="192.168.128.10"
-                defaultgateway=""
+                defaultgateway="192.168.128.19"
                 subnetmask="24"
                 dnsserver="192.168.128.10"/>
           <ipv6 address="fd53:ccc5:895a:bc00::a"
-                defaultgateway=""
+                defaultgateway="fd53:ccc5:895a:bc00::13"
                 subnetmask="64"
                 dnsserver="fd53:ccc5:895a:bc00::a"/>
         </adapter>
@@ -106,7 +98,7 @@
     </vm>
 
     <vm name="SA-DHCP1"
-        template="Template Windows Server 2012 R2 Datacenter CORE"
+        template="Template Windows Server 2016 Datacenter CORE"
         computername="SA-DHCP1">
       <dsc configname="MEMBER_DHCP"
            configfile="MEMBER_DHCP.DSC.ps1">
@@ -135,12 +127,18 @@
                  ClientMACAddress = '000000000002';
                  IPAddress = '192.168.128.16';
                  AddressFamily = 'IPv4'
+              },
+              @{ Name = 'SA-EDGE1';
+                 ScopeID = '192.168.128.0';
+                 ClientMACAddress = '000000000005';
+                 IPAddress = '192.168.128.19';
+                 AddressFamily = 'IPv4'
               }
             )
           ScopeOptions = @(
               @{ ScopeID = '192.168.128.0';
                  DNServerIPAddress = @('192.168.128.10');
-                 Router = '';
+                 Router = '192.168.128.19';
                  AddressFamily = 'IPv4'
               }
             )
@@ -152,14 +150,44 @@
         <adapter name="Domain Private Site A"
                  switchname="Domain Private Site A">
           <ipv4 address="192.168.128.16"
-                defaultgateway=""
+                defaultgateway="192.168.128.19"
                 subnetmask="24"
                 dnsserver="192.168.128.10"/>
           <ipv6 address="fd53:ccc5:895a:bc00::10"
+                defaultgateway="fd53:ccc5:895a:bc00::13"
+                subnetmask="64"
+                dnsserver="fd53:ccc5:895a:bc00::a"/>
+        </adapter>
+      </adapters>
+    </vm>
+
+    <vm name="SA-EDGE1"
+      template="Template Windows Server 2016 Datacenter CORE"
+      computername="SA-EDGE1"
+      bootorder="3">
+      <dsc configname="MEMBER_REMOTEACCESS"
+           configfile="MEMBER_REMOTEACCESS.DSC.ps1">
+        <parameters>
+          DomainName = "LABBUILDER.COM"
+          DomainAdminPassword = "P@ssword!1"
+          DCName = "SA-DC1"
+          PSDscAllowDomainUser = $True
+        </parameters>
+      </dsc>
+      <adapters>
+        <adapter name="Domain Private Site A"
+                 switchname="Domain Private Site A">
+          <ipv4 address="192.168.128.19"
+                defaultgateway=""
+                subnetmask="24"
+                dnsserver="192.168.128.10"/>
+          <ipv6 address="fd53:ccc5:895a:bc00::13"
                 defaultgateway=""
                 subnetmask="64"
                 dnsserver="fd53:ccc5:895a:bc00::a"/>
         </adapter>
+        <adapter name="External"
+                 switchname="External" />
       </adapters>
     </vm>
   </vms>
