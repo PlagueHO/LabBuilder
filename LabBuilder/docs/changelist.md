@@ -1,4 +1,4 @@
-# Unreleased
+# 0.8.3.1068
 * Added Jenkins build scripts.
 * Fix ExposeVirtualizationExtensions when on Windows 10 build 14352 and above.
 * DSCLibrary\*_ROOTCA.DSC.ps1: Fix to support 2.0.0.0 of xADCSDeployment resource.
@@ -312,3 +312,4 @@
 
 ### 0.1.0.0
 * Initial Release.
+
