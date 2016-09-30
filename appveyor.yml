@@ -6,7 +6,7 @@ environment:
   PowerShellGalleryApiKey:
     secure: 3fXfDuds8yhTa7WTOLIEhytrpsej9kcP+4rPrgLaFVmIhimmc+FgUVxkR4u468LH
   GitHubPushFromPlagueHO:
-    secure: T1YH80PnRtYOlW3XM6rYkavs91a+Dr37V9ln0OX1UrVYUoNHaJq0paGswPEWKraL
+    secure: b/CtRX2iDdREmV5mOgoqK9g6HObrPhjNkjeTxrYMgJbiYYmzvivV1Xp52M79NxDN
 install:
   - ps: |
         Install-PackageProvider -Name NuGet -MinimumVersion 2.8.5.201 -Force
@@ -100,6 +100,11 @@ deploy_script:
         $null = Copy-Item -Path (Join-Path -Path $buildFolder -ChildPath 'LabBuilder\schema') -Destination $VersionFolder -Recurse
         $null = Copy-Item -Path (Join-Path -Path $buildFolder -ChildPath 'LabBuilder\template') -Destination $VersionFolder -Recurse
         $null = Copy-Item -Path (Join-Path -Path $buildFolder -ChildPath 'LabBuilder\docs') -Destination $VersionFolder -Recurse
+
+        # Copy the module to the PSModulePath
+        $PSModulePath = ($ENV:PSModulePath -split ';')[0]
+        Write-Host "Copying Module to $PSModulePath"
+        Copy-Item -Path $ModuleFolder -Destination $PSModulePath -Recurse
 
         # Create zip artifact
         $zipFilePath = Join-Path -Path $buildFolder -ChildPath "${env:APPVEYOR_PROJECT_NAME}_${env:APPVEYOR_BUILD_VERSION}.zip"
