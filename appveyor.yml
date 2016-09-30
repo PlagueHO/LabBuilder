@@ -5,6 +5,8 @@ version: 1.0.0.{build}
 environment:
   PowerShellGalleryApiKey:
     secure: 3fXfDuds8yhTa7WTOLIEhytrpsej9kcP+4rPrgLaFVmIhimmc+FgUVxkR4u468LH
+  GitHubPushFromPlagueHO:
+    secure: T1YH80PnRtYOlW3XM6rYkavs91a+Dr37V9ln0OX1UrVYUoNHaJq0paGswPEWKraL
 install:
   - ps: |
         Install-PackageProvider -Name NuGet -MinimumVersion 2.8.5.201 -Force
@@ -143,7 +145,7 @@ deploy_script:
 
                 & git @('checkout','-f','master')
                 Set-Content -Path $ManifestPath -Value $ManifestContent
-                Set-Content -Path $readmePath -Value $readmeContent
+                Set-Content -Path $changeListPath -Value $changeListContent
 
                 # Update the master branch
                 Write-Host "Pushing deployment changes to Master"
