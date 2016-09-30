@@ -195,7 +195,7 @@ function Get-LabVMTemplateVHD {
         } # if
         
         # Add the template prefix to the VHD name.
-        if ([String]::IsNullOrWhitespace($TemplatePrefix))
+        if (!([String]::IsNullOrWhitespace($TemplatePrefix)))
         {
              $VHDPath = Join-Path `
                 -Path (Split-Path -Path $VHDPath)`
