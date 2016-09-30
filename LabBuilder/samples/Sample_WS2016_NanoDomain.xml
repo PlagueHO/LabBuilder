@@ -5,7 +5,7 @@
                   version="1.0" >
   <description>Simple Windows Server 2016 Lab Configuration creating an AD DC, DHCP Server, Edge Server, Root CA and eight Nano Servers</description>
 
-  <settings labid="NANOTEST.COM"
+  <settings labid="NANOTEST.COM "
             domainname="NANOTEST.COM"
             email="daniel@NANOTEST.COM"
             labpath="c:\vm\NANOTEST.COM"
@@ -28,7 +28,7 @@
 
   <templatevhds isopath="d:\ISOs"
                 vhdpath="d:\VHDs"
-                prefix="Template " >
+                prefix="" >
     <templatevhd name="Windows Server 2016 Datacenter Full"
                  iso="14393.0.160715-1616.RS1_RELEASE_SERVER_EVAL_X64FRE_EN-US.ISO"
                  url="https://www.microsoft.com/en-us/evalcenter/evaluate-windows-server-2016"

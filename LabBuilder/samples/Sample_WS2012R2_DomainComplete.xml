@@ -9,7 +9,7 @@
   Useful for general experimentation and testing of Windows Server 2012 R2 features.
   </description>
 
-  <settings labid="LABBUILDER-DOMAINCOMPLETE.COM"
+  <settings labid="LABBUILDER-DOMAINCOMPLETE.COM "
             domainname="LABBUILDER-DOMAINCOMPLETE.COM"
             email="admin@LABBUILDER-DOMAINCOMPLETE.COM"
             labpath="c:\vm\LABBUILDER-DOMAINCOMPLETE.COM"
@@ -39,7 +39,7 @@
 
   <templatevhds isopath="ISOFiles"
                 vhdpath="VHDFiles"
-                prefix="Template " >
+                prefix="" >
     <templatevhd name="Windows Server 2012 R2 Datacenter Full"
                  iso="9600.17050.WINBLUE_REFRESH.140317-1640_X64FRE_SERVER_EVAL_EN-US-IR3_SSS_X64FREE_EN-US_DV9.iso"
                  url="https://www.microsoft.com/en-us/evalcenter/evaluate-windows-server-2012-r2"

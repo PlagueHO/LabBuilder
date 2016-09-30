@@ -73,7 +73,7 @@ try
 
             # Figure out the TestVMName (saves typing later on)
             $Lab = Get-Lab -ConfigPath $Global:TestConfigOKPath
-            $TestVMName = "$($Lab.labbuilderconfig.settings.labid) $($Lab.labbuilderconfig.vms.vm.name)"
+            $TestVMName = "$($Lab.labbuilderconfig.settings.labid)$($Lab.labbuilderconfig.vms.vm.name)"
 
             Context 'Configuration passed with VM missing VM Name.' {
                 It 'Throw VMNameError Exception' {

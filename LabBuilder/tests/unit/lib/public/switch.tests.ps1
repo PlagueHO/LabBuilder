@@ -118,7 +118,7 @@ try
                         errorId = 'AdapterSpecifiedError'
                         errorCategory = 'InvalidArgument'
                         errorMessage = $($LocalizedData.AdapterSpecifiedError `
-                            -f 'Private',"$($Lab.labbuilderconfig.settings.labid) External")
+                            -f 'Private',"$($Lab.labbuilderconfig.settings.labid)External")
                     }
                     $Exception = GetException @ExceptionParameters
 
