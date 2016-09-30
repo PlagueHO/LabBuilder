@@ -48,7 +48,7 @@ try
 
                 [Parameter(Mandatory)]
                 [String] $errorMessage,
-                
+
                 [Switch]
                 $terminate
             )
@@ -64,12 +64,12 @@ try
 
 
 
-        Describe 'InitializeBootVHD' {
+        Describe '\Lib\Private\Vhd.ps1\InitializeBootVHD' {
             $Lab = Get-Lab -ConfigPath $Global:TestConfigOKPath
             [array] $VMs = Get-LabVM -Lab $Lab
             $NanoServerPackagesFolder = Join-Path -Path $Lab.labbuilderconfig.settings.labpath -ChildPath 'NanoServerPackages'
             $ResourceMSUFile = Join-Path -Path $Lab.labbuilderconfig.settings.resourcepathfull -ChildPath "Win8.1AndW2K12R2-KB3134758-x64.msu"
-            
+
             Mock New-Item
             Mock Mount-WindowsImage
             Mock Dismount-WindowsImage
@@ -171,10 +171,10 @@ try
                     Assert-MockCalled New-Item -Exactly 3
                     Assert-MockCalled Mount-WindowsImage -Exactly 1
                     Assert-MockCalled Dismount-WindowsImage -Exactly 1
-                    Assert-MockCalled Add-WindowsPackage -Exactly 4
+                    Assert-MockCalled Add-WindowsPackage -Exactly 6
                     Assert-MockCalled Copy-Item -Exactly 3
                     Assert-MockCalled Remove-Item -Exactly 1
-                    Assert-MockCalled Test-Path -Exactly 5
+                    Assert-MockCalled Test-Path -Exactly 7
                 }
             }
             Context 'Valid Configuration Passed with Nano Server VM and two packages and an MSU' {
@@ -192,10 +192,10 @@ try
                     Assert-MockCalled New-Item -Exactly 3
                     Assert-MockCalled Mount-WindowsImage -Exactly 1
                     Assert-MockCalled Dismount-WindowsImage -Exactly 1
-                    Assert-MockCalled Add-WindowsPackage -Exactly 5
+                    Assert-MockCalled Add-WindowsPackage -Exactly 7
                     Assert-MockCalled Copy-Item -Exactly 3
                     Assert-MockCalled Remove-Item -Exactly 1
-                    Assert-MockCalled Test-Path -Exactly 6
+                    Assert-MockCalled Test-Path -Exactly 8
                 }
             }
             Context 'Valid Configuration Passed with Nano Server VM and two packages but NanoServerPackages folder missing' {
@@ -243,7 +243,11 @@ try
 
 
 
-        Describe 'InitializeVHD' {
+        Describe '\Lib\Private\Vhd.ps1\InitializeVHD' {
+            # Mock functions
+            function Get-VHD {}
+            function Mount-VHD {}
+
             $VHD = @{
                 Path = 'c:\DataVHDx.vhdx'
             }
@@ -307,7 +311,7 @@ try
                     -Property @{
                         FileSystem = $VHDLabel.FileSystem
                         FileSystemLabel = 'Different'
-                    }        
+                    }
             $UnformattedVolume = New-CimInstance `
                     -ClassName 'MSFT_Volume' `
                     -Namespace ROOT/Microsoft/Windows/Storage `
@@ -316,8 +320,8 @@ try
                         FileSystem = ''
                         FileSystemLabel = $VHDLabel.FileSystemLabel
                     }
-            
-            Mock Test-Path -MockWith { $False } 
+
+            Mock Test-Path -MockWith { $False }
             Mock Get-VHD
             Mock Mount-VHD
             Mock Get-Disk
@@ -356,7 +360,7 @@ try
                     Assert-MockCalled Add-PartitionAccessPath -Exactly 0
                 }
             }
-            Mock Test-Path -MockWith { $True } 
+            Mock Test-Path -MockWith { $True }
             Mock Get-VHD -MockWith { @{ Attached = $False; DiskNumber = 9 } }
             Mock Get-Disk -MockWith { @{ PartitionStyle = 'RAW' } }
             Context 'VHDx file exists is not mounted, is not initialized and partition style is not passed' {
@@ -435,9 +439,9 @@ try
                     Assert-MockCalled Set-Partition -Exactly 0
                     Assert-MockCalled Add-PartitionAccessPath -Exactly 0
                 }
-            }        
+            }
             Mock Get-Disk -MockWith { @{ PartitionStyle = 'RAW' } }
-            Mock Get-Partition 
+            Mock Get-Partition
             Mock New-Partition -MockWith { @( $Partition1 ) }
             Mock Get-Volume -MockWith { $UnformattedVolume } -ParameterFilter { $Partition -eq $Partition1 }
             Mock Format-Volume -MockWith { @( $NewVolume ) }

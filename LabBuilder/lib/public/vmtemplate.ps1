@@ -4,7 +4,7 @@
 .DESCRIPTION
    Takes the provided Lab and returns the list of Virtul Machine template machines
    that will be used to create the Virtual Machines in this lab.
-   
+
    This list is usually passed to Initialize-LabVMTemplate.
 .PARAMETER Lab
    Contains the Lab object that was loaded by the Get-Lab object.
@@ -49,14 +49,14 @@ function Get-LabVMTemplate {
     {
         [LabVMTemplateVHD[]] $VMTemplateVHDs = Get-LabVMTemplateVHD `
             -Lab $Lab
-    }
+    } # if
 
     [LabVMTemplate[]] $VMTemplates = @()
     [String] $VHDParentPath = $Lab.labbuilderconfig.settings.vhdparentpathfull
-    
+
     # Get a list of all templates in the Hyper-V system matching the phrase found in the fromvm
     # config setting
-    [String] $FromVM=$Lab.labbuilderconfig.templates.fromvm
+    [String] $FromVM = $Lab.labbuilderconfig.templates.fromvm
     if ($FromVM)
     {
         $Templates = @(Get-VM -Name $FromVM)
@@ -120,7 +120,7 @@ function Get-LabVMTemplate {
             # Add the new Template to the Templates Array
             $VMTemplates += @( $VMTemplate )
         } # if
-        
+
         # Determine the Source VHD, Template VHD and VHD
         [String] $SourceVHD = $Template.SourceVHD
         [String] $TemplateVHD = $Template.TemplateVHD
@@ -253,6 +253,23 @@ function Get-LabVMTemplate {
         {
             $VMTemplate.DynamicMemoryEnabled = $True
         } # if
+        if ($Template.version)
+        {
+            $VMTemplate.version = $Template.version
+        }
+        elseif (-not $Template.version)
+        {
+            $VMTemplate.version = "8.0"
+        } # if
+        if ($Template.generation)
+        {
+            $VMTemplate.generation = $Template.generation
+        }
+        elseif (-not $Template.generation)
+        {
+            $VMTemplate.generation = 2
+        } # if
+
         if ($Template.ProcessorCount)
         {
             $VMTemplate.ProcessorCount = $Template.ProcessorCount
@@ -273,6 +290,7 @@ function Get-LabVMTemplate {
         {
             $VMTemplate.TimeZone = $Template.TimeZone
         } # if
+
         if ($Template.OSType)
         {
             $VMTemplate.OSType = [LabOSType]::$($Template.OSType)
@@ -318,7 +336,7 @@ function Get-LabVMTemplate {
    Contains the Lab object that was loaded by the Get-Lab object.
 .PARAMETER Name
    An optional array of VM Template names.
-   
+
    Only VM Templates matching names in this list will be initialized.
 .PARAMETER VMTemplates
    The array of LabVMTemplate objects pulled from the Lab using Get-LabVMTemplate.
@@ -358,7 +376,7 @@ function Initialize-LabVMTemplate {
             Position=2)]
         [ValidateNotNullOrEmpty()]
         [String[]] $Name,
-        
+
         [Parameter(
             Position=3)]
         [LabVMTemplate[]] $VMTemplates,
@@ -367,7 +385,7 @@ function Initialize-LabVMTemplate {
             Position=4)]
         [LabVMTemplateVHD[]] $VMTemplateVHDs
     )
-    
+
     # if VMTeplates array not passed, pull it from config.
     if (-not $PSBoundParameters.ContainsKey('VMTemplates'))
     {
@@ -376,7 +394,7 @@ function Initialize-LabVMTemplate {
     }
 
     [String] $LabPath = $Lab.labbuilderconfig.settings.labpath
-    
+
     # Check each Parent VHD exists in the Parent VHDs folder for the
     # Lab. If it isn't, try and copy it from the SourceVHD
     # Location.

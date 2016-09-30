@@ -48,7 +48,7 @@ try
 
                 [Parameter(Mandatory)]
                 [String] $errorMessage,
-                
+
                 [Switch]
                 $terminate
             )
@@ -64,8 +64,8 @@ try
 
 
 
-        Describe 'DownloadAndUnzipFile' {
-            $URL = 'https://raw.githubusercontent.com/PlagueHO/LabBuilder/dev/LICENSE'      
+        Describe '\Lib\Private\Utils.ps1\DownloadAndUnzipFile' {
+            $URL = 'https://raw.githubusercontent.com/PlagueHO/LabBuilder/dev/LICENSE'
             Context 'Download folder does not exist' {
                 Mock Invoke-WebRequest
                 Mock Expand-Archive
@@ -119,7 +119,7 @@ try
                 It 'Calls appropriate mocks' {
                     Assert-MockCalled Invoke-WebRequest -Exactly 1
                     Assert-MockCalled Expand-Archive -Exactly 0
-                    Assert-MockCalled Remove-Item -Exactly 0                
+                    Assert-MockCalled Remove-Item -Exactly 0
                 }
             }
             $URL = 'https://raw.githubusercontent.com/PlagueHO/LabBuilder/dev/LICENSE.ZIP'
@@ -157,18 +157,18 @@ try
                     Assert-MockCalled Expand-Archive -Exactly 1
                 }
             }
-        }    
-
-
-
-        Describe 'CreateCredential' -Tag 'Incomplete' {
         }
 
 
 
-        Describe 'DownloadResourceModule' {
+        Describe '\Lib\Private\Utils.ps1\CreateCredential' -Tag 'Incomplete' {
+        }
+
+
+
+        Describe '\Lib\Private\Utils.ps1\DownloadResourceModule' {
             $URL = 'https://github.com/PowerShell/xNetworking/archive/dev.zip'
-            
+
             Mock Get-Module -MockWith { @( New-Object -TypeName PSObject -Property @{ Name = 'xNetworking'; Version = '2.4.0.0'; } ) }
             Mock Invoke-WebRequest
             Mock Expand-Archive
@@ -518,13 +518,13 @@ try
 
 
 
-        Describe 'InstallHyperV' {
+        Describe '\Lib\Private\Utils.ps1\InstallHyperV' {
 
             $Lab = Get-Lab -ConfigPath $Global:TestConfigOKPath
 
             if ((Get-CimInstance Win32_OperatingSystem).ProductType -eq 1) {
                 Mock Get-WindowsOptionalFeature { [PSObject]@{ FeatureName = 'Mock'; State = 'Disabled'; } }
-                Mock Enable-WindowsOptionalFeature 
+                Mock Enable-WindowsOptionalFeature
             }
             else
             {
@@ -554,8 +554,9 @@ try
 
 
 
-        Describe 'EnableWSMan' {
+        Describe '\Lib\Private\Utils.ps1\EnableWSMan' {
             Context 'WS-Man is already enabled' {
+                Mock Start-Service
                 Mock Get-PSProvider -MockWith { @{ Name = 'wsman' } }
                 Mock Set-WSManQuickConfig
                 It 'Does not throw an Exception' {
@@ -566,6 +567,7 @@ try
                 }
             }
             Context 'WS-Man is not enabled, user declines install' {
+                Mock Start-Service -MockWith { Throw }
                 Mock Get-PSProvider
                 Mock Set-WSManQuickConfig
                 It 'Should throw WSManNotEnabledError exception' {
@@ -586,12 +588,12 @@ try
 
 
 
-        Describe 'ValidateConfigurationXMLSchema' -Tag 'Incomplete' {
+        Describe '\Lib\Private\Utils.ps1\ValidateConfigurationXMLSchema' -Tag 'Incomplete' {
         }
 
 
 
-        Describe 'IncreaseMacAddress' {
+        Describe '\Lib\Private\Utils.ps1\IncreaseMacAddress' {
             Context 'MAC address 00155D0106ED is passed' {
                 It 'Returns MAC address 00155D0106EE' {
                     IncreaseMacAddress `
@@ -616,7 +618,7 @@ try
 
 
 
-        Describe 'IncreaseIpAddress' {
+        Describe '\Lib\Private\Utils.ps1\IncreaseIpAddress' {
             Context 'Invalid IP Address is passed' {
                 It 'Throws a IPAddressError Exception' {
                     $ExceptionParameters = @{
@@ -675,7 +677,7 @@ try
 
 
 
-        Describe 'ValidateIpAddress' {
+        Describe '\Lib\Private\Utils.ps1\ValidateIpAddress' {
             Context 'IP address 192.168.1.1 is passed' {
                 It 'Returns True' {
                     ValidateIpAddress `
@@ -704,7 +706,7 @@ try
 
 
 
-        Describe 'InstallPackageProviders' {
+        Describe '\Lib\Private\Utils.ps1\InstallPackageProviders' {
             Context 'Required package providers already installed' {
                 Mock Get-PackageProvider -MockWith {
                     @(
@@ -736,7 +738,7 @@ try
 
 
 
-        Describe 'RegisterPackageSources' {
+        Describe '\Lib\Private\Utils.ps1\RegisterPackageSources' {
             # Define this function because the built in definition does not
             # mock properly - the ProviderName parameter is not definied.
             function Register-PackageSource {

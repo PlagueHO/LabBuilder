@@ -3,20 +3,18 @@
 <labbuilderconfig xmlns="labbuilderconfig"
                   name="Sample_WS2012R2_DomainClustering"
                   version="1.0">
-  <description>Sample Windows Server 2012 R2 Lab Configuration Domain Clustering</description>
+  <description>Sample Windows Server 2012 R2 Lab Configuration Domain with Cluster Server and NLB nodes</description>
 
-  <settings labid="LABBUILDER-DOMAINCLUSTERING.COM"
+  <settings labid="LABBUILDER-DOMAINCLUSTERING.COM "
             domainname="LABBUILDER-DOMAINCLUSTERING.COM"
             email="admin@LABBUILDER-DOMAINCLUSTERING.COM"
             labpath="c:\vm\LABBUILDER-DOMAINCLUSTERING.COM"
-            dsclibrarypath="..\DSCLibrary\" 
+            dsclibrarypath="..\DSCLibrary\"
             requiredwindowsbuild="10586" />
 
   <resources>
     <msu name="WMF5.0-WS2012R2-W81"
          url="https://download.microsoft.com/download/2/C/6/2C6E1B4A-EBE5-48A6-B225-2D2058A9CEFB/Win8.1AndW2K12R2-KB3134758-x64.msu" />
-    <msu name="RSAT-W10"
-         url="http://download.microsoft.com/download/1/D/8/1D8B5022-5477-4B9A-8104-6A71FF9D98AB/WindowsTH-KB2693643-x64.msu" />
   </resources>
 
   <switches>
@@ -34,40 +32,29 @@
     <switch name="Domain Private Site A SMB" type="Private" vlan="5" />
   </switches>
 
-  <templatevhds isopath="ISOFiles" 
-                vhdpath="VHDFiles" 
-                prefix="Template " >
+  <templatevhds isopath="ISOFiles"
+                vhdpath="VHDFiles"
+                prefix="" >
     <templatevhd name="Windows Server 2012 R2 Datacenter Full"
-                 iso="9600.16384.130821-1623_x64fre_Server_EN-US_IRM_SSS_DV5.iso"
+                 iso="9600.17050.WINBLUE_REFRESH.140317-1640_X64FRE_SERVER_EVAL_EN-US-IR3_SSS_X64FREE_EN-US_DV9.iso"
                  url="https://www.microsoft.com/en-us/evalcenter/evaluate-windows-server-2012-r2"
-                 vhd="Windows Server 2012 R2 Datacenter Full.vhdx" 
-                 edition="Windows Server 2012 R2 SERVERDATACENTER" 
+                 vhd="Windows Server 2012 R2 Datacenter Full.vhdx"
+                 edition="Windows Server 2012 R2 SERVERDATACENTER"
                  ostype="Server"
                  packages="WMF5.0-WS2012R2-W81"
-                 vhdformat="vhdx" 
-                 vhdtype="dynamic" 
-                 generation="2" 
+                 vhdformat="vhdx"
+                 vhdtype="dynamic"
+                 generation="2"
                  vhdsize="40GB" />
     <templatevhd name="Windows Server 2012 R2 Datacenter Core"
-                 iso="9600.16384.130821-1623_x64fre_Server_EN-US_IRM_SSS_DV5.iso"
+                 iso="9600.17050.WINBLUE_REFRESH.140317-1640_X64FRE_SERVER_EVAL_EN-US-IR3_SSS_X64FREE_EN-US_DV9.iso"
                  url="https://www.microsoft.com/en-us/evalcenter/evaluate-windows-server-2012-r2"
                  vhd="Windows Server 2012 R2 Datacenter Core.vhdx"
                  edition="Windows Server 2012 R2 SERVERDATACENTERCORE"
                  ostype="Server"
                  packages="WMF5.0-WS2012R2-W81"
-                 vhdformat="vhdx" 
-                 vhdtype="dynamic" 
-                 generation="2" 
-                 vhdsize="25GB" />
-    <templatevhd name="Windows 10 Enterprise"
-                 iso="10586.0.151029-1700.TH2_RELEASE_CLIENTENTERPRISEEVAL_OEMRET_X64FRE_EN-US.ISO"
-                 url="https://www.microsoft.com/en-us/evalcenter/evaluate-windows-10-enterprise"
-                 vhd="Windows 10 Enterprise.vhdx"
-                 edition="Windows 10 Enterprise"
-                 ostype="Client"
-                 packages="RSAT-W10"
-                 vhdformat="vhdx" 
-                 vhdtype="dynamic" 
+                 vhdformat="vhdx"
+                 vhdtype="dynamic"
                  generation="2"
                  vhdsize="25GB" />
   </templatevhds>
@@ -78,7 +65,7 @@
               memorystartupbytes="1GB"
               processorcount="1"
               administratorpassword="P@ssword!1"
-              timezone="New Zealand Standard Time" 
+              timezone="New Zealand Standard Time"
               ostype="Server"
               packages="WMF5.0-WS2012R2-W81" />
     <template name="Template Windows Server 2012 R2 Datacenter Core"
@@ -86,17 +73,9 @@
               memorystartupbytes="1GB"
               processorcount="1"
               administratorpassword="P@ssword!1"
-              timezone="New Zealand Standard Time" 
+              timezone="New Zealand Standard Time"
               ostype="Server"
               packages="WMF5.0-WS2012R2-W81" />
-    <template name="Template Windows 10 Enterprise"
-              templatevhd="Windows 10 Enterprise"
-              memorystartupbytes="2GB"
-              processorcount="1"
-              administratorpassword="P@ssword!1"
-              timezone="New Zealand Standard Time" 
-              ostype="Client"
-              packages="RSAT-W10" />
   </templates>
 
   <vms>
@@ -259,7 +238,7 @@
                  ClientMACAddress = '000000000010';
                  IPAddress = '192.168.128.32';
                  AddressFamily = 'IPv4'
-              }              
+              }
             )
           ScopeOptions = @(
               @{ ScopeID = '192.168.128.0';
@@ -595,7 +574,7 @@
         </adapter>
       </adapters>
     </vm>
-    
+
     <vm name="SA-FOC3"
         template="Template Windows Server 2012 R2 Datacenter CORE"
         computername="SA-FOC3"
@@ -734,16 +713,6 @@
           <ipv6 address="fd53:ccc5:895a:bc03::32"
                 subnetmask="64" />
         </adapter>
-      </adapters>
-    </vm>
-
-    <vm name="DA-IT01"
-      template="Template Windows 10 Enterprise"
-      computername="DA-IT01"
-      bootorder="3">
-      <adapters>
-        <adapter name="Domain Private Site A"
-                 switchname="Domain Private Site A" />
       </adapters>
     </vm>
   </vms>

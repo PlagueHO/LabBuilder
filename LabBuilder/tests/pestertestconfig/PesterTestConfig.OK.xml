@@ -5,7 +5,7 @@
                   version="1.0">
   <description>Configuration File Used with Pester Tests</description>
 
-  <settings labid="TestLab"
+  <settings labid="TestLab "
             domainname="PESTER.LOCAL"
             email="tester@pester.local"
             labpath="C:\Pester Lab"
@@ -51,9 +51,9 @@
 
   <templatevhds isopath="ISOFiles"
                 vhdpath="VHDFiles"
-                prefix="Template " >
+                prefix="" >
     <templatevhd name="Windows Server 2012 R2 Datacenter Full"
-                 iso="9600.16384.130821-1623_x64fre_Server_EN-US_IRM_SSS_DV5.iso"
+                 iso="9600.17050.WINBLUE_REFRESH.140317-1640_X64FRE_SERVER_EVAL_EN-US-IR3_SSS_X64FREE_EN-US_DV9.iso"
                  url="https://www.microsoft.com/en-us/evalcenter/evaluate-windows-server-2012-r2"
                  vhd="Windows Server 2012 R2 Datacenter Full.vhdx"
                  edition="Windows Server 2012 R2 SERVERDATACENTER"
@@ -64,7 +64,7 @@
                  generation="2"
                  vhdsize="40GB" />
     <templatevhd name="Windows Server 2012 R2 Datacenter Core"
-                 iso="9600.16384.130821-1623_x64fre_Server_EN-US_IRM_SSS_DV5.iso"
+                 iso="9600.17050.WINBLUE_REFRESH.140317-1640_X64FRE_SERVER_EVAL_EN-US-IR3_SSS_X64FREE_EN-US_DV9.iso"
                  url="https://www.microsoft.com/en-us/evalcenter/evaluate-windows-server-2012-r2"
                  vhd="Windows Server 2012 R2 Datacenter Core.vhdx"
                  edition="Windows Server 2012 R2 SERVERDATACENTERCORE"
@@ -74,21 +74,21 @@
                  vhdtype="dynamic"
                  generation="2"
                  vhdsize="25GB" />
-    <templatevhd name="Windows Server 2016 TP5 Datacenter FULL"
-                 iso="14300.1000.160324-1723.RS1_RELEASE_SVC_SERVER_OEMRET_X64FRE_EN-US.ISO"
-                 url="https://www.microsoft.com/en-us/evalcenter/evaluate-windows-server-technical-preview"
-                 vhd="Windows Server 2016 TP5 Datacenter Full.vhdx"
-                 edition="Windows Server 2016 Technical Preview 4 SERVERDATACENTER"
+    <templatevhd name="Windows Server 2016 Datacenter Full"
+                 iso="14393.0.160715-1616.RS1_RELEASE_SERVER_EVAL_X64FRE_EN-US.ISO"
+                 url="https://www.microsoft.com/en-us/evalcenter/evaluate-windows-server-2016"
+                 vhd="Windows Server 2016 Datacenter Full.vhdx"
+                 edition="Windows Server 2016 SERVERDATACENTER"
                  ostype="Server"
                  vhdformat="vhdx"
                  vhdtype="dynamic"
                  generation="2"
                  vhdsize="40GB" />
-    <templatevhd name="Windows Server 2016 TP5 Datacenter CORE"
-                 iso="14300.1000.160324-1723.RS1_RELEASE_SVC_SERVER_OEMRET_X64FRE_EN-US.ISO"
-                 url="https://www.microsoft.com/en-us/evalcenter/evaluate-windows-server-technical-preview"
-                 vhd="Windows Server 2016 TP5 Datacenter Core.vhdx"
-                 edition="Windows Server 2016 Technical Preview 4 SERVERDATACENTERCORE"
+    <templatevhd name="Windows Server 2016 Datacenter Core"
+                 iso="14393.0.160715-1616.RS1_RELEASE_SERVER_EVAL_X64FRE_EN-US.ISO"
+                 url="https://www.microsoft.com/en-us/evalcenter/evaluate-windows-server-2016"
+                 vhd="Windows Server 2016 Datacenter Core.vhdx"
+                 edition="Windows Server 2016 SERVERDATACENTERCORE"
                  ostype="Server"
                  vhdformat="vhdx"
                  vhdtype="dynamic"
@@ -105,11 +105,11 @@
                  vhdtype="dynamic"
                  generation="2"
                  vhdsize="25GB" />
-    <templatevhd name="Nano Server 2016 TP5 Basic"
-                 iso="14300.1000.160324-1723.RS1_RELEASE_SVC_SERVER_OEMRET_X64FRE_EN-US.ISO"
-                 url="https://www.microsoft.com/en-us/evalcenter/evaluate-windows-server-technical-preview"
-                 vhd="Nano Server 2016 TP5 Basic.vhdx"
-                 edition="Windows Server 2016 Technical Preview 5 SERVERDATACENTERNANO"
+    <templatevhd name="Nano Server 2016 Datacenter"
+                 iso="14393.0.160715-1616.RS1_RELEASE_SERVER_EVAL_X64FRE_EN-US.ISO"
+                 url="https://www.microsoft.com/en-us/evalcenter/evaluate-windows-server-2016"
+                 vhd="Nano Server 2016 Datacenter.vhdx"
+                 edition="Windows Server 2016 SERVERDATACENTERNANO"
                  ostype="Nano"
                  packages="Microsoft-NanoServer-Guest-Package.cab"
                  vhdformat="vhdx"
@@ -156,7 +156,7 @@
               integrationservices="Guest Service Interface,Heartbeat,Key-Value Pair Exchange,Shutdown,Time Synchronization,VSS" />
     <template name="Pester Nano Server"
               vhd="MyNanoServerVHD.vhdx"
-              sourcevhd="VhdFiles\Nano Server 2016 TP5 Basic.vhdx"
+              sourcevhd="VhdFiles\Nano Server 2016 Datacenter.vhdx"
               memorystartupbytes="1GB"
               processorcount="1"
               administratorpassword="None"

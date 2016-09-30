@@ -125,7 +125,9 @@ function SetModulesInDSCConfig()
         {
             $ImportCommand = "$ImportCommand -ModuleVersion '$($Module.ModuleVersion)'"
         } # if
+
         $ImportCommand = "    $ImportCommand`r`n"
+
         # is this module already in there?
         [Boolean] $Found = $False
         foreach ($Match in $Matches)
@@ -330,10 +332,20 @@ function CreateDSCMOFFiles {
             }
             ThrowException @ExceptionParameters
         }
+
+        $DestinationPath = Join-Path -Path $VMLabBuilderFiles -ChildPath 'DSC Modules\'
+        if (-not (Test-Path -Path $DestinationPath)) {
+            # Create the DSC Modules folder if it doesn't exist.
+            New-Item -Path $DestinationPath -ItemType Directory -Force
+        } # if
+
+        WriteMessage -Message $($LocalizedData.DSCConfigCopyingModuleMessage `
+            -f $VM.DSC.ConfigFile,$VM.Name,$ModuleName,$ModulePath,$DestinationPath)
         Copy-Item `
             -Path $ModulePath `
-            -Destination (Join-Path -Path $VMLabBuilderFiles -ChildPath 'DSC Modules\') `
-            -Recurse -Force
+            -Destination $DestinationPath `
+            -Recurse `
+            -Force
     } # Foreach
 
     if ($VM.CertificateSource -eq [LabCertificateSource]::Guest)

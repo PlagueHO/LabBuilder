@@ -27,15 +27,15 @@ function Get-LabSwitch {
             Mandatory=$true)]
         [ValidateNotNullOrEmpty()]
         $Lab,
-        
+
         [Parameter(
             Position=2)]
         [ValidateNotNullOrEmpty()]
         [String[]] $Name
     )
 
-    [String] $LabId = $Lab.labbuilderconfig.settings.labid 
-    [LabSwitch[]] $Switches = @() 
+    [String] $LabId = $Lab.labbuilderconfig.settings.labid
+    [LabSwitch[]] $Switches = @()
     $ConfigSwitches = $Lab.labbuilderconfig.Switches.Switch
 
     foreach ($ConfigSwitch in $ConfigSwitches)
@@ -80,7 +80,7 @@ function Get-LabSwitch {
         # an external switch.
         if ($LabId -and ($SwitchType -ne [LabSwitchType]::External))
         {
-            $SwitchName = "$LabId $SwitchName"
+            $SwitchName = "$LabId$SwitchName"
         } # if
 
         # Assemble the list of Mangement OS Adapters if any are specified for this switch
@@ -95,7 +95,7 @@ function Get-LabSwitch {
                 # But only if it is not an External switch.
                 if ($LabId -and ($SwitchType -ne [LabSwitchType]::External))
                 {
-                    $AdapterName = "$LabId $AdapterName"
+                    $AdapterName = "$LabId$AdapterName"
                 }
 
                 $ConfigAdapter = [LabSwitchAdapter]::New($AdapterName)
@@ -172,7 +172,7 @@ function Initialize-LabSwitch {
             Mandatory=$true)]
         [ValidateNotNullOrEmpty()]
         $Lab,
-        
+
         [Parameter(
             Position=2)]
         [ValidateNotNullOrEmpty()]
@@ -189,7 +189,7 @@ function Initialize-LabSwitch {
         [LabSwitch[]] $Switches = Get-LabSwitch `
             @PSBoundParameters
     }
-    
+
     # Create Hyper-V Switches
     foreach ($VMSwitch in $Switches)
     {
@@ -198,7 +198,7 @@ function Initialize-LabSwitch {
             # A names list was passed but this swtich wasn't included
             continue
         } # if
-        
+
         if ((Get-VMSwitch | Where-Object -Property Name -eq $($VMSwitch.Name)).Count -eq 0)
         {
             [String] $SwitchName = $VMSwitch.Name
@@ -221,19 +221,17 @@ function Initialize-LabSwitch {
                     # Determine which Physical Adapter to bind this switch to
                     if ($VMSwitch.BindingAdapterMac)
                     {
-                        $BindingAdapter = Get-NetAdapter `
-                            -Physical | Where-Object {
+                        $BindingAdapter = Get-NetAdapter | Where-Object {
                             ($_.MacAddress -replace '-','') -eq $VMSwitch.BindingAdapterMac
                         }
-                        $ErrorDetail="with a MAC address '$($VMSwitch.BindingAdapterMac)' "
+                        $ErrorDetail = "with a MAC address '$($VMSwitch.BindingAdapterMac)' "
                     }
                     elseif ($VMSwitch.BindingAdapterName)
                     {
                         $BindingAdapter = Get-NetAdapter `
-                            -Physical `
                             -Name $VMSwitch.BindingAdapterName `
                             -ErrorAction SilentlyContinue
-                        $ErrorDetail="with a name '$($VMSwitch.BindingAdapterName)' "
+                        $ErrorDetail = "with a name '$($VMSwitch.BindingAdapterName)' "
                     }
                     else
                     {
@@ -242,7 +240,7 @@ function Initialize-LabSwitch {
                                 ($_.Status -eq 'Up') `
                                 -and (-not $_.Virtual) `
                             } | Select-Object -First 1
-                        $ErrorDetail=''
+                        $ErrorDetail = ''
                     } # if
                     # Check that a Binding Adapter was found
                     if (-not $BindingAdapter)
@@ -269,7 +267,7 @@ function Initialize-LabSwitch {
                             -ErrorAction SilentlyContinue).MacAddress
                     } # foreach
 
-                    $UsedAdapters = @((Get-NetAdapter -Physical | ? {
+                    $UsedAdapters = @((Get-NetAdapter | Where-Object {
                         ($_.MacAddress -replace '-','') -in $MacAddress
                         }).Name)
                     if ($BindingAdapter.Name -in $UsedAdapters)
@@ -439,7 +437,7 @@ function Initialize-LabSwitch {
                     $Splat += @{ VlanId = $VMSwitch.Vlan }
                 } # if
                 UpdateSwitchManagementAdapter @Splat
-            
+
                 # Add any management OS adapters to the switch
                 if ($VMSwitch.Adapters)
                 {

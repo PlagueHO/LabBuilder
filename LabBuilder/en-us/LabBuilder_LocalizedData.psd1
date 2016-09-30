@@ -77,7 +77,6 @@ ConvertFrom-StringData -StringData @'
     VMDataDiskParentVHDMissingError=The Differencing Data Disk Parent VHD specified in VM '{0}' is empty.
     VMDataDiskSourceVHDNotFoundError=The Data Disk Source VHD '{1}' specified in VM '{0}' could not be found.
     VMDataDiskUnknownTypeError=Unknown Data Disk type '{2}' specified in VM '{0}' for VHD '{1}'.
-    VMDataDiskSupportPRError=The SupportPR flag is not supported for non-shared Data Disk VHD '{1}' specified in VM '{0}'.
     VMDataDiskSharedDifferencingError=The Differencing Data Disk VHD '{1}' specified in VM '{0}' can not be set as Shared.
     VMDataDiskSourceVHDIfMoveError=The Data Disk VHD '{1}' specified in VM '{0}' must have a Source VHD specified if MoveSourceVHD is set.
     VMDataDiskVHDConvertError=The Data Disk '{1}' in VM '{0}' cannot be converted to a {2} type.
@@ -113,7 +112,7 @@ ConvertFrom-StringData -StringData @'
     EnablingWSManMessage=Enabling WS-Man for communication with Lab Guests.
     InstallingHyperVComponentsMesage=Installing {0} Hyper-V Components.
     InitializingLabFoldersMesage=Initializing Lab Folders.
-    CreatingLabFolderMessage=Creating {0} folder '{1}' for Lab. 
+    CreatingLabFolderMessage=Creating {0} folder '{1}' for Lab.
     InitializingHyperVComponentsMesage=Initializing Hyper-V Components.
     InitializeVHDMountingMessage=Mounting VHD {0} for Initialization.
     InitializeVHDInitializingMessage=Initializing {1} partition table on VHD {0}.
@@ -146,6 +145,7 @@ ConvertFrom-StringData -StringData @'
     DSCConfigSearchingForModuleMessage=Searching for Module '{2}' required by DSC Config File '{0}' in VM '{1}'.
     DSCConfigInstallingModuleMessage=Installing Module '{2}' required by DSC Config File '{0}' in VM '{1}'.
     DSCConfigSavingModuleMessage=Saving Module '{2}' required by DSC Config File '{0}' in VM '{1}' to LabBuilder files.
+    DSCConfigCopyingModuleMessage=Copying Module '{2}' required by DSC Config File '{0}' in VM '{1}' from '{3}' to '{4}'.
     DSCConfigCreatingLCMMOFMessage=Creating DSC LCM Config file '{0}' in VM '{1}'.
     DSCConfigPrepareMessage=Preparing to compile DSC Config '{0}' for VM '{1}'.
     DSCConfigCreatingMOFMessage=Creating DSC Config file '{0}' in VM '{1}'.
@@ -179,9 +179,9 @@ ConvertFrom-StringData -StringData @'
     StoppingVMMessage=Stopping VM '{0}'.
     RemovingVMMessage=Removing VM '{0}'.
     RemovedVMMessage=Removed VM '{0}'.
-    StartingBootPhaseVMsMessage=Starting Virtual Machines with Bootorder '{0}'.    
+    StartingBootPhaseVMsMessage=Starting Virtual Machines with Bootorder '{0}'.
     AllBootPhaseVMsStartedMessage=All Virtual Machines with Bootorder '{0}' have started.
-    StoppingBootPhaseVMsMessage=Stopping Virtual Machines with Bootorder '{0}'.    
+    StoppingBootPhaseVMsMessage=Stopping Virtual Machines with Bootorder '{0}'.
     AllBootPhaseVMsStoppedMessage=All Virtual Machines with Bootorder '{0}' have stopped.
     StartingDSCMessage=Starting DSC on VM '{0}'.
     MountingVMBootDiskMessage=Mounting VM '{0}' VHD Boot Disk '{1}'.
@@ -223,9 +223,9 @@ ConvertFrom-StringData -StringData @'
     RegisterPackageSourceMessage=Registering Package Source '{0}' with '{1}'.
 
     ShouldUninstallLab=Uninstall the Lab '{0}' in folder '{1}'
-    ShouldRemoveVMTemplate=Delete the Parent VM Template VHDs useb by Lab '{0}' in folder '{1}'
+    ShouldRemoveVMTemplate=Delete the Parent VM Template VHDs used by Lab '{0}' in folder '{1}'
     ShouldRemoveSwitch=Delete the virtual switches used by Lab '{0}'
-    ShouldRemoveVMTemplateVHD=Delete the VM Template VHDs use by Lab '{0}'.
+    ShouldRemoveVMTemplateVHD=Delete the VM Template VHDs used by Lab '{0}'.
     ShouldRemoveLabFolder=Delete the folder '{1}' containing Lab '{0}'
     ShouldOverwriteLab=Install a new Lab into the existing folder '{0}'
     ShouldOverwriteLabConfig=Overwrite the existing Lab Configuration file '{0}'

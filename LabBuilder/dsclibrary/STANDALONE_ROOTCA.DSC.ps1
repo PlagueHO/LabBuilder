@@ -4,7 +4,7 @@ DSC Template Configuration File For use by LabBuilder
     STANDALONE_ROOTCA
 .Desription
     Builds a Standalone Root CA and creates Issuing CA certificates for Sub CAs.
-.Parameters:    
+.Parameters:
             CACommonName = "LABBUILDER.COM Root CA"
             CADistinguishedNameSuffix = "DC=LABBUILDER,DC=COM"
             CRLPublicationURLs = "1:C:\Windows\system32\CertSrv\CertEnroll\%3%8%9.crl\n10:ldap:///CN=%7%8,CN=%2,CN=CDP,CN=Public Key Services,CN=Services,%6%10\n2:http://pki.labbuilder.com/CertEnroll/%3%8%9.crl"
@@ -37,7 +37,7 @@ Configuration STANDALONE_ROOTCA
         }
 
         # Install ADCS Web Enrollment - only required because it creates the CertEnroll virtual folder
-        # Which we use to pass certificates to the Issuing/Sub CAs       
+        # Which we use to pass certificates to the Issuing/Sub CAs
         WindowsFeature ADCSWebEnrollment
         {
             Ensure = 'Present'
@@ -47,8 +47,8 @@ Configuration STANDALONE_ROOTCA
 
         WindowsFeature InstallWebMgmtService
         {
-            Ensure = "Present" 
-            Name = "Web-Mgmt-Service" 
+            Ensure = "Present"
+            Name = "Web-Mgmt-Service"
             DependsOn = '[WindowsFeature]ADCSWebEnrollment'
         }
 
@@ -81,7 +81,8 @@ Configuration STANDALONE_ROOTCA
         # Configure the ADCS Web Enrollment
         xADCSWebEnrollment ConfigWebEnrollment {
             Ensure = 'Present'
-            Name = 'ConfigWebEnrollment'
+            IsSingleInstance = 'Yes'
+            CAConfig = 'CertSrv'
             Credential = $LocalAdminCredential
             DependsOn = '[xADCSCertificationAuthority]ConfigCA'
         }
@@ -133,7 +134,7 @@ Configuration STANDALONE_ROOTCA
                     'AuditFilter'  = (Get-ChildItem 'HKLM:\System\CurrentControlSet\Services\CertSvc\Configuration').GetValue('AuditFilter')
                 }
             }
-            TestScript = { 
+            TestScript = {
                 If (((Get-ChildItem 'HKLM:\System\CurrentControlSet\Services\CertSvc\Configuration').GetValue('DSConfigDN') -ne "CN=Configuration,$($Using:Node.CADistinguishedNameSuffix)")) {
                     Return $False
                 }
@@ -174,7 +175,7 @@ Configuration STANDALONE_ROOTCA
 
         # Generate Issuing certificates for any SubCAs
         Foreach ($SubCA in $Node.SubCAs) {
-            
+
             # Wait for SubCA to generate REQ
             WaitForAny "WaitForSubCA_$SubCA"
             {
@@ -219,7 +220,7 @@ Configuration STANDALONE_ROOTCA
                         'Generated' = (Test-Path -Path "C:\Windows\System32\CertSrv\CertEnroll\$Using:SubCA.crt");
                     }
                 }
-                TestScript = { 
+                TestScript = {
                     If (-not (Test-Path -Path "C:\Windows\System32\CertSrv\CertEnroll\$Using:SubCA.crt")) {
                         # SubCA Cert is not yet created
                         Return $False
@@ -250,7 +251,7 @@ Configuration STANDALONE_ROOTCA
                     Return @{
                     }
                 }
-                TestScript = { 
+                TestScript = {
                     # SubCA Cert is not yet created
                     Return $False
                 }

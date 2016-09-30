@@ -1538,7 +1538,7 @@ function UpdateVMDataDisks {
 
                     Copy-item `
                         -Path $CopyFolder `
-                        -Destination $MountFolder `
+                        -Destination $MountPoint `
                         -Recurse `
                         -Force
                 }
@@ -1612,17 +1612,12 @@ function UpdateVMDataDisks {
                 ControllerNumber = 0
                 ErrorAction = 'Stop'
             }
-            if ($DataVhd.Shared)
+            if ($DataVhd.Shared -or $DataVHD.SupportPR)
             {
-                $NewHardDiskParams += @{
-                    ShareVirtualDisk = $true
-                }
-                if ($DataVhd.SupportPR)
-                {
                     $NewHardDiskParams += @{
-                        SupportPersistentReservations = $true
+                    SupportPersistentReservations = $true
                     }
-                } # if
+
             } # if
             $Null = Add-VMHardDiskDrive @NewHardDiskParams
         } # if

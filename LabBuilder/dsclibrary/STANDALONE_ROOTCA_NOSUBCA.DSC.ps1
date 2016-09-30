@@ -28,7 +28,7 @@ Configuration STANDALONE_ROOTCA_NOSUBCA
         }
 
         # Install ADCS Web Enrollment - only required because it creates the CertEnroll virtual folder
-        # Which we use to pass certificates to the Issuing/Sub CAs       
+        # Which we use to pass certificates to the Issuing/Sub CAs
         WindowsFeature ADCSWebEnrollment
         {
             Ensure = 'Present'
@@ -37,11 +37,11 @@ Configuration STANDALONE_ROOTCA_NOSUBCA
         }
 
         WindowsFeature InstallWebMgmtService
-        { 
-            Ensure = "Present" 
-            Name = "Web-Mgmt-Service" 
+        {
+            Ensure = "Present"
+            Name = "Web-Mgmt-Service"
             DependsOn = '[WindowsFeature]ADCSWebEnrollment'
-        }        
+        }
 
         # Create the CAPolicy.inf file which defines basic properties about the ROOT CA certificate
         File CAPolicy
@@ -72,7 +72,8 @@ Configuration STANDALONE_ROOTCA_NOSUBCA
         # Configure the ADCS Web Enrollment
         xADCSWebEnrollment ConfigWebEnrollment {
             Ensure = 'Present'
-            Name = 'ConfigWebEnrollment'
+            IsSingleInstance = 'Yes'
+            CAConfig = 'CertSrv'
             Credential = $LocalAdminCredential
             DependsOn = '[xADCSCertificationAuthority]ConfigCA'
         }
@@ -124,7 +125,7 @@ Configuration STANDALONE_ROOTCA_NOSUBCA
                     'AuditFilter'  = (Get-ChildItem 'HKLM:\System\CurrentControlSet\Services\CertSvc\Configuration').GetValue('AuditFilter')
                 }
             }
-            TestScript = { 
+            TestScript = {
                 If (((Get-ChildItem 'HKLM:\System\CurrentControlSet\Services\CertSvc\Configuration').GetValue('DSConfigDN') -ne "CN=Configuration,$($Using:Node.CADistinguishedNameSuffix)")) {
                     Return $False
                 }
@@ -160,7 +161,7 @@ Configuration STANDALONE_ROOTCA_NOSUBCA
                 }
                 Return $True
             }
-            DependsOn = '[xADCSWebEnrollment]ConfigWebEnrollment'       
+            DependsOn = '[xADCSWebEnrollment]ConfigWebEnrollment'
         }
     }
 }

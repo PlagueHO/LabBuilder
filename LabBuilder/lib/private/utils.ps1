@@ -37,7 +37,7 @@ function ThrowException
 
         [Parameter(Mandatory)]
         [String] $errorMessage,
-        
+
         [Switch]
         $terminate
     )
@@ -229,7 +229,7 @@ function DownloadResourceModule {
         [Parameter(
             position=3)]
         [String] $Folder,
-        
+
         [Parameter(
             position=4)]
         [String] $RequiredVersion,
@@ -367,9 +367,16 @@ function EnableWSMan {
     if (-not (Get-PSPRovider -PSProvider WSMan -ErrorAction SilentlyContinue))
     {
         WriteMessage -Message ($LocalizedData.EnablingWSManMessage)
-        $null = Set-WSManQuickConfig `
-            @PSBoundParameters `
-            -ErrorAction Stop
+        try
+        {
+            Start-Service -Name WinRm -ErrorAction Stop
+        }
+        catch
+        {
+            $null = Set-WSManQuickConfig `
+                @PSBoundParameters `
+                -ErrorAction Stop
+        }
 
         # Check WS-Man was enabled
         if (-not (Get-PSProvider -PSProvider WSMan -ErrorAction SilentlyContinue))
@@ -410,7 +417,7 @@ function InstallHyperV {
         {
             WriteMessage -Message ($LocalizedData.InstallingHyperVComponentsMesage `
                 -f 'Desktop')
-            $Feature.Foreach( { 
+            $Feature.Foreach( {
                 Enable-WindowsOptionalFeature -Online -FeatureName $_.FeatureName
             } )
         }
@@ -458,7 +465,7 @@ function ValidateConfigurationXMLSchema {
     # Define these variables so they are accesible inside the event handler.
     [int] $Script:XMLErrorCount = 0
     [string] $Script:XMLFirstError = ''
-    [String] $Script:XMLPath = $ConfigPath 
+    [String] $Script:XMLPath = $ConfigPath
     [string] $Script:ConfigurationXMLValidationMessage = $LocalizedData.ConfigurationXMLValidationMessage
 
     # Perform the XSD Validation
@@ -470,7 +477,7 @@ function ValidateConfigurationXMLSchema {
     {
         # Triggered each time an error is found in the XML file
         if ([String]::IsNullOrWhitespace($Script:XMLFirstError))
-        {    
+        {
             $Script:XMLFirstError = $_.Message
         } # if
         WriteMessage -Message ($Script:ConfigurationXMLValidationMessage `
@@ -499,7 +506,7 @@ function ValidateConfigurationXMLSchema {
     {
         $null = $reader.Close()
     } # finally
-    
+
     # Verify the results of the XSD validation
     if($script:XMLErrorCount -gt 0)
     {
@@ -536,7 +543,7 @@ function IncreaseMacAddress
         [Parameter(Mandatory)]
         [ValidateNotNullOrEmpty()]
         [String] $MacAddress,
-        
+
         [Byte] $Step = 1
     )
     Return [String]::Format("{0:X}",[Convert]::ToUInt64($MACAddress,16)+$Step).PadLeft(12,'0')
@@ -568,7 +575,7 @@ function IncreaseIpAddress
         [Parameter(Mandatory)]
         [ValidateNotNullOrEmpty()]
         [String] $IpAddress,
-        
+
         [Byte] $Step = 1
     )
     $IP = [System.Net.IPAddress]::Any
@@ -832,7 +839,7 @@ function WriteMessage
         [Parameter(Mandatory)]
         [ValidateNotNullOrEmpty()]
         [String] $Message,
-        
+
         [String] $ForegroundColor = 'Yellow'
     )
 

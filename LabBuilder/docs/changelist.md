@@ -1,3 +1,28 @@
+# Unreleased
+* Added Jenkins build scripts.
+* Fix ExposeVirtualizationExtensions when on Windows 10 build 14352 and above.
+* DSCLibrary\*_ROOTCA.DSC.ps1: Fix to support 2.0.0.0 of xADCSDeployment resource.
+* DSCLibrary\*_SUBCA.DSC.ps1: Fix to support 2.0.0.0 of xADCSDeployment resource.
+* Converted AppVeyor.yml to pull Pester from PSGallery instead of Chocolatey.
+* Changed AppVeyor.yml to use default image
+* - MSFT-MWalker changes Below
+* Added support for Version of VM - Only works on latest Windows 10 builds post 14352
+* Added support for generation of VM so Generation 1 VMs can now be created
+* Fixed issue with Shared VHDX that prevented their creation.
+* Updated SCHEMA for information on Version and Generation
+* Fixed several typos in comment sections
+* DSC resources created for working with composite DSC resources - non-functional at this time
+* DSCLibrary\MEMEBER_DSCPULLSERVER.DSC.ps1: Added DSC Library resource for creating DSC Pull Servers.
+* Added additional logging information when copying DSC Resource modules.
+* Fix bug when copying DSC Resource modules to LabBuilder Files for VM when DSC Modules folder does not exist.
+* DSCLibrary\MEMBER_SQLSERVER2016.DSC.ps1: Added DSC Library configuration for installing a SQL Server 2016 from an ISO.
+* Fix bug using a NIC team as network adapter bound to an external switch.
+* Change AppVeyor script to improve and automate deployment process.
+* Mock functions added to unit tests so that can run on machines without Hyper-V installed.
+* Added Windows Server 2016 sample labs.
+* Removed old Lab test scripts and replaced with a single Lab test script ```Invoke-LabSample.ps1```.
+* Updated all samples to use the filename of the latest Windows Server 2012 R2 Evaluation ISO.
+
 # 0.8.3.0
 * Fix bug where Administrator account is not enabled in Windows client OS.
 * Added support for ModulePath attribute on Settings node.
