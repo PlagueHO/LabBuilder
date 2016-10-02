@@ -154,6 +154,42 @@
                  ClientMACAddress = '000000000009';
                  IPAddress = '192.168.128.31';
                  AddressFamily = 'IPv4'
+              },
+              @{ Name = 'SA-NANO3';
+                 ScopeID = '192.168.128.0';
+                 ClientMACAddress = '00000000000A';
+                 IPAddress = '192.168.128.32';
+                 AddressFamily = 'IPv4'
+              },
+              @{ Name = 'SA-NANO4';
+                 ScopeID = '192.168.128.0';
+                 ClientMACAddress = '00000000000B';
+                 IPAddress = '192.168.128.33';
+                 AddressFamily = 'IPv4'
+              },
+              @{ Name = 'SA-NANO5';
+                 ScopeID = '192.168.128.0';
+                 ClientMACAddress = '00000000000C';
+                 IPAddress = '192.168.128.34';
+                 AddressFamily = 'IPv4'
+              },
+              @{ Name = 'SA-NANO6';
+                 ScopeID = '192.168.128.0';
+                 ClientMACAddress = '00000000000D';
+                 IPAddress = '192.168.128.35';
+                 AddressFamily = 'IPv4'
+              },
+              @{ Name = 'SA-NANO7';
+                 ScopeID = '192.168.128.0';
+                 ClientMACAddress = '00000000000E';
+                 IPAddress = '192.168.128.36';
+                 AddressFamily = 'IPv4'
+              },
+              @{ Name = 'SA-NANO8';
+                 ScopeID = '192.168.128.0';
+                 ClientMACAddress = '00000000000F';
+                 IPAddress = '192.168.128.37';
+                 AddressFamily = 'IPv4'
               }
             )
           ScopeOptions = @(
