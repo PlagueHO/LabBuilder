@@ -5,7 +5,7 @@
                   version="1.0">
   <description>Sample Windows Server 2016 Lab Configuration DC and DHCP Only</description>
 
-  <settings labid="LABBUILDER-WS2016.COM"
+  <settings labid="LABBUILDER-WS2016.COM "
             domainname="LABBUILDER-WS2016.COM"
             email="admin@LABBUILDER-WS2016.COM"
             labpath="c:\vm\LABBUILDER-WS2016.COM"
@@ -31,7 +31,7 @@
 
   <templatevhds isopath="ISOFiles"
                 vhdpath="VHDFiles"
-                prefix="Template " >
+                prefix="" >
     <templatevhd name="Windows Server 2016 Datacenter Full"
                  iso="14393.0.160715-1616.RS1_RELEASE_SERVER_EVAL_X64FRE_EN-US.ISO"
                  url="https://www.microsoft.com/en-us/evalcenter/evaluate-windows-server-2016"
