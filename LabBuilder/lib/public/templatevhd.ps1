@@ -2,7 +2,7 @@
 .SYNOPSIS
     Gets an Array of TemplateVHDs for a Lab.
 .DESCRIPTION
-    Takes a provided Lab and returns the list of Template Disks that will be used to 
+    Takes a provided Lab and returns the list of Template Disks that will be used to
     create the Virtual Machines in this lab. This list is usually passed to
     Initialize-LabVMTemplateVHD.
 
@@ -131,7 +131,7 @@ function Get-LabVMTemplateVHD {
             }
             ThrowException @ExceptionParameters
         } # if
-        
+
         # Get the ISO Path
         [String] $ISOPath = $TemplateVHD.ISO
         if (-not $ISOPath)
@@ -193,16 +193,16 @@ function Get-LabVMTemplateVHD {
                 -Path $VHDRootPath `
                 -ChildPath $VHDPath
         } # if
-        
+
         # Add the template prefix to the VHD name.
-        if (!([String]::IsNullOrWhitespace($TemplatePrefix)))
+        if (-not ([String]::IsNullOrWhitespace($TemplatePrefix)))
         {
              $VHDPath = Join-Path `
                 -Path (Split-Path -Path $VHDPath)`
                 -ChildPath ("$TemplatePrefix$(Split-Path -Path $VHDPath -Leaf)")
         } # if
-        
-        # Get the Template OS Type 
+
+        # Get the Template OS Type
         $OSType = [LabOStype]::Server
         if ($TemplateVHD.OSType)
         {
@@ -226,7 +226,7 @@ function Get-LabVMTemplateVHD {
             $Edition = $TemplateVHD.Edition
         } # if
 
-        # Get the Template VHD Format 
+        # Get the Template VHD Format
         $VHDFormat = [LabVHDFormat]::VHDx
         if ($TemplateVHD.VHDFormat)
         {
@@ -243,7 +243,7 @@ function Get-LabVMTemplateVHD {
             ThrowException @ExceptionParameters
         }
 
-        # Get the Template VHD Type 
+        # Get the Template VHD Type
         $VHDType = [LabVHDType]::Dynamic
         if ($TemplateVHD.VHDType)
         {
@@ -259,7 +259,7 @@ function Get-LabVMTemplateVHD {
             }
             ThrowException @ExceptionParameters
         } # if
-        
+
         # Get the disk size if provided
         [Int64] $VHDSize = 25GB
         if ($TemplateVHD.VHDSize)
@@ -267,7 +267,7 @@ function Get-LabVMTemplateVHD {
             $VHDSize = (Invoke-Expression $TemplateVHD.VHDSize)
         } # if
 
-        # Get the Template VM Generation 
+        # Get the Template VM Generation
         [int] $Generation = 2
         if ($TemplateVHD.Generation)
         {
@@ -308,7 +308,7 @@ function Get-LabVMTemplateVHD {
         $NewVMTemplateVHD.VHDSize = $VHDSize
         $NewVMTemplateVHD.Packages = $Packages
         $NewVMTemplateVHD.Features = $Features
-        $VMTemplateVHDs += @( $NewVMTemplateVHD ) 
+        $VMTemplateVHDs += @( $NewVMTemplateVHD )
      } # foreach
     Return $VMTemplateVHDs
 } # Get-LabVMTemplateVHD
@@ -408,7 +408,7 @@ function Initialize-LabVMTemplateVHD
         } # if
 
         [String] $VHDPath = $VMTemplateVHD.VHDPath
-        
+
         if (Test-Path -Path ($VHDPath))
         {
             # The SourceVHD already exists
@@ -417,11 +417,11 @@ function Initialize-LabVMTemplateVHD
 
             continue
         } # if
-        
+
         # Create the VHD
         WriteMessage -Message $($LocalizedData.CreatingVMTemplateVHDMessage `
             -f $TemplateVHDName,$VHDPath)
-            
+
         # Check the ISO exists.
         [String] $ISOPath = $VMTemplateVHD.ISOPath
         if (-not (Test-Path -Path $ISOPath))
@@ -677,7 +677,7 @@ function Initialize-LabVMTemplateVHD
             -PSProvider FileSystem
 
         # Dot source the Convert-WindowsImage script
-        # Should only be done once 
+        # Should only be done once
         if (-not (Test-Path -Path Function:Convert-WindowsImage))
         {
             . $Script:SupportConvertWindowsImagePath
@@ -721,7 +721,7 @@ function Initialize-LabVMTemplateVHD
     Contains the Lab object that was loaded by the Get-Lab object.
 .PARAMETER Name
     An optional array of VM Template VHD names.
-    
+
     Only VM Template VHDs matching names in this list will be removed.
 .PARAMETER VMTemplateVHDs
     The array of LabVMTemplateVHD objects from the Lab using Get-LabVMTemplateVHD.
@@ -785,7 +785,7 @@ function Remove-LabVMTemplateVHD
         } # if
 
         [String] $VHDPath = $VMTemplateVHD.VHDPath
-        
+
         if (Test-Path -Path ($VHDPath))
         {
             Remove-Item `

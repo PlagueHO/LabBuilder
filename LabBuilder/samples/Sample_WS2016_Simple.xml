@@ -5,7 +5,7 @@
                   version="1.0">
   <description>Sample Windows Server 2016 Lab Configuration Simple</description>
 
-  <settings labid="LABBUILDER-SIMPLE.COM"
+  <settings labid="LABBUILDER-SIMPLE.COM "
             domainname="LABBUILDER-SIMPLE.COM"
             email="admin@LABBUILDER-SIMPLE.COM"
             labpath="c:\vm\LABBUILDER-SIMPLE.COM"
@@ -28,7 +28,7 @@
 
   <templatevhds isopath="ISOFiles"
                 vhdpath="VHDFiles"
-                prefix="Template " >
+                prefix="" >
     <templatevhd name="Windows Server 2016 Datacenter Full"
                  iso="14393.0.160715-1616.RS1_RELEASE_SERVER_EVAL_X64FRE_EN-US.ISO"
                  url="https://www.microsoft.com/en-us/evalcenter/evaluate-windows-server-2016"

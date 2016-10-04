@@ -9,7 +9,7 @@
   Useful for general experimentation and testing of Windows Server 2016 features.
   </description>
 
-  <settings labid="LABBUILDER-DOMAINCOMPLETE.COM"
+  <settings labid="LABBUILDER-DOMAINCOMPLETE.COM "
             domainname="LABBUILDER-DOMAINCOMPLETE.COM"
             email="admin@LABBUILDER-DOMAINCOMPLETE.COM"
             labpath="c:\vm\LABBUILDER-DOMAINCOMPLETE.COM"
@@ -39,7 +39,7 @@
 
   <templatevhds isopath="ISOFiles"
                 vhdpath="VHDFiles"
-                prefix="Template " >
+                prefix="" >
     <templatevhd name="Windows Server 2016 Datacenter Full"
                  iso="14393.0.160715-1616.RS1_RELEASE_SERVER_EVAL_X64FRE_EN-US.ISO"
                  url="https://www.microsoft.com/en-us/evalcenter/evaluate-windows-server-2016"

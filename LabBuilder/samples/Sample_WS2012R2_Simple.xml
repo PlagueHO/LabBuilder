@@ -5,7 +5,7 @@
                   version="1.0">
   <description>Sample Windows Server 2012 R2 Lab Configuration Simple</description>
 
-  <settings labid="LABBUILDER-SIMPLE.COM"
+  <settings labid="LABBUILDER-SIMPLE.COM "
             domainname="LABBUILDER-SIMPLE.COM"
             email="admin@LABBUILDER-SIMPLE.COM"
             labpath="c:\vm\LABBUILDER-SIMPLE.COM"
@@ -33,7 +33,7 @@
 
   <templatevhds isopath="ISOFiles"
                 vhdpath="VHDFiles"
-                prefix="Template " >
+                prefix="" >
     <templatevhd name="Windows Server 2012 R2 Datacenter Full"
                  iso="9600.17050.WINBLUE_REFRESH.140317-1640_X64FRE_SERVER_EVAL_EN-US-IR3_SSS_X64FREE_EN-US_DV9.iso"
                  url="https://www.microsoft.com/en-us/evalcenter/evaluate-windows-server-2012-r2"

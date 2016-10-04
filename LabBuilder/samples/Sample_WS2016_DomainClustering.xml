@@ -5,7 +5,7 @@
                   version="1.0">
   <description>Sample Windows Server 2016 Lab Configuration Domain with Cluster Server and NLB nodes</description>
 
-  <settings labid="LABBUILDER-DOMAINCLUSTERING.COM"
+  <settings labid="LABBUILDER-DOMAINCLUSTERING.COM "
             domainname="LABBUILDER-DOMAINCLUSTERING.COM"
             email="admin@LABBUILDER-DOMAINCLUSTERING.COM"
             labpath="c:\vm\LABBUILDER-DOMAINCLUSTERING.COM"
@@ -29,7 +29,7 @@
 
   <templatevhds isopath="ISOFiles"
                 vhdpath="VHDFiles"
-                prefix="Template " >
+                prefix="" >
     <templatevhd name="Windows Server 2016 Datacenter Full"
                  iso="14393.0.160715-1616.RS1_RELEASE_SERVER_EVAL_X64FRE_EN-US.ISO"
                  url="https://www.microsoft.com/en-us/evalcenter/evaluate-windows-server-2016"

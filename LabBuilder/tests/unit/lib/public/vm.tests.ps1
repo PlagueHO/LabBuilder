@@ -1,5 +1,5 @@
 $Global:ModuleRoot = Resolve-Path -Path "$($Script:MyInvocation.MyCommand.Path)\..\..\..\..\..\"
-
+$OldPSModulePath = $env:PSModulePath
 Push-Location
 try
 {
@@ -73,7 +73,7 @@ try
 
             # Figure out the TestVMName (saves typing later on)
             $Lab = Get-Lab -ConfigPath $Global:TestConfigOKPath
-            $TestVMName = "$($Lab.labbuilderconfig.settings.labid) $($Lab.labbuilderconfig.vms.vm.name)"
+            $TestVMName = "$($Lab.labbuilderconfig.settings.labid)$($Lab.labbuilderconfig.vms.vm.name)"
 
             Context 'Configuration passed with VM missing VM Name.' {
                 It 'Throw VMNameError Exception' {
@@ -849,4 +849,5 @@ catch
 finally
 {
     Pop-Location
+    $env:PSModulePath = $OldPSModulePath
 }
