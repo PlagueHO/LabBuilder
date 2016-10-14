@@ -1,11 +1,11 @@
 <###################################################################################################
 DSC Template Configuration File For use by LabBuilder
 .Title
-    MEMBER_TP5_CONTAINER_HOST
+    MEMBER_CONTAINER_HOST
 .Desription
     Builds a Server that is joined to a domain and then made into a Container Host with Docker.
 
-    This should only be used on a Windows Server 2016 TP5 host.
+    This should only be used on a Windows Server 2016 RTM host.
 .Parameters:
     DomainName = "LABBUILDER.COM"
     DomainAdminPassword = "P@ssword!1"
@@ -13,8 +13,13 @@ DSC Template Configuration File For use by LabBuilder
     PSDscAllowDomainUser = $True
 ###################################################################################################>
 
-Configuration MEMBER_TP5_CONTAINER_HOST
+Configuration MEMBER_CONTAINER_HOST
 {
+    $DockerPath = 'c:\Program Files\Docker'
+    $DockerZipFileName = 'docker.zip'
+    $DockerZipPath = (Join-Path -Path $DockerPath -ChildPath $DockerZipFilename)
+    $DockerUri = 'https://download.docker.com/components/engine/windows-server/cs-1.12/docker.zip'
+
     Import-DscResource -ModuleName PSDesiredStateConfiguration
     Import-DscResource -ModuleName xPSDesiredStateConfiguration
     Import-DscResource -ModuleName xComputerManagement
@@ -53,38 +58,40 @@ Configuration MEMBER_TP5_CONTAINER_HOST
         {
             Ensure          = 'Present'
             Type            = 'Directory'
-            DestinationPath = 'c:\Program Files\Docker\'
+            DestinationPath = $DockerZipPath
         }
 
-        xRemoteFile DockerDaemon
+        xRemoteFile DockerEngine
         {
             Ensure          = 'Present'
-            DestinationPath = 'c:\Program Files\Docker\dockerd.exe'
-            Uri             = 'https://aka.ms/tp5/b/dockerd'
+            DestinationPath = $DockerZipPath
+            Uri             = $DockerUri
             DependsOn       = '[File]DockerDirectory'
         }
 
-        xRemoteFile DockerDaemon
+        xEnvironment DockerEngineExtract
         {
-            Ensure          = 'Present'
-            DestinationPath = 'c:\Program Files\Docker\docker.exe'
-            Uri             = 'https://aka.ms/tp5/b/docker'
-            DependsOn       = '[File]DockerDirectory'
+              Destination   = $DockerPath
+              Path          = $DockerZipPath
+              Ensure        = 'Present'
+              Validate      = $false
+              Force         = $true
         }
 
         xEnvironment DockerPath
         {
             Ensure          = 'Present'
             Name            = 'Path'
-            Value           = 'C:\Program Files\Docker'
+            Value           = $DockerPath
             Path            = $True
             DependsOn       = '[File]DockerDirectory'
         }
 
-        Script ADCSAdvConfig
+        Script DockerService
         {
             SetScript = {
-                & 'c:\Program Files\Docker\dockerd.exe' @('--register-service')
+                $DockerDPath = (Join-Path -Path $Using:DockerPath -ChildPath 'dockerd.exe')
+                & $DockerDPath @('--register-service')
             }
             GetScript = {
                 return @{
