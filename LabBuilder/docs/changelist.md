@@ -1,3 +1,6 @@
+# Unreleased
+* DSCLibrary\MEMBER_CONTAINER_HOST.DSC.ps1: Added DSC Configuration for configuring a Docker Container host.
+
 # 0.8.3.1068
 * Added Jenkins build scripts.
 * Fix ExposeVirtualizationExtensions when on Windows 10 build 14352 and above.
