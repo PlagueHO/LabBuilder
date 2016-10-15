@@ -15,14 +15,16 @@ DSC Template Configuration File For use by LabBuilder
 
 Configuration MEMBER_CONTAINER_HOST
 {
-    $DockerPath = 'c:\Program Files\Docker'
+    $ProgramFiles = $ENV:ProgramFiles
+    $DockerPath = Join-Path -Path $ProgramFiles -ChildPath 'Docker'
     $DockerZipFileName = 'docker.zip'
-    $DockerZipPath = (Join-Path -Path $DockerPath -ChildPath $DockerZipFilename)
+    $DockerZipPath = Join-Path -Path $ProgramFiles -ChildPath $DockerZipFilename
     $DockerUri = 'https://download.docker.com/components/engine/windows-server/cs-1.12/docker.zip'
 
     Import-DscResource -ModuleName PSDesiredStateConfiguration
     Import-DscResource -ModuleName xPSDesiredStateConfiguration
     Import-DscResource -ModuleName xComputerManagement
+    Import-DscResource -ModuleName xPendingReboot
     Node $AllNodes.NodeName {
         # Assemble the Local Admin Credentials
         If ($Node.LocalAdminPassword) {
@@ -30,12 +32,6 @@ Configuration MEMBER_CONTAINER_HOST
         }
         If ($Node.DomainAdminPassword) {
             [PSCredential]$DomainAdminCredential = New-Object System.Management.Automation.PSCredential ("$($Node.DomainName)\Administrator", (ConvertTo-SecureString $Node.DomainAdminPassword -AsPlainText -Force))
-        }
-
-        WindowsFeature ContainerInstall
-        {
-            Ensure = "Present"
-            Name   = "Container"
         }
 
         WaitForAll DC
@@ -54,39 +50,51 @@ Configuration MEMBER_CONTAINER_HOST
             DependsOn  = '[WaitForAll]DC'
         }
 
-        File DockerDirectory
+        # Install containers feature
+        WindowsFeature ContainerInstall
         {
-            Ensure          = 'Present'
-            Type            = 'Directory'
-            DestinationPath = $DockerZipPath
+            Ensure = "Present"
+            Name   = "Containers"
         }
 
-        xRemoteFile DockerEngine
+        # Download Docker Engine
+        xRemoteFile DockerEngineDownload
         {
-            Ensure          = 'Present'
-            DestinationPath = $DockerZipPath
+            DestinationPath = $ProgramFiles
             Uri             = $DockerUri
-            DependsOn       = '[File]DockerDirectory'
+            MatchSource     = $False
         }
 
-        xEnvironment DockerEngineExtract
+        # Extract Docker Engine zip file
+        xArchive DockerEngineExtract
         {
-              Destination   = $DockerPath
+              Destination   = $ProgramFiles
               Path          = $DockerZipPath
               Ensure        = 'Present'
               Validate      = $false
               Force         = $true
+              DependsOn     = '[xRemoteFile]DockerEngineDownload'
         }
 
+        # Add Docker to the Path
         xEnvironment DockerPath
         {
             Ensure          = 'Present'
             Name            = 'Path'
             Value           = $DockerPath
             Path            = $True
-            DependsOn       = '[File]DockerDirectory'
+            DependsOn       = '[xArchive]DockerEngineExtract'
         }
 
+        # Reboot the system to complete Containers feature setup
+        # Perform this after setting the Environment variable
+        # so that PowerShell and other consoles can access it.
+        xPendingReboot Reboot
+        {
+            Name = "Reboot After Containers"
+        }
+
+        # Install the Docker Daemon as a service
         Script DockerService
         {
             SetScript = {
@@ -99,21 +107,23 @@ Configuration MEMBER_CONTAINER_HOST
                 }
             }
             TestScript = {
-                if (Get-Service -Name Docker -ErrorAction Stop) {
+                if (Get-Service -Name Docker -ErrorAction SilentlyContinue) {
                     return $True
                 }
                 return $False
             }
-            DependsOn = '[xRemoteFile]DockerDaemon'
+            DependsOn = '[xArchive]DockerEngineExtract'
         }
 
+        # Start up the Docker Service and ensure it is set
+        # to start up automatically.
         xServiceSet DockerService
         {
             Ensure          = 'Present'
             Name            = 'Docker'
             StartupType     = 'Automatic'
             State           = 'Running'
-            DependsOn       = '[File]DockerService'
+            DependsOn       = '[Script]DockerService'
         }
     }
 }
