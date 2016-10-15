@@ -80,7 +80,7 @@ function Get-LabSwitch {
         # an external switch.
         if ($LabId -and ($SwitchType -ne [LabSwitchType]::External))
         {
-            $SwitchName = "$LabId $SwitchName"
+            $SwitchName = "$LabId$SwitchName"
         } # if
 
         # Assemble the list of Mangement OS Adapters if any are specified for this switch
@@ -95,7 +95,7 @@ function Get-LabSwitch {
                 # But only if it is not an External switch.
                 if ($LabId -and ($SwitchType -ne [LabSwitchType]::External))
                 {
-                    $AdapterName = "$LabId $AdapterName"
+                    $AdapterName = "$LabId$AdapterName"
                 }
 
                 $ConfigAdapter = [LabSwitchAdapter]::New($AdapterName)

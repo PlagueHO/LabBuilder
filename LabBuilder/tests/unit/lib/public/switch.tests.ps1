@@ -1,5 +1,5 @@
 $Global:ModuleRoot = Resolve-Path -Path "$($Script:MyInvocation.MyCommand.Path)\..\..\..\..\..\"
-
+$OldPSModulePath = $env:PSModulePath
 Push-Location
 try
 {
@@ -118,7 +118,7 @@ try
                         errorId = 'AdapterSpecifiedError'
                         errorCategory = 'InvalidArgument'
                         errorMessage = $($LocalizedData.AdapterSpecifiedError `
-                            -f 'Private',"$($Lab.labbuilderconfig.settings.labid) External")
+                            -f 'Private',"$($Lab.labbuilderconfig.settings.labid)External")
                     }
                     $Exception = GetException @ExceptionParameters
 
@@ -595,4 +595,5 @@ catch
 finally
 {
     Pop-Location
+    $env:PSModulePath = $OldPSModulePath
 }

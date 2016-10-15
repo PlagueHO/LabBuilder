@@ -99,7 +99,7 @@ function Get-LabVM {
 
         foreach ($Instance in 1..$InstanceCount)
         {
-            # If InstanceCount is 1 then don't append a number to the VM name
+            # If InstanceCount is 1 then don't increment the IP or MAC addresses or append count to the name
             if ($InstanceCount -eq 1)
             {
                 $VMName = $VM.Name
@@ -123,7 +123,7 @@ function Get-LabVM {
             # if a LabId is set for the lab, prepend it to the VM name.
             if ($LabId)
             {
-                $VMName = "$LabId $VMName"
+                $VMName = "$LabId$VMName"
             }
 
             if (-not $VM.Template)
@@ -193,8 +193,8 @@ function Get-LabVM {
                 # name and switch name.
                 if ($LabId)
                 {
-                    $AdapterName = "$LabId $AdapterName"
-                    $AdapterSwitchName = "$LabId $AdapterSwitchName"
+                    $AdapterName = "$LabId$AdapterName"
+                    $AdapterSwitchName = "$LabId$AdapterSwitchName"
                 }
 
                 # Check the switch is in the switch list

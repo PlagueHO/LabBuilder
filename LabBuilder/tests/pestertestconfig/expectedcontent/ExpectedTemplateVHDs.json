@@ -35,10 +35,10 @@
         "VHDFormat":  2,
         "VHDType":  2,
         "VHDSize":  42949672960,
-        "Name":  "Windows Server 2016 TP5 Datacenter FULL",
+        "Name":  "Windows Server 2016 Datacenter Full",
         "ISOPath":  "Intentionally Removed",
         "VHDPath":  "Intentionally Removed",
-        "Edition":  "Windows Server 2016 Technical Preview 4 SERVERDATACENTER",
+        "Edition":  "Windows Server 2016 SERVERDATACENTER",
         "Packages":  [
                          "WMF5.0-WS2012R2-W81"
                      ],
@@ -50,10 +50,10 @@
         "VHDFormat":  2,
         "VHDType":  2,
         "VHDSize":  26843545600,
-        "Name":  "Windows Server 2016 TP5 Datacenter CORE",
+        "Name":  "Windows Server 2016 Datacenter Core",
         "ISOPath":  "Intentionally Removed",
         "VHDPath":  "Intentionally Removed",
-        "Edition":  "Windows Server 2016 Technical Preview 4 SERVERDATACENTERCORE",
+        "Edition":  "Windows Server 2016 SERVERDATACENTERCORE",
         "Packages":  [
                          "WMF5.0-WS2012R2-W81"
                      ],
@@ -80,10 +80,10 @@
         "VHDFormat":  2,
         "VHDType":  2,
         "VHDSize":  26843545600,
-        "Name":  "Nano Server 2016 TP5 Basic",
+        "Name":  "Nano Server 2016 Datacenter",
         "ISOPath":  "Intentionally Removed",
         "VHDPath":  "Intentionally Removed",
-        "Edition":  "Windows Server 2016 Technical Preview 5 SERVERDATACENTERNANO",
+        "Edition":  "Windows Server 2016 SERVERDATACENTERNANO",
         "Packages":  [
                          "Microsoft-NanoServer-Guest-Package.cab"
                      ],

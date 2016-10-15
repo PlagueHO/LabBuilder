@@ -18,7 +18,7 @@
   Management Tools will not be automatically installed as they do not appear on the SQL Server 2016 ISO and must be downloaded and installed separately.
   </description>
 
-  <settings labid="DOMAINSQL2016.COM"
+  <settings labid="DOMAINSQL2016.COM "
             domainname="DOMAINSQL2016.COM"
             email="admina@DOMAINSQL2016.COM"
             labpath="c:\vm\DOMAINSQL2016.COM"
@@ -44,7 +44,7 @@
 
   <templatevhds isopath="ISOFiles"
                 vhdpath="VHDFiles"
-                prefix="Template " >
+                prefix="" >
     <templatevhd name="Windows Server 2016 Datacenter Full"
                  iso="14393.0.160715-1616.RS1_RELEASE_SERVER_EVAL_X64FRE_EN-US.ISO"
                  url="https://www.microsoft.com/en-us/evalcenter/evaluate-windows-server-2016"

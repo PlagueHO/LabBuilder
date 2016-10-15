@@ -2,16 +2,6 @@
 [String]$Script:ConfigPath = "$PSScriptRoot\..\Samples\Sample_WS2016_DCandDHCPOnly.xml"
 [String]$Script:ModulePath = "$PSScriptRoot\..\LabBuilder.psd1"
 
-Test-LabBuilderLoadModule
-
-# Comment/Uncomment lines below and run this script to execute the LabBuilder commands
-Test-LabBuilderInstall
-# Test-LabBuilderUpdate
-# Test-LabBuilderStart
-# Test-LabBuilderStop
-# Test-StartLabVM -StartVMs 'SA-DC1'
-# Test-LabBuilderUninstall
-
 ####################################################################################################
 Function Test-StartLabVM {
     Param (
@@ -58,3 +48,13 @@ Function Test-LabBuilderLoadModule {
     Import-Module $Script:ModulePath -Verbose -Force
 } # Function Test-LabBuilderLoadModule
 ####################################################################################################
+
+Test-LabBuilderLoadModule
+
+# Comment/Uncomment lines below and run this script to execute the LabBuilder commands
+Test-LabBuilderInstall
+# Test-LabBuilderUpdate
+# Test-LabBuilderStart
+# Test-LabBuilderStop
+# Test-StartLabVM -StartVMs 'SA-DC1'
+# Test-LabBuilderUninstall

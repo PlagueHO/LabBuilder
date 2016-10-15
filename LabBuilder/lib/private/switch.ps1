@@ -22,12 +22,12 @@ function GetManagementSwitchName {
         $Lab
     )
 
-    [String] $LabId = $Lab.labbuilderconfig.settings.labid 
+    [String] $LabId = $Lab.labbuilderconfig.settings.labid
     if (-not $LabId)
     {
         $LabId = $Lab.labbuilderconfig.name
     } # if
-    $ManagementSwitchName = ('{0} Lab Management' `
+    $ManagementSwitchName = ('{0}Lab Management' `
         -f $LabId)
 
     return $ManagementSwitchName
@@ -49,7 +49,7 @@ function GetManagementSwitchName {
 .PARAMETER VlanId
     This optional parameter contains the VLan Id to assign to this network adapter.
 .EXAMPLE
-    UpdateSwitchManagementAdapter -Name 'Domain Nat SMB' -SwitchName 'Domain Nat' -VlanId 25 
+    UpdateSwitchManagementAdapter -Name 'Domain Nat SMB' -SwitchName 'Domain Nat' -VlanId 25
 .OUTPUTS
     None.
 #>

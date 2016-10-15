@@ -502,7 +502,7 @@ It will be used by Template elements to refer to this Template VHD.
 This required attribute should contain the relative or full path to the Windows Install Media ISO file required to build this Template VHD.
 If this filename is not a rooted path it will be appended to the path found in the ISOFiles attribute.
                       </xs:documentation>
-                      <xs:appinfo>iso="9600.16384.130821-1623_x64fre_Server_EN-US_IRM_SSS_DV5.iso"</xs:appinfo>
+                      <xs:appinfo>iso="9600.17050.WINBLUE_REFRESH.140317-1640_X64FRE_SERVER_EVAL_EN-US-IR3_SSS_X64FREE_EN-US_DV9.iso"</xs:appinfo>
                     </xs:annotation>
                   </xs:attribute>
                   <xs:attribute name="url" type="xs:string" use="optional">
@@ -723,28 +723,28 @@ Note: Disabling this value is usually only used when Nested Virtualization is re
                       <xs:appinfo>dynamicmemoryenabled="N"</xs:appinfo>
                     </xs:annotation>
                   </xs:attribute>
-                  <xs:attribute name="generation" type="xs:unsignedByte" use="optional"> 
-                    <xs:annotation> 
-                      <xs:documentation> 
-This optional attribute controls the Virtual Machine generation to create. 
- 
- - Default Value: 2 
- - Valid Values: 1 | 2 
-                      </xs:documentation> 
-                      <xs:appinfo>generation="1"</xs:appinfo> 
-                    </xs:annotation> 
-                  </xs:attribute> 
-                  <xs:attribute name="Version" type="xs:string" use="optional"> 
-                    <xs:annotation> 
-                      <xs:documentation> 
-This optional attribute controls the Virtual Machine Version to create, this is only applicable to Windows 10 build 14352 or higher/Server 2016 post TP5. 
- 
- - Default Value: 8.0 
- - Valid Values: 5.0, 6.2, 7.0, 7.1, 8.0, 254.0, and 255.0 
-                      </xs:documentation> 
-                      <xs:appinfo>version="5.0"</xs:appinfo> 
-                    </xs:annotation> 
-                  </xs:attribute> 
+                  <xs:attribute name="generation" type="xs:unsignedByte" use="optional">
+                    <xs:annotation>
+                      <xs:documentation>
+This optional attribute controls the Virtual Machine generation to create.
+
+ - Default Value: 2
+ - Valid Values: 1 | 2
+                      </xs:documentation>
+                      <xs:appinfo>generation="1"</xs:appinfo>
+                    </xs:annotation>
+                  </xs:attribute>
+                  <xs:attribute name="Version" type="xs:string" use="optional">
+                    <xs:annotation>
+                      <xs:documentation>
+This optional attribute controls the Virtual Machine Version to create, this is only applicable to Windows 10 build 14352 or higher/Server 2016 post TP5.
+
+ - Default Value: 8.0
+ - Valid Values: 5.0, 6.2, 7.0, 7.1, 8.0, 254.0, and 255.0
+                      </xs:documentation>
+                      <xs:appinfo>version="5.0"</xs:appinfo>
+                    </xs:annotation>
+                  </xs:attribute>
                   <xs:attribute name="processorcount" type="xs:unsignedByte" use="optional">
                     <xs:annotation>
                       <xs:documentation>
@@ -1358,27 +1358,27 @@ If this attribute is not defined, but it is defined in the Template then the tem
                       <xs:appinfo>memorystartupbytes="8GB"</xs:appinfo>
                     </xs:annotation>
                   </xs:attribute>
-                  <xs:attribute name="generation" type="xs:unsignedByte" use="optional"> 
-                    <xs:annotation> 
-                      <xs:documentation> 
-This optional attribute controls the Virtual Machine generation to create. 
- 
- - Default Value: 2 
- - Valid Values: 1 | 2 
-                      </xs:documentation> 
-                      <xs:appinfo>generation="1"</xs:appinfo> 
-                    </xs:annotation> 
-                  </xs:attribute> 
-                  <xs:attribute name="Version" type="xs:string" use="optional"> 
-                    <xs:annotation> 
-                      <xs:documentation> 
-This optional attribute controls the Virtual Machine Version to create, this is only applicable to Windows 10 build 14352 or higher/Server 2016 post TP5. 
- 
- - Default Value: 8.0 
- - Valid Values: 5.0, 6.2, 7.0, 7.1, 8.0, 254.0, and 255.0 
-                      </xs:documentation> 
-                      <xs:appinfo>version="5.0"</xs:appinfo> 
-                    </xs:annotation> 
+                  <xs:attribute name="generation" type="xs:unsignedByte" use="optional">
+                    <xs:annotation>
+                      <xs:documentation>
+This optional attribute controls the Virtual Machine generation to create.
+
+ - Default Value: 2
+ - Valid Values: 1 | 2
+                      </xs:documentation>
+                      <xs:appinfo>generation="1"</xs:appinfo>
+                    </xs:annotation>
+                  </xs:attribute>
+                  <xs:attribute name="Version" type="xs:string" use="optional">
+                    <xs:annotation>
+                      <xs:documentation>
+This optional attribute controls the Virtual Machine Version to create, this is only applicable to Windows 10 build 14352 or higher/Server 2016 post TP5.
+
+ - Default Value: 8.0
+ - Valid Values: 5.0, 6.2, 7.0, 7.1, 8.0, 254.0, and 255.0
+                      </xs:documentation>
+                      <xs:appinfo>version="5.0"</xs:appinfo>
+                    </xs:annotation>
                   </xs:attribute> <xs:attribute name="dynamicmemoryenabled" type="xs:string" use="optional">
                     <xs:annotation>
                       <xs:documentation>

@@ -3,7 +3,7 @@ LabBuilder
 
 [![Join the chat at https://gitter.im/PlagueHO/LabBuilder](https://badges.gitter.im/PlagueHO/LabBuilder.svg)](https://gitter.im/PlagueHO/LabBuilder?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 [![Build status](https://ci.appveyor.com/api/projects/status/rcg7xmm97qhg2bjr/branch/master?svg=true)](https://ci.appveyor.com/project/PlagueHO/labbuilder/branch/master)
-[![Stories in Ready](https://badge.waffle.io/PlagueHO/LabBuilder.svg?label=ready&title=Ready)](http://waffle.io/PlagueHO/LabBuilder) 
+[![Stories in Ready](https://badge.waffle.io/PlagueHO/LabBuilder.svg?label=ready&title=Ready)](http://waffle.io/PlagueHO/LabBuilder)
 
 Summary
 =======
@@ -55,7 +55,7 @@ To use this Module you will require on your Lab Host:
 
     _WMF 5.0 is installed on Windows 10 and Windows Server 2016 out of the box, but for Windows Server 2012/R2 and Windows 8/8.1 it will need to be installed separately._
     _WMF 5.0 can be downloaded from [here](https://www.microsoft.com/en-us/download/details.aspx?id=50395)._
-    
+
  3. **Hyper-V** available (which requires intel-VT CPU support).
  4. To use labs that contain Nested Hyper-V hosts only Windows 10 built 10586 or later and Windows Server 2016 TP3 or later are supported.
  5. Copies of the **Windows installation media** for any Operating Systems that will be used in your Labs.
@@ -77,7 +77,7 @@ The use of this module is fairly simple from a process standpoint with the bulk 
 
 A Lab consists of the following items:
 - A configuration XML file that defines the Virtual Machines, Switches, the DSC config files and anything else related to how the Lab is set up.
-- Copies of the Windows Operating System Images used in the Lab which are: 
+- Copies of the Windows Operating System Images used in the Lab which are:
    - Either VHDs containing Syspreped Windows images.
    - Or Windows Installation media ISO files (these will be automatically converted to VHDs for you during Lab creation).
 - Any DSC configuration files that are used to configure the Lab VMs after the OS initial start up has completed.
@@ -99,7 +99,7 @@ If it is not installed, download it from [here](https://www.microsoft.com/en-us/
 Once the Lab files are available the process of installing the Lab is simple.
  1. Make a folder where all your Lab files will go (e.g. VMs, VHDs, ISOs, scripts) - e.g. c:\MyLab
  2. Copy the Lab Configuration XML file into that folder (try one of the sample configurations in the **Samples** folder).
- 3. Edit the Lab Configuration XML file and customize the Settings to suit (specifically the LabPath setting). 
+ 3. Edit the Lab Configuration XML file and customize the Settings to suit (specifically the LabPath setting).
  4. Make a folder in your Lab folder for your Windows ISO files called **isofiles** - e.g. c:\MyLab\ISOFiles
  5. Copy any ISO files into this folder that your lab will use.
  6. Make a folder in your Lab folder for your VHD boot templates (converted from the ISO files) **vhdfiles** - e.g. c:\MyLab\VHDFiles
@@ -172,7 +172,7 @@ However, if you are using multiple Labs on the same machine you might want to sh
 In that case, you can set the _vhdpath_ attribute of the _<templatevhds>_ node in the configuration to a different relative or absolute path.
 
 The conversion process for a single ISO to VHD can take 10-20 minutes depending on your machine.
-For this reason multiple Labs can be configured to use the same path to store these VHDs by changing the _vhdpath_ attribute of the _<templatevhds>_ node in the configuration. 
+For this reason multiple Labs can be configured to use the same path to store these VHDs by changing the _vhdpath_ attribute of the _<templatevhds>_ node in the configuration.
 
 Windows Server 2016
 ===================
@@ -182,7 +182,7 @@ If you are converting a Windows Server 2016 image and your Lab Host is running e
  - Windows 8.1 or older
 
 **Important:** Only Windows Server 2016 Technical Preview 5 and above are supported with LabBilder.
- 
+
 You will need to install an updated version of the DISM before you will be able to add any packages to a Windows Server 2016 ISO.
 This includes building Nano Server Images.
 
@@ -212,7 +212,7 @@ When a new Lab is installed onto a Lab Host from a configuration file, LabBuilde
   _The user specifies the location of this folder in the Lab Configuration file or by passing the LabPath parameter to the Install-Lab cmdlet._
 
  3. **Download Modules**: All Module Resources listed in the Lab Configuration are downloaded to the PowerShell Modules folder if they don't already exist.
- 4. **Download MSUs**: All MSU Resources listed in the Lab Configuration are downloaded to the Resources folder in the Lab folder if they don't already exist. 
+ 4. **Download MSUs**: All MSU Resources listed in the Lab Configuration are downloaded to the Resources folder in the Lab folder if they don't already exist.
  5. **Create Lab Switches**: Each Virtual Switch specified in the Lab Configuration is created or updated in Hyper-V.
  6. **Create Management Switch**: A Management Internal Virtual Switch is created in Hyper-V for this Lab.
 
@@ -223,7 +223,7 @@ When a new Lab is installed onto a Lab Host from a configuration file, LabBuilde
  7. **Create Template VHDs**: Any Template VHD files that don't exist but should are created from the appropriate ISO files.
 
     _A Lab Configuration file may not list any Template VHD files, or it may list them but not specify source ISO files to create the VHD files from._
-    _Instead the Templates may directly link to a VHD file or an existing Hyper-V Virtual Machine._ 
+    _Instead the Templates may directly link to a VHD file or an existing Hyper-V Virtual Machine._
 
  8. **Create VHD Templates Folder**: A folder within the Lab folder will be created to store the Virtual Hard Disk Template files.
 
@@ -238,12 +238,12 @@ When a new Lab is installed onto a Lab Host from a configuration file, LabBuilde
    _The Template VHD file will also be optimized in this folder and then marked as Read Only to ensure it is not changed (as it may be used as a Differencing Disk Parent)._
 
  10. **Create Virtual Machines**: Create the Lab Virtual Machines, one at a time, for each one performing the following steps:
-     
+
      1. **Create Hyper-V VM**: Create the Virtual Machine and attach any Network Adapters listed in the Lab Configuration with it.
      2. **Create Boot VHD**: Copy (if not using a Differencing Boot VHD) the Boot VHD from the Virtual Hard Disk Templates folder and attach it to the VM.
      3. **Add Packages**: Add any listed packages to the VM.
      4. **Create Data VHDs**: Copy/Create and attach any Data VHDs listed in the Lab Configuration with the VM.
-     5. **Create Config Files**: Create any VM configuration files required for first boot of the VM (e.g. Unattend.xml, SetupComplete.cmd) and copy them into the Boot VHD.  
+     5. **Create Config Files**: Create any VM configuration files required for first boot of the VM (e.g. Unattend.xml, SetupComplete.cmd) and copy them into the Boot VHD.
      6. **Boot VM**: Boot the VM for the first time and wait for Initial Setup of the VM to complete.
      7. **Create Certificate**: A Self-Signed certificate will be created by the VM and made available on the VM Boot VHD.
      8. **Download Certificate**: The Self-Signed certificate will be downloaded by the Lab Host and used to encrypt the credentials in the DSC MOF file that will be created.
@@ -277,9 +277,9 @@ These MSU packages can be installed during any of the following phases of Lab in
  - Convert Windows Install Media ISO to Template VHD.
  - Copy Template VHD to ParentVHD folder in Lab.
  - Create new VM Boot VHD from ParentVHD folder in Lab.
- 
+
  By default, Lab configuration files are configured to ensure WMF 5.0 is installed at each of the above phases.
- 
+
  The WMF 5.0 MSU package is controlled by adding a new MSU element to the &lt;Resources&gt; element in a Lab Configuration.
  E.g.
 ```xml
@@ -292,15 +292,15 @@ The package can then be added to the &lt;Template&gt;, &lt;TemplateVHD&gt; or &l
 E.g.
 ```xml
 <templatevhd name="Windows Server 2012 R2 Datacenter Full"
-                iso="9600.16384.130821-1623_x64fre_Server_EN-US_IRM_SSS_DV5.iso"
+                iso="9600.17050.WINBLUE_REFRESH.140317-1640_X64FRE_SERVER_EVAL_EN-US-IR3_SSS_X64FREE_EN-US_DV9.iso"
                 url="https://www.microsoft.com/en-us/evalcenter/evaluate-windows-server-2012-r2"
-                vhd="Windows Server 2012 R2 Datacenter Full.vhdx" 
-                edition="Windows Server 2012 R2 SERVERDATACENTER" 
+                vhd="Windows Server 2012 R2 Datacenter Full.vhdx"
+                edition="Windows Server 2012 R2 SERVERDATACENTER"
                 ostype="Server"
                 packages="WMF5.0-WS2012R2-W81"
-                vhdformat="vhdx" 
-                vhdtype="dynamic" 
-                generation="2" 
+                vhdformat="vhdx"
+                vhdtype="dynamic"
+                generation="2"
                 vhdsize="40GB" />
 ```
 

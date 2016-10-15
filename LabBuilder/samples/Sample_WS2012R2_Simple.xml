@@ -5,7 +5,7 @@
                   version="1.0">
   <description>Sample Windows Server 2012 R2 Lab Configuration Simple</description>
 
-  <settings labid="LABBUILDER-SIMPLE.COM"
+  <settings labid="LABBUILDER-SIMPLE.COM "
             domainname="LABBUILDER-SIMPLE.COM"
             email="admin@LABBUILDER-SIMPLE.COM"
             labpath="c:\vm\LABBUILDER-SIMPLE.COM"
@@ -25,40 +25,40 @@
         <adapter name="LM" macaddress="00155D010704" />
       </adapters>
     </switch>
-    <switch name="General Purpose Internal" type="Internal" /> 
+    <switch name="General Purpose Internal" type="Internal" />
     <switch name="Domain Private Site A" type="Private" vlan="2" />
     <switch name="Domain Private Site B" type="Private" vlan="3" />
     <switch name="Domain Private Site C" type="Private" vlan="4" />
   </switches>
 
-  <templatevhds isopath="ISOFiles" 
-                vhdpath="VHDFiles" 
-                prefix="Template " >
+  <templatevhds isopath="ISOFiles"
+                vhdpath="VHDFiles"
+                prefix="" >
     <templatevhd name="Windows Server 2012 R2 Datacenter Full"
-                 iso="9600.16384.130821-1623_x64fre_Server_EN-US_IRM_SSS_DV5.iso"
+                 iso="9600.17050.WINBLUE_REFRESH.140317-1640_X64FRE_SERVER_EVAL_EN-US-IR3_SSS_X64FREE_EN-US_DV9.iso"
                  url="https://www.microsoft.com/en-us/evalcenter/evaluate-windows-server-2012-r2"
-                 vhd="Windows Server 2012 R2 Datacenter Full.vhdx" 
-                 edition="Windows Server 2012 R2 SERVERDATACENTER" 
+                 vhd="Windows Server 2012 R2 Datacenter Full.vhdx"
+                 edition="Windows Server 2012 R2 SERVERDATACENTER"
                  ostype="Server"
                  packages="WMF5.0-WS2012R2-W81"
-                 vhdformat="vhdx" 
-                 vhdtype="dynamic" 
-                 generation="2" 
+                 vhdformat="vhdx"
+                 vhdtype="dynamic"
+                 generation="2"
                  vhdsize="40GB" />
   </templatevhds>
-  
+
   <templates>
     <template name="Template Windows Server 2012 R2 Datacenter Full"
               templatevhd="Windows Server 2012 R2 Datacenter FULL"
               memorystartupbytes="1GB"
               processorcount="1"
               administratorpassword="P@ssword!1"
-              timezone="New Zealand Standard Time" 
+              timezone="New Zealand Standard Time"
               ostype="Server"
               packages="WMF5.0-WS2012R2-W81" />
   </templates>
 
-  <vms>   
+  <vms>
     <vm name="SS-DEFAULT"
         template="Template Windows Server 2012 R2 Datacenter FULL"
         computername="SS-DEFAULT">
