@@ -242,7 +242,7 @@ function CreateDSCMOFFiles {
 
     # Add the xNetworking DSC Resource because it is always used
     $Module = [LabDSCModule]::New('xNetworking')
-    $DSCModules += @( $Module ) 
+    $DSCModules += @( $Module )
 
     foreach ($DSCModule in $DSCModules)
     {
@@ -259,7 +259,7 @@ function CreateDSCMOFFiles {
             $FilterScript = { ($_.Name -eq $ModuleName) }
         }
         $Module = ($InstalledModules | Where-Object -FilterScript $FilterScript | Sort-Object -Property Version -Descending | Select-Object -First 1)
-        
+
         if ($Module)
         {
             # The module already exists, load the version number into the Module
@@ -469,7 +469,7 @@ function CreateDSCMOFFiles {
         @{
             NodeName = '$($VM.ComputerName)'
             CertificateFile = '$CertificateFile'
-            Thumbprint = '$CertificateThumbprint' 
+            Thumbprint = '$CertificateThumbprint'
             LocalAdminPassword = '$($VM.administratorpassword)'
             $($VM.DSC.Parameters)
         }
@@ -487,7 +487,7 @@ function CreateDSCMOFFiles {
             -Force
     }
     Set-Content -Path $ConfigFile -Value $ConfigData
-        
+
     # Generate the MOF file from the configuration
     $null = & "$DSCConfigName" -OutputPath $($ENV:Temp) -ConfigurationData $ConfigFile
     if (-not (Test-Path -Path $DSCMOFFile))
@@ -553,7 +553,7 @@ function CreateDSCMOFFiles {
         1. StartDSC.ps1 - the script that is called automatically to start up DSC.
         2. StartDSCDebug.ps1 - a debug script that will start up DSC in debug mode.
     These scripts will contain code to perform the following operations:
-        1. Configure the names of the Network Adapters so that they will match the 
+        1. Configure the names of the Network Adapters so that they will match the
             names in the DSC Configuration files.
         2. Enable/Disable DSC Event Logging.
         3. Apply Configuration to the Local Configuration Manager.
@@ -590,7 +590,7 @@ function SetDSCStartFile {
     # This is because unfortunately the Hyper-V Device Naming feature doesn't work.
     [String] $ManagementSwitchName = GetManagementSwitchName `
         -Lab $Lab
-    $Adapters = @(($VM.Adapters).Name)
+    $Adapters = [String[]] ($VM.Adapters).Name
     $Adapters += @($ManagementSwitchName)
 
     foreach ($Adapter in $Adapters)
@@ -630,7 +630,7 @@ Get-NetAdapter ``
     # Logging can't be enabled.
     if ($VM.OSType -ne [LabOSType]::Nano)
     {
-        [String] $Logging = ($VM.DSC.Logging).ToString() 
+        [String] $Logging = ($VM.DSC.Logging).ToString()
         $DSCStartPs += @"
 `$Result = & "wevtutil.exe" get-log "Microsoft-Windows-Dsc/Analytic"
 if (-not (`$Result -like '*enabled: true*')) {
@@ -751,7 +751,7 @@ function InitializeDSC {
 .PARAMETER Timeout
     The maximum amount of time that this function can take to perform DSC start-up.
     If the timeout is reached before the process is complete an error will be thrown.
-    The timeout defaults to 300 seconds.   
+    The timeout defaults to 300 seconds.
 .EXAMPLE
     $Lab = Get-Lab -ConfigPath c:\mylab\config.xml
     $VMs = Get-LabVM -Lab $Lab
@@ -776,7 +776,7 @@ function StartDSC {
     [Boolean] $Complete = $False
     [Boolean] $ConfigCopyComplete = $False
     [Boolean] $ModuleCopyComplete = $False
-    
+
     # Get Path to LabBuilder files
     [String] $VMLabBuilderFiles = $VM.LabBuilderFilesPath
 
@@ -888,7 +888,7 @@ function StartDSC {
 
             # Add the xNetworking DSC Resource because it is always used
             $Module = [LabDSCModule]::New('xNetworking')
-            $DSCModules += @( $Module ) 
+            $DSCModules += @( $Module )
 
             foreach ($DSCModule in $DSCModules)
             {
@@ -970,7 +970,7 @@ function StartDSC {
     Assemble the content of the Networking DSC config file.
 .DESCRIPTION
     This function creates the content that will be written to the Networking DSC Config file
-    from the networking details stored in the VM object. 
+    from the networking details stored in the VM object.
 .EXAMPLE
     $Lab = Get-Lab -ConfigPath c:\mylab\config.xml
     $VMs = Get-LabVM -Lab $Lab
@@ -1149,6 +1149,6 @@ Configuration ConfigLCM {
             RefreshFrequencyMins = 30
             RebootNodeIfNeeded = $True
             ActionAfterReboot = 'ContinueConfiguration'
-        } 
+        }
     }
 }
