@@ -107,7 +107,7 @@ try
                     { InitializeBootVHD -Lab $Lab -VM $VM -VMBootDiskPath 'c:\Dummy\' } | Should Not Throw
                 }
                 It 'Calls Mocked commands' {
-                    Assert-MockCalled New-Item -Exactly 3
+                    Assert-MockCalled New-Item -Exactly 4
                     Assert-MockCalled Mount-WindowsImage -Exactly 1
                     Assert-MockCalled Dismount-WindowsImage -Exactly 1
                     Assert-MockCalled Add-WindowsPackage -Exactly 1
@@ -149,7 +149,7 @@ try
                     { InitializeBootVHD -Lab $Lab -VM $VM -VMBootDiskPath 'c:\Dummy\' } | Should Not Throw
                 }
                 It 'Calls Mocked commands' {
-                    Assert-MockCalled New-Item -Exactly 3
+                    Assert-MockCalled New-Item -Exactly 4
                     Assert-MockCalled Mount-WindowsImage -Exactly 1
                     Assert-MockCalled Dismount-WindowsImage -Exactly 1
                     Assert-MockCalled Add-WindowsPackage -Exactly 2
@@ -168,7 +168,7 @@ try
                     { InitializeBootVHD -Lab $Lab -VM $VM -VMBootDiskPath 'c:\Dummy\' } | Should Not Throw
                 }
                 It 'Calls Mocked commands' {
-                    Assert-MockCalled New-Item -Exactly 3
+                    Assert-MockCalled New-Item -Exactly 4
                     Assert-MockCalled Mount-WindowsImage -Exactly 1
                     Assert-MockCalled Dismount-WindowsImage -Exactly 1
                     Assert-MockCalled Add-WindowsPackage -Exactly 6
@@ -189,7 +189,7 @@ try
                     { InitializeBootVHD -Lab $Lab -VM $VM -VMBootDiskPath 'c:\Dummy\' } | Should Not Throw
                 }
                 It 'Calls Mocked commands' {
-                    Assert-MockCalled New-Item -Exactly 3
+                    Assert-MockCalled New-Item -Exactly 4
                     Assert-MockCalled Mount-WindowsImage -Exactly 1
                     Assert-MockCalled Dismount-WindowsImage -Exactly 1
                     Assert-MockCalled Add-WindowsPackage -Exactly 7
@@ -230,7 +230,7 @@ try
                     { InitializeBootVHD -Lab $Lab -VM $VM -VMBootDiskPath 'c:\Dummy\' } | Should Not Throw
                 }
                 It 'Calls Mocked commands' {
-                    Assert-MockCalled New-Item -Exactly 3
+                    Assert-MockCalled New-Item -Exactly 4
                     Assert-MockCalled Mount-WindowsImage -Exactly 1
                     Assert-MockCalled Dismount-WindowsImage -Exactly 1
                     Assert-MockCalled Add-WindowsPackage -Exactly 1

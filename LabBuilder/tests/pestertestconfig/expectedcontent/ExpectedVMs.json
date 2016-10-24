@@ -215,7 +215,8 @@
                     "Parameters":  "\r\n          Dummy = \"Dummy\"\r\n        "
                 },
         "VMRootPath":  "C:\\Pester Lab\\TestLab PESTER011",
-        "LabBuilderFilesPath":  "C:\\Pester Lab\\TestLab PESTER011\\LabBuilder Files"
+        "LabBuilderFilesPath":  "C:\\Pester Lab\\TestLab PESTER011\\LabBuilder Files",
+        "NanoODJPath":  ""
     },
     {
         "MemoryStartupBytes":  2147483648,
@@ -433,6 +434,7 @@
                     "Parameters":  "\r\n          Dummy = \"Dummy\"\r\n        "
                 },
         "VMRootPath":  "C:\\Pester Lab\\TestLab PESTER012",
-        "LabBuilderFilesPath":  "C:\\Pester Lab\\TestLab PESTER012\\LabBuilder Files"
+        "LabBuilderFilesPath":  "C:\\Pester Lab\\TestLab PESTER012\\LabBuilder Files",
+        "NanoODJPath":  ""
     }
 ]
