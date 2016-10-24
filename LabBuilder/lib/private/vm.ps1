@@ -97,7 +97,7 @@ function CreateVMInitializationFiles {
     $null = Set-Content `
         -Path (Join-Path -Path $VMLabBuilderFiles -ChildPath 'Unattend.xml') `
         -Value $UnattendFile -Force
- 
+
     # Assemble the SetupComplete.* scripts.
     [String] $SetupCompleteCmd = ''
 
@@ -220,41 +220,28 @@ Add-Content ``
 
 
     # If ODJ file specified copy it to the labuilder path.
-    if ($VM.OSType -eq [LabOSType]::Nano -and $VM.NanoODJPath){
-       
-       try
-          {
-
-
-            if ([System.IO.Path]::IsPathRooted($VM.NanoODJPath))
-                    {
-                        $NanoODJPath = "$($VM.NanoODJPath)"
-                    }
-                    else
-                    {
-                        $NanoODJPath = Join-Path `
-                            -Path $Lab.labbuilderconfig.settings.fullconfigpath `
-                            -ChildPath "\$($VM.NanoODJPath)"
-                    } # if
-
-            $null = Copy-Item `
-                -Path (Join-Path -Path $NanoODJPath -ChildPath "\$($VM.ComputerName).txt") `
-                -Destination $VMLabBuilderFiles `
-                -ErrorAction Stop
-            $Complete = $True
-            }
-
-            catch
-            
-            {
-                WriteMessage -Message $($LocalizedData.WaitingForODJMessage `
-                    -f $VM.Name,$Script:RetryConnectSeconds)
-            } # try
+    if ($VM.OSType -eq [LabOSType]::Nano `
+        -and -not [String]::IsNullOrWhiteSpace($VM.NanoODJPath))
+    {
+        if ([System.IO.Path]::IsPathRooted($VM.NanoODJPath))
+        {
+            $NanoODJPath = $VM.NanoODJPath
         }
+        else
+        {
+            $NanoODJPath = Join-Path `
+                -Path $Lab.labbuilderconfig.settings.fullconfigpath `
+                -ChildPath $VM.NanoODJPath
+        } # if
+
+        $null = Copy-Item `
+            -Path (Join-Path -Path $NanoODJPath -ChildPath "$($VM.ComputerName).txt") `
+            -Destination $VMLabBuilderFiles `
+            -ErrorAction Stop
+    } # if
 
     WriteMessage -Message $($LocalizedData.CreatedVMInitializationFiles `
         -f $VM.Name)
-
 } # CreateVMInitializationFiles
 
 
@@ -1768,7 +1755,9 @@ function UpdateVMDVDDrives {
 .DESCRIPTION
     This function will perform the following tasks:
         1. Connect to the VM via remoting.
-        2. Upload the ODJ files to c:\windows\setup\ODJFiles folder of the VM.
+        2. Upload the ODJ file to c:\windows\setup\ODJFiles folder of the VM.
+    If the ODJ file does not exist in the LabFiles folder for the VM then the
+    copy will not be performed.
 .PARAMETER Lab
     Contains the Lab object that was produced by the Get-Lab cmdlet.
 .PARAMETER VM
@@ -1776,12 +1765,11 @@ function UpdateVMDVDDrives {
 .PARAMETER Timeout
     The maximum amount of time that this function can take to perform the copy.
     If the timeout is reached before the process is complete an error will be thrown.
-    The timeout defaults to 300 seconds.   
+    The timeout defaults to 300 seconds.
 .EXAMPLE
     $Lab = Get-Lab -ConfigPath c:\mylab\config.xml
     $VMs = Get-LabVM -Lab $Lab
     CopyODJ -Lab $Lab -VM $VMs[0]
-    
 .OUTPUTS
     None.
 #>
@@ -1800,7 +1788,16 @@ function CopyODJ {
     [System.Management.Automation.Runspaces.PSSession] $Session = $null
     [Boolean] $Complete = $False
     [Boolean] $ODJCopyComplete = $False
-    
+    [String] $ODJFilename = Join-Path `
+        -Path $VMLabBuilderFiles `
+        -ChildPath "$($VM.ComputerName).txt"
+
+    # If ODJ file does not exist then return
+    if (-not (Test-Path -Path $ODJFilename))
+    {
+        return
+    } # if
+
     # Get Path to LabBuilder files
     [String] $VMLabBuilderFiles = $VM.LabBuilderFilesPath
 
@@ -1819,11 +1816,11 @@ function CopyODJ {
                 errorId = 'ODJCopyError'
                 errorCategory = 'OperationTimeout'
                 errorMessage = $($LocalizedData.ODJCopyError `
-                    -f $VM.Name)
+                    -f $VM.Name,$ODJFilename)
             }
             ThrowException @ExceptionParameters
             return
-        }
+        } # if
 
         if (($Session) `
             -and ($Session.State -eq 'Opened') `
@@ -1849,8 +1846,8 @@ function CopyODJ {
                         @CopyParameters `
                         -Path (Join-Path `
                             -Path $VMLabBuilderFiles `
-                            -ChildPath "\$($VM.ComputerName).txt") `
-                            -Verbose
+                            -ChildPath "$($VM.ComputerName).txt") `
+                        -Verbose
                     $ODJCopyComplete = $True
                 }
                 Catch
@@ -1876,7 +1873,7 @@ function CopyODJ {
                 errorId = 'ODJCopyError'
                 errorCategory = 'OperationTimeout'
                 errorMessage = $($LocalizedData.ODJCopyError `
-                    -f $VM.Name)
+                    -f $VM.Name,$ODJFilename)
             }
             ThrowException @ExceptionParameters
         } # if

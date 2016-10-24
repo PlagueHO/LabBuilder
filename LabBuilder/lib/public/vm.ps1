@@ -161,10 +161,10 @@ function Get-LabVM {
 
             # Get path to Offline Domain Join file if it exists
             [String]$NanoODJPath = $null
-            If($VM.NanoODJPath){
+            if ($VM.NanoODJPath)
+            {
                 $NanoODJPath = $VM.NanoODJPath
-            }
-
+            } # if
 
             # Assemble the Network adapters that this VM will use
             [LabVMAdapter[]] $VMAdapters = @()
@@ -183,7 +183,7 @@ function Get-LabVM {
                             -f $VMName)
                     }
                     ThrowException @ExceptionParameters
-                }
+                } # if
 
                 if (-not $AdapterSwitchName)
                 {
@@ -194,7 +194,7 @@ function Get-LabVM {
                             -f $VMName,$AdapterName)
                     }
                     ThrowException @ExceptionParameters
-                }
+                } # if
 
                 # if a LabId is set for the lab, prepend it to the adapter name
                 # name and switch name.
@@ -202,7 +202,7 @@ function Get-LabVM {
                 {
                     $AdapterName = "$LabId$AdapterName"
                     $AdapterSwitchName = "$LabId$AdapterSwitchName"
-                }
+                } # if
 
                 # Check the switch is in the switch list
                 [Boolean] $Found = $False
@@ -1516,8 +1516,8 @@ function Install-LabVM {
         {
         # Copy ODJ Files if it Exists
             CopyODJ `
-            -Lab $Lab `
-            -VM $VM
+                -Lab $Lab `
+                -VM $VM
         } # if
 
         # Create any DSC Files for the VM
@@ -1529,15 +1529,6 @@ function Install-LabVM {
         StartDSC `
             -Lab $Lab `
             -VM $VM
-
-        if ($VM.OSType -in ([LabOStype]::Nano))
-        {
-        # Copy ODJ Files if it Exists
-            CopyODJ `
-            -Lab $Lab `
-            -VM $VM
-        } # if
-
     } # if
 } # Install-LabVM
 
