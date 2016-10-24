@@ -468,7 +468,12 @@ Function Install-Lab {
 
         [Parameter(
             Position=5)]
-        [Switch] $Force
+        [Switch] $Force,
+        
+        [Parameter(
+            Position=6)]
+        [Switch] $OffLine
+
     ) # Param
 
     begin
@@ -496,6 +501,8 @@ Function Install-Lab {
             @ForceSplat `
             -ErrorAction Stop
 
+        if (!($PSBoundParameters.ContainsKey('OffLine')))
+        {
         # Install Package Providers
         InstallPackageProviders `
             @ForceSplat `
@@ -505,6 +512,9 @@ Function Install-Lab {
         RegisterPackageSources `
             @ForceSplat `
             -ErrorAction Stop
+        }
+        
+        $null = $PSBoundParameters.Remove('Offline')
 
         if ($PSCmdlet.ParameterSetName -eq 'File')
         {
