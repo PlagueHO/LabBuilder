@@ -1,5 +1,6 @@
 # Unreleased
 * DSCLibrary\MEMBER_CONTAINER_HOST.DSC.ps1: Added DSC Configuration for configuring a Docker Container host.
+* Added support for inserting ODJ files into a VM for joining Nano Servers to an AD domain.
 
 # 0.8.3.1068
 * Added Jenkins build scripts.
