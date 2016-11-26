@@ -57,7 +57,7 @@ function GetModulesInDSCConfig()
             $Module = [LabDSCModule]::New($ModuleName)
             if (-not [String]::IsNullOrWhitespace($ModuleVersion))
             {
-                $Module.ModuleVersion = $ModuleVersion
+                $Module.ModuleVersion = [Version] $ModuleVersion
             } # if
             $Modules += @( $Module )
         } # if
@@ -242,23 +242,34 @@ function CreateDSCMOFFiles {
 
     # Add the xNetworking DSC Resource because it is always used
     $Module = [LabDSCModule]::New('xNetworking')
+    # It must be 3.0.0.0 or greater
+    $Module.MinimumVersion = [Version] '3.0.0.0'
     $DSCModules += @( $Module )
 
     foreach ($DSCModule in $DSCModules)
     {
         $ModuleName = $DSCModule.ModuleName
         $ModuleSplat = @{ Name = $ModuleName }
-        $ModuleVersion = $DSCModule.Version
+        $ModuleVersion = $DSCModule.ModuleVersion
+        $MinimumVersion = $DSCModule.MinimumVersion
         if ($ModuleVersion)
         {
             $FilterScript = { ($_.Name -eq $ModuleName) -and ($ModuleVersion -eq $_.Version) }
             $ModuleSplat += @{ RequiredVersion = $ModuleVersion }
         }
+        elseif ($MinimumVersion)
+        {
+            $FilterScript = { ($_.Name -eq $ModuleName) -and ($_.Version -ge $MinimumVersion) }
+            $ModuleSplat += @{ MinimumVersion = $MinimumVersion }
+        }
         else
         {
             $FilterScript = { ($_.Name -eq $ModuleName) }
         }
-        $Module = ($InstalledModules | Where-Object -FilterScript $FilterScript | Sort-Object -Property Version -Descending | Select-Object -First 1)
+        $Module = ($InstalledModules |
+            Where-Object -FilterScript $FilterScript |
+            Sort-Object -Property Version -Descending |
+            Select-Object -First 1)
 
         if ($Module)
         {
@@ -1017,7 +1028,7 @@ $DSCNetworkingConfig += @"
         InterfaceAlias = '$($Adapter.Name)'
         AddressFamily  = 'IPv4'
         IPAddress      = '$($Adapter.IPv4.Address.Replace(',',"','"))'
-        SubnetMask     = '$($Adapter.IPv4.SubnetMask)'
+        PrefixLength   = '$($Adapter.IPv4.SubnetMask)'
     }
 
 "@
@@ -1076,7 +1087,7 @@ $DSCNetworkingConfig += @"
         InterfaceAlias = '$($Adapter.Name)'
         AddressFamily  = 'IPv6'
         IPAddress      = '$($Adapter.IPv6.Address.Replace(',',"','"))'
-        SubnetMask     = '$($Adapter.IPv6.SubnetMask)'
+        PrefixLength   = '$($Adapter.IPv6.SubnetMask)'
     }
 
 "@

@@ -190,7 +190,7 @@ class LabVMAdapterIPv4:System.ICloneable {
         $this.Address = $Address
         $this.SubnetMask = $SubnetMask
     } # Constructor
-    
+
     [Object] Clone () {
         $New = [LabVMAdapterIPv4]::New()
         foreach ($Property in ($this | Get-Member -MemberType Property))
@@ -238,7 +238,7 @@ class LabVMAdapter:System.ICloneable {
     LabVMAdapter($Name) {
         $this.Name = $Name
     } # Constructor
-    
+
     [Object] Clone () {
         $New = [LabVMAdapter]::New()
         foreach ($Property in ($this | Get-Member -MemberType Property))
@@ -264,7 +264,7 @@ class LabDataVHD:System.ICloneable {
     [Boolean] $SupportPR = $False
 
     LabDataVHD() {}
-    
+
     LabDataVHD($VHD) {
         $this.VHD = $VHD
     } # Constructor
@@ -284,7 +284,7 @@ class LabDVDDrive:System.ICloneable {
     [String] $Path
 
     LabDVDDrive() {}
-    
+
     LabDVDDrive($ISO) {
         $this.ISO = $ISO
     } # Constructor
@@ -307,13 +307,13 @@ class LabVMTemplateVHD:System.ICloneable {
     [String] $Edition
     [Byte] $Generation = 2
     [LabVHDFormat] $VHDFormat = [LabVHDFormat]::VHDx
-    [LabVHDType] $VHDType = [LabVHDType]::Dynamic 
+    [LabVHDType] $VHDType = [LabVHDType]::Dynamic
     [Uint64] $VHDSize = 0
     [String[]] $Packages
     [String[]] $Features
 
     LabVMTemplateVHD() {}
-    
+
     LabVMTemplateVHD($Name) {
         $this.Name = $Name
     } # Constructor
@@ -342,13 +342,13 @@ class LabVMTemplate:System.ICloneable {
     [String] $ProductKey
     [String] $Timezone="Pacific Standard Time"
     [LabOStype] $OSType = [LabOStype]::Server
-    [String[]] $IntegrationServices = @('Guest Service Interface','Heartbeat','Key-Value Pair Exchange','Shutdown','Time Synchronization','VSS') 
+    [String[]] $IntegrationServices = @('Guest Service Interface','Heartbeat','Key-Value Pair Exchange','Shutdown','Time Synchronization','VSS')
     [String[]] $Packages
     [ValidateRange(1,2)][Byte] $Generation = 2
     [ValidateSet("5.0","6.2","7.0","7.1","8.0","254.0","255.0")][String] $Version = '8.0'
 
     LabVMTemplate() {}
-    
+
     LabVMTemplate($Name) {
         $this.Name = $Name
     } # Constructor
@@ -374,7 +374,7 @@ class LabSwitch:System.ICloneable {
     [LabSwitchAdapter[]] $Adapters
 
     LabSwitch() {}
-    
+
     LabSwitch($Name) {
         $this.Name = $Name
     } # Constructor
@@ -401,7 +401,7 @@ class LabDSC:System.ICloneable {
     [Boolean] $Logging = $False
 
     LabDSC() {}
-    
+
     LabDSC($ConfigName) {
         $this.ConfigName = $ConfigName
     } # Constructor
@@ -410,7 +410,7 @@ class LabDSC:System.ICloneable {
         $this.ConfigName = $ConfigName
         $this.ConfigFile = $ConfigFile
     } # Constructor
-    
+
     [Object] Clone () {
         $New = [LabDSC]::New()
         foreach ($Property in ($this | Get-Member -MemberType Property))
@@ -452,7 +452,7 @@ class LabVM:System.ICloneable {
     [String] $NanoODJPath
 
     LabVM() {}
-    
+
     LabVM($Name) {
         $this.Name = $Name
     } # Constructor
@@ -474,17 +474,18 @@ class LabVM:System.ICloneable {
 
 class LabDSCModule:System.ICloneable {
     [String] $ModuleName
-    [String] $ModuleVersion
+    [Version] $ModuleVersion
+    [Version] $MinimumVersion
 
     LabDSCModule() {}
-    
+
     LabDSCModule($ModuleName) {
         $this.ModuleName = $ModuleName
     } # Constructor
 
     LabDSCModule($ModuleName,$ModuleVersion) {
         $this.ModuleName = $ModuleName
-        $this.ModuleVersion = $ModuleVersion
+        $this.ModuleVersion = [Version] $ModuleVersion
     } # Constructor
 
     [Object] Clone () {
