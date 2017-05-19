@@ -1,5 +1,5 @@
 ﻿# Set the name of the sample Lab from the samples folder:
-[String]$Script:ConfigPath = "$PSScriptRoot\..\Samples\Sample_WS2016_DCandDHCPOnly.xml"
+[String]$Script:ConfigPath = "$PSScriptRoot\..\Samples\Sample_WS2016_DomainFunctions.xml"
 [String]$Script:ModulePath = "$PSScriptRoot\..\LabBuilder.psd1"
 
 ####################################################################################################
@@ -52,9 +52,9 @@ Function Test-LabBuilderLoadModule {
 Test-LabBuilderLoadModule
 
 # Comment/Uncomment lines below and run this script to execute the LabBuilder commands
-Test-LabBuilderInstall
+# Test-LabBuilderInstall
 # Test-LabBuilderUpdate
 # Test-LabBuilderStart
-# Test-LabBuilderStop
+Test-LabBuilderStop
 # Test-StartLabVM -StartVMs 'SA-DC1'
 # Test-LabBuilderUninstall

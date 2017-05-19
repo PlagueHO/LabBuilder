@@ -1,4 +1,11 @@
-# Changelist
+# Change Log
+
+## Unreleased
+
+- Moved Changelist.md file to root and renamed to CHANGELOG.MD.
+- Cleaned up markdown errors in README.MD.
+- Updated samples to use latest version of Windows Server 2016 Evaulation ISO.
+- Added sample Sample_WS2016_DomainFunctions.xml for creating an Azure Functions lab.
 
 ## 0.8.3.1107
 
@@ -351,7 +358,6 @@
 ## 0.1.0.0
 
 - Initial Release.
-
 
 
 

@@ -46,7 +46,7 @@
                 vhdpath="VHDFiles"
                 prefix="" >
     <templatevhd name="Windows Server 2016 Datacenter Full"
-                 iso="14393.0.160715-1616.RS1_RELEASE_SERVER_EVAL_X64FRE_EN-US.ISO"
+                 iso="14393.0.161119-1705.RS1_REFRESH_SERVER_EVAL_X64FRE_EN-US.ISO"
                  url="https://www.microsoft.com/en-us/evalcenter/evaluate-windows-server-2016"
                  vhd="Windows Server 2016 Datacenter Full.vhdx"
                  edition="Windows Server 2016 SERVERDATACENTER"
@@ -56,7 +56,7 @@
                  generation="2"
                  vhdsize="40GB" />
     <templatevhd name="Windows Server 2016 Datacenter CORE"
-                 iso="14393.0.160715-1616.RS1_RELEASE_SERVER_EVAL_X64FRE_EN-US.ISO"
+                 iso="14393.0.161119-1705.RS1_REFRESH_SERVER_EVAL_X64FRE_EN-US.ISO"
                  url="https://www.microsoft.com/en-us/evalcenter/evaluate-windows-server-2016"
                  vhd="Windows Server 2016 Datacenter Core.vhdx"
                  edition="Windows Server 2016 SERVERDATACENTERCORE"
