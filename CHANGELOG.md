@@ -6,6 +6,7 @@
 - Cleaned up markdown errors in README.MD.
 - Updated samples to use latest version of Windows Server 2016 Evaulation ISO.
 - Added sample Sample_WS2016_DomainFunctions.xml for creating an Azure Functions lab.
+- Added support for codecoverage analysis using CodeCov.io.
 
 ## 0.8.3.1107
 
@@ -233,7 +234,7 @@
 - VM\SetupComplete attribute supports rooted paths.
 - DSC\ConfigFile Lab setting supports rooted paths.
 - VM\UseDifferencingBootDisk default changed to 'Y'.
-- GetModulesInDSCConfig: Returns Array of objects containing ModuleName and ModuleVersion.
+- Get-ModulesInDSCConfig: Returns Array of objects containing ModuleName and ModuleVersion.
                          Now returns PSDesiredStateConfiguration module if listed -expected that calling function will ignore if required.
                          Added function to set the Module versions in a DSC Config.
 - CreateDSCMOFFiles: Updated to set Module versions in DSC Config files.

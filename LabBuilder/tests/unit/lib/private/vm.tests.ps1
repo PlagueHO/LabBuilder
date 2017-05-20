@@ -75,11 +75,11 @@ try
         }
 
 
-        Describe '\Lib\Private\Vm.ps1\GetSelfSignedCertificate' -Tags 'Incomplete' {
+        Describe '\Lib\Private\Vm.ps1\Recieve-SelfSignedCertificate' -Tags 'Incomplete' {
         }
 
 
-        Describe '\Lib\Private\Vm.ps1\RecreateSelfSignedCertificate' -Tags 'Incomplete' {
+        Describe '\Lib\Private\Vm.ps1\Request-SelfSignedCertificate' -Tags 'Incomplete' {
         }
 
 

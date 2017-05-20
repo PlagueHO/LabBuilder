@@ -751,6 +751,7 @@ try
                     [Switch] $Force
                 )
             }
+
             Context 'Required package sources already registered and trusted' {
                 Mock Get-PackageSource -MockWith {
                     @(
@@ -779,6 +780,7 @@ try
                     Assert-MockCalled Register-PackageSource -Exactly 0
                 }
             }
+
             Context 'Required package sources already registered but not trusted' {
                 Mock Get-PackageSource -MockWith {
                     @(

@@ -12,16 +12,16 @@
 .PARAMETER DSCConfigContent
     Contains the content of the DSC Config to extract resource module names from.
 .EXAMPLE
-    GetModulesInDSCConfig -DSCConfigFile c:\mydsc\Server01.ps1
+    Get-ModulesInDSCConfig -DSCConfigFile c:\mydsc\Server01.ps1
     Return the DSC Resource module list from file c:\mydsc\server01.ps1
 .EXAMPLE
-    GetModulesInDSCConfig -DSCConfigContent $DSCConfig
+    Get-ModulesInDSCConfig -DSCConfigContent $DSCConfig
     Return the DSC Resource module list from the DSC Config in $DSCConfig.
 .OUTPUTS
     An array of LabDSCModule objects containing the DSC Resource modules required by this DSC
     configuration file.
 #>
-function GetModulesInDSCConfig()
+function Get-ModulesInDSCConfig()
 {
    [CmdLetBinding(DefaultParameterSetName="Content")]
    [OutputType([Object[]])]
@@ -63,7 +63,7 @@ function GetModulesInDSCConfig()
         } # if
     } # foreach
     Return $Modules
-} # GetModulesInDSCConfig
+} # Get-ModulesInDSCConfig
 
 
 <#
@@ -237,7 +237,7 @@ function CreateDSCMOFFiles {
     [String] $DSCConfigContent = Get-Content `
         -Path $($VM.DSC.ConfigFile) `
         -RAW
-    [LabDSCModule[]] $DSCModules = GetModulesInDSCConfig `
+    [LabDSCModule[]] $DSCModules = Get-ModulesInDSCConfig `
         -DSCConfigContent $DSCConfigContent
 
     # Add the xNetworking DSC Resource because it is always used
@@ -266,6 +266,7 @@ function CreateDSCMOFFiles {
         {
             $FilterScript = { ($_.Name -eq $ModuleName) }
         }
+
         $Module = ($InstalledModules |
             Where-Object -FilterScript $FilterScript |
             Sort-Object -Property Version -Descending |
@@ -282,9 +283,9 @@ function CreateDSCMOFFiles {
             # The Module isn't available on this computer, so try and install it
             WriteMessage -Message $($LocalizedData.DSCConfigSearchingForModuleMessage `
                 -f $VM.DSC.ConfigFile,$VM.Name,$ModuleName)
-
             $NewModule = Find-Module `
                 @ModuleSplat
+
             if ($NewModule)
             {
                 WriteMessage -Message $($LocalizedData.DSCConfigInstallingModuleMessage `
@@ -325,14 +326,18 @@ function CreateDSCMOFFiles {
         [String] $ModulePath = ''
         foreach ($Path in $ENV:PSModulePath.Split(';'))
         {
-            $ModulePath = Join-Path `
-                -Path $Path `
-                -ChildPath $ModuleName
-            if (Test-Path -Path $ModulePath)
-            {
-                break
-            } # If
+            if (-not [String]::IsNullOrEmpty($Path)) {
+                $ModulePath = Join-Path `
+                    -Path $Path `
+                    -ChildPath $ModuleName
+
+                if (Test-Path -Path $ModulePath)
+                {
+                    break
+                } # If
+            }
         } # Foreach
+
         if (-not (Test-Path -Path $ModulePath))
         {
             $ExceptionParameters = @{
@@ -362,7 +367,7 @@ function CreateDSCMOFFiles {
     if ($VM.CertificateSource -eq [LabCertificateSource]::Guest)
     {
         # Recreate the certificate if it the source is the Guest
-        if (-not (RecreateSelfSignedCertificate -Lab $Lab -VM $VM))
+        if (-not (Request-SelfSignedCertificate -Lab $Lab -VM $VM))
         {
             $ExceptionParameters = @{
                 errorId = 'CertificateCreateError'
@@ -894,7 +899,7 @@ function StartDSC {
             [String] $DSCContent = Get-Content `
                 -Path $($VM.DSC.ConfigFile) `
                 -RAW
-            [LabDSCModule[]] $DSCModules = GetModulesInDSCConfig `
+            [LabDSCModule[]] $DSCModules = Get-ModulesInDSCConfig `
                 -DSCConfigContent $DSCContent
 
             # Add the xNetworking DSC Resource because it is always used

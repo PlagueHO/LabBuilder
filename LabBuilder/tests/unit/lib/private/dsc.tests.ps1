@@ -63,11 +63,10 @@ try
         # Run tests assuming Build 10586 is installed
         $Script:CurrentBuild = 10586
 
-
-        Describe '\Lib\Private\Dsc.ps1\GetModulesInDSCConfig' {
+        Describe '\Lib\Private\Dsc.ps1\Get-ModulesInDSCConfig' {
             Context 'Called with Test DSC Resource File' {
                 It 'Returns DSCModules Object that matches Expected Object' {
-                    $DSCModules = GetModulesInDSCConfig `
+                    $DSCModules = Get-ModulesInDSCConfig `
                         -DSCConfigFile (Join-Path -Path $Global:TestConfigPath -ChildPath 'dsclibrary\PesterTest.DSC.ps1')
 
                     Set-Content `
@@ -78,10 +77,11 @@ try
                     [String]::Compare((Get-Content -Path "$Global:ArtifactPath\ExpectedDSCModules.json"),$ExpectedDSCModules,$true) | Should Be 0
                 }
             }
+
             Context 'Called with Test DSC Resource Content' {
                 It 'Returns DSCModules Object that matches Expected Object' {
                     $Content = Get-Content -Path (Join-Path -Path $Global:TestConfigPath -ChildPath 'dsclibrary\PesterTest.DSC.ps1') -RAW
-                    $DSCModules = GetModulesInDSCConfig `
+                    $DSCModules = Get-ModulesInDSCConfig `
                         -DSCConfigContent $Content
 
                     Set-Content `
@@ -92,8 +92,6 @@ try
                 }
             }
         }
-
-
 
         Describe '\Lib\Private\Dsc.ps1\SetModulesInDSCConfig' {
             $Module1 = [LabDSCModule]::New('PSDesiredStateConfiguration','1.0')
@@ -115,6 +113,7 @@ try
                         -DifferenceObject (Get-Content -Path "$Global:ArtifactPath\ExpectedDSCConfig.txt")).Count  | Should Be 0
                 }
             }
+
             Context 'Called with Test DSC Resource Content' {
                 It 'Returns DSCModules Content that matches Expected String' {
                     [String] $Content = Get-Content -Path (Join-Path -Path $Global:TestConfigPath -ChildPath 'dsclibrary\PesterTest.DSC.ps1') -RAW
@@ -131,8 +130,6 @@ try
             }
         }
 
-
-
         Describe '\Lib\Private\Dsc.ps1\CreateDSCMOFFiles' -Tags 'Incomplete' {
             # Mock functions
             function Get-VM {}
@@ -145,23 +142,30 @@ try
             [Array]$Templates = Get-LabVMTemplate -Lab $Lab
             [Array]$VMs = Get-LabVM -Lab $Lab -VMTemplates $Templates -Switches $Switches
 
-            Mock Get-Module
-            Mock GetModulesInDSCConfig -MockWith { @('TestModule') }
-
             Context 'Empty DSC Config' {
+                Mock Get-Module
+                Mock Get-ModulesInDSCConfig -MockWith { @('TestModule') }
+
                 $VM = $VMS[0].Clone()
+                
+                $VMConfigFile = $VM.DSC.ConfigFile
                 $VM.DSC.ConfigFile = ''
                 It 'Does not throw an Exception' {
                     { CreateDSCMOFFiles -Lab $Lab -VM $VM } | Should Not Throw
                 }
+
                 It 'Calls Mocked commands' {
                     Assert-MockCalled Get-Module -Exactly 0
                 }
+                $VM.DSC.ConfigFile = $VMConfigFile
             }
 
-            Mock Find-Module
 
             Context 'DSC Module Not Found' {
+                Mock Get-Module
+                Mock Get-ModulesInDSCConfig -MockWith { @('TestModule') }
+                Mock Find-Module
+
                 $VM = $VMS[0].Clone()
                 $ExceptionParameters = @{
                     errorId = 'DSCModuleDownloadError'
@@ -176,15 +180,17 @@ try
                 }
                 It 'Calls Mocked commands' {
                     Assert-MockCalled Get-Module -Exactly 1
-                    Assert-MockCalled GetModulesInDSCConfig -Exactly 1
+                    Assert-MockCalled Get-ModulesInDSCConfig -Exactly 1
                     Assert-MockCalled Find-Module -Exactly 1
                 }
             }
-
-            Mock Find-Module -MockWith { @{ name = 'TestModule' } }
-            Mock Install-Module -MockWith { Throw }
 
             Context 'DSC Module Download Error' {
+                Mock Get-Module
+                Mock Get-ModulesInDSCConfig -MockWith { @('TestModule') }
+                Mock Find-Module -MockWith { @{ name = 'TestModule' } }
+                Mock Install-Module -MockWith { Throw }
+
                 $VM = $VMS[0].Clone()
                 $ExceptionParameters = @{
                     errorId = 'DSCModuleDownloadError'
@@ -199,17 +205,20 @@ try
                 }
                 It 'Calls Mocked commands' {
                     Assert-MockCalled Get-Module -Exactly 1
-                    Assert-MockCalled GetModulesInDSCConfig -Exactly 1
+                    Assert-MockCalled Get-ModulesInDSCConfig -Exactly 1
                     Assert-MockCalled Find-Module -Exactly 1
                 }
             }
 
-            Mock Install-Module -MockWith { }
-            Mock Test-Path `
-                -ParameterFilter { $Path -like '*TestModule' } `
-                -MockWith { $false }
-
             Context 'DSC Module Not Found in Path' {
+                Mock Get-Module
+                Mock Get-ModulesInDSCConfig -MockWith { @('TestModule') }
+                Mock Find-Module -MockWith { @{ name = 'TestModule' } }
+                Mock Install-Module -MockWith { }
+                Mock Test-Path `
+                    -ParameterFilter { $Path -like '*TestModule' } `
+                    -MockWith { $false }
+
                 $VM = $VMS[0].Clone()
                 $ExceptionParameters = @{
                     errorId = 'DSCModuleNotFoundError'
@@ -222,22 +231,29 @@ try
                 It 'Throws a DSCModuleNotFoundError Exception' {
                     { CreateDSCMOFFiles -Lab $Lab -VM $VM } | Should Throw $Exception
                 }
+
                 It 'Calls Mocked commands' {
                     Assert-MockCalled Get-Module -Exactly 1
-                    Assert-MockCalled GetModulesInDSCConfig -Exactly 1
+                    Assert-MockCalled Get-ModulesInDSCConfig -Exactly 1
                     Assert-MockCalled Find-Module -Exactly 1
                     Assert-MockCalled Install-Module -Exactly 1
                 }
             }
 
-            Mock Test-Path `
-                -ParameterFilter { $Path -like '*TestModule' } `
-                -MockWith { $true }
-            Mock Copy-Item
-            Mock Get-LabVMCertificate
-
             Context 'Certificate Create Failed' {
+                Mock Get-Module
+                Mock Get-ModulesInDSCConfig -MockWith { @('TestModule') }
+                Mock Find-Module -MockWith { @{ name = 'TestModule' } }
+                Mock Install-Module -MockWith { }
+                Mock Test-Path `
+                    -ParameterFilter { $Path -like '*TestModule' } `
+                    -MockWith { $true }
+                Mock Copy-Item
+                Mock Request-SelfSignedCertificate `
+                    -MockWith { $false }
+
                 $VM = $VMS[0].Clone()
+                $VM.CertificateSource = [LabCertificateSource]::Guest
                 $ExceptionParameters = @{
                     errorId = 'CertificateCreateError'
                     errorCategory = 'InvalidArgument'
@@ -249,29 +265,39 @@ try
                 It 'Throws a CertificateCreateError Exception' {
                     { CreateDSCMOFFiles -Lab $Lab -VM $VM } | Should Throw $Exception
                 }
+
                 It 'Calls Mocked commands' {
                     Assert-MockCalled Get-Module -Exactly 1
-                    Assert-MockCalled GetModulesInDSCConfig -Exactly 1
-                    Assert-MockCalled Find-Module -Exactly 1
-                    Assert-MockCalled Install-Module -Exactly 1
-                    Assert-MockCalled Copy-Item -Exactly 1
-                    Assert-MockCalled Get-LabVMCertificate -Exactly 1
+                    Assert-MockCalled Get-ModulesInDSCConfig -Exactly 1
+                    Assert-MockCalled Find-Module -Exactly 2
+                    Assert-MockCalled Install-Module -Exactly 2
+                    Assert-MockCalled Copy-Item -Exactly 2
+                    Assert-MockCalled Request-SelfSignedCertificate -Exactly 1
                 }
             }
 
-            Mock Get-LabVMCertificate -MockWith { $true }
-            Mock Import-Certificate
-            Mock Get-ChildItem `
-                -ParameterFilter { $path -eq 'cert:\LocalMachine\My' } `
-                -MockWith { @{
-                    FriendlyName = 'DSC Credential Encryption'
-                    Thumbprint = '1FE3BA1B6DBE84FCDF675A1C944A33A55FD4B872'
-                } }
-            Mock Remove-Item
-            Mock ConfigLCM
-
             Context 'Meta MOF Create Failed' {
+                Mock Get-Module
+                Mock Get-ModulesInDSCConfig -MockWith { @('TestModule') }
+                Mock Find-Module -MockWith { @{ name = 'TestModule' } }
+                Mock Install-Module -MockWith { }
+                Mock Test-Path `
+                    -ParameterFilter { $Path -like '*TestModule' } `
+                    -MockWith { $true }
+                Mock Copy-Item
+                Mock Request-SelfSignedCertificate -MockWith { $true }
+                Mock Import-Certificate
+                Mock Get-ChildItem `
+                    -ParameterFilter { $path -eq 'cert:\LocalMachine\My' } `
+                    -MockWith { @{
+                        FriendlyName = 'DSC Credential Encryption'
+                        Thumbprint = '1FE3BA1B6DBE84FCDF675A1C944A33A55FD4B872'
+                    } }
+                Mock Remove-Item
+                Mock ConfigLCM
+
                 $VM = $VMS[0].Clone()
+                $VM.CertificateSource = [LabCertificateSource]::Guest
                 $ExceptionParameters = @{
                     errorId = 'DSCConfigMetaMOFCreateError'
                     errorCategory = 'InvalidArgument'
@@ -285,11 +311,11 @@ try
                 }
                 It 'Calls Mocked commands' {
                     Assert-MockCalled Get-Module -Exactly 1
-                    Assert-MockCalled GetModulesInDSCConfig -Exactly 1
-                    Assert-MockCalled Find-Module -Exactly 1
-                    Assert-MockCalled Install-Module -Exactly 1
-                    Assert-MockCalled Copy-Item -Exactly 1
-                    Assert-MockCalled Get-LabVMCertificate -Exactly 1
+                    Assert-MockCalled Get-ModulesInDSCConfig -Exactly 1
+                    Assert-MockCalled Find-Module -Exactly 2
+                    Assert-MockCalled Install-Module -Exactly 2
+                    Assert-MockCalled Copy-Item -Exactly 2
+                    Assert-MockCalled Request-SelfSignedCertificate -Exactly 1
                     Assert-MockCalled Import-Certificate -Exactly 1
                     Assert-MockCalled Get-ChildItem -ParameterFilter { $path -eq 'cert:\LocalMachine\My' } -Exactly 1
                     Assert-MockCalled Remove-Item
@@ -297,8 +323,6 @@ try
                 }
             }
         }
-
-
 
         Describe '\Lib\Private\Dsc.ps1\SetDSCStartFile' {
 
@@ -370,8 +394,6 @@ try
             }
         }
 
-
-
         Describe '\Lib\Private\Dsc.ps1\InitializeDSC' -Tag 'Incomplete' {
             $Lab = Get-Lab -ConfigPath $Global:TestConfigOKPath
             [LabVM[]] $VMs = Get-LabVM -Lab $Lab
@@ -395,11 +417,8 @@ try
             }
         }
 
-
-
         Describe '\Lib\Private\Dsc.ps1\StartDSC' -Tags 'Incomplete' {
         }
-
 
         Describe '\Lib\Private\Dsc.ps1\GetDSCNetworkingConfig' -Tags 'Incomplete' {
         }
