@@ -1111,12 +1111,16 @@ function WaitVMStarted {
         [LabVM] $VM
     )
 
-	#Names of IntegrationServices are not culture neutral, but have an ID
-	$HeartbeatCultureNeutral = ( Get-VMIntegrationService -VMName $VM.Name | Where-Object { $_.ID -match "84EAAE65-2F2E-45F5-9BB5-0E857DC8EB47" } ).Name
-	$Heartbeat = Get-VMIntegrationService -VMName $VM.Name -Name $HeartbeatCultureNeutral
+    #Names of IntegrationServices are not culture neutral, but have an ID
+    $HeartbeatCultureNeutral = ( Get-VMIntegrationService -VMName $VM.Name | Where-Object { $_.ID -match "84EAAE65-2F2E-45F5-9BB5-0E857DC8EB47" } ).Name
+    $Heartbeat = Get-VMIntegrationService -VMName $VM.Name -Name $HeartbeatCultureNeutral
     while ($Heartbeat.PrimaryStatusDescription -ne 'OK')
     {
         $Heartbeat = Get-VMIntegrationService -VMName $VM.Name -Name $HeartbeatCultureNeutral
+
+        WriteMessage -Message $($LocalizedData.WaitingForVMHeartbeatMessage `
+            -f $VM.Name,$Script:RetryHeartbeatSeconds)
+
         Start-Sleep -Seconds $Script:RetryHeartbeatSeconds
     } # while
 } # WaitVMStarted

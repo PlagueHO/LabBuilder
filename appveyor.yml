@@ -43,11 +43,11 @@ install:
         $manifestContent = $ManifestContent -replace '(?<=ModuleVersion\s+=\s+'')(?<ModuleVersion>.*)(?='')', $newVersion
         Set-Content -Path $ManifestPath -Value $ManifestContent
 
-        # Set the new version number in the Changelist.md
-        $changeListPath = Join-Path -Path $ENV:APPVEYOR_BUILD_FOLDER -ChildPath 'labbuilder\docs\changelist.md'
-        $changeListContent = Get-Content -Path $changeListPath -Raw
-        $changeListContent = $changeListContent -replace '# Unreleased', "# $newVersion"
-        Set-Content -Path $changeListPath -Value $changeListContent
+        # Set the new version number in the CHANGELOG.md
+        $changeLogPath = Join-Path -Path $ENV:APPVEYOR_BUILD_FOLDER -ChildPath 'CHANGELOG.md'
+        $changeLogContent = Get-Content -Path $changeLogPath -Raw
+        $changeLogContent = $changeLogContent -replace '# Unreleased', "# $newVersion"
+        Set-Content -Path $changeLogPath -Value $changeLogContent
 
         Install-WindowsFeature -Name hyper-v-powershell
 
@@ -149,7 +149,7 @@ deploy_script:
 
                 & git @('checkout','-f','master')
                 Set-Content -Path $ManifestPath -Value $ManifestContent
-                Set-Content -Path $changeListPath -Value $changeListContent
+                Set-Content -Path $changeLogPath -Value $changeLogContent
 
                 # Update the master branch
                 Write-Host "Pushing deployment changes to Master"

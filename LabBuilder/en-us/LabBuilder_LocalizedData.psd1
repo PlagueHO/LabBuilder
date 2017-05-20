@@ -222,6 +222,7 @@ ConvertFrom-StringData -StringData @'
     ConfigurationXMLValidationMessage=Lab Configuration XML '{0}'- {1}
     InstallPackageProviderMessage=Installing Package Provider '{0}'.
     RegisterPackageSourceMessage=Registering Package Source '{0}' with '{1}'.
+    WaitingForVMHeartbeatMessage=Waiting for Virtual Machine '{0}' heartbeat, retrying in {1} seconds.
 
     ShouldUninstallLab=Uninstall the Lab '{0}' in folder '{1}'
     ShouldRemoveVMTemplate=Delete the Parent VM Template VHDs used by Lab '{0}' in folder '{1}'
