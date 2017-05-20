@@ -73,7 +73,7 @@ test_script:
 
           if ($results.CodeCoverage)
           {
-            Write-Info -Message 'Uploading CodeCoverage to CodeCov.io...'
+            Write-Host -Message 'Uploading CodeCoverage to CodeCov.io...'
             Import-Module -Name (Join-Path -Path $env:APPVEYOR_BUILD_FOLDER -ChildPath '.codecovio\CodeCovio.psm1')
             $jsonPath = Export-CodeCovIoJson -CodeCoverage $results.CodeCoverage -repoRoot $env:APPVEYOR_BUILD_FOLDER
             Invoke-UploadCoveCoveIoReport -Path $jsonPath
