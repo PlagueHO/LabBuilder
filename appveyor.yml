@@ -41,13 +41,13 @@ install:
 
         # Set the new version number in the Module Manifest
         $manifestContent = $ManifestContent -replace '(?<=ModuleVersion\s+=\s+'')(?<ModuleVersion>.*)(?='')', $newVersion
-        Set-Content -Path $ManifestPath -Value $ManifestContent
+        Set-Content -Path $ManifestPath -Value $ManifestContent -NoNewLine
 
         # Set the new version number in the CHANGELOG.md
         $changeLogPath = Join-Path -Path $ENV:APPVEYOR_BUILD_FOLDER -ChildPath 'CHANGELOG.md'
         $changeLogContent = Get-Content -Path $changeLogPath -Raw
         $changeLogContent = $changeLogContent -replace '# Unreleased', "# $newVersion"
-        Set-Content -Path $changeLogPath -Value $changeLogContent
+        Set-Content -Path $changeLogPath -Value $changeLogContent -NoNewLine
 
         Install-WindowsFeature -Name hyper-v-powershell
 

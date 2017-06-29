@@ -1,5 +1,11 @@
 # Change Log
 
+## Unreleased
+
+- DSCLibrary\MEMBER_DHCPNPAS2016.DSC.ps1:Added DSC Library Configuration for DHCP with NPAS on
+  Windows Server 2016 - see [Issue 283](https://github.com/PlagueHO/LabBuilder/issues/283).
+- Added .vscode\settings.json to force code styles and enable auto formatting in VS Code.
+
 ## 0.8.3.1116
 
 - Moved Changelist.md file to root and renamed to CHANGELOG.MD.
@@ -359,8 +365,3 @@
 ## 0.1.0.0
 
 - Initial Release.
-
-
-
-
-
