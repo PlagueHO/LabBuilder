@@ -1,11 +1,11 @@
 <###################################################################################################
 DSC Template Configuration File For use by LabBuilder
 .Title
-    MEMBER_DHCPNPAS
+    MEMBER_DHCPNPAS2016
 .Desription
     Builds a Server that is joined to a domain and then made into a DHCP Server. NPAS is also installed.
-
-    This is for use on Windows Server 2012 R2 only.
+    
+    This is for use on Windows Server 2016 only.
 .Notes
     NPAS requires a full server install, so ensure that this OS is not a Core version.
 .Parameters:          
@@ -57,7 +57,7 @@ DSC Template Configuration File For use by LabBuilder
     )
 ###################################################################################################>
 
-Configuration MEMBER_DHCPNPAS
+Configuration MEMBER_DHCPNPAS2016
 {
     Import-DscResource -ModuleName 'PSDesiredStateConfiguration'
     Import-DscResource -ModuleName xComputerManagement
@@ -74,7 +74,7 @@ Configuration MEMBER_DHCPNPAS
         WindowsFeature NPASPolicyServerInstall
         {
             Ensure = "Present"
-            Name   = "NPAS-Policy-Server"
+            Name   = "NPAS"
         }
 
         WindowsFeature DHCPInstall
