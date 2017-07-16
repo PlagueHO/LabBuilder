@@ -108,6 +108,7 @@ ConvertFrom-StringData -StringData @'
     PackageSourceNotTrustedError=The required package source '{0}' is not trusted.
     PackageSourceNotRegisteredError=The required package source '{0}' is not registered.
     ODJCopyError=Error copying Offline Domain Join file '{1}' to VM '{0}'.
+    VMNotRunningHeartbeatError=Virtual Machine '{0}' is not running, so waiting for heartbeat failed.
 
     ImportingLibFileMessage=Importing function library '{0}'.
     EnablingWSManMessage=Enabling WS-Man for communication with Lab Guests.

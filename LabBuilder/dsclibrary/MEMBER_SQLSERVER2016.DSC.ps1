@@ -68,7 +68,7 @@ Configuration MEMBER_SQLSERVER2016
 
         xWaitforDisk Disk2
         {
-            DiskNumber = 1
+            DiskId = 1
             RetryIntervalSec = 60
             RetryCount = 60
             DependsOn = '[xComputer]JoinDomain'
@@ -76,7 +76,7 @@ Configuration MEMBER_SQLSERVER2016
 
         xDisk DVolume
         {
-            DiskNumber = 1
+            DiskId = 1
             DriveLetter = $Node.SQLDataDrive
             DependsOn = '[xWaitforDisk]Disk2'
         }

@@ -1,9 +1,13 @@
 # LabBuilder
 
-[![Join the chat at https://gitter.im/PlagueHO/LabBuilder](https://badges.gitter.im/PlagueHO/LabBuilder.svg)](https://gitter.im/PlagueHO/LabBuilder?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
-[![Build status](https://ci.appveyor.com/api/projects/status/rcg7xmm97qhg2bjr/branch/master?svg=true)](https://ci.appveyor.com/project/PlagueHO/labbuilder/branch/master)
-[![Stories in Ready](https://badge.waffle.io/PlagueHO/LabBuilder.svg?label=ready&title=Ready)](http://waffle.io/PlagueHO/LabBuilder)
-[![codecov](https://codecov.io/gh/PlagueHO/LabBuilder/branch/dev/graph/badge.svg)](https://codecov.io/gh/PlagueHO/LabBuilder)
+| Branch | Build Status | Code Coverage |
+| --- | --- | --- |
+| dev | [![Build status](https://ci.appveyor.com/api/projects/status/rcg7xmm97qhg2bjr/branch/dev?svg=true)](https://ci.appveyor.com/project/PlagueHO/labbuilder/branch/dev) | [![codecov](https://codecov.io/gh/PlagueHO/LabBuilder/branch/dev/graph/badge.svg)](https://codecov.io/gh/PlagueHO/LabBuilder/branch/dev) |
+| master | [![Build status](https://ci.appveyor.com/api/projects/status/rcg7xmm97qhg2bjr/branch/master?svg=true)](https://ci.appveyor.com/project/PlagueHO/labbuilder/branch/master) | [![codecov](https://codecov.io/gh/PlagueHO/LabBuilder/branch/master/graph/badge.svg)](https://codecov.io/gh/PlagueHO/LabBuilder/branch/master) |
+
+Waffle Board: [![Stories in Ready](https://badge.waffle.io/PlagueHO/LabBuilder.svg?label=ready&title=Ready)](http://waffle.io/PlagueHO/LabBuilder)
+
+Gitter Chat: [![Join the chat at https://gitter.im/PlagueHO/LabBuilder](https://badges.gitter.im/PlagueHO/LabBuilder.svg)](https://gitter.im/PlagueHO/LabBuilder?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 
 
 ## Summary

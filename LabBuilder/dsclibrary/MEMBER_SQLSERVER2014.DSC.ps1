@@ -59,7 +59,7 @@ Configuration MEMBER_SQLSERVER2014
         }
 
         xComputer JoinDomain
-        { 
+        {
             Name          = $Node.NodeName
             DomainName    = $Node.DomainName
             Credential    = $DomainAdminCredential
@@ -68,15 +68,15 @@ Configuration MEMBER_SQLSERVER2014
 
         xWaitforDisk Disk2
         {
-            DiskNumber = 1
+            DiskId = 1
             RetryIntervalSec = 60
             RetryCount = 60
             DependsOn = '[xComputer]JoinDomain'
         }
-        
+
         xDisk DVolume
         {
-            DiskNumber = 1
+            DiskId = 1
             DriveLetter = $Node.SQLDataDrive
             DependsOn = '[xWaitforDisk]Disk2'
         }

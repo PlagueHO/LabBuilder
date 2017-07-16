@@ -5,7 +5,7 @@ DSC Template Configuration File For use by LabBuilder
 .Desription
     Builds a Server that is joined to a domain and then installs WSUS components.
     Requires cMicrosoftUpdate resource from https://github.com/fabiendibot/cMicrosoftUpdate
-.Parameters:          
+.Parameters:
     DomainName = "LABBUILDER.COM"
     DomainAdminPassword = "P@ssword!1"
     DCName = 'SA-DC1'
@@ -27,17 +27,17 @@ Configuration MEMBER_WSUS
             [PSCredential]$DomainAdminCredential = New-Object System.Management.Automation.PSCredential ("$($Node.DomainName)\Administrator", (ConvertTo-SecureString $Node.DomainAdminPassword -AsPlainText -Force))
         }
 
-        WindowsFeature UpdateServicesWIDDBInstall 
+        WindowsFeature UpdateServicesWIDDBInstall
         {
-            Ensure = "Present" 
-            Name = "UpdateServices-WidDB" 
+            Ensure = "Present"
+            Name = "UpdateServices-WidDB"
         }
 
-        WindowsFeature UpdateServicesServicesInstall 
+        WindowsFeature UpdateServicesServicesInstall
         {
-            Ensure = "Present" 
-            Name = "UpdateServices-Services" 
-            DependsOn = "[WindowsFeature]UpdateServicesWIDDBInstall" 
+            Ensure = "Present"
+            Name = "UpdateServices-Services"
+            DependsOn = "[WindowsFeature]UpdateServicesWIDDBInstall"
         }
 
         # Wait for the Domain to be available so we can join it.
@@ -48,29 +48,29 @@ Configuration MEMBER_WSUS
         RetryIntervalSec  = 15
         RetryCount        = 60
         }
-        
+
         # Join this Server to the Domain
-        xComputer JoinDomain 
-        { 
+        xComputer JoinDomain
+        {
             Name          = $Node.NodeName
             DomainName    = $Node.DomainName
-            Credential    = $DomainAdminCredential 
-            DependsOn = "[WaitForAll]DC" 
+            Credential    = $DomainAdminCredential
+            DependsOn = "[WaitForAll]DC"
         }
 
         xWaitforDisk Disk2
         {
-            DiskNumber = 1
+            DiskId = 1
             RetryIntervalSec = 60
             RetryCount = 60
-            DependsOn = "[xComputer]JoinDomain" 
+            DependsOn = "[xComputer]JoinDomain"
         }
-        
+
         xDisk DVolume
         {
-            DiskNumber = 1
+            DiskId = 1
             DriveLetter = 'D'
-            DependsOn = "[xWaitforDisk]Disk2" 
+            DependsOn = "[xWaitforDisk]Disk2"
         }
     }
 }

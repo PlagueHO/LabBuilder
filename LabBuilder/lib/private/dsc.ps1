@@ -1032,8 +1032,7 @@ $DSCNetworkingConfig += @"
     xIPAddress IPv4_$AdapterCount {
         InterfaceAlias = '$($Adapter.Name)'
         AddressFamily  = 'IPv4'
-        IPAddress      = '$($Adapter.IPv4.Address.Replace(',',"','"))'
-        PrefixLength   = '$($Adapter.IPv4.SubnetMask)'
+        IPAddress      = '$($Adapter.IPv4.Address.Replace(',',"','"))/$($Adapter.IPv4.SubnetMask)'
     }
 
 "@
@@ -1091,8 +1090,7 @@ $DSCNetworkingConfig += @"
     xIPAddress IPv6_$AdapterCount {
         InterfaceAlias = '$($Adapter.Name)'
         AddressFamily  = 'IPv6'
-        IPAddress      = '$($Adapter.IPv6.Address.Replace(',',"','"))'
-        PrefixLength   = '$($Adapter.IPv6.SubnetMask)'
+        IPAddress      = '$($Adapter.IPv6.Address.Replace(',',"','"))/$($Adapter.IPv6.SubnetMask)'
     }
 
 "@
