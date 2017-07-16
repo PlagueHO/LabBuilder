@@ -1,6 +1,6 @@
 # Change Log
 
-## Unreleased
+## 0.8.3.1132
 
 - Added .vscode\settings.json to force code styles and enable auto formatting in VS Code.
 - Changed WaitVMStarted to check VM is running and also handle blank heartbeat being returned
@@ -372,4 +372,5 @@
 ## 0.1.0.0
 
 - Initial Release.
+
 

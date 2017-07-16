@@ -1,6 +1,6 @@
 @{
     RootModule = 'LabBuilder.psm1'
-    ModuleVersion = '0.8.3.1124'
+    ModuleVersion = '0.8.3.1132'
     GUID = 'e229850e-7a90-4123-9a30-37814119d3a3'
     Author = 'Daniel Scott-Raynsford'
     CompanyName = ''
@@ -61,4 +61,5 @@
     HelpInfoURI = 'https://github.com/PlagueHO/LabBuilder/blob/master/README.md'
     # DefaultCommandPrefix = ''
 }
+
 
