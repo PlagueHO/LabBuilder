@@ -52,9 +52,9 @@ Function Test-LabBuilderLoadModule {
 Test-LabBuilderLoadModule
 
 # Comment/Uncomment lines below and run this script to execute the LabBuilder commands
-# Test-LabBuilderInstall
+Test-LabBuilderInstall
 # Test-LabBuilderUpdate
 # Test-LabBuilderStart
-Test-LabBuilderStop
+# Test-LabBuilderStop
 # Test-StartLabVM -StartVMs 'SA-DC1'
 # Test-LabBuilderUninstall

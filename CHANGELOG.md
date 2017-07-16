@@ -5,6 +5,10 @@
 - DSCLibrary\MEMBER_DHCPNPAS2016.DSC.ps1:Added DSC Library Configuration for DHCP with NPAS on
   Windows Server 2016 - see [Issue 283](https://github.com/PlagueHO/LabBuilder/issues/283).
 - Added .vscode\settings.json to force code styles and enable auto formatting in VS Code.
+- Changed WaitVMStarted to check VM is running and also handle blank heartbeat being returned
+  in Windows 10 15063 (Creators Update) and above.
+- Updated LabBuilder to support changes in xNetworking DSC Resource v5.0.0.0
+- Updated DSC sample configurations to support xStorage DSC Resource v3.2.0.0
 
 ## 0.8.3.1116
 
