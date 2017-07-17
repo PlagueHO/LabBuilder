@@ -1,5 +1,9 @@
 # Change Log
 
+## Unreleased
+
+- Enforce xNetworking v5.0.0.0 is installed and used - fixes [Issue #289](https://github.com/PlagueHO/LabBuilder/issues/289).
+
 ## 0.8.3.1132
 
 - Added .vscode\settings.json to force code styles and enable auto formatting in VS Code.
