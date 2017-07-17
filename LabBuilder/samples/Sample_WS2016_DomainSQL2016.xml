@@ -225,7 +225,6 @@
           SQLAdminAccount = 'Administrator'
           SQLDataDrive = 'E'
           SourcePath = 'D:\'
-          SourceFolder = ''
           Instances = @(
             @{
               Name = 'MSSQLSERVER'

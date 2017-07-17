@@ -242,8 +242,8 @@ function CreateDSCMOFFiles {
 
     # Add the xNetworking DSC Resource because it is always used
     $Module = [LabDSCModule]::New('xNetworking')
-    # It must be 3.0.0.0 or greater
-    $Module.MinimumVersion = [Version] '3.0.0.0'
+    # It must be 5.0.0.0 or greater
+    $Module.MinimumVersion = [Version] '5.0.0.0'
     $DSCModules += @( $Module )
 
     foreach ($DSCModule in $DSCModules)

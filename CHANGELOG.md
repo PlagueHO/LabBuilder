@@ -1,5 +1,11 @@
 # Change Log
 
+## Unreleased
+
+- Enforce xNetworking v5.0.0.0 is installed and used - fixes [Issue #289](https://github.com/PlagueHO/LabBuilder/issues/289).
+- DSCLibrary\MEMBER_SQLSERVER2014.DSC.ps1: Updated to support v8.0.0.0 of xSQLServer
+- DSCLibrary\MEMBER_SQLSERVER2016.DSC.ps1: Updated to support v8.0.0.0 of xSQLServer
+
 ## 0.8.3.1132
 
 - Added .vscode\settings.json to force code styles and enable auto formatting in VS Code.
