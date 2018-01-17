@@ -99,7 +99,7 @@ function Get-LabVMTemplate {
                 errorCategory = 'InvalidArgument'
                 errorMessage = $($LocalizedData.EmptyTemplateNameError)
             }
-            New-Exception @exceptionParameters
+            New-LabException @exceptionParameters
         } # if
 
         # Does the template already exist in the list?
@@ -134,7 +134,7 @@ function Get-LabVMTemplate {
                 errorMessage = $($LocalizedData.TemplateSourceVHDAndTemplateVHDConflictError `
                     -f $TemplateName)
             }
-            New-Exception @exceptionParameters
+            New-LabException @exceptionParameters
         } # if
 
         if ($TemplateVHD)
@@ -169,7 +169,7 @@ function Get-LabVMTemplate {
                     errorMessage = $($LocalizedData.TemplateTemplateVHDNotFoundError `
                         -f $TemplateName,$TemplateVHD)
                 }
-                New-Exception @exceptionParameters
+                New-LabException @exceptionParameters
             } # if
         }
         elseif ($SourceVHD)
@@ -196,7 +196,7 @@ function Get-LabVMTemplate {
                     errorMessage = $($LocalizedData.TemplateSourceVHDNotFoundError `
                         -f $TemplateName,$VMTemplate.sourcevhd)
                 }
-                New-Exception @exceptionParameters
+                New-LabException @exceptionParameters
             } # if
 
             # if a VHD filename wasn't specified in the Template
@@ -227,7 +227,7 @@ function Get-LabVMTemplate {
                 errorMessage = $($LocalizedData.TemplateSourceVHDandTemplateVHDMissingError `
                     -f $TemplateName)
             }
-            New-Exception @exceptionParameters
+            New-LabException @exceptionParameters
         } # if
 
         # Ensure the ParentVHD is up-to-date
@@ -419,7 +419,7 @@ function Initialize-LabVMTemplate {
                     errorMessage = $($LocalizedData.TemplateSourceVHDNotFoundError `
                         -f $VMTemplate.Name,$VMTemplate.sourcevhd)
                 }
-                New-Exception @exceptionParameters
+                New-LabException @exceptionParameters
             }
 
             Write-LabMessage -Message $($LocalizedData.CopyingTemplateSourceVHDMessage `
@@ -494,7 +494,7 @@ function Initialize-LabVMTemplate {
                                 errorMessage = $($LocalizedData.PackageNotFoundError `
                                 -f $Package)
                             }
-                            New-Exception @exceptionParameters
+                            New-LabException @exceptionParameters
                         } # if
 
                         $PackagePath = $ResourceMSU.Filename
@@ -517,7 +517,7 @@ function Initialize-LabVMTemplate {
                                 errorMessage = $($LocalizedData.PackageMSUNotFoundError `
                                 -f $Package,$PackagePath)
                             }
-                            New-Exception @exceptionParameters
+                            New-LabException @exceptionParameters
                         } # if
 
                         # Apply a Pacakge

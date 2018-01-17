@@ -53,7 +53,7 @@ function Get-LabResourceModule
                     errorCategory = 'InvalidArgument'
                     errorMessage  = $($LocalizedData.ResourceModuleNameIsEmptyError)
                 }
-                New-Exception @exceptionParameters
+                New-LabException @exceptionParameters
             } # if
             $ResourceModule = [LabResourceModule]::New($ModuleName)
             $ResourceModule.URL = $Module.URL
@@ -147,7 +147,7 @@ function Initialize-LabResourceModule
             Write-LabMessage -Message $($LocalizedData.DownloadingResourceModuleMessage `
                     -f $Name, $URL)
 
-            DownloadResourceModule @Splat
+            Invoke-LabDownloadResourceModule @Splat
         } # foreach
     } # if
 } # Initialize-LabResourceModule
@@ -208,7 +208,7 @@ function Get-LabResourceMSU
                     errorCategory = 'InvalidArgument'
                     errorMessage  = $($LocalizedData.ResourceMSUNameIsEmptyError)
                 }
-                New-Exception @exceptionParameters
+                New-LabException @exceptionParameters
             } # if
             $ResourceMSU = [LabResourceMSU]::New($MSUName, $MSU.URL)
             $Path = $MSU.Path
@@ -302,7 +302,7 @@ function Initialize-LabResourceMSU
                 Write-LabMessage -Message $($LocalizedData.DownloadingResourceMSUMessage `
                         -f $MSU.Name, $MSU.URL)
 
-                DownloadAndUnzipFile `
+                Invoke-LabDownloadAndUnzipFile `
                     -URL $MSU.URL `
                     -DestinationPath (Split-Path -Path $MSU.Filename)
             } # if
@@ -385,7 +385,7 @@ function Get-LabResourceISO
                     errorCategory = 'InvalidArgument'
                     errorMessage  = $($LocalizedData.ResourceISONameIsEmptyError)
                 }
-                New-Exception @exceptionParameters
+                New-LabException @exceptionParameters
             } # if
             $ResourceISO = [LabResourceISO]::New($ISOName)
             $Path = $ISO.Path
@@ -407,7 +407,7 @@ function Get-LabResourceISO
                     errorMessage  = $($LocalizedData.ResourceISOPathIsEmptyError `
                             -f $ISOName)
                 }
-                New-Exception @exceptionParameters
+                New-LabException @exceptionParameters
             }
             if ($ISO.URL)
             {
@@ -492,7 +492,7 @@ function Initialize-LabResourceISO
                         errorMessage  = $($LocalizedData.ResourceISOFileNotFoundAndNoURLError `
                                 -f $ISOName, $Path)
                     }
-                    New-Exception @exceptionParameters
+                    New-LabException @exceptionParameters
                 } # if
 
                 $URLLeaf = [System.IO.Path]::GetFileName($ResourceISO.URL)
@@ -502,7 +502,7 @@ function Initialize-LabResourceISO
                     Write-LabMessage -Message $($LocalizedData.DownloadingResourceISOMessage `
                             -f $ResourceISO.Name, $ResourceISO.URL)
 
-                    DownloadAndUnzipFile `
+                    Invoke-LabDownloadAndUnzipFile `
                         -URL $ResourceISO.URL `
                         -DestinationPath (Split-Path -Path $ResourceISO.Path)
                 }
@@ -521,7 +521,7 @@ function Initialize-LabResourceISO
                         errorMessage  = $($LocalizedData.ResourceISOFileNotDownloadedError `
                                 -f $ResourceISO.Name, $ResourceISO.Path, $ResourceISO.URL)
                     }
-                    New-Exception @exceptionParameters
+                    New-LabException @exceptionParameters
                 } # if
             } # if
         } # foreach

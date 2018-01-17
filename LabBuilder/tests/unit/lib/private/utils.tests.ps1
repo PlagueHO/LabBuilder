@@ -62,7 +62,7 @@ try
         # Run tests assuming Build 10586 is installed
         $Script:CurrentBuild = 10586
 
-        Describe '\Lib\Private\Utils.ps1\DownloadAndUnzipFile' {
+        Describe '\Lib\Private\Utils.ps1\Invoke-LabDownloadAndUnzipFile' {
             $URL = 'https://raw.githubusercontent.com/PlagueHO/LabBuilder/dev/LICENSE'
 
             Context 'Download folder does not exist' {
@@ -79,7 +79,7 @@ try
                     }
                     $Exception = Get-Exception @exceptionParameters
 
-                    { DownloadAndUnzipFile -URL $URL -DestinationPath 'c:\doesnotexist' } | Should -Throw $Exception
+                    { Invoke-LabDownloadAndUnzipFile -URL $URL -DestinationPath 'c:\doesnotexist' } | Should -Throw $Exception
                 }
 
                 It 'Calls appropriate mocks' {
@@ -104,7 +104,7 @@ try
                     }
                     $Exception = Get-Exception @exceptionParameters
 
-                    { DownloadAndUnzipFile -URL $URL -DestinationPath $ENV:Temp } | Should -Throw $Exception
+                    { Invoke-LabDownloadAndUnzipFile -URL $URL -DestinationPath $ENV:Temp } | Should -Throw $Exception
                 }
 
                 It 'Calls appropriate mocks' {
@@ -120,7 +120,7 @@ try
                 Mock -CommandName Remove-Item
 
                 It 'Does not throw an Exception' {
-                    { DownloadAndUnzipFile -URL $URL -DestinationPath $ENV:Temp } | Should -Not -Throw
+                    { Invoke-LabDownloadAndUnzipFile -URL $URL -DestinationPath $ENV:Temp } | Should -Not -Throw
                 }
 
                 It 'Calls appropriate mocks' {
@@ -146,7 +146,7 @@ try
                     }
                     $Exception = Get-Exception @exceptionParameters
 
-                    { DownloadAndUnzipFile -URL $URL -DestinationPath $ENV:Temp } | Should -Throw $Exception
+                    { Invoke-LabDownloadAndUnzipFile -URL $URL -DestinationPath $ENV:Temp } | Should -Throw $Exception
                 }
 
                 It 'Calls appropriate mocks' {
@@ -162,7 +162,7 @@ try
                 Mock -CommandName Remove-Item
 
                 It 'Does not throw an Exception' {
-                    { DownloadAndUnzipFile -URL $URL -DestinationPath $ENV:Temp } | Should -Not -Throw
+                    { Invoke-LabDownloadAndUnzipFile -URL $URL -DestinationPath $ENV:Temp } | Should -Not -Throw
                 }
 
                 It 'Calls appropriate mocks' {
@@ -172,10 +172,7 @@ try
             }
         }
 
-        Describe '\Lib\Private\Utils.ps1\CreateCredential' -Tag 'Incomplete' {
-        }
-
-        Describe '\Lib\Private\Utils.ps1\DownloadResourceModule' {
+        Describe '\Lib\Private\Utils.ps1\Invoke-LabDownloadResourceModule' {
             $URL = 'https://github.com/PowerShell/xNetworking/archive/dev.zip'
 
             Mock -CommandName Get-Module -MockWith { @( New-Object -TypeName PSObject -Property @{ Name = 'xNetworking'; Version = '2.4.0.0'; } ) }
@@ -191,7 +188,7 @@ try
             Context 'Correct module already installed; Valid URL and Folder passed' {
                 It 'Does not throw an Exception' {
                     {
-                        DownloadResourceModule `
+                        Invoke-LabDownloadResourceModule `
                             -Name 'xNetworking' `
                             -URL $URL `
                             -Folder 'xNetworkingDev'
@@ -216,7 +213,7 @@ try
             Context 'Module is not installed; Valid URL and Folder passed' {
                 It 'Does not throw an Exception' {
                     {
-                        DownloadResourceModule `
+                        Invoke-LabDownloadResourceModule `
                             -Name 'xNetworking' `
                             -URL $URL `
                             -Folder 'xNetworkingDev'
@@ -239,7 +236,7 @@ try
             Context 'Module is not installed; No URL or Folder passed' {
                 It 'Does not throw an Exception' {
                     {
-                        DownloadResourceModule `
+                        Invoke-LabDownloadResourceModule `
                             -Name 'xNetworking'
                     } | Should -Not -Throw
                 }
@@ -261,7 +258,7 @@ try
             Context 'Wrong version of module is installed; Valid URL, Folder and Required Version passed' {
                 It 'Does not throw an Exception' {
                     {
-                        DownloadResourceModule `
+                        Invoke-LabDownloadResourceModule `
                             -Name 'xNetworking' `
                             -URL $URL `
                             -Folder 'xNetworkingDev' `
@@ -285,7 +282,7 @@ try
             Context 'Wrong version of module is installed; No URL or Folder passed, but Required Version passed' {
                 It 'Does not throw an Exception' {
                     {
-                        DownloadResourceModule `
+                        Invoke-LabDownloadResourceModule `
                             -Name 'xNetworking' `
                             -RequiredVersion '2.5.0.0'
                     } | Should -Not -Throw
@@ -306,7 +303,7 @@ try
             Context 'Correct version of module is installed; Valid URL, Folder and Required Version passed' {
                 It 'Does not throw an Exception' {
                     {
-                        DownloadResourceModule `
+                        Invoke-LabDownloadResourceModule `
                             -Name 'xNetworking' `
                             -URL $URL `
                             -Folder 'xNetworkingDev' `
@@ -329,7 +326,7 @@ try
             Context 'Correct version of module is installed; No URL and Folder passed, but Required Version passed' {
                 It 'Does not throw an Exception' {
                     {
-                        DownloadResourceModule `
+                        Invoke-LabDownloadResourceModule `
                             -Name 'xNetworking' `
                             -RequiredVersion '2.4.0.0'
                     } | Should -Not -Throw
@@ -350,7 +347,7 @@ try
             Context 'Wrong version of module is installed; Valid URL, Folder and Minimum Version passed' {
                 It 'Does not throw an Exception' {
                     {
-                        DownloadResourceModule `
+                        Invoke-LabDownloadResourceModule `
                             -Name 'xNetworking' `
                             -URL $URL `
                             -Folder 'xNetworkingDev' `
@@ -374,7 +371,7 @@ try
             Context 'Wrong version of module is installed; No URL and Folder passed, but Minimum Version passed' {
                 It 'Does not throw an Exception' {
                     {
-                        DownloadResourceModule `
+                        Invoke-LabDownloadResourceModule `
                             -Name 'xNetworking' `
                             -MinimumVersion '2.5.0.0'
                     } | Should -Not -Throw
@@ -395,7 +392,7 @@ try
             Context 'Correct version of module is installed; Valid URL, Folder and Minimum Version passed' {
                 It 'Does not throw an Exception' {
                     {
-                        DownloadResourceModule `
+                        Invoke-LabDownloadResourceModule `
                             -Name 'xNetworking' `
                             -URL $URL `
                             -Folder 'xNetworkingDev' `
@@ -418,7 +415,7 @@ try
             Context 'Correct version of module is installed; No URL and Folder passed, but Minimum Version passed' {
                 It 'Does not throw an Exception' {
                     {
-                        DownloadResourceModule `
+                        Invoke-LabDownloadResourceModule `
                             -Name 'xNetworking' `
                             -MinimumVersion '2.4.0.0'
                     } | Should -Not -Throw
@@ -450,7 +447,7 @@ try
                     $Exception = Get-Exception @exceptionParameters
 
                     {
-                        DownloadResourceModule `
+                        Invoke-LabDownloadResourceModule `
                             -Name 'xNetworking' `
                             -URL $URL `
                             -Folder 'xNetworkingDev'
@@ -482,7 +479,7 @@ try
                     $Exception = Get-Exception @exceptionParameters
 
                     {
-                        DownloadResourceModule `
+                        Invoke-LabDownloadResourceModule `
                             -Name 'xDoesNotExist'
                     } | Should -Throw $Exception
                 }
@@ -512,7 +509,7 @@ try
                     $Exception = Get-Exception @exceptionParameters
 
                     {
-                        DownloadResourceModule `
+                        Invoke-LabDownloadResourceModule `
                             -Name 'xNetworking' `
                             -RequiredVersion '2.5.0.0'
                     } | Should -Throw $Exception
@@ -541,7 +538,7 @@ try
                     $Exception = Get-Exception @exceptionParameters
 
                     {
-                        DownloadResourceModule `
+                        Invoke-LabDownloadResourceModule `
                             -Name 'xNetworking' `
                             -MinimumVersion '2.5.0.0'
                     } | Should -Throw $Exception
@@ -560,16 +557,29 @@ try
             }
         }
 
+        Describe '\Lib\Private\Utils.ps1\New-LabCredential' -Tag 'Incomplete' {
+        }
+
         Describe '\Lib\Private\Utils.ps1\Install-LabHyperV' {
             $Lab = Get-Lab -ConfigPath $Global:TestConfigOKPath
 
             if ((Get-CimInstance Win32_OperatingSystem).ProductType -eq 1) {
-                Mock -CommandName Get-WindowsOptionalFeature { [PSObject]@{ FeatureName = 'Mock'; State = 'Disabled'; } }
+                Mock -CommandName Get-WindowsOptionalFeature -MockWith {
+                    [PSObject] @{
+                        FeatureName = 'Mock'
+                        State = 'Disabled'
+                    }
+                }
                 Mock -CommandName Enable-WindowsOptionalFeature
             }
             else
             {
-                Mock -CommandName Get-WindowsFeature { [PSObject]@{ Name = 'Mock'; Installed = $false; } }
+                Mock -CommandName Get-WindowsFeature -MockWith {
+                    [PSObject] @{
+                        Name = 'Mock'
+                        Installed = $false
+                    }
+                }
                 Mock -CommandName Install-WindowsFeature
             }
 
@@ -596,7 +606,11 @@ try
         Describe '\Lib\Private\Utils.ps1\Enable-LabWSMan' {
             Context 'WS-Man is already enabled' {
                 Mock -CommandName Start-Service
-                Mock -CommandName Get-PSProvider -MockWith { @{ Name = 'wsman' } }
+                Mock -CommandName Get-PSProvider -MockWith {
+                    @{
+                        Name = 'wsman'
+                    }
+                }
                 Mock -CommandName Enable-PSRemoting
 
                 It 'Does not throw an Exception' {

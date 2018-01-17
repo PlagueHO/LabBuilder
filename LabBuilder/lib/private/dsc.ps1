@@ -191,7 +191,7 @@ function Set-ModulesInDSCConfig
                         errorCategory = 'InvalidArgument'
                         errorMessage  = $($LocalizedData.DSCConfiguartionMissingError)
                     }
-                    New-Exception @exceptionParameters
+                    New-LabException @exceptionParameters
                 }
             } # if
 
@@ -340,7 +340,7 @@ function CreateDSCMOFFiles
                         errorMessage  = $($LocalizedData.DSCModuleDownloadError `
                                 -f $VM.DSC.ConfigFile, $VM.Name, $ModuleName)
                     }
-                    New-Exception @exceptionParameters
+                    New-LabException @exceptionParameters
                 }
             }
             else
@@ -351,7 +351,7 @@ function CreateDSCMOFFiles
                     errorMessage  = $($LocalizedData.DSCModuleDownloadError `
                             -f $VM.DSC.ConfigFile, $VM.Name, $ModuleName)
                 }
-                New-Exception @exceptionParameters
+                New-LabException @exceptionParameters
             }
             $DSCModule.ModuleVersion = $NewModule.Version
         } # if
@@ -384,7 +384,7 @@ function CreateDSCMOFFiles
                 errorMessage  = $($LocalizedData.DSCModuleNotFoundError `
                         -f $VM.DSC.ConfigFile, $VM.Name, $ModuleName)
             }
-            New-Exception @exceptionParameters
+            New-LabException @exceptionParameters
         }
 
         $DestinationPath = Join-Path -Path $VMLabBuilderFiles -ChildPath 'DSC Modules\'
@@ -414,7 +414,7 @@ function CreateDSCMOFFiles
                 errorMessage  = $($LocalizedData.CertificateCreateError `
                         -f $VM.Name)
             }
-            New-Exception @exceptionParameters
+            New-LabException @exceptionParameters
         }
 
         # Remove any old self-signed certifcates for this VM
@@ -454,7 +454,7 @@ function CreateDSCMOFFiles
             errorMessage  = $($LocalizedData.DSCConfigMetaMOFCreateError `
                     -f $VM.Name)
         }
-        New-Exception @exceptionParameters
+        New-LabException @exceptionParameters
     } # If
 
     # A DSC Config File was provided so create a MOF File out of it.
@@ -499,7 +499,7 @@ function CreateDSCMOFFiles
                 errorMessage  = $($LocalizedData.DSCConfigMoreThanOneNodeError `
                         -f $VM.DSC.ConfigFile, $VM.Name)
             }
-            New-Exception @exceptionParameters
+            New-LabException @exceptionParameters
         } # If
     } # If
 
@@ -553,7 +553,7 @@ function CreateDSCMOFFiles
             errorMessage  = $($LocalizedData.DSCConfigMOFCreateError `
                     -f $VM.DSC.ConfigFile, $VM.Name)
         }
-        New-Exception @exceptionParameters
+        New-LabException @exceptionParameters
     } # If
 
     # Remove the VM Self-Signed Certificate from the Local Machine Store
@@ -660,7 +660,7 @@ function SetDSCStartFile
                 errorMessage  = $($LocalizedData.NetworkAdapterNotFoundError `
                         -f $Adapter, $VM.Name)
             }
-            New-Exception @exceptionParameters
+            New-LabException @exceptionParameters
         } # If
         $MacAddress = $NetAdapter.MacAddress
         if (-not $MacAddress)
@@ -671,7 +671,7 @@ function SetDSCStartFile
                 errorMessage  = $($LocalizedData.NetworkAdapterBlankMacError `
                         -f $Adapter, $VM.Name)
             }
-            New-Exception @exceptionParameters
+            New-LabException @exceptionParameters
         } # If
         $DSCStartPs += @"
 Get-NetAdapter ``
@@ -855,7 +855,7 @@ function StartDSC
                 errorMessage  = $($LocalizedData.DSCInitializationError `
                         -f $VM.Name)
             }
-            New-Exception @exceptionParameters
+            New-LabException @exceptionParameters
             return
         }
 
@@ -930,7 +930,7 @@ function StartDSC
                 errorMessage  = $($LocalizedData.DSCInitializationError `
                         -f $VM.Name)
             }
-            New-Exception @exceptionParameters
+            New-LabException @exceptionParameters
         } # if
 
         # Upload any required modules to the VM
@@ -998,7 +998,7 @@ function StartDSC
                 errorMessage  = $($LocalizedData.DSCInitializationError `
                         -f $VM.Name)
             }
-            New-Exception @exceptionParameters
+            New-LabException @exceptionParameters
         } # if
 
         # Finally, Start DSC up!

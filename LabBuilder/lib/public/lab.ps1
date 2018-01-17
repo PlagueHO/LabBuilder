@@ -59,7 +59,7 @@ function Get-Lab {
             errorMessage = $($LocalizedData.ConfigurationFileNotFoundError `
                 -f $ConfigPath)
         }
-        New-Exception @exceptionParameters
+        New-LabException @exceptionParameters
     } # if
 
     $Content = Get-Content -Path $ConfigPath -Raw
@@ -71,7 +71,7 @@ function Get-Lab {
             errorMessage = $($LocalizedData.ConfigurationFileEmptyError `
                 -f $ConfigPath)
         }
-        New-Exception @exceptionParameters
+        New-LabException @exceptionParameters
     } # if
 
     if (-not $SkipXMLValidation)
@@ -98,7 +98,7 @@ function Get-Lab {
             errorMessage = $($LocalizedData.RequiredBuildNotMetError `
                 -f $Script:CurrentBuild,$RequiredWindowsBuild)
         }
-        New-Exception @exceptionParameters
+        New-LabException @exceptionParameters
     } # if
 
     # Figure out the Config path and load it into the XML object (if we can)
@@ -1106,7 +1106,7 @@ Function Start-Lab {
                             -f $VMName)
 
                     }
-                    New-Exception @exceptionParameters
+                    New-LabException @exceptionParameters
                 } # if
 
                 # Start the VM if it is off
@@ -1163,7 +1163,7 @@ Function Start-Lab {
                         -f $BootPhase)
 
                 }
-                New-Exception @exceptionParameters
+                New-LabException @exceptionParameters
             } # if
         } # foreach
 
@@ -1314,7 +1314,7 @@ Function Stop-Lab {
                             -f $VMName)
 
                     }
-                    New-Exception @exceptionParameters
+                    New-LabException @exceptionParameters
                 } # if
 
                 # Shutodwn the VM if it is off

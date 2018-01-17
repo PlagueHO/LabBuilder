@@ -87,7 +87,7 @@ function Get-LabVM {
                 errorCategory = 'InvalidArgument'
                 errorMessage = $($LocalizedData.VMNameError)
             }
-            New-Exception @exceptionParameters
+            New-LabException @exceptionParameters
         } # if
 
         # Get the Instance Count attribute
@@ -134,7 +134,7 @@ function Get-LabVM {
                     errorMessage = $($LocalizedData.VMTemplateNameEmptyError `
                         -f $VMName)
                 }
-                New-Exception @exceptionParameters
+                New-LabException @exceptionParameters
             } # if
 
             # Find the template that this VM uses and get the VHD Path
@@ -156,7 +156,7 @@ function Get-LabVM {
                     errorMessage = $($LocalizedData.VMTemplateNotFoundError `
                         -f $VMName,$VM.template)
                 }
-                New-Exception @exceptionParameters
+                New-LabException @exceptionParameters
             } # if
 
             # Get path to Offline Domain Join file if it exists
@@ -182,7 +182,7 @@ function Get-LabVM {
                         errorMessage = $($LocalizedData.VMAdapterNameError `
                             -f $VMName)
                     }
-                    New-Exception @exceptionParameters
+                    New-LabException @exceptionParameters
                 } # if
 
                 if (-not $AdapterSwitchName)
@@ -193,7 +193,7 @@ function Get-LabVM {
                         errorMessage = $($LocalizedData.VMAdapterSwitchNameError `
                             -f $VMName,$AdapterName)
                     }
-                    New-Exception @exceptionParameters
+                    New-LabException @exceptionParameters
                 } # if
 
                 # if a LabId is set for the lab, prepend it to the adapter name
@@ -238,7 +238,7 @@ function Get-LabVM {
                         errorMessage = $($LocalizedData.VMAdapterSwitchNotFoundError `
                             -f $VMName,$AdapterName,$AdapterSwitchName)
                     }
-                    New-Exception @exceptionParameters
+                    New-LabException @exceptionParameters
                 } # if
 
                 # Figure out the VLan - If defined in the VM use it, otherwise use the one defined in the Switch, otherwise keep blank.
@@ -314,7 +314,7 @@ function Get-LabVM {
                         errorMessage = $($LocalizedData.VMDataDiskVHDEmptyError `
                             -f $VMName)
                     }
-                    New-Exception @exceptionParameters
+                    New-LabException @exceptionParameters
                 } # if
 
                 # Adjust the path to be relative to the Virtual Hard Disks folder of the VM
@@ -353,7 +353,7 @@ function Get-LabVM {
                             errorMessage = $($LocalizedData.VMDataDiskParentVHDNotFoundError `
                                 -f $VMName,$NewDataVHD.ParentVhd)
                         }
-                        New-Exception @exceptionParameters
+                        New-LabException @exceptionParameters
                     } # if
                 } # if
 
@@ -377,7 +377,7 @@ function Get-LabVM {
                             errorMessage = $($LocalizedData.VMDataDiskSourceVHDNotFoundError `
                                 -f $VMName,$NewDataVHD.SourceVhd)
                         }
-                        New-Exception @exceptionParameters
+                        New-LabException @exceptionParameters
                     } # if
                 } # if
 
@@ -415,7 +415,7 @@ function Get-LabVM {
                                     errorMessage = $($LocalizedData.VMDataDiskParentVHDMissingError `
                                         -f $VMName)
                                 }
-                                New-Exception @exceptionParameters
+                                New-LabException @exceptionParameters
                             } # if
                             if ($NewDataVHD.Shared)
                             {
@@ -425,7 +425,7 @@ function Get-LabVM {
                                     errorMessage = $($LocalizedData.VMDataDiskSharedDifferencingError `
                                         -f $VMName,$VHD)
                                 }
-                                New-Exception @exceptionParameters
+                                New-LabException @exceptionParameters
                             } # if
                         }
                         Default
@@ -436,7 +436,7 @@ function Get-LabVM {
                                 errorMessage = $($LocalizedData.VMDataDiskUnknownTypeError `
                                     -f $VMName,$VHD,$VMDataVhd.Type)
                             }
-                            New-Exception @exceptionParameters
+                            New-LabException @exceptionParameters
                         }
                     } # switch
                     $NewDataVHD.VHDType = [LabVHDType]::$($VMDataVhd.Type)
@@ -454,7 +454,7 @@ function Get-LabVM {
                             errorMessage = $($LocalizedData.VMDataDiskPartitionStyleError `
                                 -f $VMName,$VHD,$VMDataVhd.PartitionStyle)
                         }
-                        New-Exception @exceptionParameters
+                        New-LabException @exceptionParameters
                     } # if
                     $NewDataVHD.PartitionStyle = $PartitionStyle
                 } # if
@@ -471,7 +471,7 @@ function Get-LabVM {
                             errorMessage = $($LocalizedData.VMDataDiskFileSystemError `
                                 -f $VMName,$VHD,$VMDataVhd.FileSystem)
                         }
-                        New-Exception @exceptionParameters
+                        New-LabException @exceptionParameters
                     } # if
                     $NewDataVHD.FileSystem = $FileSystem
                 } # if
@@ -496,7 +496,7 @@ function Get-LabVM {
                             errorMessage = $($LocalizedData.VMDataDiskPartitionStyleMissingError `
                                 -f $VMName,$VHD)
                         }
-                        New-Exception @exceptionParameters
+                        New-LabException @exceptionParameters
                     } # if
                     if (-not $NewDataVHD.FileSystem)
                     {
@@ -506,7 +506,7 @@ function Get-LabVM {
                             errorMessage = $($LocalizedData.VMDataDiskFileSystemMissingError `
                                 -f $VMName,$VHD)
                         }
-                        New-Exception @exceptionParameters
+                        New-LabException @exceptionParameters
                     } # if
                 } # if
 
@@ -531,7 +531,7 @@ function Get-LabVM {
                             errorMessage = $($LocalizedData.VMDataDiskCopyFolderMissingError `
                                 -f $VMName,$VHD,$CopyFolder)
                             }
-                        New-Exception @exceptionParameters
+                        New-LabException @exceptionParameters
                         }
                     } # foreach
                     $NewDataVHD.CopyFolders = $VMDataVhd.CopyFolders
@@ -549,7 +549,7 @@ function Get-LabVM {
                             errorMessage = $($LocalizedData.VMDataDiskSourceVHDIfMoveError `
                                 -f $VMName,$VHD)
                         }
-                        New-Exception @exceptionParameters
+                        New-LabException @exceptionParameters
                     } # if
                 } # if
 
@@ -564,7 +564,7 @@ function Get-LabVM {
                         errorMessage = $($LocalizedData.VMDataDiskCantBeCreatedError `
                             -f $VMName,$VHD)
                     }
-                    New-Exception @exceptionParameters
+                    New-LabException @exceptionParameters
                 } # if
 
                 $DataVHDs += @( $NewDataVHD )
@@ -602,7 +602,7 @@ function Get-LabVM {
                             errorMessage = $($LocalizedData.VMDVDDriveISOResourceNotFOundError `
                                 -f $VMName,$VMDVDDrive.ISO)
                         }
-                        New-Exception @exceptionParameters
+                        New-LabException @exceptionParameters
                     } # if
                     # The ISO resource was found so populate the ISO details
                     $NewDVDDrive.ISO = $VMDVDDrive.ISO
@@ -634,7 +634,7 @@ function Get-LabVM {
                         errorMessage = $($LocalizedData.UnattendFileMissingError `
                             -f $VMName,$UnattendFile)
                     }
-                    New-Exception @exceptionParameters
+                    New-LabException @exceptionParameters
                 } # if
             } # if
 
@@ -660,7 +660,7 @@ function Get-LabVM {
                         errorMessage = $($LocalizedData.SetupCompleteFileBadTypeError `
                             -f $VMName,$SetupComplete)
                     }
-                    New-Exception @exceptionParameters
+                    New-LabException @exceptionParameters
                 } # if
                 if (-not (Test-Path $SetupComplete))
                 {
@@ -670,7 +670,7 @@ function Get-LabVM {
                         errorMessage = $($LocalizedData.SetupCompleteFileMissingError `
                             -f $VMName,$SetupComplete)
                     }
-                    New-Exception @exceptionParameters
+                    New-LabException @exceptionParameters
                 } # if
             } # if
 
@@ -700,7 +700,7 @@ function Get-LabVM {
                         errorMessage = $($LocalizedData.DSCConfigFileBadTypeError `
                             -f $VMName,$LabDSC.ConfigFile)
                     }
-                    New-Exception @exceptionParameters
+                    New-LabException @exceptionParameters
                 } # if
 
                 if (-not (Test-Path $LabDSC.ConfigFile))
@@ -711,7 +711,7 @@ function Get-LabVM {
                         errorMessage = $($LocalizedData.DSCConfigFileMissingError `
                             -f $VMName,$LabDSC.ConfigFile)
                     }
-                    New-Exception @exceptionParameters
+                    New-LabException @exceptionParameters
                 } # if
                 if (-not $VM.DSC.ConfigName)
                 {
@@ -721,7 +721,7 @@ function Get-LabVM {
                         errorMessage = $($LocalizedData.DSCConfigNameIsEmptyError `
                             -f $VMName)
                     }
-                    New-Exception @exceptionParameters
+                    New-LabException @exceptionParameters
                 } # if
             } # if
 
@@ -790,7 +790,7 @@ function Get-LabVM {
                     errorMessage = $($LocalizedData.VMVirtualizationExtError `
                         -f $VMName)
                 }
-                New-Exception @exceptionParameters
+                New-LabException @exceptionParameters
             } # if
 
             [Boolean] $UseDifferencingDisk = $True
@@ -1159,7 +1159,7 @@ function Initialize-LabVM {
                     errorMessage = $($LocalizedData.VMVirtualizationExtError `
                         -f $VM.Name)
                 }
-                New-Exception @exceptionParameters
+                New-LabException @exceptionParameters
             } # if
         }
         else
@@ -1496,7 +1496,7 @@ function Install-LabVM {
                             errorMessage = $($LocalizedData.CertificateDownloadError `
                                 -f $VM.name)
                         }
-                        New-Exception @exceptionParameters
+                        New-LabException @exceptionParameters
                     } # if
                 } # if
             }
@@ -1508,7 +1508,7 @@ function Install-LabVM {
                     errorMessage = $($LocalizedData.InitializationDidNotCompleteError `
                         -f $VM.name)
                 }
-                New-Exception @exceptionParameters
+                New-LabException @exceptionParameters
             } # if
         } # if
 
@@ -1579,7 +1579,7 @@ function Connect-LabVM
 
     [DateTime] $StartTime = Get-Date
     [System.Management.Automation.Runspaces.PSSession] $Session = $null
-    [PSCredential] $AdminCredential = CreateCredential `
+    [PSCredential] $AdminCredential = New-LabCredential `
         -Username '.\Administrator' `
         -Password $VM.AdministratorPassword
     [Boolean] $FatalException = $False
@@ -1655,7 +1655,7 @@ function Connect-LabVM
             errorMessage = $($LocalizedData.RemotingConnectionError `
                 -f $VM.Name)
         }
-        New-Exception @exceptionParameters
+        New-LabException @exceptionParameters
     }
     Return $Session
 } # Connect-LabVM
@@ -1690,7 +1690,7 @@ function Disconnect-LabVM
         [LabVM] $VM
     )
 
-    [PSCredential] $AdminCredential = CreateCredential `
+    [PSCredential] $AdminCredential = New-LabCredential `
         -Username '.\Administrator' `
         -Password $VM.AdministratorPassword
 

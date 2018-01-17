@@ -73,7 +73,7 @@ function Get-LabVMTemplateVHD
             errorMessage  = $($LocalizedData.VMTemplateVHDISORootPathNotFoundError `
                     -f $ISORootPath)
         }
-        New-Exception @exceptionParameters
+        New-LabException @exceptionParameters
     } # if
 
     # Determine the VHDRootPath where the VHD files should be put
@@ -102,7 +102,7 @@ function Get-LabVMTemplateVHD
             errorMessage  = $($LocalizedData.VMTemplateVHDRootPathNotFoundError `
                     -f $VHDRootPath)
         }
-        New-Exception @exceptionParameters
+        New-LabException @exceptionParameters
     } # if
 
     $TemplatePrefix = $Lab.labbuilderconfig.templatevhds.prefix
@@ -130,7 +130,7 @@ function Get-LabVMTemplateVHD
                 errorCategory = 'InvalidArgument'
                 errorMessage  = $($LocalizedData.EmptyVMTemplateVHDNameError)
             }
-            New-Exception @exceptionParameters
+            New-LabException @exceptionParameters
         } # if
 
         # Get the ISO Path
@@ -143,7 +143,7 @@ function Get-LabVMTemplateVHD
                 errorMessage  = $($LocalizedData.EmptyVMTemplateVHDISOPathError `
                         -f $TemplateVHD.Name)
             }
-            New-Exception @exceptionParameters
+            New-LabException @exceptionParameters
         } # if
 
         # Adjust the ISO Path if required
@@ -171,7 +171,7 @@ function Get-LabVMTemplateVHD
                 errorMessage  = $($LocalizedData.VMTemplateVHDISOPathNotFoundError `
                         -f $TemplateVHD.Name, $ISOPath)
             }
-            New-Exception @exceptionParameters
+            New-LabException @exceptionParameters
         } # if
 
         # Get the VHD Path
@@ -184,7 +184,7 @@ function Get-LabVMTemplateVHD
                 errorMessage  = $($LocalizedData.EmptyVMTemplateVHDPathError `
                         -f $TemplateVHD.Name)
             }
-            New-Exception @exceptionParameters
+            New-LabException @exceptionParameters
         } # if
 
         # Adjust the VHD Path if required
@@ -217,7 +217,7 @@ function Get-LabVMTemplateVHD
                 errorMessage  = $($LocalizedData.InvalidVMTemplateVHDOSTypeError `
                         -f $TemplateVHD.Name, $TemplateVHD.OSType)
             }
-            New-Exception @exceptionParameters
+            New-LabException @exceptionParameters
         } # if
 
         # Get the Template Wim Image to use
@@ -241,7 +241,7 @@ function Get-LabVMTemplateVHD
                 errorMessage  = $($LocalizedData.InvalidVMTemplateVHDVHDFormatError `
                         -f $TemplateVHD.Name, $TemplateVHD.VHDFormat)
             }
-            New-Exception @exceptionParameters
+            New-LabException @exceptionParameters
         }
 
         # Get the Template VHD Type
@@ -258,7 +258,7 @@ function Get-LabVMTemplateVHD
                 errorMessage  = $($LocalizedData.InvalidVMTemplateVHDVHDTypeError `
                         -f $TemplateVHD.Name, $TemplateVHD.VHDType)
             }
-            New-Exception @exceptionParameters
+            New-LabException @exceptionParameters
         } # if
 
         # Get the disk size if provided
@@ -282,7 +282,7 @@ function Get-LabVMTemplateVHD
                 errorMessage  = $($LocalizedData.InvalidVMTemplateVHDGenerationError `
                         -f $TemplateVHD.Name, $Generation)
             }
-            New-Exception @exceptionParameters
+            New-LabException @exceptionParameters
         }
 
         # Get the Template Packages
@@ -395,7 +395,7 @@ function Initialize-LabVMTemplateVHD
                 errorMessage  = $($LocalizedData.FileNotFoundError `
                         -f 'alternate DISM.EXE', $DismPath)
             }
-            New-Exception @exceptionParameters
+            New-LabException @exceptionParameters
         }
     }
 
@@ -433,7 +433,7 @@ function Initialize-LabVMTemplateVHD
                 errorMessage  = $($LocalizedData.VMTemplateVHDISOPathNotFoundError `
                         -f $TemplateVHDName, $ISOPath)
             }
-            New-Exception @exceptionParameters
+            New-LabException @exceptionParameters
         } # if
 
         # Mount the ISO so we can read the files.
@@ -459,7 +459,7 @@ function Initialize-LabVMTemplateVHD
                 errorMessage  = $($LocalizedData.VolumeNotAvailableAfterMountError `
                         -f $ISOPath)
             }
-            New-Exception @exceptionParameters
+            New-LabException @exceptionParameters
         }
         [System.String] $DriveLetter = $Volume.DriveLetter
         if (-not $DriveLetter)
@@ -470,7 +470,7 @@ function Initialize-LabVMTemplateVHD
                 errorMessage  = $($LocalizedData.DriveLetterNotAssignedError `
                         -f $ISOPath)
             }
-            New-Exception @exceptionParameters
+            New-LabException @exceptionParameters
         }
         [System.String] $ISODrive = "$([System.String]$DriveLetter):"
 
@@ -596,7 +596,7 @@ function Initialize-LabVMTemplateVHD
                                 errorMessage  = $($LocalizedData.NanoPackageNotFoundError `
                                         -f $PackagePath)
                             }
-                            New-Exception @exceptionParameters
+                            New-LabException @exceptionParameters
                         }
                         $Packages += @( $PackagePath )
 
@@ -614,7 +614,7 @@ function Initialize-LabVMTemplateVHD
                                 errorMessage  = $($LocalizedData.NanoPackageNotFoundError `
                                         -f $PackageLangPath)
                             }
-                            New-Exception @exceptionParameters
+                            New-LabException @exceptionParameters
                         }
                         $Packages += @( $PackageLangPath )
                     }
@@ -639,7 +639,7 @@ function Initialize-LabVMTemplateVHD
                                 errorMessage  = $($LocalizedData.PackageNotFoundError `
                                         -f $Package)
                             }
-                            New-Exception @exceptionParameters
+                            New-LabException @exceptionParameters
                         } # if
 
                         $PackagePath = $ResourceMSU.Filename
@@ -651,7 +651,7 @@ function Initialize-LabVMTemplateVHD
                                 errorMessage  = $($LocalizedData.PackageMSUNotFoundError `
                                         -f $Package, $PackagePath)
                             }
-                            New-Exception @exceptionParameters
+                            New-LabException @exceptionParameters
                         } # if
                         $Packages += @( $PackagePath )
                     }
@@ -697,7 +697,7 @@ function Initialize-LabVMTemplateVHD
                 errorMessage  = $($LocalizedData.ConvertWindowsImageError `
                         -f $ISOPath, $SourcePath, $Edition, $VHDFormat, $_.Exception.Message)
             }
-            New-Exception @exceptionParameters
+            New-LabException @exceptionParameters
         } # catch
         finally
         {

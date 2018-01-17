@@ -350,7 +350,7 @@
 - Added Initialize-VHD function.
 - Added support for formatting Data VHDs.
 - Added support for copying multiple folders to DataVHDs.
-- Updated Download-ResourceModule to use DownloadAndUnzipFile function.
+- Updated Download-ResourceModule to use Invoke-LabDownloadAndUnzipFile function.
 - Changed name of Settings\VMPath attribute to LabPath.
 
 ## 0.3.1.0

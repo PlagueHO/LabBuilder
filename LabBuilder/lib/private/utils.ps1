@@ -24,29 +24,29 @@
             errorCategory = 'ConnectionError'
             errorMessage = 'Could not connect'
         }
-        New-Exception @exceptionParameters
+        New-LabException @exceptionParameters
         Throw a ConnectionError exception with the message 'Could not connect'.
 
     .OUTPUTS
         None
 #>
 
-function New-Exception
+function New-LabException
 {
     [CmdLetBinding()]
     param
     (
         [Parameter(Mandatory = $true)]
-        [System.String] $errorId,
+        [System.String] $ErrorId,
 
         [Parameter(Mandatory = $true)]
-        [System.Management.Automation.ErrorCategory] $errorCategory,
+        [System.Management.Automation.ErrorCategory] $ErrorCategory,
 
         [Parameter(Mandatory = $true)]
-        [System.String] $errorMessage,
+        [System.String] $ErrorMessage,
 
         [Switch]
-        $terminate
+        $Terminate
     )
 
     $exception = New-Object -TypeName System.Exception `
@@ -64,17 +64,18 @@ function New-Exception
         # Note: Although this method is called ThrowTerminatingError, it doesn't terminate.
         $PSCmdlet.ThrowTerminatingError($errorRecord)
     }
-} # New-Exception
+} # New-LabException
 
 <#
-.SYNOPSIS
-    Download the a file to a folder and optionally unzip it.
-.DESCRIPTION
-    If the file is a zip file the file will be downloaded to a temporary
-    working folder and then unzipped to the destination, otherwise it
-    will be downloaded straight to the destination folder.
+    .SYNOPSIS
+        Download the a file to a folder and optionally unzip it.
+
+    .DESCRIPTION
+        If the file is a zip file the file will be downloaded to a temporary
+        working folder and then unzipped to the destination, otherwise it
+        will be downloaded straight to the destination folder.
 #>
-function DownloadAndUnzipFile()
+function Invoke-LabDownloadAndUnzipFile
 {
     [CmdletBinding()]
     Param
@@ -87,7 +88,8 @@ function DownloadAndUnzipFile()
         [ValidateNotNullOrEmpty()]
         [System.String] $DestinationPath
     )
-    $FileName = [System.IO.Path]::GetFileName($URL)
+
+    $fileName = [System.IO.Path]::GetFileName($URL)
 
     if (-not (Test-Path -Path $DestinationPath))
     {
@@ -95,130 +97,114 @@ function DownloadAndUnzipFile()
             errorId       = 'DownloadFolderDoesNotExistError'
             errorCategory = 'InvalidArgument'
             errorMessage  = $($LocalizedData.DownloadFolderDoesNotExistError `
-                    -f $DestinationPath, $Filename)
+                    -f $DestinationPath, $fileName)
         }
-        New-Exception @exceptionParameters
+        New-LabException @exceptionParameters
     }
 
-    $Extension = [System.IO.Path]::GetExtension($Filename)
-    if ($Extension -eq '.zip')
+    $extension = [System.IO.Path]::GetExtension($fileName)
+
+    if ($extension -eq '.zip')
     {
         # Download to a temp folder and unzip
-        $DownloadPath = Join-Path -Path $Script:WorkingFolder -ChildPath $FileName
+        $downloadPath = Join-Path -Path $Script:WorkingFolder -ChildPath $fileName
     }
     else
     {
         # Download to a temp folder and unzip
-        $DownloadPath = Join-Path -Path $DestinationPath -ChildPath $FileName
+        $downloadPath = Join-Path -Path $DestinationPath -ChildPath $fileName
     }
 
     Write-LabMessage -Message ($LocalizedData.DownloadingFileMessage `
-            -f $Filename, $URL, $DownloadPath)
+            -f $fileName, $URL, $downloadPath)
 
-    Try
+    try
     {
         Invoke-WebRequest `
             -Uri $URL `
-            -OutFile $DownloadPath `
+            -OutFile $downloadPath `
             -ErrorAction Stop
     }
-    Catch
+    catch
     {
         $exceptionParameters = @{
             errorId       = 'FileDownloadError'
             errorCategory = 'InvalidOperation'
-            errorMessage  = $($LocalizedData.FileDownloadError `
-                    -f $Filename, $URL, $_.Exception.Message)
+            errorMessage  = $($LocalizedData.FileDownloadError -f $fileName, $URL, $_.Exception.Message)
         }
-        New-Exception @exceptionParameters
-    } # Try
+        New-LabException @exceptionParameters
+    } # try
 
-    if ($Extension -eq '.zip')
+    if ($extension -eq '.zip')
     {
         Write-LabMessage -Message ($LocalizedData.ExtractingFileMessage `
-                -f $Filename, $DownloadPath)
+                -f $fileName, $downloadPath)
 
         # Extract this to the destination folder
-        Try
+        try
         {
             Expand-Archive `
-                -Path $DownloadPath `
+                -Path $downloadPath `
                 -DestinationPath $DestinationPath `
                 -Force `
                 -ErrorAction Stop
         }
-        Catch
+        catch
         {
             $exceptionParameters = @{
                 errorId       = 'FileExtractError'
                 errorCategory = 'InvalidArgument'
-                errorMessage  = $($LocalizedData.FileExtractError `
-                        -f $Filename, $_.Exception.Message)
+                errorMessage  = $($LocalizedData.FileExtractError -f $fileName, $_.Exception.Message)
             }
-            New-Exception @exceptionParameters
+            New-LabException @exceptionParameters
         }
         finally
         {
             # Remove the downloaded zip file
-            Remove-Item -Path $DownloadPath
-        } # Try
+            Remove-Item -Path $downloadPath
+        } # try
     }
-} # DownloadAndUnzipFile
-
-
-<#
-.SYNOPSIS
-    Generates a credential object from a username and password.
-#>
-function CreateCredential()
-{
-    [CmdletBinding()]
-    [OutputType([PSCredential])]
-    Param
-    (
-        [Parameter(Mandatory = $True)]
-        [ValidateNotNullOrEmpty()]
-        [System.String] $Username,
-
-        [Parameter(Mandatory = $True)]
-        [ValidateNotNullOrEmpty()]
-        [System.String] $Password
-    )
-    [PSCredential] $Credential = New-Object `
-        -TypeName System.Management.Automation.PSCredential `
-        -ArgumentList ($Username, (ConvertTo-SecureString $Password -AsPlainText -Force))
-    return $Credential
-} # CreateCredential
-
+} # Invoke-LabDownloadAndUnzipFile
 
 <#
 .SYNOPSIS
     Downloads a resource module.
+
 .DESCRIPTION
     It will download a specific resource module, either from PowerShell Gallery
     or from a URL if the module does not already exist.
+
 .PARAMETER Name
     Contains the Name of the module to download.
+
 .PARAMETER URL
-    If this parameter is specified, the resource module will be downloaded from a URL rather than via PowerShell Gallery.
-    This is a the URL to use to download a zip file containing this resource module.
+    If this parameter is specified, the resource module will be downloaded from a URL
+    rather than via PowerShell Gallery. This is a the URL to use to download a zip
+    file containing this resource module.
+
 .PARAMETER Folder
-    If this resource module is downloaded using a URL, this is the folder in the zip file that contains the resource and will need to be renamed to the name of the resource.
+    If this resource module is downloaded using a URL, this is the folder in the zip
+    file that contains the resource and will need to be renamed to the name of the
+    resource.
+
 .PARAMETER RequiredVersion
     This is the required version of the Resource Module that is required.
     If this version is not installed the a new version will be downloaded.
+
 .PARAMETER MinimumVersion
     This is the minimum version of the Resource Module that is required.
     If at least this version is not installed then a new version will be downloaded.
+
 .EXAMPLE
-    DownloadResourceModule `
+    Invoke-LabDownloadResourceModule `
         -Name xNetworking `
         -RequiredVersion 2.7.0.0
     Downloads the Resource Module xNetowrking version 2.7.0.0
+
 .OUTPUTS
     None.
 #>
-function DownloadResourceModule
+function Invoke-LabDownloadResourceModule
 {
     [CmdLetBinding()]
     param
@@ -246,68 +232,71 @@ function DownloadResourceModule
         [System.String] $MinimumVersion
     )
 
-    $InstalledModules = @(Get-Module -ListAvailable)
+    $installedModules = @(Get-Module -ListAvailable)
 
     # Determine a query that will be used to decide if the module is already installed
     if ($RequiredVersion)
     {
-        [ScriptBlock] $Query = `
-        { ($_.Name -eq $Name) -and ($_.Version -eq $RequiredVersion) }
-        $VersionMessage = $RequiredVersion
+        [ScriptBlock] $Query = {
+            ($_.Name -eq $Name) -and ($_.Version -eq $RequiredVersion)
+        }
+        $versionMessage = $RequiredVersion
     }
     elseif ($MinimumVersion)
     {
-        [ScriptBlock] $Query = `
-        { ($_.Name -eq $Name) -and ($_.Version -ge $MinimumVersion) }
-        $VersionMessage = "min ${MinimumVersion}"
+        [ScriptBlock] $Query = {
+            ($_.Name -eq $Name) -and ($_.Version -ge $MinimumVersion)
+        }
+        $versionMessage = "min ${MinimumVersion}"
     }
     else
     {
-        [ScriptBlock] $Query = `
-        { $_.Name -eq $Name }
-        $VersionMessage = 'any version'
+        [ScriptBlock] $Query = {
+            $_.Name -eq $Name
+        }
+        $versionMessage = 'any version'
     }
 
     # Is the module installed?
-    if ($InstalledModules.Where($Query).Count -eq 0)
+    if ($installedModules.Where($Query).Count -eq 0)
     {
         Write-LabMessage -Message ($LocalizedData.ModuleNotInstalledMessage `
-                -f $Name, $VersionMessage)
+                -f $Name, $versionMessage)
 
         # If a URL was specified, download this module via HTTP
         if ($URL)
         {
             # The module is not installed - so download it
             # This is usually for downloading modules directly from github
-            $FileName = $URL.Substring($URL.LastIndexOf('/') + 1)
-
             Write-LabMessage -Message ($LocalizedData.DownloadingLabResourceWebMessage `
-                    -f $Name, $VersionMessage, $URL)
+                    -f $Name, $versionMessage, $URL)
 
-            [System.String] $ModulesFolder = "$($ENV:ProgramFiles)\WindowsPowerShell\Modules\"
+            $modulesFolder = "$($ENV:ProgramFiles)\WindowsPowerShell\Modules\"
 
-            DownloadAndUnzipFile `
+            Invoke-LabDownloadAndUnzipFile `
                 -URL $URL `
-                -DestinationPath $ModulesFolder `
+                -DestinationPath $modulesFolder `
                 -ErrorAction Stop
 
             if ($Folder)
             {
                 # This zip file contains a folder that is not the name of the module so it must be
                 # renamed. This is usually the case with source downloaded directly from GitHub
-                $ModulePath = Join-Path -Path $ModulesFolder -ChildPath $Name
-                if (Test-Path -Path $ModulePath)
+                $modulePath = Join-Path -Path $modulesFolder -ChildPath $Name
+
+                if (Test-Path -Path $modulePath)
                 {
-                    Remove-Item -Path $ModulePath -Recurse -Force
+                    Remove-Item -Path $modulePath -Recurse -Force
                 }
+
                 Rename-Item `
-                    -Path (Join-Path -Path $ModulesFolder -ChildPath $Folder) `
+                    -Path (Join-Path -Path $modulesFolder -ChildPath $Folder) `
                     -NewName $Name `
                     -Force
-            } # If
+            } # if
 
             Write-LabMessage -Message ($LocalizedData.InstalledLabResourceWebMessage `
-                    -f $Name, $VersionMessage, $ModulePath)
+                    -f $Name, $versionMessage, $modulePath)
         }
         else
         {
@@ -324,20 +313,26 @@ function DownloadResourceModule
                 -InstallationPolicy Trusted
 
             # Install the module
-            $Splat = [PSObject] @{ Name = $Name }
+            $installModuleParameters = [PSObject] @{ Name = $Name }
+
             if ($RequiredVersion)
             {
                 # Is a specific module version required?
-                $Splat += [PSObject] @{ RequiredVersion = $RequiredVersion }
+                $installModuleParameters += [PSObject] @{
+                    RequiredVersion = $RequiredVersion
+                }
             }
             elseif ($MinimumVersion)
             {
                 # Is a specific module version minimum version?
-                $Splat += [PSObject] @{ MinimumVersion = $MinimumVersion }
+                $installModuleParameters += [PSObject] @{
+                    MinimumVersion = $MinimumVersion
+                }
             }
+
             try
             {
-                Install-Module @Splat -Force -ErrorAction Stop
+                Install-Module @installModuleParameters -Force -ErrorAction Stop
             }
             catch
             {
@@ -345,37 +340,66 @@ function DownloadResourceModule
                     errorId       = 'ModuleNotAvailableError'
                     errorCategory = 'InvalidArgument'
                     errorMessage  = $($LocalizedData.ModuleNotAvailableError `
-                            -f $Name, $VersionMessage, $_.Exception.Message)
+                            -f $Name, $versionMessage, $_.Exception.Message)
                 }
-                New-Exception @exceptionParameters
+                New-LabException @exceptionParameters
             }
         } # If
     } # If
-} # DownloadResourceModule
-
+} # Invoke-LabDownloadResourceModule
 
 <#
-.SYNOPSIS
-    Ensures the WS-Man is configured on this system.
-.DESCRIPTION
-    If WS-Man is not enabled on this system it will be enabled.
-    This is required to communicate with the managed Lab Virtual Machines.
-.EXAMPLE
-    Enable-LabWSMan
-    Enables WS-Man on this machine.
-.OUTPUTS
-    None
+    .SYNOPSIS
+        Generates a credential object from a username and password.
+#>
+function New-LabCredential()
+{
+    [CmdletBinding()]
+    [OutputType([PSCredential])]
+    Param
+    (
+        [Parameter(Mandatory = $True)]
+        [ValidateNotNullOrEmpty()]
+        [System.String] $Username,
+
+        [Parameter(Mandatory = $True)]
+        [ValidateNotNullOrEmpty()]
+        [System.String] $Password
+    )
+
+    [PSCredential] $Credential = New-Object `
+        -TypeName System.Management.Automation.PSCredential `
+        -ArgumentList ($Username, (ConvertTo-SecureString $Password -AsPlainText -Force))
+    return $Credential
+} # New-LabCredential
+
+<#
+    .SYNOPSIS
+        Ensures the WS-Man is configured on this system.
+
+    .DESCRIPTION
+        If WS-Man is not enabled on this system it will be enabled.
+        This is required to communicate with the managed Lab Virtual Machines.
+
+    .EXAMPLE
+        Enable-LabWSMan
+        Enables WS-Man on this machine.
+
+    .OUTPUTS
+        None
 #>
 function Enable-LabWSMan
 {
     [CmdLetBinding()]
     param (
+        [Parameter()]
         [Switch] $Force
     )
 
     if (-not (Get-PSPRovider -PSProvider WSMan -ErrorAction SilentlyContinue))
     {
         Write-LabMessage -Message ($LocalizedData.EnablingWSManMessage)
+
         try
         {
             Start-Service -Name WinRm -ErrorAction Stop
@@ -396,11 +420,10 @@ function Enable-LabWSMan
                 errorCategory = 'InvalidArgument'
                 errorMessage  = $($LocalizedData.WSManNotEnabledError)
             }
-            New-Exception @exceptionParameters
+            New-LabException @exceptionParameters
         } # if
     } # if
 } # Enable-LabWSMan
-
 
 <#
 .SYNOPSIS
@@ -448,7 +471,6 @@ function Install-LabHyperV
         }
     }
 } # Install-LabHyperV
-
 
 <#
 .SYNOPSIS
@@ -514,7 +536,7 @@ function Assert-ValidConfigurationXMLSchema
             errorMessage  = $($LocalizedData.ConfigurationXMLValidationError `
                     -f $ConfigPath, $_.Exception.Message)
         }
-        New-Exception @exceptionParameters
+        New-LabException @exceptionParameters
     } # catch
     finally
     {
@@ -530,10 +552,9 @@ function Assert-ValidConfigurationXMLSchema
             errorCategory = 'InvalidArgument'
             errorMessage  = $($LocalizedData.ConfigurationXMLValidationError -f $ConfigPath, $Script:XMLFirstError)
         }
-        New-Exception @exceptionParameters
+        New-LabException @exceptionParameters
     } # if
 } # Assert-ValidConfigurationXMLSchema
-
 
 <#
 .SYNOPSIS
@@ -658,7 +679,7 @@ function Assert-ValidIpAddress
             errorCategory = 'InvalidArgument'
             errorMessage  = $($LocalizedData.IPAddressError -f $IpAddress)
         }
-        New-Exception @exceptionParameters
+        New-LabException @exceptionParameters
     }
     return $ip
 } # Assert-ValidIpAddress
@@ -723,7 +744,7 @@ function Install-LabPackageProvider
                     errorMessage  = $($LocalizedData.PackageProviderNotInstalledError `
                             -f $requiredPackageProvider)
                 }
-                New-Exception @exceptionParameters
+                New-LabException @exceptionParameters
             } # if
         } # if
     } # foreach
@@ -805,7 +826,7 @@ function Register-LabPackageSource
                         errorMessage  = $($LocalizedData.PackageSourceNotTrustedError `
                                 -f $requiredPackageSource.Name)
                     }
-                    New-Exception @exceptionParameters
+                    New-LabException @exceptionParameters
                 } # if
             } # if
         }
@@ -836,7 +857,7 @@ function Register-LabPackageSource
                     errorMessage  = $($LocalizedData.PackageSourceNotRegisteredError `
                             -f $requiredPackageSource.Name)
                 }
-                New-Exception @exceptionParameters
+                New-LabException @exceptionParameters
             } # if
         } # if
     } # foreach
@@ -866,7 +887,7 @@ function Register-LabPackageSource
 
     .EXAMPLE
         Write-LabMessage -Type Verbose -Message 'Downloading file'
-        New-Exception @exceptionParameters
+        New-LabException @exceptionParameters
         Outputs the message 'Downloading file' to the Verbose stream.
 
     .OUTPUTS

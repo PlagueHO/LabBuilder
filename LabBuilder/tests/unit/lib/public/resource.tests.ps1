@@ -98,14 +98,14 @@ try
             $Lab = Get-Lab -ConfigPath $Global:TestConfigOKPath
             [LabResourceModule[]]$ResourceModules = Get-LabResourceModule -Lab $Lab
 
-            Mock DownloadResourceModule
+            Mock Invoke-LabDownloadResourceModule
 
             Context 'Valid configuration is passed' {
                 It 'Does not throw an Exception' {
                     { Initialize-LabResourceModule -Lab $Lab -ResourceModules $ResourceModules } | Should -Not -Throw
                 }
                 It 'Calls Mocked commands' {
-                    Assert-MockCalled DownloadResourceModule -Exactly 4
+                    Assert-MockCalled Invoke-LabDownloadResourceModule -Exactly 4
                 }
             }
         }
@@ -146,7 +146,7 @@ try
             $Lab = Get-Lab -ConfigPath $Global:TestConfigOKPath
             [LabResourceMSU[]]$ResourceMSUs = Get-LabResourceMSU -Lab $Lab
 
-            Mock DownloadAndUnzipFile
+            Mock Invoke-LabDownloadAndUnzipFile
             Mock Test-Path -MockWith { $False }
 
             Context 'Valid configuration is passed and resources are missing' {
@@ -154,7 +154,7 @@ try
                     { Initialize-LabResourceMSU -Lab $Lab -ResourceMSUs $ResourceMSUs } | Should -Not -Throw
                 }
                 It 'Calls Mocked commands' {
-                    Assert-MockCalled DownloadAndUnzipFile -Exactly 2
+                    Assert-MockCalled Invoke-LabDownloadAndUnzipFile -Exactly 2
                 }
             }
         }
@@ -244,14 +244,14 @@ try
             $Lab.labbuilderconfig.resources.SetAttribute('isopath',$Path)
             [LabResourceISO[]]$ResourceISOs = Get-LabResourceISO -Lab $Lab
 
-            Mock DownloadAndUnzipFile
+            Mock Invoke-LabDownloadAndUnzipFile
 
             Context 'Valid configuration is passed and all ISOs exist' {
                 It 'Does not throw an Exception' {
                     { Initialize-LabResourceISO -Lab $Lab -ResourceISOs $ResourceISOs } | Should -Not -Throw
                 }
                 It 'Calls Mocked commands' {
-                    Assert-MockCalled DownloadAndUnzipFile -Exactly 0
+                    Assert-MockCalled Invoke-LabDownloadAndUnzipFile -Exactly 0
                 }
             }
         }

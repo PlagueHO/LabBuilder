@@ -85,7 +85,7 @@ function InitializeBootVHD {
                     errorMessage = $($LocalizedData.NanoServerPackagesFolderMissingError `
                     -f $NanoPackagesFolder)
                 }
-                New-Exception @exceptionParameters
+                New-LabException @exceptionParameters
             }
             # Add DSC Package to packages list if missing
             if ([System.String]::IsNullOrWhitespace($Packages))
@@ -128,7 +128,7 @@ function InitializeBootVHD {
                             errorMessage = $($LocalizedData.NanoPackageNotFoundError `
                             -f $PackagePath)
                         }
-                        New-Exception @exceptionParameters
+                        New-LabException @exceptionParameters
                     }
 
                     # Add the package
@@ -154,7 +154,7 @@ function InitializeBootVHD {
                             errorMessage = $($LocalizedData.NanoPackageNotFoundError `
                             -f $PackageLangFile)
                         }
-                        New-Exception @exceptionParameters
+                        New-LabException @exceptionParameters
                     }
 
                     Write-LabMessage -Message $($LocalizedData.ApplyingVMBootDiskFileMessage `
@@ -186,7 +186,7 @@ function InitializeBootVHD {
                             errorMessage = $($LocalizedData.PackageNotFoundError `
                             -f $Package)
                         }
-                        New-Exception @exceptionParameters
+                        New-LabException @exceptionParameters
                     } # if
 
                     $PackagePath = $ResourceMSU.Filename
@@ -198,7 +198,7 @@ function InitializeBootVHD {
                             errorMessage = $($LocalizedData.PackageMSUNotFoundError `
                             -f $Package,$PackagePath)
                         }
-                        New-Exception @exceptionParameters
+                        New-LabException @exceptionParameters
                     } # if
                     # Apply a Package
                     Write-LabMessage -Message $($LocalizedData.ApplyingVMBootDiskFileMessage `
@@ -403,7 +403,7 @@ function InitializeVhd
             errorMessage = $($LocalizedData.FileNotFoundError `
             -f "VHD",$Path)
         }
-        New-Exception @exceptionParameters
+        New-LabException @exceptionParameters
     } # if
 
     # Check disk is not already mounted
@@ -433,7 +433,7 @@ function InitializeVhd
                 errorMessage = $($LocalizedData.InitializeVHDNotInitializedError `
                 -f $Path)
             }
-            New-Exception @exceptionParameters
+            New-LabException @exceptionParameters
         } # if
         Write-LabMessage -Message ($LocalizedData.InitializeVHDInitializingMessage `
             -f $Path,$PartitionStyle)
@@ -527,7 +527,7 @@ function InitializeVhd
                 errorMessage = $($LocalizedData.InitializeVHDNotFormattedError `
                 -f $Path)
             }
-            New-Exception @exceptionParameters
+            New-LabException @exceptionParameters
         }
 
         # Format the volume
@@ -593,7 +593,7 @@ function InitializeVhd
                         errorMessage = $($LocalizedData.InitializeVHDAccessPathNotFoundError `
                         -f $Path,$AccessPath)
                     }
-                    New-Exception @exceptionParameters
+                    New-LabException @exceptionParameters
                 }
 
                 # Add the Partition Access Path

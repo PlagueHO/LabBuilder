@@ -157,7 +157,7 @@ Add-Content ``
                 errorMessage = $($LocalizedData.SetupCompleteScriptMissingError `
                     -f $VM.name,$SetupComplete)
             }
-            New-Exception @exceptionParameters
+            New-LabException @exceptionParameters
         }
         [System.String] $Extension = [System.IO.Path]::GetExtension($SetupComplete)
         Switch ($Extension.ToLower())
@@ -544,7 +544,7 @@ function Recieve-SelfSignedCertificate
                 errorMessage = $($LocalizedData.CertificateDownloadError `
                     -f $VM.Name)
             }
-            New-Exception @exceptionParameters
+            New-LabException @exceptionParameters
             return
         } # if
 
@@ -590,7 +590,7 @@ function Recieve-SelfSignedCertificate
                 errorMessage = $($LocalizedData.CertificateDownloadError `
                     -f $VM.Name)
             }
-            New-Exception @exceptionParameters
+            New-LabException @exceptionParameters
         } # if
 
         # Close the Session if it is opened and the download is complete
@@ -685,7 +685,7 @@ function Request-SelfSignedCertificate
                 errorMessage = $($LocalizedData.CertificateDownloadError `
                     -f $VM.Name)
             }
-            New-Exception @exceptionParameters
+            New-LabException @exceptionParameters
             return
         } # if
 
@@ -789,7 +789,7 @@ function Request-SelfSignedCertificate
                 errorMessage = $($LocalizedData.CertificateDownloadError `
                     -f $VM.Name)
             }
-            New-Exception @exceptionParameters
+            New-LabException @exceptionParameters
         }
 
         # Close the Session if it is opened and the download is complete
@@ -941,7 +941,7 @@ function GetVMManagementIPAddress {
             errorMessage = $($LocalizedData.ManagmentIPAddressError `
                 -f $ManagementSwitchName,$VM.Name)
         }
-        New-Exception @exceptionParameters
+        New-LabException @exceptionParameters
     } # if
     return $IPAddress
 } # GetVMManagementIPAddress
@@ -1027,7 +1027,7 @@ function WaitVMInitializationComplete
                 errorMessage = $($LocalizedData.InitialSetupCompleteError `
                     -f $VM.Name)
             }
-            New-Exception @exceptionParameters
+            New-LabException @exceptionParameters
             return
         }
 
@@ -1074,7 +1074,7 @@ function WaitVMInitializationComplete
                 errorMessage = $($LocalizedData.InitialSetupCompleteError `
                     -f $VM.Name)
             }
-            New-Exception @exceptionParameters
+            New-LabException @exceptionParameters
         }
 
         # Close the Session if it is opened
@@ -1119,7 +1119,7 @@ function WaitVMStarted {
             errorMessage = $($LocalizedData.VMNotRunningHeartbeatMessage `
                 -f $VM.name)
         }
-        New-Exception @exceptionParameters
+        New-LabException @exceptionParameters
     } # if
 
     # Names of IntegrationServices are not culture neutral, but have an ID
@@ -1369,7 +1369,7 @@ function UpdateVMDataDisks {
                     errorMessage = $($LocalizedData.VMDataDiskVHDConvertError `
                         -f $VM.name,$Vhd,$DataVhd.VhdType)
                 }
-                New-Exception @exceptionParameters
+                New-LabException @exceptionParameters
             }
 
             # Check the size
@@ -1395,7 +1395,7 @@ function UpdateVMDataDisks {
                         errorMessage = $($LocalizedData.VMDataDiskVHDShrinkError `
                             -f $VM.name,$Vhd,$DataVhd.Size)
                     }
-                    New-Exception @exceptionParameters
+                    New-LabException @exceptionParameters
                 } # if
             } # if
         }
@@ -1414,7 +1414,7 @@ function UpdateVMDataDisks {
                         errorMessage = $($LocalizedData.VMDataDiskSourceVHDNotFoundError `
                             -f $VM.name,$SourceVhd)
                     }
-                    New-Exception @exceptionParameters
+                    New-LabException @exceptionParameters
                 } # if
                 # Should the Source VHD be copied or moved
                 if ($DataVhd.MoveSourceVHD)
@@ -1484,7 +1484,7 @@ function UpdateVMDataDisks {
                                 errorMessage = $($LocalizedData.VMDataDiskParentVHDMissingError `
                                     -f $VM.name)
                             }
-                            New-Exception @exceptionParameters
+                            New-LabException @exceptionParameters
                         } # if
                         if (-not (Test-Path -Path $ParentVhd))
                         {
@@ -1494,7 +1494,7 @@ function UpdateVMDataDisks {
                                 errorMessage = $($LocalizedData.VMDataDiskParentVHDNotFoundError `
                                     -f $VM.name,$ParentVhd)
                             }
-                            New-Exception @exceptionParameters
+                            New-LabException @exceptionParameters
                         } # if
 
                         # Create a new Differencing VHD
@@ -1517,7 +1517,7 @@ function UpdateVMDataDisks {
                             errorMessage = $($LocalizedData.VMDataDiskUnknownTypeError `
                                 -f $VM.Name,$Vhd,$DataVhd.VhdType)
                         }
-                        New-Exception @exceptionParameters
+                        New-LabException @exceptionParameters
                     } # default
                 } # switch
             } # if
@@ -1834,7 +1834,7 @@ function CopyODJ {
                 errorMessage = $($LocalizedData.ODJCopyError `
                     -f $VM.Name,$ODJFilename)
             }
-            New-Exception @exceptionParameters
+            New-LabException @exceptionParameters
             return
         } # if
 
@@ -1891,7 +1891,7 @@ function CopyODJ {
                 errorMessage = $($LocalizedData.ODJCopyError `
                     -f $VM.Name,$ODJFilename)
             }
-            New-Exception @exceptionParameters
+            New-LabException @exceptionParameters
         } # if
 
 
