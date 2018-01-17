@@ -557,7 +557,20 @@ try
             }
         }
 
-        Describe '\Lib\Private\Utils.ps1\New-LabCredential' -Tag 'Incomplete' {
+        Describe '\Lib\Private\Utils.ps1\New-LabCredential' {
+            Context 'Username and Password provided' {
+                $testUsername = 'testUsername'
+                $testPassword = 'testPassword'
+                $testCredetial = New-Object `
+                    -TypeName System.Management.Automation.PSCredential `
+                    -ArgumentList ($testUsername, (ConvertTo-SecureString $testPassword -AsPlainText -Force))
+
+                It 'Should return the exepected credential object' {
+                    $result = New-LabCredential -Username $testUsername -Password $testPassword
+                    $result | Should -BeOfType [System.Management.Automation.PSCredential]
+                    $result.Username | Should -Be $testUsername
+                }
+            }
         }
 
         Describe '\Lib\Private\Utils.ps1\Install-LabHyperV' {

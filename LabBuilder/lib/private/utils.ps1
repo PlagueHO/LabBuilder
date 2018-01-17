@@ -167,42 +167,42 @@ function Invoke-LabDownloadAndUnzipFile
 } # Invoke-LabDownloadAndUnzipFile
 
 <#
-.SYNOPSIS
-    Downloads a resource module.
+    .SYNOPSIS
+        Downloads a resource module.
 
-.DESCRIPTION
-    It will download a specific resource module, either from PowerShell Gallery
-    or from a URL if the module does not already exist.
+    .DESCRIPTION
+        It will download a specific resource module, either from PowerShell Gallery
+        or from a URL if the module does not already exist.
 
-.PARAMETER Name
-    Contains the Name of the module to download.
+    .PARAMETER Name
+        Contains the Name of the module to download.
 
-.PARAMETER URL
-    If this parameter is specified, the resource module will be downloaded from a URL
-    rather than via PowerShell Gallery. This is a the URL to use to download a zip
-    file containing this resource module.
+    .PARAMETER URL
+        If this parameter is specified, the resource module will be downloaded from a URL
+        rather than via PowerShell Gallery. This is a the URL to use to download a zip
+        file containing this resource module.
 
-.PARAMETER Folder
-    If this resource module is downloaded using a URL, this is the folder in the zip
-    file that contains the resource and will need to be renamed to the name of the
-    resource.
+    .PARAMETER Folder
+        If this resource module is downloaded using a URL, this is the folder in the zip
+        file that contains the resource and will need to be renamed to the name of the
+        resource.
 
-.PARAMETER RequiredVersion
-    This is the required version of the Resource Module that is required.
-    If this version is not installed the a new version will be downloaded.
+    .PARAMETER RequiredVersion
+        This is the required version of the Resource Module that is required.
+        If this version is not installed the a new version will be downloaded.
 
-.PARAMETER MinimumVersion
-    This is the minimum version of the Resource Module that is required.
-    If at least this version is not installed then a new version will be downloaded.
+    .PARAMETER MinimumVersion
+        This is the minimum version of the Resource Module that is required.
+        If at least this version is not installed then a new version will be downloaded.
 
-.EXAMPLE
-    Invoke-LabDownloadResourceModule `
-        -Name xNetworking `
-        -RequiredVersion 2.7.0.0
-    Downloads the Resource Module xNetowrking version 2.7.0.0
+    .EXAMPLE
+        Invoke-LabDownloadResourceModule `
+            -Name xNetworking `
+            -RequiredVersion 2.7.0.0
+        Downloads the Resource Module xNetowrking version 2.7.0.0
 
-.OUTPUTS
-    None.
+    .OUTPUTS
+        None.
 #>
 function Invoke-LabDownloadResourceModule
 {
@@ -240,6 +240,7 @@ function Invoke-LabDownloadResourceModule
         [ScriptBlock] $Query = {
             ($_.Name -eq $Name) -and ($_.Version -eq $RequiredVersion)
         }
+
         $versionMessage = $RequiredVersion
     }
     elseif ($MinimumVersion)
@@ -247,6 +248,7 @@ function Invoke-LabDownloadResourceModule
         [ScriptBlock] $Query = {
             ($_.Name -eq $Name) -and ($_.Version -ge $MinimumVersion)
         }
+
         $versionMessage = "min ${MinimumVersion}"
     }
     else
@@ -254,6 +256,7 @@ function Invoke-LabDownloadResourceModule
         [ScriptBlock] $Query = {
             $_.Name -eq $Name
         }
+
         $versionMessage = 'any version'
     }
 
@@ -367,10 +370,11 @@ function New-LabCredential()
         [System.String] $Password
     )
 
-    [PSCredential] $Credential = New-Object `
+    $credential = New-Object `
         -TypeName System.Management.Automation.PSCredential `
         -ArgumentList ($Username, (ConvertTo-SecureString $Password -AsPlainText -Force))
-    return $Credential
+
+    return $credential
 } # New-LabCredential
 
 <#
