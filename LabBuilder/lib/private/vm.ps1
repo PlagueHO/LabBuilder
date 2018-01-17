@@ -151,13 +151,13 @@ Add-Content ``
         [System.String] $SetupComplete = $VM.SetupComplete
         if (-not (Test-Path -Path $SetupComplete))
         {
-            $ExceptionParameters = @{
+            $exceptionParameters = @{
                 errorId = 'SetupCompleteScriptMissingError'
                 errorCategory = 'InvalidArgument'
                 errorMessage = $($LocalizedData.SetupCompleteScriptMissingError `
                     -f $VM.name,$SetupComplete)
             }
-            New-Exception @ExceptionParameters
+            New-Exception @exceptionParameters
         }
         [System.String] $Extension = [System.IO.Path]::GetExtension($SetupComplete)
         Switch ($Extension.ToLower())
@@ -538,13 +538,13 @@ function Recieve-SelfSignedCertificate
         # Failed to connnect to the VM
         if (-not $Session)
         {
-            $ExceptionParameters = @{
+            $exceptionParameters = @{
                 errorId = 'CertificateDownloadError'
                 errorCategory = 'OperationTimeout'
                 errorMessage = $($LocalizedData.CertificateDownloadError `
                     -f $VM.Name)
             }
-            New-Exception @ExceptionParameters
+            New-Exception @exceptionParameters
             return
         } # if
 
@@ -584,13 +584,13 @@ function Recieve-SelfSignedCertificate
                 -VM $VM `
                 -ErrorAction Continue
 
-            $ExceptionParameters = @{
+            $exceptionParameters = @{
                 errorId = 'CertificateDownloadError'
                 errorCategory = 'OperationTimeout'
                 errorMessage = $($LocalizedData.CertificateDownloadError `
                     -f $VM.Name)
             }
-            New-Exception @ExceptionParameters
+            New-Exception @exceptionParameters
         } # if
 
         # Close the Session if it is opened and the download is complete
@@ -679,13 +679,13 @@ function Request-SelfSignedCertificate
         # Failed to connnect to the VM
         if (-not $Session)
         {
-            $ExceptionParameters = @{
+            $exceptionParameters = @{
                 errorId = 'CertificateDownloadError'
                 errorCategory = 'OperationTimeout'
                 errorMessage = $($LocalizedData.CertificateDownloadError `
                     -f $VM.Name)
             }
-            New-Exception @ExceptionParameters
+            New-Exception @exceptionParameters
             return
         } # if
 
@@ -783,13 +783,13 @@ function Request-SelfSignedCertificate
                 Remove-PSSession -Session $Session
             }
 
-            $ExceptionParameters = @{
+            $exceptionParameters = @{
                 errorId = 'CertificateDownloadError'
                 errorCategory = 'OperationTimeout'
                 errorMessage = $($LocalizedData.CertificateDownloadError `
                     -f $VM.Name)
             }
-            New-Exception @ExceptionParameters
+            New-Exception @exceptionParameters
         }
 
         # Close the Session if it is opened and the download is complete
@@ -935,13 +935,13 @@ function GetVMManagementIPAddress {
         Where({$_.SwitchName -eq $ManagementSwitchName}).`
         IPAddresses.Where({$_.Contains('.')})
     if (-not $IPAddress) {
-        $ExceptionParameters = @{
+        $exceptionParameters = @{
             errorId = 'ManagmentIPAddressError'
             errorCategory = 'InvalidArgument'
             errorMessage = $($LocalizedData.ManagmentIPAddressError `
                 -f $ManagementSwitchName,$VM.Name)
         }
-        New-Exception @ExceptionParameters
+        New-Exception @exceptionParameters
     } # if
     return $IPAddress
 } # GetVMManagementIPAddress
@@ -1021,13 +1021,13 @@ function WaitVMInitializationComplete
         # Failed to connnect to the VM
         if (! $Session)
         {
-            $ExceptionParameters = @{
+            $exceptionParameters = @{
                 errorId = 'InitialSetupCompleteError'
                 errorCategory = 'OperationTimeout'
                 errorMessage = $($LocalizedData.InitialSetupCompleteError `
                     -f $VM.Name)
             }
-            New-Exception @ExceptionParameters
+            New-Exception @exceptionParameters
             return
         }
 
@@ -1068,13 +1068,13 @@ function WaitVMInitializationComplete
                 -VM $VM `
                 -ErrorAction Continue
 
-            $ExceptionParameters = @{
+            $exceptionParameters = @{
                 errorId = 'InitialSetupCompleteError'
                 errorCategory = 'OperationTimeout'
                 errorMessage = $($LocalizedData.InitialSetupCompleteError `
                     -f $VM.Name)
             }
-            New-Exception @ExceptionParameters
+            New-Exception @exceptionParameters
         }
 
         # Close the Session if it is opened
@@ -1113,13 +1113,13 @@ function WaitVMStarted {
 
     # If the VM is not running then throw an exception
     if ((Get-VM -VMName $VM.Name).State -ne 'Running') {
-        $ExceptionParameters = @{
+        $exceptionParameters = @{
             errorId = 'VMNotRunningHeartbeatMessage'
             errorCategory = 'InvalidArgument'
             errorMessage = $($LocalizedData.VMNotRunningHeartbeatMessage `
                 -f $VM.name)
         }
-        New-Exception @ExceptionParameters
+        New-Exception @exceptionParameters
     } # if
 
     # Names of IntegrationServices are not culture neutral, but have an ID
@@ -1363,13 +1363,13 @@ function UpdateVMDataDisks {
                 -and ($ExistingVhd.VhdType.ToString() -ne $DataVhd.VhdType.ToString()))
             {
                 # The type of disk can't be changed.
-                $ExceptionParameters = @{
+                $exceptionParameters = @{
                     errorId = 'VMDataDiskVHDConvertError'
                     errorCategory = 'InvalidArgument'
                     errorMessage = $($LocalizedData.VMDataDiskVHDConvertError `
                         -f $VM.name,$Vhd,$DataVhd.VhdType)
                 }
-                New-Exception @ExceptionParameters
+                New-Exception @exceptionParameters
             }
 
             # Check the size
@@ -1389,13 +1389,13 @@ function UpdateVMDataDisks {
                 {
                     # The disk size can't be reduced.
                     # This could be revisited later.
-                    $ExceptionParameters = @{
+                    $exceptionParameters = @{
                         errorId = 'VMDataDiskVHDShrinkError'
                         errorCategory = 'InvalidArgument'
                         errorMessage = $($LocalizedData.VMDataDiskVHDShrinkError `
                             -f $VM.name,$Vhd,$DataVhd.Size)
                     }
-                    New-Exception @ExceptionParameters
+                    New-Exception @exceptionParameters
                 } # if
             } # if
         }
@@ -1408,13 +1408,13 @@ function UpdateVMDataDisks {
                 # A source VHD was specified to create the new VHD using
                 if (! (Test-Path -Path $SourceVhd))
                 {
-                    $ExceptionParameters = @{
+                    $exceptionParameters = @{
                         errorId = 'VMDataDiskSourceVHDNotFoundError'
                         errorCategory = 'InvalidArgument'
                         errorMessage = $($LocalizedData.VMDataDiskSourceVHDNotFoundError `
                             -f $VM.name,$SourceVhd)
                     }
-                    New-Exception @ExceptionParameters
+                    New-Exception @exceptionParameters
                 } # if
                 # Should the Source VHD be copied or moved
                 if ($DataVhd.MoveSourceVHD)
@@ -1478,23 +1478,23 @@ function UpdateVMDataDisks {
                         $ParentVhd = $DataVhd.ParentVhd
                         if (-not $ParentVhd)
                         {
-                            $ExceptionParameters = @{
+                            $exceptionParameters = @{
                                 errorId = 'VMDataDiskParentVHDMissingError'
                                 errorCategory = 'InvalidArgument'
                                 errorMessage = $($LocalizedData.VMDataDiskParentVHDMissingError `
                                     -f $VM.name)
                             }
-                            New-Exception @ExceptionParameters
+                            New-Exception @exceptionParameters
                         } # if
                         if (-not (Test-Path -Path $ParentVhd))
                         {
-                            $ExceptionParameters = @{
+                            $exceptionParameters = @{
                                 errorId = 'VMDataDiskParentVHDNotFoundError'
                                 errorCategory = 'InvalidArgument'
                                 errorMessage = $($LocalizedData.VMDataDiskParentVHDNotFoundError `
                                     -f $VM.name,$ParentVhd)
                             }
-                            New-Exception @ExceptionParameters
+                            New-Exception @exceptionParameters
                         } # if
 
                         # Create a new Differencing VHD
@@ -1511,13 +1511,13 @@ function UpdateVMDataDisks {
                     } # 'differencing'
                     default
                     {
-                        $ExceptionParameters = @{
+                        $exceptionParameters = @{
                             errorId = 'VMDataDiskUnknownTypeError'
                             errorCategory = 'InvalidArgument'
                             errorMessage = $($LocalizedData.VMDataDiskUnknownTypeError `
                                 -f $VM.Name,$Vhd,$DataVhd.VhdType)
                         }
-                        New-Exception @ExceptionParameters
+                        New-Exception @exceptionParameters
                     } # default
                 } # switch
             } # if
@@ -1828,13 +1828,13 @@ function CopyODJ {
         # Failed to connnect to the VM
         if (-not $Session)
         {
-            $ExceptionParameters = @{
+            $exceptionParameters = @{
                 errorId = 'ODJCopyError'
                 errorCategory = 'OperationTimeout'
                 errorMessage = $($LocalizedData.ODJCopyError `
                     -f $VM.Name,$ODJFilename)
             }
-            New-Exception @ExceptionParameters
+            New-Exception @exceptionParameters
             return
         } # if
 
@@ -1885,13 +1885,13 @@ function CopyODJ {
                 -VM $VM `
                 -ErrorAction Continue
 
-            $ExceptionParameters = @{
+            $exceptionParameters = @{
                 errorId = 'ODJCopyError'
                 errorCategory = 'OperationTimeout'
                 errorMessage = $($LocalizedData.ODJCopyError `
                     -f $VM.Name,$ODJFilename)
             }
-            New-Exception @ExceptionParameters
+            New-Exception @exceptionParameters
         } # if
 
 

@@ -17,17 +17,18 @@ Configuration RODC_SECONDARY
 {
     Import-DscResource -ModuleName 'PSDesiredStateConfiguration'
     Import-DscResource -ModuleName xActiveDirectory
+
     Node $AllNodes.NodeName {
         # Assemble the Local Admin Credentials
-        If ($Node.LocalAdminPassword) {
+        if ($Node.LocalAdminPassword) {
             [PSCredential]$LocalAdminCredential = New-Object System.Management.Automation.PSCredential ("Administrator", (ConvertTo-SecureString $Node.LocalAdminPassword -AsPlainText -Force))
         }
-        If ($Node.DomainAdminPassword) {
+        if ($Node.DomainAdminPassword) {
             [PSCredential]$DomainAdminCredential = New-Object System.Management.Automation.PSCredential ("$($Node.DomainName)\Administrator", (ConvertTo-SecureString $Node.DomainAdminPassword -AsPlainText -Force))
         }
 
         WindowsFeature BackupInstall
-        { 
+        {
             Ensure = "Present"
             Name   = "Windows-Server-Backup"
         }
@@ -76,7 +77,7 @@ Configuration RODC_SECONDARY
         {
             DomainName = $Node.DomainName
             DomainAdministratorCredential = $DomainAdminCredential
-            SafemodeAdministratorPassword = $LocalAdminCredential 
+            SafemodeAdministratorPassword = $LocalAdminCredential
             DependsOn = "[xWaitForADDomain]DscDomainWait"
         }
 #>

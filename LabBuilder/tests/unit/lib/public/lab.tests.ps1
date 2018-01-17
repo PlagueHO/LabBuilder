@@ -94,13 +94,13 @@ try
             }
             Context 'Path is provided but file does not exist' {
                 It 'Throws ConfigurationFileNotFoundError Exception' {
-                    $ExceptionParameters = @{
+                    $exceptionParameters = @{
                         errorId = 'ConfigurationFileNotFoundError'
                         errorCategory = 'InvalidArgument'
                         errorMessage = $($LocalizedData.ConfigurationFileNotFoundError `
                             -f 'c:\doesntexist.xml')
                     }
-                    $Exception = Get-Exception @ExceptionParameters
+                    $Exception = Get-Exception @exceptionParameters
 
                     Mock Test-Path -MockWith { $false }
 
@@ -109,13 +109,13 @@ try
             }
             Context 'Path is provided and file exists but is empty' {
                 It 'Throws ConfigurationFileEmptyError Exception' {
-                    $ExceptionParameters = @{
+                    $exceptionParameters = @{
                         errorId = 'ConfigurationFileEmptyError'
                         errorCategory = 'InvalidArgument'
                         errorMessage = $($LocalizedData.ConfigurationFileEmptyError `
                             -f 'c:\isempty.xml')
                     }
-                    $Exception = Get-Exception @ExceptionParameters
+                    $Exception = Get-Exception @exceptionParameters
 
                     Mock Test-Path -MockWith { $true }
                     Mock Get-Content -MockWith {''}
@@ -126,13 +126,13 @@ try
             $Script:CurrentBuild = 10000
             Context 'Path is provided and file exists but host build version requirement not met' {
                 It 'Throws RequiredBuildNotMetError Exception' {
-                    $ExceptionParameters = @{
+                    $exceptionParameters = @{
                         errorId = 'RequiredBuildNotMetError'
                         errorCategory = 'InvalidArgument'
                         errorMessage = $($LocalizedData.RequiredBuildNotMetError `
                             -f $Script:CurrentBuild,'10560')
                     }
-                    $Exception = Get-Exception @ExceptionParameters
+                    $Exception = Get-Exception @exceptionParameters
                     { Get-Lab -ConfigPath $Global:TestConfigOKPath } | Should -Throw $Exception
                 }
             }

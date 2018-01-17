@@ -70,12 +70,12 @@ try
                 It 'Throws a ResourceModuleNameIsEmptyError Exception' {
                     $Lab = Get-Lab -ConfigPath $Global:TestConfigOKPath
                     $Lab.labbuilderconfig.resources.module[0].RemoveAttribute('name')
-                    $ExceptionParameters = @{
+                    $exceptionParameters = @{
                         errorId = 'ResourceModuleNameIsEmptyError'
                         errorCategory = 'InvalidArgument'
                         errorMessage = $($LocalizedData.ResourceModuleNameIsEmptyError)
                     }
-                    $Exception = Get-Exception @ExceptionParameters
+                    $Exception = Get-Exception @exceptionParameters
 
                     { Get-LabResourceModule -Lab $Lab } | Should -Throw $Exception
                 }
@@ -118,12 +118,12 @@ try
                 It 'Throws a ResourceMSUNameIsEmptyError Exception' {
                     $Lab = Get-Lab -ConfigPath $Global:TestConfigOKPath
                     $Lab.labbuilderconfig.resources.msu[0].RemoveAttribute('name')
-                    $ExceptionParameters = @{
+                    $exceptionParameters = @{
                         errorId = 'ResourceMSUNameIsEmptyError'
                         errorCategory = 'InvalidArgument'
                         errorMessage = $($LocalizedData.ResourceMSUNameIsEmptyError)
                     }
-                    $Exception = Get-Exception @ExceptionParameters
+                    $Exception = Get-Exception @exceptionParameters
 
                     { Get-LabResourceMSU -Lab $Lab } | Should -Throw $Exception
                 }
@@ -167,12 +167,12 @@ try
                 It 'Throws a ResourceISONameIsEmptyError Exception' {
                     $Lab = Get-Lab -ConfigPath $Global:TestConfigOKPath
                     $Lab.labbuilderconfig.resources.iso[0].RemoveAttribute('name')
-                    $ExceptionParameters = @{
+                    $exceptionParameters = @{
                         errorId = 'ResourceISONameIsEmptyError'
                         errorCategory = 'InvalidArgument'
                         errorMessage = $($LocalizedData.ResourceISONameIsEmptyError)
                     }
-                    $Exception = Get-Exception @ExceptionParameters
+                    $Exception = Get-Exception @exceptionParameters
 
                     { Get-LabResourceISO -Lab $Lab } | Should -Throw $Exception
                 }
@@ -181,13 +181,13 @@ try
                 It 'Throws a ResourceISOPathIsEmptyError Exception' {
                     $Lab = Get-Lab -ConfigPath $Global:TestConfigOKPath
                     $Lab.labbuilderconfig.resources.iso[0].path=''
-                    $ExceptionParameters = @{
+                    $exceptionParameters = @{
                         errorId = 'ResourceISOPathIsEmptyError'
                         errorCategory = 'InvalidArgument'
                         errorMessage = $($LocalizedData.ResourceISOPathIsEmptyError `
                             -f $Lab.labbuilderconfig.resources.iso[0].name)
                     }
-                    $Exception = Get-Exception @ExceptionParameters
+                    $Exception = Get-Exception @exceptionParameters
 
                     { Get-LabResourceISO -Lab $Lab } | Should -Throw $Exception
                 }

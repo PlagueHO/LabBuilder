@@ -8,7 +8,7 @@ DSC Template Configuration File For use by LabBuilder
     This is for use on Windows Server 2012 R2 only.
 .Notes
     NPAS requires a full server install, so ensure that this OS is not a Core version.
-.Parameters:          
+.Parameters:
     DomainName = "LABBUILDER.COM"
     DomainAdminPassword = "P@ssword!1"
     DCName = 'SA-DC1'
@@ -62,12 +62,15 @@ Configuration MEMBER_DHCPNPAS
     Import-DscResource -ModuleName 'PSDesiredStateConfiguration'
     Import-DscResource -ModuleName xComputerManagement
     Import-DscResource -ModuleName xDHCPServer
+
     Node $AllNodes.NodeName {
         # Assemble the Local Admin Credentials
-        If ($Node.LocalAdminPassword) {
+        if ($Node.LocalAdminPassword)
+        {
             [PSCredential]$LocalAdminCredential = New-Object System.Management.Automation.PSCredential ("Administrator", (ConvertTo-SecureString $Node.LocalAdminPassword -AsPlainText -Force))
         }
-        If ($Node.DomainAdminPassword) {
+        if ($Node.DomainAdminPassword)
+        {
             [PSCredential]$DomainAdminCredential = New-Object System.Management.Automation.PSCredential ("$($Node.DomainName)\Administrator", (ConvertTo-SecureString $Node.DomainAdminPassword -AsPlainText -Force))
         }
 
@@ -89,7 +92,7 @@ Configuration MEMBER_DHCPNPAS
             WindowsFeature RSAT-ManagementTools
             {
                 Ensure    = "Present"
-                Name      = "RSAT-DHCP","RSAT-NPAS"
+                Name      = "RSAT-DHCP", "RSAT-NPAS"
                 DependsOn = "[WindowsFeature]DHCPInstall"
             }
         }
@@ -102,33 +105,34 @@ Configuration MEMBER_DHCPNPAS
             RetryCount       = 60
         }
 
-        xComputer JoinDomain 
-        { 
+        xComputer JoinDomain
+        {
             Name       = $Node.NodeName
             DomainName = $Node.DomainName
-            Credential = $DomainAdminCredential 
-            DependsOn  = "[WaitForAll]DC" 
+            Credential = $DomainAdminCredential
+            DependsOn  = "[WaitForAll]DC"
         }
 
         # DHCP Server Settings
         Script DHCPAuthorize
         {
             PSDSCRunAsCredential = $DomainAdminCredential
-            SetScript = {
+            SetScript            = {
                 Add-DHCPServerInDC
             }
-            GetScript = {
+            GetScript            = {
                 Return @{
                     'Authorized' = (@(Get-DHCPServerInDC | Where-Object { $_.IPAddress -In (Get-NetIPAddress).IPAddress }).Count -gt 0);
                 }
             }
-            TestScript = { 
+            TestScript           = {
                 Return (-not (@(Get-DHCPServerInDC | Where-Object { $_.IPAddress -In (Get-NetIPAddress).IPAddress }).Count -eq 0))
             }
-            DependsOn = '[xComputer]JoinDomain'
+            DependsOn            = '[xComputer]JoinDomain'
         }
-        [Int]$Count=0
-        Foreach ($Scope in $Node.Scopes) {
+        [Int]$Count = 0
+        Foreach ($Scope in $Node.Scopes)
+        {
             $Count++
             xDhcpServerScope "Scope$Count"
             {
@@ -142,8 +146,9 @@ Configuration MEMBER_DHCPNPAS
                 AddressFamily = $Scope.AddressFamily
             }
         }
-        [Int]$Count=0
-        Foreach ($Reservation in $Node.Reservations) {
+        [Int]$Count = 0
+        Foreach ($Reservation in $Node.Reservations)
+        {
             $Count++
             xDhcpServerReservation "Reservation$Count"
             {
@@ -155,8 +160,9 @@ Configuration MEMBER_DHCPNPAS
                 AddressFamily    = $Reservation.AddressFamily
             }
         }
-        [Int]$Count=0
-        Foreach ($ScopeOption in $Node.ScopeOptions) {
+        [Int]$Count = 0
+        Foreach ($ScopeOption in $Node.ScopeOptions)
+        {
             $Count++
             xDhcpServerOption "ScopeOption$Count"
             {

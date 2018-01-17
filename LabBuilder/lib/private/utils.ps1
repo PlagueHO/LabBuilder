@@ -19,12 +19,12 @@
         This switch will cause the exception to terminate the cmdlet.
 
     .EXAMPLE
-        $ExceptionParameters = @{
+        $exceptionParameters = @{
             errorId = 'ConnectionFailure'
             errorCategory = 'ConnectionError'
             errorMessage = 'Could not connect'
         }
-        New-Exception @ExceptionParameters
+        New-Exception @exceptionParameters
         Throw a ConnectionError exception with the message 'Could not connect'.
 
     .OUTPUTS
@@ -91,13 +91,13 @@ function DownloadAndUnzipFile()
 
     if (-not (Test-Path -Path $DestinationPath))
     {
-        $ExceptionParameters = @{
+        $exceptionParameters = @{
             errorId       = 'DownloadFolderDoesNotExistError'
             errorCategory = 'InvalidArgument'
             errorMessage  = $($LocalizedData.DownloadFolderDoesNotExistError `
                     -f $DestinationPath, $Filename)
         }
-        New-Exception @ExceptionParameters
+        New-Exception @exceptionParameters
     }
 
     $Extension = [System.IO.Path]::GetExtension($Filename)
@@ -124,13 +124,13 @@ function DownloadAndUnzipFile()
     }
     Catch
     {
-        $ExceptionParameters = @{
+        $exceptionParameters = @{
             errorId       = 'FileDownloadError'
             errorCategory = 'InvalidOperation'
             errorMessage  = $($LocalizedData.FileDownloadError `
                     -f $Filename, $URL, $_.Exception.Message)
         }
-        New-Exception @ExceptionParameters
+        New-Exception @exceptionParameters
     } # Try
 
     if ($Extension -eq '.zip')
@@ -149,13 +149,13 @@ function DownloadAndUnzipFile()
         }
         Catch
         {
-            $ExceptionParameters = @{
+            $exceptionParameters = @{
                 errorId       = 'FileExtractError'
                 errorCategory = 'InvalidArgument'
                 errorMessage  = $($LocalizedData.FileExtractError `
                         -f $Filename, $_.Exception.Message)
             }
-            New-Exception @ExceptionParameters
+            New-Exception @exceptionParameters
         }
         finally
         {
@@ -341,13 +341,13 @@ function DownloadResourceModule
             }
             catch
             {
-                $ExceptionParameters = @{
+                $exceptionParameters = @{
                     errorId       = 'ModuleNotAvailableError'
                     errorCategory = 'InvalidArgument'
                     errorMessage  = $($LocalizedData.ModuleNotAvailableError `
                             -f $Name, $VersionMessage, $_.Exception.Message)
                 }
-                New-Exception @ExceptionParameters
+                New-Exception @exceptionParameters
             }
         } # If
     } # If
@@ -361,12 +361,12 @@ function DownloadResourceModule
     If WS-Man is not enabled on this system it will be enabled.
     This is required to communicate with the managed Lab Virtual Machines.
 .EXAMPLE
-    EnableWSMan
+    Enable-LabWSMan
     Enables WS-Man on this machine.
 .OUTPUTS
     None
 #>
-function EnableWSMan
+function Enable-LabWSMan
 {
     [CmdLetBinding()]
     param (
@@ -391,15 +391,15 @@ function EnableWSMan
         # Check WS-Man was enabled
         if (-not (Get-PSProvider -PSProvider WSMan -ErrorAction SilentlyContinue))
         {
-            $ExceptionParameters = @{
+            $exceptionParameters = @{
                 errorId       = 'WSManNotEnabledError'
                 errorCategory = 'InvalidArgument'
                 errorMessage  = $($LocalizedData.WSManNotEnabledError)
             }
-            New-Exception @ExceptionParameters
+            New-Exception @exceptionParameters
         } # if
     } # if
-} # EnableWSMan
+} # Enable-LabWSMan
 
 
 <#
@@ -408,12 +408,12 @@ function EnableWSMan
 .DESCRIPTION
     If the Hyper-V features are not installed onto this system they will be installed.
 .EXAMPLE
-    InstallHyperV
+    Install-LabHyperV
     Installs the appropriate Hyper-V features if they are not currently installed.
 .OUTPUTS
     None
 #>
-function InstallHyperV
+function Install-LabHyperV
 {
     [CmdLetBinding()]
     param ()
@@ -447,7 +447,7 @@ function InstallHyperV
                 } )
         }
     }
-} # InstallHyperV
+} # Install-LabHyperV
 
 
 <#
@@ -459,12 +459,12 @@ function InstallHyperV
 .PARAMETER ConfigPath
     Contains the path to the Configuration XML file
 .EXAMPLE
-    ValidateConfigurationXMLSchema -ConfigPath c:\mylab\config.xml
+    Assert-ValidConfigurationXMLSchema -ConfigPath c:\mylab\config.xml
     Validates the XML configuration and downloads any resources required by it.
 .OUTPUTS
     None. If the XML is invalid an exception will be thrown.
 #>
-function ValidateConfigurationXMLSchema
+function Assert-ValidConfigurationXMLSchema
 {
     [CmdLetBinding()]
     param
@@ -475,10 +475,10 @@ function ValidateConfigurationXMLSchema
     )
 
     # Define these variables so they are accesible inside the event handler.
-    [int] $Script:XMLErrorCount = 0
-    [System.String] $Script:XMLFirstError = ''
-    [System.String] $Script:XMLPath = $ConfigPath
-    [System.String] $Script:ConfigurationXMLValidationMessage = $LocalizedData.ConfigurationXMLValidationMessage
+    $Script:XMLErrorCount = 0
+    $Script:XMLFirstError = ''
+    $Script:XMLPath = $ConfigPath
+    $Script:ConfigurationXMLValidationMessage = $LocalizedData.ConfigurationXMLValidationMessage
 
     # Perform the XSD Validation
     $readerSettings = New-Object -TypeName System.Xml.XmlReaderSettings
@@ -496,7 +496,9 @@ function ValidateConfigurationXMLSchema
                     -f $Script:XMLPath, $_.Message)
             $Script:XMLErrorCount++
         })
+
     $reader = [System.Xml.XmlReader]::Create([System.String] $ConfigPath, $readerSettings)
+
     try
     {
         while ($reader.Read())
@@ -506,13 +508,13 @@ function ValidateConfigurationXMLSchema
     catch
     {
         # XML is NOT valid
-        $ExceptionParameters = @{
+        $exceptionParameters = @{
             errorId       = 'ConfigurationXMLValidationError'
             errorCategory = 'InvalidArgument'
             errorMessage  = $($LocalizedData.ConfigurationXMLValidationError `
                     -f $ConfigPath, $_.Exception.Message)
         }
-        New-Exception @ExceptionParameters
+        New-Exception @exceptionParameters
     } # catch
     finally
     {
@@ -523,15 +525,14 @@ function ValidateConfigurationXMLSchema
     if ($script:XMLErrorCount -gt 0)
     {
         # XML is NOT valid
-        $ExceptionParameters = @{
+        $exceptionParameters = @{
             errorId       = 'ConfigurationXMLValidationError'
             errorCategory = 'InvalidArgument'
-            errorMessage  = $($LocalizedData.ConfigurationXMLValidationError `
-                    -f $ConfigPath, $Script:XMLFirstError)
+            errorMessage  = $($LocalizedData.ConfigurationXMLValidationError -f $ConfigPath, $Script:XMLFirstError)
         }
-        New-Exception @ExceptionParameters
+        New-Exception @exceptionParameters
     } # if
-} # ValidateConfigurationXMLSchema
+} # Assert-ValidConfigurationXMLSchema
 
 
 <#
@@ -652,12 +653,12 @@ function Assert-ValidIpAddress
     $ip = [System.Net.IPAddress]::Any
     if (-not [System.Net.IPAddress]::TryParse($IpAddress, [ref] $ip))
     {
-        $ExceptionParameters = @{
+        $exceptionParameters = @{
             errorId       = 'IPAddressError'
             errorCategory = 'InvalidArgument'
             errorMessage  = $($LocalizedData.IPAddressError -f $IpAddress)
         }
-        New-Exception @ExceptionParameters
+        New-Exception @exceptionParameters
     }
     return $ip
 } # Assert-ValidIpAddress
@@ -716,13 +717,13 @@ function Install-LabPackageProvider
             else
             {
                 # Can't continue if the package provider is not installed.
-                $ExceptionParameters = @{
+                $exceptionParameters = @{
                     errorId       = 'PackageProviderNotInstalledError'
                     errorCategory = 'InvalidArgument'
                     errorMessage  = $($LocalizedData.PackageProviderNotInstalledError `
                             -f $requiredPackageProvider)
                 }
-                New-Exception @ExceptionParameters
+                New-Exception @exceptionParameters
             } # if
         } # if
     } # foreach
@@ -798,13 +799,13 @@ function Register-LabPackageSource
                 else
                 {
                     # Can't continue if the package source is not trusted.
-                    $ExceptionParameters = @{
+                    $exceptionParameters = @{
                         errorId       = 'PackageSourceNotTrustedError'
                         errorCategory = 'InvalidArgument'
                         errorMessage  = $($LocalizedData.PackageSourceNotTrustedError `
                                 -f $requiredPackageSource.Name)
                     }
-                    New-Exception @ExceptionParameters
+                    New-Exception @exceptionParameters
                 } # if
             } # if
         }
@@ -829,13 +830,13 @@ function Register-LabPackageSource
             else
             {
                 # Can't continue if the package source is not registered.
-                $ExceptionParameters = @{
+                $exceptionParameters = @{
                     errorId       = 'PackageSourceNotRegisteredError'
                     errorCategory = 'InvalidArgument'
                     errorMessage  = $($LocalizedData.PackageSourceNotRegisteredError `
                             -f $requiredPackageSource.Name)
                 }
-                New-Exception @ExceptionParameters
+                New-Exception @exceptionParameters
             } # if
         } # if
     } # foreach
@@ -865,7 +866,7 @@ function Register-LabPackageSource
 
     .EXAMPLE
         Write-LabMessage -Type Verbose -Message 'Downloading file'
-        New-Exception @ExceptionParameters
+        New-Exception @exceptionParameters
         Outputs the message 'Downloading file' to the Verbose stream.
 
     .OUTPUTS

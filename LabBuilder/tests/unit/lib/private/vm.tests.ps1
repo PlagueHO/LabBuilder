@@ -293,13 +293,13 @@ try
                     VhdType =  'Dynamic'
                 } }
                 It 'Throws VMDataDiskVHDConvertError Exception' {
-                    $ExceptionParameters = @{
+                    $exceptionParameters = @{
                         errorId = 'VMDataDiskVHDConvertError'
                         errorCategory = 'InvalidArgument'
                         errorMessage = $($LocalizedData.VMDataDiskVHDConvertError `
                             -f $VMs[0].Name,$VMs[0].DataVHDs.Vhd,$VMs[0].DataVHDs.VhdType)
                     }
-                    $Exception = Get-Exception @ExceptionParameters
+                    $Exception = Get-Exception @exceptionParameters
                     { UpdateVMDataDisks -Lab $Lab -VM $VMs[0] } | Should -Throw
                 }
                 It 'Calls Mocked commands' {
@@ -326,13 +326,13 @@ try
                     Size = 20GB
                 } }
                 It 'Throws VMDataDiskVHDShrinkError Exception' {
-                    $ExceptionParameters = @{
+                    $exceptionParameters = @{
                         errorId = 'VMDataDiskVHDShrinkError'
                         errorCategory = 'InvalidArgument'
                         errorMessage = $($LocalizedData.VMDataDiskVHDShrinkError `
                             -f $VMs[0].Name,$VMs[0].DataVHDs[0].Vhd,$VMs[0].DataVHDs[0].Size)
                     }
-                    $Exception = Get-Exception @ExceptionParameters
+                    $Exception = Get-Exception @exceptionParameters
                     { UpdateVMDataDisks -Lab $Lab -VM $VMs[0] } | Should -Throw $Exception
                 }
                 It 'Calls Mocked commands' {
@@ -381,13 +381,13 @@ try
                 $DataVHD.SourceVhd = 'DoesNotExist.Vhdx'
                 $VMs[0].DataVHDs = @( $DataVHD )
                 It 'Throws VMDataDiskSourceVHDNotFoundError Exception' {
-                    $ExceptionParameters = @{
+                    $exceptionParameters = @{
                         errorId = 'VMDataDiskSourceVHDNotFoundError'
                         errorCategory = 'InvalidArgument'
                         errorMessage = $($LocalizedData.VMDataDiskSourceVHDNotFoundError `
                             -f $VMs[0].Name,$VMs[0].DataVHDs[0].SourceVhd)
                     }
-                    $Exception = Get-Exception @ExceptionParameters
+                    $Exception = Get-Exception @exceptionParameters
                     { UpdateVMDataDisks -Lab $Lab -VM $VMs[0] } | Should -Throw $Exception
                 }
                 It 'Calls Mocked commands' {
@@ -570,13 +570,13 @@ try
                 $DataVHD.Size = 10GB
                 $VMs[0].DataVHDs = @( $DataVHD )
                 It 'Throws VMDataDiskParentVHDMissingError Exception' {
-                    $ExceptionParameters = @{
+                    $exceptionParameters = @{
                         errorId = 'VMDataDiskParentVHDMissingError'
                         errorCategory = 'InvalidArgument'
                         errorMessage = $($LocalizedData.VMDataDiskParentVHDMissingError `
                             -f $VMs[0].Name)
                     }
-                    $Exception = Get-Exception @ExceptionParameters
+                    $Exception = Get-Exception @exceptionParameters
                     { UpdateVMDataDisks -Lab $Lab -VM $VMs[0] } | Should -Throw $Exception
                 }
                 It 'Calls Mocked commands' {
@@ -600,13 +600,13 @@ try
                 $DataVHD.ParentVHD = 'DoesNotExist.vhdx'
                 $VMs[0].DataVHDs = @( $DataVHD )
                 It 'Throws VMDataDiskParentVHDNotFoundError Exception' {
-                    $ExceptionParameters = @{
+                    $exceptionParameters = @{
                         errorId = 'VMDataDiskParentVHDNotFoundError'
                         errorCategory = 'InvalidArgument'
                         errorMessage = $($LocalizedData.VMDataDiskParentVHDNotFoundError `
                             -f $VMs[0].Name,$VMs[0].DataVHDs[0].ParentVhd)
                     }
-                    $Exception = Get-Exception @ExceptionParameters
+                    $Exception = Get-Exception @exceptionParameters
                     { UpdateVMDataDisks -Lab $Lab -VM $VMs[0] } | Should -Throw $Exception
                 }
                 It 'Calls Mocked commands' {

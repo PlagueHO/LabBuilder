@@ -186,12 +186,12 @@ function Set-ModulesInDSCConfig
 
                 if (-not $moduleMatch)
                 {
-                    $ExceptionParameters = @{
+                    $exceptionParameters = @{
                         errorId       = 'DSCConfiguartionMissingError'
                         errorCategory = 'InvalidArgument'
                         errorMessage  = $($LocalizedData.DSCConfiguartionMissingError)
                     }
-                    New-Exception @ExceptionParameters
+                    New-Exception @exceptionParameters
                 }
             } # if
 
@@ -334,24 +334,24 @@ function CreateDSCMOFFiles
                 }
                 catch
                 {
-                    $ExceptionParameters = @{
+                    $exceptionParameters = @{
                         errorId       = 'DSCModuleDownloadError'
                         errorCategory = 'InvalidArgument'
                         errorMessage  = $($LocalizedData.DSCModuleDownloadError `
                                 -f $VM.DSC.ConfigFile, $VM.Name, $ModuleName)
                     }
-                    New-Exception @ExceptionParameters
+                    New-Exception @exceptionParameters
                 }
             }
             else
             {
-                $ExceptionParameters = @{
+                $exceptionParameters = @{
                     errorId       = 'DSCModuleDownloadError'
                     errorCategory = 'InvalidArgument'
                     errorMessage  = $($LocalizedData.DSCModuleDownloadError `
                             -f $VM.DSC.ConfigFile, $VM.Name, $ModuleName)
                 }
-                New-Exception @ExceptionParameters
+                New-Exception @exceptionParameters
             }
             $DSCModule.ModuleVersion = $NewModule.Version
         } # if
@@ -378,13 +378,13 @@ function CreateDSCMOFFiles
 
         if (-not (Test-Path -Path $ModulePath))
         {
-            $ExceptionParameters = @{
+            $exceptionParameters = @{
                 errorId       = 'DSCModuleNotFoundError'
                 errorCategory = 'InvalidArgument'
                 errorMessage  = $($LocalizedData.DSCModuleNotFoundError `
                         -f $VM.DSC.ConfigFile, $VM.Name, $ModuleName)
             }
-            New-Exception @ExceptionParameters
+            New-Exception @exceptionParameters
         }
 
         $DestinationPath = Join-Path -Path $VMLabBuilderFiles -ChildPath 'DSC Modules\'
@@ -408,13 +408,13 @@ function CreateDSCMOFFiles
         # Recreate the certificate if it the source is the Guest
         if (-not (Request-SelfSignedCertificate -Lab $Lab -VM $VM))
         {
-            $ExceptionParameters = @{
+            $exceptionParameters = @{
                 errorId       = 'CertificateCreateError'
                 errorCategory = 'InvalidArgument'
                 errorMessage  = $($LocalizedData.CertificateCreateError `
                         -f $VM.Name)
             }
-            New-Exception @ExceptionParameters
+            New-Exception @exceptionParameters
         }
 
         # Remove any old self-signed certifcates for this VM
@@ -448,13 +448,13 @@ function CreateDSCMOFFiles
         -Thumbprint $CertificateThumbprint
     if (-not (Test-Path -Path $DSCMOFMetaFile))
     {
-        $ExceptionParameters = @{
+        $exceptionParameters = @{
             errorId       = 'DSCConfigMetaMOFCreateError'
             errorCategory = 'InvalidArgument'
             errorMessage  = $($LocalizedData.DSCConfigMetaMOFCreateError `
                     -f $VM.Name)
         }
-        New-Exception @ExceptionParameters
+        New-Exception @exceptionParameters
     } # If
 
     # A DSC Config File was provided so create a MOF File out of it.
@@ -493,13 +493,13 @@ function CreateDSCMOFFiles
         }
         Else
         {
-            $ExceptionParameters = @{
+            $exceptionParameters = @{
                 errorId       = 'DSCConfigMoreThanOneNodeError'
                 errorCategory = 'InvalidArgument'
                 errorMessage  = $($LocalizedData.DSCConfigMoreThanOneNodeError `
                         -f $VM.DSC.ConfigFile, $VM.Name)
             }
-            New-Exception @ExceptionParameters
+            New-Exception @exceptionParameters
         } # If
     } # If
 
@@ -547,13 +547,13 @@ function CreateDSCMOFFiles
     $null = & "$DSCConfigName" -OutputPath $($ENV:Temp) -ConfigurationData $ConfigFile
     if (-not (Test-Path -Path $DSCMOFFile))
     {
-        $ExceptionParameters = @{
+        $exceptionParameters = @{
             errorId       = 'DSCConfigMOFCreateError'
             errorCategory = 'InvalidArgument'
             errorMessage  = $($LocalizedData.DSCConfigMOFCreateError `
                     -f $VM.DSC.ConfigFile, $VM.Name)
         }
-        New-Exception @ExceptionParameters
+        New-Exception @exceptionParameters
     } # If
 
     # Remove the VM Self-Signed Certificate from the Local Machine Store
@@ -654,24 +654,24 @@ function SetDSCStartFile
         $NetAdapter = Get-VMNetworkAdapter -VMName $($VM.Name) -Name $Adapter
         if (-not $NetAdapter)
         {
-            $ExceptionParameters = @{
+            $exceptionParameters = @{
                 errorId       = 'NetworkAdapterNotFoundError'
                 errorCategory = 'InvalidArgument'
                 errorMessage  = $($LocalizedData.NetworkAdapterNotFoundError `
                         -f $Adapter, $VM.Name)
             }
-            New-Exception @ExceptionParameters
+            New-Exception @exceptionParameters
         } # If
         $MacAddress = $NetAdapter.MacAddress
         if (-not $MacAddress)
         {
-            $ExceptionParameters = @{
+            $exceptionParameters = @{
                 errorId       = 'NetworkAdapterBlankMacError'
                 errorCategory = 'InvalidArgument'
                 errorMessage  = $($LocalizedData.NetworkAdapterBlankMacError `
                         -f $Adapter, $VM.Name)
             }
-            New-Exception @ExceptionParameters
+            New-Exception @exceptionParameters
         } # If
         $DSCStartPs += @"
 Get-NetAdapter ``
@@ -849,13 +849,13 @@ function StartDSC
         # Failed to connnect to the VM
         if (-not $Session)
         {
-            $ExceptionParameters = @{
+            $exceptionParameters = @{
                 errorId       = 'DSCInitializationError'
                 errorCategory = 'OperationTimeout'
                 errorMessage  = $($LocalizedData.DSCInitializationError `
                         -f $VM.Name)
             }
-            New-Exception @ExceptionParameters
+            New-Exception @exceptionParameters
             return
         }
 
@@ -924,13 +924,13 @@ function StartDSC
                 -VM $VM `
                 -ErrorAction Continue
 
-            $ExceptionParameters = @{
+            $exceptionParameters = @{
                 errorId       = 'DSCInitializationError'
                 errorCategory = 'OperationTimeout'
                 errorMessage  = $($LocalizedData.DSCInitializationError `
                         -f $VM.Name)
             }
-            New-Exception @ExceptionParameters
+            New-Exception @exceptionParameters
         } # if
 
         # Upload any required modules to the VM
@@ -992,13 +992,13 @@ function StartDSC
                 -VM $VM `
                 -ErrorAction Continue
 
-            $ExceptionParameters = @{
+            $exceptionParameters = @{
                 errorId       = 'DSCInitializationError'
                 errorCategory = 'OperationTimeout'
                 errorMessage  = $($LocalizedData.DSCInitializationError `
                         -f $VM.Name)
             }
-            New-Exception @ExceptionParameters
+            New-Exception @exceptionParameters
         } # if
 
         # Finally, Start DSC up!

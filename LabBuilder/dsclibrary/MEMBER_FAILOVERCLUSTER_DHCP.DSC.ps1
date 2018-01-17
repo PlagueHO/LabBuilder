@@ -63,95 +63,98 @@ Configuration MEMBER_FAILOVERCLUSTER_FS
     Import-DscResource -ModuleName xComputerManagement
     Import-DscResource -ModuleName xPSDesiredStateConfiguration
     Import-DscResource -ModuleName xDHCPServer
+
     Node $AllNodes.NodeName {
         # Assemble the Local Admin Credentials
-        If ($Node.LocalAdminPassword) {
+        if ($Node.LocalAdminPassword)
+        {
             [PSCredential]$LocalAdminCredential = New-Object System.Management.Automation.PSCredential ("Administrator", (ConvertTo-SecureString $Node.LocalAdminPassword -AsPlainText -Force))
         }
-        If ($Node.DomainAdminPassword) {
+        if ($Node.DomainAdminPassword)
+        {
             [PSCredential]$DomainAdminCredential = New-Object System.Management.Automation.PSCredential ("$($Node.DomainName)\Administrator", (ConvertTo-SecureString $Node.DomainAdminPassword -AsPlainText -Force))
         }
 
         WindowsFeature FailoverClusteringInstall
         {
-            Ensure = "Present" 
-            Name = "Failover-Clustering" 
+            Ensure = "Present"
+            Name   = "Failover-Clustering"
         }
 
         WindowsFeature FailoverClusteringPSInstall
         {
-            Ensure = "Present" 
-            Name = "RSAT-Clustering-PowerShell" 
-            DependsOn = "[WindowsFeature]FailoverClusteringInstall" 
+            Ensure    = "Present"
+            Name      = "RSAT-Clustering-PowerShell"
+            DependsOn = "[WindowsFeature]FailoverClusteringInstall"
         }
 
-        WindowsFeature DHCPInstall 
+        WindowsFeature DHCPInstall
         {
-            Ensure = "Present" 
-            Name = "DHCP" 
+            Ensure    = "Present"
+            Name      = "DHCP"
             DependsOn = "[WindowsFeature]FailoverClusteringPSInstall"
         }
 
         # Wait for the Domain to be available so we can join it.
         WaitForAll DC
         {
-        ResourceName      = '[xADDomain]PrimaryDC'
-        NodeName          = $Node.DCname
-        RetryIntervalSec  = 15
-        RetryCount        = 60
+            ResourceName     = '[xADDomain]PrimaryDC'
+            NodeName         = $Node.DCname
+            RetryIntervalSec = 15
+            RetryCount       = 60
         }
-        
+
         # Join this Server to the Domain so that it can be an Enterprise CA.
-        xComputer JoinDomain 
-        { 
-            Name          = $Node.NodeName
-            DomainName    = $Node.DomainName
-            Credential    = $DomainAdminCredential 
-            DependsOn = "[WaitForAll]DC" 
+        xComputer JoinDomain
+        {
+            Name       = $Node.NodeName
+            DomainName = $Node.DomainName
+            Credential = $DomainAdminCredential
+            DependsOn  = "[WaitForAll]DC"
         }
 
         if ($Node.ServerTargetName)
         {
             # Ensure the iSCSI Initiator service is running
-            Service iSCSIService 
-            { 
-                Name = 'MSiSCSI'
+            Service iSCSIService
+            {
+                Name        = 'MSiSCSI'
                 StartupType = 'Automatic'
-                State = 'Running'
+                State       = 'Running'
             }
 
             # Wait for the iSCSI Server Target to become available
             WaitForAny WaitForiSCSIServerTarget
             {
-                ResourceName = "[ciSCSIServerTarget]ClusterServerTarget"
-                NodeName = $Node.ServerName
+                ResourceName     = "[ISCSIServerTarget]ClusterServerTarget"
+                NodeName         = $Node.ServerName
                 RetryIntervalSec = 30
-                RetryCount = 30
-                DependsOn = "[Service]iSCSIService"
+                RetryCount       = 30
+                DependsOn        = "[Service]iSCSIService"
             }
 
             # Connect the Initiator
-            ciSCSIInitiator iSCSIInitiator
+            ISCSIInitiator iSCSIInitiator
             {
-                Ensure = 'Present'
-                NodeAddress = "iqn.1991-05.com.microsoft:$($Node.ServerTargetName)"
-                TargetPortalAddress = $Node.TargetPortalAddress
+                Ensure                 = 'Present'
+                NodeAddress            = "iqn.1991-05.com.microsoft:$($Node.ServerTargetName)"
+                TargetPortalAddress    = $Node.TargetPortalAddress
                 InitiatorPortalAddress = $Node.InitiatorPortalAddress
-                IsPersistent = $true 
-                DependsOn = "[WaitForAny]WaitForiSCSIServerTarget" 
-            } # End of ciSCSITarget Resource
+                IsPersistent           = $true
+                DependsOn              = "[WaitForAny]WaitForiSCSIServerTarget"
+            } # End of ISCSITarget Resource
 
             # Enable iSCSI FireWall rules so that the Initiator can be added to iSNS
             xFirewall iSCSIFirewallIn
             {
-                Name = "MsiScsi-In-TCP"
-                Ensure = 'Present'
+                Name    = "MsiScsi-In-TCP"
+                Ensure  = 'Present'
                 Enabled = 'True'
             }
             xFirewall iSCSIFirewallOut
             {
-                Name = "MsiScsi-Out-TCP"
-                Ensure = 'Present'
+                Name    = "MsiScsi-Out-TCP"
+                Ensure  = 'Present'
                 Enabled = 'True'
             }
         }
@@ -160,21 +163,22 @@ Configuration MEMBER_FAILOVERCLUSTER_FS
         Script DHCPAuthorize
         {
             PSDSCRunAsCredential = $DomainAdminCredential
-            SetScript = {
+            SetScript            = {
                 Add-DHCPServerInDC
             }
-            GetScript = {
+            GetScript            = {
                 Return @{
                     'Authorized' = (@(Get-DHCPServerInDC | Where-Object { $_.IPAddress -In (Get-NetIPAddress).IPAddress }).Count -gt 0);
                 }
             }
-            TestScript = { 
+            TestScript           = {
                 Return (-not (@(Get-DHCPServerInDC | Where-Object { $_.IPAddress -In (Get-NetIPAddress).IPAddress }).Count -eq 0))
             }
-            DependsOn = '[xComputer]JoinDomain'
+            DependsOn            = '[xComputer]JoinDomain'
         }
-        [Int]$Count=0
-        Foreach ($Scope in $Node.Scopes) {
+        [Int]$Count = 0
+        Foreach ($Scope in $Node.Scopes)
+        {
             $Count++
             xDhcpServerScope "Scope$Count"
             {
@@ -188,8 +192,9 @@ Configuration MEMBER_FAILOVERCLUSTER_FS
                 AddressFamily = $Scope.AddressFamily
             }
         }
-        [Int]$Count=0
-        Foreach ($Reservation in $Node.Reservations) {
+        [Int]$Count = 0
+        Foreach ($Reservation in $Node.Reservations)
+        {
             $Count++
             xDhcpServerReservation "Reservation$Count"
             {
@@ -201,8 +206,9 @@ Configuration MEMBER_FAILOVERCLUSTER_FS
                 AddressFamily    = $Reservation.AddressFamily
             }
         }
-        [Int]$Count=0
-        Foreach ($ScopeOption in $Node.ScopeOptions) {
+        [Int]$Count = 0
+        Foreach ($ScopeOption in $Node.ScopeOptions)
+        {
             $Count++
             xDhcpServerOption "ScopeOption$Count"
             {

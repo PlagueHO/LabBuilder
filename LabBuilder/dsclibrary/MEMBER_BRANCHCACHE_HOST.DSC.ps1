@@ -17,52 +17,55 @@ Configuration MEMBER_BRANCHCACHE_HOST
     Import-DscResource -ModuleName xComputerManagement
     Import-DscResource -ModuleName xStorage
     Import-DscResource -ModuleName xNetworking
+
     Node $AllNodes.NodeName {
         # Assemble the Local Admin Credentials
-        If ($Node.LocalAdminPassword) {
+        if ($Node.LocalAdminPassword)
+        {
             [PSCredential]$LocalAdminCredential = New-Object System.Management.Automation.PSCredential ("Administrator", (ConvertTo-SecureString $Node.LocalAdminPassword -AsPlainText -Force))
         }
-        If ($Node.DomainAdminPassword) {
+        if ($Node.DomainAdminPassword)
+        {
             [PSCredential]$DomainAdminCredential = New-Object System.Management.Automation.PSCredential ("$($Node.DomainName)\Administrator", (ConvertTo-SecureString $Node.DomainAdminPassword -AsPlainText -Force))
         }
 
-        WindowsFeature BranchCache 
-        { 
-            Ensure = "Present" 
-            Name = "BranchCache" 
+        WindowsFeature BranchCache
+        {
+            Ensure = "Present"
+            Name   = "BranchCache"
         }
 
         # Wait for the Domain to be available so we can join it.
         WaitForAll DC
         {
-        ResourceName      = '[xADDomain]PrimaryDC'
-        NodeName          = $Node.DCname
-        RetryIntervalSec  = 15
-        RetryCount        = 60
+            ResourceName     = '[xADDomain]PrimaryDC'
+            NodeName         = $Node.DCname
+            RetryIntervalSec = 15
+            RetryCount       = 60
         }
-        
+
         # Join this Server to the Domain
-        xComputer JoinDomain 
-        { 
-            Name          = $Node.NodeName
-            DomainName    = $Node.DomainName
-            Credential    = $DomainAdminCredential 
-            DependsOn = "[WaitForAll]DC" 
+        xComputer JoinDomain
+        {
+            Name       = $Node.NodeName
+            DomainName = $Node.DomainName
+            Credential = $DomainAdminCredential
+            DependsOn  = "[WaitForAll]DC"
         }
 
         # Enable BranchCache Hosted Mode Firewall Fules
         xFirewall FSRMFirewall1
         {
-            Name = "Microsoft-Windows-PeerDist-HostedServer-In"
-            Ensure = 'Present'
+            Name    = "Microsoft-Windows-PeerDist-HostedServer-In"
+            Ensure  = 'Present'
             Enabled = 'True'
         }
 
         xFirewall FSRMFirewall2
         {
-            Name = "Microsoft-Windows-PeerDist-HostedServer-Out"
-            Ensure = 'Present'
-            Enabled = 'True' 
+            Name    = "Microsoft-Windows-PeerDist-HostedServer-Out"
+            Ensure  = 'Present'
+            Enabled = 'True'
         }
     }
 }

@@ -31,22 +31,25 @@ Configuration DC_FORESTPRIMARY
     Import-DscResource -ModuleName 'PSDesiredStateConfiguration'
     Import-DscResource -ModuleName xActiveDirectory
     Import-DscResource -ModuleName xDNSServer
+
     Node $AllNodes.NodeName {
         # Assemble the Local Admin Credentials
-        If ($Node.LocalAdminPassword) {
+        if ($Node.LocalAdminPassword)
+        {
             [PSCredential]$LocalAdminCredential = New-Object System.Management.Automation.PSCredential ("Administrator", (ConvertTo-SecureString $Node.LocalAdminPassword -AsPlainText -Force))
         }
-        If ($Node.DomainAdminPassword) {
+        if ($Node.DomainAdminPassword)
+        {
             [PSCredential]$DomainAdminCredential = New-Object System.Management.Automation.PSCredential ("Administrator", (ConvertTo-SecureString $Node.DomainAdminPassword -AsPlainText -Force))
         }
 
         WindowsFeature BackupInstall
-        { 
-            Ensure = "Present" 
-            Name   = "Windows-Server-Backup" 
-        } 
+        {
+            Ensure = "Present"
+            Name   = "Windows-Server-Backup"
+        }
 
-        WindowsFeature DNSInstall 
+        WindowsFeature DNSInstall
         {
             Ensure = "Present"
             Name   = "DNS"
@@ -58,7 +61,7 @@ Configuration DC_FORESTPRIMARY
             Name      = "AD-Domain-Services"
             DependsOn = "[WindowsFeature]DNSInstall"
         }
-        
+
         WindowsFeature RSAT-AD-PowerShellInstall
         {
             Ensure    = "Present"
@@ -71,28 +74,28 @@ Configuration DC_FORESTPRIMARY
             WindowsFeature RSAT-ManagementTools
             {
                 Ensure    = "Present"
-                Name      = "RSAT-AD-Tools","RSAT-DNS-Server"
+                Name      = "RSAT-AD-Tools", "RSAT-DNS-Server"
                 DependsOn = "[WindowsFeature]ADDSInstall"
             }
         }
 
         xADDomain PrimaryDC
         {
-            DomainName                    = $Node.DomainName 
+            DomainName                    = $Node.DomainName
             DomainAdministratorCredential = $DomainAdminCredential
             SafemodeAdministratorPassword = $LocalAdminCredential
             DependsOn                     = "[WindowsFeature]ADDSInstall"
         }
 
-        xWaitForADDomain DscForestWait 
+        xWaitForADDomain DscForestWait
         {
-            DomainName           = $Node.DomainName 
+            DomainName           = $Node.DomainName
             DomainUserCredential = $DomainAdminCredential
             RetryCount           = 20
             RetryIntervalSec     = 30
             DependsOn            = "[xADDomain]PrimaryDC"
         }
-        
+
         # Enable AD Recycle bin
         xADRecycleBin RecycleBin
         {
@@ -104,21 +107,22 @@ Configuration DC_FORESTPRIMARY
         # Install a KDS Root Key so we can create MSA/gMSA accounts
         Script CreateKDSRootKey
         {
-            SetScript = {
+            SetScript  = {
                 Add-KDSRootKey -EffectiveTime ((Get-Date).AddHours(-10))            }
-            GetScript = {
+            GetScript  = {
                 Return @{
                     KDSRootKey = (Get-KDSRootKey)
                 }
             }
-            TestScript = { 
-                If (-not (Get-KDSRootKey)) {
+            TestScript = {
+                if (-not (Get-KDSRootKey))
+                {
                     Write-Verbose -Message "KDS Root Key Needs to be installed..."
                     Return $False
                 }
                 Return $True
             }
-            DependsOn = '[xWaitForADDomain]DscForestWait'
+            DependsOn  = '[xWaitForADDomain]DscForestWait'
         }
 
         # DNS Server Settings
@@ -131,8 +135,9 @@ Configuration DC_FORESTPRIMARY
                 DependsOn        = "[xWaitForADDomain]DscForestWait"
             }
         }
-        [Int]$Count=0
-        Foreach ($ADZone in $Node.ADZones) {
+        [Int]$Count = 0
+        Foreach ($ADZone in $Node.ADZones)
+        {
             $Count++
             xDnsServerADZone "ADZone$Count"
             {
@@ -143,8 +148,9 @@ Configuration DC_FORESTPRIMARY
                 DependsOn        = "[xWaitForADDomain]DscForestWait"
             }
         }
-        [Int]$Count=0
-        Foreach ($PrimaryZone in $Node.PrimaryZones) {
+        [Int]$Count = 0
+        Foreach ($PrimaryZone in $Node.PrimaryZones)
+        {
             $Count++
             xDnsServerPrimaryZone "PrimaryZone$Count"
             {
@@ -152,15 +158,15 @@ Configuration DC_FORESTPRIMARY
                 Name          = $PrimaryZone.Name
                 ZoneFile      = $PrimaryZone.ZoneFile
                 DynamicUpdate = $PrimaryZone.DynamicUpdate
-                DependsOn        = "[xWaitForADDomain]DscForestWait"
+                DependsOn     = "[xWaitForADDomain]DscForestWait"
             }
         }
-<#
+        <#
         # Create a Reverse Lookup Zone
         xDnsServerPrimaryZone GlobalNamesZone
         {
             Name = $Node.ReverseZone
-            DynamicUpdate = 
+            DynamicUpdate =
             Ensure = 'Present'
             DependsOn = '[xWaitForADDomain]DscForestWait'
         }
@@ -169,7 +175,7 @@ Configuration DC_FORESTPRIMARY
         xDnsServerPrimaryZone GlobalNamesZone
         {
             Name = 'GlobalNames'
-            DynamicUpdate = 
+            DynamicUpdate =
             Ensure = 'Present'
             DependsOn = '[xWaitForADDomain]DscForestWait'
         }
@@ -187,8 +193,8 @@ Configuration DC_FORESTPRIMARY
                     Enable = (Get-DNSServerGlobalNameZone).Enable
                 }
             }
-            TestScript = { 
-                If (-not (Get-DNSServerGlobalNameZone).Enable) {
+            TestScript = {
+                if (-not (Get-DNSServerGlobalNameZone).Enable) {
                     Write-Verbose -Message "Global Name Zone needs to be enabled..."
                     Return $False
                 }

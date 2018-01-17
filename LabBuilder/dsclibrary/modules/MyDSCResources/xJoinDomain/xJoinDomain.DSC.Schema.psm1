@@ -45,10 +45,10 @@ Configuration JOINDOMAIN
     Import-DscResource -ModuleName xNetworking
 
         # Assemble the Local Admin Credentials
-        If ($LocalAdminPassword) {
+        if ($LocalAdminPassword) {
             [PSCredential]$LocalAdminCredential = New-Object System.Management.Automation.PSCredential ("Administrator", (ConvertTo-SecureString $LocalAdminPassword -AsPlainText -Force))
         }
-        If ($Node.DomainAdminPassword) {
+        if ($Node.DomainAdminPassword) {
             [PSCredential]$DomainAdminCredential = New-Object System.Management.Automation.PSCredential ("$DomainName\Administrator", (ConvertTo-SecureString $DomainAdminPassword -AsPlainText -Force))
         }
 

@@ -13,31 +13,32 @@ Configuration STANDALONE_JENKINS
     Import-DscResource -ModuleName 'PSDesiredStateConfiguration'
     Import-DscResource -ModuleName cChoco
     Import-DscResource -ModuleName xNetworking
+
     Node $AllNodes.NodeName {
-        WindowsFeature NetFrameworkCore 
+        WindowsFeature NetFrameworkCore
         {
-            Ensure    = "Present" 
-            Name      = "NET-Framework-Core"
+            Ensure = "Present"
+            Name   = "NET-Framework-Core"
         }
 
         # Install Chocolatey
         cChocoInstaller installChoco
         {
             InstallDir = "c:\choco"
-            DependsOn = "[WindowsFeature]NetFrameworkCore"
+            DependsOn  = "[WindowsFeature]NetFrameworkCore"
         }
 
         # Install JDK8
         cChocoPackageInstaller installJdk8
         {
-            Name = "jdk8"
+            Name      = "jdk8"
             DependsOn = "[cChocoInstaller]installChoco"
         }
 
         # Install Jenkins
         cChocoPackageInstaller installJenkins
         {
-            Name = "Jenkins"
+            Name      = "Jenkins"
             DependsOn = "[cChocoInstaller]installChoco"
         }
 
@@ -49,12 +50,12 @@ Configuration STANDALONE_JENKINS
         }
         Script SetJenkinsPort
         {
-            SetScript = {
+            SetScript  = {
                 Write-Verbose -Message "Setting Jenkins Port to $Using:JenkinsPort"
                 $Config = Get-Content `
                     -Path "${ENV:ProgramFiles(x86)}\Jenkins\Jenkins.xml"
                 $NewConfig = $Config `
-                    -replace '--httpPort=[0-9]*\s',"--httpPort=$Using:JenkinsPort "
+                    -replace '--httpPort=[0-9]*\s', "--httpPort=$Using:JenkinsPort "
                 Set-Content `
                     -Path "${ENV:ProgramFiles(x86)}\Jenkins\Jenkins.xml" `
                     -Value $NewConfig `
@@ -63,7 +64,7 @@ Configuration STANDALONE_JENKINS
                 Restart-Service `
                     -Name Jenkins
             }
-            GetScript = {
+            GetScript  = {
                 $Config = Get-Content `
                     -Path "${ENV:ProgramFiles(x86)}\Jenkins\Jenkins.xml"
                 $Matches = @([regex]::matches($Config, "--httpPort=([0-9]*)\s", 'IgnoreCase'))
@@ -72,20 +73,21 @@ Configuration STANDALONE_JENKINS
                     'JenkinsPort' = $CurrentPort
                 }
             }
-            TestScript = { 
+            TestScript = {
                 $Config = Get-Content `
                     -Path "${ENV:ProgramFiles(x86)}\Jenkins\Jenkins.xml"
                 $Matches = @([regex]::matches($Config, "--httpPort=([0-9]*)\s", 'IgnoreCase'))
                 $CurrentPort = $Matches.Groups[1].Value
-                
-                If ($Using:JenkinsPort -ne $CurrentPort) {
+
+                if ($Using:JenkinsPort -ne $CurrentPort)
+                {
                     # Jenkins port must be changed
                     Return $False
                 }
                 # Jenkins is already on correct port
                 Return $True
             }
-            DependsOn = "[cChocoPackageInstaller]installJenkins"
+            DependsOn  = "[cChocoPackageInstaller]installJenkins"
         }
     }
 }

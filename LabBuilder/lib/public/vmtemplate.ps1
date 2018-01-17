@@ -94,12 +94,12 @@ function Get-LabVMTemplate {
 
         if ($TemplateName -eq 'template')
         {
-            $ExceptionParameters = @{
+            $exceptionParameters = @{
                 errorId = 'EmptyTemplateNameError'
                 errorCategory = 'InvalidArgument'
                 errorMessage = $($LocalizedData.EmptyTemplateNameError)
             }
-            New-Exception @ExceptionParameters
+            New-Exception @exceptionParameters
         } # if
 
         # Does the template already exist in the list?
@@ -128,13 +128,13 @@ function Get-LabVMTemplate {
         # Throw an error if both a TemplateVHD and SourceVHD are provided
         if ($TemplateVHD -and $SourceVHD)
         {
-            $ExceptionParameters = @{
+            $exceptionParameters = @{
                 errorId = 'TemplateSourceVHDAndTemplateVHDConflictError'
                 errorCategory = 'InvalidArgument'
                 errorMessage = $($LocalizedData.TemplateSourceVHDAndTemplateVHDConflictError `
                     -f $TemplateName)
             }
-            New-Exception @ExceptionParameters
+            New-Exception @exceptionParameters
         } # if
 
         if ($TemplateVHD)
@@ -163,13 +163,13 @@ function Get-LabVMTemplate {
             else
             {
                 # The TemplateVHD could not be found in the list
-                $ExceptionParameters = @{
+                $exceptionParameters = @{
                     errorId = 'TemplateTemplateVHDNotFoundError'
                     errorCategory = 'InvalidArgument'
                     errorMessage = $($LocalizedData.TemplateTemplateVHDNotFoundError `
                         -f $TemplateName,$TemplateVHD)
                 }
-                New-Exception @ExceptionParameters
+                New-Exception @exceptionParameters
             } # if
         }
         elseif ($SourceVHD)
@@ -190,13 +190,13 @@ function Get-LabVMTemplate {
             # A Source VHD file was specified - does it exist?
             if (-not (Test-Path -Path $VMTemplate.sourcevhd))
             {
-                $ExceptionParameters = @{
+                $exceptionParameters = @{
                     errorId = 'TemplateSourceVHDNotFoundError'
                     errorCategory = 'InvalidArgument'
                     errorMessage = $($LocalizedData.TemplateSourceVHDNotFoundError `
                         -f $TemplateName,$VMTemplate.sourcevhd)
                 }
-                New-Exception @ExceptionParameters
+                New-Exception @exceptionParameters
             } # if
 
             # if a VHD filename wasn't specified in the Template
@@ -221,13 +221,13 @@ function Get-LabVMTemplate {
         {
             # Neither a SourceVHD or TemplateVHD was provided
             # So throw an exception
-            $ExceptionParameters = @{
+            $exceptionParameters = @{
                 errorId = 'TemplateSourceVHDandTemplateVHDMissingError'
                 errorCategory = 'InvalidArgument'
                 errorMessage = $($LocalizedData.TemplateSourceVHDandTemplateVHDMissingError `
                     -f $TemplateName)
             }
-            New-Exception @ExceptionParameters
+            New-Exception @exceptionParameters
         } # if
 
         # Ensure the ParentVHD is up-to-date
@@ -413,13 +413,13 @@ function Initialize-LabVMTemplate {
             if (-not (Test-Path $VMTemplate.SourceVhd))
             {
                 # The source VHD could not be found.
-                $ExceptionParameters = @{
+                $exceptionParameters = @{
                     errorId = 'TemplateSourceVHDNotFoundError'
                     errorCategory = 'InvalidArgument'
                     errorMessage = $($LocalizedData.TemplateSourceVHDNotFoundError `
                         -f $VMTemplate.Name,$VMTemplate.sourcevhd)
                 }
-                New-Exception @ExceptionParameters
+                New-Exception @exceptionParameters
             }
 
             Write-LabMessage -Message $($LocalizedData.CopyingTemplateSourceVHDMessage `
@@ -488,13 +488,13 @@ function Initialize-LabVMTemplate {
                                 -Recurse `
                                 -Force
 
-                            $ExceptionParameters = @{
+                            $exceptionParameters = @{
                                 errorId = 'PackageNotFoundError'
                                 errorCategory = 'InvalidArgument'
                                 errorMessage = $($LocalizedData.PackageNotFoundError `
                                 -f $Package)
                             }
-                            New-Exception @ExceptionParameters
+                            New-Exception @exceptionParameters
                         } # if
 
                         $PackagePath = $ResourceMSU.Filename
@@ -511,13 +511,13 @@ function Initialize-LabVMTemplate {
                                 -Recurse `
                                 -Force
 
-                            $ExceptionParameters = @{
+                            $exceptionParameters = @{
                                 errorId = 'PackageMSUNotFoundError'
                                 errorCategory = 'InvalidArgument'
                                 errorMessage = $($LocalizedData.PackageMSUNotFoundError `
                                 -f $Package,$PackagePath)
                             }
-                            New-Exception @ExceptionParameters
+                            New-Exception @exceptionParameters
                         } # if
 
                         # Apply a Pacakge

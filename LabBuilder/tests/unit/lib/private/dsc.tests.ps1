@@ -167,13 +167,13 @@ try
                 Mock Find-Module
 
                 $VM = $VMS[0].Clone()
-                $ExceptionParameters = @{
+                $exceptionParameters = @{
                     errorId = 'DSCModuleDownloadError'
                     errorCategory = 'InvalidArgument'
                     errorMessage = $($LocalizedData.DSCModuleDownloadError `
                         -f $VM.DSC.ConfigFile,$VM.Name,'TestModule')
                 }
-                $Exception = Get-Exception @ExceptionParameters
+                $Exception = Get-Exception @exceptionParameters
 
                 It 'Throws a DSCModuleDownloadError Exception' {
                     { CreateDSCMOFFiles -Lab $Lab -VM $VM } | Should -Throw $Exception
@@ -192,13 +192,13 @@ try
                 Mock Install-Module -MockWith { Throw }
 
                 $VM = $VMS[0].Clone()
-                $ExceptionParameters = @{
+                $exceptionParameters = @{
                     errorId = 'DSCModuleDownloadError'
                     errorCategory = 'InvalidArgument'
                     errorMessage = $($LocalizedData.DSCModuleDownloadError `
                         -f $VM.DSC.ConfigFile,$VM.Name,'TestModule')
                 }
-                $Exception = Get-Exception @ExceptionParameters
+                $Exception = Get-Exception @exceptionParameters
 
                 It 'Throws a DSCModuleDownloadError Exception' {
                     { CreateDSCMOFFiles -Lab $Lab -VM $VM } | Should -Throw $Exception
@@ -220,13 +220,13 @@ try
                     -MockWith { $false }
 
                 $VM = $VMS[0].Clone()
-                $ExceptionParameters = @{
+                $exceptionParameters = @{
                     errorId = 'DSCModuleNotFoundError'
                     errorCategory = 'InvalidArgument'
                     errorMessage = $($LocalizedData.DSCModuleNotFoundError `
                         -f $VM.DSC.ConfigFile,$VM.Name,'TestModule')
                 }
-                $Exception = Get-Exception @ExceptionParameters
+                $Exception = Get-Exception @exceptionParameters
 
                 It 'Throws a DSCModuleNotFoundError Exception' {
                     { CreateDSCMOFFiles -Lab $Lab -VM $VM } | Should -Throw $Exception
@@ -254,13 +254,13 @@ try
 
                 $VM = $VMS[0].Clone()
                 $VM.CertificateSource = [LabCertificateSource]::Guest
-                $ExceptionParameters = @{
+                $exceptionParameters = @{
                     errorId = 'CertificateCreateError'
                     errorCategory = 'InvalidArgument'
                     errorMessage = $($LocalizedData.CertificateCreateError `
                         -f $VM.Name)
                 }
-                $Exception = Get-Exception @ExceptionParameters
+                $Exception = Get-Exception @exceptionParameters
 
                 It 'Throws a CertificateCreateError Exception' {
                     { CreateDSCMOFFiles -Lab $Lab -VM $VM } | Should -Throw $Exception
@@ -298,13 +298,13 @@ try
 
                 $VM = $VMS[0].Clone()
                 $VM.CertificateSource = [LabCertificateSource]::Guest
-                $ExceptionParameters = @{
+                $exceptionParameters = @{
                     errorId = 'DSCConfigMetaMOFCreateError'
                     errorCategory = 'InvalidArgument'
                     errorMessage = $($LocalizedData.DSCConfigMetaMOFCreateError `
                         -f $VM.Name)
                 }
-                $Exception = Get-Exception @ExceptionParameters
+                $Exception = Get-Exception @exceptionParameters
 
                 It 'Throws a DSCConfigMetaMOFCreateError Exception' {
                     { CreateDSCMOFFiles -Lab $Lab -VM $VM } | Should -Throw $Exception
@@ -342,13 +342,13 @@ try
             Context 'Network Adapter does not Exist' {
                 $VM = $VMS[0].Clone()
                 $VM.Adapters[0].Name = 'DoesNotExist'
-                $ExceptionParameters = @{
+                $exceptionParameters = @{
                     errorId = 'NetworkAdapterNotFoundError'
                     errorCategory = 'InvalidArgument'
                     errorMessage = $($LocalizedData.NetworkAdapterNotFoundError `
                         -f 'DoesNotExist',$VMS[0].Name)
                 }
-                $Exception = Get-Exception @ExceptionParameters
+                $Exception = Get-Exception @exceptionParameters
                 It 'Throws a NetworkAdapterNotFoundError Exception' {
                     { SetDSCStartFile -Lab $Lab -VM $VM } | Should -Throw $Exception
                 }
@@ -362,13 +362,13 @@ try
             Context 'Network Adapter has blank MAC Address' {
                 $VM = $VMS[0].Clone()
                 $VM.Adapters[0].Name = 'Exists'
-                $ExceptionParameters = @{
+                $exceptionParameters = @{
                     errorId = 'NetworkAdapterBlankMacError'
                     errorCategory = 'InvalidArgument'
                     errorMessage = $($LocalizedData.NetworkAdapterBlankMacError `
                         -f 'Exists',$VMS[0].Name)
                 }
-                $Exception = Get-Exception @ExceptionParameters
+                $Exception = Get-Exception @exceptionParameters
 
                 It 'Throws a NetworkAdapterBlankMacError Exception' {
                     { SetDSCStartFile -Lab $Lab -VM $VM } | Should -Throw $Exception

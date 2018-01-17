@@ -70,12 +70,12 @@ try
                 It 'Throws a SwitchNameIsEmptyError Exception' {
                     $Lab = Get-Lab -ConfigPath $Global:TestConfigOKPath
                     $Lab.labbuilderconfig.switches.switch[0].RemoveAttribute('name')
-                    $ExceptionParameters = @{
+                    $exceptionParameters = @{
                         errorId = 'SwitchNameIsEmptyError'
                         errorCategory = 'InvalidArgument'
                         errorMessage = $($LocalizedData.SwitchNameIsEmptyError)
                     }
-                    $Exception = Get-Exception @ExceptionParameters
+                    $Exception = Get-Exception @exceptionParameters
 
                     { Get-LabSwitch -Lab $Lab } | Should -Throw $Exception
                 }
@@ -84,13 +84,13 @@ try
                 It 'Throws a UnknownSwitchTypeError Exception' {
                     $Lab = Get-Lab -ConfigPath $Global:TestConfigOKPath
                     $Lab.labbuilderconfig.switches.switch[0].RemoveAttribute('type')
-                    $ExceptionParameters = @{
+                    $exceptionParameters = @{
                         errorId = 'UnknownSwitchTypeError'
                         errorCategory = 'InvalidArgument'
                         errorMessage = $($LocalizedData.UnknownSwitchTypeError `
                             -f '','External')
                     }
-                    $Exception = Get-Exception @ExceptionParameters
+                    $Exception = Get-Exception @exceptionParameters
 
                     { Get-LabSwitch -Lab $Lab } | Should -Throw $Exception
                 }
@@ -99,13 +99,13 @@ try
                 It 'Throws a UnknownSwitchTypeError Exception' {
                     $Lab = Get-Lab -ConfigPath $Global:TestConfigOKPath
                     $Lab.labbuilderconfig.switches.switch[0].type='BadType'
-                    $ExceptionParameters = @{
+                    $exceptionParameters = @{
                         errorId = 'UnknownSwitchTypeError'
                         errorCategory = 'InvalidArgument'
                         errorMessage = $($LocalizedData.UnknownSwitchTypeError `
                             -f 'BadType','External')
                     }
-                    $Exception = Get-Exception @ExceptionParameters
+                    $Exception = Get-Exception @exceptionParameters
 
                     { Get-LabSwitch -Lab $Lab } | Should -Throw $Exception
                 }
@@ -114,13 +114,13 @@ try
                 $Lab = Get-Lab -ConfigPath $Global:TestConfigOKPath
                 $Lab.labbuilderconfig.switches.switch[0].type='Private'
                 It 'Throws a AdapterSpecifiedError Exception' {
-                    $ExceptionParameters = @{
+                    $exceptionParameters = @{
                         errorId = 'AdapterSpecifiedError'
                         errorCategory = 'InvalidArgument'
                         errorMessage = $($LocalizedData.AdapterSpecifiedError `
                             -f 'Private',"$($Lab.labbuilderconfig.settings.labid)External")
                     }
-                    $Exception = Get-Exception @ExceptionParameters
+                    $Exception = Get-Exception @exceptionParameters
 
                     { Get-LabSwitch -Lab $Lab } | Should -Throw $Exception
                 }
@@ -269,13 +269,13 @@ try
                 $Switches[0].Type = [LabSwitchType]::NAT
                 $Switches[0].NatSubnet = ''
                 It 'Throws a NatSubnetEmptyError Exception' {
-                    $ExceptionParameters = @{
+                    $exceptionParameters = @{
                         errorId = 'NatSubnetEmptyError'
                         errorCategory = 'InvalidArgument'
                         errorMessage = $($LocalizedData.NatSubnetEmptyError `
                             -f $Switches[0].Name)
                     }
-                    $Exception = Get-Exception @ExceptionParameters
+                    $Exception = Get-Exception @exceptionParameters
 
                     { Initialize-LabSwitch -Lab $Lab -Switches $Switches } | Should -Throw $Exception
                 }
@@ -297,13 +297,13 @@ try
             Context 'Valid configuration NAT on unsupported build' {
                 $Switches[0].Type = [LabSwitchType]::NAT
                 It 'Throws a NatSubnetEmptyError Exception' {
-                    $ExceptionParameters = @{
+                    $exceptionParameters = @{
                         errorId = 'NatSwitchNotSupportedError'
                         errorCategory = 'InvalidArgument'
                         errorMessage = $($LocalizedData.NatSwitchNotSupportedError `
                             -f $Switches[0].Name)
                     }
-                    $Exception = Get-Exception @ExceptionParameters
+                    $Exception = Get-Exception @exceptionParameters
 
                     { Initialize-LabSwitch -Lab $Lab -Switches $Switches } | Should -Throw $Exception
                 }
@@ -326,13 +326,13 @@ try
                 $Switches[0].Type = [LabSwitchType]::NAT
                 $Switches[0].NatSubnet = 'Invalid'
                 It 'Throws a NatSubnetInvalidError Exception' {
-                    $ExceptionParameters = @{
+                    $exceptionParameters = @{
                         errorId = 'NatSubnetInvalidError'
                         errorCategory = 'InvalidArgument'
                         errorMessage = $($LocalizedData.NatSubnetInvalidError `
                             -f $Switches[0].Name,'Invalid')
                     }
-                    $Exception = Get-Exception @ExceptionParameters
+                    $Exception = Get-Exception @exceptionParameters
 
                     { Initialize-LabSwitch -Lab $Lab -Switches $Switches } | Should -Throw $Exception
                 }
@@ -354,13 +354,13 @@ try
                 $Switches[0].Type = [LabSwitchType]::NAT
                 $Switches[0].NatSubnet = '192.168.1.1000/24'
                 It 'Throws a NatSubnetAddressInvalidError Exception' {
-                    $ExceptionParameters = @{
+                    $exceptionParameters = @{
                         errorId = 'NatSubnetAddressInvalidError'
                         errorCategory = 'InvalidArgument'
                         errorMessage = $($LocalizedData.NatSubnetAddressInvalidError `
                             -f $Switches[0].Name,'192.168.1.1000')
                     }
-                    $Exception = Get-Exception @ExceptionParameters
+                    $Exception = Get-Exception @exceptionParameters
 
                     { Initialize-LabSwitch -Lab $Lab -Switches $Switches } | Should -Throw $Exception
                 }
@@ -382,13 +382,13 @@ try
                 $Switches[0].Type = [LabSwitchType]::NAT
                 $Switches[0].NatSubnet = '192.168.1.0/33'
                 It 'Throws a NatSubnetPrefixLengthInvalidError Exception' {
-                    $ExceptionParameters = @{
+                    $exceptionParameters = @{
                         errorId = 'NatSubnetPrefixLengthInvalidError'
                         errorCategory = 'InvalidArgument'
                         errorMessage = $($LocalizedData.NatSubnetPrefixLengthInvalidError `
                             -f $Switches[0].Name,33)
                     }
-                    $Exception = Get-Exception @ExceptionParameters
+                    $Exception = Get-Exception @exceptionParameters
 
                     { Initialize-LabSwitch -Lab $Lab -Switches $Switches } | Should -Throw $Exception
                 }
@@ -413,13 +413,13 @@ try
                 $Switches[0].Type = [LabSwitchType]::NAT
                 $Switches[0].NatSubnet = '192.168.1.0/24'
                 It 'Throws a NatSwitchDefaultAdapterMacEmptyError Exception' {
-                    $ExceptionParameters = @{
+                    $exceptionParameters = @{
                         errorId = 'NatSwitchDefaultAdapterMacEmptyError'
                         errorCategory = 'InvalidArgument'
                         errorMessage = $($LocalizedData.NatSwitchDefaultAdapterMacEmptyError `
                             -f $Switches[0].Name)
                     }
-                    $Exception = Get-Exception @ExceptionParameters
+                    $Exception = Get-Exception @exceptionParameters
 
                     { Initialize-LabSwitch -Lab $Lab -Switches $Switches } | Should -Throw $Exception
                 }
@@ -443,12 +443,12 @@ try
                 $Switches[0].Type = [LabSwitchType]::External
                 $Switches[0].Name = ''
                 It 'Throws a SwitchNameIsEmptyError Exception' {
-                    $ExceptionParameters = @{
+                    $exceptionParameters = @{
                         errorId = 'SwitchNameIsEmptyError'
                         errorCategory = 'InvalidArgument'
                         errorMessage = $($LocalizedData.SwitchNameIsEmptyError)
                     }
-                    $Exception = Get-Exception @ExceptionParameters
+                    $Exception = Get-Exception @exceptionParameters
 
                     { Initialize-LabSwitch -Lab $Lab -Switches $Switches } | Should -Throw $Exception
                 }
@@ -471,13 +471,13 @@ try
             Context 'Valid configuration with External switch with binding Adapter name bad' {
                 Mock Get-NetAdapter
                 It 'Throws a BindingAdapterNotFoundError Exception' {
-                    $ExceptionParameters = @{
+                    $exceptionParameters = @{
                         errorId = 'BindingAdapterNotFoundError'
                         errorCategory = 'InvalidArgument'
                         errorMessage = $($LocalizedData.BindingAdapterNotFoundError `
                             -f $Switches[0].Name,"with a name '$($Switches[0].BindingAdapterName)' ")
                     }
-                    $Exception = Get-Exception @ExceptionParameters
+                    $Exception = Get-Exception @exceptionParameters
 
                     { Initialize-LabSwitch -Lab $Lab -Switches $Switches } | Should -Throw $Exception
                 }
@@ -500,13 +500,13 @@ try
                 $Switches[0].BindingAdapterName = ''
                 $Switches[0].BindingAdapterMac = '1111111111'
                 It 'Throws a BindingAdapterNotFoundError Exception' {
-                    $ExceptionParameters = @{
+                    $exceptionParameters = @{
                         errorId = 'BindingAdapterNotFoundError'
                         errorCategory = 'InvalidArgument'
                         errorMessage = $($LocalizedData.BindingAdapterNotFoundError `
                             -f $Switches[0].Name,"with a MAC address '$($Switches[0].BindingAdapterMac)' ")
                     }
-                    $Exception = Get-Exception @ExceptionParameters
+                    $Exception = Get-Exception @exceptionParameters
 
                     { Initialize-LabSwitch -Lab $Lab -Switches $Switches } | Should -Throw $Exception
                 }
@@ -569,12 +569,12 @@ try
             Context 'Valid configuration with blank switch name passed' {
                 $Switches[0].Name = ''
                 It 'Throws a SwitchNameIsEmptyError Exception' {
-                    $ExceptionParameters = @{
+                    $exceptionParameters = @{
                         errorId = 'SwitchNameIsEmptyError'
                         errorCategory = 'InvalidArgument'
                         errorMessage = $($LocalizedData.SwitchNameIsEmptyError)
                     }
-                    $Exception = Get-Exception @ExceptionParameters
+                    $Exception = Get-Exception @exceptionParameters
 
                     { Remove-LabSwitch -Lab $Lab -Switches $Switches } | Should -Throw $Exception
                 }

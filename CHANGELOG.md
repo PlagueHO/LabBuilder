@@ -5,6 +5,9 @@
 - Clean up markdown errors in README.MD.
 - Updated code style to meet current best practices.
 - Updated tests to meet Pester v4 guidelines.
+- Convert sample labs to use ISCSIDsc resource module.
+- Convert sample labs to use FSRMDsc resource module.
+- Convert sample labs to use xDFS resource module.
 
 ## 0.8.3.1140
 

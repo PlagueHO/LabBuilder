@@ -41,10 +41,10 @@
     Import-DscResource -ModuleName xDHCPServer
 
         # Assemble the Local Admin Credentials
-        If ($LocalAdminPassword) {
+        if ($LocalAdminPassword) {
             [PSCredential]$LocalAdminCredential = New-Object System.Management.Automation.PSCredential ("Administrator", (ConvertTo-SecureString $LocalAdminPassword -AsPlainText -Force))
         }
-        If ($DomainAdminPassword) {
+        if ($DomainAdminPassword) {
             [PSCredential]$DomainAdminCredential = New-Object System.Management.Automation.PSCredential ("$DomainName\Administrator", (ConvertTo-SecureString $DomainAdminPassword -AsPlainText -Force))
         }
 

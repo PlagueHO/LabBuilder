@@ -24,17 +24,20 @@ Configuration MEMBER_DNS
     Import-DscResource -ModuleName 'PSDesiredStateConfiguration'
     Import-DscResource -ModuleName xComputerManagement
     Import-DscResource -ModuleName xDNSServer
+
     Node $AllNodes.NodeName {
         # Assemble the Local Admin Credentials
-        If ($Node.LocalAdminPassword) {
+        if ($Node.LocalAdminPassword)
+        {
             [PSCredential]$LocalAdminCredential = New-Object System.Management.Automation.PSCredential ("Administrator", (ConvertTo-SecureString $Node.LocalAdminPassword -AsPlainText -Force))
         }
-        If ($Node.DomainAdminPassword) {
+        if ($Node.DomainAdminPassword)
+        {
             [PSCredential]$DomainAdminCredential = New-Object System.Management.Automation.PSCredential ("$($Node.DomainName)\Administrator", (ConvertTo-SecureString $Node.DomainAdminPassword -AsPlainText -Force))
         }
 
         WindowsFeature DNSInstall
-        { 
+        {
             Ensure = "Present"
             Name   = "DNS"
         }
@@ -57,7 +60,7 @@ Configuration MEMBER_DNS
             RetryCount       = 60
         }
 
-        xComputer JoinDomain 
+        xComputer JoinDomain
         {
             Name       = $Node.NodeName
             DomainName = $Node.DomainName
@@ -76,8 +79,9 @@ Configuration MEMBER_DNS
                 DependsOn        = '[xComputer]JoinDomain'
             }
         }
-        [Int]$Count=0
-        Foreach ($PrimaryZone in $Node.PrimaryZones) {
+        [Int]$Count = 0
+        Foreach ($PrimaryZone in $Node.PrimaryZones)
+        {
             $Count++
             xDnsServerPrimaryZone "PrimaryZone$Count"
             {

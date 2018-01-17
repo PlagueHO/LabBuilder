@@ -15,42 +15,45 @@ Configuration MEMBER_IPAM
 {
     Import-DscResource -ModuleName 'PSDesiredStateConfiguration'
     Import-DscResource -ModuleName xComputerManagement
+
     Node $AllNodes.NodeName {
         # Assemble the Local Admin Credentials
-        If ($Node.LocalAdminPassword) {
+        if ($Node.LocalAdminPassword)
+        {
             [PSCredential]$LocalAdminCredential = New-Object System.Management.Automation.PSCredential ("Administrator", (ConvertTo-SecureString $Node.LocalAdminPassword -AsPlainText -Force))
         }
-        If ($Node.DomainAdminPassword) {
+        if ($Node.DomainAdminPassword)
+        {
             [PSCredential]$DomainAdminCredential = New-Object System.Management.Automation.PSCredential ("$($Node.DomainName)\Administrator", (ConvertTo-SecureString $Node.DomainAdminPassword -AsPlainText -Force))
         }
 
-        WindowsFeature WIDInstall 
+        WindowsFeature WIDInstall
         {
-            Ensure = "Present" 
+            Ensure = "Present"
             Name   = "Windows-Internal-Database"
         }
 
-        WindowsFeature IPAMInstall 
+        WindowsFeature IPAMInstall
         {
-            Ensure    = "Present" 
+            Ensure    = "Present"
             Name      = "IPAM"
             DependsOn = "[WindowsFeature]WIDInstall"
         }
 
         WaitForAll DC
         {
-            ResourceName      = '[xADDomain]PrimaryDC'
-            NodeName          = $Node.DCname
-            RetryIntervalSec  = 15
-            RetryCount        = 60
+            ResourceName     = '[xADDomain]PrimaryDC'
+            NodeName         = $Node.DCname
+            RetryIntervalSec = 15
+            RetryCount       = 60
         }
 
-        xComputer JoinDomain 
-        { 
-            Name          = $Node.NodeName
-            DomainName    = $Node.DomainName
-            Credential    = $DomainAdminCredential
-            DependsOn     = "[WaitForAll]DC"
+        xComputer JoinDomain
+        {
+            Name       = $Node.NodeName
+            DomainName = $Node.DomainName
+            Credential = $DomainAdminCredential
+            DependsOn  = "[WaitForAll]DC"
         }
     }
 }

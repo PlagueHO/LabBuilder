@@ -10,9 +10,11 @@ DSC Template Configuration File For use by LabBuilder
 Configuration STANDALONE_DEFAULT
 {
     Import-DscResource -ModuleName 'PSDesiredStateConfiguration'
+
     Node $AllNodes.NodeName {
         # Assemble the Local Admin Credentials
-        If ($Node.LocalAdminPassword) {
+        if ($Node.LocalAdminPassword)
+        {
             [PSCredential]$LocalAdminCredential = New-Object System.Management.Automation.PSCredential ("Administrator", (ConvertTo-SecureString $Node.LocalAdminPassword -AsPlainText -Force))
         }
     }

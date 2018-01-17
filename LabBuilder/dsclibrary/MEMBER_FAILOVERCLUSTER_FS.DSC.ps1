@@ -21,69 +21,70 @@ Configuration MEMBER_FAILOVERCLUSTER_FS
     Import-DscResource -ModuleName 'PSDesiredStateConfiguration'
     Import-DscResource -ModuleName xComputerManagement
     Import-DscResource -ModuleName xPSDesiredStateConfiguration
-    Import-DscResource -ModuleName ciscsi
+    Import-DscResource -ModuleName ISCSIDsc
+
     Node $AllNodes.NodeName {
         # Assemble the Local Admin Credentials
-        If ($Node.LocalAdminPassword) {
+        if ($Node.LocalAdminPassword) {
             [PSCredential]$LocalAdminCredential = New-Object System.Management.Automation.PSCredential ("Administrator", (ConvertTo-SecureString $Node.LocalAdminPassword -AsPlainText -Force))
         }
-        If ($Node.DomainAdminPassword) {
+        if ($Node.DomainAdminPassword) {
             [PSCredential]$DomainAdminCredential = New-Object System.Management.Automation.PSCredential ("$($Node.DomainName)\Administrator", (ConvertTo-SecureString $Node.DomainAdminPassword -AsPlainText -Force))
         }
 
         WindowsFeature FailoverClusteringInstall
         {
-            Ensure = "Present" 
-            Name = "Failover-Clustering" 
+            Ensure = "Present"
+            Name = "Failover-Clustering"
         }
 
         WindowsFeature FailoverClusteringPSInstall
         {
-            Ensure = "Present" 
-            Name = "RSAT-Clustering-PowerShell" 
-            DependsOn = "[WindowsFeature]FailoverClusteringInstall" 
+            Ensure = "Present"
+            Name = "RSAT-Clustering-PowerShell"
+            DependsOn = "[WindowsFeature]FailoverClusteringInstall"
         }
 
-        WindowsFeature FileServerInstall 
+        WindowsFeature FileServerInstall
         {
-            Ensure = "Present" 
-            Name = "FS-FileServer" 
-            DependsOn = "[WindowsFeature]FailoverClusteringPSInstall" 
+            Ensure = "Present"
+            Name = "FS-FileServer"
+            DependsOn = "[WindowsFeature]FailoverClusteringPSInstall"
         }
 
-        WindowsFeature DataDedupInstall 
-        { 
-            Ensure = "Present" 
-            Name = "FS-Data-Deduplication" 
-            DependsOn = "[WindowsFeature]FileServerInstall" 
+        WindowsFeature DataDedupInstall
+        {
+            Ensure = "Present"
+            Name = "FS-Data-Deduplication"
+            DependsOn = "[WindowsFeature]FileServerInstall"
         }
 
-        WindowsFeature BranchCacheInstall 
-        { 
-            Ensure = "Present" 
-            Name = "FS-BranchCache" 
-            DependsOn = "[WindowsFeature]DataDedupInstall" 
+        WindowsFeature BranchCacheInstall
+        {
+            Ensure = "Present"
+            Name = "FS-BranchCache"
+            DependsOn = "[WindowsFeature]DataDedupInstall"
         }
 
-        WindowsFeature DFSNameSpaceInstall 
-        { 
-            Ensure = "Present" 
-            Name = "FS-DFS-Namespace" 
-            DependsOn = "[WindowsFeature]BranchCacheInstall" 
+        WindowsFeature DFSNameSpaceInstall
+        {
+            Ensure = "Present"
+            Name = "FS-DFS-Namespace"
+            DependsOn = "[WindowsFeature]BranchCacheInstall"
         }
 
-        WindowsFeature DFSReplicationInstall 
-        { 
-            Ensure = "Present" 
-            Name = "FS-DFS-Replication" 
-            DependsOn = "[WindowsFeature]DFSNameSpaceInstall" 
+        WindowsFeature DFSReplicationInstall
+        {
+            Ensure = "Present"
+            Name = "FS-DFS-Replication"
+            DependsOn = "[WindowsFeature]DFSNameSpaceInstall"
         }
 
-        WindowsFeature FSResourceManagerInstall 
-        { 
-            Ensure = "Present" 
-            Name = "FS-Resource-Manager" 
-            DependsOn = "[WindowsFeature]DFSReplicationInstall" 
+        WindowsFeature FSResourceManagerInstall
+        {
+            Ensure = "Present"
+            Name = "FS-Resource-Manager"
+            DependsOn = "[WindowsFeature]DFSReplicationInstall"
         }
 
         # Wait for the Domain to be available so we can join it.
@@ -94,21 +95,21 @@ Configuration MEMBER_FAILOVERCLUSTER_FS
         RetryIntervalSec  = 15
         RetryCount        = 60
         }
-        
+
         # Join this Server to the Domain so that it can be an Enterprise CA.
-        xComputer JoinDomain 
-        { 
+        xComputer JoinDomain
+        {
             Name          = $Node.NodeName
             DomainName    = $Node.DomainName
-            Credential    = $DomainAdminCredential 
-            DependsOn = "[WaitForAll]DC" 
+            Credential    = $DomainAdminCredential
+            DependsOn = "[WaitForAll]DC"
         }
 
         if ($Node.ServerTargetName)
         {
             # Ensure the iSCSI Initiator service is running
-            Service iSCSIService 
-            { 
+            Service iSCSIService
+            {
                 Name = 'MSiSCSI'
                 StartupType = 'Automatic'
                 State = 'Running'
@@ -117,7 +118,7 @@ Configuration MEMBER_FAILOVERCLUSTER_FS
             # Wait for the iSCSI Server Target to become available
             WaitForAny WaitForiSCSIServerTarget
             {
-                ResourceName = "[ciSCSIServerTarget]ClusterServerTarget"
+                ResourceName = "[ISCSIServerTarget]ClusterServerTarget"
                 NodeName = $Node.ServerName
                 RetryIntervalSec = 30
                 RetryCount = 30
@@ -125,15 +126,15 @@ Configuration MEMBER_FAILOVERCLUSTER_FS
             }
 
             # Connect the Initiator
-            ciSCSIInitiator iSCSIInitiator
+            ISCSIInitiator iSCSIInitiator
             {
                 Ensure = 'Present'
                 NodeAddress = "iqn.1991-05.com.microsoft:$($Node.ServerTargetName)"
                 TargetPortalAddress = $Node.TargetPortalAddress
                 InitiatorPortalAddress = $Node.InitiatorPortalAddress
-                IsPersistent = $true 
-                DependsOn = "[WaitForAny]WaitForiSCSIServerTarget" 
-            } # End of ciSCSITarget Resource
+                IsPersistent = $true
+                DependsOn = "[WaitForAny]WaitForiSCSIServerTarget"
+            } # End of ISCSITarget Resource
 
             # Enable iSCSI FireWall rules so that the Initiator can be added to iSNS
             xFirewall iSCSIFirewallIn
@@ -162,44 +163,44 @@ Configuration MEMBER_FAILOVERCLUSTER_FS
         {
             Name = "FSRM-WMI-WINMGMT-In-TCP"
             Ensure = 'Present'
-            Enabled = 'True' 
+            Enabled = 'True'
         }
 
         xFirewall FSRMFirewall3
         {
             Name = "FSRM-RemoteRegistry-In (RPC)"
             Ensure = 'Present'
-            Enabled = 'True' 
+            Enabled = 'True'
         }
-        
+
         xFirewall FSRMFirewall4
         {
             Name = "FSRM-Task-Scheduler-In (RPC)"
             Ensure = 'Present'
-            Enabled = 'True' 
+            Enabled = 'True'
         }
 
         xFirewall FSRMFirewall5
         {
             Name = "FSRM-SrmReports-In (RPC)"
             Ensure = 'Present'
-            Enabled = 'True' 
+            Enabled = 'True'
         }
 
         xFirewall FSRMFirewall6
         {
             Name = "FSRM-RpcSs-In (RPC-EPMAP)"
             Ensure = 'Present'
-            Enabled = 'True' 
+            Enabled = 'True'
         }
-        
+
         xFirewall FSRMFirewall7
         {
             Name = "FSRM-System-In (TCP-445)"
             Ensure = 'Present'
-            Enabled = 'True' 
+            Enabled = 'True'
         }
-        
+
         xFirewall FSRMFirewall8
         {
             Name = "FSRM-SrmSvc-In (RPC)"

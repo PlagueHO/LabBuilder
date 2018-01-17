@@ -48,12 +48,12 @@ function Get-LabResourceModule
 
             if ($ModuleName -eq 'module')
             {
-                $ExceptionParameters = @{
+                $exceptionParameters = @{
                     errorId       = 'ResourceModuleNameIsEmptyError'
                     errorCategory = 'InvalidArgument'
                     errorMessage  = $($LocalizedData.ResourceModuleNameIsEmptyError)
                 }
-                New-Exception @ExceptionParameters
+                New-Exception @exceptionParameters
             } # if
             $ResourceModule = [LabResourceModule]::New($ModuleName)
             $ResourceModule.URL = $Module.URL
@@ -203,12 +203,12 @@ function Get-LabResourceMSU
 
             if ($MSUName -eq 'msu')
             {
-                $ExceptionParameters = @{
+                $exceptionParameters = @{
                     errorId       = 'ResourceMSUNameIsEmptyError'
                     errorCategory = 'InvalidArgument'
                     errorMessage  = $($LocalizedData.ResourceMSUNameIsEmptyError)
                 }
-                New-Exception @ExceptionParameters
+                New-Exception @exceptionParameters
             } # if
             $ResourceMSU = [LabResourceMSU]::New($MSUName, $MSU.URL)
             $Path = $MSU.Path
@@ -380,12 +380,12 @@ function Get-LabResourceISO
 
             if ($ISOName -eq 'iso')
             {
-                $ExceptionParameters = @{
+                $exceptionParameters = @{
                     errorId       = 'ResourceISONameIsEmptyError'
                     errorCategory = 'InvalidArgument'
                     errorMessage  = $($LocalizedData.ResourceISONameIsEmptyError)
                 }
-                New-Exception @ExceptionParameters
+                New-Exception @exceptionParameters
             } # if
             $ResourceISO = [LabResourceISO]::New($ISOName)
             $Path = $ISO.Path
@@ -401,13 +401,13 @@ function Get-LabResourceISO
             else
             {
                 # A Path is not provided
-                $ExceptionParameters = @{
+                $exceptionParameters = @{
                     errorId       = 'ResourceISOPathIsEmptyError'
                     errorCategory = 'InvalidArgument'
                     errorMessage  = $($LocalizedData.ResourceISOPathIsEmptyError `
                             -f $ISOName)
                 }
-                New-Exception @ExceptionParameters
+                New-Exception @exceptionParameters
             }
             if ($ISO.URL)
             {
@@ -486,13 +486,13 @@ function Initialize-LabResourceISO
                 # The Resource ISO does not exist
                 if (-not ($ResourceISO.URL))
                 {
-                    $ExceptionParameters = @{
+                    $exceptionParameters = @{
                         errorId       = 'ResourceISOFileNotFoundAndNoURLError'
                         errorCategory = 'InvalidArgument'
                         errorMessage  = $($LocalizedData.ResourceISOFileNotFoundAndNoURLError `
                                 -f $ISOName, $Path)
                     }
-                    New-Exception @ExceptionParameters
+                    New-Exception @exceptionParameters
                 } # if
 
                 $URLLeaf = [System.IO.Path]::GetFileName($ResourceISO.URL)
@@ -515,13 +515,13 @@ function Initialize-LabResourceISO
                 } # if
                 if (-not (Test-Path -Path $ResourceISO.Path))
                 {
-                    $ExceptionParameters = @{
+                    $exceptionParameters = @{
                         errorId       = 'ResourceISOFileNotDownloadedError'
                         errorCategory = 'InvalidArgument'
                         errorMessage  = $($LocalizedData.ResourceISOFileNotDownloadedError `
                                 -f $ResourceISO.Name, $ResourceISO.Path, $ResourceISO.URL)
                     }
-                    New-Exception @ExceptionParameters
+                    New-Exception @exceptionParameters
                 } # if
             } # if
         } # foreach

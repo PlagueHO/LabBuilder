@@ -53,31 +53,31 @@ function Get-Lab {
 
     if (-not (Test-Path -Path $ConfigPath))
     {
-        $ExceptionParameters = @{
+        $exceptionParameters = @{
             errorId = 'ConfigurationFileNotFoundError'
             errorCategory = 'InvalidArgument'
             errorMessage = $($LocalizedData.ConfigurationFileNotFoundError `
                 -f $ConfigPath)
         }
-        New-Exception @ExceptionParameters
+        New-Exception @exceptionParameters
     } # if
 
     $Content = Get-Content -Path $ConfigPath -Raw
     if (-not $Content)
     {
-        $ExceptionParameters = @{
+        $exceptionParameters = @{
             errorId = 'ConfigurationFileEmptyError'
             errorCategory = 'InvalidArgument'
             errorMessage = $($LocalizedData.ConfigurationFileEmptyError `
                 -f $ConfigPath)
         }
-        New-Exception @ExceptionParameters
+        New-Exception @exceptionParameters
     } # if
 
     if (-not $SkipXMLValidation)
     {
         # Validate the XML
-        ValidateConfigurationXMLSchema `
+        Assert-ValidConfigurationXMLSchema `
             -ConfigPath $ConfigPath `
             -ErrorAction Stop
     }
@@ -92,13 +92,13 @@ function Get-Lab {
     if ($RequiredWindowsBuild -and `
         ($Script:CurrentBuild -lt $RequiredWindowsBuild))
     {
-        $ExceptionParameters = @{
+        $exceptionParameters = @{
             errorId = 'RequiredBuildNotMetError'
             errorCategory = 'InvalidArgument'
             errorMessage = $($LocalizedData.RequiredBuildNotMetError `
                 -f $Script:CurrentBuild,$RequiredWindowsBuild)
         }
-        New-Exception @ExceptionParameters
+        New-Exception @exceptionParameters
     } # if
 
     # Figure out the Config path and load it into the XML object (if we can)
@@ -492,12 +492,12 @@ Function Install-Lab {
         if ($CheckEnvironment)
         {
             # Check Hyper-V
-            InstallHyperV `
+            Install-LabHyperV `
                 -ErrorAction Stop
         } # if
 
         # Ensure WS-Man is enabled
-        EnableWSMan `
+        Enable-LabWSMan `
             @ForceSplat `
             -ErrorAction Stop
 
@@ -1099,14 +1099,14 @@ Function Start-Lab {
                 if (-not $VMObject)
                 {
                     # if the VM does not exist then throw a non-terminating exception
-                    $ExceptionParameters = @{
+                    $exceptionParameters = @{
                         errorId = 'VMDoesNotExistError'
                         errorCategory = 'InvalidArgument'
                         errorMessage = $($LocalizedData.VMDoesNotExistError `
                             -f $VMName)
 
                     }
-                    New-Exception @ExceptionParameters
+                    New-Exception @exceptionParameters
                 } # if
 
                 # Start the VM if it is off
@@ -1156,14 +1156,14 @@ Function Start-Lab {
             if (-not ($PhaseComplete))
             {
                 # Yes, throw an exception
-                $ExceptionParameters = @{
+                $exceptionParameters = @{
                     errorId = 'BootPhaseVMsTimeoutError'
                     errorCategory = 'InvalidArgument'
                     errorMessage = $($LocalizedData.BootPhaseStartVMsTimeoutError `
                         -f $BootPhase)
 
                 }
-                New-Exception @ExceptionParameters
+                New-Exception @exceptionParameters
             } # if
         } # foreach
 
@@ -1307,14 +1307,14 @@ Function Stop-Lab {
                 if (-not $VMObject)
                 {
                     # if the VM does not exist then throw a non-terminating exception
-                    $ExceptionParameters = @{
+                    $exceptionParameters = @{
                         errorId = 'VMDoesNotExistError'
                         errorCategory = 'InvalidArgument'
                         errorMessage = $($LocalizedData.VMDoesNotExistError `
                             -f $VMName)
 
                     }
-                    New-Exception @ExceptionParameters
+                    New-Exception @exceptionParameters
                 } # if
 
                 # Shutodwn the VM if it is off

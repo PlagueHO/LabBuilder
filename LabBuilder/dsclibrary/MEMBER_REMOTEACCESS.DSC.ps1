@@ -15,44 +15,47 @@ Configuration MEMBER_REMOTEACCESS
 {
     Import-DscResource -ModuleName 'PSDesiredStateConfiguration'
     Import-DscResource -ModuleName xComputerManagement
+
     Node $AllNodes.NodeName {
         # Assemble the Local Admin Credentials
-        If ($Node.LocalAdminPassword) {
+        if ($Node.LocalAdminPassword)
+        {
             [PSCredential]$LocalAdminCredential = New-Object System.Management.Automation.PSCredential ("Administrator", (ConvertTo-SecureString $Node.LocalAdminPassword -AsPlainText -Force))
         }
-        If ($Node.DomainAdminPassword) {
+        if ($Node.DomainAdminPassword)
+        {
             [PSCredential]$DomainAdminCredential = New-Object System.Management.Automation.PSCredential ("$($Node.DomainName)\Administrator", (ConvertTo-SecureString $Node.DomainAdminPassword -AsPlainText -Force))
         }
 
-        WindowsFeature DirectAccessVPNInstall 
+        WindowsFeature DirectAccessVPNInstall
         {
-            Ensure = "Present" 
-            Name = "DirectAccess-VPN" 
+            Ensure = "Present"
+            Name   = "DirectAccess-VPN"
         }
 
-        WindowsFeature RoutingInstall 
+        WindowsFeature RoutingInstall
         {
-            Ensure = "Present" 
-            Name = "Routing" 
-            DependsOn = "[WindowsFeature]DirectAccessVPNInstall" 
+            Ensure    = "Present"
+            Name      = "Routing"
+            DependsOn = "[WindowsFeature]DirectAccessVPNInstall"
         }
 
         # Wait for the Domain to be available so we can join it.
         WaitForAll DC
         {
-            ResourceName      = '[xADDomain]PrimaryDC'
-            NodeName          = $Node.DCname
-            RetryIntervalSec  = 15
-            RetryCount        = 60
+            ResourceName     = '[xADDomain]PrimaryDC'
+            NodeName         = $Node.DCname
+            RetryIntervalSec = 15
+            RetryCount       = 60
         }
-        
+
         # Join this Server to the Domain
-        xComputer JoinDomain 
-        { 
-            Name          = $Node.NodeName
-            DomainName    = $Node.DomainName
-            Credential    = $DomainAdminCredential 
-            DependsOn = "[WaitForAll]DC" 
+        xComputer JoinDomain
+        {
+            Name       = $Node.NodeName
+            DomainName = $Node.DomainName
+            Credential = $DomainAdminCredential
+            DependsOn  = "[WaitForAll]DC"
         }
     }
 }

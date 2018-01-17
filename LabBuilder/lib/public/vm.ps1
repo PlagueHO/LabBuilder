@@ -82,12 +82,12 @@ function Get-LabVM {
     {
         if ($VM.Name -eq 'VM')
         {
-            $ExceptionParameters = @{
+            $exceptionParameters = @{
                 errorId = 'VMNameError'
                 errorCategory = 'InvalidArgument'
                 errorMessage = $($LocalizedData.VMNameError)
             }
-            New-Exception @ExceptionParameters
+            New-Exception @exceptionParameters
         } # if
 
         # Get the Instance Count attribute
@@ -128,13 +128,13 @@ function Get-LabVM {
 
             if (-not $VM.Template)
             {
-                $ExceptionParameters = @{
+                $exceptionParameters = @{
                     errorId = 'VMTemplateNameEmptyError'
                     errorCategory = 'InvalidArgument'
                     errorMessage = $($LocalizedData.VMTemplateNameEmptyError `
                         -f $VMName)
                 }
-                New-Exception @ExceptionParameters
+                New-Exception @exceptionParameters
             } # if
 
             # Find the template that this VM uses and get the VHD Path
@@ -150,13 +150,13 @@ function Get-LabVM {
 
             if (-not $Found)
             {
-                $ExceptionParameters = @{
+                $exceptionParameters = @{
                     errorId = 'VMTemplateNotFoundError'
                     errorCategory = 'InvalidArgument'
                     errorMessage = $($LocalizedData.VMTemplateNotFoundError `
                         -f $VMName,$VM.template)
                 }
-                New-Exception @ExceptionParameters
+                New-Exception @exceptionParameters
             } # if
 
             # Get path to Offline Domain Join file if it exists
@@ -176,24 +176,24 @@ function Get-LabVM {
                 $AdapterSwitchName = $VMAdapter.SwitchName
                 if ($AdapterName -eq 'adapter')
                 {
-                    $ExceptionParameters = @{
+                    $exceptionParameters = @{
                         errorId = 'VMAdapterNameError'
                         errorCategory = 'InvalidArgument'
                         errorMessage = $($LocalizedData.VMAdapterNameError `
                             -f $VMName)
                     }
-                    New-Exception @ExceptionParameters
+                    New-Exception @exceptionParameters
                 } # if
 
                 if (-not $AdapterSwitchName)
                 {
-                    $ExceptionParameters = @{
+                    $exceptionParameters = @{
                         errorId = 'VMAdapterSwitchNameError'
                         errorCategory = 'InvalidArgument'
                         errorMessage = $($LocalizedData.VMAdapterSwitchNameError `
                             -f $VMName,$AdapterName)
                     }
-                    New-Exception @ExceptionParameters
+                    New-Exception @exceptionParameters
                 } # if
 
                 # if a LabId is set for the lab, prepend it to the adapter name
@@ -232,13 +232,13 @@ function Get-LabVM {
                 } # foreach
                 if (-not $Found)
                 {
-                    $ExceptionParameters = @{
+                    $exceptionParameters = @{
                         errorId = 'VMAdapterSwitchNotFoundError'
                         errorCategory = 'InvalidArgument'
                         errorMessage = $($LocalizedData.VMAdapterSwitchNotFoundError `
                             -f $VMName,$AdapterName,$AdapterSwitchName)
                     }
-                    New-Exception @ExceptionParameters
+                    New-Exception @exceptionParameters
                 } # if
 
                 # Figure out the VLan - If defined in the VM use it, otherwise use the one defined in the Switch, otherwise keep blank.
@@ -308,13 +308,13 @@ function Get-LabVM {
                 [System.String] $Vhd = $VMDataVhd.Vhd
                 if (-not $VMDataVhd.Vhd)
                 {
-                    $ExceptionParameters = @{
+                    $exceptionParameters = @{
                         errorId = 'VMDataDiskVHDEmptyError'
                         errorCategory = 'InvalidArgument'
                         errorMessage = $($LocalizedData.VMDataDiskVHDEmptyError `
                             -f $VMName)
                     }
-                    New-Exception @ExceptionParameters
+                    New-Exception @exceptionParameters
                 } # if
 
                 # Adjust the path to be relative to the Virtual Hard Disks folder of the VM
@@ -347,13 +347,13 @@ function Get-LabVM {
                     }
                     if (-not (Test-Path -Path $NewDataVHD.ParentVhd))
                     {
-                        $ExceptionParameters = @{
+                        $exceptionParameters = @{
                             errorId = 'VMDataDiskParentVHDNotFoundError'
                             errorCategory = 'InvalidArgument'
                             errorMessage = $($LocalizedData.VMDataDiskParentVHDNotFoundError `
                                 -f $VMName,$NewDataVHD.ParentVhd)
                         }
-                        New-Exception @ExceptionParameters
+                        New-Exception @exceptionParameters
                     } # if
                 } # if
 
@@ -371,13 +371,13 @@ function Get-LabVM {
                     } # if
                     if (-not (Test-Path -Path $NewDataVHD.SourceVhd))
                     {
-                        $ExceptionParameters = @{
+                        $exceptionParameters = @{
                             errorId = 'VMDataDiskSourceVHDNotFoundError'
                             errorCategory = 'InvalidArgument'
                             errorMessage = $($LocalizedData.VMDataDiskSourceVHDNotFoundError `
                                 -f $VMName,$NewDataVHD.SourceVhd)
                         }
-                        New-Exception @ExceptionParameters
+                        New-Exception @exceptionParameters
                     } # if
                 } # if
 
@@ -409,34 +409,34 @@ function Get-LabVM {
                         {
                             if (-not $NewDataVHD.ParentVhd)
                             {
-                                $ExceptionParameters = @{
+                                $exceptionParameters = @{
                                     errorId = 'VMDataDiskParentVHDMissingError'
                                     errorCategory = 'InvalidArgument'
                                     errorMessage = $($LocalizedData.VMDataDiskParentVHDMissingError `
                                         -f $VMName)
                                 }
-                                New-Exception @ExceptionParameters
+                                New-Exception @exceptionParameters
                             } # if
                             if ($NewDataVHD.Shared)
                             {
-                                $ExceptionParameters = @{
+                                $exceptionParameters = @{
                                     errorId = 'VMDataDiskSharedDifferencingError'
                                     errorCategory = 'InvalidArgument'
                                     errorMessage = $($LocalizedData.VMDataDiskSharedDifferencingError `
                                         -f $VMName,$VHD)
                                 }
-                                New-Exception @ExceptionParameters
+                                New-Exception @exceptionParameters
                             } # if
                         }
                         Default
                         {
-                            $ExceptionParameters = @{
+                            $exceptionParameters = @{
                                 errorId = 'VMDataDiskUnknownTypeError'
                                 errorCategory = 'InvalidArgument'
                                 errorMessage = $($LocalizedData.VMDataDiskUnknownTypeError `
                                     -f $VMName,$VHD,$VMDataVhd.Type)
                             }
-                            New-Exception @ExceptionParameters
+                            New-Exception @exceptionParameters
                         }
                     } # switch
                     $NewDataVHD.VHDType = [LabVHDType]::$($VMDataVhd.Type)
@@ -448,13 +448,13 @@ function Get-LabVM {
                     $PartitionStyle = [LabPartitionStyle]::$($VMDataVhd.PartitionStyle)
                     if (-not $PartitionStyle)
                     {
-                        $ExceptionParameters = @{
+                        $exceptionParameters = @{
                             errorId = 'VMDataDiskPartitionStyleError'
                             errorCategory = 'InvalidArgument'
                             errorMessage = $($LocalizedData.VMDataDiskPartitionStyleError `
                                 -f $VMName,$VHD,$VMDataVhd.PartitionStyle)
                         }
-                        New-Exception @ExceptionParameters
+                        New-Exception @exceptionParameters
                     } # if
                     $NewDataVHD.PartitionStyle = $PartitionStyle
                 } # if
@@ -465,13 +465,13 @@ function Get-LabVM {
                     $FileSystem = [LabFileSystem]::$($VMDataVhd.FileSystem)
                     if (-not $FileSystem)
                     {
-                        $ExceptionParameters = @{
+                        $exceptionParameters = @{
                             errorId = 'VMDataDiskFileSystemError'
                             errorCategory = 'InvalidArgument'
                             errorMessage = $($LocalizedData.VMDataDiskFileSystemError `
                                 -f $VMName,$VHD,$VMDataVhd.FileSystem)
                         }
-                        New-Exception @ExceptionParameters
+                        New-Exception @exceptionParameters
                     } # if
                     $NewDataVHD.FileSystem = $FileSystem
                 } # if
@@ -490,23 +490,23 @@ function Get-LabVM {
                 {
                     if (-not $NewDataVHD.PartitionStyle)
                     {
-                        $ExceptionParameters = @{
+                        $exceptionParameters = @{
                             errorId = 'VMDataDiskPartitionStyleMissingError'
                             errorCategory = 'InvalidArgument'
                             errorMessage = $($LocalizedData.VMDataDiskPartitionStyleMissingError `
                                 -f $VMName,$VHD)
                         }
-                        New-Exception @ExceptionParameters
+                        New-Exception @exceptionParameters
                     } # if
                     if (-not $NewDataVHD.FileSystem)
                     {
-                        $ExceptionParameters = @{
+                        $exceptionParameters = @{
                             errorId = 'VMDataDiskFileSystemMissingError'
                             errorCategory = 'InvalidArgument'
                             errorMessage = $($LocalizedData.VMDataDiskFileSystemMissingError `
                                 -f $VMName,$VHD)
                         }
-                        New-Exception @ExceptionParameters
+                        New-Exception @exceptionParameters
                     } # if
                 } # if
 
@@ -525,13 +525,13 @@ function Get-LabVM {
                         } # if
                         if (-not (Test-Path -Path $CopyFolder -Type Container))
                         {
-                        $ExceptionParameters = @{
+                        $exceptionParameters = @{
                             errorId = 'VMDataDiskCopyFolderMissingError'
                             errorCategory = 'InvalidArgument'
                             errorMessage = $($LocalizedData.VMDataDiskCopyFolderMissingError `
                                 -f $VMName,$VHD,$CopyFolder)
                             }
-                        New-Exception @ExceptionParameters
+                        New-Exception @exceptionParameters
                         }
                     } # foreach
                     $NewDataVHD.CopyFolders = $VMDataVhd.CopyFolders
@@ -543,13 +543,13 @@ function Get-LabVM {
                     $NewDataVHD.MoveSourceVHD = ($VMDataVhd.MoveSourceVHD -eq 'Y')
                     if (-not $NewDataVHD.SourceVHD)
                     {
-                        $ExceptionParameters = @{
+                        $exceptionParameters = @{
                             errorId = 'VMDataDiskSourceVHDIfMoveError'
                             errorCategory = 'InvalidArgument'
                             errorMessage = $($LocalizedData.VMDataDiskSourceVHDIfMoveError `
                                 -f $VMName,$VHD)
                         }
-                        New-Exception @ExceptionParameters
+                        New-Exception @exceptionParameters
                     } # if
                 } # if
 
@@ -558,13 +558,13 @@ function Get-LabVM {
                     -and ( ( ( -not $NewDataVHD.VhdType ) -or ( $NewDataVHD.Size -eq 0) ) `
                     -and -not $NewDataVHD.SourceVhd ) )
                 {
-                    $ExceptionParameters = @{
+                    $exceptionParameters = @{
                         errorId = 'VMDataDiskCantBeCreatedError'
                         errorCategory = 'InvalidArgument'
                         errorMessage = $($LocalizedData.VMDataDiskCantBeCreatedError `
                             -f $VMName,$VHD)
                     }
-                    New-Exception @ExceptionParameters
+                    New-Exception @exceptionParameters
                 } # if
 
                 $DataVHDs += @( $NewDataVHD )
@@ -596,13 +596,13 @@ function Get-LabVM {
                     if (-not $ResourceISO)
                     {
                         # The ISO Resource was not found
-                        $ExceptionParameters = @{
+                        $exceptionParameters = @{
                             errorId = 'VMDVDDriveISOResourceNotFOundError'
                             errorCategory = 'InvalidArgument'
                             errorMessage = $($LocalizedData.VMDVDDriveISOResourceNotFOundError `
                                 -f $VMName,$VMDVDDrive.ISO)
                         }
-                        New-Exception @ExceptionParameters
+                        New-Exception @exceptionParameters
                     } # if
                     # The ISO resource was found so populate the ISO details
                     $NewDVDDrive.ISO = $VMDVDDrive.ISO
@@ -628,13 +628,13 @@ function Get-LabVM {
                 } # if
                 if (-not (Test-Path $UnattendFile))
                 {
-                    $ExceptionParameters = @{
+                    $exceptionParameters = @{
                         errorId = 'UnattendFileMissingError'
                         errorCategory = 'InvalidArgument'
                         errorMessage = $($LocalizedData.UnattendFileMissingError `
                             -f $VMName,$UnattendFile)
                     }
-                    New-Exception @ExceptionParameters
+                    New-Exception @exceptionParameters
                 } # if
             } # if
 
@@ -654,23 +654,23 @@ function Get-LabVM {
                 } # if
                 if ([System.IO.Path]::GetExtension($SetupComplete).ToLower() -notin '.ps1','.cmd' )
                 {
-                    $ExceptionParameters = @{
+                    $exceptionParameters = @{
                         errorId = 'SetupCompleteFileBadTypeError'
                         errorCategory = 'InvalidArgument'
                         errorMessage = $($LocalizedData.SetupCompleteFileBadTypeError `
                             -f $VMName,$SetupComplete)
                     }
-                    New-Exception @ExceptionParameters
+                    New-Exception @exceptionParameters
                 } # if
                 if (-not (Test-Path $SetupComplete))
                 {
-                    $ExceptionParameters = @{
+                    $exceptionParameters = @{
                         errorId = 'SetupCompleteFileMissingError'
                         errorCategory = 'InvalidArgument'
                         errorMessage = $($LocalizedData.SetupCompleteFileMissingError `
                             -f $VMName,$SetupComplete)
                     }
-                    New-Exception @ExceptionParameters
+                    New-Exception @exceptionParameters
                 } # if
             } # if
 
@@ -694,34 +694,34 @@ function Get-LabVM {
 
                 if ([System.IO.Path]::GetExtension($LabDSC.ConfigFile).ToLower() -ne '.ps1' )
                 {
-                    $ExceptionParameters = @{
+                    $exceptionParameters = @{
                         errorId = 'DSCConfigFileBadTypeError'
                         errorCategory = 'InvalidArgument'
                         errorMessage = $($LocalizedData.DSCConfigFileBadTypeError `
                             -f $VMName,$LabDSC.ConfigFile)
                     }
-                    New-Exception @ExceptionParameters
+                    New-Exception @exceptionParameters
                 } # if
 
                 if (-not (Test-Path $LabDSC.ConfigFile))
                 {
-                    $ExceptionParameters = @{
+                    $exceptionParameters = @{
                         errorId = 'DSCConfigFileMissingError'
                         errorCategory = 'InvalidArgument'
                         errorMessage = $($LocalizedData.DSCConfigFileMissingError `
                             -f $VMName,$LabDSC.ConfigFile)
                     }
-                    New-Exception @ExceptionParameters
+                    New-Exception @exceptionParameters
                 } # if
                 if (-not $VM.DSC.ConfigName)
                 {
-                    $ExceptionParameters = @{
+                    $exceptionParameters = @{
                         errorId = 'DSCConfigNameIsEmptyError'
                         errorCategory = 'InvalidArgument'
                         errorMessage = $($LocalizedData.DSCConfigNameIsEmptyError `
                             -f $VMName)
                     }
-                    New-Exception @ExceptionParameters
+                    New-Exception @exceptionParameters
                 } # if
             } # if
 
@@ -784,13 +784,13 @@ function Get-LabVM {
             # it is not supported on Host then throw an exception.
             if ($ExposeVirtualizationExtensions -and ($Script:CurrentBuild -lt 10565))
             {
-                $ExceptionParameters = @{
+                $exceptionParameters = @{
                     errorId = 'VMVirtualizationExtError'
                     errorCategory = 'InvalidArgument'
                     errorMessage = $($LocalizedData.VMVirtualizationExtError `
                         -f $VMName)
                 }
-                New-Exception @ExceptionParameters
+                New-Exception @exceptionParameters
             } # if
 
             [Boolean] $UseDifferencingDisk = $True
@@ -1153,13 +1153,13 @@ function Initialize-LabVM {
             if ($VM.ExposeVirtualizationExtensions)
             {
                 # ExposeVirtualizationExtensions is required for this VM
-                $ExceptionParameters = @{
+                $exceptionParameters = @{
                     errorId = 'VMVirtualizationExtError'
                     errorCategory = 'InvalidArgument'
                     errorMessage = $($LocalizedData.VMVirtualizationExtError `
                         -f $VM.Name)
                 }
-                New-Exception @ExceptionParameters
+                New-Exception @exceptionParameters
             } # if
         }
         else
@@ -1490,25 +1490,25 @@ function Install-LabVM {
                     }
                     else
                     {
-                        $ExceptionParameters = @{
+                        $exceptionParameters = @{
                             errorId = 'CertificateDownloadError'
                             errorCategory = 'InvalidArgument'
                             errorMessage = $($LocalizedData.CertificateDownloadError `
                                 -f $VM.name)
                         }
-                        New-Exception @ExceptionParameters
+                        New-Exception @exceptionParameters
                     } # if
                 } # if
             }
             else
             {
-                $ExceptionParameters = @{
+                $exceptionParameters = @{
                     errorId = 'InitializationDidNotCompleteError'
                     errorCategory = 'InvalidArgument'
                     errorMessage = $($LocalizedData.InitializationDidNotCompleteError `
                         -f $VM.name)
                 }
-                New-Exception @ExceptionParameters
+                New-Exception @exceptionParameters
             } # if
         } # if
 
@@ -1649,13 +1649,13 @@ function Connect-LabVM
     if ($FatalException -or ($null -eq $Session))
     {
         # The connection failed so throw an error
-        $ExceptionParameters = @{
+        $exceptionParameters = @{
             errorId = 'RemotingConnectionError'
             errorCategory = 'ConnectionError'
             errorMessage = $($LocalizedData.RemotingConnectionError `
                 -f $VM.Name)
         }
-        New-Exception @ExceptionParameters
+        New-Exception @exceptionParameters
     }
     Return $Session
 } # Connect-LabVM

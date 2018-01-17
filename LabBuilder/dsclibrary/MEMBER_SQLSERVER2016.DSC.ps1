@@ -30,17 +30,18 @@ Configuration MEMBER_SQLSERVER2016
     Import-DscResource -ModuleName xComputerManagement
     Import-DscResource -ModuleName xStorage
     Import-DscResource -ModuleName xSQLServer
+
     Node $AllNodes.NodeName {
         # Assemble the Local Admin Credentials
-        If ($Node.LocalAdminPassword)
+        if ($Node.LocalAdminPassword)
         {
             [PSCredential]$LocalAdminCredential = New-Object System.Management.Automation.PSCredential ("Administrator", (ConvertTo-SecureString $Node.LocalAdminPassword -AsPlainText -Force))
         }
-        If ($Node.DomainAdminPassword)
+        if ($Node.DomainAdminPassword)
         {
             [PSCredential]$DomainAdminCredential = New-Object System.Management.Automation.PSCredential ("$($Node.DomainName)\Administrator", (ConvertTo-SecureString $Node.DomainAdminPassword -AsPlainText -Force))
         }
-        If ($Node.InstallerPassword)
+        if ($Node.InstallerPassword)
         {
             [PSCredential]$InstallerCredential = New-Object System.Management.Automation.PSCredential ("$($Node.DomainName)\$($Node.InstallerUsername)", (ConvertTo-SecureString $Node.InstallerPassword -AsPlainText -Force))
         }

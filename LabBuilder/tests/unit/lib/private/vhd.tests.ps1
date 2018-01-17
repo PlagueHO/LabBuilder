@@ -81,13 +81,13 @@ try
                 It 'Throws a PackageNotFoundError exception' {
                     $VM = $VMs[0].Clone()
                     $VM.Packages = 'DoesNotExist'
-                    $ExceptionParameters = @{
+                    $exceptionParameters = @{
                         errorId = 'PackageNotFoundError'
                         errorCategory = 'InvalidArgument'
                         errorMessage = $($LocalizedData.PackageNotFoundError `
                             -f 'DoesNotExist')
                     }
-                    $Exception = Get-Exception @ExceptionParameters
+                    $Exception = Get-Exception @exceptionParameters
                     { InitializeBootVHD -Lab $Lab -VM $VM -VMBootDiskPath 'c:\Dummy\' } | Should -Throw $Exception
                 }
                 It 'Calls Mocked commands' {
@@ -120,13 +120,13 @@ try
                 It 'Throws a PackageMSUNotFoundError exception' {
                     $VM = $VMs[0].Clone()
                     $VM.Packages = 'WMF5.0-WS2012R2-W81'
-                    $ExceptionParameters = @{
+                    $exceptionParameters = @{
                         errorId = 'PackageMSUNotFoundError'
                         errorCategory = 'InvalidArgument'
                         errorMessage = $($LocalizedData.PackageMSUNotFoundError `
                             -f 'WMF5.0-WS2012R2-W81',$ResourceMSUFile)
                     }
-                    $Exception = Get-Exception @ExceptionParameters
+                    $Exception = Get-Exception @exceptionParameters
                     { InitializeBootVHD -Lab $Lab -VM $VM -VMBootDiskPath 'c:\Dummy\' } | Should -Throw $Exception
                 }
                 It 'Calls Mocked commands' {
@@ -204,13 +204,13 @@ try
                     $VM = $VMs[0].Clone()
                     $VM.OSType = [LabOStype]::Nano
                     $VM.Packages = 'Microsoft-NanoServer-Containers-Package.cab,Microsoft-NanoServer-Guest-Package.cab'
-                    $ExceptionParameters = @{
+                    $exceptionParameters = @{
                         errorId = 'NanoServerPackagesFolderMissingError'
                         errorCategory = 'InvalidArgument'
                         errorMessage = $($LocalizedData.NanoServerPackagesFolderMissingError `
                             -f $NanoServerPackagesFolder)
                     }
-                    $Exception = Get-Exception @ExceptionParameters
+                    $Exception = Get-Exception @exceptionParameters
                     { InitializeBootVHD -Lab $Lab -VM $VM -VMBootDiskPath 'c:\Dummy\' } | Should -Throw $Exception
                 }
                 It 'Calls Mocked commands' {
@@ -336,13 +336,13 @@ try
             Context 'VHDx file does not exist' {
                 It 'Throws a FileNotFoundError Exception' {
                     $Splat = $VHD.Clone()
-                    $ExceptionParameters = @{
+                    $exceptionParameters = @{
                         errorId = 'FileNotFoundError'
                         errorCategory = 'InvalidArgument'
                         errorMessage = $($LocalizedData.FileNotFoundError `
                             -f "VHD",$Splat.Path)
                     }
-                    $Exception = Get-Exception @ExceptionParameters
+                    $Exception = Get-Exception @exceptionParameters
 
                     { InitializeVHD @Splat } | Should -Throw $Exception
                 }
@@ -366,13 +366,13 @@ try
             Context 'VHDx file exists is not mounted, is not initialized and partition style is not passed' {
                 It 'Throws a InitializeVHDNotInitializedError Exception' {
                     $Splat = $VHD.Clone()
-                    $ExceptionParameters = @{
+                    $exceptionParameters = @{
                         errorId = 'InitializeVHDNotInitializedError'
                         errorCategory = 'InvalidArgument'
                         errorMessage = $($LocalizedData.InitializeVHDNotInitializedError `
                             -f$Splat.Path)
                     }
-                    $Exception = Get-Exception @ExceptionParameters
+                    $Exception = Get-Exception @exceptionParameters
 
                     { InitializeVHD @Splat } | Should -Throw $Exception
                 }
@@ -513,13 +513,13 @@ try
                     $Splat = $VHDLabel.Clone()
                     $Splat.AccessPath = 'c:\DoesNotExist'
 
-                    $ExceptionParameters = @{
+                    $exceptionParameters = @{
                         errorId = 'InitializeVHDAccessPathNotFoundError'
                         errorCategory = 'InvalidArgument'
                         errorMessage = $($LocalizedData.InitializeVHDAccessPathNotFoundError `
                             -f$Splat.Path,'c:\DoesNotExist')
                     }
-                    $Exception = Get-Exception @ExceptionParameters
+                    $Exception = Get-Exception @exceptionParameters
 
                     { InitializeVHD @Splat } | Should -Throw $Exception
                 }

@@ -79,13 +79,13 @@ function InitializeBootVHD {
                 -ChildPath 'NanoServerPackages'
             if (-not (Test-Path -Path $NanoPackagesFolder))
             {
-                $ExceptionParameters = @{
+                $exceptionParameters = @{
                     errorId = 'NanoServerPackagesFolderMissingError'
                     errorCategory = 'InvalidArgument'
                     errorMessage = $($LocalizedData.NanoServerPackagesFolderMissingError `
                     -f $NanoPackagesFolder)
                 }
-                New-Exception @ExceptionParameters
+                New-Exception @exceptionParameters
             }
             # Add DSC Package to packages list if missing
             if ([System.String]::IsNullOrWhitespace($Packages))
@@ -122,13 +122,13 @@ function InitializeBootVHD {
                     # Does it exist?
                     if (-not (Test-Path -Path $PackagePath))
                     {
-                        $ExceptionParameters = @{
+                        $exceptionParameters = @{
                             errorId = 'NanoPackageNotFoundError'
                             errorCategory = 'InvalidArgument'
                             errorMessage = $($LocalizedData.NanoPackageNotFoundError `
                             -f $PackagePath)
                         }
-                        New-Exception @ExceptionParameters
+                        New-Exception @exceptionParameters
                     }
 
                     # Add the package
@@ -148,13 +148,13 @@ function InitializeBootVHD {
                     # Does it exist?
                     if (-not (Test-Path -Path $PackageLangFile))
                     {
-                        $ExceptionParameters = @{
+                        $exceptionParameters = @{
                             errorId = 'NanoPackageNotFoundError'
                             errorCategory = 'InvalidArgument'
                             errorMessage = $($LocalizedData.NanoPackageNotFoundError `
                             -f $PackageLangFile)
                         }
-                        New-Exception @ExceptionParameters
+                        New-Exception @exceptionParameters
                     }
 
                     Write-LabMessage -Message $($LocalizedData.ApplyingVMBootDiskFileMessage `
@@ -180,25 +180,25 @@ function InitializeBootVHD {
                     } # foreach
                     if (-not $Found)
                     {
-                        $ExceptionParameters = @{
+                        $exceptionParameters = @{
                             errorId = 'PackageNotFoundError'
                             errorCategory = 'InvalidArgument'
                             errorMessage = $($LocalizedData.PackageNotFoundError `
                             -f $Package)
                         }
-                        New-Exception @ExceptionParameters
+                        New-Exception @exceptionParameters
                     } # if
 
                     $PackagePath = $ResourceMSU.Filename
                     if (-not (Test-Path -Path $PackagePath))
                     {
-                        $ExceptionParameters = @{
+                        $exceptionParameters = @{
                             errorId = 'PackageMSUNotFoundError'
                             errorCategory = 'InvalidArgument'
                             errorMessage = $($LocalizedData.PackageMSUNotFoundError `
                             -f $Package,$PackagePath)
                         }
-                        New-Exception @ExceptionParameters
+                        New-Exception @exceptionParameters
                     } # if
                     # Apply a Package
                     Write-LabMessage -Message $($LocalizedData.ApplyingVMBootDiskFileMessage `
@@ -397,13 +397,13 @@ function InitializeVhd
     # Check file exists
     if (-not (Test-Path -Path $Path))
     {
-        $ExceptionParameters = @{
+        $exceptionParameters = @{
             errorId = 'FileNotFoundError'
             errorCategory = 'InvalidArgument'
             errorMessage = $($LocalizedData.FileNotFoundError `
             -f "VHD",$Path)
         }
-        New-Exception @ExceptionParameters
+        New-Exception @exceptionParameters
     } # if
 
     # Check disk is not already mounted
@@ -427,13 +427,13 @@ function InitializeVhd
     {
         if (-not $PartitionStyle)
         {
-            $ExceptionParameters = @{
+            $exceptionParameters = @{
                 errorId = 'InitializeVHDNotInitializedError'
                 errorCategory = 'InvalidArgument'
                 errorMessage = $($LocalizedData.InitializeVHDNotInitializedError `
                 -f $Path)
             }
-            New-Exception @ExceptionParameters
+            New-Exception @exceptionParameters
         } # if
         Write-LabMessage -Message ($LocalizedData.InitializeVHDInitializingMessage `
             -f $Path,$PartitionStyle)
@@ -521,13 +521,13 @@ function InitializeVhd
         if (-not $FileSystem)
         {
             # A File System wasn't specified so can't continue
-            $ExceptionParameters = @{
+            $exceptionParameters = @{
                 errorId = 'InitializeVHDNotFormattedError'
                 errorCategory = 'InvalidArgument'
                 errorMessage = $($LocalizedData.InitializeVHDNotFormattedError `
                 -f $Path)
             }
-            New-Exception @ExceptionParameters
+            New-Exception @exceptionParameters
         }
 
         # Format the volume
@@ -587,13 +587,13 @@ function InitializeVhd
                 # Check the Access folder exists
                 if (-not (Test-Path -Path $AccessPath -Type Container))
                 {
-                    $ExceptionParameters = @{
+                    $exceptionParameters = @{
                         errorId = 'InitializeVHDAccessPathNotFoundError'
                         errorCategory = 'InvalidArgument'
                         errorMessage = $($LocalizedData.InitializeVHDAccessPathNotFoundError `
                         -f $Path,$AccessPath)
                     }
-                    New-Exception @ExceptionParameters
+                    New-Exception @exceptionParameters
                 }
 
                 # Add the Partition Access Path

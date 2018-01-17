@@ -4,7 +4,7 @@ DSC Template Configuration File For use by LabBuilder
     MEMBER_ROOTCA
 .Desription
     Builds an Enterprise Root CA.
-.Parameters:    
+.Parameters:
           DomainName = "LABBUILDER.COM"
           DomainAdminPassword = "P@ssword!1"
           PSDscAllowDomainUser = $True
@@ -31,10 +31,10 @@ Configuration MEMBER_ROOTCA
     Import-DscResource -ModuleName xNetworking
     Node $AllNodes.NodeName {
         # Assemble the Local Admin Credentials
-        If ($Node.LocalAdminPassword) {
+        if ($Node.LocalAdminPassword) {
             [PSCredential]$LocalAdminCredential = New-Object System.Management.Automation.PSCredential ("Administrator", (ConvertTo-SecureString $Node.LocalAdminPassword -AsPlainText -Force))
         }
-        If ($Node.DomainAdminPassword) {
+        if ($Node.DomainAdminPassword) {
             [PSCredential]$DomainAdminCredential = New-Object System.Management.Automation.PSCredential ("$($Node.DomainName)\Administrator", (ConvertTo-SecureString $Node.DomainAdminPassword -AsPlainText -Force))
         }
 
@@ -52,9 +52,9 @@ Configuration MEMBER_ROOTCA
         }
 
         WindowsFeature InstallWebMgmtService
-        { 
-            Ensure = "Present" 
-            Name = "Web-Mgmt-Service" 
+        {
+            Ensure = "Present"
+            Name = "Web-Mgmt-Service"
             DependsOn = '[WindowsFeature]ADCSWebEnrollment'
         }
 
@@ -82,7 +82,7 @@ Configuration MEMBER_ROOTCA
             }
         }
 
-            
+
         # Create the CAPolicy.inf file that sets basic parameters for certificate issuance for this CA.
         File CAPolicy
         {
@@ -118,7 +118,7 @@ Configuration MEMBER_ROOTCA
             KeyLength = 4096
             DependsOn = '[File]CertEnrollFolder'
         }
-        
+
         # Configure the Web Enrollment Feature
         xADCSWebEnrollment ConfigWebEnrollment {
             Ensure = 'Present'
@@ -132,29 +132,29 @@ Configuration MEMBER_ROOTCA
         Script ADCSAdvConfig
         {
             SetScript = {
-                If ($Using:Node.CADistinguishedNameSuffix) {
+                if ($Using:Node.CADistinguishedNameSuffix) {
                     & "$($ENV:SystemRoot)\system32\certutil.exe" -setreg CA\DSConfigDN "CN=Configuration,$($Using:Node.CADistinguishedNameSuffix)"
                     & "$($ENV:SystemRoot)\system32\certutil.exe" -setreg CA\DSDomainDN "$($Using:Node.CADistinguishedNameSuffix)"
                 }
-                If ($Using:Node.CRLPublicationURLs) {
+                if ($Using:Node.CRLPublicationURLs) {
                     & "$($ENV:SystemRoot)\System32\certutil.exe" -setreg CA\CRLPublicationURLs $($Using:Node.CRLPublicationURLs)
                 }
-                If ($Using:Node.CACertPublicationURLs) {
+                if ($Using:Node.CACertPublicationURLs) {
                     & "$($ENV:SystemRoot)\System32\certutil.exe" -setreg CA\CACertPublicationURLs $($Using:Node.CACertPublicationURLs)
                 }
-                If ($Using:Node.CRLPeriodUnits) {
+                if ($Using:Node.CRLPeriodUnits) {
                     & "$($ENV:SystemRoot)\System32\certutil.exe" -setreg CA\CRLPeriodUnits $($Using:Node.CRLPeriodUnits)
                     & "$($ENV:SystemRoot)\System32\certutil.exe" -setreg CA\CRLPeriod "$($Using:Node.CRLPeriod)"
                 }
-                If ($Using:Node.CRLOverlapUnits) {
+                if ($Using:Node.CRLOverlapUnits) {
                     & "$($ENV:SystemRoot)\System32\certutil.exe" -setreg CA\CRLOverlapUnits $($Using:Node.CRLOverlapUnits)
                     & "$($ENV:SystemRoot)\System32\certutil.exe" -setreg CA\CRLOverlapPeriod "$($Using:Node.CRLOverlapPeriod)"
                 }
-                If ($Using:Node.ValidityPeriodUnits) {
+                if ($Using:Node.ValidityPeriodUnits) {
                     & "$($ENV:SystemRoot)\System32\certutil.exe" -setreg CA\ValidityPeriodUnits $($Using:Node.ValidityPeriodUnits)
                     & "$($ENV:SystemRoot)\System32\certutil.exe" -setreg CA\ValidityPeriod "$($Using:Node.ValidityPeriod)"
                 }
-                If ($Using:Node.AuditFilter) {
+                if ($Using:Node.AuditFilter) {
                     & "$($ENV:SystemRoot)\System32\certutil.exe" -setreg CA\AuditFilter $($Using:Node.AuditFilter)
                 }
                 Restart-Service -Name CertSvc
@@ -175,45 +175,45 @@ Configuration MEMBER_ROOTCA
                     'AuditFilter'  = (Get-ChildItem 'HKLM:\System\CurrentControlSet\Services\CertSvc\Configuration').GetValue('AuditFilter')
                 }
             }
-            TestScript = { 
-                If (((Get-ChildItem 'HKLM:\System\CurrentControlSet\Services\CertSvc\Configuration').GetValue('DSConfigDN') -ne "CN=Configuration,$($Using:Node.CADistinguishedNameSuffix)")) {
+            TestScript = {
+                if (((Get-ChildItem 'HKLM:\System\CurrentControlSet\Services\CertSvc\Configuration').GetValue('DSConfigDN') -ne "CN=Configuration,$($Using:Node.CADistinguishedNameSuffix)")) {
                     Return $False
                 }
-                If (((Get-ChildItem 'HKLM:\System\CurrentControlSet\Services\CertSvc\Configuration').GetValue('DSDomainDN') -ne "$($Using:Node.CADistinguishedNameSuffix)")) {
+                if (((Get-ChildItem 'HKLM:\System\CurrentControlSet\Services\CertSvc\Configuration').GetValue('DSDomainDN') -ne "$($Using:Node.CADistinguishedNameSuffix)")) {
                     Return $False
                 }
-                If (($Using:Node.CRLPublicationURLs) -and ((Get-ChildItem 'HKLM:\System\CurrentControlSet\Services\CertSvc\Configuration').GetValue('CRLPublicationURLs') -ne $Using:Node.CRLPublicationURLs)) {
+                if (($Using:Node.CRLPublicationURLs) -and ((Get-ChildItem 'HKLM:\System\CurrentControlSet\Services\CertSvc\Configuration').GetValue('CRLPublicationURLs') -ne $Using:Node.CRLPublicationURLs)) {
                     Return $False
                 }
-                If (($Using:Node.CACertPublicationURLs) -and ((Get-ChildItem 'HKLM:\System\CurrentControlSet\Services\CertSvc\Configuration').GetValue('CACertPublicationURLs') -ne $Using:Node.CACertPublicationURLs)) {
+                if (($Using:Node.CACertPublicationURLs) -and ((Get-ChildItem 'HKLM:\System\CurrentControlSet\Services\CertSvc\Configuration').GetValue('CACertPublicationURLs') -ne $Using:Node.CACertPublicationURLs)) {
                     Return $False
                 }
-                If (($Using:Node.CRLPeriodUnits) -and ((Get-ChildItem 'HKLM:\System\CurrentControlSet\Services\CertSvc\Configuration').GetValue('CRLPeriodUnits') -ne $Using:Node.CRLPeriodUnits)) {
+                if (($Using:Node.CRLPeriodUnits) -and ((Get-ChildItem 'HKLM:\System\CurrentControlSet\Services\CertSvc\Configuration').GetValue('CRLPeriodUnits') -ne $Using:Node.CRLPeriodUnits)) {
                     Return $False
                 }
-                If (($Using:Node.CRLPeriod) -and ((Get-ChildItem 'HKLM:\System\CurrentControlSet\Services\CertSvc\Configuration').GetValue('CRLPeriod') -ne $Using:Node.CRLPeriod)) {
+                if (($Using:Node.CRLPeriod) -and ((Get-ChildItem 'HKLM:\System\CurrentControlSet\Services\CertSvc\Configuration').GetValue('CRLPeriod') -ne $Using:Node.CRLPeriod)) {
                     Return $False
                 }
-                If (($Using:Node.CRLOverlapUnits) -and ((Get-ChildItem 'HKLM:\System\CurrentControlSet\Services\CertSvc\Configuration').GetValue('CRLOverlapUnits') -ne $Using:Node.CRLOverlapUnits)) {
+                if (($Using:Node.CRLOverlapUnits) -and ((Get-ChildItem 'HKLM:\System\CurrentControlSet\Services\CertSvc\Configuration').GetValue('CRLOverlapUnits') -ne $Using:Node.CRLOverlapUnits)) {
                     Return $False
                 }
-                If (($Using:Node.CRLOverlapPeriod) -and ((Get-ChildItem 'HKLM:\System\CurrentControlSet\Services\CertSvc\Configuration').GetValue('CRLOverlapPeriod') -ne $Using:Node.CRLOverlapPeriod)) {
+                if (($Using:Node.CRLOverlapPeriod) -and ((Get-ChildItem 'HKLM:\System\CurrentControlSet\Services\CertSvc\Configuration').GetValue('CRLOverlapPeriod') -ne $Using:Node.CRLOverlapPeriod)) {
                     Return $False
                 }
-                If (($Using:Node.ValidityPeriodUnits) -and ((Get-ChildItem 'HKLM:\System\CurrentControlSet\Services\CertSvc\Configuration').GetValue('ValidityPeriodUnits') -ne $Using:Node.ValidityPeriodUnits)) {
+                if (($Using:Node.ValidityPeriodUnits) -and ((Get-ChildItem 'HKLM:\System\CurrentControlSet\Services\CertSvc\Configuration').GetValue('ValidityPeriodUnits') -ne $Using:Node.ValidityPeriodUnits)) {
                     Return $False
                 }
-                If (($Using:Node.ValidityPeriod) -and ((Get-ChildItem 'HKLM:\System\CurrentControlSet\Services\CertSvc\Configuration').GetValue('ValidityPeriod') -ne $Using:Node.ValidityPeriod)) {
+                if (($Using:Node.ValidityPeriod) -and ((Get-ChildItem 'HKLM:\System\CurrentControlSet\Services\CertSvc\Configuration').GetValue('ValidityPeriod') -ne $Using:Node.ValidityPeriod)) {
                     Return $False
                 }
-                If (($Using:Node.AuditFilter) -and ((Get-ChildItem 'HKLM:\System\CurrentControlSet\Services\CertSvc\Configuration').GetValue('AuditFilter') -ne $Using:Node.AuditFilter)) {
+                if (($Using:Node.AuditFilter) -and ((Get-ChildItem 'HKLM:\System\CurrentControlSet\Services\CertSvc\Configuration').GetValue('AuditFilter') -ne $Using:Node.AuditFilter)) {
                     Return $False
                 }
                 Return $True
             }
             DependsOn = '[xADCSWebEnrollment]ConfigWebEnrollment'
         }
-        
+
         if ($Node.InstallOnlineResponder) {
             # Configure the Online Responder Feature
             xADCSOnlineResponder ConfigOnlineResponder {
@@ -228,21 +228,21 @@ Configuration MEMBER_ROOTCA
             {
                 Name = "Microsoft-Windows-OnlineRevocationServices-OcspSvc-DCOM-In"
                 Enabled = "True"
-                DependsOn = "[xADCSOnlineResponder]ConfigOnlineResponder" 
+                DependsOn = "[xADCSOnlineResponder]ConfigOnlineResponder"
             }
 
             xFirewall OnlineResponderirewall2
             {
                 Name = "Microsoft-Windows-CertificateServices-OcspSvc-RPC-TCP-In"
                 Enabled = "True"
-                DependsOn = "[xADCSOnlineResponder]ConfigOnlineResponder" 
+                DependsOn = "[xADCSOnlineResponder]ConfigOnlineResponder"
             }
 
             xFirewall OnlineResponderFirewall3
             {
                 Name = "Microsoft-Windows-OnlineRevocationServices-OcspSvc-TCP-Out"
                 Enabled = "True"
-                DependsOn = "[xADCSOnlineResponder]ConfigOnlineResponder" 
+                DependsOn = "[xADCSOnlineResponder]ConfigOnlineResponder"
             }
         }
     }

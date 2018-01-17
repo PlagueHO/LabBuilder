@@ -70,13 +70,13 @@ try
                 It 'Throws a VMTemplateVHDISORootPathNotFoundError Exception' {
                     $Lab = Get-Lab -ConfigPath $Global:TestConfigOKPath
                     $Lab.labbuilderconfig.templatevhds.ISOPath = "$Global:TestConfigPath\MissingFolder"
-                    $ExceptionParameters = @{
+                    $exceptionParameters = @{
                         errorId = 'VMTemplateVHDISORootPathNotFoundError'
                         errorCategory = 'InvalidArgument'
                         errorMessage = $($LocalizedData.VMTemplateVHDISORootPathNotFoundError `
                             -f "$Global:TestConfigPath\MissingFolder")
                     }
-                    $Exception = Get-Exception @ExceptionParameters
+                    $Exception = Get-Exception @exceptionParameters
 
                     { Get-LabVMTemplateVHD -Lab $Lab } | Should -Throw $Exception
                 }
@@ -85,13 +85,13 @@ try
                 It 'Throws a VMTemplateVHDISORootPathNotFoundError Exception' {
                     $Lab = Get-Lab -ConfigPath $Global:TestConfigOKPath
                     $Lab.labbuilderconfig.templatevhds.ISOPath = "MissingFolder"
-                    $ExceptionParameters = @{
+                    $exceptionParameters = @{
                         errorId = 'VMTemplateVHDISORootPathNotFoundError'
                         errorCategory = 'InvalidArgument'
                         errorMessage = $($LocalizedData.VMTemplateVHDISORootPathNotFoundError `
                             -f "$Global:TestConfigPath\MissingFolder")
                     }
-                    $Exception = Get-Exception @ExceptionParameters
+                    $Exception = Get-Exception @exceptionParameters
 
                     { Get-LabVMTemplateVHD -Lab $Lab } | Should -Throw $Exception
                 }
@@ -100,13 +100,13 @@ try
                 It 'Throws a VMTemplateVHDRootPathNotFoundError Exception' {
                     $Lab = Get-Lab -ConfigPath $Global:TestConfigOKPath
                     $Lab.labbuilderconfig.templatevhds.VHDPath = "$Global:TestConfigPath\MissingFolder"
-                    $ExceptionParameters = @{
+                    $exceptionParameters = @{
                         errorId = 'VMTemplateVHDRootPathNotFoundError'
                         errorCategory = 'InvalidArgument'
                         errorMessage = $($LocalizedData.VMTemplateVHDRootPathNotFoundError `
                             -f "$Global:TestConfigPath\MissingFolder")
                     }
-                    $Exception = Get-Exception @ExceptionParameters
+                    $Exception = Get-Exception @exceptionParameters
 
                     { Get-LabVMTemplateVHD -Lab $Lab } | Should -Throw $Exception
                 }
@@ -115,13 +115,13 @@ try
                 It 'Throws a VMTemplateVHDRootPathNotFoundError Exception' {
                     $Lab = Get-Lab -ConfigPath $Global:TestConfigOKPath
                     $Lab.labbuilderconfig.templatevhds.VHDPath = "MissingFolder"
-                    $ExceptionParameters = @{
+                    $exceptionParameters = @{
                         errorId = 'VMTemplateVHDRootPathNotFoundError'
                         errorCategory = 'InvalidArgument'
                         errorMessage = $($LocalizedData.VMTemplateVHDRootPathNotFoundError `
                             -f "$Global:TestConfigPath\MissingFolder")
                     }
-                    $Exception = Get-Exception @ExceptionParameters
+                    $Exception = Get-Exception @exceptionParameters
 
                     { Get-LabVMTemplateVHD -Lab $Lab } | Should -Throw $Exception
                 }
@@ -130,12 +130,12 @@ try
                 It 'Throws a EmptyVMTemplateVHDNameError Exception' {
                     $Lab = Get-Lab -ConfigPath $Global:TestConfigOKPath
                     $Lab.labbuilderconfig.templatevhds.templatevhd[0].RemoveAttribute('name')
-                    $ExceptionParameters = @{
+                    $exceptionParameters = @{
                         errorId = 'EmptyVMTemplateVHDNameError'
                         errorCategory = 'InvalidArgument'
                         errorMessage = $($LocalizedData.EmptyVMTemplateVHDNameError)
                     }
-                    $Exception = Get-Exception @ExceptionParameters
+                    $Exception = Get-Exception @exceptionParameters
 
                     { Get-LabVMTemplateVHD -Lab $Lab } | Should -Throw $Exception
                 }
@@ -144,13 +144,13 @@ try
                 It 'Throws a EmptyVMTemplateVHDISOPathError Exception' {
                     $Lab = Get-Lab -ConfigPath $Global:TestConfigOKPath
                     $Lab.labbuilderconfig.templatevhds.templatevhd[0].ISO = ''
-                    $ExceptionParameters = @{
+                    $exceptionParameters = @{
                         errorId = 'EmptyVMTemplateVHDISOPathError'
                         errorCategory = 'InvalidArgument'
                         errorMessage = $($LocalizedData.EmptyVMTemplateVHDISOPathError `
                             -f $Lab.labbuilderconfig.templatevhds.templatevhd[0].name)
                     }
-                    $Exception = Get-Exception @ExceptionParameters
+                    $Exception = Get-Exception @exceptionParameters
 
                     { Get-LabVMTemplateVHD -Lab $Lab } | Should -Throw $Exception
                 }
@@ -159,13 +159,13 @@ try
                 It 'Throws a VMTemplateVHDISOPathNotFoundError Exception' {
                     $Lab = Get-Lab -ConfigPath $Global:TestConfigOKPath
                     $Lab.labbuilderconfig.templatevhds.templatevhd[0].ISO = "$Global:TestConfigPath\MissingFolder\DoesNotExist.iso"
-                    $ExceptionParameters = @{
+                    $exceptionParameters = @{
                         errorId = 'VMTemplateVHDISOPathNotFoundError'
                         errorCategory = 'InvalidArgument'
                         errorMessage = $($LocalizedData.VMTemplateVHDISOPathNotFoundError `
                             -f $Lab.labbuilderconfig.templatevhds.templatevhd[0].name,"$Global:TestConfigPath\MissingFolder\DoesNotExist.iso")
                     }
-                    $Exception = Get-Exception @ExceptionParameters
+                    $Exception = Get-Exception @exceptionParameters
 
                     { Get-LabVMTemplateVHD -Lab $Lab } | Should -Throw $Exception
                 }
@@ -174,13 +174,13 @@ try
                 It 'Throws a VMTemplateVHDISOPathNotFoundError Exception' {
                     $Lab = Get-Lab -ConfigPath $Global:TestConfigOKPath
                     $Lab.labbuilderconfig.templatevhds.templatevhd[0].ISO = "MissingFolder\DoesNotExist.iso"
-                    $ExceptionParameters = @{
+                    $exceptionParameters = @{
                         errorId = 'VMTemplateVHDISOPathNotFoundError'
                         errorCategory = 'InvalidArgument'
                         errorMessage = $($LocalizedData.VMTemplateVHDISOPathNotFoundError `
                             -f $Lab.labbuilderconfig.templatevhds.templatevhd[0].name,"$Global:TestConfigPath\ISOFiles\MissingFolder\DoesNotExist.iso")
                     }
-                    $Exception = Get-Exception @ExceptionParameters
+                    $Exception = Get-Exception @exceptionParameters
 
                     { Get-LabVMTemplateVHD -Lab $Lab } | Should -Throw $Exception
                 }
@@ -189,13 +189,13 @@ try
                 It 'Throws a InvalidVMTemplateVHDOSTypeError Exception' {
                     $Lab = Get-Lab -ConfigPath $Global:TestConfigOKPath
                     $Lab.labbuilderconfig.templatevhds.templatevhd[0].OSType = 'invalid'
-                    $ExceptionParameters = @{
+                    $exceptionParameters = @{
                         errorId = 'InvalidVMTemplateVHDOSTypeError'
                         errorCategory = 'InvalidArgument'
                         errorMessage = $($LocalizedData.InvalidVMTemplateVHDOSTypeError `
                             -f $Lab.labbuilderconfig.templatevhds.templatevhd[0].name,'invalid')
                     }
-                    $Exception = Get-Exception @ExceptionParameters
+                    $Exception = Get-Exception @exceptionParameters
 
                     { Get-LabVMTemplateVHD -Lab $Lab } | Should -Throw $Exception
                 }
@@ -204,13 +204,13 @@ try
                 It 'Throws a InvalidVMTemplateVHDVHDFormatError Exception' {
                     $Lab = Get-Lab -ConfigPath $Global:TestConfigOKPath
                     $Lab.labbuilderconfig.templatevhds.templatevhd[0].VHDFormat = 'invalid'
-                    $ExceptionParameters = @{
+                    $exceptionParameters = @{
                         errorId = 'InvalidVMTemplateVHDVHDFormatError'
                         errorCategory = 'InvalidArgument'
                         errorMessage = $($LocalizedData.InvalidVMTemplateVHDVHDFormatError `
                             -f $Lab.labbuilderconfig.templatevhds.templatevhd[0].name,'invalid')
                     }
-                    $Exception = Get-Exception @ExceptionParameters
+                    $Exception = Get-Exception @exceptionParameters
 
                     { Get-LabVMTemplateVHD -Lab $Lab } | Should -Throw $Exception
                 }
@@ -219,13 +219,13 @@ try
                 It 'Throws a InvalidVMTemplateVHDVHDTypeError Exception' {
                     $Lab = Get-Lab -ConfigPath $Global:TestConfigOKPath
                     $Lab.labbuilderconfig.templatevhds.templatevhd[0].VHDType = 'invalid'
-                    $ExceptionParameters = @{
+                    $exceptionParameters = @{
                         errorId = 'InvalidVMTemplateVHDVHDTypeError'
                         errorCategory = 'InvalidArgument'
                         errorMessage = $($LocalizedData.InvalidVMTemplateVHDVHDTypeError `
                             -f $Lab.labbuilderconfig.templatevhds.templatevhd[0].name,'invalid')
                     }
-                    $Exception = Get-Exception @ExceptionParameters
+                    $Exception = Get-Exception @exceptionParameters
 
                     { Get-LabVMTemplateVHD -Lab $Lab } | Should -Throw $Exception
                 }
@@ -234,13 +234,13 @@ try
                 It 'Throws a InvalidVMTemplateVHDGenerationError Exception' {
                     $Lab = Get-Lab -ConfigPath $Global:TestConfigOKPath
                     $Lab.labbuilderconfig.templatevhds.templatevhd[0].Generation = '99'
-                    $ExceptionParameters = @{
+                    $exceptionParameters = @{
                         errorId = 'InvalidVMTemplateVHDGenerationError'
                         errorCategory = 'InvalidArgument'
                         errorMessage = $($LocalizedData.InvalidVMTemplateVHDGenerationError `
                             -f $Lab.labbuilderconfig.templatevhds.templatevhd[0].name,'99')
                     }
-                    $Exception = Get-Exception @ExceptionParameters
+                    $Exception = Get-Exception @exceptionParameters
 
                     { Get-LabVMTemplateVHD -Lab $Lab } | Should -Throw $Exception
                 }
@@ -335,7 +335,7 @@ try
                 It 'Throws a FileNotFoundError exception' {
                     $Lab = Get-Lab -ConfigPath $Global:TestConfigOKPath
                     $VMTemplateVHDs = Get-LabVMTemplateVHD -Lab $Lab
-                    $ExceptionParameters = @{
+                    $exceptionParameters = @{
                         errorId = 'FileNotFoundError'
                         errorCategory = 'InvalidArgument'
                         errorMessage = $($LocalizedData.FileNotFoundError `
@@ -380,13 +380,13 @@ try
                     $VMTemplateVHDs = Get-LabVMTemplateVHD -Lab $Lab
                     $VMTemplateVHDs[0].isopath = 'doesnotexist.iso'
                     $VMTemplateVHDs[0].vhdpath = 'doesnotexist.vhdx'
-                    $ExceptionParameters = @{
+                    $exceptionParameters = @{
                         errorId = 'VMTemplateVHDISOPathNotFoundError'
                         errorCategory = 'InvalidArgument'
                         errorMessage = $($LocalizedData.VMTemplateVHDISOPathNotFoundError `
                             -f $Lab.labbuilderconfig.templatevhds.templatevhd[0].name,'doesnotexist.iso')
                     }
-                    $Exception = Get-Exception @ExceptionParameters
+                    $Exception = Get-Exception @exceptionParameters
 
                     { Initialize-LabVMTemplateVHD -Lab $Lab -VMTemplateVHDs $VMTemplateVHDs } | Should -Throw $Exception
                 }
@@ -453,13 +453,13 @@ try
                     {
                         $VMTemplateVHD.Packages='DoesNotExist'
                     }
-                    $ExceptionParameters = @{
+                    $exceptionParameters = @{
                         errorId = 'PackageNotFoundError'
                         errorCategory = 'InvalidArgument'
                         errorMessage = $($LocalizedData.PackageNotFoundError `
                             -f 'DoesNotExist')
                     }
-                    $Exception = Get-Exception @ExceptionParameters
+                    $Exception = Get-Exception @exceptionParameters
                     { Initialize-LabVMTemplateVHD -Lab $Lab -VMTemplateVHDs $VMTemplateVHDs } | Should -Throw $Exception
                 }
                 It 'Calls expected mocks commands' {
@@ -479,13 +479,13 @@ try
                     $Lab = Get-Lab -ConfigPath $Global:TestConfigOKPath
                     $VMTemplateVHDs = Get-LabVMTemplateVHD -Lab $Lab
                     $VMTemplateVHDs[0].vhdpath = 'doesnotexist.vhdx'
-                    $ExceptionParameters = @{
+                    $exceptionParameters = @{
                         errorId = 'PackageMSUNotFoundError'
                         errorCategory = 'InvalidArgument'
                         errorMessage = $($LocalizedData.PackageMSUNotFoundError `
                             -f 'WMF5.0-WS2012R2-W81',$ResourceMSUFile)
                     }
-                    $Exception = Get-Exception @ExceptionParameters
+                    $Exception = Get-Exception @exceptionParameters
                     { Initialize-LabVMTemplateVHD -Lab $Lab -VMTemplateVHDs $VMTemplateVHDs } | Should -Throw $Exception
                 }
                 It 'Calls expected mocks commands' {
@@ -575,7 +575,7 @@ try
                     $VMTemplateVHDs = Get-LabVMTemplateVHD -Lab $Lab
                     $VMTemplateVHDs[0].vhdpath = 'doesnotexist.vhdx'
                     $VMTemplateVHDs[1].vhdpath = 'doesnotexist.vhdx'
-                    $ExceptionParameters = @{
+                    $exceptionParameters = @{
                         errorId = 'ConvertWindowsImageError'
                         errorCategory = 'InvalidArgument'
                         errorMessage = $($LocalizedData.ConvertWindowsImageError `

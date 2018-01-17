@@ -16,7 +16,7 @@ Configuration STANDALONE_DEFAULT
     Import-DscResource -ModuleName 'xNewModule' -ModuleVersion '9.9.9.9'
     Node $AllNodes.NodeName {
         # Assemble the Local Admin Credentials
-        If ($Node.LocalAdminPassword) {
+        if ($Node.LocalAdminPassword) {
             [PSCredential]$LocalAdminCredential = New-Object System.Management.Automation.PSCredential ("Administrator", (ConvertTo-SecureString $Node.LocalAdminPassword -AsPlainText -Force))
         }
     }

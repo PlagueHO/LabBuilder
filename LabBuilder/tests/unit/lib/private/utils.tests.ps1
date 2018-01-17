@@ -64,92 +64,107 @@ try
 
         Describe '\Lib\Private\Utils.ps1\DownloadAndUnzipFile' {
             $URL = 'https://raw.githubusercontent.com/PlagueHO/LabBuilder/dev/LICENSE'
+
             Context 'Download folder does not exist' {
                 Mock -CommandName Invoke-WebRequest
                 Mock -CommandName Expand-Archive
                 Mock -CommandName Remove-Item
+
                 It 'Throws a DownloadFolderDoesNotExistError Exception' {
-                    $ExceptionParameters = @{
+                    $exceptionParameters = @{
                         errorId = 'DownloadFolderDoesNotExistError'
                         errorCategory = 'InvalidArgument'
                         errorMessage = $($LocalizedData.DownloadFolderDoesNotExistError `
                             -f 'c:\doesnotexist','LICENSE')
                     }
-                    $Exception = Get-Exception @ExceptionParameters
+                    $Exception = Get-Exception @exceptionParameters
 
                     { DownloadAndUnzipFile -URL $URL -DestinationPath 'c:\doesnotexist' } | Should -Throw $Exception
                 }
+
                 It 'Calls appropriate mocks' {
                     Assert-MockCalled -CommandName Invoke-WebRequest -Exactly -Times 0
                     Assert-MockCalled -CommandName Expand-Archive -Exactly -Times 0
                     Assert-MockCalled -CommandName Remove-Item -Exactly -Times 0
                 }
             }
+
             Context 'Download fails' {
                 Mock -CommandName Invoke-WebRequest { Throw ('Download Error') }
                 Mock -CommandName Expand-Archive
                 Mock -CommandName Remove-Item
+
                 It 'Throws a FileDownloadError Exception' {
 
-                    $ExceptionParameters = @{
+                    $exceptionParameters = @{
                         errorId = 'FileDownloadError'
                         errorCategory = 'InvalidArgument'
                         errorMessage = $($LocalizedData.FileDownloadError `
                             -f 'LICENSE',$URL,'Download Error')
                     }
-                    $Exception = Get-Exception @ExceptionParameters
+                    $Exception = Get-Exception @exceptionParameters
 
                     { DownloadAndUnzipFile -URL $URL -DestinationPath $ENV:Temp } | Should -Throw $Exception
                 }
+
                 It 'Calls appropriate mocks' {
                     Assert-MockCalled -CommandName Invoke-WebRequest -Exactly -Times 1
                     Assert-MockCalled -CommandName Expand-Archive -Exactly -Times 0
                     Assert-MockCalled -CommandName Remove-Item -Exactly -Times 0
                 }
             }
+
             Context 'Download OK' {
                 Mock -CommandName Invoke-WebRequest
                 Mock -CommandName Expand-Archive
                 Mock -CommandName Remove-Item
+
                 It 'Does not throw an Exception' {
                     { DownloadAndUnzipFile -URL $URL -DestinationPath $ENV:Temp } | Should -Not -Throw
                 }
+
                 It 'Calls appropriate mocks' {
                     Assert-MockCalled -CommandName Invoke-WebRequest -Exactly -Times 1
                     Assert-MockCalled -CommandName Expand-Archive -Exactly -Times 0
                     Assert-MockCalled -CommandName Remove-Item -Exactly -Times 0
                 }
             }
+
             $URL = 'https://raw.githubusercontent.com/PlagueHO/LabBuilder/dev/LICENSE.ZIP'
+
             Context 'Zip Download OK, Extract fails' {
                 Mock -CommandName Invoke-WebRequest
                 Mock -CommandName Expand-Archive { Throw ('Extract Error') }
                 Mock -CommandName Remove-Item
-                It 'Throws a FileExtractError Exception' {
 
-                    $ExceptionParameters = @{
+                It 'Throws a FileExtractError Exception' {
+                    $exceptionParameters = @{
                         errorId = 'FileExtractError'
                         errorCategory = 'InvalidArgument'
                         errorMessage = $($LocalizedData.FileExtractError `
                             -f 'LICENSE.ZIP','Extract Error')
                     }
-                    $Exception = Get-Exception @ExceptionParameters
+                    $Exception = Get-Exception @exceptionParameters
 
                     { DownloadAndUnzipFile -URL $URL -DestinationPath $ENV:Temp } | Should -Throw $Exception
                 }
+
                 It 'Calls appropriate mocks' {
                     Assert-MockCalled -CommandName Invoke-WebRequest -Exactly -Times 1
                     Assert-MockCalled -CommandName Expand-Archive -Exactly -Times 1
                     Assert-MockCalled -CommandName Remove-Item -Exactly -Times 1
                 }
             }
+
             Context 'Zip Download OK, Extract OK' {
                 Mock -CommandName Invoke-WebRequest
                 Mock -CommandName Expand-Archive
                 Mock -CommandName Remove-Item
+
                 It 'Does not throw an Exception' {
                     { DownloadAndUnzipFile -URL $URL -DestinationPath $ENV:Temp } | Should -Not -Throw
                 }
+
                 It 'Calls appropriate mocks' {
                     Assert-MockCalled -CommandName Invoke-WebRequest -Exactly -Times 1
                     Assert-MockCalled -CommandName Expand-Archive -Exactly -Times 1
@@ -157,12 +172,8 @@ try
             }
         }
 
-
-
         Describe '\Lib\Private\Utils.ps1\CreateCredential' -Tag 'Incomplete' {
         }
-
-
 
         Describe '\Lib\Private\Utils.ps1\DownloadResourceModule' {
             $URL = 'https://github.com/PowerShell/xNetworking/archive/dev.zip'
@@ -176,6 +187,7 @@ try
             Mock -CommandName Remove-Item
             Mock -CommandName Get-PackageProvider
             Mock -CommandName Install-Module
+
             Context 'Correct module already installed; Valid URL and Folder passed' {
                 It 'Does not throw an Exception' {
                     {
@@ -185,6 +197,7 @@ try
                             -Folder 'xNetworkingDev'
                     } | Should -Not -Throw
                 }
+
                 It 'Should call appropriate Mocks' {
                     Assert-MockCalled -CommandName Get-Module -Exactly -Times 1
                     Assert-MockCalled -CommandName Invoke-WebRequest -Exactly -Times 0
@@ -197,7 +210,9 @@ try
                     Assert-MockCalled -CommandName Install-Module -Exactly -Times 0
                 }
             }
+
             Mock -CommandName Get-Module -MockWith { }
+
             Context 'Module is not installed; Valid URL and Folder passed' {
                 It 'Does not throw an Exception' {
                     {
@@ -207,6 +222,7 @@ try
                             -Folder 'xNetworkingDev'
                     } | Should -Not -Throw
                 }
+
                 It 'Should call appropriate Mocks' {
                     Assert-MockCalled -CommandName Get-Module -Exactly -Times 1
                     Assert-MockCalled -CommandName Invoke-WebRequest -Exactly -Times 1
@@ -219,6 +235,7 @@ try
                     Assert-MockCalled -CommandName Install-Module -Exactly -Times 0
                 }
             }
+
             Context 'Module is not installed; No URL or Folder passed' {
                 It 'Does not throw an Exception' {
                     {
@@ -226,6 +243,7 @@ try
                             -Name 'xNetworking'
                     } | Should -Not -Throw
                 }
+
                 It 'Should call appropriate Mocks' {
                     Assert-MockCalled -CommandName Get-Module -Exactly -Times 1
                     Assert-MockCalled -CommandName Invoke-WebRequest -Exactly -Times 0
@@ -237,7 +255,9 @@ try
                     Assert-MockCalled -CommandName Install-Module -Exactly -Times 1
                 }
             }
+
             Mock -CommandName Get-Module -MockWith { @( New-Object -TypeName PSObject -Property @{ Name = 'xNetworking'; Version = '2.4.0.0'; } ) }
+
             Context 'Wrong version of module is installed; Valid URL, Folder and Required Version passed' {
                 It 'Does not throw an Exception' {
                     {
@@ -248,6 +268,7 @@ try
                             -RequiredVersion '2.5.0.0'
                     } | Should -Not -Throw
                 }
+
                 It 'Should call appropriate Mocks' {
                     Assert-MockCalled -CommandName Get-Module -Exactly -Times 1
                     Assert-MockCalled -CommandName Invoke-WebRequest -Exactly -Times 1
@@ -260,6 +281,7 @@ try
                     Assert-MockCalled -CommandName Install-Module -Exactly -Times 0
                 }
             }
+
             Context 'Wrong version of module is installed; No URL or Folder passed, but Required Version passed' {
                 It 'Does not throw an Exception' {
                     {
@@ -268,6 +290,7 @@ try
                             -RequiredVersion '2.5.0.0'
                     } | Should -Not -Throw
                 }
+
                 It 'Should call appropriate Mocks' {
                     Assert-MockCalled -CommandName Get-Module -Exactly -Times 1
                     Assert-MockCalled -CommandName Invoke-WebRequest -Exactly -Times 0
@@ -279,6 +302,7 @@ try
                     Assert-MockCalled -CommandName Install-Module -Exactly -Times 1
                 }
             }
+
             Context 'Correct version of module is installed; Valid URL, Folder and Required Version passed' {
                 It 'Does not throw an Exception' {
                     {
@@ -289,6 +313,7 @@ try
                             -RequiredVersion '2.4.0.0'
                     } | Should -Not -Throw
                 }
+
                 It 'Should call appropriate Mocks' {
                     Assert-MockCalled -CommandName Get-Module -Exactly -Times 1
                     Assert-MockCalled -CommandName Invoke-WebRequest -Exactly -Times 0
@@ -300,6 +325,7 @@ try
                     Assert-MockCalled -CommandName Install-Module -Exactly -Times 0
                 }
             }
+
             Context 'Correct version of module is installed; No URL and Folder passed, but Required Version passed' {
                 It 'Does not throw an Exception' {
                     {
@@ -308,6 +334,7 @@ try
                             -RequiredVersion '2.4.0.0'
                     } | Should -Not -Throw
                 }
+
                 It 'Should call appropriate Mocks' {
                     Assert-MockCalled -CommandName Get-Module -Exactly -Times 1
                     Assert-MockCalled -CommandName Invoke-WebRequest -Exactly -Times 0
@@ -319,6 +346,7 @@ try
                     Assert-MockCalled -CommandName Install-Module -Exactly -Times 0
                 }
             }
+
             Context 'Wrong version of module is installed; Valid URL, Folder and Minimum Version passed' {
                 It 'Does not throw an Exception' {
                     {
@@ -329,6 +357,7 @@ try
                             -MinimumVersion '2.5.0.0'
                     } | Should -Not -Throw
                 }
+
                 It 'Should call appropriate Mocks' {
                     Assert-MockCalled -CommandName Get-Module -Exactly -Times 1
                     Assert-MockCalled -CommandName Invoke-WebRequest -Exactly -Times 1
@@ -341,6 +370,7 @@ try
                     Assert-MockCalled -CommandName Install-Module -Exactly -Times 0
                 }
             }
+
             Context 'Wrong version of module is installed; No URL and Folder passed, but Minimum Version passed' {
                 It 'Does not throw an Exception' {
                     {
@@ -349,6 +379,7 @@ try
                             -MinimumVersion '2.5.0.0'
                     } | Should -Not -Throw
                 }
+
                 It 'Should call appropriate Mocks' {
                     Assert-MockCalled -CommandName Get-Module -Exactly -Times 1
                     Assert-MockCalled -CommandName Invoke-WebRequest -Exactly -Times 0
@@ -360,6 +391,7 @@ try
                     Assert-MockCalled -CommandName Install-Module -Exactly -Times 1
                 }
             }
+
             Context 'Correct version of module is installed; Valid URL, Folder and Minimum Version passed' {
                 It 'Does not throw an Exception' {
                     {
@@ -370,6 +402,7 @@ try
                             -MinimumVersion '2.4.0.0'
                     } | Should -Not -Throw
                 }
+
                 It 'Should call appropriate Mocks' {
                     Assert-MockCalled -CommandName Get-Module -Exactly -Times 1
                     Assert-MockCalled -CommandName Invoke-WebRequest -Exactly -Times 0
@@ -381,6 +414,7 @@ try
                     Assert-MockCalled -CommandName Install-Module -Exactly -Times 0
                 }
             }
+
             Context 'Correct version of module is installed; No URL and Folder passed, but Minimum Version passed' {
                 It 'Does not throw an Exception' {
                     {
@@ -389,6 +423,7 @@ try
                             -MinimumVersion '2.4.0.0'
                     } | Should -Not -Throw
                 }
+
                 It 'Should call appropriate Mocks' {
                     Assert-MockCalled -CommandName Get-Module -Exactly -Times 1
                     Assert-MockCalled -CommandName Invoke-WebRequest -Exactly -Times 0
@@ -400,17 +435,19 @@ try
                     Assert-MockCalled -CommandName Install-Module -Exactly -Times 0
                 }
             }
+
             Mock -CommandName Get-Module -MockWith { }
             Mock -CommandName Invoke-WebRequest -MockWith { Throw ('Download Error') }
+
             Context 'Module is not installed; Bad URL passed' {
                 It 'Throws a FileDownloadError exception' {
-                    $ExceptionParameters = @{
+                    $exceptionParameters = @{
                         errorId = 'FileDownloadError'
                         errorCategory = 'InvalidOperation'
                         errorMessage = $($LocalizedData.FileDownloadError `
                             -f 'dev.zip',$URL,'Download Error')
                     }
-                    $Exception = Get-Exception @ExceptionParameters
+                    $Exception = Get-Exception @exceptionParameters
 
                     {
                         DownloadResourceModule `
@@ -419,6 +456,7 @@ try
                             -Folder 'xNetworkingDev'
                     } | Should -Throw $Exception
                 }
+
                 It 'Should call appropriate Mocks' {
                     Assert-MockCalled -CommandName Get-Module -Exactly -Times 1
                     Assert-MockCalled -CommandName Invoke-WebRequest -Exactly -Times 1
@@ -430,22 +468,25 @@ try
                     Assert-MockCalled -CommandName Install-Module -Exactly -Times 0
                 }
             }
+
             Mock -CommandName Install-Module -MockWith { Throw ("No match was found for the specified search criteria and module name 'xDoesNotExist'" )}
+
             Context 'Module is not installed; Not available in Repository' {
                 It 'Throws a ModuleNotAvailableError exception' {
-                    $ExceptionParameters = @{
+                    $exceptionParameters = @{
                         errorId = 'ModuleNotAvailableError'
                         errorCategory = 'InvalidArgument'
                         errorMessage = $($LocalizedData.ModuleNotAvailableError `
                             -f 'xDoesNotExist','any version',"No match was found for the specified search criteria and module name 'xDoesNotExist'")
                     }
-                    $Exception = Get-Exception @ExceptionParameters
+                    $Exception = Get-Exception @exceptionParameters
 
                     {
                         DownloadResourceModule `
                             -Name 'xDoesNotExist'
                     } | Should -Throw $Exception
                 }
+
                 It 'Should call appropriate Mocks' {
                     Assert-MockCalled -CommandName Get-Module -Exactly -Times 1
                     Assert-MockCalled -CommandName Invoke-WebRequest -Exactly -Times 0
@@ -457,16 +498,18 @@ try
                     Assert-MockCalled -CommandName Install-Module -Exactly -Times 1
                 }
             }
+
             Mock -CommandName Install-Module -MockWith { Throw ("No match was found for the specified search criteria and module name 'xNetworking'" )}
+
             Context 'Wrong version of module is installed; No URL or Folder passed, but Required Version passed. Required Version is not available' {
                 It ' Throws a ModuleNotAvailableError Exception' {
-                    $ExceptionParameters = @{
+                    $exceptionParameters = @{
                         errorId = 'ModuleNotAvailableError'
                         errorCategory = 'InvalidArgument'
                         errorMessage = $($LocalizedData.ModuleNotAvailableError `
                             -f 'xNetworking','2.5.0.0',"No match was found for the specified search criteria and module name 'xNetworking'" )
                     }
-                    $Exception = Get-Exception @ExceptionParameters
+                    $Exception = Get-Exception @exceptionParameters
 
                     {
                         DownloadResourceModule `
@@ -474,6 +517,7 @@ try
                             -RequiredVersion '2.5.0.0'
                     } | Should -Throw $Exception
                 }
+
                 It 'Should call appropriate Mocks' {
                     Assert-MockCalled -CommandName Get-Module -Exactly -Times 1
                     Assert-MockCalled -CommandName Invoke-WebRequest -Exactly -Times 0
@@ -485,15 +529,16 @@ try
                     Assert-MockCalled -CommandName Install-Module -Exactly -Times 1
                 }
             }
+
             Context 'Wrong version of module is installed; No URL or Folder passed, but Minimum Version passed. Minimum Version is not available' {
                 It ' Throws a ModuleNotAvailableError Exception' {
-                    $ExceptionParameters = @{
+                    $exceptionParameters = @{
                         errorId = 'ModuleNotAvailableError'
                         errorCategory = 'InvalidArgument'
                         errorMessage = $($LocalizedData.ModuleNotAvailableError `
                             -f 'xNetworking','min 2.5.0.0',"No match was found for the specified search criteria and module name 'xNetworking'" )
                     }
-                    $Exception = Get-Exception @ExceptionParameters
+                    $Exception = Get-Exception @exceptionParameters
 
                     {
                         DownloadResourceModule `
@@ -501,6 +546,7 @@ try
                             -MinimumVersion '2.5.0.0'
                     } | Should -Throw $Exception
                 }
+
                 It 'Should call appropriate Mocks' {
                     Assert-MockCalled -CommandName Get-Module -Exactly -Times 1
                     Assert-MockCalled -CommandName Invoke-WebRequest -Exactly -Times 0
@@ -514,10 +560,7 @@ try
             }
         }
 
-
-
-        Describe '\Lib\Private\Utils.ps1\InstallHyperV' {
-
+        Describe '\Lib\Private\Utils.ps1\Install-LabHyperV' {
             $Lab = Get-Lab -ConfigPath $Global:TestConfigOKPath
 
             if ((Get-CimInstance Win32_OperatingSystem).ProductType -eq 1) {
@@ -532,7 +575,7 @@ try
 
             Context 'The function is called' {
                 It 'Does not throw an Exception' {
-                    { InstallHyperV } | Should -Not -Throw
+                    { Install-LabHyperV } | Should -Not -Throw
                 }
                 if ((Get-CimInstance Win32_OperatingSystem).ProductType -eq 1) {
                     It 'Calls appropriate mocks' {
@@ -550,43 +593,44 @@ try
             }
         }
 
-
-
-        Describe '\Lib\Private\Utils.ps1\EnableWSMan' {
+        Describe '\Lib\Private\Utils.ps1\Enable-LabWSMan' {
             Context 'WS-Man is already enabled' {
                 Mock -CommandName Start-Service
                 Mock -CommandName Get-PSProvider -MockWith { @{ Name = 'wsman' } }
                 Mock -CommandName Enable-PSRemoting
+
                 It 'Does not throw an Exception' {
-                    { EnableWSMan } | Should -Not -Throw
+                    { Enable-LabWSMan } | Should -Not -Throw
                 }
+
                 It 'Calls appropriate mocks' {
                     Assert-MockCalled -CommandName Enable-PSRemoting -Exactly -Times 0
                 }
             }
+
             Context 'WS-Man is not enabled, user declines install' {
                 Mock -CommandName Start-Service -MockWith { Throw }
                 Mock -CommandName Get-PSProvider
                 Mock -CommandName Enable-PSRemoting
+
                 It 'Should throw WSManNotEnabledError exception' {
-                    $ExceptionParameters = @{
+                    $exceptionParameters = @{
                         errorId = 'WSManNotEnabledError'
                         errorCategory = 'InvalidArgument'
                         errorMessage = $($LocalizedData.WSManNotEnabledError)
                     }
-                    $Exception = Get-Exception @ExceptionParameters
+                    $Exception = Get-Exception @exceptionParameters
 
-                    { EnableWSMan } | Should -Throw $Exception
+                    { Enable-LabWSMan } | Should -Throw $Exception
                 }
+
                 It 'Calls appropriate mocks' {
                     Assert-MockCalled -CommandName Enable-PSRemoting -Exactly -Times 1
                 }
             }
         }
 
-
-
-        Describe '\Lib\Private\Utils.ps1\ValidateConfigurationXMLSchema' -Tag 'Incomplete' {
+        Describe '\Lib\Private\Utils.ps1\Assert-ValidConfigurationXMLSchema' -Tag 'Incomplete' {
         }
 
         Describe '\Lib\Private\Utils.ps1\Get-NextMacAddress' {
@@ -617,13 +661,13 @@ try
         Describe '\Lib\Private\Utils.ps1\Get-NextIpAddress' {
             Context 'Invalid IP Address is passed' {
                 It 'Throws a IPAddressError Exception' {
-                    $ExceptionParameters = @{
+                    $exceptionParameters = @{
                         errorId = 'IPAddressError'
                         errorCategory = 'InvalidArgument'
                         errorMessage = $($LocalizedData.IPAddressError `
                             -f '192.168.1.999' )
                     }
-                    $Exception = Get-Exception @ExceptionParameters
+                    $Exception = Get-Exception @exceptionParameters
 
                     {
                         Get-NextIpAddress `

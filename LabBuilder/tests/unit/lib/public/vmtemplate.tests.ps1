@@ -75,12 +75,12 @@ try
                 It 'Throws a EmptyTemplateNameError Exception' {
                     $Lab = Get-Lab -ConfigPath $Global:TestConfigOKPath
                     $Lab.labbuilderconfig.templates.template[0].RemoveAttribute('name')
-                    $ExceptionParameters = @{
+                    $exceptionParameters = @{
                         errorId = 'EmptyTemplateNameError'
                         errorCategory = 'InvalidArgument'
                         errorMessage = $($LocalizedData.EmptyTemplateNameError)
                     }
-                    $Exception = Get-Exception @ExceptionParameters
+                    $Exception = Get-Exception @exceptionParameters
 
                     { Get-LabVMTemplate -Lab $Lab } | Should -Throw $Exception
                 }
@@ -89,13 +89,13 @@ try
                 It 'Throws a TemplateSourceVHDNotFoundError Exception' {
                     $Lab = Get-Lab -ConfigPath $Global:TestConfigOKPath
                     $Lab.labbuilderconfig.templates.template[0].sourcevhd = 'This File Doesnt Exist.vhdx'
-                    $ExceptionParameters = @{
+                    $exceptionParameters = @{
                         errorId = 'TemplateSourceVHDNotFoundError'
                         errorCategory = 'InvalidArgument'
                         errorMessage = $($LocalizedData.TemplateSourceVHDNotFoundError `
                             -f $Lab.labbuilderconfig.templates.template[0].name,"$Global:TestConfigPath\This File Doesnt Exist.vhdx")
                     }
-                    $Exception = Get-Exception @ExceptionParameters
+                    $Exception = Get-Exception @exceptionParameters
 
                     { Get-LabVMTemplate -Lab $Lab } | Should -Throw $Exception
                 }
@@ -104,13 +104,13 @@ try
                 It 'Throws a TemplateSourceVHDNotFoundError Exception' {
                     $Lab = Get-Lab -ConfigPath $Global:TestConfigOKPath
                     $Lab.labbuilderconfig.templates.template[0].sourcevhd = 'c:\This File Doesnt Exist.vhdx'
-                    $ExceptionParameters = @{
+                    $exceptionParameters = @{
                         errorId = 'TemplateSourceVHDNotFoundError'
                         errorCategory = 'InvalidArgument'
                         errorMessage = $($LocalizedData.TemplateSourceVHDNotFoundError `
                             -f $Lab.labbuilderconfig.templates.template[0].name,"c:\This File Doesnt Exist.vhdx")
                     }
-                    $Exception = Get-Exception @ExceptionParameters
+                    $Exception = Get-Exception @exceptionParameters
 
                     { Get-LabVMTemplate -Lab $Lab } | Should -Throw $Exception
                 }
@@ -119,13 +119,13 @@ try
                 It 'Throws a TemplateSourceVHDAndTemplateVHDConflictError Exception' {
                     $Lab = Get-Lab -ConfigPath $Global:TestConfigOKPath
                     $Lab.labbuilderconfig.templates.template[0].SetAttribute('templatevhd','Windows Server 2012 R2 Datacenter FULL')
-                    $ExceptionParameters = @{
+                    $exceptionParameters = @{
                         errorId = 'TemplateSourceVHDAndTemplateVHDConflictError'
                         errorCategory = 'InvalidArgument'
                         errorMessage = $($LocalizedData.TemplateSourceVHDAndTemplateVHDConflictError `
                             -f $Lab.labbuilderconfig.templates.template[0].name)
                     }
-                    $Exception = Get-Exception @ExceptionParameters
+                    $Exception = Get-Exception @exceptionParameters
 
                     { Get-LabVMTemplate -Lab $Lab } | Should -Throw $Exception
                 }
@@ -134,13 +134,13 @@ try
                 It 'Throws a TemplateSourceVHDandTemplateVHDMissingError Exception' {
                     $Lab = Get-Lab -ConfigPath $Global:TestConfigOKPath
                     $Lab.labbuilderconfig.templates.template[0].RemoveAttribute('sourcevhd')
-                    $ExceptionParameters = @{
+                    $exceptionParameters = @{
                         errorId = 'TemplateSourceVHDandTemplateVHDMissingError'
                         errorCategory = 'InvalidArgument'
                         errorMessage = $($LocalizedData.TemplateSourceVHDandTemplateVHDMissingError `
                             -f $Lab.labbuilderconfig.templates.template[0].name)
                     }
-                    $Exception = Get-Exception @ExceptionParameters
+                    $Exception = Get-Exception @exceptionParameters
 
                     { Get-LabVMTemplate -Lab $Lab } | Should -Throw $Exception
                 }
@@ -150,13 +150,13 @@ try
                 It 'Throws a TemplateSourceVHDAndTemplateVHDConflictError Exception' {
                     $Lab = Get-Lab -ConfigPath $Global:TestConfigOKPath
                     $Lab.labbuilderconfig.templates.template[1].TemplateVHD='Template VHD Does Not Exist'
-                    $ExceptionParameters = @{
+                    $exceptionParameters = @{
                         errorId = 'TemplateTemplateVHDNotFoundError'
                         errorCategory = 'InvalidArgument'
                         errorMessage = $($LocalizedData.TemplateTemplateVHDNotFoundError `
                             -f $Lab.labbuilderconfig.templates.template[1].name,'Template VHD Does Not Exist')
                     }
-                    $Exception = Get-Exception @ExceptionParameters
+                    $Exception = Get-Exception @exceptionParameters
 
                     { Get-LabVMTemplate -Lab $Lab } | Should -Throw $Exception
                 }
@@ -266,13 +266,13 @@ try
                 [LabVMTemplate[]] $Templates = @( $Template )
 
                 It 'Throws a TemplateSourceVHDNotFoundError Exception' {
-                    $ExceptionParameters = @{
+                    $exceptionParameters = @{
                         errorId = 'TemplateSourceVHDNotFoundError'
                         errorCategory = 'InvalidArgument'
                         errorMessage = $($LocalizedData.TemplateSourceVHDNotFoundError `
                             -f $Template.Name,$Template.SourceVHD)
                     }
-                    $Exception = Get-Exception @ExceptionParameters
+                    $Exception = Get-Exception @exceptionParameters
 
                     { Initialize-LabVMTemplate -Lab $Lab -VMTemplates $Templates } | Should -Throw $Exception
                 }

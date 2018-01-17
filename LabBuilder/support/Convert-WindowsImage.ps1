@@ -2242,7 +2242,7 @@ You can use the fields below to configure the VHD or VHDX that you want to creat
                 }
             }
 
-            If ($Feature)
+            if ($Feature)
             {
                 Write-W2VInfo -text "Installing Windows Feature(s) $Feature to the Image"
                 $FeatureSourcePath = Join-Path -Path "$($driveLetter):" -ChildPath "sources\sxs"

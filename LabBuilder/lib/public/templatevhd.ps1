@@ -67,13 +67,13 @@ function Get-LabVMTemplateVHD
     } # if
     if (-not (Test-Path -Path $ISORootPath -Type Container))
     {
-        $ExceptionParameters = @{
+        $exceptionParameters = @{
             errorId       = 'VMTemplateVHDISORootPathNotFoundError'
             errorCategory = 'InvalidArgument'
             errorMessage  = $($LocalizedData.VMTemplateVHDISORootPathNotFoundError `
                     -f $ISORootPath)
         }
-        New-Exception @ExceptionParameters
+        New-Exception @exceptionParameters
     } # if
 
     # Determine the VHDRootPath where the VHD files should be put
@@ -96,13 +96,13 @@ function Get-LabVMTemplateVHD
     } # if
     if (-not (Test-Path -Path $VHDRootPath -Type Container))
     {
-        $ExceptionParameters = @{
+        $exceptionParameters = @{
             errorId       = 'VMTemplateVHDRootPathNotFoundError'
             errorCategory = 'InvalidArgument'
             errorMessage  = $($LocalizedData.VMTemplateVHDRootPathNotFoundError `
                     -f $VHDRootPath)
         }
-        New-Exception @ExceptionParameters
+        New-Exception @exceptionParameters
     } # if
 
     $TemplatePrefix = $Lab.labbuilderconfig.templatevhds.prefix
@@ -125,25 +125,25 @@ function Get-LabVMTemplateVHD
         if (($TemplateVHDName -eq 'TemplateVHD') `
                 -or ([System.String]::IsNullOrWhiteSpace($TemplateVHDName)))
         {
-            $ExceptionParameters = @{
+            $exceptionParameters = @{
                 errorId       = 'EmptyVMTemplateVHDNameError'
                 errorCategory = 'InvalidArgument'
                 errorMessage  = $($LocalizedData.EmptyVMTemplateVHDNameError)
             }
-            New-Exception @ExceptionParameters
+            New-Exception @exceptionParameters
         } # if
 
         # Get the ISO Path
         [System.String] $ISOPath = $TemplateVHD.ISO
         if (-not $ISOPath)
         {
-            $ExceptionParameters = @{
+            $exceptionParameters = @{
                 errorId       = 'EmptyVMTemplateVHDISOPathError'
                 errorCategory = 'InvalidArgument'
                 errorMessage  = $($LocalizedData.EmptyVMTemplateVHDISOPathError `
                         -f $TemplateVHD.Name)
             }
-            New-Exception @ExceptionParameters
+            New-Exception @exceptionParameters
         } # if
 
         # Adjust the ISO Path if required
@@ -165,26 +165,26 @@ function Get-LabVMTemplateVHD
                     -Message $($LocalizedData.ISONotFoundDownloadURLMessage `
                         -f $TemplateVHD.Name, $ISOPath, $URL)
             } # if
-            $ExceptionParameters = @{
+            $exceptionParameters = @{
                 errorId       = 'VMTemplateVHDISOPathNotFoundError'
                 errorCategory = 'InvalidArgument'
                 errorMessage  = $($LocalizedData.VMTemplateVHDISOPathNotFoundError `
                         -f $TemplateVHD.Name, $ISOPath)
             }
-            New-Exception @ExceptionParameters
+            New-Exception @exceptionParameters
         } # if
 
         # Get the VHD Path
         [System.String] $VHDPath = $TemplateVHD.VHD
         if (-not $VHDPath)
         {
-            $ExceptionParameters = @{
+            $exceptionParameters = @{
                 errorId       = 'EmptyVMTemplateVHDPathError'
                 errorCategory = 'InvalidArgument'
                 errorMessage  = $($LocalizedData.EmptyVMTemplateVHDPathError `
                         -f $TemplateVHD.Name)
             }
-            New-Exception @ExceptionParameters
+            New-Exception @exceptionParameters
         } # if
 
         # Adjust the VHD Path if required
@@ -211,13 +211,13 @@ function Get-LabVMTemplateVHD
         } # if
         if (-not $OSType)
         {
-            $ExceptionParameters = @{
+            $exceptionParameters = @{
                 errorId       = 'InvalidVMTemplateVHDOSTypeError'
                 errorCategory = 'InvalidArgument'
                 errorMessage  = $($LocalizedData.InvalidVMTemplateVHDOSTypeError `
                         -f $TemplateVHD.Name, $TemplateVHD.OSType)
             }
-            New-Exception @ExceptionParameters
+            New-Exception @exceptionParameters
         } # if
 
         # Get the Template Wim Image to use
@@ -235,13 +235,13 @@ function Get-LabVMTemplateVHD
         } # if
         if (-not $VHDFormat)
         {
-            $ExceptionParameters = @{
+            $exceptionParameters = @{
                 errorId       = 'InvalidVMTemplateVHDVHDFormatError'
                 errorCategory = 'InvalidArgument'
                 errorMessage  = $($LocalizedData.InvalidVMTemplateVHDVHDFormatError `
                         -f $TemplateVHD.Name, $TemplateVHD.VHDFormat)
             }
-            New-Exception @ExceptionParameters
+            New-Exception @exceptionParameters
         }
 
         # Get the Template VHD Type
@@ -252,13 +252,13 @@ function Get-LabVMTemplateVHD
         } # if
         if (-not $VHDType)
         {
-            $ExceptionParameters = @{
+            $exceptionParameters = @{
                 errorId       = 'InvalidVMTemplateVHDVHDTypeError'
                 errorCategory = 'InvalidArgument'
                 errorMessage  = $($LocalizedData.InvalidVMTemplateVHDVHDTypeError `
                         -f $TemplateVHD.Name, $TemplateVHD.VHDType)
             }
-            New-Exception @ExceptionParameters
+            New-Exception @exceptionParameters
         } # if
 
         # Get the disk size if provided
@@ -276,13 +276,13 @@ function Get-LabVMTemplateVHD
         } # if
         if ($Generation -notin @(1, 2) )
         {
-            $ExceptionParameters = @{
+            $exceptionParameters = @{
                 errorId       = 'InvalidVMTemplateVHDGenerationError'
                 errorCategory = 'InvalidArgument'
                 errorMessage  = $($LocalizedData.InvalidVMTemplateVHDGenerationError `
                         -f $TemplateVHD.Name, $Generation)
             }
-            New-Exception @ExceptionParameters
+            New-Exception @exceptionParameters
         }
 
         # Get the Template Packages
@@ -389,13 +389,13 @@ function Initialize-LabVMTemplateVHD
             -ChildPath 'dism.exe'
         if (-not (Test-Path -Path $DismPath))
         {
-            $ExceptionParameters = @{
+            $exceptionParameters = @{
                 errorId       = 'FileNotFoundError'
                 errorCategory = 'InvalidArgument'
                 errorMessage  = $($LocalizedData.FileNotFoundError `
                         -f 'alternate DISM.EXE', $DismPath)
             }
-            New-Exception @ExceptionParameters
+            New-Exception @exceptionParameters
         }
     }
 
@@ -427,13 +427,13 @@ function Initialize-LabVMTemplateVHD
         [System.String] $ISOPath = $VMTemplateVHD.ISOPath
         if (-not (Test-Path -Path $ISOPath))
         {
-            $ExceptionParameters = @{
+            $exceptionParameters = @{
                 errorId       = 'VMTemplateVHDISOPathNotFoundError'
                 errorCategory = 'InvalidArgument'
                 errorMessage  = $($LocalizedData.VMTemplateVHDISOPathNotFoundError `
                         -f $TemplateVHDName, $ISOPath)
             }
-            New-Exception @ExceptionParameters
+            New-Exception @exceptionParameters
         } # if
 
         # Mount the ISO so we can read the files.
@@ -453,24 +453,24 @@ function Initialize-LabVMTemplateVHD
         $Volume = Get-Volume -DiskImage $DiskImage
         if (-not $Volume)
         {
-            $ExceptionParameters = @{
+            $exceptionParameters = @{
                 errorId       = 'VolumeNotAvailableAfterMountError'
                 errorCategory = 'InvalidArgument'
                 errorMessage  = $($LocalizedData.VolumeNotAvailableAfterMountError `
                         -f $ISOPath)
             }
-            New-Exception @ExceptionParameters
+            New-Exception @exceptionParameters
         }
         [System.String] $DriveLetter = $Volume.DriveLetter
         if (-not $DriveLetter)
         {
-            $ExceptionParameters = @{
+            $exceptionParameters = @{
                 errorId       = 'DriveLetterNotAssignedError'
                 errorCategory = 'InvalidArgument'
                 errorMessage  = $($LocalizedData.DriveLetterNotAssignedError `
                         -f $ISOPath)
             }
-            New-Exception @ExceptionParameters
+            New-Exception @exceptionParameters
         }
         [System.String] $ISODrive = "$([System.String]$DriveLetter):"
 
@@ -590,13 +590,13 @@ function Initialize-LabVMTemplateVHD
                         # Does it exist?
                         if (-not (Test-Path -Path $PackagePath))
                         {
-                            $ExceptionParameters = @{
+                            $exceptionParameters = @{
                                 errorId       = 'NanoPackageNotFoundError'
                                 errorCategory = 'InvalidArgument'
                                 errorMessage  = $($LocalizedData.NanoPackageNotFoundError `
                                         -f $PackagePath)
                             }
-                            New-Exception @ExceptionParameters
+                            New-Exception @exceptionParameters
                         }
                         $Packages += @( $PackagePath )
 
@@ -608,13 +608,13 @@ function Initialize-LabVMTemplateVHD
                         # Does it exist?
                         if (-not (Test-Path -Path $PackageLangPath))
                         {
-                            $ExceptionParameters = @{
+                            $exceptionParameters = @{
                                 errorId       = 'NanoPackageNotFoundError'
                                 errorCategory = 'InvalidArgument'
                                 errorMessage  = $($LocalizedData.NanoPackageNotFoundError `
                                         -f $PackageLangPath)
                             }
-                            New-Exception @ExceptionParameters
+                            New-Exception @exceptionParameters
                         }
                         $Packages += @( $PackageLangPath )
                     }
@@ -633,25 +633,25 @@ function Initialize-LabVMTemplateVHD
                         } # foreach
                         if (-not $Found)
                         {
-                            $ExceptionParameters = @{
+                            $exceptionParameters = @{
                                 errorId       = 'PackageNotFoundError'
                                 errorCategory = 'InvalidArgument'
                                 errorMessage  = $($LocalizedData.PackageNotFoundError `
                                         -f $Package)
                             }
-                            New-Exception @ExceptionParameters
+                            New-Exception @exceptionParameters
                         } # if
 
                         $PackagePath = $ResourceMSU.Filename
                         if (-not (Test-Path -Path $PackagePath))
                         {
-                            $ExceptionParameters = @{
+                            $exceptionParameters = @{
                                 errorId       = 'PackageMSUNotFoundError'
                                 errorCategory = 'InvalidArgument'
                                 errorMessage  = $($LocalizedData.PackageMSUNotFoundError `
                                         -f $Package, $PackagePath)
                             }
-                            New-Exception @ExceptionParameters
+                            New-Exception @exceptionParameters
                         } # if
                         $Packages += @( $PackagePath )
                     }
@@ -691,13 +691,13 @@ function Initialize-LabVMTemplateVHD
         } # try
         catch
         {
-            $ExceptionParameters = @{
+            $exceptionParameters = @{
                 errorId       = 'ConvertWindowsImageError'
                 errorCategory = 'InvalidArgument'
                 errorMessage  = $($LocalizedData.ConvertWindowsImageError `
                         -f $ISOPath, $SourcePath, $Edition, $VHDFormat, $_.Exception.Message)
             }
-            New-Exception @ExceptionParameters
+            New-Exception @exceptionParameters
         } # catch
         finally
         {
