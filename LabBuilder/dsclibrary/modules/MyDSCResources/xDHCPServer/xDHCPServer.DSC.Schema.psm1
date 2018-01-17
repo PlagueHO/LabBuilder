@@ -4,39 +4,39 @@
     (
         # Domain Admin Password
         [Parameter(Mandatory=$True)]
-        [String]
+        [System.String]
         $DomainAdminPassword,
-        
+
         # Local Admin Password
         [Parameter(Mandatory=$True)]
-        [string]
+        [System.String]
         $LocalAdminPassword,
-        
+
         # Domain Name
         [Parameter(Mandatory=$True)]
-        [String]
+        [System.String]
         $DomainName,
-        
-        # Scope Options to add 
+
+        # Scope Options to add
         [Parameter(AttributeValues)]
         [hashtable]
         $ScopeOptions,
-        
+
         # Scopes to create
         [Parameter(AttributeValues)]
         [hashtable]
         $Scopes,
-        
+
         # Scope Reservations
         [Parameter(AttributeValues)]
         [hashtable]
         $Reservations
-        
-        
+
+
     )
-    
-    
-    
+
+
+
     Import-DscResource -ModuleName 'PSDesiredStateConfiguration'
     Import-DscResource -ModuleName xDHCPServer
 
@@ -48,10 +48,10 @@
             [PSCredential]$DomainAdminCredential = New-Object System.Management.Automation.PSCredential ("$DomainName\Administrator", (ConvertTo-SecureString $DomainAdminPassword -AsPlainText -Force))
         }
 
-        WindowsFeature DHCPInstall 
-        { 
-            Ensure = "Present" 
-            Name = "DHCP" 
+        WindowsFeature DHCPInstall
+        {
+            Ensure = "Present"
+            Name = "DHCP"
         }
 
 
@@ -66,7 +66,7 @@
                     'Authorized' = (@(Get-DHCPServerInDC | Where-Object { $_.IPAddress -In (Get-NetIPAddress).IPAddress }).Count -gt 0);
                 }
             }
-            TestScript = { 
+            TestScript = {
                 Return (-not (@(Get-DHCPServerInDC | Where-Object { $_.IPAddress -In (Get-NetIPAddress).IPAddress }).Count -eq 0))
             }
             DependsOn = '[WindowsFeature]DHCPInstall'

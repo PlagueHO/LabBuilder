@@ -86,7 +86,7 @@ Configuration MEMBER_SQLSERVER2014
         foreach ($Instance in $Node.Instances)
         {
             $Features = $Instance.Features
-            if ([String]::IsNullOrEmpty($Features))
+            if ([System.String]::IsNullOrEmpty($Features))
             {
                 $Features = 'SQLENGINE,FULLTEXT,RS,AS,IS'
             } # if

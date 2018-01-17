@@ -15,20 +15,21 @@
 .OUTPUTS
     A management switch name.
 #>
-function GetManagementSwitchName {
+function GetManagementSwitchName
+{
     [CmdLetBinding()]
     param (
-        [Parameter(Mandatory)]
+        [Parameter(Mandatory = $true)]
         $Lab
     )
 
-    [String] $LabId = $Lab.labbuilderconfig.settings.labid
+    [System.String] $LabId = $Lab.labbuilderconfig.settings.labid
     if (-not $LabId)
     {
         $LabId = $Lab.labbuilderconfig.name
     } # if
     $ManagementSwitchName = ('{0}Lab Management' `
-        -f $LabId)
+            -f $LabId)
 
     return $ManagementSwitchName
 } # GetManagementSwitchName
@@ -53,16 +54,17 @@ function GetManagementSwitchName {
 .OUTPUTS
     None.
 #>
-function UpdateSwitchManagementAdapter {
+function UpdateSwitchManagementAdapter
+{
     [CmdLetBinding()]
     param (
-        [Parameter(Mandatory)]
-        [String] $Name,
+        [Parameter(Mandatory = $true)]
+        [System.String] $Name,
 
-        [Parameter(Mandatory)]
-        [String] $SwitchName,
+        [Parameter(Mandatory = $true)]
+        [System.String] $SwitchName,
 
-        [String] $StaticMacAddress,
+        [System.String] $StaticMacAddress,
 
         $VLanId
     )
@@ -85,9 +87,9 @@ function UpdateSwitchManagementAdapter {
         {
             # For a management adapter a Static MAC address can only be assigned
             # at creation time.
-            if (-not ([String]::IsNullOrEmpty($StaticMacAddress)))
+            if (-not ([System.String]::IsNullOrEmpty($StaticMacAddress)))
             {
-                $PSBoundParameters.Add('StaticMacAddress',$StaticMacAddress)
+                $PSBoundParameters.Add('StaticMacAddress', $StaticMacAddress)
             } # if
         } # If
 
@@ -106,7 +108,7 @@ function UpdateSwitchManagementAdapter {
     # Set or clear the VLanId
     if ($SetVlanId)
     {
-        if ([String]::IsNullOrEmpty($VLanId))
+        if ([System.String]::IsNullOrEmpty($VLanId))
         {
             $VlanSplat = @{ Untagged = $True }
         }

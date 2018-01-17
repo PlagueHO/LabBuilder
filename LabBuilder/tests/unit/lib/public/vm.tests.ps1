@@ -40,14 +40,14 @@ try
             [CmdLetBinding()]
             param
             (
-                [Parameter(Mandatory)]
-                [String] $errorId,
+                [Parameter(Mandatory = $true)]
+                [System.String] $errorId,
 
-                [Parameter(Mandatory)]
+                [Parameter(Mandatory = $true)]
                 [System.Management.Automation.ErrorCategory] $errorCategory,
 
-                [Parameter(Mandatory)]
-                [String] $errorMessage,
+                [Parameter(Mandatory = $true)]
+                [System.String] $errorMessage,
 
                 [Switch]
                 $terminate
@@ -87,7 +87,7 @@ try
                         errorMessage = $($LocalizedData.VMNameError)
                     }
                     $Exception = GetException @ExceptionParameters
-                    { Get-LabVM -Lab $Lab -VMTemplates $Templates -Switches $Switches } | Should Throw $Exception
+                    { Get-LabVM -Lab $Lab -VMTemplates $Templates -Switches $Switches } | Should -Throw $Exception
                 }
             }
             Context 'Configuration passed with VM missing Template.' {
@@ -103,7 +103,7 @@ try
                             -f $TestVMName)
                     }
                     $Exception = GetException @ExceptionParameters
-                    { Get-LabVM -Lab $Lab -VMTemplates $Templates -Switches $Switches } | Should Throw $Exception
+                    { Get-LabVM -Lab $Lab -VMTemplates $Templates -Switches $Switches } | Should -Throw $Exception
                 }
             }
             Context 'Configuration passed with VM invalid Template Name.' {
@@ -119,7 +119,7 @@ try
                             -f $TestVMName,'BadTemplate')
                     }
                     $Exception = GetException @ExceptionParameters
-                    { Get-LabVM -Lab $Lab -VMTemplates $Templates -Switches $Switches } | Should Throw $Exception
+                    { Get-LabVM -Lab $Lab -VMTemplates $Templates -Switches $Switches } | Should -Throw $Exception
                 }
             }
             Context 'Configuration passed with VM missing adapter name.' {
@@ -135,7 +135,7 @@ try
                             -f $TestVMName)
                     }
                     $Exception = GetException @ExceptionParameters
-                    { Get-LabVM -Lab $Lab -VMTemplates $Templates -Switches $Switches } | Should Throw $Exception
+                    { Get-LabVM -Lab $Lab -VMTemplates $Templates -Switches $Switches } | Should -Throw $Exception
                 }
             }
             Context 'Configuration passed with VM missing adapter switch name.' {
@@ -151,7 +151,7 @@ try
                             -f $TestVMName,$($Lab.labbuilderconfig.vms.vm.adapters.adapter[0].name))
                     }
                     $Exception = GetException @ExceptionParameters
-                    { Get-LabVM -Lab $Lab -VMTemplates $Templates -Switches $Switches } | Should Throw $Exception
+                    { Get-LabVM -Lab $Lab -VMTemplates $Templates -Switches $Switches } | Should -Throw $Exception
                 }
             }
             Context 'Configuration passed with VM Data Disk with empty VHD.' {
@@ -167,7 +167,7 @@ try
                             -f $TestVMName)
                     }
                     $Exception = GetException @ExceptionParameters
-                    { Get-LabVM -Lab $Lab -VMTemplates $Templates -Switches $Switches } | Should Throw $Exception
+                    { Get-LabVM -Lab $Lab -VMTemplates $Templates -Switches $Switches } | Should -Throw $Exception
                 }
             }
             Context "Configuration passed with VM Data Disk where ParentVHD can't be found." {
@@ -183,7 +183,7 @@ try
                             -f $TestVMName,"c:\ThisFileDoesntExist.vhdx")
                     }
                     $Exception = GetException @ExceptionParameters
-                    { Get-LabVM -Lab $Lab -VMTemplates $Templates -Switches $Switches } | Should Throw $Exception
+                    { Get-LabVM -Lab $Lab -VMTemplates $Templates -Switches $Switches } | Should -Throw $Exception
                 }
             }
             Context "Configuration passed with VM Data Disk where SourceVHD can't be found." {
@@ -199,7 +199,7 @@ try
                             -f $TestVMName,"c:\ThisFileDoesntExist.vhdx")
                     }
                     $Exception = GetException @ExceptionParameters
-                    { Get-LabVM -Lab $Lab -VMTemplates $Templates -Switches $Switches } | Should Throw $Exception
+                    { Get-LabVM -Lab $Lab -VMTemplates $Templates -Switches $Switches } | Should -Throw $Exception
                 }
             }
             Context "Configuration passed with VM Differencing Data Disk with empty ParentVHD." {
@@ -215,7 +215,7 @@ try
                             -f $TestVMName)
                     }
                     $Exception = GetException @ExceptionParameters
-                    { Get-LabVM -Lab $Lab -VMTemplates $Templates -Switches $Switches } | Should Throw $Exception
+                    { Get-LabVM -Lab $Lab -VMTemplates $Templates -Switches $Switches } | Should -Throw $Exception
                 }
             }
             Context "Configuration passed with VM Data Disk where it is a Differencing type disk but is shared." {
@@ -231,7 +231,7 @@ try
                             -f $TestVMName,"$($Lab.labbuilderconfig.settings.labpath)\$TestVMName\Virtual Hard Disks\$($Lab.labbuilderconfig.vms.vm.datavhds.datavhd[3].vhd)")
                     }
                     $Exception = GetException @ExceptionParameters
-                    { Get-LabVM -Lab $Lab -VMTemplates $Templates -Switches $Switches } | Should Throw $Exception
+                    { Get-LabVM -Lab $Lab -VMTemplates $Templates -Switches $Switches } | Should -Throw $Exception
                 }
             }
             Context "Configuration passed with VM Data Disk where it has an unknown Type." {
@@ -247,7 +247,7 @@ try
                             -f $TestVMName,"$($Lab.labbuilderconfig.settings.labpath)\$TestVMName\Virtual Hard Disks\$($Lab.labbuilderconfig.vms.vm.datavhds.datavhd[1].vhd)",'badtype')
                     }
                     $Exception = GetException @ExceptionParameters
-                    { Get-LabVM -Lab $Lab -VMTemplates $Templates -Switches $Switches } | Should Throw $Exception
+                    { Get-LabVM -Lab $Lab -VMTemplates $Templates -Switches $Switches } | Should -Throw $Exception
                 }
             }
             Context "Configuration passed with VM Data Disk that has an invalid Partition Style." {
@@ -263,7 +263,7 @@ try
                             -f $TestVMName,"$($Lab.labbuilderconfig.settings.labpath)\$TestVMName\Virtual Hard Disks\$($Lab.labbuilderconfig.vms.vm.datavhds.datavhd[1].vhd)",'Bad')
                     }
                     $Exception = GetException @ExceptionParameters
-                    { Get-LabVM -Lab $Lab -VMTemplates $Templates -Switches $Switches } | Should Throw $Exception
+                    { Get-LabVM -Lab $Lab -VMTemplates $Templates -Switches $Switches } | Should -Throw $Exception
                 }
             }
             Context "Configuration passed with VM Data Disk that has an invalid File System." {
@@ -279,7 +279,7 @@ try
                             -f $TestVMName,"$($Lab.labbuilderconfig.settings.labpath)\$TestVMName\Virtual Hard Disks\$($Lab.labbuilderconfig.vms.vm.datavhds.datavhd[1].vhd)",'Bad')
                     }
                     $Exception = GetException @ExceptionParameters
-                    { Get-LabVM -Lab $Lab -VMTemplates $Templates -Switches $Switches } | Should Throw $Exception
+                    { Get-LabVM -Lab $Lab -VMTemplates $Templates -Switches $Switches } | Should -Throw $Exception
                 }
             }
             Context "Configuration passed with VM Data Disk that has a File System set but not a Partition Style." {
@@ -295,7 +295,7 @@ try
                             -f $TestVMName,"$($Lab.labbuilderconfig.settings.labpath)\$TestVMName\Virtual Hard Disks\$($Lab.labbuilderconfig.vms.vm.datavhds.datavhd[1].vhd)")
                     }
                     $Exception = GetException @ExceptionParameters
-                    { Get-LabVM -Lab $Lab -VMTemplates $Templates -Switches $Switches } | Should Throw $Exception
+                    { Get-LabVM -Lab $Lab -VMTemplates $Templates -Switches $Switches } | Should -Throw $Exception
                 }
             }
             Context "Configuration passed with VM Data Disk that has a Partition Style set but not a File System." {
@@ -311,7 +311,7 @@ try
                             -f $TestVMName,"$($Lab.labbuilderconfig.settings.labpath)\$TestVMName\Virtual Hard Disks\$($Lab.labbuilderconfig.vms.vm.datavhds.datavhd[1].vhd)")
                     }
                     $Exception = GetException @ExceptionParameters
-                    { Get-LabVM -Lab $Lab -VMTemplates $Templates -Switches $Switches } | Should Throw $Exception
+                    { Get-LabVM -Lab $Lab -VMTemplates $Templates -Switches $Switches } | Should -Throw $Exception
                 }
             }
             Context "Configuration passed with VM Data Disk that has a File System Label set but not a Partition Style or File System." {
@@ -328,7 +328,7 @@ try
                             -f $TestVMName,"$($Lab.labbuilderconfig.settings.labpath)\$TestVMName\Virtual Hard Disks\$($Lab.labbuilderconfig.vms.vm.datavhds.datavhd[2].vhd)")
                     }
                     $Exception = GetException @ExceptionParameters
-                    { Get-LabVM -Lab $Lab -VMTemplates $Templates -Switches $Switches } | Should Throw $Exception
+                    { Get-LabVM -Lab $Lab -VMTemplates $Templates -Switches $Switches } | Should -Throw $Exception
                 }
             }
             Context "Configuration passed with VM Data Disk that exists with CopyFolders set to a folder that does not exist." {
@@ -344,7 +344,7 @@ try
                             -f $TestVMName,"$($Lab.labbuilderconfig.settings.labpath)\$TestVMName\Virtual Hard Disks\$($Lab.labbuilderconfig.vms.vm.datavhds.datavhd[0].vhd)",'c:\doesnotexist')
                     }
                     $Exception = GetException @ExceptionParameters
-                    { Get-LabVM -Lab $Lab -VMTemplates $Templates -Switches $Switches } | Should Throw $Exception
+                    { Get-LabVM -Lab $Lab -VMTemplates $Templates -Switches $Switches } | Should -Throw $Exception
                 }
             }
             Context "Configuration passed with VM Data Disk that does not exist but Type missing." {
@@ -360,7 +360,7 @@ try
                             -f $TestVMName,"$($Lab.labbuilderconfig.settings.labpath)\$TestVMName\Virtual Hard Disks\$($Lab.labbuilderconfig.vms.vm.datavhds.datavhd[1].vhd)")
                     }
                     $Exception = GetException @ExceptionParameters
-                    { Get-LabVM -Lab $Lab -VMTemplates $Templates -Switches $Switches } | Should Throw $Exception
+                    { Get-LabVM -Lab $Lab -VMTemplates $Templates -Switches $Switches } | Should -Throw $Exception
                 }
             }
             Context "Configuration passed with VM Data Disk that does not exist but Size missing." {
@@ -376,7 +376,7 @@ try
                             -f $TestVMName,"$($Lab.labbuilderconfig.settings.labpath)\$TestVMName\Virtual Hard Disks\$($Lab.labbuilderconfig.vms.vm.datavhds.datavhd[1].vhd)")
                     }
                     $Exception = GetException @ExceptionParameters
-                    { Get-LabVM -Lab $Lab -VMTemplates $Templates -Switches $Switches } | Should Throw $Exception
+                    { Get-LabVM -Lab $Lab -VMTemplates $Templates -Switches $Switches } | Should -Throw $Exception
                 }
             }
             Context "Configuration passed with VM Data Disk that does not exist but SourceVHD missing." {
@@ -392,7 +392,7 @@ try
                             -f $TestVMName,"$($Lab.labbuilderconfig.settings.labpath)\$TestVMName\Virtual Hard Disks\$($Lab.labbuilderconfig.vms.vm.datavhds.datavhd[0].vhd)")
                     }
                     $Exception = GetException @ExceptionParameters
-                    { Get-LabVM -Lab $Lab -VMTemplates $Templates -Switches $Switches } | Should Throw $Exception
+                    { Get-LabVM -Lab $Lab -VMTemplates $Templates -Switches $Switches } | Should -Throw $Exception
                 }
             }
             Context "Configuration passed with VM Data Disk that has MoveSourceVHD flag but SourceVHD missing." {
@@ -408,7 +408,7 @@ try
                             -f $TestVMName,"$($Lab.labbuilderconfig.settings.labpath)\$TestVMName\Virtual Hard Disks\$($Lab.labbuilderconfig.vms.vm.datavhds.datavhd[4].vhd)")
                     }
                     $Exception = GetException @ExceptionParameters
-                    { Get-LabVM -Lab $Lab -VMTemplates $Templates -Switches $Switches } | Should Throw $Exception
+                    { Get-LabVM -Lab $Lab -VMTemplates $Templates -Switches $Switches } | Should -Throw $Exception
                 }
             }
             Context 'Valid configuration is passed with VM Data Disk with rooted VHD path.' {
@@ -418,7 +418,7 @@ try
                 [Array]$Templates = Get-LabVMTemplate -Lab $Lab
                 [Array]$VMs = Get-LabVM -Lab $Lab -VMTemplates $Templates -Switches $Switches
                 It 'Returns Template Object containing VHD with correct rooted path' {
-                    $VMs[0].DataVhds[0].vhd | Should Be "$Global:TestConfigPath\VhdFiles\DataDisk.vhdx"
+                    $VMs[0].DataVhds[0].vhd | Should -Be "$Global:TestConfigPath\VhdFiles\DataDisk.vhdx"
                 }
             }
             Context 'Valid configuration is passed with VM Data Disk with non-rooted VHD path.' {
@@ -428,7 +428,7 @@ try
                 [Array]$Templates = Get-LabVMTemplate -Lab $Lab
                 [Array]$VMs = Get-LabVM -Lab $Lab -VMTemplates $Templates -Switches $Switches
                 It 'Returns Template Object containing VHD with correct rooted path' {
-                    $VMs[0].DataVhds[0].vhd | Should Be "$($Lab.labbuilderconfig.settings.labpath)\$TestVMName\Virtual Hard Disks\DataDisk.vhdx"
+                    $VMs[0].DataVhds[0].vhd | Should -Be "$($Lab.labbuilderconfig.settings.labpath)\$TestVMName\Virtual Hard Disks\DataDisk.vhdx"
                 }
             }
             Context 'Valid configuration is passed with VM Data Disk with rooted Parent VHD path.' {
@@ -438,7 +438,7 @@ try
                 [Array]$Templates = Get-LabVMTemplate -Lab $Lab
                 [Array]$VMs = Get-LabVM -Lab $Lab -VMTemplates $Templates -Switches $Switches
                 It 'Returns Template Object containing Parent VHD with correct rooted path' {
-                    $VMs[0].DataVhds[3].parentvhd | Should Be "$Global:TestConfigPath\VhdFiles\DataDisk.vhdx"
+                    $VMs[0].DataVhds[3].parentvhd | Should -Be "$Global:TestConfigPath\VhdFiles\DataDisk.vhdx"
                 }
             }
             Context 'Valid configuration is passed with VM Data Disk with non-rooted Parent VHD path.' {
@@ -449,7 +449,7 @@ try
                 [Array]$Templates = Get-LabVMTemplate -Lab $Lab
                 [Array]$VMs = Get-LabVM -Lab $Lab -VMTemplates $Templates -Switches $Switches
                 It 'Returns Template Object containing Parent VHD with correct rooted path' {
-                    $VMs[0].DataVhds[3].parentvhd | Should Be "$Global:TestConfigPath\VhdFiles\DataDisk.vhdx"
+                    $VMs[0].DataVhds[3].parentvhd | Should -Be "$Global:TestConfigPath\VhdFiles\DataDisk.vhdx"
                 }
             }
             Context 'Valid configuration is passed with VM Data Disk with rooted Source VHD path.' {
@@ -459,7 +459,7 @@ try
                 [Array]$Templates = Get-LabVMTemplate -Lab $Lab
                 [Array]$VMs = Get-LabVM -Lab $Lab -VMTemplates $Templates -Switches $Switches
                 It 'Returns Template Object containing Source VHD with correct rooted path' {
-                    $VMs[0].DataVhds[0].sourcevhd | Should Be "$Global:TestConfigPath\VhdFiles\DataDisk.vhdx"
+                    $VMs[0].DataVhds[0].sourcevhd | Should -Be "$Global:TestConfigPath\VhdFiles\DataDisk.vhdx"
                 }
             }
             Context 'Valid configuration is passed with VM Data Disk with non-rooted Source VHD path.' {
@@ -470,7 +470,7 @@ try
                 [Array]$Templates = Get-LabVMTemplate -Lab $Lab
                 [Array]$VMs = Get-LabVM -Lab $Lab -VMTemplates $Templates -Switches $Switches
                 It 'Returns Template Object containing Source VHD with correct rooted path' {
-                    $VMs[0].DataVhds[0].sourcevhd | Should Be "$Global:TestConfigPath\VhdFiles\DataDisk.vhdx"
+                    $VMs[0].DataVhds[0].sourcevhd | Should -Be "$Global:TestConfigPath\VhdFiles\DataDisk.vhdx"
                 }
             }
             Context "Configuration passed with VM DVD Drive that has a missing Resource ISO." {
@@ -486,7 +486,7 @@ try
                             -f $TestVMName,'DoesNotExist')
                     }
                     $Exception = GetException @ExceptionParameters
-                    { Get-LabVM -Lab $Lab -VMTemplates $Templates -Switches $Switches } | Should Throw $Exception
+                    { Get-LabVM -Lab $Lab -VMTemplates $Templates -Switches $Switches } | Should -Throw $Exception
                 }
             }
             Context "Configuration passed with VM unattend file that can't be found." {
@@ -502,7 +502,7 @@ try
                             -f $TestVMName,"$Global:TestConfigPath\ThisFileDoesntExist.xml")
                     }
                     $Exception = GetException @ExceptionParameters
-                    { Get-LabVM -Lab $Lab -VMTemplates $Templates -Switches $Switches } | Should Throw $Exception
+                    { Get-LabVM -Lab $Lab -VMTemplates $Templates -Switches $Switches } | Should -Throw $Exception
                 }
             }
             Context "Configuration passed with VM setup complete file that can't be found." {
@@ -518,7 +518,7 @@ try
                             -f $TestVMName,"$Global:TestConfigPath\ThisFileDoesntExist.ps1")
                     }
                     $Exception = GetException @ExceptionParameters
-                    { Get-LabVM -Lab $Lab -VMTemplates $Templates -Switches $Switches } | Should Throw $Exception
+                    { Get-LabVM -Lab $Lab -VMTemplates $Templates -Switches $Switches } | Should -Throw $Exception
                 }
             }
             Context 'Configuration passed with VM setup complete file with an invalid file extension.' {
@@ -534,7 +534,7 @@ try
                             -f $TestVMName,"$Global:TestConfigPath\ThisFileDoesntExist.abc")
                     }
                     $Exception = GetException @ExceptionParameters
-                    { Get-LabVM -Lab $Lab -VMTemplates $Templates -Switches $Switches } | Should Throw $Exception
+                    { Get-LabVM -Lab $Lab -VMTemplates $Templates -Switches $Switches } | Should -Throw $Exception
                 }
             }
             Context "Configuration passed with VM DSC Config File that can't be found." {
@@ -550,7 +550,7 @@ try
                             -f $TestVMName,"$Global:TestConfigPath\DSCLibrary\ThisFileDoesntExist.ps1")
                     }
                     $Exception = GetException @ExceptionParameters
-                    { Get-LabVM -Lab $Lab -VMTemplates $Templates -Switches $Switches } | Should Throw $Exception
+                    { Get-LabVM -Lab $Lab -VMTemplates $Templates -Switches $Switches } | Should -Throw $Exception
                 }
             }
             Context 'Configuration passed with VM DSC Config File with an invalid file extension.' {
@@ -566,7 +566,7 @@ try
                             -f $TestVMName,"$Global:TestConfigPath\DSCLibrary\FileWithBadType.xyz")
                     }
                     $Exception = GetException @ExceptionParameters
-                    { Get-LabVM -Lab $Lab -VMTemplates $Templates -Switches $Switches } | Should Throw $Exception
+                    { Get-LabVM -Lab $Lab -VMTemplates $Templates -Switches $Switches } | Should -Throw $Exception
                 }
             }
             Context 'Configuration passed with VM DSC Config File but no DSC Name.' {
@@ -582,7 +582,7 @@ try
                             -f $TestVMName)
                     }
                     $Exception = GetException @ExceptionParameters
-                    { Get-LabVM -Lab $Lab -VMTemplates $Templates -Switches $Switches } | Should Throw $Exception
+                    { Get-LabVM -Lab $Lab -VMTemplates $Templates -Switches $Switches } | Should -Throw $Exception
                 }
             }
             Context 'Valid configuration is passed with and Name filter set to matching switch' {
@@ -591,7 +591,7 @@ try
                     [Array]$Switches = Get-LabSwitch -Lab $Lab
                     [Array]$Templates = Get-LabVMTemplate -Lab $Lab
                     [Array]$VMs = Get-LabVM -Lab $Lab -VMTemplates $Templates -Switches $Switches -Name $Lab.labbuilderconfig.VMs.VM.Name
-                    $VMs.Count | Should Be 1
+                    $VMs.Count | Should -Be 1
                 }
             }
             Context 'Valid configuration is passed with and Name filter set to non-matching switch' {
@@ -600,7 +600,7 @@ try
                     [Array]$Switches = Get-LabSwitch -Lab $Lab
                     [Array]$Templates = Get-LabVMTemplate -Lab $Lab
                     [Array]$VMs = Get-LabVM -Lab $Lab -VMTemplates $Templates -Switches $Switches -Name 'Does Not Exist'
-                    $VMs.Count | Should Be 0
+                    $VMs.Count | Should -Be 0
                 }
             }
             $Script:CurrentBuild = 10560
@@ -616,7 +616,7 @@ try
                             -f $TestVMName)
                     }
                     $Exception = GetException @ExceptionParameters
-                    { Get-LabVM -Lab $Lab -VMTemplates $Templates -Switches $Switches } | Should Throw $Exception
+                    { Get-LabVM -Lab $Lab -VMTemplates $Templates -Switches $Switches } | Should -Throw $Exception
                 }
             }
             $Script:CurrentBuild = 10586
@@ -640,7 +640,7 @@ try
                 It 'Returns Template Object that matches Expected Object' {
                     Set-Content -Path "$Global:ArtifactPath\ExpectedVMs.json" -Value ($VMs | ConvertTo-Json -Depth 6)
                     $ExpectedVMs = Get-Content -Path "$Global:ExpectedContentPath\ExpectedVMs.json"
-                    [String]::Compare((Get-Content -Path "$Global:ArtifactPath\ExpectedVMs.json"),$ExpectedVMs,$true) | Should Be 0
+                    [System.String]::Compare((Get-Content -Path "$Global:ArtifactPath\ExpectedVMs.json"),$ExpectedVMs,$true) | Should -Be 0
                 }
             }
             Context 'Valid configuration is passed' {
@@ -665,7 +665,7 @@ try
                 It 'Returns Template Object that matches Expected Object' {
                     Set-Content -Path "$Global:ArtifactPath\ExpectedVMs.json" -Value ($VMs | ConvertTo-Json -Depth 6)
                     $ExpectedVMs = Get-Content -Path "$Global:ExpectedContentPath\ExpectedVMs.json"
-                    [String]::Compare((Get-Content -Path "$Global:ArtifactPath\ExpectedVMs.json"),$ExpectedVMs,$true) | Should Be 0
+                    [System.String]::Compare((Get-Content -Path "$Global:ArtifactPath\ExpectedVMs.json"),$ExpectedVMs,$true) | Should -Be 0
                 }
             }
         }
@@ -699,7 +699,7 @@ try
                 [Array]$VMs = Get-LabVM -Lab $Lab -VMTemplates $Templates -Switches $Switches
 
                 It 'Returns True' {
-                    Initialize-LabVM -Lab $Lab -VMs $VMs | Should Be $True
+                    Initialize-LabVM -Lab $Lab -VMs $VMs | Should -Be $True
                 }
                 It 'Calls Mocked commands' {
                     Assert-MockCalled New-VHD -Exactly 1
@@ -746,7 +746,7 @@ try
 
                 # Create the dummy VM's that the Remove-LabVM function
                 It 'Returns True' {
-                    Remove-LabVM -Lab $Lab -VMs $VMs | Should Be $True
+                    Remove-LabVM -Lab $Lab -VMs $VMs | Should -Be $True
                 }
                 It 'Calls Mocked commands' {
                     Assert-MockCalled Get-VM -Exactly 3
@@ -761,7 +761,7 @@ try
 
                 # Create the dummy VM's that the Remove-LabVM function
                 It 'Returns True' {
-                    Remove-LabVM -Lab $Lab | Should Be $True
+                    Remove-LabVM -Lab $Lab | Should -Be $True
                 }
                 It 'Calls Mocked commands' {
                     Assert-MockCalled Get-VM -Exactly 3
@@ -779,7 +779,7 @@ try
 
                 # Create the dummy VM's that the Remove-LabVM function
                 It 'Returns True' {
-                    Remove-LabVM -Lab $Lab -VMs $VMs -RemoveVMFolder | Should Be $True
+                    Remove-LabVM -Lab $Lab -VMs $VMs -RemoveVMFolder | Should -Be $True
                 }
                 It 'Calls Mocked commands' {
                     Assert-MockCalled Get-VM -Exactly 3
@@ -814,7 +814,7 @@ try
                 [Array]$VMs = Get-LabVM -Lab $Lab -VMTemplates $Templates -Switches $Switches
 
                 It 'Returns True' {
-                    Install-LabVM -Lab $Lab -VM $VMs[0] | Should Be $True
+                    Install-LabVM -Lab $Lab -VM $VMs[0] | Should -Be $True
                 }
                 It 'Calls Mocked commands' {
                     Assert-MockCalled Get-VM -ParameterFilter { $Name -eq 'PESTER01' } -Exactly 1

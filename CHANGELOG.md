@@ -1,5 +1,11 @@
 # Change Log
 
+## Unreleased
+
+- Clean up markdown errors in README.MD.
+- Updated code style to meet current best practices.
+- Updated tests to meet Pester v4 guidelines.
+
 ## 0.8.3.1140
 
 - Enforce xNetworking v5.0.0.0 is installed and used - fixes [Issue #289](https://github.com/PlagueHO/LabBuilder/issues/289).
@@ -75,7 +81,7 @@
 
 ## 0.8.1.0
 
-- Converted all Write-Verbose calls to WriteMessage function.
+- Converted all Write-Verbose calls to Write-LabMessage function.
 - Fix bug when creating a new Management adapter for a new Lab.
 
 ## 0.8.0.0
@@ -109,8 +115,8 @@
 - Private function UpdateSwitchManagementAdapter added.
 - Samples\Sample_WS2012R2_DCandDHCPOnly_NAT.xml: Added sample for testing NAT based Lab switches.
 - Improved ShouldProcess messages to be easier to read.
-- Utils\InstallPackageProviders: Added function for ensuring Package Providers are installed.
-- Utils\RegisterPackageSources: Added function for ensuring Package surces are registered.
+- Utils\Install-LabPackageProvider: Added function for ensuring Package Providers are installed.
+- Utils\Register-LabPackageSource: Added function for ensuring Package surces are registered.
 - Install-Lab: Added checks to ensure required PackageProviders and PackageSources are available.
 
 ## 0.7.8.0

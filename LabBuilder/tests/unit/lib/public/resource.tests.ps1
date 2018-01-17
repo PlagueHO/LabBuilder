@@ -40,14 +40,14 @@ try
             [CmdLetBinding()]
             param
             (
-                [Parameter(Mandatory)]
-                [String] $errorId,
+                [Parameter(Mandatory = $true)]
+                [System.String] $errorId,
 
-                [Parameter(Mandatory)]
+                [Parameter(Mandatory = $true)]
                 [System.Management.Automation.ErrorCategory] $errorCategory,
 
-                [Parameter(Mandatory)]
-                [String] $errorMessage,
+                [Parameter(Mandatory = $true)]
+                [System.String] $errorMessage,
 
                 [Switch]
                 $terminate
@@ -77,7 +77,7 @@ try
                     }
                     $Exception = GetException @ExceptionParameters
 
-                    { Get-LabResourceModule -Lab $Lab } | Should Throw $Exception
+                    { Get-LabResourceModule -Lab $Lab } | Should -Throw $Exception
                 }
             }
             Context 'Valid configuration is passed' {
@@ -86,7 +86,7 @@ try
                     [Array] $ResourceModules = Get-LabResourceModule -Lab $Lab
                     Set-Content -Path "$Global:ArtifactPath\ExpectedResourceModules.json" -Value ($ResourceModules | ConvertTo-Json -Depth 4)
                     $ExpectedResourceModules = Get-Content -Path "$Global:ExpectedContentPath\ExpectedResourceModules.json"
-                    [String]::Compare((Get-Content -Path "$Global:ArtifactPath\ExpectedResourceModules.json"),$ExpectedResourceModules,$true) | Should Be 0
+                    [System.String]::Compare((Get-Content -Path "$Global:ArtifactPath\ExpectedResourceModules.json"),$ExpectedResourceModules,$true) | Should -Be 0
                 }
             }
         }
@@ -102,7 +102,7 @@ try
 
             Context 'Valid configuration is passed' {
                 It 'Does not throw an Exception' {
-                    { Initialize-LabResourceModule -Lab $Lab -ResourceModules $ResourceModules } | Should Not Throw
+                    { Initialize-LabResourceModule -Lab $Lab -ResourceModules $ResourceModules } | Should -Not -Throw
                 }
                 It 'Calls Mocked commands' {
                     Assert-MockCalled DownloadResourceModule -Exactly 4
@@ -125,7 +125,7 @@ try
                     }
                     $Exception = GetException @ExceptionParameters
 
-                    { Get-LabResourceMSU -Lab $Lab } | Should Throw $Exception
+                    { Get-LabResourceMSU -Lab $Lab } | Should -Throw $Exception
                 }
             }
             Context 'Valid configuration is passed' {
@@ -134,7 +134,7 @@ try
                     [Array] $ResourceMSUs = Get-LabResourceMSU -Lab $Lab
                     Set-Content -Path "$Global:ArtifactPath\ExpectedResourceMSUs.json" -Value ($ResourceMSUs | ConvertTo-Json -Depth 4)
                     $ExpectedResourceMSUs = Get-Content -Path "$Global:ExpectedContentPath\ExpectedResourceMSUs.json"
-                    [String]::Compare((Get-Content -Path "$Global:ArtifactPath\ExpectedResourceMSUs.json"),$ExpectedResourceMSUs,$true) | Should Be 0
+                    [System.String]::Compare((Get-Content -Path "$Global:ArtifactPath\ExpectedResourceMSUs.json"),$ExpectedResourceMSUs,$true) | Should -Be 0
                 }
             }
         }
@@ -151,7 +151,7 @@ try
 
             Context 'Valid configuration is passed and resources are missing' {
                 It 'Does not throw an Exception' {
-                    { Initialize-LabResourceMSU -Lab $Lab -ResourceMSUs $ResourceMSUs } | Should Not Throw
+                    { Initialize-LabResourceMSU -Lab $Lab -ResourceMSUs $ResourceMSUs } | Should -Not -Throw
                 }
                 It 'Calls Mocked commands' {
                     Assert-MockCalled DownloadAndUnzipFile -Exactly 2
@@ -174,7 +174,7 @@ try
                     }
                     $Exception = GetException @ExceptionParameters
 
-                    { Get-LabResourceISO -Lab $Lab } | Should Throw $Exception
+                    { Get-LabResourceISO -Lab $Lab } | Should -Throw $Exception
                 }
             }
             Context 'Configuration passed with resource ISO with Empty Path' {
@@ -189,7 +189,7 @@ try
                     }
                     $Exception = GetException @ExceptionParameters
 
-                    { Get-LabResourceISO -Lab $Lab } | Should Throw $Exception
+                    { Get-LabResourceISO -Lab $Lab } | Should -Throw $Exception
                 }
             }
             Context 'Configuration passed with resource ISO files that do exist.' {
@@ -201,7 +201,7 @@ try
                     $Lab.labbuilderconfig.resources.iso[1].RemoveAttribute('url')
                     $Lab.labbuilderconfig.resources.iso[1].SetAttribute('path',"$Global:TestConfigPath\ISOFiles\SQLFULL_ENU.iso")
 
-                    { Get-LabResourceISO -Lab $Lab } | Should Not Throw
+                    { Get-LabResourceISO -Lab $Lab } | Should -Not -Throw
                 }
             }
             Context 'Valid configuration is passed' {
@@ -216,7 +216,7 @@ try
                     })
                     Set-Content -Path "$Global:ArtifactPath\ExpectedResourceISOs.json" -Value ($ResourceISOs | ConvertTo-Json -Depth 4)
                     $ExpectedResourceISOs = Get-Content -Path "$Global:ExpectedContentPath\ExpectedResourceISOs.json"
-                    [String]::Compare((Get-Content -Path "$Global:ArtifactPath\ExpectedResourceISOs.json"),$ExpectedResourceISOs,$true) | Should Be 0
+                    [System.String]::Compare((Get-Content -Path "$Global:ArtifactPath\ExpectedResourceISOs.json"),$ExpectedResourceISOs,$true) | Should -Be 0
                 }
             }
             Context 'Valid configuration is passed with ISOPath set' {
@@ -231,7 +231,7 @@ try
                     })
                     Set-Content -Path "$Global:ArtifactPath\ExpectedResourceISOs.json" -Value ($ResourceISOs | ConvertTo-Json -Depth 4)
                     $ExpectedResourceISOs = Get-Content -Path "$Global:ExpectedContentPath\ExpectedResourceISOs.json"
-                    [String]::Compare((Get-Content -Path "$Global:ArtifactPath\ExpectedResourceISOs.json"),$ExpectedResourceISOs,$true) | Should Be 0
+                    [System.String]::Compare((Get-Content -Path "$Global:ArtifactPath\ExpectedResourceISOs.json"),$ExpectedResourceISOs,$true) | Should -Be 0
                 }
             }
         }
@@ -248,7 +248,7 @@ try
 
             Context 'Valid configuration is passed and all ISOs exist' {
                 It 'Does not throw an Exception' {
-                    { Initialize-LabResourceISO -Lab $Lab -ResourceISOs $ResourceISOs } | Should Not Throw
+                    { Initialize-LabResourceISO -Lab $Lab -ResourceISOs $ResourceISOs } | Should -Not -Throw
                 }
                 It 'Calls Mocked commands' {
                     Assert-MockCalled DownloadAndUnzipFile -Exactly 0

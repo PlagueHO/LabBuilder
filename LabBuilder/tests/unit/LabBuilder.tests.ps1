@@ -60,7 +60,7 @@ try
                     Write-Warning -Message 'There are PSScriptAnalyzer errors that need to be fixed:'
                     @($PSScriptAnalyzerErrors).Foreach( { Write-Warning -Message "$($_.Scriptname) (Line $($_.Line)): $($_.Message)" } )
                     Write-Warning -Message  'For instructions on how to run PSScriptAnalyzer on your own machine, please go to https://github.com/powershell/psscriptAnalyzer/'
-                    $PSScriptAnalyzerErrors.Count | Should Be $null
+                    $PSScriptAnalyzerErrors.Count | Should -Be $null
                 }
                 if ($PSScriptAnalyzerWarnings -ne $null)
                 {
@@ -81,14 +81,14 @@ try
             [CmdLetBinding()]
             param
             (
-                [Parameter(Mandatory)]
-                [String] $errorId,
+                [Parameter(Mandatory = $true)]
+                [System.String] $errorId,
 
-                [Parameter(Mandatory)]
+                [Parameter(Mandatory = $true)]
                 [System.Management.Automation.ErrorCategory] $errorCategory,
 
-                [Parameter(Mandatory)]
-                [String] $errorMessage,
+                [Parameter(Mandatory = $true)]
+                [System.String] $errorMessage,
 
                 [Switch]
                 $terminate
@@ -109,7 +109,7 @@ try
         Describe 'XMLConfigurationSchemaValidation' {
             Context 'PesterTestConfig.OK.XML' {
                 It 'Does not throw an exception' {
-                    { ValidateConfigurationXMLSchema -ConfigPath $Global:TestConfigOKPath -Verbose } | Should Not Throw
+                    { ValidateConfigurationXMLSchema -ConfigPath $Global:TestConfigOKPath -Verbose } | Should -Not -Throw
                 }
             }
             $SampleFiles = Get-ChildItem -Path (Join-Path -Path $Global:ModuleRoot -ChildPath "Samples") -Recurse -Filter 'Sample_*.xml'
@@ -117,7 +117,7 @@ try
             {
                 Context "Samples\$SampleFile" {
                     It 'Does not throw an exception' {
-                        { ValidateConfigurationXMLSchema -ConfigPath $($SampleFile.Fullname) -Verbose } | Should Not Throw
+                        { ValidateConfigurationXMLSchema -ConfigPath $($SampleFile.Fullname) -Verbose } | Should -Not -Throw
                     }
                 }
             }

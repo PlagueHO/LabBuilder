@@ -40,14 +40,14 @@ try
             [CmdLetBinding()]
             param
             (
-                [Parameter(Mandatory)]
-                [String] $errorId,
+                [Parameter(Mandatory = $true)]
+                [System.String] $errorId,
 
-                [Parameter(Mandatory)]
+                [Parameter(Mandatory = $true)]
                 [System.Management.Automation.ErrorCategory] $errorCategory,
 
-                [Parameter(Mandatory)]
-                [String] $errorMessage,
+                [Parameter(Mandatory = $true)]
+                [System.String] $errorMessage,
 
                 [Switch]
                 $terminate
@@ -77,7 +77,7 @@ try
                     }
                     $Exception = GetException @ExceptionParameters
 
-                    { Get-LabSwitch -Lab $Lab } | Should Throw $Exception
+                    { Get-LabSwitch -Lab $Lab } | Should -Throw $Exception
                 }
             }
             Context 'Configuration passed with switch missing Switch Type.' {
@@ -92,7 +92,7 @@ try
                     }
                     $Exception = GetException @ExceptionParameters
 
-                    { Get-LabSwitch -Lab $Lab } | Should Throw $Exception
+                    { Get-LabSwitch -Lab $Lab } | Should -Throw $Exception
                 }
             }
             Context 'Configuration passed with switch invalid Switch Type.' {
@@ -107,7 +107,7 @@ try
                     }
                     $Exception = GetException @ExceptionParameters
 
-                    { Get-LabSwitch -Lab $Lab } | Should Throw $Exception
+                    { Get-LabSwitch -Lab $Lab } | Should -Throw $Exception
                 }
             }
             Context 'Configuration passed with switch containing adapters but is not External type.' {
@@ -122,21 +122,21 @@ try
                     }
                     $Exception = GetException @ExceptionParameters
 
-                    { Get-LabSwitch -Lab $Lab } | Should Throw $Exception
+                    { Get-LabSwitch -Lab $Lab } | Should -Throw $Exception
                 }
             }
             Context 'Valid configuration is passed with and Name filter set to matching switch' {
                 It 'Returns a Single Switch object' {
                     $Lab = Get-Lab -ConfigPath $Global:TestConfigOKPath
                     [Array] $Switches = Get-LabSwitch -Lab $Lab -Name $Lab.labbuilderconfig.switches.switch[0].name
-                    $Switches.Count | Should Be 1
+                    $Switches.Count | Should -Be 1
                 }
             }
             Context 'Valid configuration is passed with and Name filter set to non-matching switch' {
                 It 'Returns a Single Switch object' {
                     $Lab = Get-Lab -ConfigPath $Global:TestConfigOKPath
                     [Array] $Switches = Get-LabSwitch -Lab $Lab -Name 'Does Not Exist'
-                    $Switches.Count | Should Be 0
+                    $Switches.Count | Should -Be 0
                 }
             }
             Context 'Valid configuration is passed' {
@@ -145,7 +145,7 @@ try
                     [Array] $Switches = Get-LabSwitch -Lab $Lab
                     Set-Content -Path "$Global:ArtifactPath\ExpectedSwitches.json" -Value ($Switches | ConvertTo-Json -Depth 4)
                     $ExpectedSwitches = Get-Content -Path "$Global:ExpectedContentPath\ExpectedSwitches.json"
-                    [String]::Compare((Get-Content -Path "$Global:ArtifactPath\ExpectedSwitches.json"),$ExpectedSwitches,$true) | Should Be 0
+                    [System.String]::Compare((Get-Content -Path "$Global:ArtifactPath\ExpectedSwitches.json"),$ExpectedSwitches,$true) | Should -Be 0
                 }
             }
         }
@@ -163,8 +163,8 @@ try
             function Get-VMNetworkAdapter {
                 [cmdletbinding()]
                 param (
-                    [String] $Name,
-                    [String] $SwitchName,
+                    [System.String] $Name,
+                    [System.String] $SwitchName,
                     [Switch] $ManagementOS
                 )
             }
@@ -174,7 +174,7 @@ try
                     [Parameter(ValueFromPipeline=$True)]
                     $InputObject,
                     [Switch] $Physical,
-                    [String] $Name
+                    [System.String] $Name
                 )
             }
             function New-NetIPAddress {
@@ -182,21 +182,21 @@ try
                 param (
                     [Parameter(ValueFromPipeline=$True)]
                     $InputObject,
-                    [String] $IPAddress,
+                    [System.String] $IPAddress,
                     $PrefixLength
                 )
             }
             function Get-NetNat {
                 [cmdletbinding()]
                 param (
-                    [String] $Name
+                    [System.String] $Name
                 )
             }
             function New-NetNat {
                 [cmdletbinding()]
                 param (
-                    [String] $Name,
-                    [String] $InternalIPInterfaceAddressPrefix
+                    [System.String] $Name,
+                    [System.String] $InternalIPInterfaceAddressPrefix
                 )
             }
             function Remove-NetNat {
@@ -231,7 +231,7 @@ try
 
             Context 'Valid configuration is passed' {
                 It 'Does not throw an Exception' {
-                    { Initialize-LabSwitch -Lab $Lab -Switches $Switches } | Should Not Throw
+                    { Initialize-LabSwitch -Lab $Lab -Switches $Switches } | Should -Not -Throw
                 }
                 It 'Calls Mocked commands' {
                     Assert-MockCalled Get-VMSwitch -Exactly 7
@@ -249,7 +249,7 @@ try
 
             Context 'Valid configuration without switches is passed' {
                 It 'Does not throw an Exception' {
-                    { Initialize-LabSwitch -Lab $Lab } | Should Not Throw
+                    { Initialize-LabSwitch -Lab $Lab } | Should -Not -Throw
                 }
                 It 'Calls Mocked commands' {
                     Assert-MockCalled Get-VMSwitch -Exactly 7
@@ -277,7 +277,7 @@ try
                     }
                     $Exception = GetException @ExceptionParameters
 
-                    { Initialize-LabSwitch -Lab $Lab -Switches $Switches } | Should Throw $Exception
+                    { Initialize-LabSwitch -Lab $Lab -Switches $Switches } | Should -Throw $Exception
                 }
                 It 'Calls Mocked commands' {
                     Assert-MockCalled Get-VMSwitch -Exactly 1
@@ -305,7 +305,7 @@ try
                     }
                     $Exception = GetException @ExceptionParameters
 
-                    { Initialize-LabSwitch -Lab $Lab -Switches $Switches } | Should Throw $Exception
+                    { Initialize-LabSwitch -Lab $Lab -Switches $Switches } | Should -Throw $Exception
                 }
                 It 'Calls Mocked commands' {
                     Assert-MockCalled Get-VMSwitch -Exactly 1
@@ -334,7 +334,7 @@ try
                     }
                     $Exception = GetException @ExceptionParameters
 
-                    { Initialize-LabSwitch -Lab $Lab -Switches $Switches } | Should Throw $Exception
+                    { Initialize-LabSwitch -Lab $Lab -Switches $Switches } | Should -Throw $Exception
                 }
                 It 'Calls Mocked commands' {
                     Assert-MockCalled Get-VMSwitch -Exactly 1
@@ -362,7 +362,7 @@ try
                     }
                     $Exception = GetException @ExceptionParameters
 
-                    { Initialize-LabSwitch -Lab $Lab -Switches $Switches } | Should Throw $Exception
+                    { Initialize-LabSwitch -Lab $Lab -Switches $Switches } | Should -Throw $Exception
                 }
                 It 'Calls Mocked commands' {
                     Assert-MockCalled Get-VMSwitch -Exactly 1
@@ -390,7 +390,7 @@ try
                     }
                     $Exception = GetException @ExceptionParameters
 
-                    { Initialize-LabSwitch -Lab $Lab -Switches $Switches } | Should Throw $Exception
+                    { Initialize-LabSwitch -Lab $Lab -Switches $Switches } | Should -Throw $Exception
                 }
                 It 'Calls Mocked commands' {
                     Assert-MockCalled Get-VMSwitch -Exactly 1
@@ -421,7 +421,7 @@ try
                     }
                     $Exception = GetException @ExceptionParameters
 
-                    { Initialize-LabSwitch -Lab $Lab -Switches $Switches } | Should Throw $Exception
+                    { Initialize-LabSwitch -Lab $Lab -Switches $Switches } | Should -Throw $Exception
                 }
                 It 'Calls Mocked commands' {
                     Assert-MockCalled Get-VMSwitch -Exactly 1
@@ -450,7 +450,7 @@ try
                     }
                     $Exception = GetException @ExceptionParameters
 
-                    { Initialize-LabSwitch -Lab $Lab -Switches $Switches } | Should Throw $Exception
+                    { Initialize-LabSwitch -Lab $Lab -Switches $Switches } | Should -Throw $Exception
                 }
                 It 'Calls Mocked commands' {
                     Assert-MockCalled Get-VMSwitch -Exactly 1
@@ -479,7 +479,7 @@ try
                     }
                     $Exception = GetException @ExceptionParameters
 
-                    { Initialize-LabSwitch -Lab $Lab -Switches $Switches } | Should Throw $Exception
+                    { Initialize-LabSwitch -Lab $Lab -Switches $Switches } | Should -Throw $Exception
                 }
                 It 'Calls Mocked commands' {
                     Assert-MockCalled Get-VMSwitch -Exactly 1
@@ -508,7 +508,7 @@ try
                     }
                     $Exception = GetException @ExceptionParameters
 
-                    { Initialize-LabSwitch -Lab $Lab -Switches $Switches } | Should Throw $Exception
+                    { Initialize-LabSwitch -Lab $Lab -Switches $Switches } | Should -Throw $Exception
                 }
                 It 'Calls Mocked commands' {
                     Assert-MockCalled Get-VMSwitch -Exactly 1
@@ -544,7 +544,7 @@ try
 
             Context 'Valid configuration is passed' {
                 It 'Does not throw an Exception' {
-                    { Remove-LabSwitch -Lab $Lab -Switches $Switches } | Should Not Throw
+                    { Remove-LabSwitch -Lab $Lab -Switches $Switches } | Should -Not -Throw
                 }
                 It 'Calls Mocked commands' {
                     Assert-MockCalled Get-VMSwitch -Exactly 6
@@ -556,7 +556,7 @@ try
 
             Context 'Valid configuration is passed without switches' {
                 It 'Does not throw an Exception' {
-                    { Remove-LabSwitch -Lab $Lab } | Should Not Throw
+                    { Remove-LabSwitch -Lab $Lab } | Should -Not -Throw
                 }
                 It 'Calls Mocked commands' {
                     Assert-MockCalled Get-VMSwitch -Exactly 6
@@ -576,7 +576,7 @@ try
                     }
                     $Exception = GetException @ExceptionParameters
 
-                    { Remove-LabSwitch -Lab $Lab -Switches $Switches } | Should Throw $Exception
+                    { Remove-LabSwitch -Lab $Lab -Switches $Switches } | Should -Throw $Exception
                 }
                 It 'Calls Mocked commands' {
                     Assert-MockCalled Get-VMSwitch -Exactly 1

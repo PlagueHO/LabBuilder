@@ -178,7 +178,7 @@ Convert-WindowsImage
     param(
         [Parameter(ParameterSetName="SRC", Mandatory=$true, ValueFromPipeline=$true)]
         [Alias("WIM")]
-        [string]
+        [System.String]
         [ValidateNotNullOrEmpty()]
         [ValidateScript({ Test-Path $(Resolve-Path $_) })]
         $SourcePath,
@@ -195,20 +195,20 @@ Convert-WindowsImage
 
         [Parameter(ParameterSetName="SRC")]
         [Alias("WorkDir")]
-        [string]
+        [System.String]
         [ValidateNotNullOrEmpty()]
         [ValidateScript({ Test-Path $_ })]
         $WorkingDirectory = $pwd,
 
         [Parameter(ParameterSetName="SRC")]
         [Alias("TempDir")]
-        [string]
+        [System.String]
         [ValidateNotNullOrEmpty()]
         $TempDirectory = $env:Temp,
 
         [Parameter(ParameterSetName="SRC")]
         [Alias("VHD")]
-        [string]
+        [System.String]
         [ValidateNotNullOrEmpty()]
         $VHDPath,
 
@@ -221,38 +221,38 @@ Convert-WindowsImage
 
         [Parameter(ParameterSetName="SRC")]
         [Alias("Format")]
-        [string]
+        [System.String]
         [ValidateNotNullOrEmpty()]
         [ValidateSet("VHD", "VHDX", "AUTO")]
         $VHDFormat = "AUTO",
 
         [Parameter(ParameterSetName="SRC")]
         [Alias("MergeFolder")]
-        [string]
+        [System.String]
         [ValidateNotNullOrEmpty()]
         $MergeFolderPath = "",
 
         [Parameter(ParameterSetName="SRC", Mandatory=$true)]
         [Alias("Layout")]
-        [string]
+        [System.String]
         [ValidateNotNullOrEmpty()]
         [ValidateSet("BIOS", "UEFI", "WindowsToGo")]
         $DiskLayout,
 
         [Parameter(ParameterSetName="SRC")]
-        [string]
+        [System.String]
         [ValidateNotNullOrEmpty()]
         [ValidateSet("NativeBoot", "VirtualMachine")]
         $BCDinVHD = "VirtualMachine",
 
         [Parameter(ParameterSetName="SRC")]
         [Parameter(ParameterSetName="UI")]
-        [string]
+        [System.String]
         $BCDBoot = "bcdboot.exe",
 
         [Parameter(ParameterSetName="SRC")]
         [Parameter(ParameterSetName="UI")]
-        [string]
+        [System.String]
         [ValidateNotNullOrEmpty()]
         [ValidateSet("None", "Serial", "1394", "USB", "Local", "Network")]
         $EnableDebugger = "None",
@@ -284,7 +284,7 @@ Convert-WindowsImage
 
         [Parameter(ParameterSetName="SRC")]
         [Alias("Unattend")]
-        [string]
+        [System.String]
         [ValidateNotNullOrEmpty()]
         [ValidateScript({ Test-Path $(Resolve-Path $_) })]
         $UnattendPath,
@@ -295,7 +295,7 @@ Convert-WindowsImage
         $Passthru,
 
         [Parameter(ParameterSetName="SRC")]
-        [string]
+        [System.String]
         [ValidateNotNullOrEmpty()]
         [ValidateScript({ Test-Path $(Resolve-Path $_) })]
         $DismPath,
@@ -436,7 +436,7 @@ Convert-WindowsImage
 
                 $Target                        = New-Object System.Management.Automation.RuntimeDefinedParameter(
                                                      "Target",
-                                                     [string],
+                                                     [System.String],
                                                      $TargetAttrCollection
                                                  )
 
@@ -465,7 +465,7 @@ Convert-WindowsImage
 
                 $IP                            = New-Object System.Management.Automation.RuntimeDefinedParameter(
                                                      "IPAddress",
-                                                     [string],
+                                                     [System.String],
                                                      $IpAttrCollection
                                                  )
 
@@ -520,7 +520,7 @@ Convert-WindowsImage
 
                 $Key                           = New-Object System.Management.Automation.RuntimeDefinedParameter(
                                                      "Key",
-                                                     [string],
+                                                     [System.String],
                                                      $KeyAttrCollection
                                                  )
 
@@ -696,7 +696,7 @@ You can use the fields below to configure the VHD or VHDX that you want to creat
             [CmdletBinding()]
             param(
                 [Parameter(Mandatory = $true, ValueFromPipeline = $true, Position = 0)]
-                [string]
+                [System.String]
                 [ValidateNotNullOrEmpty()]
                 $HiveMountPoint
             )
@@ -768,7 +768,7 @@ You can use the fields below to configure the VHD or VHDX that you want to creat
             [CmdletBinding()]
             param(
                 [Parameter(Mandatory = $true, ValueFromPipeline = $true)]
-                [string]
+                [System.String]
                 [ValidateNotNullOrEmpty()]
                 $text
             )
@@ -784,7 +784,7 @@ You can use the fields below to configure the VHD or VHDX that you want to creat
             [CmdletBinding()]
             param(
                 [Parameter(Mandatory = $true, ValueFromPipeline = $true)]
-                [string]
+                [System.String]
                 [ValidateNotNullOrEmpty()]
                 $text
             )
@@ -800,7 +800,7 @@ You can use the fields below to configure the VHD or VHDX that you want to creat
             [CmdletBinding()]
             param(
                 [Parameter(Mandatory = $true, ValueFromPipeline = $true)]
-                [string]
+                [System.String]
                 [ValidateNotNullOrEmpty()]
                 $text
             )
@@ -816,7 +816,7 @@ You can use the fields below to configure the VHD or VHDX that you want to creat
             [CmdletBinding()]
             param(
                 [Parameter(Mandatory = $true, ValueFromPipeline = $true)]
-                [string]
+                [System.String]
                 [ValidateNotNullOrEmpty()]
                 $text
             )
@@ -846,7 +846,7 @@ You can use the fields below to configure the VHD or VHDX that you want to creat
             [CmdletBinding()]
             param(
                 [Parameter(Mandatory=$true)]
-                [string]
+                [System.String]
                 [ValidateNotNullOrEmpty()]
                 $Executable,
 
@@ -898,7 +898,7 @@ You can use the fields below to configure the VHD or VHDX that you want to creat
             [CmdletBinding()]
             param(
                 [Parameter(ValueFromPipeLine = $true)]
-                [string]
+                [System.String]
                 [ValidateNotNullOrEmpty()]
                 $Path
             )
@@ -929,7 +929,7 @@ You can use the fields below to configure the VHD or VHDX that you want to creat
     Process
     {
         Write-Host $header
-        
+
         $disk           = $null
         $openWim        = $null
         $openIso        = $null
@@ -1003,7 +1003,7 @@ You can use the fields below to configure the VHD or VHDX that you want to creat
             }
 
             # Resolve the path for the unattend file.
-            if (![string]::IsNullOrEmpty($UnattendPath))
+            if (![System.String]::IsNullOrEmpty($UnattendPath))
             {
                 $UnattendPath = (Resolve-Path $UnattendPath).Path
             }
@@ -1646,7 +1646,7 @@ You can use the fields below to configure the VHD or VHDX that you want to creat
                     throw "Form session has been cancelled."
                 }
 
-                if ([string]::IsNullOrEmpty($SourcePath))
+                if ([System.String]::IsNullOrEmpty($SourcePath))
                 {
                     throw "No source path specified."
                 }
@@ -1661,13 +1661,13 @@ You can use the fields below to configure the VHD or VHDX that you want to creat
                 $WorkingDirectory = $txtWorkingDirectory.Text
 
                 # VHDPath
-                if (![string]::IsNullOrEmpty($txtVhdName.Text))
+                if (![System.String]::IsNullOrEmpty($txtVhdName.Text))
                 {
                     $VHDPath      = "$($WorkingDirectory)\$($txtVhdName.Text)"
                 }
 
                 # Edition
-                if (![string]::IsNullOrEmpty($cmbSkuList.SelectedItem))
+                if (![System.String]::IsNullOrEmpty($cmbSkuList.SelectedItem))
                 {
                     $Edition      = $cmbSkuList.SelectedItem
                 }
@@ -1709,7 +1709,7 @@ You can use the fields below to configure the VHD or VHDX that you want to creat
             }
 
             # Check if -VHDPath and -WorkingDirectory were both specified.
-            if ((![String]::IsNullOrEmpty($VHDPath)) -and (![String]::IsNullOrEmpty($WorkingDirectory)))
+            if ((![System.String]::IsNullOrEmpty($VHDPath)) -and (![System.String]::IsNullOrEmpty($WorkingDirectory)))
             {
                 if ($WorkingDirectory -ne $pwd)
                 {
@@ -1732,7 +1732,7 @@ You can use the fields below to configure the VHD or VHDX that you want to creat
             }
 
             # Create a temporary name for the VHD(x).  We'll name it properly at the end of the script.
-            if ([String]::IsNullOrEmpty($VHDPath))
+            if ([System.String]::IsNullOrEmpty($VHDPath))
             {
                 $VHDPath      = Join-Path $WorkingDirectory "$($sessionKey).$($VHDFormat.ToLower())"
             }
@@ -2016,13 +2016,13 @@ You can use the fields below to configure the VHD or VHDX that you want to creat
             ####################################################################################################
 
             Write-W2VInfo "Applying image to $VHDFormat. This could take a while..."
-            if ((Get-Command Expand-WindowsImage -ErrorAction SilentlyContinue) -and ((-not $ApplyEA) -and ([string]::IsNullOrEmpty($DismPath))))
+            if ((Get-Command Expand-WindowsImage -ErrorAction SilentlyContinue) -and ((-not $ApplyEA) -and ([System.String]::IsNullOrEmpty($DismPath))))
             {
                 Expand-WindowsImage -ApplyPath $windowsDrive -ImagePath $SourcePath -Index $ImageIndex -LogPath "$($logFolder)\DismLogs.log" | Out-Null
             }
             else
             {
-                if (![string]::IsNullOrEmpty($DismPath))
+                if (![System.String]::IsNullOrEmpty($DismPath))
                 {
                     $dismPath = $DismPath
                 }
@@ -2052,13 +2052,13 @@ You can use the fields below to configure the VHD or VHDX that you want to creat
             #
             # Here we copy in the unattend file (if specified by the command line)
             #
-            if (![string]::IsNullOrEmpty($UnattendPath))
+            if (![System.String]::IsNullOrEmpty($UnattendPath))
             {
                 Write-W2VInfo "Applying unattend file ($(Split-Path $UnattendPath -Leaf))..."
                 Copy-Item -Path $UnattendPath -Destination (Join-Path $windowsDrive "unattend.xml") -Force
             }
 
-            if (![string]::IsNullOrEmpty($MergeFolderPath))
+            if (![System.String]::IsNullOrEmpty($MergeFolderPath))
             {
                 Write-W2VInfo "Applying merge folder ($MergeFolderPath)..."
                 Copy-Item -Recurse -Path (Join-Path $MergeFolderPath "*") -Destination $windowsDrive -Force #added to handle merge folders
@@ -2268,7 +2268,7 @@ You can use the fields below to configure the VHD or VHDX that you want to creat
                 $systemPartition | Remove-PartitionAccessPath -AccessPath $systemPartition.AccessPaths[0]
             }
 
-            if ([String]::IsNullOrEmpty($vhdFinalName))
+            if ([System.String]::IsNullOrEmpty($vhdFinalName))
             {
                 # We need to generate a file name.
                 Write-W2VInfo "Generating name for $($VHDFormat)..."

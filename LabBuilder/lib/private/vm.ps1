@@ -17,38 +17,38 @@ function InitializeVMPaths {
     [CmdLetBinding()]
     param
     (
-        [Parameter(Mandatory)]
+        [Parameter(Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
-        [String] $VMPath
+        [System.String] $VMPath
     )
 
     if (-not (Test-Path -Path $VMPath))
     {
-        $Null = New-Item `
+        $null = New-Item `
             -Path $VMPath `
             -ItemType Directory
     } # if
     if (-not (Test-Path -Path "$VMPath\Virtual Machines"))
     {
-        $Null = New-Item `
+        $null = New-Item `
             -Path "$VMPath\Virtual Machines" `
             -ItemType Directory
     } # if
     if (-not (Test-Path -Path "$VMPath\Virtual Hard Disks"))
     {
-        $Null = New-Item `
+        $null = New-Item `
         -Path "$VMPath\Virtual Hard Disks" `
         -ItemType Directory
     } # if
     if (-not (Test-Path -Path "$VMPath\LabBuilder Files"))
     {
-        $Null = New-Item `
+        $null = New-Item `
             -Path "$VMPath\LabBuilder Files" `
             -ItemType Directory
     } # if
     if (-not (Test-Path -Path "$VMPath\LabBuilder Files\DSC Modules"))
     {
-        $Null = New-Item `
+        $null = New-Item `
             -Path "$VMPath\LabBuilder Files\DSC Modules" `
             -ItemType Directory
     } # if
@@ -80,18 +80,18 @@ function InitializeVMPaths {
 function CreateVMInitializationFiles {
     [CmdLetBinding()]
     param (
-        [Parameter(Mandatory)]
+        [Parameter(Mandatory = $true)]
         $Lab,
 
-        [Parameter(Mandatory)]
+        [Parameter(Mandatory = $true)]
         [LabVM] $VM
     )
 
     # Get Path to LabBuilder files
-    [String] $VMLabBuilderFiles = $VM.LabBuilderFilesPath
+    [System.String] $VMLabBuilderFiles = $VM.LabBuilderFilesPath
 
     # Generate an unattended setup file
-    [String] $UnattendFile = GetUnattendFileContent `
+    [System.String] $UnattendFile = GetUnattendFileContent `
         -Lab $Lab `
         -VM $VM
     $null = Set-Content `
@@ -99,7 +99,7 @@ function CreateVMInitializationFiles {
         -Value $UnattendFile -Force
 
     # Assemble the SetupComplete.* scripts.
-    [String] $SetupCompleteCmd = ''
+    [System.String] $SetupCompleteCmd = ''
 
     # Write out the PS1 Setup Complete File
     if ($VM.OSType -eq [LabOSType]::Nano)
@@ -113,7 +113,7 @@ function CreateVMInitializationFiles {
         # PowerShell currently can't find any basic Cmdlets when executed by
         # SetupComplete.cmd during the initialization phase, so create an empty
         # a SetupComplete.ps1
-        [String] $SetupCompletePs = ''
+        [System.String] $SetupCompletePs = ''
 
     }
     else
@@ -125,10 +125,10 @@ function CreateVMInitializationFiles {
                 -Lab $Lab `
                 -VM $VM
         }
-        [String] $GetCertPs = GetCertificatePsFileContent `
+        [System.String] $GetCertPs = GetCertificatePsFileContent `
             -Lab $Lab `
             -VM $VM
-        [String] $SetupCompletePs = @"
+        [System.String] $SetupCompletePs = @"
 Add-Content ``
     -Path "C:\WINDOWS\Setup\Scripts\SetupComplete.log" ``
     -Value 'SetupComplete.ps1 Script Started...' ``
@@ -148,7 +148,7 @@ Add-Content ``
 
     if ($VM.SetupComplete)
     {
-        [String] $SetupComplete = $VM.SetupComplete
+        [System.String] $SetupComplete = $VM.SetupComplete
         if (-not (Test-Path -Path $SetupComplete))
         {
             $ExceptionParameters = @{
@@ -157,9 +157,9 @@ Add-Content ``
                 errorMessage = $($LocalizedData.SetupCompleteScriptMissingError `
                     -f $VM.name,$SetupComplete)
             }
-            ThrowException @ExceptionParameters
+            New-Exception @ExceptionParameters
         }
-        [String] $Extension = [System.IO.Path]::GetExtension($SetupComplete)
+        [System.String] $Extension = [System.IO.Path]::GetExtension($SetupComplete)
         Switch ($Extension.ToLower())
         {
             '.ps1'
@@ -221,7 +221,7 @@ Add-Content ``
 
     # If ODJ file specified copy it to the labuilder path.
     if ($VM.OSType -eq [LabOSType]::Nano `
-        -and -not [String]::IsNullOrWhiteSpace($VM.NanoODJPath))
+        -and -not [System.String]::IsNullOrWhiteSpace($VM.NanoODJPath))
     {
         if ([System.IO.Path]::IsPathRooted($VM.NanoODJPath))
         {
@@ -240,7 +240,7 @@ Add-Content ``
             -ErrorAction Stop
     } # if
 
-    WriteMessage -Message $($LocalizedData.CreatedVMInitializationFiles `
+    Write-LabMessage -Message $($LocalizedData.CreatedVMInitializationFiles `
         -f $VM.Name)
 } # CreateVMInitializationFiles
 
@@ -267,24 +267,24 @@ Add-Content ``
 #>
 function GetUnattendFileContent {
     [CmdLetBinding()]
-    [OutputType([String])]
+    [OutputType([System.String])]
     param
     (
-        [Parameter(Mandatory)]
+        [Parameter(Mandatory = $true)]
         $Lab,
 
-        [Parameter(Mandatory)]
+        [Parameter(Mandatory = $true)]
         [LabVM] $VM
     )
     if ($VM.UnattendFile)
     {
-        [String] $UnattendContent = Get-Content -Path $VM.UnattendFile
+        [System.String] $UnattendContent = Get-Content -Path $VM.UnattendFile
     }
     Else
     {
-        [String] $DomainName = $Lab.labbuilderconfig.settings.domainname
-        [String] $Email = $Lab.labbuilderconfig.settings.email
-        $UnattendContent = [String] @"
+        [System.String] $DomainName = $Lab.labbuilderconfig.settings.domainname
+        [System.String] $Email = $Lab.labbuilderconfig.settings.email
+        $UnattendContent = [System.String] @"
 <?xml version="1.0" encoding="utf-8"?>
 <unattend xmlns="urn:schemas-microsoft-com:unattend">
     <settings pass="offlineServicing">
@@ -393,13 +393,13 @@ function GetUnattendFileContent {
 #>
 function GetCertificatePsFileContent {
     [CmdLetBinding()]
-    [OutputType([String])]
+    [OutputType([System.String])]
     param
     (
-        [Parameter(Mandatory)]
+        [Parameter(Mandatory = $true)]
         $Lab,
 
-        [Parameter(Mandatory)]
+        [Parameter(Mandatory = $true)]
         [LabVM] $VM,
 
         [LabCertificateSource] $CertificateSource
@@ -411,7 +411,7 @@ function GetCertificatePsFileContent {
     } # if
     if ($CertificateSource -eq [LabCertificateSource]::Guest)
     {
-        [String] $CreateCertificatePs = @"
+        [System.String] $CreateCertificatePs = @"
 `$CertificateFriendlyName = '$($Script:DSCCertificateFriendlyName)'
 `$Cert = Get-ChildItem -Path cert:\LocalMachine\My ``
     | Where-Object { `$_.FriendlyName -eq `$CertificateFriendlyName } ``
@@ -452,7 +452,7 @@ Add-Content ``
     }
     else
     {
-        [String] $CreateCertificatePs = @"
+        [System.String] $CreateCertificatePs = @"
 if (Test-Path -Path `"`$(`$ENV:SystemRoot)\$Script:DSCEncryptionPfxCert`")
 {
     `$CertificatePassword = ConvertTo-SecureString ``
@@ -509,24 +509,24 @@ function Recieve-SelfSignedCertificate
     [OutputType([Boolean])]
     param
     (
-        [Parameter(Mandatory)]
+        [Parameter(Mandatory = $true)]
         $Lab,
 
-        [Parameter(Mandatory)]
+        [Parameter(Mandatory = $true)]
         [LabVM] $VM,
 
         [Int] $Timeout = 300
     )
-    [String] $LabPath = $Lab.labbuilderconfig.SelectNodes('settings').labpath
+    [System.String] $LabPath = $Lab.labbuilderconfig.SelectNodes('settings').labpath
     [DateTime] $StartTime = Get-Date
     [System.Management.Automation.Runspaces.PSSession] $Session = $null
     [Boolean] $Complete = $False
 
     # Load path variables
-    [String] $VMRootPath = $VM.VMRootPath
+    [System.String] $VMRootPath = $VM.VMRootPath
 
     # Get Path to LabBuilder files
-    [String] $VMLabBuilderFiles = $VM.LabBuilderFilesPath
+    [System.String] $VMLabBuilderFiles = $VM.LabBuilderFilesPath
 
     while ((-not $Complete) `
         -and (((Get-Date) - $StartTime).TotalSeconds) -lt $TimeOut)
@@ -544,7 +544,7 @@ function Recieve-SelfSignedCertificate
                 errorMessage = $($LocalizedData.CertificateDownloadError `
                     -f $VM.Name)
             }
-            ThrowException @ExceptionParameters
+            New-Exception @ExceptionParameters
             return
         } # if
 
@@ -567,7 +567,7 @@ function Recieve-SelfSignedCertificate
                 }
                 catch
                 {
-                    WriteMessage -Message $($LocalizedData.WaitingForCertificateMessage `
+                    Write-LabMessage -Message $($LocalizedData.WaitingForCertificateMessage `
                         -f $VM.Name,$Script:RetryConnectSeconds)
 
                     Start-Sleep -Seconds $Script:RetryConnectSeconds
@@ -590,7 +590,7 @@ function Recieve-SelfSignedCertificate
                 errorMessage = $($LocalizedData.CertificateDownloadError `
                     -f $VM.Name)
             }
-            ThrowException @ExceptionParameters
+            New-Exception @ExceptionParameters
         } # if
 
         # Close the Session if it is opened and the download is complete
@@ -639,27 +639,27 @@ function Request-SelfSignedCertificate
     [OutputType([System.IO.FileInfo])]
     param
     (
-        [Parameter(Mandatory)]
+        [Parameter(Mandatory = $true)]
         $Lab,
 
-        [Parameter(Mandatory)]
+        [Parameter(Mandatory = $true)]
         [LabVM] $VM,
 
         [Int] $Timeout = 300
     )
     [DateTime] $StartTime = Get-Date
-    [String] $LabPath = $Lab.labbuilderconfig.SelectNodes('settings').labpath
+    [System.String] $LabPath = $Lab.labbuilderconfig.SelectNodes('settings').labpath
     [System.Management.Automation.Runspaces.PSSession] $Session = $null
     [Boolean] $Complete = $False
 
     # Load path variables
-    [String] $VMRootPath = $VM.VMRootPath
+    [System.String] $VMRootPath = $VM.VMRootPath
 
     # Get Path to LabBuilder files
-    [String] $VMLabBuilderFiles = $VM.LabBuilderFilesPath
+    [System.String] $VMLabBuilderFiles = $VM.LabBuilderFilesPath
 
     # Ensure the certificate generation script has been created
-    [String] $GetCertPs = GetCertificatePsFileContent `
+    [System.String] $GetCertPs = GetCertificatePsFileContent `
         -Lab $Lab `
         -VM $VM `
         -CertificateSource Guest
@@ -685,7 +685,7 @@ function Request-SelfSignedCertificate
                 errorMessage = $($LocalizedData.CertificateDownloadError `
                     -f $VM.Name)
             }
-            ThrowException @ExceptionParameters
+            New-Exception @ExceptionParameters
             return
         } # if
 
@@ -711,7 +711,7 @@ function Request-SelfSignedCertificate
                 }
                 catch
                 {
-                    WriteMessage -Message $($LocalizedData.FailedToUploadCertificateCreateScriptMessage `
+                    Write-LabMessage -Message $($LocalizedData.FailedToUploadCertificateCreateScriptMessage `
                         -f $VM.Name,$Script:RetryConnectSeconds)
 
                     Start-Sleep -Seconds $Script:RetryConnectSeconds
@@ -738,7 +738,7 @@ function Request-SelfSignedCertificate
                 }
                 catch
                 {
-                    WriteMessage -Message $($LocalizedData.FailedToExecuteCertificateCreateScriptMessage `
+                    Write-LabMessage -Message $($LocalizedData.FailedToExecuteCertificateCreateScriptMessage `
                         -f $VM.Name,$Script:RetryConnectSeconds)
 
                     Start-Sleep -Seconds $Script:RetryConnectSeconds
@@ -766,7 +766,7 @@ function Request-SelfSignedCertificate
                 }
                 catch
                 {
-                    WriteMessage -Message $($LocalizedData.FailedToDownloadCertificateMessage `
+                    Write-LabMessage -Message $($LocalizedData.FailedToDownloadCertificateMessage `
                         -f $VM.Name,$Script:RetryConnectSeconds)
 
                     Start-Sleep -Seconds $Script:RetryConnectSeconds
@@ -789,7 +789,7 @@ function Request-SelfSignedCertificate
                 errorMessage = $($LocalizedData.CertificateDownloadError `
                     -f $VM.Name)
             }
-            ThrowException @ExceptionParameters
+            New-Exception @ExceptionParameters
         }
 
         # Close the Session if it is opened and the download is complete
@@ -830,18 +830,18 @@ function CreateHostSelfSignedCertificate
     [OutputType([System.IO.FileInfo])]
     param
     (
-        [Parameter(Mandatory)]
+        [Parameter(Mandatory = $true)]
         $Lab,
 
-        [Parameter(Mandatory)]
+        [Parameter(Mandatory = $true)]
         [LabVM] $VM
     )
 
     # Load path variables
-    [String] $VMRootPath = $VM.VMRootPath
+    [System.String] $VMRootPath = $VM.VMRootPath
 
     # Get Path to LabBuilder files
-    [String] $VMLabBuilderFiles = $VM.LabBuilderFilesPath
+    [System.String] $VMLabBuilderFiles = $VM.LabBuilderFilesPath
 
     $CertificateFriendlyName = $Script:DSCCertificateFriendlyName
     $CertificateSubject = "CN=$($VM.ComputerName)"
@@ -921,17 +921,17 @@ function CreateHostSelfSignedCertificate
 #>
 function GetVMManagementIPAddress {
     [CmdLetBinding()]
-    [OutputType([String])]
+    [OutputType([System.String])]
     param (
-        [Parameter(Mandatory)]
+        [Parameter(Mandatory = $true)]
         $Lab,
 
-        [Parameter(Mandatory)]
+        [Parameter(Mandatory = $true)]
         [LabVM] $VM
     )
-    [String] $ManagementSwitchName = GetManagementSwitchName `
+    [System.String] $ManagementSwitchName = GetManagementSwitchName `
         -Lab $Lab
-    [String] $IPAddress = (Get-VMNetworkAdapter -VMName $VM.Name).`
+    [System.String] $IPAddress = (Get-VMNetworkAdapter -VMName $VM.Name).`
         Where({$_.SwitchName -eq $ManagementSwitchName}).`
         IPAddresses.Where({$_.Contains('.')})
     if (-not $IPAddress) {
@@ -941,7 +941,7 @@ function GetVMManagementIPAddress {
             errorMessage = $($LocalizedData.ManagmentIPAddressError `
                 -f $ManagementSwitchName,$VM.Name)
         }
-        ThrowException @ExceptionParameters
+        New-Exception @ExceptionParameters
     } # if
     return $IPAddress
 } # GetVMManagementIPAddress
@@ -976,10 +976,10 @@ function GetVMManagementIPAddress {
 function WaitVMInitializationComplete
 {
     [CmdLetBinding()]
-    [OutputType([String])]
+    [OutputType([System.String])]
     param
     (
-        [Parameter(Mandatory)]
+        [Parameter(Mandatory = $true)]
         [LabVM] $VM,
 
         [Int] $Timeout = 300
@@ -990,22 +990,22 @@ function WaitVMInitializationComplete
     [Boolean] $Complete = $False
 
     # Get the root path of the VM
-    [String] $VMRootPath = $VM.VMRootPath
+    [System.String] $VMRootPath = $VM.VMRootPath
 
     # Get Path to LabBuilder files
-    [String] $VMLabBuilderFiles = $VM.LabBuilderFilesPath
+    [System.String] $VMLabBuilderFiles = $VM.LabBuilderFilesPath
 
     # Make sure the VM has started
     WaitVMStarted -VM $VM
 
-    [String] $InitialSetupCompletePath = Join-Path `
+    [System.String] $InitialSetupCompletePath = Join-Path `
         -Path $VMLabBuilderFiles `
         -ChildPath 'InitialSetupCompleted.txt'
 
     # Check the initial setup on this VM hasn't already completed
     if (Test-Path -Path $InitialSetupCompletePath)
     {
-        WriteMessage -Message $($LocalizedData.InitialSetupIsAlreadyCompleteMessaage `
+        Write-LabMessage -Message $($LocalizedData.InitialSetupIsAlreadyCompleteMessaage `
             -f $VM.Name)
         return $InitialSetupCompletePath
     }
@@ -1027,7 +1027,7 @@ function WaitVMInitializationComplete
                 errorMessage = $($LocalizedData.InitialSetupCompleteError `
                     -f $VM.Name)
             }
-            ThrowException @ExceptionParameters
+            New-Exception @ExceptionParameters
             return
         }
 
@@ -1051,7 +1051,7 @@ function WaitVMInitializationComplete
                 }
                 catch
                 {
-                    WriteMessage -Message $($LocalizedData.WaitingForInitialSetupCompleteMessage `
+                    Write-LabMessage -Message $($LocalizedData.WaitingForInitialSetupCompleteMessage `
                         -f $VM.Name,$Script:RetryConnectSeconds)
                     Start-Sleep `
                         -Seconds $Script:RetryConnectSeconds
@@ -1074,7 +1074,7 @@ function WaitVMInitializationComplete
                 errorMessage = $($LocalizedData.InitialSetupCompleteError `
                     -f $VM.Name)
             }
-            ThrowException @ExceptionParameters
+            New-Exception @ExceptionParameters
         }
 
         # Close the Session if it is opened
@@ -1107,7 +1107,7 @@ function WaitVMStarted {
     [CmdLetBinding()]
     param
     (
-        [Parameter(Mandatory)]
+        [Parameter(Mandatory = $true)]
         [LabVM] $VM
     )
 
@@ -1119,18 +1119,18 @@ function WaitVMStarted {
             errorMessage = $($LocalizedData.VMNotRunningHeartbeatMessage `
                 -f $VM.name)
         }
-        ThrowException @ExceptionParameters
+        New-Exception @ExceptionParameters
     } # if
 
     # Names of IntegrationServices are not culture neutral, but have an ID
     $heartbeatCultureNeutral = ( Get-VMIntegrationService -VMName $VM.Name | Where-Object { $_.ID -match "84EAAE65-2F2E-45F5-9BB5-0E857DC8EB47" } ).Name
     $heartbeat = Get-VMIntegrationService -VMName $VM.Name -Name $heartbeatCultureNeutral
 
-    while (($heartbeat.PrimaryStatusDescription -ne 'OK') -and (-not [String]::IsNullOrEmpty($heartbeat.PrimaryStatusDescription)))
+    while (($heartbeat.PrimaryStatusDescription -ne 'OK') -and (-not [System.String]::IsNullOrEmpty($heartbeat.PrimaryStatusDescription)))
     {
         $heartbeat = Get-VMIntegrationService -VMName $VM.Name -Name $heartbeatCultureNeutral
 
-        WriteMessage -Message $($LocalizedData.WaitingForVMHeartbeatMessage `
+        Write-LabMessage -Message $($LocalizedData.WaitingForVMHeartbeatMessage `
             -f $VM.Name,$Script:RetryHeartbeatSeconds)
 
         Start-Sleep -Seconds $Script:RetryHeartbeatSeconds
@@ -1154,7 +1154,7 @@ function WaitVMOff {
     [CmdLetBinding()]
     param
     (
-        [Parameter(Mandatory)]
+        [Parameter(Mandatory = $true)]
         [LabVM] $VM
     )
     $RunningVM = Get-VM -Name $VM.Name
@@ -1272,7 +1272,7 @@ function UpdateVMIntegrationServices {
                 # It is disabled so enable it
                 $ExistingIntegrationService | Enable-VMIntegrationService
 
-                WriteMessage -Message $($LocalizedData.EnableVMIntegrationServiceMessage `
+                Write-LabMessage -Message $($LocalizedData.EnableVMIntegrationServiceMessage `
                     -f $VM.Name,$ExistingIntegrationService.Name)
             } # if
         }
@@ -1284,7 +1284,7 @@ function UpdateVMIntegrationServices {
                 # It is enabled so disable it
                 $ExistingIntegrationService | Disable-VMIntegrationService
 
-                WriteMessage -Message $($LocalizedData.DisableVMIntegrationServiceMessage `
+                Write-LabMessage -Message $($LocalizedData.DisableVMIntegrationServiceMessage `
                     -f $VM.Name,$ExistingIntegrationService.Name)
             } # if
         } # if
@@ -1340,10 +1340,10 @@ function UpdateVMDataDisks {
     }
 
     # Get the root path of the VM
-    [String] $VMRootPath = $VM.VMRootPath
+    [System.String] $VMRootPath = $VM.VMRootPath
 
     # Get the Virtual Hard Disk Path
-    [String] $VHDPath = Join-Path `
+    [System.String] $VHDPath = Join-Path `
         -Path $VMRootPath `
         -ChildPath 'Virtual Hard Disks'
 
@@ -1352,7 +1352,7 @@ function UpdateVMDataDisks {
         $Vhd = $DataVhd.Vhd
         if (Test-Path -Path $Vhd)
         {
-            WriteMessage -Message $($LocalizedData.VMDiskAlreadyExistsMessage `
+            Write-LabMessage -Message $($LocalizedData.VMDiskAlreadyExistsMessage `
                 -f $VM.Name,$Vhd,'Data')
 
             # Check the parameters of the VHD match
@@ -1369,7 +1369,7 @@ function UpdateVMDataDisks {
                     errorMessage = $($LocalizedData.VMDataDiskVHDConvertError `
                         -f $VM.name,$Vhd,$DataVhd.VhdType)
                 }
-                ThrowException @ExceptionParameters
+                New-Exception @ExceptionParameters
             }
 
             # Check the size
@@ -1378,7 +1378,7 @@ function UpdateVMDataDisks {
                 if ($ExistingVhd.Size -lt $DataVhd.Size)
                 {
                     # Expand the disk
-                    WriteMessage -Message $($LocalizedData.ExpandingVMDiskMessage `
+                    Write-LabMessage -Message $($LocalizedData.ExpandingVMDiskMessage `
                         -f $VM.Name,$Vhd,'Data',$DataVhd.Size)
 
                     $null = Resize-VHD `
@@ -1395,7 +1395,7 @@ function UpdateVMDataDisks {
                         errorMessage = $($LocalizedData.VMDataDiskVHDShrinkError `
                             -f $VM.name,$Vhd,$DataVhd.Size)
                     }
-                    ThrowException @ExceptionParameters
+                    New-Exception @ExceptionParameters
                 } # if
             } # if
         }
@@ -1414,12 +1414,12 @@ function UpdateVMDataDisks {
                         errorMessage = $($LocalizedData.VMDataDiskSourceVHDNotFoundError `
                             -f $VM.name,$SourceVhd)
                     }
-                    ThrowException @ExceptionParameters
+                    New-Exception @ExceptionParameters
                 } # if
                 # Should the Source VHD be copied or moved
                 if ($DataVhd.MoveSourceVHD)
                 {
-                    WriteMessage -Message $($LocalizedData.CreatingVMDiskByMovingSourceVHDMessage `
+                    Write-LabMessage -Message $($LocalizedData.CreatingVMDiskByMovingSourceVHDMessage `
                         -f $VM.Name,$Vhd,$SourceVhd)
 
                     $null = Move-Item `
@@ -1430,7 +1430,7 @@ function UpdateVMDataDisks {
                 }
                 else
                 {
-                    WriteMessage -Message $($LocalizedData.CreatingVMDiskByCopyingSourceVHDMessage `
+                    Write-LabMessage -Message $($LocalizedData.CreatingVMDiskByCopyingSourceVHDMessage `
                         -f $VM.Name,$Vhd,$SourceVhd)
 
                     $null = Copy-Item `
@@ -1448,7 +1448,7 @@ function UpdateVMDataDisks {
                     'fixed'
                     {
                         # Create a new Fixed VHD
-                        WriteMessage -Message $($LocalizedData.CreatingVMDiskMessage `
+                        Write-LabMessage -Message $($LocalizedData.CreatingVMDiskMessage `
                             -f $VM.Name,$Vhd,'Fixed Data')
 
                         $null = New-VHD `
@@ -1461,7 +1461,7 @@ function UpdateVMDataDisks {
                     'dynamic'
                     {
                         # Create a new Dynamic VHD
-                        WriteMessage -Message $($LocalizedData.CreatingVMDiskMessage `
+                        Write-LabMessage -Message $($LocalizedData.CreatingVMDiskMessage `
                             -f $VM.Name,$Vhd,'Dynamic Data')
 
                         $null = New-VHD `
@@ -1484,7 +1484,7 @@ function UpdateVMDataDisks {
                                 errorMessage = $($LocalizedData.VMDataDiskParentVHDMissingError `
                                     -f $VM.name)
                             }
-                            ThrowException @ExceptionParameters
+                            New-Exception @ExceptionParameters
                         } # if
                         if (-not (Test-Path -Path $ParentVhd))
                         {
@@ -1494,11 +1494,11 @@ function UpdateVMDataDisks {
                                 errorMessage = $($LocalizedData.VMDataDiskParentVHDNotFoundError `
                                     -f $VM.name,$ParentVhd)
                             }
-                            ThrowException @ExceptionParameters
+                            New-Exception @ExceptionParameters
                         } # if
 
                         # Create a new Differencing VHD
-                        WriteMessage -Message $($LocalizedData.CreatingVMDiskMessage `
+                        Write-LabMessage -Message $($LocalizedData.CreatingVMDiskMessage `
                             -f $VM.Name,$Vhd,"Differencing Data using Parent '$ParentVhd'")
 
                         $null = New-VHD `
@@ -1517,7 +1517,7 @@ function UpdateVMDataDisks {
                             errorMessage = $($LocalizedData.VMDataDiskUnknownTypeError `
                                 -f $VM.Name,$Vhd,$DataVhd.VhdType)
                         }
-                        ThrowException @ExceptionParameters
+                        New-Exception @ExceptionParameters
                     } # default
                 } # switch
             } # if
@@ -1528,9 +1528,9 @@ function UpdateVMDataDisks {
                 # Files need to be copied to this Data VHD so
                 # set up a mount folder for it to be mounted to.
                 # Get Path to LabBuilder files
-                [String] $VMLabBuilderFiles = $VM.LabBuilderFilesPath
+                [System.String] $VMLabBuilderFiles = $VM.LabBuilderFilesPath
 
-                [String] $MountPoint = Join-Path `
+                [System.String] $MountPoint = Join-Path `
                     -Path $VMLabBuilderFiles `
                     -ChildPath 'VHDMount'
 
@@ -1561,7 +1561,7 @@ function UpdateVMDataDisks {
                         }
                     }
                 }
-                WriteMessage -Message $($LocalizedData.InitializingVMDiskMessage `
+                Write-LabMessage -Message $($LocalizedData.InitializingVMDiskMessage `
                     -f $VM.Name,$VHD)
 
                 InitializeVHD `
@@ -1571,7 +1571,7 @@ function UpdateVMDataDisks {
                 # Copy each folder to the VM Data Disk
                 foreach ($CopyFolder in @($DataVHD.CopyFolders))
                 {
-                    WriteMessage -Message $($LocalizedData.CopyingFoldersToVMDiskMessage `
+                    Write-LabMessage -Message $($LocalizedData.CopyingFoldersToVMDiskMessage `
                         -f $VM.Name,$VHD,$CopyFolder)
 
                     Copy-item `
@@ -1582,7 +1582,7 @@ function UpdateVMDataDisks {
                 }
 
                 # Dismount the VM Data Disk
-                WriteMessage -Message $($LocalizedData.DismountingVMDiskMessage `
+                Write-LabMessage -Message $($LocalizedData.DismountingVMDiskMessage `
                     -f $VM.Name,$VHD)
 
                 Dismount-VHD `
@@ -1608,7 +1608,7 @@ function UpdateVMDataDisks {
                         }
                     } # if
 
-                    WriteMessage -Message $($LocalizedData.InitializingVMDiskMessage `
+                    Write-LabMessage -Message $($LocalizedData.InitializingVMDiskMessage `
                         -f $VM.Name,$VHD)
 
                     InitializeVHD `
@@ -1616,7 +1616,7 @@ function UpdateVMDataDisks {
                         -ErrorAction Stop
 
                     # Dismount the VM Data Disk
-                    WriteMessage -Message $($LocalizedData.DismountingVMDiskMessage `
+                    Write-LabMessage -Message $($LocalizedData.DismountingVMDiskMessage `
                         -f $VM.Name,$VHD)
 
                     Dismount-VHD `
@@ -1634,7 +1634,7 @@ function UpdateVMDataDisks {
         if (($VMHardDiskDrives | Where-Object -Property Path -eq $Vhd).Count -eq 0)
         {
             # The data disk is not yet attached
-            WriteMessage -Message $($LocalizedData.AddingVMDiskMessage `
+            Write-LabMessage -Message $($LocalizedData.AddingVMDiskMessage `
                 -f $VM.Name,$Vhd,'Data')
 
             # Determine the ControllerLocation and ControllerNumber to
@@ -1657,7 +1657,7 @@ function UpdateVMDataDisks {
                     }
 
             } # if
-            $Null = Add-VMHardDiskDrive @NewHardDiskParams
+            $null = Add-VMHardDiskDrive @NewHardDiskParams
         } # if
     } # foreach
 } # UpdateVMDataDisks
@@ -1724,12 +1724,12 @@ function UpdateVMDVDDrives {
             {
                 if ($DVDDrive.Path)
                 {
-                    WriteMessage -Message $($LocalizedData.MountingVMDVDDriveISOMessage `
+                    Write-LabMessage -Message $($LocalizedData.MountingVMDVDDriveISOMessage `
                         -f $VM.Name,$DVDDrive.Path)
                 }
                 else
                 {
-                    WriteMessage -Message $($LocalizedData.DismountingVMDVDDriveISOMessage `
+                    Write-LabMessage -Message $($LocalizedData.DismountingVMDVDDriveISOMessage `
                         -f $VM.Name,$VMDVDDrives[$DVDDriveCount].Path)
                 } # if
                 Set-VMDVDDrive `
@@ -1742,7 +1742,7 @@ function UpdateVMDVDDrives {
         else
         {
             # The DVD Drive does not exist
-            WriteMessage -Message $($LocalizedData.AddingVMDVDDriveMessage `
+            Write-LabMessage -Message $($LocalizedData.AddingVMDVDDriveMessage `
                 -f $VM.Name)
 
             $NewDVDDriveParams = @{
@@ -1752,7 +1752,7 @@ function UpdateVMDVDDrives {
 
             if ($DVDDrive.Path)
             {
-                WriteMessage -Message $($LocalizedData.MountingVMDVDDriveISOMessage `
+                Write-LabMessage -Message $($LocalizedData.MountingVMDVDDriveISOMessage `
                     -f $VM.Name,$DVDDrive.Path)
 
                 $NewDVDDriveParams += @{
@@ -1792,10 +1792,10 @@ function UpdateVMDVDDrives {
 function CopyODJ {
     [CmdLetBinding()]
     param (
-        [Parameter(Mandatory)]
+        [Parameter(Mandatory = $true)]
         $Lab,
 
-        [Parameter(Mandatory)]
+        [Parameter(Mandatory = $true)]
         [LabVM] $VM,
 
         [Int] $Timeout = 300
@@ -1804,7 +1804,7 @@ function CopyODJ {
     [System.Management.Automation.Runspaces.PSSession] $Session = $null
     [Boolean] $Complete = $False
     [Boolean] $ODJCopyComplete = $False
-    [String] $ODJFilename = Join-Path `
+    [System.String] $ODJFilename = Join-Path `
         -Path $VMLabBuilderFiles `
         -ChildPath "$($VM.ComputerName).txt"
 
@@ -1815,7 +1815,7 @@ function CopyODJ {
     } # if
 
     # Get Path to LabBuilder files
-    [String] $VMLabBuilderFiles = $VM.LabBuilderFilesPath
+    [System.String] $VMLabBuilderFiles = $VM.LabBuilderFilesPath
 
     While ((-not $Complete) `
         -and (((Get-Date) - $StartTime).TotalSeconds) -lt $TimeOut)
@@ -1834,7 +1834,7 @@ function CopyODJ {
                 errorMessage = $($LocalizedData.ODJCopyError `
                     -f $VM.Name,$ODJFilename)
             }
-            ThrowException @ExceptionParameters
+            New-Exception @ExceptionParameters
             return
         } # if
 
@@ -1855,7 +1855,7 @@ function CopyODJ {
             {
                 Try
                 {
-                    WriteMessage -Message $($LocalizedData.CopyingFilesToVMMessage `
+                    Write-LabMessage -Message $($LocalizedData.CopyingFilesToVMMessage `
                         -f $VM.Name,'ODJ')
 
                      Copy-Item `
@@ -1868,7 +1868,7 @@ function CopyODJ {
                 }
                 Catch
                 {
-                    WriteMessage -Message $($LocalizedData.CopyingFilesToVMFailedMessage `
+                    Write-LabMessage -Message $($LocalizedData.CopyingFilesToVMFailedMessage `
                         -f $VM.Name,'ODJ',$Script:RetryConnectSeconds)
 
                     Start-Sleep -Seconds $Script:RetryConnectSeconds
@@ -1891,7 +1891,7 @@ function CopyODJ {
                 errorMessage = $($LocalizedData.ODJCopyError `
                     -f $VM.Name,$ODJFilename)
             }
-            ThrowException @ExceptionParameters
+            New-Exception @ExceptionParameters
         } # if
 
 

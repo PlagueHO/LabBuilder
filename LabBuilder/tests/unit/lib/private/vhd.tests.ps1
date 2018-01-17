@@ -40,14 +40,14 @@ try
             [CmdLetBinding()]
             param
             (
-                [Parameter(Mandatory)]
-                [String] $errorId,
+                [Parameter(Mandatory = $true)]
+                [System.String] $errorId,
 
-                [Parameter(Mandatory)]
+                [Parameter(Mandatory = $true)]
                 [System.Management.Automation.ErrorCategory] $errorCategory,
 
-                [Parameter(Mandatory)]
-                [String] $errorMessage,
+                [Parameter(Mandatory = $true)]
+                [System.String] $errorMessage,
 
                 [Switch]
                 $terminate
@@ -88,7 +88,7 @@ try
                             -f 'DoesNotExist')
                     }
                     $Exception = GetException @ExceptionParameters
-                    { InitializeBootVHD -Lab $Lab -VM $VM -VMBootDiskPath 'c:\Dummy\' } | Should Throw $Exception
+                    { InitializeBootVHD -Lab $Lab -VM $VM -VMBootDiskPath 'c:\Dummy\' } | Should -Throw $Exception
                 }
                 It 'Calls Mocked commands' {
                     Assert-MockCalled New-Item -Exactly 1
@@ -104,7 +104,7 @@ try
                 It 'Does Not Throw Exception' {
                     $VM = $VMs[0].Clone()
                     $VM.Packages = 'WMF5.0-WS2012R2-W81'
-                    { InitializeBootVHD -Lab $Lab -VM $VM -VMBootDiskPath 'c:\Dummy\' } | Should Not Throw
+                    { InitializeBootVHD -Lab $Lab -VM $VM -VMBootDiskPath 'c:\Dummy\' } | Should -Not -Throw
                 }
                 It 'Calls Mocked commands' {
                     Assert-MockCalled New-Item -Exactly 4
@@ -127,7 +127,7 @@ try
                             -f 'WMF5.0-WS2012R2-W81',$ResourceMSUFile)
                     }
                     $Exception = GetException @ExceptionParameters
-                    { InitializeBootVHD -Lab $Lab -VM $VM -VMBootDiskPath 'c:\Dummy\' } | Should Throw $Exception
+                    { InitializeBootVHD -Lab $Lab -VM $VM -VMBootDiskPath 'c:\Dummy\' } | Should -Throw $Exception
                 }
                 It 'Calls Mocked commands' {
                     Assert-MockCalled New-Item -Exactly 1
@@ -146,7 +146,7 @@ try
                     $VM = $VMs[0].Clone()
                     $VM.Packages = ''
                     $VM.OSType = [LabOStype]::Nano
-                    { InitializeBootVHD -Lab $Lab -VM $VM -VMBootDiskPath 'c:\Dummy\' } | Should Not Throw
+                    { InitializeBootVHD -Lab $Lab -VM $VM -VMBootDiskPath 'c:\Dummy\' } | Should -Not -Throw
                 }
                 It 'Calls Mocked commands' {
                     Assert-MockCalled New-Item -Exactly 4
@@ -165,7 +165,7 @@ try
                     $VM = $VMs[0].Clone()
                     $VM.OSType = [LabOStype]::Nano
                     $VM.Packages = 'Microsoft-NanoServer-Containers-Package.cab,Microsoft-NanoServer-Guest-Package.cab'
-                    { InitializeBootVHD -Lab $Lab -VM $VM -VMBootDiskPath 'c:\Dummy\' } | Should Not Throw
+                    { InitializeBootVHD -Lab $Lab -VM $VM -VMBootDiskPath 'c:\Dummy\' } | Should -Not -Throw
                 }
                 It 'Calls Mocked commands' {
                     Assert-MockCalled New-Item -Exactly 4
@@ -186,7 +186,7 @@ try
                     $VM = $VMs[0].Clone()
                     $VM.OSType = [LabOStype]::Nano
                     $VM.Packages = 'Microsoft-NanoServer-Containers-Package.cab,Microsoft-NanoServer-Guest-Package.cab,WMF5.0-WS2012R2-W81'
-                    { InitializeBootVHD -Lab $Lab -VM $VM -VMBootDiskPath 'c:\Dummy\' } | Should Not Throw
+                    { InitializeBootVHD -Lab $Lab -VM $VM -VMBootDiskPath 'c:\Dummy\' } | Should -Not -Throw
                 }
                 It 'Calls Mocked commands' {
                     Assert-MockCalled New-Item -Exactly 4
@@ -211,7 +211,7 @@ try
                             -f $NanoServerPackagesFolder)
                     }
                     $Exception = GetException @ExceptionParameters
-                    { InitializeBootVHD -Lab $Lab -VM $VM -VMBootDiskPath 'c:\Dummy\' } | Should Throw $Exception
+                    { InitializeBootVHD -Lab $Lab -VM $VM -VMBootDiskPath 'c:\Dummy\' } | Should -Throw $Exception
                 }
                 It 'Calls Mocked commands' {
                     Assert-MockCalled New-Item -Exactly 1
@@ -227,7 +227,7 @@ try
                 Mock Test-Path -ParameterFilter { $Path -eq $ResourceMSUFile } -MockWith { $True }
                 It 'Does Not Throw Exception' {
                     $VM = $VMs[0].Clone()
-                    { InitializeBootVHD -Lab $Lab -VM $VM -VMBootDiskPath 'c:\Dummy\' } | Should Not Throw
+                    { InitializeBootVHD -Lab $Lab -VM $VM -VMBootDiskPath 'c:\Dummy\' } | Should -Not -Throw
                 }
                 It 'Calls Mocked commands' {
                     Assert-MockCalled New-Item -Exactly 4
@@ -344,7 +344,7 @@ try
                     }
                     $Exception = GetException @ExceptionParameters
 
-                    { InitializeVHD @Splat } | Should Throw $Exception
+                    { InitializeVHD @Splat } | Should -Throw $Exception
                 }
                 It 'Calls appropriate mocks' {
                     Assert-MockCalled Get-VHD -Exactly 0
@@ -374,7 +374,7 @@ try
                     }
                     $Exception = GetException @ExceptionParameters
 
-                    { InitializeVHD @Splat } | Should Throw $Exception
+                    { InitializeVHD @Splat } | Should -Throw $Exception
                 }
                 It 'Calls appropriate mocks' {
                     Assert-MockCalled Get-VHD -Exactly 2
@@ -400,7 +400,7 @@ try
                     $Splat = $VHDLabel.Clone()
                     $Splat.FileSystemLabel = 'Different'
 
-                    InitializeVHD @Splat | Should Be $RenamedVolume
+                    InitializeVHD @Splat | Should -Be $RenamedVolume
                 }
                 It 'Calls appropriate mocks' {
                     Assert-MockCalled Get-VHD -Exactly 2
@@ -424,7 +424,7 @@ try
                     $Splat = $VHDLabel.Clone()
                     $Splat.FileSystemLabel = 'Different'
 
-                    InitializeVHD @Splat | Should Be $RenamedVolume
+                    InitializeVHD @Splat | Should -Be $RenamedVolume
                 }
                 It 'Calls appropriate mocks' {
                     Assert-MockCalled Get-VHD -Exactly 2
@@ -449,7 +449,7 @@ try
                 It 'Returns Expected Volume' {
                     $Splat = $VHDLabel.Clone()
 
-                    InitializeVHD @Splat | Should Be $NewVolume
+                    InitializeVHD @Splat | Should -Be $NewVolume
                 }
                 It 'Calls appropriate mocks' {
                     Assert-MockCalled Get-VHD -Exactly 2
@@ -470,7 +470,7 @@ try
                     $Splat = $VHDLabel.Clone()
                     $Splat.DriveLetter = 'X'
 
-                    InitializeVHD @Splat | Should Be $UnformattedVolume # would be NewVolume but Get-Volume is mocked to this.
+                    InitializeVHD @Splat | Should -Be $UnformattedVolume # would be NewVolume but Get-Volume is mocked to this.
                 }
                 It 'Calls appropriate mocks' {
                     Assert-MockCalled Get-VHD -Exactly 2
@@ -491,7 +491,7 @@ try
                     $Splat = $VHDLabel.Clone()
                     $Splat.AccessPath = 'c:\Exists'
 
-                    InitializeVHD @Splat | Should Be $NewVolume
+                    InitializeVHD @Splat | Should -Be $NewVolume
                 }
                 It 'Calls appropriate mocks' {
                     Assert-MockCalled Get-VHD -Exactly 2
@@ -521,7 +521,7 @@ try
                     }
                     $Exception = GetException @ExceptionParameters
 
-                    { InitializeVHD @Splat } | Should Throw $Exception
+                    { InitializeVHD @Splat } | Should -Throw $Exception
                 }
                 It 'Calls appropriate mocks' {
                     Assert-MockCalled Get-VHD -Exactly 2

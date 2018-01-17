@@ -30,11 +30,11 @@ function Add-UniqueFileLineToTable
         $Command,
 
         [Parameter(Mandatory = $true)]
-        [String]
+        [System.String]
         $RepoRoot,
 
         [Parameter(Mandatory = $true)]
-        [String]
+        [System.String]
         $TableName
     )
 
@@ -53,16 +53,16 @@ function Add-UniqueFileLineToTable
             $file = $command.File
             $fileKey = $file.replace($RepoRoot,'').TrimStart('\').replace('\','/')
             $fileKey = $fileKeys.where{$_ -like $fileKey}
-            
+
             if ($null -eq $fileKey)
             {
                 Write-Warning -Message "Unexpected error filekey was null"
                 continue
             }
-            elseif ($fileKey.Count -ne 1) 
+            elseif ($fileKey.Count -ne 1)
             {
                 Write-Warning -Message "Unexpected error, more than one git file matched file ($file): $($fileKey -join ', ')"
-                continue                
+                continue
             }
 
             $fileKey = $fileKey | Select-Object -First 1
@@ -118,7 +118,7 @@ function Test-CodeCoverage
         throw 'Must be a Pester CodeCoverage object'
     }
 
-    return $true    
+    return $true
 }
 
 <#
@@ -144,12 +144,12 @@ function Export-CodeCovIoJson
         $CodeCoverage,
 
         [Parameter(Mandatory = $true)]
-        [String]
+        [System.String]
         $RepoRoot,
 
         [Parameter()]
         [ValidateNotNullOrEmpty()]
-        [String]
+        [System.String]
         $Path = (Join-Path -Path $env:TEMP -ChildPath 'codeCov.json')
     )
 
@@ -224,7 +224,7 @@ function Export-CodeCovIoJson
         $max = $hits.Keys | Sort-Object -Descending | Select-Object -First 1
         $maxMissLine = $misses.Keys | Sort-Object -Descending | Select-Object -First 1
 
-        <# 
+        <#
             if max missed line is greater than maxed hit line
             used max missed line as the max line
         #>
@@ -318,7 +318,7 @@ function Invoke-UploadCoveCoveIoReport
     param
     (
         [Parameter(Mandatory = $true)]
-        [String]
+        [System.String]
         $Path
     )
 
@@ -334,7 +334,7 @@ function Invoke-UploadCoveCoveIoReport
     $null = python -m pip install --upgrade pip
     $null = pip install git+git://github.com/codecov/codecov-python.git
     $uploadResults = codecov -f $resolvedResultFile -X gcov
-    
+
     if ($env:APPVEYOR_REPO_BRANCH)
     {
         $logPath = (Join-Path -Path $env:TEMP -ChildPath 'codeCovUpload.log')

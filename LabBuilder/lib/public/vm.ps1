@@ -73,9 +73,9 @@ function Get-LabVM {
     }
 
     [LabVM[]] $LabVMs = @()
-    [String] $LabPath = $Lab.labbuilderconfig.settings.labpath
-    [String] $VHDParentPath = $Lab.labbuilderconfig.settings.vhdparentpathfull
-    [String] $LabId = $Lab.labbuilderconfig.settings.labid
+    [System.String] $LabPath = $Lab.labbuilderconfig.settings.labpath
+    [System.String] $VHDParentPath = $Lab.labbuilderconfig.settings.vhdparentpathfull
+    [System.String] $LabId = $Lab.labbuilderconfig.settings.labid
     $VMs = $Lab.labbuilderconfig.vms.vm
 
     foreach ($VM in $VMs)
@@ -87,7 +87,7 @@ function Get-LabVM {
                 errorCategory = 'InvalidArgument'
                 errorMessage = $($LocalizedData.VMNameError)
             }
-            ThrowException @ExceptionParameters
+            New-Exception @ExceptionParameters
         } # if
 
         # Get the Instance Count attribute
@@ -134,11 +134,11 @@ function Get-LabVM {
                     errorMessage = $($LocalizedData.VMTemplateNameEmptyError `
                         -f $VMName)
                 }
-                ThrowException @ExceptionParameters
+                New-Exception @ExceptionParameters
             } # if
 
             # Find the template that this VM uses and get the VHD Path
-            [String] $ParentVHDPath = ''
+            [System.String] $ParentVHDPath = ''
             [Boolean] $Found = $false
             foreach ($VMTemplate in $VMTemplates) {
                 if ($VMTemplate.Name -eq $VM.Template) {
@@ -156,11 +156,11 @@ function Get-LabVM {
                     errorMessage = $($LocalizedData.VMTemplateNotFoundError `
                         -f $VMName,$VM.template)
                 }
-                ThrowException @ExceptionParameters
+                New-Exception @ExceptionParameters
             } # if
 
             # Get path to Offline Domain Join file if it exists
-            [String]$NanoODJPath = $null
+            [System.String]$NanoODJPath = $null
             if ($VM.NanoODJPath)
             {
                 $NanoODJPath = $VM.NanoODJPath
@@ -182,7 +182,7 @@ function Get-LabVM {
                         errorMessage = $($LocalizedData.VMAdapterNameError `
                             -f $VMName)
                     }
-                    ThrowException @ExceptionParameters
+                    New-Exception @ExceptionParameters
                 } # if
 
                 if (-not $AdapterSwitchName)
@@ -193,7 +193,7 @@ function Get-LabVM {
                         errorMessage = $($LocalizedData.VMAdapterSwitchNameError `
                             -f $VMName,$AdapterName)
                     }
-                    ThrowException @ExceptionParameters
+                    New-Exception @ExceptionParameters
                 } # if
 
                 # if a LabId is set for the lab, prepend it to the adapter name
@@ -238,11 +238,11 @@ function Get-LabVM {
                         errorMessage = $($LocalizedData.VMAdapterSwitchNotFoundError `
                             -f $VMName,$AdapterName,$AdapterSwitchName)
                     }
-                    ThrowException @ExceptionParameters
+                    New-Exception @ExceptionParameters
                 } # if
 
                 # Figure out the VLan - If defined in the VM use it, otherwise use the one defined in the Switch, otherwise keep blank.
-                [String] $VLan = $VMAdapter.VLan
+                [System.String] $VLan = $VMAdapter.VLan
                 if (-not $VLan)
                 {
                     $VLan = $SwitchVLan
@@ -305,7 +305,7 @@ function Get-LabVM {
                 $DataVhdCount++
 
                 # Load all the VHD properties and check they are valid
-                [String] $Vhd = $VMDataVhd.Vhd
+                [System.String] $Vhd = $VMDataVhd.Vhd
                 if (-not $VMDataVhd.Vhd)
                 {
                     $ExceptionParameters = @{
@@ -314,7 +314,7 @@ function Get-LabVM {
                         errorMessage = $($LocalizedData.VMDataDiskVHDEmptyError `
                             -f $VMName)
                     }
-                    ThrowException @ExceptionParameters
+                    New-Exception @ExceptionParameters
                 } # if
 
                 # Adjust the path to be relative to the Virtual Hard Disks folder of the VM
@@ -353,7 +353,7 @@ function Get-LabVM {
                             errorMessage = $($LocalizedData.VMDataDiskParentVHDNotFoundError `
                                 -f $VMName,$NewDataVHD.ParentVhd)
                         }
-                        ThrowException @ExceptionParameters
+                        New-Exception @ExceptionParameters
                     } # if
                 } # if
 
@@ -377,7 +377,7 @@ function Get-LabVM {
                             errorMessage = $($LocalizedData.VMDataDiskSourceVHDNotFoundError `
                                 -f $VMName,$NewDataVHD.SourceVhd)
                         }
-                        ThrowException @ExceptionParameters
+                        New-Exception @ExceptionParameters
                     } # if
                 } # if
 
@@ -415,7 +415,7 @@ function Get-LabVM {
                                     errorMessage = $($LocalizedData.VMDataDiskParentVHDMissingError `
                                         -f $VMName)
                                 }
-                                ThrowException @ExceptionParameters
+                                New-Exception @ExceptionParameters
                             } # if
                             if ($NewDataVHD.Shared)
                             {
@@ -425,7 +425,7 @@ function Get-LabVM {
                                     errorMessage = $($LocalizedData.VMDataDiskSharedDifferencingError `
                                         -f $VMName,$VHD)
                                 }
-                                ThrowException @ExceptionParameters
+                                New-Exception @ExceptionParameters
                             } # if
                         }
                         Default
@@ -436,7 +436,7 @@ function Get-LabVM {
                                 errorMessage = $($LocalizedData.VMDataDiskUnknownTypeError `
                                     -f $VMName,$VHD,$VMDataVhd.Type)
                             }
-                            ThrowException @ExceptionParameters
+                            New-Exception @ExceptionParameters
                         }
                     } # switch
                     $NewDataVHD.VHDType = [LabVHDType]::$($VMDataVhd.Type)
@@ -454,7 +454,7 @@ function Get-LabVM {
                             errorMessage = $($LocalizedData.VMDataDiskPartitionStyleError `
                                 -f $VMName,$VHD,$VMDataVhd.PartitionStyle)
                         }
-                        ThrowException @ExceptionParameters
+                        New-Exception @ExceptionParameters
                     } # if
                     $NewDataVHD.PartitionStyle = $PartitionStyle
                 } # if
@@ -471,7 +471,7 @@ function Get-LabVM {
                             errorMessage = $($LocalizedData.VMDataDiskFileSystemError `
                                 -f $VMName,$VHD,$VMDataVhd.FileSystem)
                         }
-                        ThrowException @ExceptionParameters
+                        New-Exception @ExceptionParameters
                     } # if
                     $NewDataVHD.FileSystem = $FileSystem
                 } # if
@@ -496,7 +496,7 @@ function Get-LabVM {
                             errorMessage = $($LocalizedData.VMDataDiskPartitionStyleMissingError `
                                 -f $VMName,$VHD)
                         }
-                        ThrowException @ExceptionParameters
+                        New-Exception @ExceptionParameters
                     } # if
                     if (-not $NewDataVHD.FileSystem)
                     {
@@ -506,7 +506,7 @@ function Get-LabVM {
                             errorMessage = $($LocalizedData.VMDataDiskFileSystemMissingError `
                                 -f $VMName,$VHD)
                         }
-                        ThrowException @ExceptionParameters
+                        New-Exception @ExceptionParameters
                     } # if
                 } # if
 
@@ -531,7 +531,7 @@ function Get-LabVM {
                             errorMessage = $($LocalizedData.VMDataDiskCopyFolderMissingError `
                                 -f $VMName,$VHD,$CopyFolder)
                             }
-                        ThrowException @ExceptionParameters
+                        New-Exception @ExceptionParameters
                         }
                     } # foreach
                     $NewDataVHD.CopyFolders = $VMDataVhd.CopyFolders
@@ -549,7 +549,7 @@ function Get-LabVM {
                             errorMessage = $($LocalizedData.VMDataDiskSourceVHDIfMoveError `
                                 -f $VMName,$VHD)
                         }
-                        ThrowException @ExceptionParameters
+                        New-Exception @ExceptionParameters
                     } # if
                 } # if
 
@@ -564,7 +564,7 @@ function Get-LabVM {
                         errorMessage = $($LocalizedData.VMDataDiskCantBeCreatedError `
                             -f $VMName,$VHD)
                     }
-                    ThrowException @ExceptionParameters
+                    New-Exception @ExceptionParameters
                 } # if
 
                 $DataVHDs += @( $NewDataVHD )
@@ -602,7 +602,7 @@ function Get-LabVM {
                             errorMessage = $($LocalizedData.VMDVDDriveISOResourceNotFOundError `
                                 -f $VMName,$VMDVDDrive.ISO)
                         }
-                        ThrowException @ExceptionParameters
+                        New-Exception @ExceptionParameters
                     } # if
                     # The ISO resource was found so populate the ISO details
                     $NewDVDDrive.ISO = $VMDVDDrive.ISO
@@ -613,7 +613,7 @@ function Get-LabVM {
             } # foreach
 
             # Does the VM have an Unattend file specified?
-            [String] $UnattendFile = ''
+            [System.String] $UnattendFile = ''
             if ($VM.UnattendFile)
             {
                 if ([System.IO.Path]::IsPathRooted($VM.UnattendFile))
@@ -634,12 +634,12 @@ function Get-LabVM {
                         errorMessage = $($LocalizedData.UnattendFileMissingError `
                             -f $VMName,$UnattendFile)
                     }
-                    ThrowException @ExceptionParameters
+                    New-Exception @ExceptionParameters
                 } # if
             } # if
 
             # Does the VM specify a Setup Complete Script?
-            [String] $SetupComplete = ''
+            [System.String] $SetupComplete = ''
             if ($VM.SetupComplete)
             {
                 if ([System.IO.Path]::IsPathRooted($VM.SetupComplete))
@@ -660,7 +660,7 @@ function Get-LabVM {
                         errorMessage = $($LocalizedData.SetupCompleteFileBadTypeError `
                             -f $VMName,$SetupComplete)
                     }
-                    ThrowException @ExceptionParameters
+                    New-Exception @ExceptionParameters
                 } # if
                 if (-not (Test-Path $SetupComplete))
                 {
@@ -670,7 +670,7 @@ function Get-LabVM {
                         errorMessage = $($LocalizedData.SetupCompleteFileMissingError `
                             -f $VMName,$SetupComplete)
                     }
-                    ThrowException @ExceptionParameters
+                    New-Exception @ExceptionParameters
                 } # if
             } # if
 
@@ -678,7 +678,7 @@ function Get-LabVM {
             $LabDSC = [LabDSC]::New($VM.DSC.ConfigName)
 
             # Load the DSC Config File setting and check it
-            [String] $LabDSC.ConfigFile = ''
+            [System.String] $LabDSC.ConfigFile = ''
             if ($VM.DSC.ConfigFile)
             {
                 if (-not [System.IO.Path]::IsPathRooted($VM.DSC.ConfigFile))
@@ -700,7 +700,7 @@ function Get-LabVM {
                         errorMessage = $($LocalizedData.DSCConfigFileBadTypeError `
                             -f $VMName,$LabDSC.ConfigFile)
                     }
-                    ThrowException @ExceptionParameters
+                    New-Exception @ExceptionParameters
                 } # if
 
                 if (-not (Test-Path $LabDSC.ConfigFile))
@@ -711,7 +711,7 @@ function Get-LabVM {
                         errorMessage = $($LocalizedData.DSCConfigFileMissingError `
                             -f $VMName,$LabDSC.ConfigFile)
                     }
-                    ThrowException @ExceptionParameters
+                    New-Exception @ExceptionParameters
                 } # if
                 if (-not $VM.DSC.ConfigName)
                 {
@@ -721,12 +721,12 @@ function Get-LabVM {
                         errorMessage = $($LocalizedData.DSCConfigNameIsEmptyError `
                             -f $VMName)
                     }
-                    ThrowException @ExceptionParameters
+                    New-Exception @ExceptionParameters
                 } # if
             } # if
 
             # Load the DSC Parameters
-            [String] $LabDSC.Parameters = ''
+            [System.String] $LabDSC.Parameters = ''
             if ($VM.DSC.Parameters)
             {
                 # Correct any LFs into CRLFs to ensure the new line format is the same when
@@ -790,7 +790,7 @@ function Get-LabVM {
                     errorMessage = $($LocalizedData.VMVirtualizationExtError `
                         -f $VMName)
                 }
-                ThrowException @ExceptionParameters
+                New-Exception @ExceptionParameters
             } # if
 
             [Boolean] $UseDifferencingDisk = $True
@@ -810,7 +810,7 @@ function Get-LabVM {
             } # if
 
             # Get the Administrator password (from the template or VM)
-            [String] $AdministratorPassword = ''
+            [System.String] $AdministratorPassword = ''
             if ($VM.administratorpassword)
             {
                 $AdministratorPassword = $VM.administratorpassword
@@ -821,7 +821,7 @@ function Get-LabVM {
             } # if
 
             # Get the Product Key (from the template or VM)
-            [String] $ProductKey = ''
+            [System.String] $ProductKey = ''
             if ($VM.productkey)
             {
                 $ProductKey = $VM.productkey
@@ -832,7 +832,7 @@ function Get-LabVM {
             } # if
 
             # Get the Timezone (from the template or VM)
-            [String] $Timezone = 'Pacific Standard Time'
+            [System.String] $Timezone = 'Pacific Standard Time'
             if ($VM.timezone)
             {
                 $Timezone = $VM.timezone
@@ -861,7 +861,7 @@ function Get-LabVM {
             } # if
 
             # Get the Packages
-            [String] $Packages = $null
+            [System.String] $Packages = $null
             if ($VM.packages)
             {
                 $Packages = $VM.packages
@@ -872,7 +872,7 @@ function Get-LabVM {
             } # if
 
             # Get the Version (from the template or VM)
-            [String] $Version = '8.0'
+            [System.String] $Version = '8.0'
             if ($VM.version)
             {
                 $Version = $VM.version
@@ -883,7 +883,7 @@ function Get-LabVM {
             } # if
 
             # Get the Generation (from the template or VM)
-            [String] $Generation = 2
+            [System.String] $Generation = 2
             if ($VM.generation)
             {
                 $Generation = $VM.generation
@@ -1009,7 +1009,7 @@ function Initialize-LabVM {
 
     $CurrentVMs = Get-VM
 
-    [String] $LabPath = $Lab.labbuilderconfig.settings.labpath
+    [System.String] $LabPath = $Lab.labbuilderconfig.settings.labpath
 
     # Figure out the name of the LabBuilder control switch
     $ManagementSwitchName = GetManagementSwitchName `
@@ -1032,24 +1032,24 @@ function Initialize-LabVM {
         } # if
 
         # Get the root path of the VM
-        [String] $VMRootPath = $VM.VMRootPath
+        [System.String] $VMRootPath = $VM.VMRootPath
 
         # Get the Virtual Machine Path
-        [String] $VMPath = Join-Path `
+        [System.String] $VMPath = Join-Path `
             -Path $VMRootPath `
             -ChildPath 'Virtual Machines'
 
         # Get the Virtual Hard Disk Path
-        [String] $VHDPath = Join-Path `
+        [System.String] $VHDPath = Join-Path `
             -Path $VMRootPath `
             -ChildPath 'Virtual Hard Disks'
 
         # Get Path to LabBuilder files
-        [String] $VMLabBuilderFiles = $VM.LabBuilderFilesPath
+        [System.String] $VMLabBuilderFiles = $VM.LabBuilderFilesPath
 
         if (($CurrentVMs | Where-Object -Property Name -eq $VM.Name).Count -eq 0)
         {
-            WriteMessage -Message $($LocalizedData.CreatingVMMessage `
+            Write-LabMessage -Message $($LocalizedData.CreatingVMMessage `
                 -f $VM.Name)
 
             # Make sure the appropriate folders exist
@@ -1062,20 +1062,20 @@ function Initialize-LabVM {
             {
                 if ($VM.UseDifferencingDisk)
                 {
-                    WriteMessage -Message $($LocalizedData.CreatingVMDiskMessage `
+                    Write-LabMessage -Message $($LocalizedData.CreatingVMDiskMessage `
                         -f $VM.Name,$VMBootDiskPath,'Differencing Boot')
 
-                    $Null = New-VHD `
+                    $null = New-VHD `
                         -Differencing `
                         -Path $VMBootDiskPath `
                         -ParentPath $VM.ParentVHD
                 }
                 else
                 {
-                    WriteMessage -Message $($LocalizedData.CreatingVMDiskMessage `
+                    Write-LabMessage -Message $($LocalizedData.CreatingVMDiskMessage `
                         -f $VM.Name,$VMBootDiskPath,'Boot')
 
-                    $Null = Copy-Item `
+                    $null = Copy-Item `
                         -Path $VM.ParentVHD `
                         -Destination $VMBootDiskPath
                 }
@@ -1093,7 +1093,7 @@ function Initialize-LabVM {
             }
             else
             {
-                WriteMessage -Message $($LocalizedData.VMDiskAlreadyExistsMessage `
+                Write-LabMessage -Message $($LocalizedData.VMDiskAlreadyExistsMessage `
                     -f $VM.Name,$VMBootDiskPath,'Boot')
             } # if
 
@@ -1159,7 +1159,7 @@ function Initialize-LabVM {
                     errorMessage = $($LocalizedData.VMVirtualizationExtError `
                         -f $VM.Name)
                 }
-                ThrowException @ExceptionParameters
+                New-Exception @ExceptionParameters
             } # if
         }
         else
@@ -1199,7 +1199,7 @@ function Initialize-LabVM {
         # Create/Update the Management Network Adapter
         if ((Get-VMNetworkAdapter -VMName $VM.Name | Where-Object -Property Name -EQ $ManagementSwitchName).Count -eq 0)
         {
-            WriteMessage -Message $($LocalizedData.AddingVMNetworkAdapterMessage `
+            Write-LabMessage -Message $($LocalizedData.AddingVMNetworkAdapterMessage `
                 -f $VM.Name,$ManagementSwitchName,'Management')
 
             Add-VMNetworkAdapter `
@@ -1215,7 +1215,7 @@ function Initialize-LabVM {
                 -Access `
                 -VlanId $ManagementVlan
 
-        WriteMessage -Message $($LocalizedData.SettingVMNetworkAdapterVlanMessage `
+        Write-LabMessage -Message $($LocalizedData.SettingVMNetworkAdapterVlanMessage `
             -f $VM.Name,$ManagementSwitchName,'Management',$ManagementVlan)
 
         # Create any network adapters
@@ -1223,7 +1223,7 @@ function Initialize-LabVM {
         {
             if ((Get-VMNetworkAdapter -VMName $VM.Name | Where-Object -Property Name -EQ $VMAdapter.Name).Count -eq 0)
             {
-                WriteMessage -Message $($LocalizedData.AddingVMNetworkAdapterMessage `
+                Write-LabMessage -Message $($LocalizedData.AddingVMNetworkAdapterMessage `
                     -f $VM.Name,$VMAdapter.SwitchName,$VMAdapter.Name)
 
                 Add-VMNetworkAdapter `
@@ -1242,7 +1242,7 @@ function Initialize-LabVM {
                         -Access `
                         -VlanId $VMAdapter.VLan
 
-                WriteMessage -Message $($LocalizedData.SettingVMNetworkAdapterVlanMessage `
+                Write-LabMessage -Message $($LocalizedData.SettingVMNetworkAdapterVlanMessage `
                     -f $VM.Name,$VMAdapter.Name,'',$VMAdapter.VLan)
             }
             else
@@ -1251,11 +1251,11 @@ function Initialize-LabVM {
                     Set-VMNetworkAdapterVlan `
                         -Untagged
 
-                WriteMessage -Message $($LocalizedData.ClearingVMNetworkAdapterVlanMessage `
+                Write-LabMessage -Message $($LocalizedData.ClearingVMNetworkAdapterVlanMessage `
                     -f $VM.Name,$VMAdapter.Name,'')
             } # if
 
-            if ([String]::IsNullOrWhitespace($VMAdapter.MACAddress))
+            if ([System.String]::IsNullOrWhitespace($VMAdapter.MACAddress))
             {
                 $null = $VMNetworkAdapter |
                     Set-VMNetworkAdapter `
@@ -1360,7 +1360,7 @@ function Remove-LabVM {
     $CurrentVMs = Get-VM
 
     # Get the LabPath
-    [String] $LabPath = $Lab.labbuilderconfig.settings.labpath
+    [System.String] $LabPath = $Lab.labbuilderconfig.settings.labpath
 
     foreach ($VM in $VMs)
     {
@@ -1375,7 +1375,7 @@ function Remove-LabVM {
             # if the VM is running we need to shut it down.
             if ((Get-VM -Name $VM.Name).State -eq 'Running')
             {
-                WriteMessage -Message $($LocalizedData.StoppingVMMessage `
+                Write-LabMessage -Message $($LocalizedData.StoppingVMMessage `
                     -f $VM.Name)
 
                 Stop-VM `
@@ -1385,19 +1385,19 @@ function Remove-LabVM {
                     -VM $VM
             }
 
-            WriteMessage -Message $($LocalizedData.RemovingVMMessage `
+            Write-LabMessage -Message $($LocalizedData.RemovingVMMessage `
                 -f $VM.Name)
 
             # Now delete the actual VM
             Get-VM `
                 -Name $VM.Name | Remove-VM -Force -Confirm:$False
 
-            WriteMessage -Message $($LocalizedData.RemovedVMMessage `
+            Write-LabMessage -Message $($LocalizedData.RemovedVMMessage `
                 -f $VM.Name)
         }
         else
         {
-            WriteMessage -Message $($LocalizedData.VMNotFoundMessage `
+            Write-LabMessage -Message $($LocalizedData.VMNotFoundMessage `
                 -f $VM.Name)
         }
     }
@@ -1406,7 +1406,7 @@ function Remove-LabVM {
     {
         if (Test-Path -Path $VM.VMRootPath)
         {
-            WriteMessage -Message $($LocalizedData.DeletingVMFolderMessage `
+            Write-LabMessage -Message $($LocalizedData.DeletingVMFolderMessage `
                 -f $VM.Name)
 
             Remove-Item `
@@ -1458,12 +1458,12 @@ function Install-LabVM {
         [LabVM] $VM
     )
 
-    [String] $LabPath = $Lab.labbuilderconfig.settings.labpath
+    [System.String] $LabPath = $Lab.labbuilderconfig.settings.labpath
 
     # The VM is now ready to be started
     if ((Get-VM -Name $VM.Name).State -eq 'Off')
     {
-        WriteMessage -Message $($LocalizedData.StartingVMMessage `
+        Write-LabMessage -Message $($LocalizedData.StartingVMMessage `
             -f $VM.Name)
 
         Start-VM -VMName $VM.Name
@@ -1478,14 +1478,14 @@ function Install-LabVM {
             # No, so check it is initialized and download the cert if required
             if (WaitVMInitializationComplete -VM $VM -ErrorAction Continue)
             {
-                WriteMessage -Message $($LocalizedData.CertificateDownloadStartedMessage `
+                Write-LabMessage -Message $($LocalizedData.CertificateDownloadStartedMessage `
                     -f $VM.Name)
 
                 if ($VM.CertificateSource -eq [LabCertificateSource]::Guest)
                 {
                     if (Recieve-SelfSignedCertificate -Lab $Lab -VM $VM)
                     {
-                        WriteMessage -Message $($LocalizedData.CertificateDownloadCompleteMessage `
+                        Write-LabMessage -Message $($LocalizedData.CertificateDownloadCompleteMessage `
                             -f $VM.Name)
                     }
                     else
@@ -1496,7 +1496,7 @@ function Install-LabVM {
                             errorMessage = $($LocalizedData.CertificateDownloadError `
                                 -f $VM.name)
                         }
-                        ThrowException @ExceptionParameters
+                        New-Exception @ExceptionParameters
                     } # if
                 } # if
             }
@@ -1508,7 +1508,7 @@ function Install-LabVM {
                     errorMessage = $($LocalizedData.InitializationDidNotCompleteError `
                         -f $VM.name)
                 }
-                ThrowException @ExceptionParameters
+                New-Exception @ExceptionParameters
             } # if
         } # if
 
@@ -1603,7 +1603,7 @@ function Connect-LabVM
             $TrustedHosts = (Get-Item -Path WSMAN::localhost\Client\TrustedHosts).Value
             if (($TrustedHosts -notlike "*$IPAddress*") -and ($TrustedHosts -ne '*'))
             {
-                if ([String]::IsNullOrWhitespace($TrustedHosts))
+                if ([System.String]::IsNullOrWhitespace($TrustedHosts))
                 {
                     $TrustedHosts = $IPAddress
                 }
@@ -1615,11 +1615,11 @@ function Connect-LabVM
                     -Path WSMAN::localhost\Client\TrustedHosts `
                     -Value $TrustedHosts `
                     -Force
-                WriteMessage -Message $($LocalizedData.AddingIPAddressToTrustedHostsMessage `
+                Write-LabMessage -Message $($LocalizedData.AddingIPAddressToTrustedHostsMessage `
                     -f $VM.Name,$IPAddress)
             }
 
-            WriteMessage -Message $($LocalizedData.ConnectingVMMessage `
+            Write-LabMessage -Message $($LocalizedData.ConnectingVMMessage `
                 -f $VM.Name,$IPAddress)
 
             $Session = New-PSSession `
@@ -1632,12 +1632,12 @@ function Connect-LabVM
         {
             if (-not $IPAddress)
             {
-                WriteMessage -Message $($LocalizedData.WaitingForIPAddressAssignedMessage `
+                Write-LabMessage -Message $($LocalizedData.WaitingForIPAddressAssignedMessage `
                     -f $VM.Name,$Script:RetryConnectSeconds)
             }
             else
             {
-                WriteMessage -Message $($LocalizedData.ConnectingVMFailedMessage `
+                Write-LabMessage -Message $($LocalizedData.ConnectingVMFailedMessage `
                     -f $VM.Name,$Script:RetryConnectSeconds,$_.Exception.Message)
             }
             Start-Sleep -Seconds $Script:RetryConnectSeconds
@@ -1655,7 +1655,7 @@ function Connect-LabVM
             errorMessage = $($LocalizedData.RemotingConnectionError `
                 -f $VM.Name)
         }
-        ThrowException @ExceptionParameters
+        New-Exception @ExceptionParameters
     }
     Return $Session
 } # Connect-LabVM
@@ -1711,7 +1711,7 @@ function Disconnect-LabVM
         if (-not $Session)
         {
             # No session found to this machine so nothing to do.
-            WriteMessage -Message $($LocalizedData.VMSessionDoesNotExistMessage `
+            Write-LabMessage -Message $($LocalizedData.VMSessionDoesNotExistMessage `
                 -f $VM.Name)
         }
         else
@@ -1720,7 +1720,7 @@ function Disconnect-LabVM
             {
                 # Disconnect the session
                 $null = $Session | Disconnect-PSSession
-                WriteMessage -Message $($LocalizedData.DisconnectingVMMessage `
+                Write-LabMessage -Message $($LocalizedData.DisconnectingVMMessage `
                     -f $VM.Name,$IPAddress)
             }
             # Remove the session
@@ -1743,7 +1743,7 @@ function Disconnect-LabVM
                 -Path WSMAN::localhost\Client\TrustedHosts `
                 -Value $TrustedHosts `
                 -Force
-            WriteMessage -Message $($LocalizedData.RemovingIPAddressFromTrustedHostsMessage `
+            Write-LabMessage -Message $($LocalizedData.RemovingIPAddressFromTrustedHostsMessage `
                 -f $VM.Name,$IPAddress)
         }
     } # try

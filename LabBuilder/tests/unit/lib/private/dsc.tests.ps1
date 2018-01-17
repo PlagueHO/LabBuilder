@@ -40,14 +40,14 @@ try
             [CmdLetBinding()]
             param
             (
-                [Parameter(Mandatory)]
-                [String] $errorId,
+                [Parameter(Mandatory = $true)]
+                [System.String] $errorId,
 
-                [Parameter(Mandatory)]
+                [Parameter(Mandatory = $true)]
                 [System.Management.Automation.ErrorCategory] $errorCategory,
 
-                [Parameter(Mandatory)]
-                [String] $errorMessage,
+                [Parameter(Mandatory = $true)]
+                [System.String] $errorMessage,
 
                 [Switch]
                 $terminate
@@ -74,7 +74,7 @@ try
                         -Value ($DSCModules | ConvertTo-Json -Depth 4)
                     $ExpectedDSCModules = Get-Content `
                         -Path "$Global:ExpectedContentPath\ExpectedDSCModules.json"
-                    [String]::Compare((Get-Content -Path "$Global:ArtifactPath\ExpectedDSCModules.json"),$ExpectedDSCModules,$true) | Should Be 0
+                    [System.String]::Compare((Get-Content -Path "$Global:ArtifactPath\ExpectedDSCModules.json"),$ExpectedDSCModules,$true) | Should -Be 0
                 }
             }
 
@@ -88,12 +88,12 @@ try
                         -Path "$Global:ArtifactPath\ExpectedDSCModules.json" `
                         -Value ($DSCModules | ConvertTo-Json -Depth 4)
                     $ExpectedDSCModules = Get-Content -Path "$Global:ExpectedContentPath\ExpectedDSCModules.json"
-                    [String]::Compare((Get-Content -Path "$Global:ArtifactPath\ExpectedDSCModules.json"),$ExpectedDSCModules,$true) | Should Be 0
+                    [System.String]::Compare((Get-Content -Path "$Global:ArtifactPath\ExpectedDSCModules.json"),$ExpectedDSCModules,$true) | Should -Be 0
                 }
             }
         }
 
-        Describe '\Lib\Private\Dsc.ps1\SetModulesInDSCConfig' {
+        Describe '\Lib\Private\Dsc.ps1\Set-ModulesInDSCConfig' {
             $Module1 = [LabDSCModule]::New('PSDesiredStateConfiguration','1.0')
             $Module2 = [LabDSCModule]::New('xActiveDirectory')
             $Module3 = [LabDSCModule]::New('xComputerManagement','1.4.0.0')
@@ -102,7 +102,7 @@ try
 
             Context 'Called with Test DSC Resource File' {
                 It 'Returns DSCConfig Content that matches Expected String' {
-                    [String] $DSCConfig = SetModulesInDSCConfig `
+                    [System.String] $DSCConfig = Set-ModulesInDSCConfig `
                         -DSCConfigFile (Join-Path -Path $Global:TestConfigPath -ChildPath 'dsclibrary\PesterTest.DSC.ps1') `
                         -Modules $UpdateModules
 
@@ -110,14 +110,14 @@ try
                     $ExpectedDSCConfig = Get-Content -Path "$Global:ExpectedContentPath\ExpectedDSCConfig.txt"
                     @(Compare-Object `
                         -ReferenceObject $ExpectedDSCConfig `
-                        -DifferenceObject (Get-Content -Path "$Global:ArtifactPath\ExpectedDSCConfig.txt")).Count  | Should Be 0
+                        -DifferenceObject (Get-Content -Path "$Global:ArtifactPath\ExpectedDSCConfig.txt")).Count  | Should -Be 0
                 }
             }
 
             Context 'Called with Test DSC Resource Content' {
                 It 'Returns DSCModules Content that matches Expected String' {
-                    [String] $Content = Get-Content -Path (Join-Path -Path $Global:TestConfigPath -ChildPath 'dsclibrary\PesterTest.DSC.ps1') -RAW
-                    $DSCConfig = SetModulesInDSCConfig `
+                    [System.String] $Content = Get-Content -Path (Join-Path -Path $Global:TestConfigPath -ChildPath 'dsclibrary\PesterTest.DSC.ps1') -RAW
+                    $DSCConfig = Set-ModulesInDSCConfig `
                         -DSCConfigContent $Content `
                         -Modules $UpdateModules
 
@@ -125,7 +125,7 @@ try
                     $ExpectedDSCConfig = Get-Content -Path "$Global:ExpectedContentPath\ExpectedDSCConfig.txt"
                     @(Compare-Object `
                         -ReferenceObject $ExpectedDSCConfig `
-                        -DifferenceObject (Get-Content -Path "$Global:ArtifactPath\ExpectedDSCConfig.txt")).Count  | Should Be 0
+                        -DifferenceObject (Get-Content -Path "$Global:ArtifactPath\ExpectedDSCConfig.txt")).Count  | Should -Be 0
                 }
             }
         }
@@ -147,11 +147,11 @@ try
                 Mock Get-ModulesInDSCConfig -MockWith { @('TestModule') }
 
                 $VM = $VMS[0].Clone()
-                
+
                 $VMConfigFile = $VM.DSC.ConfigFile
                 $VM.DSC.ConfigFile = ''
                 It 'Does not throw an Exception' {
-                    { CreateDSCMOFFiles -Lab $Lab -VM $VM } | Should Not Throw
+                    { CreateDSCMOFFiles -Lab $Lab -VM $VM } | Should -Not -Throw
                 }
 
                 It 'Calls Mocked commands' {
@@ -176,7 +176,7 @@ try
                 $Exception = GetException @ExceptionParameters
 
                 It 'Throws a DSCModuleDownloadError Exception' {
-                    { CreateDSCMOFFiles -Lab $Lab -VM $VM } | Should Throw $Exception
+                    { CreateDSCMOFFiles -Lab $Lab -VM $VM } | Should -Throw $Exception
                 }
                 It 'Calls Mocked commands' {
                     Assert-MockCalled Get-Module -Exactly 1
@@ -201,7 +201,7 @@ try
                 $Exception = GetException @ExceptionParameters
 
                 It 'Throws a DSCModuleDownloadError Exception' {
-                    { CreateDSCMOFFiles -Lab $Lab -VM $VM } | Should Throw $Exception
+                    { CreateDSCMOFFiles -Lab $Lab -VM $VM } | Should -Throw $Exception
                 }
                 It 'Calls Mocked commands' {
                     Assert-MockCalled Get-Module -Exactly 1
@@ -229,7 +229,7 @@ try
                 $Exception = GetException @ExceptionParameters
 
                 It 'Throws a DSCModuleNotFoundError Exception' {
-                    { CreateDSCMOFFiles -Lab $Lab -VM $VM } | Should Throw $Exception
+                    { CreateDSCMOFFiles -Lab $Lab -VM $VM } | Should -Throw $Exception
                 }
 
                 It 'Calls Mocked commands' {
@@ -263,7 +263,7 @@ try
                 $Exception = GetException @ExceptionParameters
 
                 It 'Throws a CertificateCreateError Exception' {
-                    { CreateDSCMOFFiles -Lab $Lab -VM $VM } | Should Throw $Exception
+                    { CreateDSCMOFFiles -Lab $Lab -VM $VM } | Should -Throw $Exception
                 }
 
                 It 'Calls Mocked commands' {
@@ -307,7 +307,7 @@ try
                 $Exception = GetException @ExceptionParameters
 
                 It 'Throws a DSCConfigMetaMOFCreateError Exception' {
-                    { CreateDSCMOFFiles -Lab $Lab -VM $VM } | Should Throw $Exception
+                    { CreateDSCMOFFiles -Lab $Lab -VM $VM } | Should -Throw $Exception
                 }
                 It 'Calls Mocked commands' {
                     Assert-MockCalled Get-Module -Exactly 1
@@ -350,7 +350,7 @@ try
                 }
                 $Exception = GetException @ExceptionParameters
                 It 'Throws a NetworkAdapterNotFoundError Exception' {
-                    { SetDSCStartFile -Lab $Lab -VM $VM } | Should Throw $Exception
+                    { SetDSCStartFile -Lab $Lab -VM $VM } | Should -Throw $Exception
                 }
                 It 'Calls Mocked commands' {
                     Assert-MockCalled Get-VMNetworkAdapter -Exactly 1
@@ -371,7 +371,7 @@ try
                 $Exception = GetException @ExceptionParameters
 
                 It 'Throws a NetworkAdapterBlankMacError Exception' {
-                    { SetDSCStartFile -Lab $Lab -VM $VM } | Should Throw $Exception
+                    { SetDSCStartFile -Lab $Lab -VM $VM } | Should -Throw $Exception
                 }
                 It 'Calls Mocked commands' {
                     Assert-MockCalled Get-VMNetworkAdapter -Exactly 1
@@ -385,7 +385,7 @@ try
                 $VM = $VMS[0].Clone()
 
                 It 'Does Not Throw Exception' {
-                    { SetDSCStartFile -Lab $Lab -VM $VM } | Should Not Throw
+                    { SetDSCStartFile -Lab $Lab -VM $VM } | Should -Not -Throw
                 }
                 It 'Calls Mocked commands' {
                     Assert-MockCalled Get-VMNetworkAdapter -Exactly ($VM.Adapters.Count+1)
@@ -408,7 +408,7 @@ try
                 $VM = $VMs[0].Clone()
 
                 It 'Does Not Throw Exception' {
-                    { InitializeDSC -Lab $Lab -VM $VM } | Should Not Throw
+                    { InitializeDSC -Lab $Lab -VM $VM } | Should -Not -Throw
                 }
                 It 'Calls Mocked commands' {
                     Assert-MockCalled CreateDSCMOFFiles -Exactly 1

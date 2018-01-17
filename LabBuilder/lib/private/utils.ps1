@@ -1,42 +1,49 @@
 <#
-.SYNOPSIS
-    Throws a custom exception.
-.DESCRIPTION
-    This cmdlet throws a terminating or non-terminating exception.
-.PARAMETER errorId
-    The Id of the exception.
-.PARAMETER errorCategory
-    The category of the exception. It must be a valid [System.Management.Automation.ErrorCategory]
-    value.
-.PARAMETER errorMessage
-    The exception message.
-.PARAMETER terminate
-    This switch will cause the exception to terminate the cmdlet.
-.EXAMPLE
-    $ExceptionParameters = @{
-        errorId = 'ConnectionFailure'
-        errorCategory = 'ConnectionError'
-        errorMessage = 'Could not connect'
-    }
-    ThrowException @ExceptionParameters
-    Throw a ConnectionError exception with the message 'Could not connect'.
-.OUTPUTS
-    None
+    .SYNOPSIS
+        Throws a custom exception.
+
+    .DESCRIPTION
+        This cmdlet throws a terminating or non-terminating exception.
+
+    .PARAMETER errorId
+        The Id of the exception.
+
+    .PARAMETER errorCategory
+        The category of the exception. It must be a valid [System.Management.Automation.ErrorCategory]
+        value.
+
+    .PARAMETER errorMessage
+        The exception message.
+
+    .PARAMETER terminate
+        This switch will cause the exception to terminate the cmdlet.
+
+    .EXAMPLE
+        $ExceptionParameters = @{
+            errorId = 'ConnectionFailure'
+            errorCategory = 'ConnectionError'
+            errorMessage = 'Could not connect'
+        }
+        New-Exception @ExceptionParameters
+        Throw a ConnectionError exception with the message 'Could not connect'.
+
+    .OUTPUTS
+        None
 #>
 
-function ThrowException
+function New-Exception
 {
     [CmdLetBinding()]
     param
     (
-        [Parameter(Mandatory)]
-        [String] $errorId,
+        [Parameter(Mandatory = $true)]
+        [System.String] $errorId,
 
-        [Parameter(Mandatory)]
+        [Parameter(Mandatory = $true)]
         [System.Management.Automation.ErrorCategory] $errorCategory,
 
-        [Parameter(Mandatory)]
-        [String] $errorMessage,
+        [Parameter(Mandatory = $true)]
+        [System.String] $errorMessage,
 
         [Switch]
         $terminate
@@ -57,8 +64,7 @@ function ThrowException
         # Note: Although this method is called ThrowTerminatingError, it doesn't terminate.
         $PSCmdlet.ThrowTerminatingError($errorRecord)
     }
-} # ThrowException
-
+} # New-Exception
 
 <#
 .SYNOPSIS
@@ -73,25 +79,25 @@ function DownloadAndUnzipFile()
     [CmdletBinding()]
     Param
     (
-        [Parameter(Mandatory=$True)]
+        [Parameter(Mandatory = $True)]
         [ValidateNotNullOrEmpty()]
-        [String] $URL,
+        [System.String] $URL,
 
-        [Parameter(Mandatory=$True)]
+        [Parameter(Mandatory = $True)]
         [ValidateNotNullOrEmpty()]
-        [String] $DestinationPath
+        [System.String] $DestinationPath
     )
     $FileName = [System.IO.Path]::GetFileName($URL)
 
     if (-not (Test-Path -Path $DestinationPath))
     {
         $ExceptionParameters = @{
-            errorId = 'DownloadFolderDoesNotExistError'
+            errorId       = 'DownloadFolderDoesNotExistError'
             errorCategory = 'InvalidArgument'
-            errorMessage = $($LocalizedData.DownloadFolderDoesNotExistError `
-            -f $DestinationPath,$Filename)
+            errorMessage  = $($LocalizedData.DownloadFolderDoesNotExistError `
+                    -f $DestinationPath, $Filename)
         }
-        ThrowException @ExceptionParameters
+        New-Exception @ExceptionParameters
     }
 
     $Extension = [System.IO.Path]::GetExtension($Filename)
@@ -106,8 +112,8 @@ function DownloadAndUnzipFile()
         $DownloadPath = Join-Path -Path $DestinationPath -ChildPath $FileName
     }
 
-    WriteMessage -Message ($LocalizedData.DownloadingFileMessage `
-        -f $Filename,$URL,$DownloadPath)
+    Write-LabMessage -Message ($LocalizedData.DownloadingFileMessage `
+            -f $Filename, $URL, $DownloadPath)
 
     Try
     {
@@ -119,18 +125,18 @@ function DownloadAndUnzipFile()
     Catch
     {
         $ExceptionParameters = @{
-            errorId = 'FileDownloadError'
+            errorId       = 'FileDownloadError'
             errorCategory = 'InvalidOperation'
-            errorMessage = $($LocalizedData.FileDownloadError `
-                -f $Filename,$URL,$_.Exception.Message)
+            errorMessage  = $($LocalizedData.FileDownloadError `
+                    -f $Filename, $URL, $_.Exception.Message)
         }
-        ThrowException @ExceptionParameters
+        New-Exception @ExceptionParameters
     } # Try
 
     if ($Extension -eq '.zip')
     {
-        WriteMessage -Message ($LocalizedData.ExtractingFileMessage `
-            -f $Filename,$DownloadPath)
+        Write-LabMessage -Message ($LocalizedData.ExtractingFileMessage `
+                -f $Filename, $DownloadPath)
 
         # Extract this to the destination folder
         Try
@@ -144,12 +150,12 @@ function DownloadAndUnzipFile()
         Catch
         {
             $ExceptionParameters = @{
-                errorId = 'FileExtractError'
+                errorId       = 'FileExtractError'
                 errorCategory = 'InvalidArgument'
-                errorMessage = $($LocalizedData.FileExtractError `
-                -f $Filename,$_.Exception.Message)
+                errorMessage  = $($LocalizedData.FileExtractError `
+                        -f $Filename, $_.Exception.Message)
             }
-            ThrowException @ExceptionParameters
+            New-Exception @ExceptionParameters
         }
         finally
         {
@@ -170,13 +176,13 @@ function CreateCredential()
     [OutputType([PSCredential])]
     Param
     (
-        [Parameter(Mandatory=$True)]
+        [Parameter(Mandatory = $True)]
         [ValidateNotNullOrEmpty()]
-        [String] $Username,
+        [System.String] $Username,
 
-        [Parameter(Mandatory=$True)]
+        [Parameter(Mandatory = $True)]
         [ValidateNotNullOrEmpty()]
-        [String] $Password
+        [System.String] $Password
     )
     [PSCredential] $Credential = New-Object `
         -TypeName System.Management.Automation.PSCredential `
@@ -212,59 +218,61 @@ function CreateCredential()
 .OUTPUTS
     None.
 #>
-function DownloadResourceModule {
+function DownloadResourceModule
+{
     [CmdLetBinding()]
     param
     (
         [Parameter(
-            position=1,
-            Mandatory=$true)]
+            position = 1,
+            Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
-        [String] $Name,
+        [System.String] $Name,
 
         [Parameter(
-            position=2)]
-        [String] $URL,
+            position = 2)]
+        [System.String] $URL,
 
         [Parameter(
-            position=3)]
-        [String] $Folder,
+            position = 3)]
+        [System.String] $Folder,
 
         [Parameter(
-            position=4)]
-        [String] $RequiredVersion,
+            position = 4)]
+        [System.String] $RequiredVersion,
 
         [Parameter(
-            position=5)]
-        [String] $MinimumVersion
+            position = 5)]
+        [System.String] $MinimumVersion
     )
 
     $InstalledModules = @(Get-Module -ListAvailable)
 
     # Determine a query that will be used to decide if the module is already installed
-    if ($RequiredVersion) {
+    if ($RequiredVersion)
+    {
         [ScriptBlock] $Query = `
-            { ($_.Name -eq $Name) -and ($_.Version -eq $RequiredVersion) }
+        { ($_.Name -eq $Name) -and ($_.Version -eq $RequiredVersion) }
         $VersionMessage = $RequiredVersion
     }
     elseif ($MinimumVersion)
     {
         [ScriptBlock] $Query = `
-            { ($_.Name -eq $Name) -and ($_.Version -ge $MinimumVersion) }
+        { ($_.Name -eq $Name) -and ($_.Version -ge $MinimumVersion) }
         $VersionMessage = "min ${MinimumVersion}"
     }
     else
     {
         [ScriptBlock] $Query = `
-            { $_.Name -eq $Name }
+        { $_.Name -eq $Name }
         $VersionMessage = 'any version'
     }
 
     # Is the module installed?
     if ($InstalledModules.Where($Query).Count -eq 0)
     {
-        WriteMessage -Message ($LocalizedData.ModuleNotInstalledMessage `
-            -f $Name,$VersionMessage)
+        Write-LabMessage -Message ($LocalizedData.ModuleNotInstalledMessage `
+                -f $Name, $VersionMessage)
 
         # If a URL was specified, download this module via HTTP
         if ($URL)
@@ -273,10 +281,10 @@ function DownloadResourceModule {
             # This is usually for downloading modules directly from github
             $FileName = $URL.Substring($URL.LastIndexOf('/') + 1)
 
-            WriteMessage -Message ($LocalizedData.DownloadingLabResourceWebMessage `
-                -f $Name,$VersionMessage,$URL)
+            Write-LabMessage -Message ($LocalizedData.DownloadingLabResourceWebMessage `
+                    -f $Name, $VersionMessage, $URL)
 
-            [String] $ModulesFolder = "$($ENV:ProgramFiles)\WindowsPowerShell\Modules\"
+            [System.String] $ModulesFolder = "$($ENV:ProgramFiles)\WindowsPowerShell\Modules\"
 
             DownloadAndUnzipFile `
                 -URL $URL `
@@ -298,8 +306,8 @@ function DownloadResourceModule {
                     -Force
             } # If
 
-            WriteMessage -Message ($LocalizedData.InstalledLabResourceWebMessage `
-                -f $Name,$VersionMessage,$ModulePath)
+            Write-LabMessage -Message ($LocalizedData.InstalledLabResourceWebMessage `
+                    -f $Name, $VersionMessage, $ModulePath)
         }
         else
         {
@@ -334,12 +342,12 @@ function DownloadResourceModule {
             catch
             {
                 $ExceptionParameters = @{
-                    errorId = 'ModuleNotAvailableError'
+                    errorId       = 'ModuleNotAvailableError'
                     errorCategory = 'InvalidArgument'
-                    errorMessage = $($LocalizedData.ModuleNotAvailableError `
-                        -f $Name,$VersionMessage,$_.Exception.Message)
+                    errorMessage  = $($LocalizedData.ModuleNotAvailableError `
+                            -f $Name, $VersionMessage, $_.Exception.Message)
                 }
-                ThrowException @ExceptionParameters
+                New-Exception @ExceptionParameters
             }
         } # If
     } # If
@@ -358,15 +366,16 @@ function DownloadResourceModule {
 .OUTPUTS
     None
 #>
-function EnableWSMan {
+function EnableWSMan
+{
     [CmdLetBinding()]
-    Param (
+    param (
         [Switch] $Force
     )
 
     if (-not (Get-PSPRovider -PSProvider WSMan -ErrorAction SilentlyContinue))
     {
-        WriteMessage -Message ($LocalizedData.EnablingWSManMessage)
+        Write-LabMessage -Message ($LocalizedData.EnablingWSManMessage)
         try
         {
             Start-Service -Name WinRm -ErrorAction Stop
@@ -383,11 +392,11 @@ function EnableWSMan {
         if (-not (Get-PSProvider -PSProvider WSMan -ErrorAction SilentlyContinue))
         {
             $ExceptionParameters = @{
-                errorId = 'WSManNotEnabledError'
+                errorId       = 'WSManNotEnabledError'
                 errorCategory = 'InvalidArgument'
-                errorMessage = $($LocalizedData.WSManNotEnabledError)
+                errorMessage  = $($LocalizedData.WSManNotEnabledError)
             }
-            ThrowException @ExceptionParameters
+            New-Exception @ExceptionParameters
         } # if
     } # if
 } # EnableWSMan
@@ -404,9 +413,10 @@ function EnableWSMan {
 .OUTPUTS
     None
 #>
-function InstallHyperV {
+function InstallHyperV
+{
     [CmdLetBinding()]
-    Param ()
+    param ()
 
     # Install Hyper-V Components
     if ((Get-CimInstance Win32_OperatingSystem).ProductType -eq 1)
@@ -416,11 +426,11 @@ function InstallHyperV {
             | Where-Object -Property State -Eq 'Disabled'
         if ($Feature.Count -gt 0 )
         {
-            WriteMessage -Message ($LocalizedData.InstallingHyperVComponentsMesage `
-                -f 'Desktop')
+            Write-LabMessage -Message ($LocalizedData.InstallingHyperVComponentsMesage `
+                    -f 'Desktop')
             $Feature.Foreach( {
-                Enable-WindowsOptionalFeature -Online -FeatureName $_.FeatureName
-            } )
+                    Enable-WindowsOptionalFeature -Online -FeatureName $_.FeatureName
+                } )
         }
     }
     Else
@@ -430,11 +440,11 @@ function InstallHyperV {
             | Where-Object -Property Installed -EQ $false
         if ($Feature.Count -gt 0 )
         {
-            WriteMessage -Message ($LocalizedData.InstallingHyperVComponentsMesage `
-                -f 'Desktop')
+            Write-LabMessage -Message ($LocalizedData.InstallingHyperVComponentsMesage `
+                    -f 'Desktop')
             $Feature.Foreach( {
-                Install-WindowsFeature -IncludeAllSubFeature -IncludeManagementTools -Name $_.Name
-            } )
+                    Install-WindowsFeature -IncludeAllSubFeature -IncludeManagementTools -Name $_.Name
+                } )
         }
     }
 } # InstallHyperV
@@ -454,20 +464,21 @@ function InstallHyperV {
 .OUTPUTS
     None. If the XML is invalid an exception will be thrown.
 #>
-function ValidateConfigurationXMLSchema {
+function ValidateConfigurationXMLSchema
+{
     [CmdLetBinding()]
     param
     (
-        [Parameter(Mandatory)]
+        [Parameter(Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
-        [String] $ConfigPath
+        [System.String] $ConfigPath
     )
 
     # Define these variables so they are accesible inside the event handler.
     [int] $Script:XMLErrorCount = 0
-    [string] $Script:XMLFirstError = ''
-    [String] $Script:XMLPath = $ConfigPath
-    [string] $Script:ConfigurationXMLValidationMessage = $LocalizedData.ConfigurationXMLValidationMessage
+    [System.String] $Script:XMLFirstError = ''
+    [System.String] $Script:XMLPath = $ConfigPath
+    [System.String] $Script:ConfigurationXMLValidationMessage = $LocalizedData.ConfigurationXMLValidationMessage
 
     # Perform the XSD Validation
     $readerSettings = New-Object -TypeName System.Xml.XmlReaderSettings
@@ -475,17 +486,17 @@ function ValidateConfigurationXMLSchema {
     $null = $readerSettings.Schemas.Add("labbuilderconfig", $Script:ConfigurationXMLSchema)
     $readerSettings.ValidationFlags = [System.Xml.Schema.XmlSchemaValidationFlags]::ProcessInlineSchema -bor [System.Xml.Schema.XmlSchemaValidationFlags]::ProcessSchemaLocation
     $readerSettings.add_ValidationEventHandler(
-    {
-        # Triggered each time an error is found in the XML file
-        if ([String]::IsNullOrWhitespace($Script:XMLFirstError))
         {
-            $Script:XMLFirstError = $_.Message
-        } # if
-        WriteMessage -Message ($Script:ConfigurationXMLValidationMessage `
-            -f $Script:XMLPath,$_.Message)
-        $Script:XMLErrorCount++
-    });
-    $reader = [System.Xml.XmlReader]::Create([string] $ConfigPath, $readerSettings)
+            # Triggered each time an error is found in the XML file
+            if ([System.String]::IsNullOrWhitespace($Script:XMLFirstError))
+            {
+                $Script:XMLFirstError = $_.Message
+            } # if
+            Write-LabMessage -Message ($Script:ConfigurationXMLValidationMessage `
+                    -f $Script:XMLPath, $_.Message)
+            $Script:XMLErrorCount++
+        })
+    $reader = [System.Xml.XmlReader]::Create([System.String] $ConfigPath, $readerSettings)
     try
     {
         while ($reader.Read())
@@ -496,12 +507,12 @@ function ValidateConfigurationXMLSchema {
     {
         # XML is NOT valid
         $ExceptionParameters = @{
-            errorId = 'ConfigurationXMLValidationError'
+            errorId       = 'ConfigurationXMLValidationError'
             errorCategory = 'InvalidArgument'
-            errorMessage = $($LocalizedData.ConfigurationXMLValidationError `
-                -f $ConfigPath,$_.Exception.Message)
+            errorMessage  = $($LocalizedData.ConfigurationXMLValidationError `
+                    -f $ConfigPath, $_.Exception.Message)
         }
-        ThrowException @ExceptionParameters
+        New-Exception @ExceptionParameters
     } # catch
     finally
     {
@@ -509,16 +520,16 @@ function ValidateConfigurationXMLSchema {
     } # finally
 
     # Verify the results of the XSD validation
-    if($script:XMLErrorCount -gt 0)
+    if ($script:XMLErrorCount -gt 0)
     {
         # XML is NOT valid
         $ExceptionParameters = @{
-            errorId = 'ConfigurationXMLValidationError'
+            errorId       = 'ConfigurationXMLValidationError'
             errorCategory = 'InvalidArgument'
-            errorMessage = $($LocalizedData.ConfigurationXMLValidationError `
-                -f $ConfigPath,$Script:XMLFirstError)
+            errorMessage  = $($LocalizedData.ConfigurationXMLValidationError `
+                    -f $ConfigPath, $Script:XMLFirstError)
         }
-        ThrowException @ExceptionParameters
+        New-Exception @ExceptionParameters
     } # if
 } # ValidateConfigurationXMLSchema
 
@@ -541,13 +552,13 @@ function IncreaseMacAddress
     [CmdLetBinding()]
     param
     (
-        [Parameter(Mandatory)]
+        [Parameter(Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
-        [String] $MacAddress,
+        [System.String] $MacAddress,
 
         [Byte] $Step = 1
     )
-    Return [String]::Format("{0:X}",[Convert]::ToUInt64($MACAddress,16)+$Step).PadLeft(12,'0')
+    Return [System.String]::Format("{0:X}", [Convert]::ToUInt64($MACAddress, 16) + $Step).PadLeft(12, '0')
 } # IncreaseMacAddress
 
 
@@ -573,27 +584,27 @@ function IncreaseIpAddress
     [CmdLetBinding()]
     param
     (
-        [Parameter(Mandatory)]
+        [Parameter(Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
-        [String] $IpAddress,
+        [System.String] $IpAddress,
 
         [Byte] $Step = 1
     )
     $IP = [System.Net.IPAddress]::Any
-    if (-not [System.Net.IPAddress]::TryParse($IpAddress,[ref]$IP))
+    if (-not [System.Net.IPAddress]::TryParse($IpAddress, [ref]$IP))
     {
         $ExceptionParameters = @{
-            errorId = 'IPAddressError'
+            errorId       = 'IPAddressError'
             errorCategory = 'InvalidArgument'
-            errorMessage = $($LocalizedData.IPAddressError `
-                -f $IpAddress)
+            errorMessage  = $($LocalizedData.IPAddressError `
+                    -f $IpAddress)
         }
-        ThrowException @ExceptionParameters
+        New-Exception @ExceptionParameters
     }
     # This code will increase the next IP address by the step amount.
     # It uses the IP Address byte array to do this.
     $Bytes = $IP.GetAddressBytes()
-    $Pos = $Bytes.Length-1
+    $Pos = $Bytes.Length - 1
     while ($Step -gt 0)
     {
         if ($Bytes[$Pos] + $Step -gt 255)
@@ -632,96 +643,110 @@ function ValidateIpAddress
     [CmdLetBinding()]
     param
     (
-        [Parameter(Mandatory)]
+        [Parameter(Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
-        [String] $IpAddress
+        [System.String] $IpAddress
     )
+
     $IP = [System.Net.IPAddress]::Any
-    return [System.Net.IPAddress]::TryParse($IpAddress,[ref]$IP)
+    return [System.Net.IPAddress]::TryParse($IpAddress, [ref]$IP)
 } # ValidateIpAddress
 
 
 <#
-.SYNOPSIS
-    Ensures the Package Providers required by LabBuilder are installed.
-.DESCRIPTION
-    This function will check that both the NuGet and the PowerShellGet package
-    providers are installed.
-    If either of them are missing the function will attempt to install them.
-.EXAMPLE
-    InstallPackageProviders
-    Ensures the required Package Providers for LabBuilder are installed.
-.OUTPUTS
-    None
+    .SYNOPSIS
+        Ensures the Package Providers required by LabBuilder are installed.
+
+    .DESCRIPTION
+        This function will check that both the NuGet and the PowerShellGet package
+        providers are installed.
+        If either of them are missing the function will attempt to install them.
+
+    .EXAMPLE
+        Install-LabPackageProvider
+        Ensures the required Package Providers for LabBuilder are installed.
+
+    .OUTPUTS
+        None
 #>
-function InstallPackageProviders {
+function Install-LabPackageProvider
+{
     [CmdLetBinding(SupportsShouldProcess = $true,
         ConfirmImpact = 'High')]
-    Param (
+    param
+    (
+        [Parameter()]
         [Switch] $Force
     )
 
-    $RequiredPackageProviders = @('PowerShellGet','NuGet')
-    $CurrentPackageProviders = Get-PackageProvider `
+    $requiredPackageProviders = @('PowerShellGet', 'NuGet')
+    $currentPackageProviders = Get-PackageProvider `
         -ListAvailable `
         -ErrorAction Stop
-    foreach ($RequiredPackageProvider in $RequiredPackageProviders)
+
+    foreach ($requiredPackageProvider in $requiredPackageProviders)
     {
-        $PackageProvider = $CurrentPackageProviders |
-            Where-Object { $_.Name -eq $RequiredPackageProvider }
-        if (-not $PackageProvider)
+        $packageProvider = $currentPackageProviders |
+            Where-Object { $_.Name -eq $requiredPackageProvider }
+        if (-not $packageProvider)
         {
             # The Package provider is not installed so install it
             if ($Force -or $PSCmdlet.ShouldProcess( 'LocalHost', `
-                ($LocalizedData.ShouldInstallPackageProvider `
-                -f $PackageProvider )))
+                    ($LocalizedData.ShouldInstallPackageProvider `
+                            -f $packageProvider )))
             {
-            WriteMessage -Message ($LocalizedData.InstallPackageProviderMessage `
-                -f $RequiredPackageProvider)
+                Write-LabMessage -Message ($LocalizedData.InstallPackageProviderMessage `
+                        -f $requiredPackageProvider)
 
-            $null = Install-PackageProvider `
-                -Name $RequiredPackageProvider `
-                -ForceBootstrap `
-                -Force `
-                -ErrorAction Stop
+                $null = Install-PackageProvider `
+                    -Name $requiredPackageProvider `
+                    -ForceBootstrap `
+                    -Force `
+                    -ErrorAction Stop
             }
             else
             {
                 # Can't continue if the package provider is not installed.
                 $ExceptionParameters = @{
-                    errorId = 'PackageProviderNotInstalledError'
+                    errorId       = 'PackageProviderNotInstalledError'
                     errorCategory = 'InvalidArgument'
-                    errorMessage = $($LocalizedData.PackageProviderNotInstalledError `
-                        -f $RequiredPackageProvider)
+                    errorMessage  = $($LocalizedData.PackageProviderNotInstalledError `
+                            -f $requiredPackageProvider)
                 }
-                ThrowException @ExceptionParameters
+                New-Exception @ExceptionParameters
             } # if
         } # if
     } # foreach
-} # InstallPackageProviders
+} # Install-LabPackageProvider
 
 
 <#
-.SYNOPSIS
-    Ensures the Package Sources required by LabBuilder are registered.
-.DESCRIPTION
-    This function will check that both the NuGet.org and the PSGallery package
-    sources are registered.
-    If either of them are missing the function will attempt to register them.
-.EXAMPLE
-    RegisterPackageSources
-    Ensures the required Package Sources for LabBuilder are required.
-.OUTPUTS
-    None
+    .SYNOPSIS
+        Ensures the Package Sources required by LabBuilder are registered.
+
+    .DESCRIPTION
+        This function will check that both the NuGet.org and the PSGallery package
+        sources are registered.
+        If either of them are missing the function will attempt to register them.
+
+    .EXAMPLE
+        Register-LabPackageSource
+        Ensures the required Package Sources for LabBuilder are required.
+
+    .OUTPUTS
+        None
 #>
-function RegisterPackageSources {
+function Register-LabPackageSource
+{
     [CmdLetBinding(SupportsShouldProcess = $true,
         ConfirmImpact = 'High')]
-    Param (
+    param
+    (
+        [Parameter()]
         [Switch] $Force
     )
 
-    $RequiredPackageSources = @(
+    $requiredPackageSources = @(
         @{
             Name         = 'nuget.org'
             ProviderName = 'NuGet'
@@ -733,26 +758,30 @@ function RegisterPackageSources {
             Location     = 'https://www.powershellgallery.com/api/v2/'
         }
     )
-    $CurrentPackageSources = Get-PackageSource `
-        -ErrorAction Stop
-    foreach ($RequiredPackageSource in $RequiredPackageSources)
+
+    $currentPackageSources = Get-PackageSource -ErrorAction Stop
+
+    foreach ($requiredPackageSource in $requiredPackageSources)
     {
-        $PackageSource = $CurrentPackageSources |
-            Where-Object { $_.Name -eq $RequiredPackageSource.Name }
-        if ($PackageSource)
+        $packageSource = $currentPackageSources |
+            Where-Object -FilterScript {
+            $_.Name -eq $requiredPackageSource.Name
+        }
+
+        if ($packageSource)
         {
-            if (-not $PackageSource.IsTrusted)
+            if (-not $packageSource.IsTrusted)
             {
                 if ($Force -or $PSCmdlet.ShouldProcess( 'Localhost', `
-                    ($LocalizedData.ShouldTrustPackageSource `
-                    -f $RequiredPackageSource.Name,$RequiredPackageSource.Location )))
+                        ($LocalizedData.ShouldTrustPackageSource `
+                                -f $requiredPackageSource.Name, $requiredPackageSource.Location )))
                 {
                     # The Package source is not trusted so trust it
-                    WriteMessage -Message ($LocalizedData.RegisterPackageSourceMessage `
-                        -f $RequiredPackageSource.Name,$RequiredPackageSource.Location)
+                    Write-LabMessage -Message ($LocalizedData.RegisterPackageSourceMessage `
+                            -f $requiredPackageSource.Name, $requiredPackageSource.Location)
 
                     $null = Set-PackageSource `
-                        -Name $RequiredPackageSource.Name `
+                        -Name $requiredPackageSource.Name `
                         -Trusted `
                         -Force `
                         -ErrorAction Stop
@@ -761,12 +790,12 @@ function RegisterPackageSources {
                 {
                     # Can't continue if the package source is not trusted.
                     $ExceptionParameters = @{
-                        errorId = 'PackageSourceNotTrustedError'
+                        errorId       = 'PackageSourceNotTrustedError'
                         errorCategory = 'InvalidArgument'
-                        errorMessage = $($LocalizedData.PackageSourceNotTrustedError `
-                            -f $RequiredPackageSource.Name)
+                        errorMessage  = $($LocalizedData.PackageSourceNotTrustedError `
+                                -f $requiredPackageSource.Name)
                     }
-                    ThrowException @ExceptionParameters
+                    New-Exception @ExceptionParameters
                 } # if
             } # if
         }
@@ -774,16 +803,16 @@ function RegisterPackageSources {
         {
             # The Package source is not registered so register it
             if ($Force -or $PSCmdlet.ShouldProcess( 'Localhost', `
-                ($LocalizedData.ShouldRegisterPackageSource `
-                -f $RequiredPackageSource.Name,$RequiredPackageSource.Location )))
+                    ($LocalizedData.ShouldRegisterPackageSource `
+                            -f $requiredPackageSource.Name, $requiredPackageSource.Location )))
             {
-                WriteMessage -Message ($LocalizedData.RegisterPackageSourceMessage `
-                    -f $RequiredPackageSource.Name,$RequiredPackageSource.Location)
+                Write-LabMessage -Message ($LocalizedData.RegisterPackageSourceMessage `
+                        -f $requiredPackageSource.Name, $requiredPackageSource.Location)
 
                 $null = Register-PackageSource `
-                    -Name $RequiredPackageSource.Name `
-                    -Location $RequiredPackageSource.Location `
-                    -ProviderName $RequiredPackageSource.ProviderName `
+                    -Name $requiredPackageSource.Name `
+                    -Location $requiredPackageSource.Location `
+                    -ProviderName $requiredPackageSource.ProviderName `
                     -Trusted `
                     -Force `
                     -ErrorAction Stop
@@ -792,59 +821,66 @@ function RegisterPackageSources {
             {
                 # Can't continue if the package source is not registered.
                 $ExceptionParameters = @{
-                    errorId = 'PackageSourceNotRegisteredError'
+                    errorId       = 'PackageSourceNotRegisteredError'
                     errorCategory = 'InvalidArgument'
-                    errorMessage = $($LocalizedData.PackageSourceNotRegisteredError `
-                        -f $RequiredPackageSource.Name)
+                    errorMessage  = $($LocalizedData.PackageSourceNotRegisteredError `
+                            -f $requiredPackageSource.Name)
                 }
-                ThrowException @ExceptionParameters
+                New-Exception @ExceptionParameters
             } # if
         } # if
     } # foreach
-} # InstallPackageProviders
-
-
+} # Register-LabPackageSource
 
 <#
-.SYNOPSIS
-    Writes a Message of the specified Type.
-.DESCRIPTION
-    This cmdlet will write a message along with the time to the specified output stream.
-.PARAMETER Type
-    This can be one of the following:
-    Error - Writes to the Error Stream.
-    Warning - Writes to the Warning Stream.
-    Verbose - Writes to the Verbose Stream (default)
-    Debug - Writes to the Debug Stream.
-    Information - Writes to the Information Stream.
-    Output - Writes to the Output Stream (so should be used for a terminating message)
-.PARAMETER Message
-    The Message to output.
-.PARAMETER ForegroundColor
-    The foreground color of the message if being writen to the output stream.
-.EXAMPLE
-    WriteMessage -Type Verbose -Message 'Downloading file'
-    ThrowException @ExceptionParameters
-    Outputs the message 'Downloading file' to the Verbose stream.
-.OUTPUTS
-    None
+    .SYNOPSIS
+        Writes a Message of the specified Type.
+
+    .DESCRIPTION
+        This cmdlet will write a message along with the time to the specified output stream.
+
+    .PARAMETER Type
+        This can be one of the following:
+        Error - Writes to the Error Stream.
+        Warning - Writes to the Warning Stream.
+        Verbose - Writes to the Verbose Stream (default)
+        Debug - Writes to the Debug Stream.
+        Information - Writes to the Information Stream.
+        Output - Writes to the Output Stream (so should be used for a terminating message)
+
+    .PARAMETER Message
+        The Message to output.
+
+    .PARAMETER ForegroundColor
+        The foreground color of the message if being writen to the output stream.
+
+    .EXAMPLE
+        Write-LabMessage -Type Verbose -Message 'Downloading file'
+        New-Exception @ExceptionParameters
+        Outputs the message 'Downloading file' to the Verbose stream.
+
+    .OUTPUTS
+        None
 #>
-function WriteMessage
+function Write-LabMessage
 {
     [CmdLetBinding()]
     param
     (
-        [ValidateSet('Error','Warning','Verbose','Debug','Info','Alert')]
-        [String] $Type = 'Verbose',
+        [Parameter()]
+        [ValidateSet('Error', 'Warning', 'Verbose', 'Debug', 'Info', 'Alert')]
+        [System.String] $Type = 'Verbose',
 
-        [Parameter(Mandatory)]
+        [Parameter(Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
-        [String] $Message,
+        [System.String] $Message,
 
-        [String] $ForegroundColor = 'Yellow'
+        [Parameter()]
+        [System.String] $ForegroundColor = 'Yellow'
     )
 
-    $Time = Get-Date -UFormat %T
+    $time = Get-Date -UFormat %T
+
     switch ($Type)
     {
         'Error'
@@ -852,30 +888,31 @@ function WriteMessage
             Write-Error -Message $Message
             break
         }
+
         'Warning'
         {
-            Write-Warning -Message ('[{0}]: {1}' `
-                -f $Time,$Message)
+            Write-Warning -Message ('[{0}]: {1}' -f $time, $Message)
             break
         }
+
         'Verbose'
         {
-            Write-Verbose -Message ('[{0}]: {1}' `
-                -f $Time,$Message)
+            Write-Verbose -Message ('[{0}]: {1}' -f $time, $Message)
             break
         }
+
         'Debug'
         {
-            Write-Debug -Message ('[{0}]: {1}' `
-                -f $Time,$Message)
+            Write-Debug -Message ('[{0}]: {1}' -f $time, $Message)
             break
         }
+
         'Info'
         {
-            Write-Information -Message ('INFO: [{0}]: {1}' `
-                -f $Time,$Message)
+            Write-Information -MessageData ('INFO: [{0}]: {1}' -f $time, $Message)
             break
         }
+
         'Alert'
         {
             Write-Host `
@@ -884,4 +921,4 @@ function WriteMessage
             break
         }
     } # switch
-} # WriteMessage
+} # Write-LabMessage

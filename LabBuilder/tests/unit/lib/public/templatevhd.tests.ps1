@@ -40,14 +40,14 @@ try
             [CmdLetBinding()]
             param
             (
-                [Parameter(Mandatory)]
-                [String] $errorId,
+                [Parameter(Mandatory = $true)]
+                [System.String] $errorId,
 
-                [Parameter(Mandatory)]
+                [Parameter(Mandatory = $true)]
                 [System.Management.Automation.ErrorCategory] $errorCategory,
 
-                [Parameter(Mandatory)]
-                [String] $errorMessage,
+                [Parameter(Mandatory = $true)]
+                [System.String] $errorMessage,
 
                 [Switch]
                 $terminate
@@ -78,7 +78,7 @@ try
                     }
                     $Exception = GetException @ExceptionParameters
 
-                    { Get-LabVMTemplateVHD -Lab $Lab } | Should Throw $Exception
+                    { Get-LabVMTemplateVHD -Lab $Lab } | Should -Throw $Exception
                 }
             }
             Context 'Configuration passed with relative ISO Root Path that does not exist' {
@@ -93,7 +93,7 @@ try
                     }
                     $Exception = GetException @ExceptionParameters
 
-                    { Get-LabVMTemplateVHD -Lab $Lab } | Should Throw $Exception
+                    { Get-LabVMTemplateVHD -Lab $Lab } | Should -Throw $Exception
                 }
             }
             Context 'Configuration passed with rooted VHD Root Path that does not exist' {
@@ -108,7 +108,7 @@ try
                     }
                     $Exception = GetException @ExceptionParameters
 
-                    { Get-LabVMTemplateVHD -Lab $Lab } | Should Throw $Exception
+                    { Get-LabVMTemplateVHD -Lab $Lab } | Should -Throw $Exception
                 }
             }
             Context 'Configuration passed with relative VHD Root Path that does not exist' {
@@ -123,7 +123,7 @@ try
                     }
                     $Exception = GetException @ExceptionParameters
 
-                    { Get-LabVMTemplateVHD -Lab $Lab } | Should Throw $Exception
+                    { Get-LabVMTemplateVHD -Lab $Lab } | Should -Throw $Exception
                 }
             }
             Context 'Configuration passed with empty template VHD Name' {
@@ -137,7 +137,7 @@ try
                     }
                     $Exception = GetException @ExceptionParameters
 
-                    { Get-LabVMTemplateVHD -Lab $Lab } | Should Throw $Exception
+                    { Get-LabVMTemplateVHD -Lab $Lab } | Should -Throw $Exception
                 }
             }
             Context 'Configuration passed with template ISO Path is empty' {
@@ -152,7 +152,7 @@ try
                     }
                     $Exception = GetException @ExceptionParameters
 
-                    { Get-LabVMTemplateVHD -Lab $Lab } | Should Throw $Exception
+                    { Get-LabVMTemplateVHD -Lab $Lab } | Should -Throw $Exception
                 }
             }
             Context 'Configuration passed with template ISO Path that does not exist' {
@@ -167,7 +167,7 @@ try
                     }
                     $Exception = GetException @ExceptionParameters
 
-                    { Get-LabVMTemplateVHD -Lab $Lab } | Should Throw $Exception
+                    { Get-LabVMTemplateVHD -Lab $Lab } | Should -Throw $Exception
                 }
             }
             Context 'Configuration passed with relative template ISO Path that does not exist' {
@@ -182,7 +182,7 @@ try
                     }
                     $Exception = GetException @ExceptionParameters
 
-                    { Get-LabVMTemplateVHD -Lab $Lab } | Should Throw $Exception
+                    { Get-LabVMTemplateVHD -Lab $Lab } | Should -Throw $Exception
                 }
             }
             Context 'Configuration passed with invalid OSType' {
@@ -197,7 +197,7 @@ try
                     }
                     $Exception = GetException @ExceptionParameters
 
-                    { Get-LabVMTemplateVHD -Lab $Lab } | Should Throw $Exception
+                    { Get-LabVMTemplateVHD -Lab $Lab } | Should -Throw $Exception
                 }
             }
             Context 'Configuration passed with invalid VHDFormat' {
@@ -212,7 +212,7 @@ try
                     }
                     $Exception = GetException @ExceptionParameters
 
-                    { Get-LabVMTemplateVHD -Lab $Lab } | Should Throw $Exception
+                    { Get-LabVMTemplateVHD -Lab $Lab } | Should -Throw $Exception
                 }
             }
             Context 'Configuration passed with invalid VHDType' {
@@ -227,7 +227,7 @@ try
                     }
                     $Exception = GetException @ExceptionParameters
 
-                    { Get-LabVMTemplateVHD -Lab $Lab } | Should Throw $Exception
+                    { Get-LabVMTemplateVHD -Lab $Lab } | Should -Throw $Exception
                 }
             }
             Context 'Configuration passed with invalid VHDType' {
@@ -242,35 +242,35 @@ try
                     }
                     $Exception = GetException @ExceptionParameters
 
-                    { Get-LabVMTemplateVHD -Lab $Lab } | Should Throw $Exception
+                    { Get-LabVMTemplateVHD -Lab $Lab } | Should -Throw $Exception
                 }
             }
             Context 'Valid configuration is passed missing TemplateVHDs Node' {
                 $Lab = Get-Lab -ConfigPath $Global:TestConfigOKPath
                 $Lab.labbuilderconfig.RemoveChild($Lab.labbuilderconfig.templatevhds)
                 It 'Returns null' {
-                    Get-LabVMTemplateVHD -Lab $Lab  | Should Be $null
+                    Get-LabVMTemplateVHD -Lab $Lab  | Should -Be $null
                 }
             }
             Context 'Valid configuration is passed with no TemplateVHD Nodes' {
                 $Lab = Get-Lab -ConfigPath $Global:TestConfigOKPath
                 $Lab.labbuilderconfig.templatevhds.IsEmpty = $true
                 It 'Returns null' {
-                    Get-LabVMTemplateVHD -Lab $Lab | Should Be $null
+                    Get-LabVMTemplateVHD -Lab $Lab | Should -Be $null
                 }
             }
             Context 'Valid configuration is passed with and Name filter set to matching switch' {
                 It 'Returns a Single Switch object' {
                     $Lab = Get-Lab -ConfigPath $Global:TestConfigOKPath
                     [Array] $TemplateVHDs = Get-LabVMTemplateVHD -Lab $Lab -Name $Lab.labbuilderconfig.TemplateVHDs.templateVHD[0].Name
-                    $TemplateVHDs.Count | Should Be 1
+                    $TemplateVHDs.Count | Should -Be 1
                 }
             }
             Context 'Valid configuration is passed with and Name filter set to non-matching switch' {
                 It 'Returns a Single Switch object' {
                     $Lab = Get-Lab -ConfigPath $Global:TestConfigOKPath
                     [Array] $TemplateVHDs = Get-LabVMTemplateVHD -Lab $Lab -Name 'Does Not Exist'
-                    $TemplateVHDs.Count | Should Be 0
+                    $TemplateVHDs.Count | Should -Be 0
                 }
             }
             Context 'Valid configuration is passed and template VHD ISOs are found' {
@@ -287,7 +287,7 @@ try
                     }
                     Set-Content -Path "$Global:ArtifactPath\ExpectedTemplateVHDs.json" -Value ($TemplateVHDs | ConvertTo-Json -Depth 2)
                     $ExpectedTemplateVHDs = Get-Content -Path "$Global:ExpectedContentPath\ExpectedTemplateVHDs.json"
-                    [String]::Compare((Get-Content -Path "$Global:ArtifactPath\ExpectedTemplateVHDs.json"),$ExpectedTemplateVHDs,$true) | Should Be 0
+                    [System.String]::Compare((Get-Content -Path "$Global:ArtifactPath\ExpectedTemplateVHDs.json"),$ExpectedTemplateVHDs,$true) | Should -Be 0
                 }
             }
         }
@@ -341,7 +341,7 @@ try
                         errorMessage = $($LocalizedData.FileNotFoundError `
                             -f 'alternate DISM.EXE','C:\dism\dism.exe')
                     }
-                    { Initialize-LabVMTemplateVHD -Lab $Lab -VMTemplateVHDs $VMTemplateVHDs } | Should Throw $Exception
+                    { Initialize-LabVMTemplateVHD -Lab $Lab -VMTemplateVHDs $VMTemplateVHDs } | Should -Throw $Exception
                 }
                 It 'Calls expected mocks commands' {
                     Assert-MockCalled Mount-DiskImage -Exactly 0
@@ -361,7 +361,7 @@ try
                 It 'Does not throw an Exception' {
                     $Lab = Get-Lab -ConfigPath $Global:TestConfigOKPath
                     $Lab.labbuilderconfig.RemoveChild($Lab.labbuilderconfig.templatevhds)
-                    { Initialize-LabVMTemplateVHD -Lab $Lab } | Should Not Throw
+                    { Initialize-LabVMTemplateVHD -Lab $Lab } | Should -Not -Throw
                 }
                 It 'Calls expected mocks commands' {
                     Assert-MockCalled Mount-DiskImage -Exactly 0
@@ -388,7 +388,7 @@ try
                     }
                     $Exception = GetException @ExceptionParameters
 
-                    { Initialize-LabVMTemplateVHD -Lab $Lab -VMTemplateVHDs $VMTemplateVHDs } | Should Throw $Exception
+                    { Initialize-LabVMTemplateVHD -Lab $Lab -VMTemplateVHDs $VMTemplateVHDs } | Should -Throw $Exception
                 }
                 It 'Calls expected mocks commands' {
                     Assert-MockCalled Mount-DiskImage -Exactly 0
@@ -411,7 +411,7 @@ try
                     {
                         $VMTemplateVHD.Packages = ''
                     }
-                    { Initialize-LabVMTemplateVHD -Lab $Lab -VMTemplateVHDs $VMTemplateVHDs } | Should Not Throw
+                    { Initialize-LabVMTemplateVHD -Lab $Lab -VMTemplateVHDs $VMTemplateVHDs } | Should -Not -Throw
                 }
                 It 'Calls expected mocks commands' {
                     Assert-MockCalled Mount-DiskImage -Exactly 2
@@ -431,7 +431,7 @@ try
                     $VMTemplateVHDs = Get-LabVMTemplateVHD -Lab $Lab
                     $VMTemplateVHDs[0].vhdpath = 'doesnotexist.vhdx'
                     $VMTemplateVHDs[1].vhdpath = 'doesnotexist.vhdx'
-                    { Initialize-LabVMTemplateVHD -Lab $Lab -VMTemplateVHDs $VMTemplateVHDs } | Should Not Throw
+                    { Initialize-LabVMTemplateVHD -Lab $Lab -VMTemplateVHDs $VMTemplateVHDs } | Should -Not -Throw
                 }
                 It 'Calls expected mocks commands' {
                     Assert-MockCalled Mount-DiskImage -Exactly 2
@@ -460,7 +460,7 @@ try
                             -f 'DoesNotExist')
                     }
                     $Exception = GetException @ExceptionParameters
-                    { Initialize-LabVMTemplateVHD -Lab $Lab -VMTemplateVHDs $VMTemplateVHDs } | Should Throw $Exception
+                    { Initialize-LabVMTemplateVHD -Lab $Lab -VMTemplateVHDs $VMTemplateVHDs } | Should -Throw $Exception
                 }
                 It 'Calls expected mocks commands' {
                     Assert-MockCalled Mount-DiskImage -Exactly 1
@@ -486,7 +486,7 @@ try
                             -f 'WMF5.0-WS2012R2-W81',$ResourceMSUFile)
                     }
                     $Exception = GetException @ExceptionParameters
-                    { Initialize-LabVMTemplateVHD -Lab $Lab -VMTemplateVHDs $VMTemplateVHDs } | Should Throw $Exception
+                    { Initialize-LabVMTemplateVHD -Lab $Lab -VMTemplateVHDs $VMTemplateVHDs } | Should -Throw $Exception
                 }
                 It 'Calls expected mocks commands' {
                     Assert-MockCalled Mount-DiskImage -Exactly 1
@@ -514,7 +514,7 @@ try
 
                 It 'Does Not Throw Exception' {
                     $VMTemplateVHDs[5].Packages = 'Microsoft-NanoServer-Containers-Package.cab,Microsoft-NanoServer-Guest-Package.cab'
-                    { Initialize-LabVMTemplateVHD -Lab $Lab -VMTemplateVHDs $VMTemplateVHDs } | Should Not Throw
+                    { Initialize-LabVMTemplateVHD -Lab $Lab -VMTemplateVHDs $VMTemplateVHDs } | Should -Not -Throw
                 }
                 It 'Calls Mocked commands' {
                     Assert-MockCalled Mount-DiskImage -Exactly 1
@@ -534,7 +534,7 @@ try
 
                 It 'Does Not Throw Exception' {
                     $VMTemplateVHDs[5].Packages = 'Microsoft-NanoServer-Containers-Package.cab,Microsoft-NanoServer-Guest-Package.cab,WMF5.0-WS2012R2-W81'
-                    { Initialize-LabVMTemplateVHD -Lab $Lab -VMTemplateVHDs $VMTemplateVHDs } | Should Not Throw
+                    { Initialize-LabVMTemplateVHD -Lab $Lab -VMTemplateVHDs $VMTemplateVHDs } | Should -Not -Throw
                 }
                 It 'Calls Mocked commands' {
                     Assert-MockCalled Mount-DiskImage -Exactly 1
@@ -554,7 +554,7 @@ try
                 It 'Does Not Throw Exception' {
                     $VMTemplateVHDs[5].Packages = ''
                     $VMTemplateVHDs[5].Edition = $null
-                    { Initialize-LabVMTemplateVHD -Lab $Lab -VMTemplateVHDs $VMTemplateVHDs } | Should Not Throw
+                    { Initialize-LabVMTemplateVHD -Lab $Lab -VMTemplateVHDs $VMTemplateVHDs } | Should -Not -Throw
                 }
                 It 'Calls Mocked commands' {
                     Assert-MockCalled Mount-DiskImage -Exactly 1
@@ -581,7 +581,7 @@ try
                         errorMessage = $($LocalizedData.ConvertWindowsImageError `
                             -f $VMTemplateVHDs[0].ISOPath,'X:\Sources\Install.WIM',$VMTemplateVHDs[0].Edition,$VMTemplateVHDs[0].VHDFormat,'Convert-WindowsImage Exception')
                     }
-                    { Initialize-LabVMTemplateVHD -Lab $Lab -VMTemplateVHDs $VMTemplateVHDs } | Should Throw $Exception
+                    { Initialize-LabVMTemplateVHD -Lab $Lab -VMTemplateVHDs $VMTemplateVHDs } | Should -Throw $Exception
                 }
                 It 'Calls expected mocks commands' {
                     Assert-MockCalled Mount-DiskImage -Exactly 1
@@ -604,7 +604,7 @@ try
             Mock Test-Path -MockWith { $False }
             Context 'Configuration passed with VMtemplateVHDs but VHD not found' {
                 It 'Does not throw an Exception' {
-                    { Remove-LabVMTemplateVHD -Lab $Lab -VMTemplateVHDs $VMTemplateVHDs } | Should Not Throw
+                    { Remove-LabVMTemplateVHD -Lab $Lab -VMTemplateVHDs $VMTemplateVHDs } | Should -Not -Throw
                 }
                 It 'Calls expected mocks commands' {
                     Assert-MockCalled Test-Path -Exactly $VMTemplateVHDs.Count
@@ -614,7 +614,7 @@ try
             Mock Test-Path -MockWith { $True }
             Context 'Configuration passed with VMtemplateVHDs but VHD found' {
                 It 'Does not throw an Exception' {
-                    { Remove-LabVMTemplateVHD -Lab $Lab -VMTemplateVHDs $VMTemplateVHDs } | Should Not Throw
+                    { Remove-LabVMTemplateVHD -Lab $Lab -VMTemplateVHDs $VMTemplateVHDs } | Should -Not -Throw
                 }
                 It 'Calls expected mocks commands' {
                     Assert-MockCalled Test-Path -Exactly $VMTemplateVHDs.Count
@@ -623,7 +623,7 @@ try
             }
             Context 'Configuration passed with no VMtemplateVHDs' {
                 It 'Does not throw an Exception' {
-                    { Remove-LabVMTemplateVHD -Lab $Lab -VMTemplateVHDs $null } | Should Not Throw
+                    { Remove-LabVMTemplateVHD -Lab $Lab -VMTemplateVHDs $null } | Should -Not -Throw
                 }
                 It 'Calls expected mocks commands' {
                     Assert-MockCalled Test-Path -Exactly 0
