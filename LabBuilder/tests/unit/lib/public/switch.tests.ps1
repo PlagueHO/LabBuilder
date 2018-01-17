@@ -35,7 +35,7 @@ try
     .SYNOPSIS
     Helper function that just creates an exception record for testing.
     #>
-        function GetException
+        function Get-Exception
         {
             [CmdLetBinding()]
             param
@@ -75,7 +75,7 @@ try
                         errorCategory = 'InvalidArgument'
                         errorMessage = $($LocalizedData.SwitchNameIsEmptyError)
                     }
-                    $Exception = GetException @ExceptionParameters
+                    $Exception = Get-Exception @ExceptionParameters
 
                     { Get-LabSwitch -Lab $Lab } | Should -Throw $Exception
                 }
@@ -90,7 +90,7 @@ try
                         errorMessage = $($LocalizedData.UnknownSwitchTypeError `
                             -f '','External')
                     }
-                    $Exception = GetException @ExceptionParameters
+                    $Exception = Get-Exception @ExceptionParameters
 
                     { Get-LabSwitch -Lab $Lab } | Should -Throw $Exception
                 }
@@ -105,7 +105,7 @@ try
                         errorMessage = $($LocalizedData.UnknownSwitchTypeError `
                             -f 'BadType','External')
                     }
-                    $Exception = GetException @ExceptionParameters
+                    $Exception = Get-Exception @ExceptionParameters
 
                     { Get-LabSwitch -Lab $Lab } | Should -Throw $Exception
                 }
@@ -120,7 +120,7 @@ try
                         errorMessage = $($LocalizedData.AdapterSpecifiedError `
                             -f 'Private',"$($Lab.labbuilderconfig.settings.labid)External")
                     }
-                    $Exception = GetException @ExceptionParameters
+                    $Exception = Get-Exception @ExceptionParameters
 
                     { Get-LabSwitch -Lab $Lab } | Should -Throw $Exception
                 }
@@ -275,7 +275,7 @@ try
                         errorMessage = $($LocalizedData.NatSubnetEmptyError `
                             -f $Switches[0].Name)
                     }
-                    $Exception = GetException @ExceptionParameters
+                    $Exception = Get-Exception @ExceptionParameters
 
                     { Initialize-LabSwitch -Lab $Lab -Switches $Switches } | Should -Throw $Exception
                 }
@@ -303,7 +303,7 @@ try
                         errorMessage = $($LocalizedData.NatSwitchNotSupportedError `
                             -f $Switches[0].Name)
                     }
-                    $Exception = GetException @ExceptionParameters
+                    $Exception = Get-Exception @ExceptionParameters
 
                     { Initialize-LabSwitch -Lab $Lab -Switches $Switches } | Should -Throw $Exception
                 }
@@ -332,7 +332,7 @@ try
                         errorMessage = $($LocalizedData.NatSubnetInvalidError `
                             -f $Switches[0].Name,'Invalid')
                     }
-                    $Exception = GetException @ExceptionParameters
+                    $Exception = Get-Exception @ExceptionParameters
 
                     { Initialize-LabSwitch -Lab $Lab -Switches $Switches } | Should -Throw $Exception
                 }
@@ -360,7 +360,7 @@ try
                         errorMessage = $($LocalizedData.NatSubnetAddressInvalidError `
                             -f $Switches[0].Name,'192.168.1.1000')
                     }
-                    $Exception = GetException @ExceptionParameters
+                    $Exception = Get-Exception @ExceptionParameters
 
                     { Initialize-LabSwitch -Lab $Lab -Switches $Switches } | Should -Throw $Exception
                 }
@@ -388,7 +388,7 @@ try
                         errorMessage = $($LocalizedData.NatSubnetPrefixLengthInvalidError `
                             -f $Switches[0].Name,33)
                     }
-                    $Exception = GetException @ExceptionParameters
+                    $Exception = Get-Exception @ExceptionParameters
 
                     { Initialize-LabSwitch -Lab $Lab -Switches $Switches } | Should -Throw $Exception
                 }
@@ -419,7 +419,7 @@ try
                         errorMessage = $($LocalizedData.NatSwitchDefaultAdapterMacEmptyError `
                             -f $Switches[0].Name)
                     }
-                    $Exception = GetException @ExceptionParameters
+                    $Exception = Get-Exception @ExceptionParameters
 
                     { Initialize-LabSwitch -Lab $Lab -Switches $Switches } | Should -Throw $Exception
                 }
@@ -448,7 +448,7 @@ try
                         errorCategory = 'InvalidArgument'
                         errorMessage = $($LocalizedData.SwitchNameIsEmptyError)
                     }
-                    $Exception = GetException @ExceptionParameters
+                    $Exception = Get-Exception @ExceptionParameters
 
                     { Initialize-LabSwitch -Lab $Lab -Switches $Switches } | Should -Throw $Exception
                 }
@@ -477,7 +477,7 @@ try
                         errorMessage = $($LocalizedData.BindingAdapterNotFoundError `
                             -f $Switches[0].Name,"with a name '$($Switches[0].BindingAdapterName)' ")
                     }
-                    $Exception = GetException @ExceptionParameters
+                    $Exception = Get-Exception @ExceptionParameters
 
                     { Initialize-LabSwitch -Lab $Lab -Switches $Switches } | Should -Throw $Exception
                 }
@@ -506,7 +506,7 @@ try
                         errorMessage = $($LocalizedData.BindingAdapterNotFoundError `
                             -f $Switches[0].Name,"with a MAC address '$($Switches[0].BindingAdapterMac)' ")
                     }
-                    $Exception = GetException @ExceptionParameters
+                    $Exception = Get-Exception @ExceptionParameters
 
                     { Initialize-LabSwitch -Lab $Lab -Switches $Switches } | Should -Throw $Exception
                 }
@@ -574,7 +574,7 @@ try
                         errorCategory = 'InvalidArgument'
                         errorMessage = $($LocalizedData.SwitchNameIsEmptyError)
                     }
-                    $Exception = GetException @ExceptionParameters
+                    $Exception = Get-Exception @ExceptionParameters
 
                     { Remove-LabSwitch -Lab $Lab -Switches $Switches } | Should -Throw $Exception
                 }

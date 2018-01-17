@@ -35,7 +35,7 @@ try
     .SYNOPSIS
     Helper function that just creates an exception record for testing.
     #>
-        function GetException
+        function Get-Exception
         {
             [CmdLetBinding()]
             param
@@ -87,7 +87,7 @@ try
                         errorMessage = $($LocalizedData.PackageNotFoundError `
                             -f 'DoesNotExist')
                     }
-                    $Exception = GetException @ExceptionParameters
+                    $Exception = Get-Exception @ExceptionParameters
                     { InitializeBootVHD -Lab $Lab -VM $VM -VMBootDiskPath 'c:\Dummy\' } | Should -Throw $Exception
                 }
                 It 'Calls Mocked commands' {
@@ -126,7 +126,7 @@ try
                         errorMessage = $($LocalizedData.PackageMSUNotFoundError `
                             -f 'WMF5.0-WS2012R2-W81',$ResourceMSUFile)
                     }
-                    $Exception = GetException @ExceptionParameters
+                    $Exception = Get-Exception @ExceptionParameters
                     { InitializeBootVHD -Lab $Lab -VM $VM -VMBootDiskPath 'c:\Dummy\' } | Should -Throw $Exception
                 }
                 It 'Calls Mocked commands' {
@@ -210,7 +210,7 @@ try
                         errorMessage = $($LocalizedData.NanoServerPackagesFolderMissingError `
                             -f $NanoServerPackagesFolder)
                     }
-                    $Exception = GetException @ExceptionParameters
+                    $Exception = Get-Exception @ExceptionParameters
                     { InitializeBootVHD -Lab $Lab -VM $VM -VMBootDiskPath 'c:\Dummy\' } | Should -Throw $Exception
                 }
                 It 'Calls Mocked commands' {
@@ -342,7 +342,7 @@ try
                         errorMessage = $($LocalizedData.FileNotFoundError `
                             -f "VHD",$Splat.Path)
                     }
-                    $Exception = GetException @ExceptionParameters
+                    $Exception = Get-Exception @ExceptionParameters
 
                     { InitializeVHD @Splat } | Should -Throw $Exception
                 }
@@ -372,7 +372,7 @@ try
                         errorMessage = $($LocalizedData.InitializeVHDNotInitializedError `
                             -f$Splat.Path)
                     }
-                    $Exception = GetException @ExceptionParameters
+                    $Exception = Get-Exception @ExceptionParameters
 
                     { InitializeVHD @Splat } | Should -Throw $Exception
                 }
@@ -519,7 +519,7 @@ try
                         errorMessage = $($LocalizedData.InitializeVHDAccessPathNotFoundError `
                             -f$Splat.Path,'c:\DoesNotExist')
                     }
-                    $Exception = GetException @ExceptionParameters
+                    $Exception = Get-Exception @ExceptionParameters
 
                     { InitializeVHD @Splat } | Should -Throw $Exception
                 }

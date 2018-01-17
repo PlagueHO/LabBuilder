@@ -542,12 +542,12 @@ function ValidateConfigurationXMLSchema
 .PARAMETER Step
     Contains the number of steps to increase the MAC address by.
 .EXAMPLE
-    IncreaseMacAddress -MacAddress '00155D0106ED' -Step 2
+    Get-NextMacAddress -MacAddress '00155D0106ED' -Step 2
     Returns the MAC Address '00155D0106EF'
 .OUTPUTS
     The increased MAC Address.
 #>
-function IncreaseMacAddress
+function Get-NextMacAddress
 {
     [CmdLetBinding()]
     param
@@ -559,27 +559,30 @@ function IncreaseMacAddress
         [Byte] $Step = 1
     )
     Return [System.String]::Format("{0:X}", [Convert]::ToUInt64($MACAddress, 16) + $Step).PadLeft(12, '0')
-} # IncreaseMacAddress
-
-
+} # Get-NextMacAddress
 
 <#
-.SYNOPSIS
-    Increases the IP Address.
-.PARAMETER IpAddress
-    Contains the IP Address to increase.
-.PARAMETER Step
-    Contains the number of steps to increase the IP address by.
-.EXAMPLE
-    IncreaseIpAddress -IpAddress '192.168.123.44' -Step 2
-    Returns the IP Address '192.168.123.44'
-.EXAMPLE
-    IncreaseIpAddress -IpAddress 'fe80::15b4:b934:5d23:1a2f' -Step 2
-    Returns the IP Address 'fe80::15b4:b934:5d23:1a31'
-.OUTPUTS
-    The increased IP Address.
+    .SYNOPSIS
+        Increases the IP Address.
+
+    .PARAMETER IpAddress
+        Contains the IP Address to increase.
+
+    .PARAMETER Step
+        Contains the number of steps to increase the IP address by.
+
+    .EXAMPLE
+        Get-NextIpAddress -IpAddress '192.168.123.44' -Step 2
+        Returns the IP Address '192.168.123.44'
+
+    .EXAMPLE
+        Get-NextIpAddress -IpAddress 'fe80::15b4:b934:5d23:1a2f' -Step 2
+        Returns the IP Address 'fe80::15b4:b934:5d23:1a31'
+
+    .OUTPUTS
+        The increased IP Address.
 #>
-function IncreaseIpAddress
+function Get-NextIpAddress
 {
     [CmdLetBinding()]
     param
@@ -588,57 +591,55 @@ function IncreaseIpAddress
         [ValidateNotNullOrEmpty()]
         [System.String] $IpAddress,
 
-        [Byte] $Step = 1
+        [Parameter()]
+        [System.Byte] $Step = 1
     )
-    $IP = [System.Net.IPAddress]::Any
-    if (-not [System.Net.IPAddress]::TryParse($IpAddress, [ref]$IP))
-    {
-        $ExceptionParameters = @{
-            errorId       = 'IPAddressError'
-            errorCategory = 'InvalidArgument'
-            errorMessage  = $($LocalizedData.IPAddressError `
-                    -f $IpAddress)
-        }
-        New-Exception @ExceptionParameters
-    }
+
+    # Check the IP Address is valid
+    $ip = Assert-ValidIpAddress -IpAddress $IpAddress
+
     # This code will increase the next IP address by the step amount.
     # It uses the IP Address byte array to do this.
-    $Bytes = $IP.GetAddressBytes()
-    $Pos = $Bytes.Length - 1
+    $bytes = $ip.GetAddressBytes()
+    $position = $bytes.Length - 1
+
     while ($Step -gt 0)
     {
-        if ($Bytes[$Pos] + $Step -gt 255)
+        if ($bytes[$position] + $Step -gt 255)
         {
-            $Bytes[$Pos] = $Bytes[$Pos] + $Step - 256
-            $Step = $Step - $Bytes[$Pos]
-            $Pos--
+            $bytes[$position] = $bytes[$position] + $Step - 256
+            $Step = $Step - $bytes[$position]
+            $position--
         }
         else
         {
-            $Bytes[$Pos] = $Bytes[$Pos] + $Step
+            $bytes[$position] = $bytes[$position] + $Step
             $Step = 0
         } # if
     } # while
-    Return [System.Net.IPAddress]::new($Bytes).IPAddressToString
-} # IncreaseIpAddress
 
-
+    return [System.Net.IPAddress]::new($bytes).IPAddressToString
+} # Get-NextIpAddress
 
 <#
-.SYNOPSIS
-    Validates the IP Address.
-.PARAMETER IpAddress
-      Contains the IP Address to validate.
-.EXAMPLE
-    ValidateIpAddress -IpAddress '192.168.123.44'
-    Returns True
-.EXAMPLE
-    ValidateIpAddress -IpAddress '192.168.123.4432'
-    Returns False
-.OUTPUTS
-    True if the IP Address is valid
+    .SYNOPSIS
+        Validates the IP Address.
+
+    .PARAMETER IpAddress
+        Contains the IP Address to validate.
+
+    .EXAMPLE
+        Assert-ValidIpAddress -IpAddress '192.168.123.44'
+        Does not throw an exception and returns '192.168.123.44'.
+
+    .EXAMPLE
+        Assert-ValidIpAddress -IpAddress '192.168.123.4432'
+        Throws an exception.
+
+    .OUTPUTS
+        The IP address if valid.
 #>
-function ValidateIpAddress
+function Assert-ValidIpAddress
 {
     [CmdLetBinding()]
     param
@@ -648,10 +649,18 @@ function ValidateIpAddress
         [System.String] $IpAddress
     )
 
-    $IP = [System.Net.IPAddress]::Any
-    return [System.Net.IPAddress]::TryParse($IpAddress, [ref]$IP)
-} # ValidateIpAddress
-
+    $ip = [System.Net.IPAddress]::Any
+    if (-not [System.Net.IPAddress]::TryParse($IpAddress, [ref] $ip))
+    {
+        $ExceptionParameters = @{
+            errorId       = 'IPAddressError'
+            errorCategory = 'InvalidArgument'
+            errorMessage  = $($LocalizedData.IPAddressError -f $IpAddress)
+        }
+        New-Exception @ExceptionParameters
+    }
+    return $ip
+} # Assert-ValidIpAddress
 
 <#
     .SYNOPSIS

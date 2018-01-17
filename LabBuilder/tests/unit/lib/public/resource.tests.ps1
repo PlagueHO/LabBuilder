@@ -35,7 +35,7 @@ try
     .SYNOPSIS
     Helper function that just creates an exception record for testing.
     #>
-        function GetException
+        function Get-Exception
         {
             [CmdLetBinding()]
             param
@@ -75,7 +75,7 @@ try
                         errorCategory = 'InvalidArgument'
                         errorMessage = $($LocalizedData.ResourceModuleNameIsEmptyError)
                     }
-                    $Exception = GetException @ExceptionParameters
+                    $Exception = Get-Exception @ExceptionParameters
 
                     { Get-LabResourceModule -Lab $Lab } | Should -Throw $Exception
                 }
@@ -123,7 +123,7 @@ try
                         errorCategory = 'InvalidArgument'
                         errorMessage = $($LocalizedData.ResourceMSUNameIsEmptyError)
                     }
-                    $Exception = GetException @ExceptionParameters
+                    $Exception = Get-Exception @ExceptionParameters
 
                     { Get-LabResourceMSU -Lab $Lab } | Should -Throw $Exception
                 }
@@ -172,7 +172,7 @@ try
                         errorCategory = 'InvalidArgument'
                         errorMessage = $($LocalizedData.ResourceISONameIsEmptyError)
                     }
-                    $Exception = GetException @ExceptionParameters
+                    $Exception = Get-Exception @ExceptionParameters
 
                     { Get-LabResourceISO -Lab $Lab } | Should -Throw $Exception
                 }
@@ -187,7 +187,7 @@ try
                         errorMessage = $($LocalizedData.ResourceISOPathIsEmptyError `
                             -f $Lab.labbuilderconfig.resources.iso[0].name)
                     }
-                    $Exception = GetException @ExceptionParameters
+                    $Exception = Get-Exception @ExceptionParameters
 
                     { Get-LabResourceISO -Lab $Lab } | Should -Throw $Exception
                 }

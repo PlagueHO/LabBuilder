@@ -31,11 +31,11 @@ try
         -ErrorAction SilentlyContinue
 
     InModuleScope LabBuilder {
-    <#
-    .SYNOPSIS
-    Helper function that just creates an exception record for testing.
-    #>
-        function GetException
+        <#
+            .SYNOPSIS
+            Helper function that just creates an exception record for testing.
+        #>
+        function Get-Exception
         {
             [CmdLetBinding()]
             param
@@ -75,7 +75,7 @@ try
                         errorMessage = $($LocalizedData.DownloadFolderDoesNotExistError `
                             -f 'c:\doesnotexist','LICENSE')
                     }
-                    $Exception = GetException @ExceptionParameters
+                    $Exception = Get-Exception @ExceptionParameters
 
                     { DownloadAndUnzipFile -URL $URL -DestinationPath 'c:\doesnotexist' } | Should -Throw $Exception
                 }
@@ -97,7 +97,7 @@ try
                         errorMessage = $($LocalizedData.FileDownloadError `
                             -f 'LICENSE',$URL,'Download Error')
                     }
-                    $Exception = GetException @ExceptionParameters
+                    $Exception = Get-Exception @ExceptionParameters
 
                     { DownloadAndUnzipFile -URL $URL -DestinationPath $ENV:Temp } | Should -Throw $Exception
                 }
@@ -133,7 +133,7 @@ try
                         errorMessage = $($LocalizedData.FileExtractError `
                             -f 'LICENSE.ZIP','Extract Error')
                     }
-                    $Exception = GetException @ExceptionParameters
+                    $Exception = Get-Exception @ExceptionParameters
 
                     { DownloadAndUnzipFile -URL $URL -DestinationPath $ENV:Temp } | Should -Throw $Exception
                 }
@@ -410,7 +410,7 @@ try
                         errorMessage = $($LocalizedData.FileDownloadError `
                             -f 'dev.zip',$URL,'Download Error')
                     }
-                    $Exception = GetException @ExceptionParameters
+                    $Exception = Get-Exception @ExceptionParameters
 
                     {
                         DownloadResourceModule `
@@ -439,7 +439,7 @@ try
                         errorMessage = $($LocalizedData.ModuleNotAvailableError `
                             -f 'xDoesNotExist','any version',"No match was found for the specified search criteria and module name 'xDoesNotExist'")
                     }
-                    $Exception = GetException @ExceptionParameters
+                    $Exception = Get-Exception @ExceptionParameters
 
                     {
                         DownloadResourceModule `
@@ -466,7 +466,7 @@ try
                         errorMessage = $($LocalizedData.ModuleNotAvailableError `
                             -f 'xNetworking','2.5.0.0',"No match was found for the specified search criteria and module name 'xNetworking'" )
                     }
-                    $Exception = GetException @ExceptionParameters
+                    $Exception = Get-Exception @ExceptionParameters
 
                     {
                         DownloadResourceModule `
@@ -493,7 +493,7 @@ try
                         errorMessage = $($LocalizedData.ModuleNotAvailableError `
                             -f 'xNetworking','min 2.5.0.0',"No match was found for the specified search criteria and module name 'xNetworking'" )
                     }
-                    $Exception = GetException @ExceptionParameters
+                    $Exception = Get-Exception @ExceptionParameters
 
                     {
                         DownloadResourceModule `
@@ -574,7 +574,7 @@ try
                         errorCategory = 'InvalidArgument'
                         errorMessage = $($LocalizedData.WSManNotEnabledError)
                     }
-                    $Exception = GetException @ExceptionParameters
+                    $Exception = Get-Exception @ExceptionParameters
 
                     { EnableWSMan } | Should -Throw $Exception
                 }
@@ -589,34 +589,32 @@ try
         Describe '\Lib\Private\Utils.ps1\ValidateConfigurationXMLSchema' -Tag 'Incomplete' {
         }
 
-
-
-        Describe '\Lib\Private\Utils.ps1\IncreaseMacAddress' {
+        Describe '\Lib\Private\Utils.ps1\Get-NextMacAddress' {
             Context 'MAC address 00155D0106ED is passed' {
                 It 'Returns MAC address 00155D0106EE' {
-                    IncreaseMacAddress `
+                    Get-NextMacAddress `
                         -MacAddress '00155D0106ED' | Should -Be '00155D0106EE'
                 }
             }
+
             Context 'MAC address 00155D0106ED and step 10 is passed' {
                 It 'Returns IP address 00155D0106F7' {
-                    IncreaseMacAddress `
+                    Get-NextMacAddress `
                         -MacAddress '00155D0106ED' `
                         -Step 10 | Should -Be '00155D0106F7'
                 }
             }
+
             Context 'MAC address 00155D0106ED and step 0 is passed' {
                 It 'Returns IP address 00155D0106ED' {
-                    IncreaseMacAddress `
+                    Get-NextMacAddress `
                         -MacAddress '00155D0106ED' `
                         -Step 0 | Should -Be '00155D0106ED'
                 }
             }
         }
 
-
-
-        Describe '\Lib\Private\Utils.ps1\IncreaseIpAddress' {
+        Describe '\Lib\Private\Utils.ps1\Get-NextIpAddress' {
             Context 'Invalid IP Address is passed' {
                 It 'Throws a IPAddressError Exception' {
                     $ExceptionParameters = @{
@@ -625,80 +623,90 @@ try
                         errorMessage = $($LocalizedData.IPAddressError `
                             -f '192.168.1.999' )
                     }
-                    $Exception = GetException @ExceptionParameters
+                    $Exception = Get-Exception @ExceptionParameters
 
                     {
-                        IncreaseIpAddress `
+                        Get-NextIpAddress `
                             -IpAddress '192.168.1.999'
                     } | Should -Throw $Exception
                 }
             }
+
             Context 'IP address 192.168.1.1 is passed' {
                 It 'Returns IP address 192.168.1.2' {
-                    IncreaseIpAddress `
+                    Get-NextIpAddress `
                         -IpAddress '192.168.1.1' | Should -Be '192.168.1.2'
                 }
             }
+
             Context 'IP address 192.168.1.255 is passed' {
                 It 'Returns IP address 192.168.2.0' {
-                    IncreaseIpAddress `
+                    Get-NextIpAddress `
                         -IpAddress '192.168.1.255' | Should -Be '192.168.2.0'
                 }
             }
+
             Context 'IP address 192.168.1.255 and Step 10 is passed' {
                 It 'Returns IP address 192.168.2.9' {
-                    IncreaseIpAddress `
+                    Get-NextIpAddress `
                         -IpAddress '192.168.1.255' `
                         -Step 10 | Should -Be '192.168.2.9'
                 }
             }
+
             Context 'IP address 192.168.1.255 and Step 0 is passed' {
                 It 'Returns IP address 192.168.1.255' {
-                    IncreaseIpAddress `
+                    Get-NextIpAddress `
                         -IpAddress '192.168.1.255' `
                         -Step 0 | Should -Be '192.168.1.255'
                 }
             }
+
             Context 'IP address 10.255.255.255 is passed' {
                 It 'Returns IP address 11.0.0.0' {
-                    IncreaseIpAddress `
+                    Get-NextIpAddress `
                         -IpAddress '10.255.255.255' | Should -Be '11.0.0.0'
                 }
             }
+
             Context 'IP address fe80::15b4:b934:5d23:1a31 is passed' {
                 It 'Returns IP address fe80::15b4:b934:5d23:1a32' {
-                    IncreaseIpAddress `
+                    Get-NextIpAddress `
                         -IpAddress 'fe80::15b4:b934:5d23:1a31' | Should -Be 'fe80::15b4:b934:5d23:1a32'
                 }
             }
         }
 
-        Describe '\Lib\Private\Utils.ps1\ValidateIpAddress' {
+        Describe '\Lib\Private\Utils.ps1\Assert-ValidIpAddress' {
             Context 'IP address 192.168.1.1 is passed' {
-                It 'Returns True' {
-                    ValidateIpAddress `
-                        -IpAddress '192.168.1.1' | Should -Be $True
+                It 'Returns IP Address' {
+                    Assert-ValidIpAddress `
+                        -IpAddress '192.168.1.1' | Should -Be '192.168.1.1'
                 }
             }
 
             Context 'IP address 192.168.1.1000 is passed' {
-                It 'Returns False' {
-                    ValidateIpAddress `
-                        -IpAddress '192.168.1.1000' | Should -Be $False
+                It 'Should Throw an Exception' {
+                    {
+                        Assert-ValidIpAddress `
+                            -IpAddress '192.168.1.1000'
+                    } | Should -Throw $($LocalizedData.IPAddressError -f '192.168.1.1000')
                 }
             }
 
             Context 'IP address fe80::15b4:b934:5d23:1a31 is passed' {
-                It 'Returns True' {
-                    ValidateIpAddress `
-                        -IpAddress 'fe80::15b4:b934:5d23:1a31' | Should -Be $True
+                It 'Returns IP Address' {
+                    Assert-ValidIpAddress `
+                        -IpAddress 'fe80::15b4:b934:5d23:1a31' | Should -Be 'fe80::15b4:b934:5d23:1a31'
                 }
             }
 
             Context 'IP address fe80::15b4:b934:5d23:1a3x is passed' {
-                It 'Returns False' {
-                    ValidateIpAddress `
-                        -IpAddress 'fe80::15b4:b934:5d23:1a3x' | Should -Be $False
+                It 'Should Throw an Exception' {
+                    {
+                        Assert-ValidIpAddress `
+                            -IpAddress 'fe80::15b4:b934:5d23:1a3x'
+                    } | Should -Throw $($LocalizedData.IPAddressError -f 'fe80::15b4:b934:5d23:1a3x')
                 }
             }
         }
@@ -850,92 +858,92 @@ try
         }
 
         Describe '\Lib\Private\Utils.ps1\Write-LabMessage' {
-            $testMessage = 'Test Message'
-            $testMessageTime = Get-Date -UFormat %T
-            $testMessageWithTime = ('[{0}]: {1}' -f $testMessageTime, $testMessage)
-            $testInfoMessageWithTime = ('INFO: [{0}]: {1}' -f $testMessageTime, $testMessage)
+            $script:testMessage = 'Test Message'
+            $script:testMessageTime = Get-Date -UFormat %T
+            $script:testMessageWithTime = ('[{0}]: {1}' -f $script:testMessageTime, $script:testMessage)
+            $script:testInfoMessageWithTime = ('INFO: [{0}]: {1}' -f $script:testMessageTime, $script:testMessage)
 
             Context 'Write an error message' {
-                Mock -CommandName Write-Error -ParameterFilter { $Message -eq $testMessage }
+                Mock -CommandName Write-Error -ParameterFilter { $Message -eq $script:testMessage }
 
                 It 'Does not throw an Exception' {
                     {
-                        Write-LabMessage -Type 'Error' -Message $testMessage
+                        Write-LabMessage -Type 'Error' -Message $script:testMessage
                     } | Should -Not -Throw
                 }
 
                 It 'Calls appropriate mocks' {
-                    Assert-MockCalled -CommandName Write-Error -ParameterFilter { $Message -eq $testMessage } -Exactly -Times 1
+                    Assert-MockCalled -CommandName Write-Error -ParameterFilter { $Message -eq $script:testMessage } -Exactly -Times 1
                 }
             }
 
             Context 'Write a warning message' {
-                Mock -CommandName Write-Warning -ParameterFilter { $Message -eq $testMessageWithTime }
+                Mock -CommandName Write-Warning -ParameterFilter { $Message -eq $script:testMessageWithTime }
 
                 It 'Does not throw an Exception' {
                     {
-                        Write-LabMessage -Type 'Warning' -Message $testMessage
+                        Write-LabMessage -Type 'Warning' -Message $script:testMessage
                     } | Should -Not -Throw
                 }
 
                 It 'Calls appropriate mocks' {
-                    Assert-MockCalled -CommandName Write-Warning -ParameterFilter { $Message -eq $testMessageWithTime } -Exactly -Times 1
+                    Assert-MockCalled -CommandName Write-Warning -ParameterFilter { $Message -eq $script:testMessageWithTime } -Exactly -Times 1
                 }
             }
 
             Context 'Write a verbose message' {
-                Mock -CommandName Write-Verbose -ParameterFilter { $Message -eq $testMessageWithTime }
+                Mock -CommandName Write-Verbose -ParameterFilter { $Message -eq $script:testMessageWithTime }
 
                 It 'Does not throw an Exception' {
                     {
-                        Write-LabMessage -Type 'Verbose' -Message $testMessage
+                        Write-LabMessage -Type 'Verbose' -Message $script:testMessage
                     } | Should -Not -Throw
                 }
 
                 It 'Calls appropriate mocks' {
-                    Assert-MockCalled -CommandName Write-Verbose -ParameterFilter { $Message -eq $testMessageWithTime } -Exactly -Times 1
+                    Assert-MockCalled -CommandName Write-Verbose -ParameterFilter { $Message -eq $script:testMessageWithTime } -Exactly -Times 1
                 }
             }
 
             Context 'Write a debug message' {
-                Mock -CommandName Write-Debug -ParameterFilter { $Message -eq $testMessageWithTime }
+                Mock -CommandName Write-Debug -ParameterFilter { $Message -eq $script:testMessageWithTime }
 
                 It 'Does not throw an Exception' {
                     {
-                        Write-LabMessage -Type 'Debug' -Message $testMessage
+                        Write-LabMessage -Type 'Debug' -Message $script:testMessage
                     } | Should -Not -Throw
                 }
 
                 It 'Calls appropriate mocks' {
-                    Assert-MockCalled -CommandName Write-Debug -ParameterFilter { $Message -eq $testMessageWithTime } -Exactly -Times 1
+                    Assert-MockCalled -CommandName Write-Debug -ParameterFilter { $Message -eq $script:testMessageWithTime } -Exactly -Times 1
                 }
             }
 
             Context 'Write an information message' {
-                Mock -CommandName Write-Information -ParameterFilter { $MessageData -eq $testInfoMessageWithTime }
+                Mock -CommandName Write-Information -ParameterFilter { $MessageData -eq $script:testInfoMessageWithTime }
 
                 It 'Does not throw an Exception' {
                     {
-                        Write-LabMessage -Type 'Info' -Message $testMessage
+                        Write-LabMessage -Type 'Info' -Message $script:testMessage
                     } | Should -Not -Throw
                 }
 
                 It 'Calls appropriate mocks' {
-                    Assert-MockCalled -CommandName Write-Information -ParameterFilter { $MessageData -eq $testInfoMessageWithTime } -Exactly -Times 1
+                    Assert-MockCalled -CommandName Write-Information -ParameterFilter { $MessageData -eq $script:testInfoMessageWithTime } -Exactly -Times 1
                 }
             }
 
             Context 'Write an alert message' {
-                Mock -CommandName Write-Host -ParameterFilter { $Object -eq $testMessage }
+                Mock -CommandName Write-Host -ParameterFilter { $Object -eq $script:testMessage }
 
                 It 'Does not throw an Exception' {
                     {
-                        Write-LabMessage -Type 'Alert' -Message $testMessage
+                        Write-LabMessage -Type 'Alert' -Message $script:testMessage
                     } | Should -Not -Throw
                 }
 
                 It 'Calls appropriate mocks' {
-                    Assert-MockCalled -CommandName Write-Host -ParameterFilter { $Object -eq $testMessage } -Exactly -Times 1
+                    Assert-MockCalled -CommandName Write-Host -ParameterFilter { $Object -eq $script:testMessage } -Exactly -Times 1
                 }
             }
         }

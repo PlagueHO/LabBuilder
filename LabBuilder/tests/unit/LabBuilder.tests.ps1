@@ -76,7 +76,7 @@ try
     .SYNOPSIS
     Helper function that just creates an exception record for testing.
     #>
-        function GetException
+        function Get-Exception
         {
             [CmdLetBinding()]
             param

@@ -257,7 +257,7 @@ function Get-LabVM {
                     if ($VMAdapter.IPv4.Address)
                     {
                         $IPv4 = [LabVMAdapterIPv4]::New(`
-                            (IncreaseIpAddress `
+                            (Get-NextIpAddress `
                                 -IpAddress $VMAdapter.IPv4.Address`
                                 -Step $IncNetIds)`
                             ,$VMAdapter.IPv4.SubnetMask)
@@ -273,7 +273,7 @@ function Get-LabVM {
                     if ($VMAdapter.IPv6.Address)
                     {
                         $IPv6 = [LabVMAdapterIPv6]::New(`
-                            (IncreaseIpAddress `
+                            (Get-NextIpAddress `
                                 -IpAddress $VMAdapter.IPv6.Address`
                                 -Step $IncNetIds)`
                             ,$VMAdapter.IPv6.SubnetMask)
@@ -286,7 +286,7 @@ function Get-LabVM {
                 $NewVMAdapter.SwitchName = $AdapterSwitchName
                 if($VMAdapter.macaddress)
                 {
-                    $NewVMAdapter.MACAddress = IncreaseMacAddress `
+                    $NewVMAdapter.MACAddress = Get-NextMacAddress `
                         -MacAddress $VMAdapter.macaddress `
                         -Step $IncNetIds
                 } # if
