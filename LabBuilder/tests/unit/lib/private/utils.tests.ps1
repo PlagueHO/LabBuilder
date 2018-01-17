@@ -863,6 +863,8 @@ try
             $script:testMessageWithTime = ('[{0}]: {1}' -f $script:testMessageTime, $script:testMessage)
             $script:testInfoMessageWithTime = ('INFO: [{0}]: {1}' -f $script:testMessageTime, $script:testMessage)
 
+            Mock -CommandName Get-Date -ParameterFilter { $UFormat -eq '%T' } -MockWith { $script:testMessageTime }
+
             Context 'Write an error message' {
                 Mock -CommandName Write-Error -ParameterFilter { $Message -eq $script:testMessage }
 
