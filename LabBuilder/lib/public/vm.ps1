@@ -1521,12 +1521,12 @@ function Install-LabVM {
         } # if
 
         # Create any DSC Files for the VM
-        InitializeDSC `
+        Initialize-LabDSC `
             -Lab $Lab `
             -VM $VM
 
         # Attempt to start DSC on the VM
-        StartDSC `
+        Start-LabDSC `
             -Lab $Lab `
             -VM $VM
     } # if

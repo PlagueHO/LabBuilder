@@ -35,7 +35,7 @@ try
     .SYNOPSIS
     Helper function that just creates an exception record for testing.
     #>
-        function Get-Exception
+        function Get-LabException
         {
             [CmdLetBinding()]
             param
@@ -100,7 +100,7 @@ try
                         errorMessage = $($LocalizedData.ConfigurationFileNotFoundError `
                             -f 'c:\doesntexist.xml')
                     }
-                    $Exception = Get-Exception @exceptionParameters
+                    $Exception = Get-LabException @exceptionParameters
 
                     Mock Test-Path -MockWith { $false }
 
@@ -115,7 +115,7 @@ try
                         errorMessage = $($LocalizedData.ConfigurationFileEmptyError `
                             -f 'c:\isempty.xml')
                     }
-                    $Exception = Get-Exception @exceptionParameters
+                    $Exception = Get-LabException @exceptionParameters
 
                     Mock Test-Path -MockWith { $true }
                     Mock Get-Content -MockWith {''}
@@ -132,7 +132,7 @@ try
                         errorMessage = $($LocalizedData.RequiredBuildNotMetError `
                             -f $Script:CurrentBuild,'10560')
                     }
-                    $Exception = Get-Exception @exceptionParameters
+                    $Exception = Get-LabException @exceptionParameters
                     { Get-Lab -ConfigPath $Global:TestConfigOKPath } | Should -Throw $Exception
                 }
             }

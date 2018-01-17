@@ -35,7 +35,7 @@ try
     .SYNOPSIS
     Helper function that just creates an exception record for testing.
     #>
-        function Get-Exception
+        function Get-LabException
         {
             [CmdLetBinding()]
             param
@@ -80,7 +80,7 @@ try
                         errorCategory = 'InvalidArgument'
                         errorMessage = $($LocalizedData.EmptyTemplateNameError)
                     }
-                    $Exception = Get-Exception @exceptionParameters
+                    $Exception = Get-LabException @exceptionParameters
 
                     { Get-LabVMTemplate -Lab $Lab } | Should -Throw $Exception
                 }
@@ -95,7 +95,7 @@ try
                         errorMessage = $($LocalizedData.TemplateSourceVHDNotFoundError `
                             -f $Lab.labbuilderconfig.templates.template[0].name,"$Global:TestConfigPath\This File Doesnt Exist.vhdx")
                     }
-                    $Exception = Get-Exception @exceptionParameters
+                    $Exception = Get-LabException @exceptionParameters
 
                     { Get-LabVMTemplate -Lab $Lab } | Should -Throw $Exception
                 }
@@ -110,7 +110,7 @@ try
                         errorMessage = $($LocalizedData.TemplateSourceVHDNotFoundError `
                             -f $Lab.labbuilderconfig.templates.template[0].name,"c:\This File Doesnt Exist.vhdx")
                     }
-                    $Exception = Get-Exception @exceptionParameters
+                    $Exception = Get-LabException @exceptionParameters
 
                     { Get-LabVMTemplate -Lab $Lab } | Should -Throw $Exception
                 }
@@ -125,7 +125,7 @@ try
                         errorMessage = $($LocalizedData.TemplateSourceVHDAndTemplateVHDConflictError `
                             -f $Lab.labbuilderconfig.templates.template[0].name)
                     }
-                    $Exception = Get-Exception @exceptionParameters
+                    $Exception = Get-LabException @exceptionParameters
 
                     { Get-LabVMTemplate -Lab $Lab } | Should -Throw $Exception
                 }
@@ -140,7 +140,7 @@ try
                         errorMessage = $($LocalizedData.TemplateSourceVHDandTemplateVHDMissingError `
                             -f $Lab.labbuilderconfig.templates.template[0].name)
                     }
-                    $Exception = Get-Exception @exceptionParameters
+                    $Exception = Get-LabException @exceptionParameters
 
                     { Get-LabVMTemplate -Lab $Lab } | Should -Throw $Exception
                 }
@@ -156,7 +156,7 @@ try
                         errorMessage = $($LocalizedData.TemplateTemplateVHDNotFoundError `
                             -f $Lab.labbuilderconfig.templates.template[1].name,'Template VHD Does Not Exist')
                     }
-                    $Exception = Get-Exception @exceptionParameters
+                    $Exception = Get-LabException @exceptionParameters
 
                     { Get-LabVMTemplate -Lab $Lab } | Should -Throw $Exception
                 }
@@ -272,7 +272,7 @@ try
                         errorMessage = $($LocalizedData.TemplateSourceVHDNotFoundError `
                             -f $Template.Name,$Template.SourceVHD)
                     }
-                    $Exception = Get-Exception @exceptionParameters
+                    $Exception = Get-LabException @exceptionParameters
 
                     { Initialize-LabVMTemplate -Lab $Lab -VMTemplates $Templates } | Should -Throw $Exception
                 }

@@ -35,7 +35,7 @@ try
             .SYNOPSIS
             Helper function that just creates an exception record for testing.
         #>
-        function Get-Exception
+        function Get-LabException
         {
             [CmdLetBinding()]
             param
@@ -77,7 +77,7 @@ try
                         errorMessage = $($LocalizedData.DownloadFolderDoesNotExistError `
                             -f 'c:\doesnotexist','LICENSE')
                     }
-                    $Exception = Get-Exception @exceptionParameters
+                    $Exception = Get-LabException @exceptionParameters
 
                     { Invoke-LabDownloadAndUnzipFile -URL $URL -DestinationPath 'c:\doesnotexist' } | Should -Throw $Exception
                 }
@@ -102,7 +102,7 @@ try
                         errorMessage = $($LocalizedData.FileDownloadError `
                             -f 'LICENSE',$URL,'Download Error')
                     }
-                    $Exception = Get-Exception @exceptionParameters
+                    $Exception = Get-LabException @exceptionParameters
 
                     { Invoke-LabDownloadAndUnzipFile -URL $URL -DestinationPath $ENV:Temp } | Should -Throw $Exception
                 }
@@ -144,7 +144,7 @@ try
                         errorMessage = $($LocalizedData.FileExtractError `
                             -f 'LICENSE.ZIP','Extract Error')
                     }
-                    $Exception = Get-Exception @exceptionParameters
+                    $Exception = Get-LabException @exceptionParameters
 
                     { Invoke-LabDownloadAndUnzipFile -URL $URL -DestinationPath $ENV:Temp } | Should -Throw $Exception
                 }
@@ -444,7 +444,7 @@ try
                         errorMessage = $($LocalizedData.FileDownloadError `
                             -f 'dev.zip',$URL,'Download Error')
                     }
-                    $Exception = Get-Exception @exceptionParameters
+                    $Exception = Get-LabException @exceptionParameters
 
                     {
                         Invoke-LabDownloadResourceModule `
@@ -476,7 +476,7 @@ try
                         errorMessage = $($LocalizedData.ModuleNotAvailableError `
                             -f 'xDoesNotExist','any version',"No match was found for the specified search criteria and module name 'xDoesNotExist'")
                     }
-                    $Exception = Get-Exception @exceptionParameters
+                    $Exception = Get-LabException @exceptionParameters
 
                     {
                         Invoke-LabDownloadResourceModule `
@@ -506,7 +506,7 @@ try
                         errorMessage = $($LocalizedData.ModuleNotAvailableError `
                             -f 'xNetworking','2.5.0.0',"No match was found for the specified search criteria and module name 'xNetworking'" )
                     }
-                    $Exception = Get-Exception @exceptionParameters
+                    $Exception = Get-LabException @exceptionParameters
 
                     {
                         Invoke-LabDownloadResourceModule `
@@ -535,7 +535,7 @@ try
                         errorMessage = $($LocalizedData.ModuleNotAvailableError `
                             -f 'xNetworking','min 2.5.0.0',"No match was found for the specified search criteria and module name 'xNetworking'" )
                     }
-                    $Exception = Get-Exception @exceptionParameters
+                    $Exception = Get-LabException @exceptionParameters
 
                     {
                         Invoke-LabDownloadResourceModule `
@@ -646,7 +646,7 @@ try
                         errorCategory = 'InvalidArgument'
                         errorMessage = $($LocalizedData.WSManNotEnabledError)
                     }
-                    $Exception = Get-Exception @exceptionParameters
+                    $Exception = Get-LabException @exceptionParameters
 
                     { Enable-LabWSMan } | Should -Throw $Exception
                 }
@@ -694,7 +694,7 @@ try
                         errorMessage = $($LocalizedData.IPAddressError `
                             -f '192.168.1.999' )
                     }
-                    $Exception = Get-Exception @exceptionParameters
+                    $Exception = Get-LabException @exceptionParameters
 
                     {
                         Get-NextIpAddress `

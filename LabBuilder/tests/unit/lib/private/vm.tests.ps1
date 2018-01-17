@@ -35,7 +35,7 @@ try
     .SYNOPSIS
     Helper function that just creates an exception record for testing.
     #>
-        function Get-Exception
+        function Get-LabException
         {
             [CmdLetBinding()]
             param
@@ -299,7 +299,7 @@ try
                         errorMessage = $($LocalizedData.VMDataDiskVHDConvertError `
                             -f $VMs[0].Name,$VMs[0].DataVHDs.Vhd,$VMs[0].DataVHDs.VhdType)
                     }
-                    $Exception = Get-Exception @exceptionParameters
+                    $Exception = Get-LabException @exceptionParameters
                     { UpdateVMDataDisks -Lab $Lab -VM $VMs[0] } | Should -Throw
                 }
                 It 'Calls Mocked commands' {
@@ -332,7 +332,7 @@ try
                         errorMessage = $($LocalizedData.VMDataDiskVHDShrinkError `
                             -f $VMs[0].Name,$VMs[0].DataVHDs[0].Vhd,$VMs[0].DataVHDs[0].Size)
                     }
-                    $Exception = Get-Exception @exceptionParameters
+                    $Exception = Get-LabException @exceptionParameters
                     { UpdateVMDataDisks -Lab $Lab -VM $VMs[0] } | Should -Throw $Exception
                 }
                 It 'Calls Mocked commands' {
@@ -387,7 +387,7 @@ try
                         errorMessage = $($LocalizedData.VMDataDiskSourceVHDNotFoundError `
                             -f $VMs[0].Name,$VMs[0].DataVHDs[0].SourceVhd)
                     }
-                    $Exception = Get-Exception @exceptionParameters
+                    $Exception = Get-LabException @exceptionParameters
                     { UpdateVMDataDisks -Lab $Lab -VM $VMs[0] } | Should -Throw $Exception
                 }
                 It 'Calls Mocked commands' {
@@ -576,7 +576,7 @@ try
                         errorMessage = $($LocalizedData.VMDataDiskParentVHDMissingError `
                             -f $VMs[0].Name)
                     }
-                    $Exception = Get-Exception @exceptionParameters
+                    $Exception = Get-LabException @exceptionParameters
                     { UpdateVMDataDisks -Lab $Lab -VM $VMs[0] } | Should -Throw $Exception
                 }
                 It 'Calls Mocked commands' {
@@ -606,7 +606,7 @@ try
                         errorMessage = $($LocalizedData.VMDataDiskParentVHDNotFoundError `
                             -f $VMs[0].Name,$VMs[0].DataVHDs[0].ParentVhd)
                     }
-                    $Exception = Get-Exception @exceptionParameters
+                    $Exception = Get-LabException @exceptionParameters
                     { UpdateVMDataDisks -Lab $Lab -VM $VMs[0] } | Should -Throw $Exception
                 }
                 It 'Calls Mocked commands' {

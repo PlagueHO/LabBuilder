@@ -43,8 +43,8 @@
 - Fix error occuring when starting DSC on node with no adapters.
 - LabDSCModule class: Added [Version] MinimuVersion property, converted ModuleVersion property to [Version].
 - Corrected format of Changelist.md.
-- Change SubnetMask to PrefixLength in xIPAdress DSC Config created by GetDSCNetworkingConfig.
-- Added support for specifying minimum module version in Update-LabDSCMOF to enforce xNetworking 3.0.0.0 usage.
+- Change SubnetMask to PrefixLength in xIPAdress DSC Config created by Get-LabDSCNetworkingConfig.
+- Added support for specifying minimum module version in Update-LabDSC to enforce xNetworking 3.0.0.0 usage.
 
 ## 0.8.3.1068
 
@@ -211,7 +211,7 @@
 
 ## 0.7.1.0
 
-- GetDSCNetworkingConfig: Fix DSC error occuring when a blank DNS Server address or Default Gateway address is set on an Adapter.
+- Get-LabDSCNetworkingConfig: Fix DSC error occuring when a blank DNS Server address or Default Gateway address is set on an Adapter.
 - InitializeVhd: Prevent unnecessary results of disk partitioning and volume creation to console.
 - UpdateVMDataDisks: Fix to incorrectly reported Data VHD type change error.
 - DSCLibrary\MEMBER_BRANCHCACHE_HOST.DSC.ps1: Created resource for BranchCache Hosted Servers.
@@ -265,7 +265,7 @@
 - Get-ModulesInDSCConfig: Returns Array of objects containing ModuleName and ModuleVersion.
                          Now returns PSDesiredStateConfiguration module if listed -expected that calling function will ignore if required.
                          Added function to set the Module versions in a DSC Config.
-- Update-LabDSCMOF: Updated to set Module versions in DSC Config files.
+- Update-LabDSC: Updated to set Module versions in DSC Config files.
 - DSC Library: Module Version numbers removed from all DSC Library Configrations.
 - Test Sample file code updated to remove switches when lab uninstalled.
 - Uninstall-Lab: Management Switch automatically removed when Lab uninstalled.
