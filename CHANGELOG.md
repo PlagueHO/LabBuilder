@@ -44,7 +44,7 @@
 - LabDSCModule class: Added [Version] MinimuVersion property, converted ModuleVersion property to [Version].
 - Corrected format of Changelist.md.
 - Change SubnetMask to PrefixLength in xIPAdress DSC Config created by GetDSCNetworkingConfig.
-- Added support for specifying minimum module version in CreateDSCMOFFiles to enforce xNetworking 3.0.0.0 usage.
+- Added support for specifying minimum module version in Update-LabDSCMOF to enforce xNetworking 3.0.0.0 usage.
 
 ## 0.8.3.1068
 
@@ -265,7 +265,7 @@
 - Get-ModulesInDSCConfig: Returns Array of objects containing ModuleName and ModuleVersion.
                          Now returns PSDesiredStateConfiguration module if listed -expected that calling function will ignore if required.
                          Added function to set the Module versions in a DSC Config.
-- CreateDSCMOFFiles: Updated to set Module versions in DSC Config files.
+- Update-LabDSCMOF: Updated to set Module versions in DSC Config files.
 - DSC Library: Module Version numbers removed from all DSC Library Configrations.
 - Test Sample file code updated to remove switches when lab uninstalled.
 - Uninstall-Lab: Management Switch automatically removed when Lab uninstalled.

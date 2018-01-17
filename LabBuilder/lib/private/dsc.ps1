@@ -37,7 +37,7 @@ function Get-ModulesInDSCConfig
             Position = 1,
             ParameterSetName = "Content",
             Mandatory = $true)]
-        [System.String] $DSCConfigContent,
+        [System.String] $dscConfigContent,
 
         [parameter(
             Position = 2,
@@ -118,7 +118,7 @@ function Set-ModulesInDSCConfig
             Position = 1,
             ParameterSetName = "Content",
             Mandatory = $true)]
-        [System.String] $DSCConfigContent,
+        [System.String] $dscConfigContent,
 
         [parameter(
             Position = 2,
@@ -207,7 +207,6 @@ function Set-ModulesInDSCConfig
     return $dscConfigContent
 } # Set-ModulesInDSCConfig
 
-
 <#
     .SYNOPSIS
         This function prepares all the files and modules necessary for a VM to be configured using
@@ -233,13 +232,13 @@ function Set-ModulesInDSCConfig
     .EXAMPLE
         $Lab = Get-Lab -ConfigPath c:\mylab\config.xml
         $VMs = Get-LabVM -Lab $Lab
-        CreateDSCMOFFiless -Lab $Lab -VM $VMs[0]
+        Update-LabDSCMOF -Lab $Lab -VM $VMs[0]
         Prepare the first VM in the Lab c:\mylab\config.xml for DSC configuration.
 
     .OUTPUTS
         None.
 #>
-function CreateDSCMOFFiles
+function Update-LabDSCMOF
 {
     [CmdLetBinding()]
     param
@@ -251,14 +250,11 @@ function CreateDSCMOFFiles
         [LabVM] $VM
     )
 
-    [System.String] $DSCMOFFile = ''
-    [System.String] $DSCMOFMetaFile = ''
-
-    # Get the root path of the VM
-    [System.String] $VMRootPath = $VM.VMRootPath
+    $dscMOFFile = ''
+    $dscMOFMetaFile = ''
 
     # Get Path to LabBuilder files
-    [System.String] $VMLabBuilderFiles = $VM.LabBuilderFilesPath
+    $vmLabBuilderFiles = $VM.LabBuilderFilesPath
 
     if (-not $VM.DSC.ConfigFile)
     {
@@ -267,70 +263,87 @@ function CreateDSCMOFFiles
     }
 
     # Make sure all the modules required to create the MOF file are installed
-    $InstalledModules = Get-Module -ListAvailable
+    $installedModules = Get-Module -ListAvailable
+
     Write-LabMessage -Message $($LocalizedData.DSCConfigIdentifyModulesMessage `
             -f $VM.DSC.ConfigFile, $VM.Name)
 
-    [System.String] $DSCConfigContent = Get-Content `
+    $dscConfigContent = Get-Content `
         -Path $($VM.DSC.ConfigFile) `
-        -RAW
-    [LabDSCModule[]] $DSCModules = Get-ModulesInDSCConfig `
-        -DSCConfigContent $DSCConfigContent
+        -Raw
+
+    [LabDSCModule[]] $dscModules = Get-ModulesInDSCConfig `
+        -DSCConfigContent $dscConfigContent
 
     # Add the xNetworking DSC Resource because it is always used
-    $Module = [LabDSCModule]::New('xNetworking')
-    # It must be 5.0.0.0 or greater
-    $Module.MinimumVersion = [Version] '5.0.0.0'
-    $DSCModules += @( $Module )
+    $module = [LabDSCModule]::New('xNetworking')
 
-    foreach ($DSCModule in $DSCModules)
+    # It must be 5.0.0.0 or greater
+    $module.MinimumVersion = [Version] '5.0.0.0'
+    $dscModules += @( $module )
+
+    foreach ($dscModule in $dscModules)
     {
-        $ModuleName = $DSCModule.ModuleName
-        $ModuleSplat = @{ Name = $ModuleName }
-        $ModuleVersion = $DSCModule.ModuleVersion
-        $MinimumVersion = $DSCModule.MinimumVersion
-        if ($ModuleVersion)
+        $moduleName = $dscModule.ModuleName
+        $moduleParameters = @{ Name = $ModuleName }
+        $moduleVersion = $dscModule.ModuleVersion
+        $MinimumVersion = $dscModule.MinimumVersion
+
+        if ($moduleVersion)
         {
-            $FilterScript = { ($_.Name -eq $ModuleName) -and ($ModuleVersion -eq $_.Version) }
-            $ModuleSplat += @{ RequiredVersion = $ModuleVersion }
+            $filterScript = {
+                ($_.Name -eq $ModuleName) -and ($moduleVersion -eq $_.Version)
+            }
+
+            $moduleParameters += @{
+                RequiredVersion = $moduleVersion
+            }
         }
         elseif ($MinimumVersion)
         {
-            $FilterScript = { ($_.Name -eq $ModuleName) -and ($_.Version -ge $MinimumVersion) }
-            $ModuleSplat += @{ MinimumVersion = $MinimumVersion }
+            $filterScript = {
+                ($_.Name -eq $ModuleName) -and ($_.Version -ge $MinimumVersion)
+            }
+
+            $moduleParameters += @{
+                MinimumVersion = $MinimumVersion
+            }
         }
         else
         {
-            $FilterScript = { ($_.Name -eq $ModuleName) }
+            $filterScript = {
+                $_.Name -eq $ModuleName
+            }
         }
 
-        $Module = ($InstalledModules |
-                Where-Object -FilterScript $FilterScript |
+        $module = ($installedModules |
+                Where-Object -FilterScript $filterScript |
                 Sort-Object -Property Version -Descending |
                 Select-Object -First 1)
 
-        if ($Module)
+        if ($module)
         {
             # The module already exists, load the version number into the Module
             # to force the version number to be set in the DSC Config file
-            $DSCModule.ModuleVersion = $Module.Version
+            $dscModule.ModuleVersion = $module.Version
         }
         else
         {
             # The Module isn't available on this computer, so try and install it
             Write-LabMessage -Message $($LocalizedData.DSCConfigSearchingForModuleMessage `
                     -f $VM.DSC.ConfigFile, $VM.Name, $ModuleName)
-            $NewModule = Find-Module `
+
+            $newModule = Find-Module `
                 @ModuleSplat
 
-            if ($NewModule)
+            if ($newModule)
             {
                 Write-LabMessage -Message $($LocalizedData.DSCConfigInstallingModuleMessage `
                         -f $VM.DSC.ConfigFile, $VM.Name, $ModuleName)
 
                 try
                 {
-                    $NewModule | Install-Module
+                    $newModule | Install-Module
                 }
                 catch
                 {
@@ -353,30 +366,32 @@ function CreateDSCMOFFiles
                 }
                 New-LabException @exceptionParameters
             }
-            $DSCModule.ModuleVersion = $NewModule.Version
+
+            $dscModule.ModuleVersion = $newModule.Version
         } # if
 
         Write-LabMessage -Message $($LocalizedData.DSCConfigSavingModuleMessage `
                 -f $VM.DSC.ConfigFile, $VM.Name, $ModuleName)
 
         # Find where the module is actually stored
-        [System.String] $ModulePath = ''
+        $modulePath = ''
+
         foreach ($Path in $ENV:PSModulePath.Split(';'))
         {
             if (-not [System.String]::IsNullOrEmpty($Path))
             {
-                $ModulePath = Join-Path `
+                $modulePath = Join-Path `
                     -Path $Path `
                     -ChildPath $ModuleName
 
-                if (Test-Path -Path $ModulePath)
+                if (Test-Path -Path $modulePath)
                 {
                     break
                 } # If
             }
         } # Foreach
 
-        if (-not (Test-Path -Path $ModulePath))
+        if (-not (Test-Path -Path $modulePath))
         {
             $exceptionParameters = @{
                 errorId       = 'DSCModuleNotFoundError'
@@ -387,18 +402,19 @@ function CreateDSCMOFFiles
             New-LabException @exceptionParameters
         }
 
-        $DestinationPath = Join-Path -Path $VMLabBuilderFiles -ChildPath 'DSC Modules\'
-        if (-not (Test-Path -Path $DestinationPath))
+        $destinationPath = Join-Path -Path $vmLabBuilderFiles -ChildPath 'DSC Modules\'
+
+        if (-not (Test-Path -Path $destinationPath))
         {
             # Create the DSC Modules folder if it doesn't exist.
-            New-Item -Path $DestinationPath -ItemType Directory -Force
+            New-Item -Path $destinationPath -ItemType Directory -Force
         } # if
 
         Write-LabMessage -Message $($LocalizedData.DSCConfigCopyingModuleMessage `
-                -f $VM.DSC.ConfigFile, $VM.Name, $ModuleName, $ModulePath, $DestinationPath)
+                -f $VM.DSC.ConfigFile, $VM.Name, $ModuleName, $modulePath, $destinationPath)
         Copy-Item `
-            -Path $ModulePath `
-            -Destination $DestinationPath `
+            -Path $modulePath `
+            -Destination $destinationPath `
             -Recurse `
             -Force
     } # Foreach
@@ -424,29 +440,30 @@ function CreateDSCMOFFiles
     } # if
 
     # Add the VM Self-Signed Certificate to the Local Machine store and get the Thumbprint
-    [System.String] $CertificateFile = Join-Path `
-        -Path $VMLabBuilderFiles `
+    $certificateFile = Join-Path `
+        -Path $vmLabBuilderFiles `
         -ChildPath $Script:DSCEncryptionCert
-    $Certificate = Import-Certificate `
-        -FilePath $CertificateFile `
+    $certificate = Import-Certificate `
+        -FilePath $certificateFile `
         -CertStoreLocation 'Cert:LocalMachine\My'
-    [System.String] $CertificateThumbprint = $Certificate.Thumbprint
+    $certificateThumbprint = $certificate.Thumbprint
 
     # Set the predicted MOF File name
-    $DSCMOFFile = Join-Path `
+    $dscMOFFile = Join-Path `
         -Path $ENV:Temp `
         -ChildPath "$($VM.ComputerName).mof"
-    $DSCMOFMetaFile = ([System.IO.Path]::ChangeExtension($DSCMOFFile, 'meta.mof'))
+    $dscMOFMetaFile = ([System.IO.Path]::ChangeExtension($dscMOFFile, 'meta.mof'))
 
     # Generate the LCM MOF File
     Write-LabMessage -Message $($LocalizedData.DSCConfigCreatingLCMMOFMessage `
-            -f $DSCMOFMetaFile, $VM.Name)
+            -f $dscMOFMetaFile, $VM.Name)
 
     $null = ConfigLCM `
         -OutputPath $($ENV:Temp) `
         -ComputerName $($VM.ComputerName) `
-        -Thumbprint $CertificateThumbprint
-    if (-not (Test-Path -Path $DSCMOFMetaFile))
+        -Thumbprint $certificateThumbprint
+
+    if (-not (Test-Path -Path $dscMOFMetaFile))
     {
         $exceptionParameters = @{
             errorId       = 'DSCConfigMetaMOFCreateError'
@@ -462,36 +479,36 @@ function CreateDSCMOFFiles
             -f $VM.DSC.ConfigFile, $VM.Name)
 
     # Now create the Networking DSC Config file
-    [System.String] $DSCNetworkingConfig = GetDSCNetworkingConfig `
+    $dscNetworkingConfig = GetDSCNetworkingConfig `
         -Lab $Lab -VM $VM
-    [System.String] $NetworkingDSCFile = Join-Path `
-        -Path $VMLabBuilderFiles `
+    $networkingDSCFile = Join-Path `
+        -Path $vmLabBuilderFiles `
         -ChildPath 'DSCNetworking.ps1'
     $null = Set-Content `
-        -Path $NetworkingDSCFile `
-        -Value $DSCNetworkingConfig
-    . $NetworkingDSCFile
-    [System.String] $DSCFile = Join-Path `
-        -Path $VMLabBuilderFiles `
+        -Path $networkingDSCFile `
+        -Value $dscNetworkingConfig
+    . $networkingDSCFile
+    $dscFile = Join-Path `
+        -Path $vmLabBuilderFiles `
         -ChildPath 'DSC.ps1'
 
     # Set the Modules List in the DSC Configuration
-    $DSCConfigContent = Set-ModulesInDSCConfig `
-        -DSCConfigContent $DSCConfigContent `
-        -Modules $DSCModules
+    $dscConfigContent = Set-ModulesInDSCConfig `
+        -DSCConfigContent $dscConfigContent `
+        -Modules $dscModules
 
-    if (-not ($DSCConfigContent -match 'Networking Network {}'))
+    if (-not ($dscConfigContent -match 'Networking Network {}'))
     {
         # Add the Networking Configuration item to the base DSC Config File
         # Find the location of the line containing "Node $AllNodes.NodeName {"
         [System.String] $Regex = '\s*Node\s.*{.*'
-        $Matches = [regex]::matches($DSCConfigContent, $Regex, 'IgnoreCase')
+        $Matches = [regex]::matches($dscConfigContent, $Regex, 'IgnoreCase')
         if ($Matches.Count -eq 1)
         {
-            $DSCConfigContent = $DSCConfigContent.`
+            $dscConfigContent = $dscConfigContent.`
                 Insert($Matches[0].Index + $Matches[0].Length, "`r`nNetworking Network {}`r`n")
         }
-        Else
+        else
         {
             $exceptionParameters = @{
                 errorId       = 'DSCConfigMoreThanOneNodeError'
@@ -500,31 +517,31 @@ function CreateDSCMOFFiles
                         -f $VM.DSC.ConfigFile, $VM.Name)
             }
             New-LabException @exceptionParameters
-        } # If
-    } # If
+        } # if
+    } # if
 
     # Save the DSC Content
     $null = Set-Content `
-        -Path $DSCFile `
-        -Value $DSCConfigContent `
+        -Path $dscFile `
+        -Value $dscConfigContent `
         -Force
 
     # Hook the Networking DSC File into the main DSC File
-    . $DSCFile
+    . $dscFile
 
-    [System.String] $DSCConfigName = $VM.DSC.ConfigName
+    $dscConfigName = $VM.DSC.ConfigName
 
     Write-LabMessage -Message $($LocalizedData.DSCConfigPrepareMessage `
-            -f $DSCConfigname, $VM.Name)
+            -f $dscConfigName, $VM.Name)
 
     # Generate the Configuration Nodes data that always gets passed to the DSC configuration.
-    [System.String] $ConfigData = @"
+    $dscConfigData = @"
 @{
     AllNodes = @(
         @{
             NodeName = '$($VM.ComputerName)'
-            CertificateFile = '$CertificateFile'
-            Thumbprint = '$CertificateThumbprint'
+            CertificateFile = '$certificateFile'
+            Thumbprint = '$certificateThumbprint'
             LocalAdminPassword = '$($VM.administratorpassword)'
             $($VM.DSC.Parameters)
         }
@@ -532,20 +549,23 @@ function CreateDSCMOFFiles
 }
 "@
     # Write it to a temp file
-    [System.String] $ConfigFile = Join-Path `
-        -Path $VMLabBuilderFiles `
+    $dscConfigFile = Join-Path `
+        -Path $vmLabBuilderFiles `
         -ChildPath 'DSCConfigData.psd1'
-    if (Test-Path -Path $ConfigFile)
+
+    if (Test-Path -Path $dscConfigFile)
     {
         $null = Remove-Item `
-            -Path $ConfigFile `
+            -Path $dscConfigFile `
             -Force
     }
-    Set-Content -Path $ConfigFile -Value $ConfigData
+
+    Set-Content -Path $dscConfigFile -Value $dscConfigData
 
     # Generate the MOF file from the configuration
-    $null = & "$DSCConfigName" -OutputPath $($ENV:Temp) -ConfigurationData $ConfigFile
-    if (-not (Test-Path -Path $DSCMOFFile))
+    $null = & $dscConfigName -OutputPath $($ENV:Temp) -ConfigurationData $dscConfigFile
+
+    if (-not (Test-Path -Path $dscMOFFile))
     {
         $exceptionParameters = @{
             errorId       = 'DSCConfigMOFCreateError'
@@ -558,7 +578,7 @@ function CreateDSCMOFFiles
 
     # Remove the VM Self-Signed Certificate from the Local Machine Store
     $null = Remove-Item `
-        -Path "Cert:LocalMachine\My\$CertificateThumbprint" `
+        -Path "Cert:LocalMachine\My\$certificateThumbprint" `
         -Force
 
     Write-LabMessage -Message $($LocalizedData.DSCConfigMOFCreatedMessage `
@@ -566,9 +586,9 @@ function CreateDSCMOFFiles
 
     # Copy the files to the LabBuilder Files folder
     $null = Copy-Item `
-        -Path $DSCMOFFile `
+        -Path $dscMOFFile `
         -Destination (Join-Path `
-            -Path $VMLabBuilderFiles `
+            -Path $vmLabBuilderFiles `
             -ChildPath "$($VM.ComputerName).mof") `
         -Force
 
@@ -576,56 +596,61 @@ function CreateDSCMOFFiles
     {
         # Remove Temporary files created by DSC
         $null = Remove-Item `
-            -Path $DSCMOFFile `
+            -Path $dscMOFFile `
             -Force
     }
 
-    if (Test-Path -Path $DSCMOFMetaFile)
+    if (Test-Path -Path $dscMOFMetaFile)
     {
         $null = Copy-Item `
-            -Path $DSCMOFMetaFile `
+            -Path $dscMOFMetaFile `
             -Destination (Join-Path `
-                -Path $VMLabBuilderFiles `
+                -Path $vmLabBuilderFiles `
                 -ChildPath "$($VM.ComputerName).meta.mof") `
             -Force
+
         if (-not $VM.DSC.MOFFile)
         {
             # Remove Temporary files created by DSC
             $null = Remove-Item `
-                -Path $DSCMOFMetaFile `
+                -Path $dscMOFMetaFile `
                 -Force
         }
-    } # If
-} # CreateDSCMOFFiles
-
+    } # if
+} # Update-LabDSCMOF
 
 <#
-.SYNOPSIS
-    This function prepares the PowerShell scripts used for starting up DSC on a VM.
-.DESCRIPTION
-    Two PowerShell scripts will be created by this function in the LabBuilder Files
-    folder of the VM:
-        1. StartDSC.ps1 - the script that is called automatically to start up DSC.
-        2. StartDSCDebug.ps1 - a debug script that will start up DSC in debug mode.
-    These scripts will contain code to perform the following operations:
-        1. Configure the names of the Network Adapters so that they will match the
-            names in the DSC Configuration files.
-        2. Enable/Disable DSC Event Logging.
-        3. Apply Configuration to the Local Configuration Manager.
-        4. Start DSC.
-.PARAMETER Lab
-    Contains the Lab object that was produced by the Get-Lab cmdlet.
-.PARAMETER VM
-    A LabVM object pulled from the Lab Configuration file using Get-LabVM.
-.EXAMPLE
-    $Lab = Get-Lab -ConfigPath c:\mylab\config.xml
-    $VMs = Get-LabVM -Lab $Lab
-    SetDSCStartFile -Lab $Lab -VM $VMs[0]
-    Prepare the first VM in the Lab c:\mylab\config.xml for DSC start up.
-.OUTPUTS
-    None.
+    .SYNOPSIS
+        This function prepares the PowerShell scripts used for starting up DSC on a VM.
+
+    .DESCRIPTION
+        Two PowerShell scripts will be created by this function in the LabBuilder Files
+        folder of the VM:
+            1. StartDSC.ps1 - the script that is called automatically to start up DSC.
+            2. StartDSCDebug.ps1 - a debug script that will start up DSC in debug mode.
+        These scripts will contain code to perform the following operations:
+            1. Configure the names of the Network Adapters so that they will match the
+                names in the DSC Configuration files.
+            2. Enable/Disable DSC Event Logging.
+            3. Apply Configuration to the Local Configuration Manager.
+            4. Start DSC.
+
+    .PARAMETER Lab
+        Contains the Lab object that was produced by the Get-Lab cmdlet.
+
+    .PARAMETER VM
+        A LabVM object pulled from the Lab Configuration file using Get-LabVM.
+
+    .EXAMPLE
+        $Lab = Get-Lab -ConfigPath c:\mylab\config.xml
+        $VMs = Get-LabVM -Lab $Lab
+        Set-LabDSCStartFile -Lab $Lab -VM $VMs[0]
+        Prepare the first VM in the Lab c:\mylab\config.xml for DSC start up.
+
+    .OUTPUTS
+        None.
 #>
-function SetDSCStartFile
+function Set-LabDSCStartFile
 {
     [CmdLetBinding()]
     param
@@ -637,46 +662,49 @@ function SetDSCStartFile
         [LabVM] $VM
     )
 
-    [System.String] $DSCStartPs = ''
+    $dscStartPs = ''
 
     # Get Path to LabBuilder files
-    [System.String] $VMLabBuilderFiles = $VM.LabBuilderFilesPath
+    $vmLabBuilderFiles = $VM.LabBuilderFilesPath
 
     # Relabel the Network Adapters so that they match what the DSC Networking config will use
     # This is because unfortunately the Hyper-V Device Naming feature doesn't work.
-    [System.String] $ManagementSwitchName = GetManagementSwitchName `
-        -Lab $Lab
-    $Adapters = [String[]] ($VM.Adapters).Name
-    $Adapters += @($ManagementSwitchName)
+    $managementSwitchName = GetmanagementSwitchName -Lab $Lab
+    $adapters = [String[]] ($VM.Adapters).Name
+    $adapters += @($managementSwitchName)
 
-    foreach ($Adapter in $Adapters)
+    foreach ($adapter in $adapters)
     {
-        $NetAdapter = Get-VMNetworkAdapter -VMName $($VM.Name) -Name $Adapter
-        if (-not $NetAdapter)
+        $netAdapter = Get-VMNetworkAdapter -VMName $($VM.Name) -Name $adapter
+
+        if (-not $netAdapter)
         {
             $exceptionParameters = @{
                 errorId       = 'NetworkAdapterNotFoundError'
                 errorCategory = 'InvalidArgument'
                 errorMessage  = $($LocalizedData.NetworkAdapterNotFoundError `
-                        -f $Adapter, $VM.Name)
+                        -f $adapter, $VM.Name)
             }
             New-LabException @exceptionParameters
-        } # If
-        $MacAddress = $NetAdapter.MacAddress
-        if (-not $MacAddress)
+        } # if
+
+        $macAddress = $netAdapter.MacAddress
+
+        if (-not $macAddress)
         {
             $exceptionParameters = @{
                 errorId       = 'NetworkAdapterBlankMacError'
                 errorCategory = 'InvalidArgument'
                 errorMessage  = $($LocalizedData.NetworkAdapterBlankMacError `
-                        -f $Adapter, $VM.Name)
+                        -f $adapter, $VM.Name)
             }
             New-LabException @exceptionParameters
         } # If
-        $DSCStartPs += @"
+
+        $dscStartPs += @"
 Get-NetAdapter ``
-    | Where-Object { `$_.MacAddress.Replace('-','') -eq '$MacAddress' } ``
-    | Rename-NetAdapter -NewName '$($Adapter)'
+    | Where-Object { `$_.MacAddress.Replace('-','') -eq '$macAddress' } ``
+    | Rename-NetAdapter -NewName '$($adapter)'
 
 "@
     } # Foreach
@@ -686,22 +714,23 @@ Get-NetAdapter ``
     # Logging can't be enabled.
     if ($VM.OSType -ne [LabOSType]::Nano)
     {
-        [System.String] $Logging = ($VM.DSC.Logging).ToString()
-        $DSCStartPs += @"
+        $logging = ($VM.DSC.Logging).ToString()
+
+        $dscStartPs += @"
 `$Result = & "wevtutil.exe" get-log "Microsoft-Windows-Dsc/Analytic"
 if (-not (`$Result -like '*enabled: true*')) {
-    & "wevtutil.exe" set-log "Microsoft-Windows-Dsc/Analytic" /q:true /e:$Logging
+    & "wevtutil.exe" set-log "Microsoft-Windows-Dsc/Analytic" /q:true /e:$logging
 }
 `$Result = & "wevtutil.exe" get-log "Microsoft-Windows-Dsc/Debug"
 if (-not (`$Result -like '*enabled: true*')) {
-    & "wevtutil.exe" set-log "Microsoft-Windows-Dsc/Debug" /q:true /e:$Logging
+    & "wevtutil.exe" set-log "Microsoft-Windows-Dsc/Debug" /q:true /e:$logging
 }
 
 "@
     } # if
 
     # Start the actual DSC Configuration
-    $DSCStartPs += @"
+    $dscStartPs += @"
 Set-DscLocalConfigurationManager ``
     -Path `"`$(`$ENV:SystemRoot)\Setup\Scripts\`" ``
     -Verbose  *>> `"`$(`$ENV:SystemRoot)\Setup\Scripts\DSC.log`"
@@ -712,10 +741,10 @@ Start-DSCConfiguration ``
 
 "@
     $null = Set-Content `
-        -Path (Join-Path -Path $VMLabBuilderFiles -ChildPath 'StartDSC.ps1') `
-        -Value $DSCStartPs -Force
+        -Path (Join-Path -Path $vmLabBuilderFiles -ChildPath 'StartDSC.ps1') `
+        -Value $dscStartPs -Force
 
-    $DSCStartPsDebug = @"
+    $dscStartPsDebug = @"
 param (
     [boolean] `$WaitForDebugger
 )
@@ -738,10 +767,11 @@ if (`$WaitForDebugger)
     Disable-DscDebug
 }
 "@
+
     $null = Set-Content `
-        -Path (Join-Path -Path $VMLabBuilderFiles -ChildPath 'StartDSCDebug.ps1') `
-        -Value $DSCStartPsDebug -Force
-} # SetDSCStartFile
+        -Path (Join-Path -Path $vmLabBuilderFiles -ChildPath 'StartDSCDebug.ps1') `
+        -Value $dscStartPsDebug -Force
+} # Set-LabDSCStartFile
 
 
 <#
@@ -782,10 +812,10 @@ function InitializeDSC
     )
 
     # Are there any DSC Settings to manage?
-    CreateDSCMOFFiles -Lab $Lab -VM $VM
+    Update-LabDSCMOF -Lab $Lab -VM $VM
 
     # Generate the DSC Start up Script file
-    SetDSCStartFile -Lab $Lab -VM $VM
+    Set-LabDSCStartFile -Lab $Lab -VM $VM
 } # InitializeDSC
 
 
@@ -836,7 +866,7 @@ function StartDSC
     [Boolean] $ModuleCopyComplete = $False
 
     # Get Path to LabBuilder files
-    [System.String] $VMLabBuilderFiles = $VM.LabBuilderFilesPath
+    [System.String] $vmLabBuilderFiles = $VM.LabBuilderFilesPath
 
     While ((-not $Complete) `
             -and (((Get-Date) - $StartTime).TotalSeconds) -lt $TimeOut)
@@ -882,26 +912,26 @@ function StartDSC
                     $null = Copy-Item `
                         @CopyParameters `
                         -Path (Join-Path `
-                            -Path $VMLabBuilderFiles `
+                            -Path $vmLabBuilderFiles `
                             -ChildPath "$($VM.ComputerName).mof")
                     if (Test-Path `
-                            -Path "$VMLabBuilderFiles\$($VM.ComputerName).meta.mof")
+                            -Path "$vmLabBuilderFiles\$($VM.ComputerName).meta.mof")
                     {
                         $null = Copy-Item `
                             @CopyParameters `
                             -Path (Join-Path `
-                                -Path $VMLabBuilderFiles `
+                                -Path $vmLabBuilderFiles `
                                 -ChildPath "$($VM.ComputerName).meta.mof")
                     } # If
                     $null = Copy-Item `
                         @CopyParameters `
                         -Path (Join-Path `
-                            -Path $VMLabBuilderFiles `
+                            -Path $vmLabBuilderFiles `
                             -ChildPath 'StartDSC.ps1')
                     $null = Copy-Item `
                         @CopyParameters `
                         -Path (Join-Path `
-                            -Path $VMLabBuilderFiles `
+                            -Path $vmLabBuilderFiles `
                             -ChildPath 'StartDSCDebug.ps1')
                     $ConfigCopyComplete = $True
                 }
@@ -941,21 +971,21 @@ function StartDSC
             [System.String] $DSCContent = Get-Content `
                 -Path $($VM.DSC.ConfigFile) `
                 -RAW
-            [LabDSCModule[]] $DSCModules = Get-ModulesInDSCConfig `
+            [LabDSCModule[]] $dscModules = Get-ModulesInDSCConfig `
                 -DSCConfigContent $DSCContent
 
             # Add the xNetworking DSC Resource because it is always used
             $Module = [LabDSCModule]::New('xNetworking')
-            $DSCModules += @( $Module )
+            $dscModules += @( $Module )
 
-            foreach ($DSCModule in $DSCModules)
+            foreach ($dscModule in $dscModules)
             {
-                $ModuleName = $DSCModule.ModuleName
+                $ModuleName = $dscModule.ModuleName
                 # Upload all but PSDesiredStateConfiguration because it
                 # should always exist on client node.
                 if ($ModuleName -ne 'PSDesiredStateConfiguration')
                 {
-                    $ModuleVersion = $DSCModule.Version
+                    $moduleVersion = $dscModule.Version
                     try
                     {
                         Write-LabMessage -Message $($LocalizedData.CopyingFilesToVMMessage `
@@ -963,7 +993,7 @@ function StartDSC
 
                         $null = Copy-Item `
                             -Path (Join-Path `
-                                -Path $VMLabBuilderFiles `
+                                -Path $vmLabBuilderFiles `
                                 -ChildPath "DSC Modules\$ModuleName\") `
                             -Destination "$($env:ProgramFiles)\WindowsPowerShell\Modules\" `
                             -ToSession $Session `
@@ -1058,7 +1088,7 @@ function GetDSCNetworkingConfig
             | Sort-Object version -Descending `
             | Select-Object -First 1 `
     ).Version.ToString()
-    [System.String] $DSCNetworkingConfig = @"
+    [System.String] $dscNetworkingConfig = @"
 Configuration Networking {
     Import-DscResource -ModuleName xNetworking -ModuleVersion $xNetworkingVersion
 
@@ -1071,7 +1101,7 @@ Configuration Networking {
         {
             if (-not [System.String]::IsNullOrWhitespace($Adapter.IPv4.Address))
             {
-                $DSCNetworkingConfig += @"
+                $dscNetworkingConfig += @"
     xIPAddress IPv4_$AdapterCount {
         InterfaceAlias = '$($Adapter.Name)'
         AddressFamily  = 'IPv4'
@@ -1081,7 +1111,7 @@ Configuration Networking {
 "@
                 if (-not [System.String]::IsNullOrWhitespace($Adapter.IPv4.DefaultGateway))
                 {
-                    $DSCNetworkingConfig += @"
+                    $dscNetworkingConfig += @"
     xDefaultGatewayAddress IPv4G_$AdapterCount {
         InterfaceAlias = '$($Adapter.Name)'
         AddressFamily  = 'IPv4'
@@ -1092,7 +1122,7 @@ Configuration Networking {
                 }
                 Else
                 {
-                    $DSCNetworkingConfig += @"
+                    $dscNetworkingConfig += @"
     xDefaultGatewayAddress IPv4G_$AdapterCount {
         InterfaceAlias = '$($Adapter.Name)'
         AddressFamily  = 'IPv4'
@@ -1103,7 +1133,7 @@ Configuration Networking {
             }
             Else
             {
-                $DSCNetworkingConfig += @"
+                $dscNetworkingConfig += @"
     xDhcpClient IPv4DHCP_$AdapterCount {
         InterfaceAlias = '$($Adapter.Name)'
         AddressFamily  = 'IPv4'
@@ -1115,7 +1145,7 @@ Configuration Networking {
             } # If
             if (-not [System.String]::IsNullOrWhitespace($Adapter.IPv4.DNSServer))
             {
-                $DSCNetworkingConfig += @"
+                $dscNetworkingConfig += @"
     xDnsServerAddress IPv4D_$AdapterCount {
         InterfaceAlias = '$($Adapter.Name)'
         AddressFamily  = 'IPv4'
@@ -1129,7 +1159,7 @@ Configuration Networking {
         {
             if (-not [System.String]::IsNullOrWhitespace($Adapter.IPv6.Address))
             {
-                $DSCNetworkingConfig += @"
+                $dscNetworkingConfig += @"
     xIPAddress IPv6_$AdapterCount {
         InterfaceAlias = '$($Adapter.Name)'
         AddressFamily  = 'IPv6'
@@ -1139,7 +1169,7 @@ Configuration Networking {
 "@
                 if (-not [System.String]::IsNullOrWhitespace($Adapter.IPv6.DefaultGateway))
                 {
-                    $DSCNetworkingConfig += @"
+                    $dscNetworkingConfig += @"
     xDefaultGatewayAddress IPv6G_$AdapterCount {
         InterfaceAlias = '$($Adapter.Name)'
         AddressFamily  = 'IPv6'
@@ -1150,7 +1180,7 @@ Configuration Networking {
                 }
                 Else
                 {
-                    $DSCNetworkingConfig += @"
+                    $dscNetworkingConfig += @"
     xDefaultGatewayAddress IPv6G_$AdapterCount {
         InterfaceAlias = '$($Adapter.Name)'
         AddressFamily  = 'IPv6'
@@ -1161,7 +1191,7 @@ Configuration Networking {
             }
             Else
             {
-                $DSCNetworkingConfig += @"
+                $dscNetworkingConfig += @"
     xDhcpClient IPv6DHCP_$AdapterCount {
         InterfaceAlias = '$($Adapter.Name)'
         AddressFamily  = 'IPv6'
@@ -1173,7 +1203,7 @@ Configuration Networking {
             } # If
             if (-not [System.String]::IsNullOrWhitespace($Adapter.IPv6.DNSServer))
             {
-                $DSCNetworkingConfig += @"
+                $dscNetworkingConfig += @"
     xDnsServerAddress IPv6D_$AdapterCount {
         InterfaceAlias = '$($Adapter.Name)'
         AddressFamily  = 'IPv6'
@@ -1184,10 +1214,10 @@ Configuration Networking {
             } # If
         } # If
     } # Endfor
-    $DSCNetworkingConfig += @"
+    $dscNetworkingConfig += @"
 }
 "@
-    Return $DSCNetworkingConfig
+    Return $dscNetworkingConfig
 } # GetDSCNetworkingConfig
 
 

@@ -130,7 +130,7 @@ try
             }
         }
 
-        Describe '\Lib\Private\Dsc.ps1\CreateDSCMOFFiles' -Tags 'Incomplete' {
+        Describe '\Lib\Private\Dsc.ps1\Update-LabDSCMOF' -Tags 'Incomplete' {
             # Mock functions
             function Get-VM {}
             function Get-VMNetworkAdapter {}
@@ -151,7 +151,7 @@ try
                 $VMConfigFile = $VM.DSC.ConfigFile
                 $VM.DSC.ConfigFile = ''
                 It 'Does not throw an Exception' {
-                    { CreateDSCMOFFiles -Lab $Lab -VM $VM } | Should -Not -Throw
+                    { Update-LabDSCMOF -Lab $Lab -VM $VM } | Should -Not -Throw
                 }
 
                 It 'Calls Mocked commands' {
@@ -176,7 +176,7 @@ try
                 $Exception = Get-Exception @exceptionParameters
 
                 It 'Throws a DSCModuleDownloadError Exception' {
-                    { CreateDSCMOFFiles -Lab $Lab -VM $VM } | Should -Throw $Exception
+                    { Update-LabDSCMOF -Lab $Lab -VM $VM } | Should -Throw $Exception
                 }
                 It 'Calls Mocked commands' {
                     Assert-MockCalled Get-Module -Exactly 1
@@ -201,7 +201,7 @@ try
                 $Exception = Get-Exception @exceptionParameters
 
                 It 'Throws a DSCModuleDownloadError Exception' {
-                    { CreateDSCMOFFiles -Lab $Lab -VM $VM } | Should -Throw $Exception
+                    { Update-LabDSCMOF -Lab $Lab -VM $VM } | Should -Throw $Exception
                 }
                 It 'Calls Mocked commands' {
                     Assert-MockCalled Get-Module -Exactly 1
@@ -229,7 +229,7 @@ try
                 $Exception = Get-Exception @exceptionParameters
 
                 It 'Throws a DSCModuleNotFoundError Exception' {
-                    { CreateDSCMOFFiles -Lab $Lab -VM $VM } | Should -Throw $Exception
+                    { Update-LabDSCMOF -Lab $Lab -VM $VM } | Should -Throw $Exception
                 }
 
                 It 'Calls Mocked commands' {
@@ -263,7 +263,7 @@ try
                 $Exception = Get-Exception @exceptionParameters
 
                 It 'Throws a CertificateCreateError Exception' {
-                    { CreateDSCMOFFiles -Lab $Lab -VM $VM } | Should -Throw $Exception
+                    { Update-LabDSCMOF -Lab $Lab -VM $VM } | Should -Throw $Exception
                 }
 
                 It 'Calls Mocked commands' {
@@ -307,7 +307,7 @@ try
                 $Exception = Get-Exception @exceptionParameters
 
                 It 'Throws a DSCConfigMetaMOFCreateError Exception' {
-                    { CreateDSCMOFFiles -Lab $Lab -VM $VM } | Should -Throw $Exception
+                    { Update-LabDSCMOF -Lab $Lab -VM $VM } | Should -Throw $Exception
                 }
                 It 'Calls Mocked commands' {
                     Assert-MockCalled Get-Module -Exactly 1
@@ -324,7 +324,7 @@ try
             }
         }
 
-        Describe '\Lib\Private\Dsc.ps1\SetDSCStartFile' {
+        Describe '\Lib\Private\Dsc.ps1\Set-LabDSCStartFile' {
 
             # Mock functions
             function Get-VM {}
@@ -350,7 +350,7 @@ try
                 }
                 $Exception = Get-Exception @exceptionParameters
                 It 'Throws a NetworkAdapterNotFoundError Exception' {
-                    { SetDSCStartFile -Lab $Lab -VM $VM } | Should -Throw $Exception
+                    { Set-LabDSCStartFile -Lab $Lab -VM $VM } | Should -Throw $Exception
                 }
                 It 'Calls Mocked commands' {
                     Assert-MockCalled Get-VMNetworkAdapter -Exactly 1
@@ -371,7 +371,7 @@ try
                 $Exception = Get-Exception @exceptionParameters
 
                 It 'Throws a NetworkAdapterBlankMacError Exception' {
-                    { SetDSCStartFile -Lab $Lab -VM $VM } | Should -Throw $Exception
+                    { Set-LabDSCStartFile -Lab $Lab -VM $VM } | Should -Throw $Exception
                 }
                 It 'Calls Mocked commands' {
                     Assert-MockCalled Get-VMNetworkAdapter -Exactly 1
@@ -385,7 +385,7 @@ try
                 $VM = $VMS[0].Clone()
 
                 It 'Does Not Throw Exception' {
-                    { SetDSCStartFile -Lab $Lab -VM $VM } | Should -Not -Throw
+                    { Set-LabDSCStartFile -Lab $Lab -VM $VM } | Should -Not -Throw
                 }
                 It 'Calls Mocked commands' {
                     Assert-MockCalled Get-VMNetworkAdapter -Exactly ($VM.Adapters.Count+1)
@@ -401,8 +401,8 @@ try
     # There is a problem with Pester where the custom classes declared in type.ps1
     # are not able to be found by the Mock, so an error is thrown trying to mock
     # either of these two functions.
-            Mock CreateDSCMOFFiles
-            Mock SetDSCStartFile
+            Mock Update-LabDSCMOF
+            Mock Set-LabDSCStartFile
 
             Context 'Valid Configuration Passed' {
                 $VM = $VMs[0].Clone()
@@ -411,8 +411,8 @@ try
                     { InitializeDSC -Lab $Lab -VM $VM } | Should -Not -Throw
                 }
                 It 'Calls Mocked commands' {
-                    Assert-MockCalled CreateDSCMOFFiles -Exactly 1
-                    Assert-MockCalled SetDSCStartFile -Exactly 1
+                    Assert-MockCalled Update-LabDSCMOF -Exactly 1
+                    Assert-MockCalled Set-LabDSCStartFile -Exactly 1
                 }
             }
         }
