@@ -14,7 +14,7 @@ DSC Template Configuration File For use by LabBuilder
 Configuration MEMBER_REMOTEACCESS
 {
     Import-DscResource -ModuleName 'PSDesiredStateConfiguration'
-    Import-DscResource -ModuleName xComputerManagement
+    Import-DscResource -ModuleName ComputerManagementDsc
 
     Node $AllNodes.NodeName {
         # Assemble the Local Admin Credentials
@@ -50,7 +50,7 @@ Configuration MEMBER_REMOTEACCESS
         }
 
         # Join this Server to the Domain
-        xComputer JoinDomain
+        Computer JoinDomain
         {
             Name       = $Node.NodeName
             DomainName = $Node.DomainName

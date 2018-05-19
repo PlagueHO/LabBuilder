@@ -24,7 +24,7 @@
         "MinimumVersion":  null
     },
     {
-        "ModuleName":  "xComputerManagement",
+        "ModuleName":  "ComputerManagementDsc",
         "ModuleVersion":  {
                               "Major":  1,
                               "Minor":  4,

@@ -15,7 +15,7 @@ DSC Template Configuration File For use by LabBuilder
 Configuration MEMBER_JENKINS
 {
     Import-DscResource -ModuleName 'PSDesiredStateConfiguration'
-    Import-DscResource -ModuleName xComputerManagement
+    Import-DscResource -ModuleName ComputerManagementDsc
     Import-DscResource -ModuleName cChoco
     Import-DscResource -ModuleName xNetworking
 
@@ -46,7 +46,7 @@ Configuration MEMBER_JENKINS
         }
 
         # Join this Server to the Domain
-        xComputer JoinDomain
+        Computer JoinDomain
         {
             Name       = $Node.NodeName
             DomainName = $Node.DomainName

@@ -63,7 +63,7 @@ DSC Template Configuration File For use by LabBuilder
 Configuration MEMBER_WEBSERVER
 {
     Import-DscResource -ModuleName 'PSDesiredStateConfiguration'
-    Import-DscResource -ModuleName xComputerManagement
+    Import-DscResource -ModuleName ComputerManagementDsc
     Import-DscResource -ModuleName xWebAdministration
 
     Node $AllNodes.NodeName {
@@ -101,7 +101,7 @@ Configuration MEMBER_WEBSERVER
             RetryCount        = 60
         }
 
-        xComputer JoinDomain
+        Computer JoinDomain
         {
             Name          = $Node.NodeName
             DomainName    = $Node.DomainName

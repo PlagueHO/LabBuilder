@@ -21,8 +21,8 @@ DSC Template Configuration File For use by LabBuilder
 Configuration MEMBER_SUBCA
 {
     Import-DscResource -ModuleName 'PSDesiredStateConfiguration'
-    Import-DscResource -ModuleName xComputerManagement
-    Import-DscResource -ModuleName xAdcsDeployment
+    Import-DscResource -ModuleName ComputerManagementDsc
+    Import-DscResource -ModuleName ActiveDirectoryCSDsc
     Import-DscResource -ModuleName xPSDesiredStateConfiguration
     Import-DscResource -ModuleName xNetworking
 
@@ -99,7 +99,7 @@ Configuration MEMBER_SUBCA
         }
 
         # Join this Server to the Domain
-        xComputer JoinDomain
+        Computer JoinDomain
         {
             Name          = $Node.NodeName
             DomainName    = $Node.DomainName
@@ -114,7 +114,7 @@ Configuration MEMBER_SUBCA
             DestinationPath = 'C:\Windows\CAPolicy.inf'
             Contents = "[Version]`r`n Signature= `"$Windows NT$`"`r`n[Certsrv_Server]`r`n RenewalKeyLength=2048`r`n RenewalValidityPeriod=Years`r`n RenewalValidityPeriodUnits=10`r`n LoadDefaultTemplates=1`r`n AlternateSignatureAlgorithm=1`r`n"
             Type = 'File'
-            DependsOn = '[xComputer]JoinDomain'
+            DependsOn = '[Computer]JoinDomain'
         }
 
         # Make a CertEnroll folder to put the Root CA certificate into.
@@ -131,7 +131,7 @@ Configuration MEMBER_SUBCA
         # file.
         WaitForAny RootCA
         {
-            ResourceName = '[xADCSWebEnrollment]ConfigWebEnrollment'
+            ResourceName = '[ADCSWebEnrollment]ConfigWebEnrollment'
             NodeName = $Node.RootCAName
             RetryIntervalSec = 30
             RetryCount = 30
@@ -185,7 +185,7 @@ Configuration MEMBER_SUBCA
 
         # Configure the Sub CA which will create the Certificate REQ file that Root CA will use
         # to issue a certificate for this Sub CA.
-        xADCSCertificationAuthority ConfigCA
+        ADCSCertificationAuthority ConfigCA
         {
             Ensure = 'Present'
             Credential = $DomainAdminCredential
@@ -201,12 +201,12 @@ Configuration MEMBER_SUBCA
         }
 
         # Configure the Web Enrollment Feature
-        xADCSWebEnrollment ConfigWebEnrollment {
+        ADCSWebEnrollment ConfigWebEnrollment {
             Ensure = 'Present'
             IsSingleInstance = 'Yes'
             CAConfig = 'CertSrv'
             Credential = $LocalAdminCredential
-            DependsOn = '[xADCSCertificationAuthority]ConfigCA'
+            DependsOn = '[ADCSCertificationAuthority]ConfigCA'
         }
 
         # Set the IIS Mime Type to allow the REQ request to be downloaded by the Root CA
@@ -228,7 +228,7 @@ Configuration MEMBER_SUBCA
                 # Mime Type is already set
                 Return $True
             }
-            DependsOn = '[xADCSWebEnrollment]ConfigWebEnrollment'
+            DependsOn = '[ADCSWebEnrollment]ConfigWebEnrollment'
         }
 
         # Wait for the Root CA to have completed issuance of the certificate for this SubCA.
@@ -317,7 +317,7 @@ Configuration MEMBER_SUBCA
 
         if ($Node.InstallOnlineResponder) {
             # Configure the Online Responder Feature
-            xADCSOnlineResponder ConfigOnlineResponder {
+            ADCSOnlineResponder ConfigOnlineResponder {
                 Ensure = 'Present'
                 IsSingleInstance  = 'Yes'
                 Credential = $LocalAdminCredential
@@ -329,21 +329,21 @@ Configuration MEMBER_SUBCA
             {
                 Name = "Microsoft-Windows-OnlineRevocationServices-OcspSvc-DCOM-In"
                 Enabled = "True"
-                DependsOn = "[xADCSOnlineResponder]ConfigOnlineResponder"
+                DependsOn = "[ADCSOnlineResponder]ConfigOnlineResponder"
             }
 
             xFirewall OnlineResponderirewall2
             {
                 Name = "Microsoft-Windows-CertificateServices-OcspSvc-RPC-TCP-In"
                 Enabled = "True"
-                DependsOn = "[xADCSOnlineResponder]ConfigOnlineResponder"
+                DependsOn = "[ADCSOnlineResponder]ConfigOnlineResponder"
             }
 
             xFirewall OnlineResponderFirewall3
             {
                 Name = "Microsoft-Windows-OnlineRevocationServices-OcspSvc-TCP-Out"
                 Enabled = "True"
-                DependsOn = "[xADCSOnlineResponder]ConfigOnlineResponder"
+                DependsOn = "[ADCSOnlineResponder]ConfigOnlineResponder"
             }
         }
     }

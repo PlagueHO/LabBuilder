@@ -63,7 +63,7 @@ DSC Template Configuration File For use by LabBuilder
 Configuration MEMBER_DHCPDNS
 {
     Import-DscResource -ModuleName 'PSDesiredStateConfiguration'
-    Import-DscResource -ModuleName xComputerManagement
+    Import-DscResource -ModuleName ComputerManagementDsc
     Import-DscResource -ModuleName xDNSServer
     Import-DscResource -ModuleName xDHCPServer
 
@@ -109,7 +109,7 @@ Configuration MEMBER_DHCPDNS
             RetryCount       = 60
         }
 
-        xComputer JoinDomain
+        Computer JoinDomain
         {
             Name       = $Node.NodeName
             DomainName = $Node.DomainName
@@ -132,7 +132,7 @@ Configuration MEMBER_DHCPDNS
             TestScript           = {
                 Return (-not (@(Get-DHCPServerInDC | Where-Object { $_.IPAddress -In (Get-NetIPAddress).IPAddress }).Count -eq 0))
             }
-            DependsOn            = '[xComputer]JoinDomain'
+            DependsOn            = '[Computer]JoinDomain'
         }
 
         [Int]$Count = 0
@@ -188,7 +188,7 @@ Configuration MEMBER_DHCPDNS
                 IsSingleInstance = 'Yes'
                 IPAddresses      = $Node.Forwarders
                 Credential       = $DomainAdminCredential
-                DependsOn        = '[xComputer]JoinDomain'
+                DependsOn        = '[Computer]JoinDomain'
             }
         }
         [Int]$Count = 0
@@ -202,7 +202,7 @@ Configuration MEMBER_DHCPDNS
                 ZoneFile      = $PrimaryZone.ZoneFile
                 DynamicUpdate = $PrimaryZone.DynamicUpdate
                 Credential    = $DomainAdminCredential
-                DependsOn     = '[xComputer]JoinDomain'
+                DependsOn     = '[Computer]JoinDomain'
             }
         }
     }

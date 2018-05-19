@@ -14,7 +14,7 @@ DSC Template Configuration File For use by LabBuilder
 Configuration STANDALONE_ROOTCA_NOSUBCA
 {
     Import-DscResource -ModuleName 'PSDesiredStateConfiguration'
-    Import-DscResource -ModuleName xAdcsDeployment
+    Import-DscResource -ModuleName ActiveDirectoryCSDsc
 
     Node $AllNodes.NodeName {
         # Assemble the Local Admin Credentials
@@ -57,7 +57,7 @@ Configuration STANDALONE_ROOTCA_NOSUBCA
         }
 
         # Configure the CA as Standalone Root CA
-        xADCSCertificationAuthority ConfigCA
+        ADCSCertificationAuthority ConfigCA
         {
             Ensure                    = 'Present'
             Credential                = $LocalAdminCredential
@@ -73,12 +73,12 @@ Configuration STANDALONE_ROOTCA_NOSUBCA
         }
 
         # Configure the ADCS Web Enrollment
-        xADCSWebEnrollment ConfigWebEnrollment {
+        ADCSWebEnrollment ConfigWebEnrollment {
             Ensure           = 'Present'
             IsSingleInstance = 'Yes'
             CAConfig         = 'CertSrv'
             Credential       = $LocalAdminCredential
-            DependsOn        = '[xADCSCertificationAuthority]ConfigCA'
+            DependsOn        = '[ADCSCertificationAuthority]ConfigCA'
         }
 
         # Set the advanced CA properties
@@ -182,7 +182,7 @@ Configuration STANDALONE_ROOTCA_NOSUBCA
                 }
                 Return $True
             }
-            DependsOn  = '[xADCSWebEnrollment]ConfigWebEnrollment'
+            DependsOn  = '[ADCSWebEnrollment]ConfigWebEnrollment'
         }
     }
 }

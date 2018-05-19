@@ -22,7 +22,7 @@ DSC Template Configuration File For use by LabBuilder
 Configuration STANDALONE_ROOTCA
 {
     Import-DscResource -ModuleName 'PSDesiredStateConfiguration'
-    Import-DscResource -ModuleName xAdcsDeployment
+    Import-DscResource -ModuleName ActiveDirectoryCSDsc
     Import-DscResource -ModuleName xPSDesiredStateConfiguration
 
     Node $AllNodes.NodeName {
@@ -66,7 +66,7 @@ Configuration STANDALONE_ROOTCA
         }
 
         # Configure the CA as Standalone Root CA
-        xADCSCertificationAuthority ConfigCA
+        ADCSCertificationAuthority ConfigCA
         {
             Ensure                    = 'Present'
             Credential                = $LocalAdminCredential
@@ -82,12 +82,12 @@ Configuration STANDALONE_ROOTCA
         }
 
         # Configure the ADCS Web Enrollment
-        xADCSWebEnrollment ConfigWebEnrollment {
+        ADCSWebEnrollment ConfigWebEnrollment {
             Ensure           = 'Present'
             IsSingleInstance = 'Yes'
             CAConfig         = 'CertSrv'
             Credential       = $LocalAdminCredential
-            DependsOn        = '[xADCSCertificationAuthority]ConfigCA'
+            DependsOn        = '[ADCSCertificationAuthority]ConfigCA'
         }
 
         # Set the advanced CA properties
@@ -191,7 +191,7 @@ Configuration STANDALONE_ROOTCA
                 }
                 Return $True
             }
-            DependsOn  = '[xADCSWebEnrollment]ConfigWebEnrollment'
+            DependsOn  = '[ADCSWebEnrollment]ConfigWebEnrollment'
         }
 
         # Generate Issuing certificates for any SubCAs
@@ -201,7 +201,7 @@ Configuration STANDALONE_ROOTCA
             # Wait for SubCA to generate REQ
             WaitForAny "WaitForSubCA_$SubCA"
             {
-                ResourceName     = '[xADCSCertificationAuthority]ConfigCA'
+                ResourceName     = '[ADCSCertificationAuthority]ConfigCA'
                 NodeName         = $SubCA
                 RetryIntervalSec = 30
                 RetryCount       = 30

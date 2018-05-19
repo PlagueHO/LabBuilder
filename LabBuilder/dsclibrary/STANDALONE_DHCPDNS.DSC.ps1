@@ -144,7 +144,7 @@ Configuration STANDALONE_DHCPDNS
                 IsSingleInstance = 'Yes'
                 IPAddresses      = $Node.Forwarders
                 Credential       = $DomainAdminCredential
-                DependsOn        = '[xComputer]JoinDomain'
+                DependsOn        = '[Computer]JoinDomain'
             }
         }
 
@@ -159,7 +159,7 @@ Configuration STANDALONE_DHCPDNS
                 DynamicUpdate    = $ADZone.DynamicUpdate
                 ReplicationScope = $ADZone.ReplicationScope
                 Credential       = $DomainAdminCredential
-                DependsOn        = '[xComputer]JoinDomain'
+                DependsOn        = '[Computer]JoinDomain'
             }
         }
 
@@ -174,7 +174,7 @@ Configuration STANDALONE_DHCPDNS
                 ZoneFile      = $PrimaryZone.ZoneFile
                 DynamicUpdate = $PrimaryZone.DynamicUpdate
                 Credential    = $DomainAdminCredential
-                DependsOn     = '[xComputer]JoinDomain'
+                DependsOn     = '[Computer]JoinDomain'
             }
         }
     }

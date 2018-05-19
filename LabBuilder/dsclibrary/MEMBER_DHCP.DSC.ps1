@@ -56,7 +56,7 @@ DSC Template Configuration File For use by LabBuilder
 Configuration MEMBER_DHCP
 {
     Import-DscResource -ModuleName 'PSDesiredStateConfiguration'
-    Import-DscResource -ModuleName xComputerManagement
+    Import-DscResource -ModuleName ComputerManagementDsc
     Import-DscResource -ModuleName xDHCPServer
 
     Node $AllNodes.NodeName {
@@ -94,7 +94,7 @@ Configuration MEMBER_DHCP
             RetryCount       = 60
         }
 
-        xComputer JoinDomain
+        Computer JoinDomain
         {
             Name       = $Node.NodeName
             DomainName = $Node.DomainName
@@ -117,7 +117,7 @@ Configuration MEMBER_DHCP
             TestScript           = {
                 Return (-not (@(Get-DHCPServerInDC | Where-Object { $_.IPAddress -In (Get-NetIPAddress).IPAddress }).Count -eq 0))
             }
-            DependsOn            = '[xComputer]JoinDomain'
+            DependsOn            = '[Computer]JoinDomain'
         }
         [Int]$Count = 0
         Foreach ($Scope in $Node.Scopes)

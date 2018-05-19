@@ -263,7 +263,7 @@ function Update-LabDSC
     }
 
     # Make sure all the modules required to create the MOF file are installed
-        $installedModules = Get-Module -ListAvailable
+    $installedModules = Get-Module -ListAvailable
 
     Write-LabMessage -Message $($LocalizedData.DSCConfigIdentifyModulesMessage `
             -f $VM.DSC.ConfigFile, $VM.Name)
@@ -455,8 +455,7 @@ function Update-LabDSC
     $dscMOFMetaFile = ([System.IO.Path]::ChangeExtension($dscMOFFile, 'meta.mof'))
 
     # Generate the LCM MOF File
-    Write-LabMessage -Message $($LocalizedData.DSCConfigCreatingLCMMOFMessage `
-            -f $dscMOFMetaFile, $VM.Name)
+    Write-LabMessage -Message $($LocalizedData.DSCConfigCreatingLCMMOFMessage -f $dscMOFMetaFile, $VM.Name)
 
     $null = ConfigLCM `
         -OutputPath $($ENV:Temp) `
@@ -475,19 +474,18 @@ function Update-LabDSC
     } # If
 
     # A DSC Config File was provided so create a MOF File out of it.
-    Write-LabMessage -Message $($LocalizedData.DSCConfigCreatingMOFMessage `
-            -f $VM.DSC.ConfigFile, $VM.Name)
+    Write-LabMessage -Message $($LocalizedData.DSCConfigCreatingMOFMessage -f $VM.DSC.ConfigFile, $VM.Name)
 
     # Now create the Networking DSC Config file
     $dscNetworkingConfig = Get-LabDSCNetworkingConfig `
         -Lab $Lab -VM $VM
-    $networkingDSCFile = Join-Path `
+    $xNetworkingFile = Join-Path `
         -Path $vmLabBuilderFiles `
         -ChildPath 'DSCNetworking.ps1'
     $null = Set-Content `
-        -Path $networkingDSCFile `
+        -Path $xNetworkingFile `
         -Value $dscNetworkingConfig
-    . $networkingDSCFile
+    . $xNetworkingFile
     $dscFile = Join-Path `
         -Path $vmLabBuilderFiles `
         -ChildPath 'DSC.ps1'
@@ -531,8 +529,7 @@ function Update-LabDSC
 
     $dscConfigName = $VM.DSC.ConfigName
 
-    Write-LabMessage -Message $($LocalizedData.DSCConfigPrepareMessage `
-            -f $dscConfigName, $VM.Name)
+    Write-LabMessage -Message $($LocalizedData.DSCConfigPrepareMessage -f $dscConfigName, $VM.Name)
 
     # Generate the Configuration Nodes data that always gets passed to the DSC configuration.
     $dscConfigData = @"
@@ -560,18 +557,23 @@ function Update-LabDSC
             -Force
     }
 
-    Set-Content -Path $dscConfigFile -Value $dscConfigData
+    $null = Set-Content -Path $dscConfigFile -Value $dscConfigData
+
+    # Read the config data into a Hash Table
+    $dscConfigData = Import-LocalizedData -BaseDirectory $vmLabBuilderFiles -FileName 'DSCConfigData.psd1'
 
     # Generate the MOF file from the configuration
-    $null = & $dscConfigName -OutputPath $($ENV:Temp) -ConfigurationData $dscConfigFile
+    $null = & $dscConfigName `
+        -OutputPath $($ENV:Temp) `
+        -ConfigurationData $dscConfigData `
+        -ErrorAction Stop
 
     if (-not (Test-Path -Path $dscMOFFile))
     {
         $exceptionParameters = @{
             errorId       = 'DSCConfigMOFCreateError'
             errorCategory = 'InvalidArgument'
-            errorMessage  = $($LocalizedData.DSCConfigMOFCreateError `
-                    -f $VM.DSC.ConfigFile, $VM.Name)
+            errorMessage  = $($LocalizedData.DSCConfigMOFCreateError -f $VM.DSC.ConfigFile, $VM.Name)
         }
         New-LabException @exceptionParameters
     } # If
@@ -581,15 +583,13 @@ function Update-LabDSC
         -Path "Cert:LocalMachine\My\$certificateThumbprint" `
         -Force
 
-    Write-LabMessage -Message $($LocalizedData.DSCConfigMOFCreatedMessage `
-            -f $VM.DSC.ConfigFile, $VM.Name)
+    Write-LabMessage -Message $($LocalizedData.DSCConfigMOFCreatedMessage -f $VM.DSC.ConfigFile, $VM.Name)
 
     # Copy the files to the LabBuilder Files folder
+    $dscMOFDestinationFile = Join-Path -Path $vmLabBuilderFiles -ChildPath "$($VM.ComputerName).mof"
     $null = Copy-Item `
         -Path $dscMOFFile `
-        -Destination (Join-Path `
-            -Path $vmLabBuilderFiles `
-            -ChildPath "$($VM.ComputerName).mof") `
+        -Destination $dscMOFDestinationFile `
         -Force
 
     if (-not $VM.DSC.MOFFile)
@@ -602,11 +602,10 @@ function Update-LabDSC
 
     if (Test-Path -Path $dscMOFMetaFile)
     {
+        $dscMOFMetaDestinationFile = Join-Path -Path $vmLabBuilderFiles -ChildPath "$($VM.ComputerName).meta.mof"
         $null = Copy-Item `
             -Path $dscMOFMetaFile `
-            -Destination (Join-Path `
-                -Path $vmLabBuilderFiles `
-                -ChildPath "$($VM.ComputerName).meta.mof") `
+            -Destination $dscMOFMetaDestinationFile `
             -Force
 
         if (-not $VM.DSC.MOFFile)
@@ -1071,7 +1070,7 @@ function Start-LabDSC
     .EXAMPLE
         $Lab = Get-Lab -ConfigPath c:\mylab\config.xml
         $VMs = Get-LabVM -Lab $Lab
-        $NetworkingDSC = Get-LabDSCNetworkingConfig -Lab $Lab -VM $VMs[0]
+        $xNetworking = Get-LabDSCNetworkingConfig -Lab $Lab -VM $VMs[0]
         Return the Networking DSC for the first VM in the Lab c:\mylab\config.xml for DSC configuration.
 
     .PARAMETER Lab

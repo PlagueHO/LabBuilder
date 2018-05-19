@@ -99,7 +99,7 @@ try
         Describe '\Lib\Private\Dsc.ps1\Set-ModulesInDSCConfig' {
             $module1 = [LabDSCModule]::New('PSDesiredStateConfiguration', '1.0')
             $module2 = [LabDSCModule]::New('xActiveDirectory')
-            $module3 = [LabDSCModule]::New('xComputerManagement', '1.4.0.0')
+            $module3 = [LabDSCModule]::New('ComputerManagementDsc', '1.4.0.0')
             $module4 = [LabDSCModule]::New('xNewModule', '9.9.9.9')
             [LabDSCModule[]] $UpdateModules = @($module1, $module2, $module3, $module4)
 

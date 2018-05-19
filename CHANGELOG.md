@@ -7,7 +7,19 @@
 - Updated tests to meet Pester v4 guidelines.
 - Convert sample labs to use ISCSIDsc resource module.
 - Convert sample labs to use FSRMDsc resource module.
-- Convert sample labs to use xDFS resource module.
+- Convert sample labs to use DFSDsc resource module.
+- Convert sample labs to use StorageDsc resource module.
+- Convert sample labs to use ActiveDirectoryCDDsc resource module.
+- Convert sample labs to use SQLServerDsc resource module.
+- Fix error that occurs when DSC ConfigurationData is specified
+  as a filename instead of a hashtable when compiling the MOF file.
+- Removed Visual Studio Solution and Proejct files.
+- DSCLibrary\MEMBER_DFSHUB.DSC.ps1: Added to enable Sample_WS2016_DFSHubAndSpoke
+  sample.
+- DSCLibrary\MEMBER_DFSSPOKE.DSC.ps1: Added to enable Sample_WS2016_DFSHubAndSpoke
+  sample.
+- Samples\Sample_WS2016_DFSHubAndSpoke.xml: Added to demonstrate Hub and Spoke DFS
+  replication gorup.
 
 ## 0.8.3.1140
 

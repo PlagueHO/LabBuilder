@@ -41,7 +41,7 @@ Configuration JOINDOMAIN
     )
 
     Import-DscResource -ModuleName 'PSDesiredStateConfiguration'
-    Import-DscResource -ModuleName xComputerManagement
+    Import-DscResource -ModuleName ComputerManagementDsc
     Import-DscResource -ModuleName xNetworking
 
         # Assemble the Local Admin Credentials
@@ -61,7 +61,7 @@ Configuration JOINDOMAIN
         }
 
 
-        xComputer JoinDomain
+        Computer JoinDomain
         {
             Name          = $ComputerName
             DomainName    = $DomainName

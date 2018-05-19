@@ -210,7 +210,7 @@ function Get-LabVM {
                 {
                     # Match the switch name to the Adapter Switch Name or
                     # the LabId and Adapter Switch Name
-                    if ($Switch.Name -eq $AdapterSwitchName) `
+                    if ($Switch.Name -eq $AdapterSwitchName)
                     {
                         # The switch is found in the switch list - record the VLAN (if there is one)
                         $Found = $True

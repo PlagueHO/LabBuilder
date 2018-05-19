@@ -38,8 +38,8 @@ Configuration FILESERVER
     )
 
     Import-DscResource -ModuleName 'PSDesiredStateConfiguration'
-    Import-DscResource -ModuleName xComputerManagement
-    Import-DscResource -ModuleName xStorage
+    Import-DscResource -ModuleName ComputerManagementDsc
+    Import-DscResource -ModuleName StorageDsc
     Import-DscResource -ModuleName xNetworking
 
         # Assemble the Local Admin Credentials
@@ -167,18 +167,18 @@ Configuration FILESERVER
         ForEach ($Disk in $Disks) {
         $Count++
 
-        xWaitforDisk Disk$Count
+        WaitforDisk Disk$Count
         {
             DiskNumber = $Disk.Number
             RetryIntervalSec = 60
             RetryCount = 60
         }
 
-        xDisk Volume$Count
+        Disk Volume$Count
         {
             DiskNumber = $Disk.Number
             DriveLetter = $Disk.Letter
-            DependsOn = "[xWaitforDisk]Disk$Count"
+            DependsOn = "[WaitforDisk]Disk$Count"
         }
       }
 }

@@ -5,7 +5,7 @@ DSC Template Configuration File For use by LabBuilder
 .Desription
     Builds a Server that is joined to a domain and then contains NPS/Radius components.
 
-    ** This is a special version that is used for testing the xDFS resource because
+    ** This is a special version that is used for testing the DFSDsc resource because
     ** it requires a full server (not core) installation to work.
 .Requires
     Windows Server 2012 R2 Full (Server core not supported).
@@ -19,8 +19,8 @@ DSC Template Configuration File For use by LabBuilder
 Configuration MEMBER_NPS_DFSTEST
 {
     Import-DscResource -ModuleName 'PSDesiredStateConfiguration'
-    Import-DscResource -ModuleName xComputerManagement
-    Import-DscResource -ModuleName xDFS
+    Import-DscResource -ModuleName ComputerManagementDsc
+    Import-DscResource -ModuleName DFSDsc
 
     Node $AllNodes.NodeName {
         # Assemble the Local Admin Credentials
@@ -68,7 +68,7 @@ Configuration MEMBER_NPS_DFSTEST
         }
 
         # Join this Server to the Domain
-        xComputer JoinDomain
+        Computer JoinDomain
         {
             Name          = $Node.NodeName
             DomainName    = $Node.DomainName
@@ -76,7 +76,7 @@ Configuration MEMBER_NPS_DFSTEST
             DependsOn = "[WaitForAll]DC"
         }
 
-        xDFSRepGroup RGPublic
+        DFSRepGroup RGPublic
         {
             GroupName = 'Public'
             Description = 'Public files for use by all departments'
@@ -86,7 +86,7 @@ Configuration MEMBER_NPS_DFSTEST
             Topology = 'Fullmesh'
             ContentPaths = 'd:\public\Software','d:\public\Misc'
             PSDSCRunAsCredential = $DomainAdminCredential
-            DependsOn = '[xComputer]JoinDomain'
+            DependsOn = '[Computer]JoinDomain'
         } # End of RGPublic Resource
     }
 }

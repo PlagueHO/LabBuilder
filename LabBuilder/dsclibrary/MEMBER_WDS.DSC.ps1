@@ -14,8 +14,8 @@ DSC Template Configuration File For use by LabBuilder
 Configuration MEMBER_WDS
 {
     Import-DscResource -ModuleName 'PSDesiredStateConfiguration'
-    Import-DscResource -ModuleName xComputerManagement
-    Import-DscResource -ModuleName xStorage
+    Import-DscResource -ModuleName ComputerManagementDsc
+    Import-DscResource -ModuleName StorageDsc
 
     Node $AllNodes.NodeName {
         # Assemble the Local Admin Credentials
@@ -56,7 +56,7 @@ Configuration MEMBER_WDS
         }
 
         # Join this Server to the Domain
-        xComputer JoinDomain
+        Computer JoinDomain
         {
             Name          = $Node.NodeName
             DomainName    = $Node.DomainName
@@ -64,19 +64,19 @@ Configuration MEMBER_WDS
             DependsOn = "[WaitForAll]DC"
         }
 
-        xWaitforDisk Disk2
+        WaitforDisk Disk2
         {
             DiskId = 1
             RetryIntervalSec = 60
             RetryCount = 60
-            DependsOn = "[xComputer]JoinDomain"
+            DependsOn = "[Computer]JoinDomain"
         }
 
-        xDisk DVolume
+        Disk DVolume
         {
             DiskId = 1
             DriveLetter = 'D'
-            DependsOn = "[xWaitforDisk]Disk2"
+            DependsOn = "[WaitforDisk]Disk2"
         }
     }
 }

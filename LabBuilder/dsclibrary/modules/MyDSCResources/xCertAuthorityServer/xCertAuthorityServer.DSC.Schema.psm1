@@ -25,8 +25,8 @@ Configuration MEMBER_ROOTCA
 {
     Import-DscResource -ModuleName 'PSDesiredStateConfiguration'
     Import-DscResource -ModuleName xActiveDirectory
-    Import-DscResource -ModuleName xComputerManagement
-    Import-DscResource -ModuleName xAdcsDeployment
+    Import-DscResource -ModuleName ComputerManagementDsc
+    Import-DscResource -ModuleName ActiveDirectoryCSDsc
     Import-DscResource -ModuleName xPSDesiredStateConfiguration
     Import-DscResource -ModuleName xNetworking
     Node $AllNodes.NodeName {
@@ -90,7 +90,7 @@ Configuration MEMBER_ROOTCA
             DestinationPath = 'C:\Windows\CAPolicy.inf'
             Contents = "[Version]`r`n Signature= `"$Windows NT$`"`r`n[Certsrv_Server]`r`n DiscreteSignatureAlgorithm=1`r`n HashAlgorithm=RSASHA256`r`n RenewalKeyLength=4096`r`n RenewalValidityPeriod=Years`r`n RenewalValidityPeriodUnits=20`r`n CRLDeltaPeriod=Days`r`n CRLDeltaPeriodUnits=0`r`n[CRLDistributionPoint]`r`n[AuthorityInformationAccess]`r`n"
             Type = 'File'
-            DependsOn = '[xComputer]JoinDomain'
+            DependsOn = '[Computer]JoinDomain'
         }
 
         # Make a CertEnroll folder to put the Root CA certificate into.
@@ -105,7 +105,7 @@ Configuration MEMBER_ROOTCA
 
         # Configure the Root CA which will create the Certificate REQ file that Root CA will use
         # to issue a certificate for this Sub CA.
-        xADCSCertificationAuthority ConfigCA
+        ADCSCertificationAuthority ConfigCA
         {
             Ensure = 'Present'
             Credential = $DomainAdminCredential
@@ -120,11 +120,11 @@ Configuration MEMBER_ROOTCA
         }
 
         # Configure the Web Enrollment Feature
-        xADCSWebEnrollment ConfigWebEnrollment {
+        ADCSWebEnrollment ConfigWebEnrollment {
             Ensure = 'Present'
             Name = 'ConfigWebEnrollment'
             Credential = $LocalAdminCredential
-            DependsOn = '[xADCSCertificationAuthority]ConfigCA'
+            DependsOn = '[ADCSCertificationAuthority]ConfigCA'
         }
 
         # Perform final configuration of the CA which will cause the CA service to startup
@@ -211,12 +211,12 @@ Configuration MEMBER_ROOTCA
                 }
                 Return $True
             }
-            DependsOn = '[xADCSWebEnrollment]ConfigWebEnrollment'
+            DependsOn = '[ADCSWebEnrollment]ConfigWebEnrollment'
         }
 
         if ($Node.InstallOnlineResponder) {
             # Configure the Online Responder Feature
-            xADCSOnlineResponder ConfigOnlineResponder {
+            ADCSOnlineResponder ConfigOnlineResponder {
                 Ensure = 'Present'
                 IsSingleInstance  = 'Yes'
                 Credential = $LocalAdminCredential
@@ -228,21 +228,21 @@ Configuration MEMBER_ROOTCA
             {
                 Name = "Microsoft-Windows-OnlineRevocationServices-OcspSvc-DCOM-In"
                 Enabled = "True"
-                DependsOn = "[xADCSOnlineResponder]ConfigOnlineResponder"
+                DependsOn = "[ADCSOnlineResponder]ConfigOnlineResponder"
             }
 
             xFirewall OnlineResponderirewall2
             {
                 Name = "Microsoft-Windows-CertificateServices-OcspSvc-RPC-TCP-In"
                 Enabled = "True"
-                DependsOn = "[xADCSOnlineResponder]ConfigOnlineResponder"
+                DependsOn = "[ADCSOnlineResponder]ConfigOnlineResponder"
             }
 
             xFirewall OnlineResponderFirewall3
             {
                 Name = "Microsoft-Windows-OnlineRevocationServices-OcspSvc-TCP-Out"
                 Enabled = "True"
-                DependsOn = "[xADCSOnlineResponder]ConfigOnlineResponder"
+                DependsOn = "[ADCSOnlineResponder]ConfigOnlineResponder"
             }
         }
     }

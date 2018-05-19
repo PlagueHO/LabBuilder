@@ -19,7 +19,7 @@ DSC Template Configuration File For use by LabBuilder
 Configuration MEMBER_FAILOVERCLUSTER_HV
 {
     Import-DscResource -ModuleName 'PSDesiredStateConfiguration'
-    Import-DscResource -ModuleName xComputerManagement
+    Import-DscResource -ModuleName ComputerManagementDsc
     Import-DscResource -ModuleName xPSDesiredStateConfiguration
 
     Node $AllNodes.NodeName {
@@ -59,7 +59,7 @@ Configuration MEMBER_FAILOVERCLUSTER_HV
         }
 
         # Join this Server to the Domain so that it can be an Enterprise CA.
-        xComputer JoinDomain
+        Computer JoinDomain
         {
             Name          = $Node.NodeName
             DomainName    = $Node.DomainName

@@ -39,8 +39,8 @@ DSC Template Configuration File For use by LabBuilder
 Configuration MEMBER_FILESERVER_ISCSI
 {
     Import-DscResource -ModuleName 'PSDesiredStateConfiguration'
-    Import-DscResource -ModuleName xComputerManagement
-    Import-DscResource -ModuleName xStorage
+    Import-DscResource -ModuleName ComputerManagementDsc
+    Import-DscResource -ModuleName StorageDsc
     Import-DscResource -ModuleName xNetworking
     Import-DscResource -ModuleName ISCSI
 
@@ -127,7 +127,7 @@ Configuration MEMBER_FILESERVER_ISCSI
         }
 
         # Join this Server to the Domain
-        xComputer JoinDomain
+        Computer JoinDomain
         {
             Name       = $Node.NodeName
             DomainName = $Node.DomainName
@@ -192,19 +192,19 @@ Configuration MEMBER_FILESERVER_ISCSI
             Enabled = 'True'
         }
 
-        xWaitforDisk Disk2
+        WaitforDisk Disk2
         {
             DiskId           = 1
             RetryIntervalSec = 60
             RetryCount       = 60
-            DependsOn        = "[xComputer]JoinDomain"
+            DependsOn        = "[Computer]JoinDomain"
         }
 
-        xDisk DVolume
+        Disk DVolume
         {
             DiskId      = 1
             DriveLetter = 'D'
-            DependsOn   = "[xWaitforDisk]Disk2"
+            DependsOn   = "[WaitforDisk]Disk2"
         }
 
         File VirtualDisksFolder
@@ -212,7 +212,7 @@ Configuration MEMBER_FILESERVER_ISCSI
             Ensure          = 'Present'
             DestinationPath = 'D:\iSCSIVirtualDisks'
             Type            = 'Directory'
-            DependsOn       = '[xDisk]DVolume'
+            DependsOn       = '[Disk]DVolume'
         }
 
         $DependsOn = '[File]VirtualDisksFolder'

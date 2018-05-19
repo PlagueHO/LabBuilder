@@ -14,8 +14,8 @@ DSC Template Configuration File For use by LabBuilder
 Configuration MEMBER_BRANCHCACHE_HOST
 {
     Import-DscResource -ModuleName 'PSDesiredStateConfiguration'
-    Import-DscResource -ModuleName xComputerManagement
-    Import-DscResource -ModuleName xStorage
+    Import-DscResource -ModuleName ComputerManagementDsc
+    Import-DscResource -ModuleName StorageDsc
     Import-DscResource -ModuleName xNetworking
 
     Node $AllNodes.NodeName {
@@ -45,7 +45,7 @@ Configuration MEMBER_BRANCHCACHE_HOST
         }
 
         # Join this Server to the Domain
-        xComputer JoinDomain
+        Computer JoinDomain
         {
             Name       = $Node.NodeName
             DomainName = $Node.DomainName

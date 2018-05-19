@@ -23,7 +23,7 @@ Configuration MEMBER_CONTAINER_HOST
 
     Import-DscResource -ModuleName PSDesiredStateConfiguration
     Import-DscResource -ModuleName xPSDesiredStateConfiguration
-    Import-DscResource -ModuleName xComputerManagement
+    Import-DscResource -ModuleName ComputerManagementDsc
     Import-DscResource -ModuleName xPendingReboot
 
     Node $AllNodes.NodeName {
@@ -45,7 +45,7 @@ Configuration MEMBER_CONTAINER_HOST
             RetryCount       = 60
         }
 
-        xComputer JoinDomain
+        Computer JoinDomain
         {
             Name       = $Node.NodeName
             DomainName = $Node.DomainName
