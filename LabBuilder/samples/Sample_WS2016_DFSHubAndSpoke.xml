@@ -208,9 +208,12 @@
     </vm>
 
     <vm name="SA-SPOKE1"
-      template="Template Windows Server 2016 Datacenter CORE"
+      template="Template Windows Server 2016 Datacenter Full"
       computername="SA-SPOKE1"
       bootorder="4">
+      <datavhds>
+        <datavhd vhd="LABBUILDER.COM SA-FS1 Data Disk.vhdx" size="10GB" type="dynamic" />
+      </datavhds>
       <dsc configname="MEMBER_DFSSPOKE"
            configfile="MEMBER_DFSSPOKE.DSC.ps1"
            logging="Y">
@@ -237,9 +240,12 @@
     </vm>
 
     <vm name="SA-SPOKE2"
-      template="Template Windows Server 2016 Datacenter CORE"
+      template="Template Windows Server 2016 Datacenter Full"
       computername="SA-SPOKE2"
       bootorder="4">
+      <datavhds>
+        <datavhd vhd="LABBUILDER.COM SA-FS1 Data Disk.vhdx" size="10GB" type="dynamic" />
+      </datavhds>
       <dsc configname="MEMBER_DFSSPOKE"
            configfile="MEMBER_DFSSPOKE.DSC.ps1"
            logging="Y">
@@ -266,9 +272,12 @@
     </vm>
 
     <vm name="SA-HUB"
-      template="Template Windows Server 2016 Datacenter CORE"
+      template="Template Windows Server 2016 Datacenter Full"
       computername="SA-HUB"
       bootorder="5">
+      <datavhds>
+        <datavhd vhd="LABBUILDER.COM SA-FS1 Data Disk.vhdx" size="10GB" type="dynamic" />
+      </datavhds>
       <dsc configname="MEMBER_DFSHUB"
            configfile="MEMBER_DFSHUB.DSC.ps1"
            logging="Y">
