@@ -107,6 +107,7 @@ Configuration MEMBER_DFSHUB
             GroupName = $Node.ResourceGroupName
             Description = $Node.ResourceGroupDescription
             Ensure = 'Present'
+            DomainName = $Node.DomainName
             Members = @() + $Node.NodeName + $Node.SpokeComputerName
             Folders = $Node.ResourceGroupFolderName
             PSDSCRunAsCredential = $DomainAdminCredential
@@ -117,6 +118,7 @@ Configuration MEMBER_DFSHUB
         {
             GroupName = $Node.ResourceGroupName
             FolderName = $Node.ResourceGroupFolderName
+            DomainName = $Node.DomainName
             Description = $Node.ResourceGroupDescription
             PSDSCRunAsCredential = $DomainAdminCredential
             DependsOn = '[DFSReplicationGroup]RGWebSite'
@@ -126,6 +128,7 @@ Configuration MEMBER_DFSHUB
         {
             GroupName = $Node.ResourceGroupName
             FolderName = $Node.ResourceGroupFolderName
+            DomainName = $Node.DomainName
             ComputerName = $Node.NodeName
             ContentPath = $Node.ResourceGroupContentPath
             PrimaryMember = $true
@@ -138,6 +141,7 @@ Configuration MEMBER_DFSHUB
             DFSReplicationGroupConnection "RGWebSiteConnection$spoke"
             {
                 GroupName = $Node.ResourceGroupName
+                DomainName = $Node.DomainName
                 Ensure = 'Present'
                 SourceComputerName = $Node.NodeName
                 DestinationComputerName = $spoke
@@ -149,6 +153,7 @@ Configuration MEMBER_DFSHUB
             {
                 GroupName = $Node.ResourceGroupName
                 FolderName = $Node.ResourceGroupFolderName
+                DomainName = $Node.DomainName
                 ComputerName = $spoke
                 ContentPath = $Node.ResourceGroupContentPath
                 PSDSCRunAsCredential = $DomainAdminCredential
