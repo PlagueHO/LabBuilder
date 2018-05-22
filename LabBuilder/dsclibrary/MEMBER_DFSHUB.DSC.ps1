@@ -134,7 +134,7 @@ Configuration MEMBER_DFSHUB
         } # End of RGWebSiteMembershipHub Resource
 
         # Configure the connection and membership for each Spoke
-        foreach ($spoke in $SpokeComputerName) {
+        foreach ($spoke in $Node.SpokeComputerName) {
             DFSReplicationGroupConnection "RGWebSiteConnection$spoke"
             {
                 GroupName = $Node.ResourceGroupName
