@@ -30,12 +30,12 @@ function Get-Lab {
             Position=1,
             Mandatory=$true)]
         [ValidateNotNullOrEmpty()]
-        [String] $ConfigPath,
+        [System.String] $ConfigPath,
 
         [Parameter(
             Position=2)]
         [ValidateNotNullOrEmpty()]
-        [String] $LabPath,
+        [System.String] $LabPath,
 
         [Parameter(
             Position=3)]
@@ -53,31 +53,31 @@ function Get-Lab {
 
     if (-not (Test-Path -Path $ConfigPath))
     {
-        $ExceptionParameters = @{
+        $exceptionParameters = @{
             errorId = 'ConfigurationFileNotFoundError'
             errorCategory = 'InvalidArgument'
             errorMessage = $($LocalizedData.ConfigurationFileNotFoundError `
                 -f $ConfigPath)
         }
-        ThrowException @ExceptionParameters
+        New-LabException @exceptionParameters
     } # if
 
     $Content = Get-Content -Path $ConfigPath -Raw
     if (-not $Content)
     {
-        $ExceptionParameters = @{
+        $exceptionParameters = @{
             errorId = 'ConfigurationFileEmptyError'
             errorCategory = 'InvalidArgument'
             errorMessage = $($LocalizedData.ConfigurationFileEmptyError `
                 -f $ConfigPath)
         }
-        ThrowException @ExceptionParameters
+        New-LabException @exceptionParameters
     } # if
 
     if (-not $SkipXMLValidation)
     {
         # Validate the XML
-        ValidateConfigurationXMLSchema `
+        Assert-ValidConfigurationXMLSchema `
             -ConfigPath $ConfigPath `
             -ErrorAction Stop
     }
@@ -92,33 +92,33 @@ function Get-Lab {
     if ($RequiredWindowsBuild -and `
         ($Script:CurrentBuild -lt $RequiredWindowsBuild))
     {
-        $ExceptionParameters = @{
+        $exceptionParameters = @{
             errorId = 'RequiredBuildNotMetError'
             errorCategory = 'InvalidArgument'
             errorMessage = $($LocalizedData.RequiredBuildNotMetError `
                 -f $Script:CurrentBuild,$RequiredWindowsBuild)
         }
-        ThrowException @ExceptionParameters
+        New-LabException @exceptionParameters
     } # if
 
     # Figure out the Config path and load it into the XML object (if we can)
     # This path is used to find any additional configuration files that might
     # be provided with config
-    [String] $ConfigPath = [System.IO.Path]::GetDirectoryName($ConfigPath)
-    [String] $XMLConfigPath = $Lab.labbuilderconfig.settings.configpath
+    [System.String] $ConfigPath = [System.IO.Path]::GetDirectoryName($ConfigPath)
+    [System.String] $XMLConfigPath = $Lab.labbuilderconfig.settings.configpath
     if ($XMLConfigPath) {
         if (-not [System.IO.Path]::IsPathRooted($XMLConfigurationPath))
         {
             # A relative path was provided in the config path so add the actual path of the
             # XML to it
-            [String] $FullConfigPath = Join-Path `
+            [System.String] $FullConfigPath = Join-Path `
                 -Path $ConfigPath `
                 -ChildPath $XMLConfigPath
         } # if
     }
     else
     {
-        [String] $FullConfigPath = $ConfigPath
+        [System.String] $FullConfigPath = $ConfigPath
     }
     $Lab.labbuilderconfig.settings.setattribute('fullconfigpath',$FullConfigPath)
 
@@ -129,11 +129,11 @@ function Get-Lab {
     }
     else
     {
-        [String] $LabPath = $Lab.labbuilderconfig.settings.labpath
+        [System.String] $LabPath = $Lab.labbuilderconfig.settings.labpath
     }
 
     # Get the VHDParentPathFull - if it isn't supplied default
-    [String] $VHDParentPath = $Lab.labbuilderconfig.settings.vhdparentpath
+    [System.String] $VHDParentPath = $Lab.labbuilderconfig.settings.vhdparentpath
     if (-not $VHDParentPath)
     {
         $VHDParentPath = 'Virtual Hard Disk Templates'
@@ -148,7 +148,7 @@ function Get-Lab {
     $Lab.labbuilderconfig.settings.setattribute('vhdparentpathfull',$VHDParentPath)
 
     # Get the DSCLibraryPathFull - if it isn't supplied default
-    [String] $DSCLibraryPath = $Lab.labbuilderconfig.settings.dsclibrarypath
+    [System.String] $DSCLibraryPath = $Lab.labbuilderconfig.settings.dsclibrarypath
     if (-not $DSCLibraryPath)
     {
         $DSCLibraryPath = 'DSCLibrary'
@@ -163,7 +163,7 @@ function Get-Lab {
     $Lab.labbuilderconfig.settings.setattribute('dsclibrarypathfull',$DSCLibraryPath)
 
     # Get the ResourcePathFull - if it isn't supplied default
-    [String] $ResourcePath = $Lab.labbuilderconfig.settings.resourcepath
+    [System.String] $ResourcePath = $Lab.labbuilderconfig.settings.resourcepath
     if (-not $ResourcePath)
     {
         $ResourcePath = 'Resource'
@@ -180,7 +180,7 @@ function Get-Lab {
     # Determine the ModulePath where alternate Lab PowerShell Modules can be found.
     # If a path is specified but it is relative, make it relative to the lab path.
     # Otherwise use it as is.
-    [String] $ModulePath = $Lab.labbuilderconfig.settings.modulepath
+    [System.String] $ModulePath = $Lab.labbuilderconfig.settings.modulepath
     if ($ModulePath)
     {
         if (-not [System.IO.Path]::IsPathRooted($ModulePath))
@@ -258,44 +258,44 @@ function New-Lab {
             Position=1,
             Mandatory=$true)]
         [ValidateNotNullOrEmpty()]
-        [String] $ConfigPath,
+        [System.String] $ConfigPath,
 
         [Parameter(
             Position=2,
             Mandatory=$true)]
         [ValidateNotNullOrEmpty()]
-        [String] $LabPath,
+        [System.String] $LabPath,
 
         [Parameter(
             Position=3,
             Mandatory=$true)]
         [ValidateNotNullOrEmpty()]
-        [String] $Name,
+        [System.String] $Name,
 
         [Parameter(
             Position=4)]
         [ValidateNotNullOrEmpty()]
-        [String] $Version = '1.0',
+        [System.String] $Version = '1.0',
 
         [Parameter(
             Position=5)]
         [ValidateNotNullOrEmpty()]
-        [String] $Id,
+        [System.String] $Id,
 
         [Parameter(
             Position=6)]
         [ValidateNotNullOrEmpty()]
-        [String] $Description,
+        [System.String] $Description,
 
         [Parameter(
             Position=7)]
         [ValidateNotNullOrEmpty()]
-        [String] $DomainName,
+        [System.String] $DomainName,
 
         [Parameter(
             Position=8)]
         [ValidateNotNullOrEmpty()]
-        [String] $Email
+        [System.String] $Email
     ) # Param
 
     # Determine the full Lab Path
@@ -319,7 +319,7 @@ function New-Lab {
     }
     else
     {
-        WriteMessage -Message $($LocalizedData.CreatingLabFolderMessage `
+        Write-LabMessage -Message $($LocalizedData.CreatingLabFolderMessage `
             -f 'LabPath',$LabPath)
 
         New-Item `
@@ -446,13 +446,13 @@ Function Install-Lab {
             ParameterSetName="File",
             Mandatory=$true)]
         [ValidateNotNullOrEmpty()]
-        [String] $ConfigPath,
+        [System.String] $ConfigPath,
 
         [parameter(
             Position=2,
             ParameterSetName="File")]
         [ValidateNotNullOrEmpty()]
-        [String] $LabPath,
+        [System.String] $LabPath,
 
         [Parameter(
             Position=3,
@@ -469,7 +469,7 @@ Function Install-Lab {
         [Parameter(
             Position=5)]
         [Switch] $Force,
-        
+
         [Parameter(
             Position=6)]
         [Switch] $OffLine
@@ -492,28 +492,28 @@ Function Install-Lab {
         if ($CheckEnvironment)
         {
             # Check Hyper-V
-            InstallHyperV `
+            Install-LabHyperV `
                 -ErrorAction Stop
         } # if
 
         # Ensure WS-Man is enabled
-        EnableWSMan `
+        Enable-LabWSMan `
             @ForceSplat `
             -ErrorAction Stop
 
         if (!($PSBoundParameters.ContainsKey('OffLine')))
         {
         # Install Package Providers
-        InstallPackageProviders `
+        Install-LabPackageProvider `
             @ForceSplat `
             -ErrorAction Stop
 
         # Register Package Sources
-        RegisterPackageSources `
+        Register-LabPackageSource `
             @ForceSplat `
             -ErrorAction Stop
         }
-        
+
         $null = $PSBoundParameters.Remove('Offline')
 
         if ($PSCmdlet.ParameterSetName -eq 'File')
@@ -529,13 +529,13 @@ Function Install-Lab {
     {
         # Initialize the core Lab components
         # Check Lab Folder structure
-        WriteMessage -Message $($LocalizedData.InitializingLabFoldersMesage)
+        Write-LabMessage -Message $($LocalizedData.InitializingLabFoldersMesage)
 
         # Check folders are defined
-        [String] $LabPath = $Lab.labbuilderconfig.settings.labpath
+        [System.String] $LabPath = $Lab.labbuilderconfig.settings.labpath
         if (-not (Test-Path -Path $LabPath))
         {
-            WriteMessage -Message $($LocalizedData.CreatingLabFolderMessage `
+            Write-LabMessage -Message $($LocalizedData.CreatingLabFolderMessage `
                 -f 'LabPath',$LabPath)
 
             $null = New-Item `
@@ -543,10 +543,10 @@ Function Install-Lab {
                 -Type Directory
         }
 
-        [String] $VHDParentPath = $Lab.labbuilderconfig.settings.vhdparentpathfull
+        [System.String] $VHDParentPath = $Lab.labbuilderconfig.settings.vhdparentpathfull
         if (-not (Test-Path -Path $VHDParentPath))
         {
-            WriteMessage -Message $($LocalizedData.CreatingLabFolderMessage `
+            Write-LabMessage -Message $($LocalizedData.CreatingLabFolderMessage `
                 -f 'VHDParentPath',$VHDParentPath)
 
             $null = New-Item `
@@ -554,10 +554,10 @@ Function Install-Lab {
                 -Type Directory
         }
 
-        [String] $ResourcePath = $Lab.labbuilderconfig.settings.resourcepathfull
+        [System.String] $ResourcePath = $Lab.labbuilderconfig.settings.resourcepathfull
         if (-not (Test-Path -Path $ResourcePath))
         {
-            WriteMessage -Message $($LocalizedData.CreatingLabFolderMessage `
+            Write-LabMessage -Message $($LocalizedData.CreatingLabFolderMessage `
                 -f 'ResourcePath',$ResourcePath)
 
             $null = New-Item `
@@ -566,11 +566,11 @@ Function Install-Lab {
         }
 
         # Install Hyper-V Components
-        WriteMessage -Message $($LocalizedData.InitializingHyperVComponentsMesage)
+        Write-LabMessage -Message $($LocalizedData.InitializingHyperVComponentsMesage)
 
         # Create the LabBuilder Management Network switch and assign VLAN
         # Used by host to communicate with Lab VMs
-        [String] $ManagementSwitchName = GetManagementSwitchName `
+        [System.String] $ManagementSwitchName = GetManagementSwitchName `
             -Lab $Lab
         if ($Lab.labbuilderconfig.switches.ManagementVlan)
         {
@@ -587,7 +587,7 @@ Function Install-Lab {
                 -Name $ManagementSwitchName `
                 -ErrorAction Stop
 
-            WriteMessage -Message $($LocalizedData.CreatingLabManagementSwitchMessage `
+            Write-LabMessage -Message $($LocalizedData.CreatingLabManagementSwitchMessage `
                 -f $ManagementSwitchName,$ManagementVlan)
         }
         # Check the Vlan ID of the adapter on the switch
@@ -601,7 +601,7 @@ Function Install-Lab {
 
         if ($ExistingVlan -ne $ManagementVlan)
         {
-            WriteMessage -Message $($LocalizedData.UpdatingLabManagementSwitchMessage `
+            Write-LabMessage -Message $($LocalizedData.UpdatingLabManagementSwitchMessage `
                 -f $ManagementSwitchName,$ManagementVlan)
 
             Set-VMNetworkAdapterVlan `
@@ -662,7 +662,7 @@ Function Install-Lab {
             -VMs $VMs `
             -ErrorAction Stop
 
-        WriteMessage -Message $($LocalizedData.LabInstallCompleteMessage `
+        Write-LabMessage -Message $($LocalizedData.LabInstallCompleteMessage `
             -f $Lab.labbuilderconfig.name,$Lab.labbuilderconfig.settings.labpath)
     } # process
     end
@@ -707,13 +707,13 @@ Function Update-Lab {
             ParameterSetName="File",
             Mandatory=$true)]
         [ValidateNotNullOrEmpty()]
-        [String] $ConfigPath,
+        [System.String] $ConfigPath,
 
         [parameter(
             Position=2,
             ParameterSetName="File")]
         [ValidateNotNullOrEmpty()]
-        [String] $LabPath,
+        [System.String] $LabPath,
 
         [Parameter(
             Position=3,
@@ -739,7 +739,7 @@ Function Update-Lab {
         Install-Lab `
             @PSBoundParameters
 
-        WriteMessage -Message $($LocalizedData.LabUpdateCompleteMessage `
+        Write-LabMessage -Message $($LocalizedData.LabUpdateCompleteMessage `
             -f $Lab.labbuilderconfig.name,$Lab.labbuilderconfig.settings.fullconfigpath)
     } # process
 
@@ -813,13 +813,13 @@ Function Uninstall-Lab {
             ParameterSetName="File",
             Mandatory=$true)]
         [ValidateNotNullOrEmpty()]
-        [String] $ConfigPath,
+        [System.String] $ConfigPath,
 
         [parameter(
             Position=2,
             ParameterSetName="File")]
         [ValidateNotNullOrEmpty()]
-        [String] $LabPath,
+        [System.String] $LabPath,
 
         [Parameter(
             Position=3,
@@ -937,18 +937,18 @@ Function Uninstall-Lab {
             } # if
 
             # Remove the LabBuilder Management Network switch
-            [String] $ManagementSwitchName = GetManagementSwitchName `
+            [System.String] $ManagementSwitchName = GetManagementSwitchName `
                 -Lab $Lab
             if ((Get-VMSwitch | Where-Object -Property Name -eq $ManagementSwitchName).Count -ne 0)
             {
                 $null = Remove-VMSwitch `
                     -Name $ManagementSwitchName
 
-                WriteMessage -Message $($LocalizedData.RemovingLabManagementSwitchMessage `
+                Write-LabMessage -Message $($LocalizedData.RemovingLabManagementSwitchMessage `
                     -f $ManagementSwitchName)
             }
 
-            WriteMessage -Message $($LocalizedData.LabUninstallCompleteMessage `
+            Write-LabMessage -Message $($LocalizedData.LabUninstallCompleteMessage `
                 -f $Lab.labbuilderconfig.name,$Lab.labbuilderconfig.settings.labpath )
         } # if
     } # process
@@ -1020,13 +1020,13 @@ Function Start-Lab {
             ParameterSetName="File",
             Mandatory=$true)]
         [ValidateNotNullOrEmpty()]
-        [String] $ConfigPath,
+        [System.String] $ConfigPath,
 
         [parameter(
             Position=2,
             ParameterSetName="File")]
         [ValidateNotNullOrEmpty()]
-        [String] $LabPath,
+        [System.String] $LabPath,
 
         [Parameter(
             Position=3,
@@ -1070,7 +1070,7 @@ Function Start-Lab {
         foreach ($BootPhase in $BootPhases)
         {
             # Process this "Bootphase"
-            WriteMessage -Message $($LocalizedData.StartingBootPhaseVMsMessage `
+            Write-LabMessage -Message $($LocalizedData.StartingBootPhaseVMsMessage `
                 -f $BootPhase)
 
             # Get all VMs in this "Bootphase"
@@ -1099,20 +1099,20 @@ Function Start-Lab {
                 if (-not $VMObject)
                 {
                     # if the VM does not exist then throw a non-terminating exception
-                    $ExceptionParameters = @{
+                    $exceptionParameters = @{
                         errorId = 'VMDoesNotExistError'
                         errorCategory = 'InvalidArgument'
                         errorMessage = $($LocalizedData.VMDoesNotExistError `
                             -f $VMName)
 
                     }
-                    ThrowException @ExceptionParameters
+                    New-LabException @exceptionParameters
                 } # if
 
                 # Start the VM if it is off
                 if ($VMObject.State -eq 'Off')
                 {
-                    WriteMessage -Message $($LocalizedData.StartingVMMessage `
+                    Write-LabMessage -Message $($LocalizedData.StartingVMMessage `
                         -f $VMName)
                     Start-VM `
                         -VM $VMObject
@@ -1139,7 +1139,7 @@ Function Start-Lab {
                         # if we have gone through all VMs in this "Bootphase"
                         # and they're all marked as booted then we can mark
                         # this phase as complete and allow moving on to the next one
-                        WriteMessage -Message $($LocalizedData.AllBootPhaseVMsStartedMessage `
+                        Write-LabMessage -Message $($LocalizedData.AllBootPhaseVMsStartedMessage `
                             -f $BootPhase)
                         $PhaseComplete = $True
                     }
@@ -1156,18 +1156,18 @@ Function Start-Lab {
             if (-not ($PhaseComplete))
             {
                 # Yes, throw an exception
-                $ExceptionParameters = @{
+                $exceptionParameters = @{
                     errorId = 'BootPhaseVMsTimeoutError'
                     errorCategory = 'InvalidArgument'
                     errorMessage = $($LocalizedData.BootPhaseStartVMsTimeoutError `
                         -f $BootPhase)
 
                 }
-                ThrowException @ExceptionParameters
+                New-LabException @exceptionParameters
             } # if
         } # foreach
 
-        WriteMessage -Message $($LocalizedData.LabStartCompleteMessage `
+        Write-LabMessage -Message $($LocalizedData.LabStartCompleteMessage `
             -f $Lab.labbuilderconfig.name,$Lab.labbuilderconfig.settings.fullconfigpath)
     } # process
 
@@ -1236,13 +1236,13 @@ Function Stop-Lab {
             ParameterSetName="File",
             Mandatory=$true)]
         [ValidateNotNullOrEmpty()]
-        [String] $ConfigPath,
+        [System.String] $ConfigPath,
 
         [parameter(
             Position=2,
             ParameterSetName="File")]
         [ValidateNotNullOrEmpty()]
-        [String] $LabPath,
+        [System.String] $LabPath,
 
         [Parameter(
             Position=3,
@@ -1280,7 +1280,7 @@ Function Stop-Lab {
         foreach ($BootPhase in $BootPhases)
         {
             # Process this "Bootphase"
-            WriteMessage -Message $($LocalizedData.StoppingBootPhaseVMsMessage `
+            Write-LabMessage -Message $($LocalizedData.StoppingBootPhaseVMsMessage `
                 -f $BootPhase)
 
             # Get all VMs in this "Bootphase"
@@ -1307,20 +1307,20 @@ Function Stop-Lab {
                 if (-not $VMObject)
                 {
                     # if the VM does not exist then throw a non-terminating exception
-                    $ExceptionParameters = @{
+                    $exceptionParameters = @{
                         errorId = 'VMDoesNotExistError'
                         errorCategory = 'InvalidArgument'
                         errorMessage = $($LocalizedData.VMDoesNotExistError `
                             -f $VMName)
 
                     }
-                    ThrowException @ExceptionParameters
+                    New-LabException @exceptionParameters
                 } # if
 
                 # Shutodwn the VM if it is off
                 if ($VMObject.State -eq 'Running')
                 {
-                    WriteMessage -Message $($LocalizedData.StoppingVMMessage `
+                    Write-LabMessage -Message $($LocalizedData.StoppingVMMessage `
                         -f $VMName)
                     $null = Stop-VM `
                         -VM $VMObject `
@@ -1344,7 +1344,7 @@ Function Stop-Lab {
                         # if we have gone through all VMs in this "Bootphase"
                         # and they're all marked as stopped then we can mark
                         # this phase as complete and allow moving on to the next one
-                        WriteMessage -Message $($LocalizedData.AllBootPhaseVMsStoppedMessage `
+                        Write-LabMessage -Message $($LocalizedData.AllBootPhaseVMsStoppedMessage `
                             -f $BootPhase)
                         $PhaseComplete = $True
                     }
@@ -1358,7 +1358,7 @@ Function Stop-Lab {
             } # while
         } # foreach
 
-        WriteMessage -Message $($LocalizedData.LabStopCompleteMessage `
+        Write-LabMessage -Message $($LocalizedData.LabStopCompleteMessage `
             -f $Lab.labbuilderconfig.name,$Lab.labbuilderconfig.settings.fullconfigpath)
     } # process
 

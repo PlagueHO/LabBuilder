@@ -63,20 +63,23 @@ DSC Template Configuration File For use by LabBuilder
 Configuration MEMBER_DHCPDNS
 {
     Import-DscResource -ModuleName 'PSDesiredStateConfiguration'
-    Import-DscResource -ModuleName xComputerManagement
+    Import-DscResource -ModuleName ComputerManagementDsc
     Import-DscResource -ModuleName xDNSServer
     Import-DscResource -ModuleName xDHCPServer
+
     Node $AllNodes.NodeName {
         # Assemble the Local Admin Credentials
-        If ($Node.LocalAdminPassword) {
+        if ($Node.LocalAdminPassword)
+        {
             [PSCredential]$LocalAdminCredential = New-Object System.Management.Automation.PSCredential ("Administrator", (ConvertTo-SecureString $Node.LocalAdminPassword -AsPlainText -Force))
         }
-        If ($Node.DomainAdminPassword) {
+        if ($Node.DomainAdminPassword)
+        {
             [PSCredential]$DomainAdminCredential = New-Object System.Management.Automation.PSCredential ("$($Node.DomainName)\Administrator", (ConvertTo-SecureString $Node.DomainAdminPassword -AsPlainText -Force))
         }
 
         WindowsFeature DHCPInstall
-        { 
+        {
             Ensure = "Present"
             Name   = "DHCP"
         }
@@ -93,7 +96,7 @@ Configuration MEMBER_DHCPDNS
             WindowsFeature RSAT-ManagementTools
             {
                 Ensure    = "Present"
-                Name      = "RSAT-DHCP","RSAT-DNS-Server"
+                Name      = "RSAT-DHCP", "RSAT-DNS-Server"
                 DependsOn = "[WindowsFeature]DNSInstall"
             }
         }
@@ -106,34 +109,35 @@ Configuration MEMBER_DHCPDNS
             RetryCount       = 60
         }
 
-        xComputer JoinDomain
-        { 
+        Computer JoinDomain
+        {
             Name       = $Node.NodeName
             DomainName = $Node.DomainName
-            Credential = $DomainAdminCredential 
-            DependsOn  = "[WaitForAll]DC" 
+            Credential = $DomainAdminCredential
+            DependsOn  = "[WaitForAll]DC"
         }
 
         # DHCP Server Settings
         Script DHCPAuthorize
         {
             PSDSCRunAsCredential = $DomainAdminCredential
-            SetScript = {
+            SetScript            = {
                 Add-DHCPServerInDC
             }
-            GetScript = {
+            GetScript            = {
                 Return @{
                     'Authorized' = (@(Get-DHCPServerInDC | Where-Object { $_.IPAddress -In (Get-NetIPAddress).IPAddress }).Count -gt 0);
                 }
             }
-            TestScript = { 
+            TestScript           = {
                 Return (-not (@(Get-DHCPServerInDC | Where-Object { $_.IPAddress -In (Get-NetIPAddress).IPAddress }).Count -eq 0))
             }
-            DependsOn = '[xComputer]JoinDomain'
+            DependsOn            = '[Computer]JoinDomain'
         }
 
-        [Int]$Count=0
-        Foreach ($Scope in $Node.Scopes) {
+        [Int]$Count = 0
+        Foreach ($Scope in $Node.Scopes)
+        {
             $Count++
             xDhcpServerScope "Scope$Count"
             {
@@ -147,8 +151,9 @@ Configuration MEMBER_DHCPDNS
                 AddressFamily = $Scope.AddressFamily
             }
         }
-        [Int]$Count=0
-        Foreach ($Reservation in $Node.Reservations) {
+        [Int]$Count = 0
+        Foreach ($Reservation in $Node.Reservations)
+        {
             $Count++
             xDhcpServerReservation "Reservation$Count"
             {
@@ -160,8 +165,9 @@ Configuration MEMBER_DHCPDNS
                 AddressFamily    = $Reservation.AddressFamily
             }
         }
-        [Int]$Count=0
-        Foreach ($ScopeOption in $Node.ScopeOptions) {
+        [Int]$Count = 0
+        Foreach ($ScopeOption in $Node.ScopeOptions)
+        {
             $Count++
             xDhcpServerOption "ScopeOption$Count"
             {
@@ -181,12 +187,13 @@ Configuration MEMBER_DHCPDNS
             {
                 IsSingleInstance = 'Yes'
                 IPAddresses      = $Node.Forwarders
-                Credential       = $DomainAdminCredential 
-                DependsOn        = '[xComputer]JoinDomain'
+                Credential       = $DomainAdminCredential
+                DependsOn        = '[Computer]JoinDomain'
             }
         }
-        [Int]$Count=0
-        Foreach ($PrimaryZone in $Node.PrimaryZones) {
+        [Int]$Count = 0
+        Foreach ($PrimaryZone in $Node.PrimaryZones)
+        {
             $Count++
             xDnsServerPrimaryZone "PrimaryZone$Count"
             {
@@ -194,8 +201,8 @@ Configuration MEMBER_DHCPDNS
                 Name          = $PrimaryZone.Name
                 ZoneFile      = $PrimaryZone.ZoneFile
                 DynamicUpdate = $PrimaryZone.DynamicUpdate
-                Credential    = $DomainAdminCredential 
-                DependsOn     = '[xComputer]JoinDomain'
+                Credential    = $DomainAdminCredential
+                DependsOn     = '[Computer]JoinDomain'
             }
         }
     }

@@ -15,62 +15,65 @@ DSC Template Configuration File For use by LabBuilder
 Configuration MEMBER_WSUS
 {
     Import-DscResource -ModuleName 'PSDesiredStateConfiguration'
-    Import-DscResource -ModuleName xComputerManagement
+    Import-DscResource -ModuleName ComputerManagementDsc
     Import-DscResource -ModuleName xWindowsUpdate
-    Import-DscResource -ModuleName xStorage
+    Import-DscResource -ModuleName StorageDsc
+
     Node $AllNodes.NodeName {
         # Assemble the Local Admin Credentials
-        If ($Node.LocalAdminPassword) {
+        if ($Node.LocalAdminPassword)
+        {
             [PSCredential]$LocalAdminCredential = New-Object System.Management.Automation.PSCredential ("Administrator", (ConvertTo-SecureString $Node.LocalAdminPassword -AsPlainText -Force))
         }
-        If ($Node.DomainAdminPassword) {
+        if ($Node.DomainAdminPassword)
+        {
             [PSCredential]$DomainAdminCredential = New-Object System.Management.Automation.PSCredential ("$($Node.DomainName)\Administrator", (ConvertTo-SecureString $Node.DomainAdminPassword -AsPlainText -Force))
         }
 
         WindowsFeature UpdateServicesWIDDBInstall
         {
             Ensure = "Present"
-            Name = "UpdateServices-WidDB"
+            Name   = "UpdateServices-WidDB"
         }
 
         WindowsFeature UpdateServicesServicesInstall
         {
-            Ensure = "Present"
-            Name = "UpdateServices-Services"
+            Ensure    = "Present"
+            Name      = "UpdateServices-Services"
             DependsOn = "[WindowsFeature]UpdateServicesWIDDBInstall"
         }
 
         # Wait for the Domain to be available so we can join it.
         WaitForAll DC
         {
-        ResourceName      = '[xADDomain]PrimaryDC'
-        NodeName          = $Node.DCname
-        RetryIntervalSec  = 15
-        RetryCount        = 60
+            ResourceName     = '[xADDomain]PrimaryDC'
+            NodeName         = $Node.DCname
+            RetryIntervalSec = 15
+            RetryCount       = 60
         }
 
         # Join this Server to the Domain
-        xComputer JoinDomain
+        Computer JoinDomain
         {
-            Name          = $Node.NodeName
-            DomainName    = $Node.DomainName
-            Credential    = $DomainAdminCredential
-            DependsOn = "[WaitForAll]DC"
+            Name       = $Node.NodeName
+            DomainName = $Node.DomainName
+            Credential = $DomainAdminCredential
+            DependsOn  = "[WaitForAll]DC"
         }
 
-        xWaitforDisk Disk2
+        WaitforDisk Disk2
         {
-            DiskId = 1
+            DiskId           = 1
             RetryIntervalSec = 60
-            RetryCount = 60
-            DependsOn = "[xComputer]JoinDomain"
+            RetryCount       = 60
+            DependsOn        = "[Computer]JoinDomain"
         }
 
-        xDisk DVolume
+        Disk DVolume
         {
-            DiskId = 1
+            DiskId      = 1
             DriveLetter = 'D'
-            DependsOn = "[xWaitforDisk]Disk2"
+            DependsOn   = "[WaitforDisk]Disk2"
         }
     }
 }

@@ -16,19 +16,20 @@
 .OUTPUTS
     Returns an array of LabModuleResource objects.
 #>
-function Get-LabResourceModule {
+function Get-LabResourceModule
+{
     [OutputType([LabResourceModule[]])]
     [CmdLetBinding()]
     param
     (
         [Parameter(
-            Position=1,
-            Mandatory=$true)]
+            Position = 1,
+            Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
         $Lab,
 
         [Parameter(
-            Position=2)]
+            Position = 2)]
         [ValidateNotNullOrEmpty()]
         [String[]] $Name
     )
@@ -47,12 +48,12 @@ function Get-LabResourceModule {
 
             if ($ModuleName -eq 'module')
             {
-                $ExceptionParameters = @{
-                    errorId = 'ResourceModuleNameIsEmptyError'
+                $exceptionParameters = @{
+                    errorId       = 'ResourceModuleNameIsEmptyError'
                     errorCategory = 'InvalidArgument'
-                    errorMessage = $($LocalizedData.ResourceModuleNameIsEmptyError)
+                    errorMessage  = $($LocalizedData.ResourceModuleNameIsEmptyError)
                 }
-                ThrowException @ExceptionParameters
+                New-LabException @exceptionParameters
             } # if
             $ResourceModule = [LabResourceModule]::New($ModuleName)
             $ResourceModule.URL = $Module.URL
@@ -93,23 +94,24 @@ function Get-LabResourceModule {
 .OUTPUTS
     None.
 #>
-function Initialize-LabResourceModule {
+function Initialize-LabResourceModule
+{
     [CmdLetBinding()]
     param
     (
         [Parameter(
-            Position=1,
-            Mandatory=$true)]
+            Position = 1,
+            Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
         $Lab,
 
         [Parameter(
-            Position=2)]
+            Position = 2)]
         [ValidateNotNullOrEmpty()]
         [String[]] $Name,
 
         [Parameter(
-            Position=3)]
+            Position = 3)]
         [LabResourceModule[]] $ResourceModules
     )
 
@@ -142,10 +144,10 @@ function Initialize-LabResourceModule {
                 $Splat += [PSObject] @{ MiniumVersion = $Module.MiniumVersion }
             }
 
-            WriteMessage -Message $($LocalizedData.DownloadingResourceModuleMessage `
-                -f $Name,$URL)
+            Write-LabMessage -Message $($LocalizedData.DownloadingResourceModuleMessage `
+                    -f $Name, $URL)
 
-            DownloadResourceModule @Splat
+            Invoke-LabDownloadResourceModule @Splat
         } # foreach
     } # if
 } # Initialize-LabResourceModule
@@ -169,19 +171,20 @@ function Initialize-LabResourceModule {
 .OUTPUTS
     Returns an array of LabMSUResource objects.
 #>
-function Get-LabResourceMSU {
+function Get-LabResourceMSU
+{
     [OutputType([LabResourceMSU[]])]
     [CmdLetBinding()]
     param
     (
         [Parameter(
-            Position=1,
-            Mandatory=$true)]
+            Position = 1,
+            Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
         $Lab,
 
         [Parameter(
-            Position=2)]
+            Position = 2)]
         [ValidateNotNullOrEmpty()]
         [String[]] $Name
     )
@@ -200,14 +203,14 @@ function Get-LabResourceMSU {
 
             if ($MSUName -eq 'msu')
             {
-                $ExceptionParameters = @{
-                    errorId = 'ResourceMSUNameIsEmptyError'
+                $exceptionParameters = @{
+                    errorId       = 'ResourceMSUNameIsEmptyError'
                     errorCategory = 'InvalidArgument'
-                    errorMessage = $($LocalizedData.ResourceMSUNameIsEmptyError)
+                    errorMessage  = $($LocalizedData.ResourceMSUNameIsEmptyError)
                 }
-                ThrowException @ExceptionParameters
+                New-LabException @exceptionParameters
             } # if
-            $ResourceMSU = [LabResourceMSU]::New($MSUName,$MSU.URL)
+            $ResourceMSU = [LabResourceMSU]::New($MSUName, $MSU.URL)
             $Path = $MSU.Path
             if ($Path)
             {
@@ -262,23 +265,24 @@ function Get-LabResourceMSU {
 .OUTPUTS
     None.
 #>
-function Initialize-LabResourceMSU {
+function Initialize-LabResourceMSU
+{
     [CmdLetBinding()]
     param
     (
         [Parameter(
-            Position=1,
-            Mandatory=$true)]
+            Position = 1,
+            Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
         $Lab,
 
         [Parameter(
-            Position=2)]
+            Position = 2)]
         [ValidateNotNullOrEmpty()]
         [String[]] $Name,
 
         [Parameter(
-            Position=3)]
+            Position = 3)]
         [LabResourceMSU[]] $ResourceMSUs
     )
 
@@ -295,10 +299,10 @@ function Initialize-LabResourceMSU {
         {
             if (-not (Test-Path -Path $MSU.Filename))
             {
-                WriteMessage -Message $($LocalizedData.DownloadingResourceMSUMessage `
-                    -f $MSU.Name,$MSU.URL)
+                Write-LabMessage -Message $($LocalizedData.DownloadingResourceMSUMessage `
+                        -f $MSU.Name, $MSU.URL)
 
-                DownloadAndUnzipFile `
+                Invoke-LabDownloadAndUnzipFile `
                     -URL $MSU.URL `
                     -DestinationPath (Split-Path -Path $MSU.Filename)
             } # if
@@ -325,19 +329,20 @@ function Initialize-LabResourceMSU {
 .OUTPUTS
     Returns an array of LabISOResource objects.
 #>
-function Get-LabResourceISO {
+function Get-LabResourceISO
+{
     [OutputType([LabResourceISO[]])]
     [CmdLetBinding()]
     param
     (
         [Parameter(
-            Position=1,
-            Mandatory=$true)]
+            Position = 1,
+            Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
         $Lab,
 
         [Parameter(
-            Position=2)]
+            Position = 2)]
         [ValidateNotNullOrEmpty()]
         [String[]] $Name
     )
@@ -346,7 +351,7 @@ function Get-LabResourceISO {
     # If no path is specified then look in the resource path.
     # If a path is specified but it is relative, make it relative to the resource path.
     # Otherwise use it as is.
-    [String] $ISORootPath = $Lab.labbuilderconfig.Resources.ISOPath
+    [System.String] $ISORootPath = $Lab.labbuilderconfig.Resources.ISOPath
     if ($ISORootPath)
     {
         if (-not [System.IO.Path]::IsPathRooted($ISORootPath))
@@ -375,12 +380,12 @@ function Get-LabResourceISO {
 
             if ($ISOName -eq 'iso')
             {
-                $ExceptionParameters = @{
-                    errorId = 'ResourceISONameIsEmptyError'
+                $exceptionParameters = @{
+                    errorId       = 'ResourceISONameIsEmptyError'
                     errorCategory = 'InvalidArgument'
-                    errorMessage = $($LocalizedData.ResourceISONameIsEmptyError)
+                    errorMessage  = $($LocalizedData.ResourceISONameIsEmptyError)
                 }
-                ThrowException @ExceptionParameters
+                New-LabException @exceptionParameters
             } # if
             $ResourceISO = [LabResourceISO]::New($ISOName)
             $Path = $ISO.Path
@@ -396,13 +401,13 @@ function Get-LabResourceISO {
             else
             {
                 # A Path is not provided
-                $ExceptionParameters = @{
-                    errorId = 'ResourceISOPathIsEmptyError'
+                $exceptionParameters = @{
+                    errorId       = 'ResourceISOPathIsEmptyError'
                     errorCategory = 'InvalidArgument'
-                    errorMessage = $($LocalizedData.ResourceISOPathIsEmptyError `
-                        -f $ISOName)
+                    errorMessage  = $($LocalizedData.ResourceISOPathIsEmptyError `
+                            -f $ISOName)
                 }
-                ThrowException @ExceptionParameters
+                New-LabException @exceptionParameters
             }
             if ($ISO.URL)
             {
@@ -444,23 +449,24 @@ function Get-LabResourceISO {
 .OUTPUTS
     None.
 #>
-function Initialize-LabResourceISO {
+function Initialize-LabResourceISO
+{
     [CmdLetBinding()]
     param
     (
         [Parameter(
-            Position=1,
-            Mandatory=$true)]
+            Position = 1,
+            Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
         $Lab,
 
         [Parameter(
-            Position=2)]
+            Position = 2)]
         [ValidateNotNullOrEmpty()]
         [String[]] $Name,
 
         [Parameter(
-            Position=3)]
+            Position = 3)]
         [LabResourceISO[]] $ResourceISOs
     )
 
@@ -480,42 +486,42 @@ function Initialize-LabResourceISO {
                 # The Resource ISO does not exist
                 if (-not ($ResourceISO.URL))
                 {
-                    $ExceptionParameters = @{
-                        errorId = 'ResourceISOFileNotFoundAndNoURLError'
+                    $exceptionParameters = @{
+                        errorId       = 'ResourceISOFileNotFoundAndNoURLError'
                         errorCategory = 'InvalidArgument'
-                        errorMessage = $($LocalizedData.ResourceISOFileNotFoundAndNoURLError `
-                            -f $ISOName,$Path)
+                        errorMessage  = $($LocalizedData.ResourceISOFileNotFoundAndNoURLError `
+                                -f $ISOName, $Path)
                     }
-                    ThrowException @ExceptionParameters
+                    New-LabException @exceptionParameters
                 } # if
 
                 $URLLeaf = [System.IO.Path]::GetFileName($ResourceISO.URL)
                 $URLExtension = [System.IO.Path]::GetExtension($URLLeaf)
-                if ($URLExtension -in @('.zip','.iso'))
+                if ($URLExtension -in @('.zip', '.iso'))
                 {
-                    WriteMessage -Message $($LocalizedData.DownloadingResourceISOMessage `
-                        -f $ResourceISO.Name,$ResourceISO.URL)
+                    Write-LabMessage -Message $($LocalizedData.DownloadingResourceISOMessage `
+                            -f $ResourceISO.Name, $ResourceISO.URL)
 
-                    DownloadAndUnzipFile `
+                    Invoke-LabDownloadAndUnzipFile `
                         -URL $ResourceISO.URL `
                         -DestinationPath (Split-Path -Path $ResourceISO.Path)
                 }
-                elseif ([String]::IsNullOrEmpty($URLExtension))
+                elseif ([System.String]::IsNullOrEmpty($URLExtension))
                 {
-                    WriteMessage `
+                    Write-LabMessage `
                         -Type Alert `
                         -Message $($LocalizedData.ISONotFoundDownloadURLMessage `
-                            -f $ResourceISO.Name,$ResourceISO.Path,$ResourceISO.URL)
+                            -f $ResourceISO.Name, $ResourceISO.Path, $ResourceISO.URL)
                 } # if
                 if (-not (Test-Path -Path $ResourceISO.Path))
                 {
-                    $ExceptionParameters = @{
-                        errorId = 'ResourceISOFileNotDownloadedError'
+                    $exceptionParameters = @{
+                        errorId       = 'ResourceISOFileNotDownloadedError'
                         errorCategory = 'InvalidArgument'
-                        errorMessage = $($LocalizedData.ResourceISOFileNotDownloadedError `
-                            -f $ResourceISO.Name,$ResourceISO.Path,$ResourceISO.URL)
+                        errorMessage  = $($LocalizedData.ResourceISOFileNotDownloadedError `
+                                -f $ResourceISO.Name, $ResourceISO.Path, $ResourceISO.URL)
                     }
-                    ThrowException @ExceptionParameters
+                    New-LabException @exceptionParameters
                 } # if
             } # if
         } # foreach

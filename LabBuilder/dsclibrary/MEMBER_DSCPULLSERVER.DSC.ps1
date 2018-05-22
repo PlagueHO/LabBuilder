@@ -19,68 +19,71 @@ DSC Template Configuration File For use by LabBuilder
 Configuration MEMBER_DSCPULLSERVER
 {
     Import-DSCResource -ModuleName xPSDesiredStateConfiguration
-    Import-DscResource -ModuleName xComputerManagement
+    Import-DscResource -ModuleName ComputerManagementDsc
     Import-DscResource -ModuleName xWebAdministration
+
     Node $AllNodes.NodeName {
         # Assemble the Local Admin Credentials
-        If ($Node.LocalAdminPassword) {
+        if ($Node.LocalAdminPassword)
+        {
             [PSCredential]$LocalAdminCredential = New-Object System.Management.Automation.PSCredential ("Administrator", (ConvertTo-SecureString $Node.LocalAdminPassword -AsPlainText -Force))
         }
-        If ($Node.DomainAdminPassword) {
+        if ($Node.DomainAdminPassword)
+        {
             [PSCredential]$DomainAdminCredential = New-Object System.Management.Automation.PSCredential ("$($Node.DomainName)\Administrator", (ConvertTo-SecureString $Node.DomainAdminPassword -AsPlainText -Force))
         }
 
         WindowsFeature IISInstall
         {
-            Ensure          = "Present"
-            Name            = "Web-Server"
+            Ensure = "Present"
+            Name   = "Web-Server"
         }
 
         WindowsFeature AspNet45Install
         {
-            Ensure          = "Present"
-            Name            = "Web-Asp-Net45"
+            Ensure = "Present"
+            Name   = "Web-Asp-Net45"
         }
 
         WindowsFeature WebMgmtServiceInstall
         {
-            Ensure          = "Present"
-            Name            = "Web-Mgmt-Service"
+            Ensure = "Present"
+            Name   = "Web-Mgmt-Service"
         }
 
         WindowsFeature DSCServiceFeature
         {
-            Ensure          = 'Present'
-            Name            = 'DSC-Service'
+            Ensure = 'Present'
+            Name   = 'DSC-Service'
         }
 
         WaitForAll DC
         {
-            ResourceName      = '[xADDomain]PrimaryDC'
-            NodeName          = $Node.DCname
-            RetryIntervalSec  = 15
-            RetryCount        = 60
+            ResourceName     = '[xADDomain]PrimaryDC'
+            NodeName         = $Node.DCname
+            RetryIntervalSec = 15
+            RetryCount       = 60
         }
 
-        xComputer JoinDomain
+        Computer JoinDomain
         {
-            Name          = $Node.NodeName
-            DomainName    = $Node.DomainName
-            Credential    = $DomainAdminCredential
-            DependsOn     = "[WaitForAll]DC"
+            Name       = $Node.NodeName
+            DomainName = $Node.DomainName
+            Credential = $DomainAdminCredential
+            DependsOn  = "[WaitForAll]DC"
         }
 
         xDscWebService PSDSCPullServer
         {
-            Ensure                  = 'Present'
-            EndpointName            = 'PSDSCPullServer'
-            Port                    = $Node.Port
-            PhysicalPath            = $Node.PhysicalPath
-            CertificateThumbPrint   = $Node.CertificateThumbprint
-            ModulePath              = "$env:PROGRAMFILES\WindowsPowerShell\DscService\Modules"
-            ConfigurationPath       = "$env:PROGRAMFILES\WindowsPowerShell\DscService\Configuration"
-            State                   = 'Started'
-            DependsOn               = '[WindowsFeature]DSCServiceFeature'
+            Ensure                = 'Present'
+            EndpointName          = 'PSDSCPullServer'
+            Port                  = $Node.Port
+            PhysicalPath          = $Node.PhysicalPath
+            CertificateThumbPrint = $Node.CertificateThumbprint
+            ModulePath            = "$env:PROGRAMFILES\WindowsPowerShell\DscService\Modules"
+            ConfigurationPath     = "$env:PROGRAMFILES\WindowsPowerShell\DscService\Configuration"
+            State                 = 'Started'
+            DependsOn             = '[WindowsFeature]DSCServiceFeature'
         }
 
         File RegistrationKeyFile

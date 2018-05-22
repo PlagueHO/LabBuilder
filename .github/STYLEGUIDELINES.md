@@ -8,10 +8,10 @@ General Rules
 ----------------
 
  1. For all indentation, use 4 spaces instead of tab stops
- 2. Make sure all files are encoding using UTF-8. 
+ 2. Make sure all files are encoding using UTF-8.
  3. When writing Markdown, if a paragraph includes more than one sentence, end each sentence with a newline.
-GitHub will still render the sentences as a single paragraph, but the readability of `git diff` will be greatly improved. 
- 4. Files must end with a newline, see [StackOverflow.](http://stackoverflow.com/questions/5813311/no-newline-at-end-of-file) 
+GitHub will still render the sentences as a single paragraph, but the readability of `git diff` will be greatly improved.
+ 4. Files must end with a newline, see [StackOverflow.](http://stackoverflow.com/questions/5813311/no-newline-at-end-of-file)
 
 PowerShell Coding Style Guidelines
 ==================================
@@ -78,7 +78,7 @@ if ($connected) {
 
 **Good:**
 ```powershell
-if ($connected) 
+if ($connected)
 {
     Write-Verbose -Verbose 'Connected to server'
 }
@@ -89,13 +89,13 @@ Each line should have less than 100 characters
 
 **Bad:**
 ```powershell
-$convertToCimUnjoinCredential = New-CimInstance -ClassName MSFT_Credential -Property @{Username=[string]$UnjoinCredential.UserName; Password=[string]$null} -Namespace root/microsoft/windows/desiredstateconfiguration -ClientOnly
+$convertToCimUnjoinCredential = New-CimInstance -ClassName MSFT_Credential -Property @{Username=[System.String]$UnjoinCredential.UserName; Password=[System.String]$null} -Namespace root/microsoft/windows/desiredstateconfiguration -ClientOnly
 ```
 
 **Good:**
 ```powershell
 $convertToCimUnjoinCredential = New-CimInstance -ClassName MSFT_Credential `
-        -Property @{Username=[string]$UnjoinCredential.UserName; Password=[string]$null} `
+        -Property @{Username=[System.String]$UnjoinCredential.UserName; Password=[System.String]$null} `
         -Namespace root/microsoft/windows/desiredstateconfiguration -ClientOnly
 ```
 
@@ -131,7 +131,7 @@ function Get-TargetResource
 }
 ```
 
-Parameter names should use PascalCase 
+Parameter names should use PascalCase
 -------------------------------------------------------------
 
 **Bad:**
@@ -193,13 +193,13 @@ When commenting functions, use comment-based help syntax
 # Writes event
 function New-EtwEvent
 {
-    param 
+    param
     (
         [Parameter(Mandatory=$true)]
         [ValidateNotNullOrEmpty()]
-        [String] $message,
+        [System.String] $message,
         [ValidateSet("operational", "debug", "analytic")]
-        [String] $chanel = "operational"
+        [System.String] $chanel = "operational"
     )
     # Implementation
  }
@@ -211,20 +211,20 @@ function New-EtwEvent
     .SYNOPSIS Writes event to ETW
     .PARAM
         message Message to write to ETW
-    .PARAM 
+    .PARAM
         chanel ETW channel where message should be stored
     .EXAMPLE
         New-EtwEvent -message "Attempting to connect to server" -chanel "debug"
 #>
 function New-EtwEvent
 {
-    param 
+    param
     (
         [Parameter(Mandatory=$true)]
         [ValidateNotNullOrEmpty()]
-        [String] $message,
+        [System.String] $message,
         [ValidateSet("operational", "debug", "analytic")]
-        [String] $chanel = "operational"
+        [System.String] $chanel = "operational"
     )
     # Implementation
  }

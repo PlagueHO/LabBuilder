@@ -35,19 +35,19 @@ try
     .SYNOPSIS
     Helper function that just creates an exception record for testing.
     #>
-        function GetException
+        function Get-LabException
         {
             [CmdLetBinding()]
             param
             (
-                [Parameter(Mandatory)]
-                [String] $errorId,
+                [Parameter(Mandatory = $true)]
+                [System.String] $errorId,
 
-                [Parameter(Mandatory)]
+                [Parameter(Mandatory = $true)]
                 [System.Management.Automation.ErrorCategory] $errorCategory,
 
-                [Parameter(Mandatory)]
-                [String] $errorMessage,
+                [Parameter(Mandatory = $true)]
+                [System.String] $errorMessage,
 
                 [Switch]
                 $terminate
@@ -68,7 +68,7 @@ try
 
             Context 'Valid Configuration Passed' {
                 It 'Should return "TestLab Lab Management"' {
-                    GetManagementSwitchName -Lab $Lab | Should Be 'TestLab Lab Management'
+                    GetManagementSwitchName -Lab $Lab | Should -Be 'TestLab Lab Management'
                 }
             }
         }
@@ -81,7 +81,7 @@ try
                     [Parameter(ValueFromPipeline=$True)]
                     $InputObject,
                     [Switch] $DynamicMacAddress,
-                    [String] $StaticMacAddress
+                    [System.String] $StaticMacAddress
                 )
             }
             function Set-VMNetworkAdapterVlan {
@@ -116,7 +116,7 @@ try
                 $Splat.Remove('VlanId')
                 $Splat.Remove('StaticMacAddress')
                 It 'Does Not Throw Exception' {
-                    { UpdateSwitchManagementAdapter @Splat } | Should Not Throw
+                    { UpdateSwitchManagementAdapter @Splat } | Should -Not -Throw
                 }
                 It 'Calls Mocked commands' {
                     Assert-MockCalled Get-VMNetworkAdapter -Exactly 1
@@ -133,7 +133,7 @@ try
                 $Splat.VlanId = 10
                 $Splat.Remove('StaticMacAddress')
                 It 'Does Not Throw Exception' {
-                    { UpdateSwitchManagementAdapter @Splat } | Should Not Throw
+                    { UpdateSwitchManagementAdapter @Splat } | Should -Not -Throw
                 }
                 It 'Calls Mocked commands' {
                     Assert-MockCalled Get-VMNetworkAdapter -Exactly 1
@@ -150,7 +150,7 @@ try
                 $Splat.VlanId = $null
                 $Splat.Remove('StaticMacAddress')
                 It 'Does Not Throw Exception' {
-                    { UpdateSwitchManagementAdapter @Splat } | Should Not Throw
+                    { UpdateSwitchManagementAdapter @Splat } | Should -Not -Throw
                 }
                 It 'Calls Mocked commands' {
                     Assert-MockCalled Get-VMNetworkAdapter -Exactly 1
@@ -166,7 +166,7 @@ try
                 $Splat = $TestAdapter.Clone()
                 $Splat.Remove('VlanId')
                 It 'Does Not Throw Exception' {
-                    { UpdateSwitchManagementAdapter @Splat } | Should Not Throw
+                    { UpdateSwitchManagementAdapter @Splat } | Should -Not -Throw
                 }
                 It 'Calls Mocked commands' {
                     Assert-MockCalled Get-VMNetworkAdapter -Exactly 1
@@ -183,7 +183,7 @@ try
                 $Splat.Remove('VlanId')
                 $Splat.StaticMacAddress = ''
                 It 'Does Not Throw Exception' {
-                    { UpdateSwitchManagementAdapter @Splat } | Should Not Throw
+                    { UpdateSwitchManagementAdapter @Splat } | Should -Not -Throw
                 }
                 It 'Calls Mocked commands' {
                     Assert-MockCalled Get-VMNetworkAdapter -Exactly 1
@@ -201,7 +201,7 @@ try
             Context 'Switch Management Adapter exists, VlanId passed, StaticMacAddress passed' {
                 $Splat = $TestAdapter.Clone()
                 It 'Does Not Throw Exception' {
-                    { UpdateSwitchManagementAdapter @Splat } | Should Not Throw
+                    { UpdateSwitchManagementAdapter @Splat } | Should -Not -Throw
                 }
                 It 'Calls Mocked commands' {
                     Assert-MockCalled Get-VMNetworkAdapter -Exactly 1

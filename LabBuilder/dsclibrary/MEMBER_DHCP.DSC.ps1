@@ -56,21 +56,24 @@ DSC Template Configuration File For use by LabBuilder
 Configuration MEMBER_DHCP
 {
     Import-DscResource -ModuleName 'PSDesiredStateConfiguration'
-    Import-DscResource -ModuleName xComputerManagement
+    Import-DscResource -ModuleName ComputerManagementDsc
     Import-DscResource -ModuleName xDHCPServer
+
     Node $AllNodes.NodeName {
         # Assemble the Local Admin Credentials
-        If ($Node.LocalAdminPassword) {
+        if ($Node.LocalAdminPassword)
+        {
             [PSCredential]$LocalAdminCredential = New-Object System.Management.Automation.PSCredential ("Administrator", (ConvertTo-SecureString $Node.LocalAdminPassword -AsPlainText -Force))
         }
-        If ($Node.DomainAdminPassword) {
+        if ($Node.DomainAdminPassword)
+        {
             [PSCredential]$DomainAdminCredential = New-Object System.Management.Automation.PSCredential ("$($Node.DomainName)\Administrator", (ConvertTo-SecureString $Node.DomainAdminPassword -AsPlainText -Force))
         }
 
         WindowsFeature DHCPInstall
         {
             Ensure = "Present"
-            Name = "DHCP"
+            Name   = "DHCP"
         }
 
         if ($InstallRSATTools)
@@ -78,46 +81,47 @@ Configuration MEMBER_DHCP
             WindowsFeature RSAT-ManagementTools
             {
                 Ensure    = "Present"
-                Name      = "RSAT-DHCP","RSAT-DNS-Server"
+                Name      = "RSAT-DHCP", "RSAT-DNS-Server"
                 DependsOn = "[WindowsFeature]DHCPInstall"
             }
         }
 
         WaitForAll DC
         {
-            ResourceName      = '[xADDomain]PrimaryDC'
-            NodeName          = $Node.DCname
-            RetryIntervalSec  = 15
-            RetryCount        = 60
+            ResourceName     = '[xADDomain]PrimaryDC'
+            NodeName         = $Node.DCname
+            RetryIntervalSec = 15
+            RetryCount       = 60
         }
 
-        xComputer JoinDomain
-        { 
-            Name          = $Node.NodeName
-            DomainName    = $Node.DomainName
-            Credential    = $DomainAdminCredential
-            DependsOn     = "[WaitForAll]DC"
+        Computer JoinDomain
+        {
+            Name       = $Node.NodeName
+            DomainName = $Node.DomainName
+            Credential = $DomainAdminCredential
+            DependsOn  = "[WaitForAll]DC"
         }
 
         # DHCP Server Settings
         Script DHCPAuthorize
         {
             PSDSCRunAsCredential = $DomainAdminCredential
-            SetScript = {
+            SetScript            = {
                 Add-DHCPServerInDC
             }
-            GetScript = {
+            GetScript            = {
                 Return @{
                     'Authorized' = (@(Get-DHCPServerInDC | Where-Object { $_.IPAddress -In (Get-NetIPAddress).IPAddress }).Count -gt 0);
                 }
             }
-            TestScript = { 
+            TestScript           = {
                 Return (-not (@(Get-DHCPServerInDC | Where-Object { $_.IPAddress -In (Get-NetIPAddress).IPAddress }).Count -eq 0))
             }
-            DependsOn = '[xComputer]JoinDomain'
+            DependsOn            = '[Computer]JoinDomain'
         }
-        [Int]$Count=0
-        Foreach ($Scope in $Node.Scopes) {
+        [Int]$Count = 0
+        Foreach ($Scope in $Node.Scopes)
+        {
             $Count++
             xDhcpServerScope "Scope$Count"
             {
@@ -131,8 +135,9 @@ Configuration MEMBER_DHCP
                 AddressFamily = $Scope.AddressFamily
             }
         }
-        [Int]$Count=0
-        Foreach ($Reservation in $Node.Reservations) {
+        [Int]$Count = 0
+        Foreach ($Reservation in $Node.Reservations)
+        {
             $Count++
             xDhcpServerReservation "Reservation$Count"
             {
@@ -144,8 +149,9 @@ Configuration MEMBER_DHCP
                 AddressFamily    = $Reservation.AddressFamily
             }
         }
-        [Int]$Count=0
-        Foreach ($ScopeOption in $Node.ScopeOptions) {
+        [Int]$Count = 0
+        Foreach ($ScopeOption in $Node.ScopeOptions)
+        {
             $Count++
             xDhcpServerOption "ScopeOption$Count"
             {

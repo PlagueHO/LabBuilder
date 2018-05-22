@@ -55,13 +55,15 @@ try
                     -ErrorAction SilentlyContinue
                 $PSScriptAnalyzerErrors = $PSScriptAnalyzerResult | Where-Object { $_.Severity -eq 'Error' }
                 $PSScriptAnalyzerWarnings = $PSScriptAnalyzerResult | Where-Object { $_.Severity -eq 'Warning' }
+
                 if ($PSScriptAnalyzerErrors -ne $null)
                 {
                     Write-Warning -Message 'There are PSScriptAnalyzer errors that need to be fixed:'
                     @($PSScriptAnalyzerErrors).Foreach( { Write-Warning -Message "$($_.Scriptname) (Line $($_.Line)): $($_.Message)" } )
                     Write-Warning -Message  'For instructions on how to run PSScriptAnalyzer on your own machine, please go to https://github.com/powershell/psscriptAnalyzer/'
-                    $PSScriptAnalyzerErrors.Count | Should Be $null
+                    $PSScriptAnalyzerErrors.Count | Should -Be $null
                 }
+
                 if ($PSScriptAnalyzerWarnings -ne $null)
                 {
                     Write-Warning -Message 'There are PSScriptAnalyzer warnings that should be fixed:'
@@ -76,19 +78,19 @@ try
     .SYNOPSIS
     Helper function that just creates an exception record for testing.
     #>
-        function GetException
+        function Get-LabException
         {
             [CmdLetBinding()]
             param
             (
-                [Parameter(Mandatory)]
-                [String] $errorId,
+                [Parameter(Mandatory = $true)]
+                [System.String] $errorId,
 
-                [Parameter(Mandatory)]
+                [Parameter(Mandatory = $true)]
                 [System.Management.Automation.ErrorCategory] $errorCategory,
 
-                [Parameter(Mandatory)]
-                [String] $errorMessage,
+                [Parameter(Mandatory = $true)]
+                [System.String] $errorMessage,
 
                 [Switch]
                 $terminate
@@ -104,20 +106,23 @@ try
         # Run tests assuming Build 10586 is installed
         $Script:CurrentBuild = 10586
 
-
         # Perform Configuration XML Schema validation
-        Describe 'XMLConfigurationSchemaValidation' {
+        Describe 'Validate XML schema of lab test files' {
             Context 'PesterTestConfig.OK.XML' {
                 It 'Does not throw an exception' {
-                    { ValidateConfigurationXMLSchema -ConfigPath $Global:TestConfigOKPath -Verbose } | Should Not Throw
+                    { Assert-ValidConfigurationXMLSchema -ConfigPath $Global:TestConfigOKPath -Verbose } | Should -Not -Throw
                 }
             }
+        }
+
+        Describe 'Validate XML schema of lab sample files' {
             $SampleFiles = Get-ChildItem -Path (Join-Path -Path $Global:ModuleRoot -ChildPath "Samples") -Recurse -Filter 'Sample_*.xml'
+
             foreach ($SampleFile in $SampleFiles)
             {
                 Context "Samples\$SampleFile" {
                     It 'Does not throw an exception' {
-                        { ValidateConfigurationXMLSchema -ConfigPath $($SampleFile.Fullname) -Verbose } | Should Not Throw
+                        { Assert-ValidConfigurationXMLSchema -ConfigPath $($SampleFile.Fullname) -Verbose } | Should -Not -Throw
                     }
                 }
             }

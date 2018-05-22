@@ -35,19 +35,19 @@ try
     .SYNOPSIS
     Helper function that just creates an exception record for testing.
     #>
-        function GetException
+        function Get-LabException
         {
             [CmdLetBinding()]
             param
             (
-                [Parameter(Mandatory)]
-                [String] $errorId,
+                [Parameter(Mandatory = $true)]
+                [System.String] $errorId,
 
-                [Parameter(Mandatory)]
+                [Parameter(Mandatory = $true)]
                 [System.Management.Automation.ErrorCategory] $errorCategory,
 
-                [Parameter(Mandatory)]
-                [String] $errorMessage,
+                [Parameter(Mandatory = $true)]
+                [System.String] $errorMessage,
 
                 [Switch]
                 $terminate
@@ -70,14 +70,14 @@ try
                 It 'Throws a ResourceModuleNameIsEmptyError Exception' {
                     $Lab = Get-Lab -ConfigPath $Global:TestConfigOKPath
                     $Lab.labbuilderconfig.resources.module[0].RemoveAttribute('name')
-                    $ExceptionParameters = @{
+                    $exceptionParameters = @{
                         errorId = 'ResourceModuleNameIsEmptyError'
                         errorCategory = 'InvalidArgument'
                         errorMessage = $($LocalizedData.ResourceModuleNameIsEmptyError)
                     }
-                    $Exception = GetException @ExceptionParameters
+                    $Exception = Get-LabException @exceptionParameters
 
-                    { Get-LabResourceModule -Lab $Lab } | Should Throw $Exception
+                    { Get-LabResourceModule -Lab $Lab } | Should -Throw $Exception
                 }
             }
             Context 'Valid configuration is passed' {
@@ -86,7 +86,7 @@ try
                     [Array] $ResourceModules = Get-LabResourceModule -Lab $Lab
                     Set-Content -Path "$Global:ArtifactPath\ExpectedResourceModules.json" -Value ($ResourceModules | ConvertTo-Json -Depth 4)
                     $ExpectedResourceModules = Get-Content -Path "$Global:ExpectedContentPath\ExpectedResourceModules.json"
-                    [String]::Compare((Get-Content -Path "$Global:ArtifactPath\ExpectedResourceModules.json"),$ExpectedResourceModules,$true) | Should Be 0
+                    [System.String]::Compare((Get-Content -Path "$Global:ArtifactPath\ExpectedResourceModules.json"),$ExpectedResourceModules,$true) | Should -Be 0
                 }
             }
         }
@@ -98,14 +98,14 @@ try
             $Lab = Get-Lab -ConfigPath $Global:TestConfigOKPath
             [LabResourceModule[]]$ResourceModules = Get-LabResourceModule -Lab $Lab
 
-            Mock DownloadResourceModule
+            Mock Invoke-LabDownloadResourceModule
 
             Context 'Valid configuration is passed' {
                 It 'Does not throw an Exception' {
-                    { Initialize-LabResourceModule -Lab $Lab -ResourceModules $ResourceModules } | Should Not Throw
+                    { Initialize-LabResourceModule -Lab $Lab -ResourceModules $ResourceModules } | Should -Not -Throw
                 }
                 It 'Calls Mocked commands' {
-                    Assert-MockCalled DownloadResourceModule -Exactly 4
+                    Assert-MockCalled Invoke-LabDownloadResourceModule -Exactly 4
                 }
             }
         }
@@ -118,14 +118,14 @@ try
                 It 'Throws a ResourceMSUNameIsEmptyError Exception' {
                     $Lab = Get-Lab -ConfigPath $Global:TestConfigOKPath
                     $Lab.labbuilderconfig.resources.msu[0].RemoveAttribute('name')
-                    $ExceptionParameters = @{
+                    $exceptionParameters = @{
                         errorId = 'ResourceMSUNameIsEmptyError'
                         errorCategory = 'InvalidArgument'
                         errorMessage = $($LocalizedData.ResourceMSUNameIsEmptyError)
                     }
-                    $Exception = GetException @ExceptionParameters
+                    $Exception = Get-LabException @exceptionParameters
 
-                    { Get-LabResourceMSU -Lab $Lab } | Should Throw $Exception
+                    { Get-LabResourceMSU -Lab $Lab } | Should -Throw $Exception
                 }
             }
             Context 'Valid configuration is passed' {
@@ -134,7 +134,7 @@ try
                     [Array] $ResourceMSUs = Get-LabResourceMSU -Lab $Lab
                     Set-Content -Path "$Global:ArtifactPath\ExpectedResourceMSUs.json" -Value ($ResourceMSUs | ConvertTo-Json -Depth 4)
                     $ExpectedResourceMSUs = Get-Content -Path "$Global:ExpectedContentPath\ExpectedResourceMSUs.json"
-                    [String]::Compare((Get-Content -Path "$Global:ArtifactPath\ExpectedResourceMSUs.json"),$ExpectedResourceMSUs,$true) | Should Be 0
+                    [System.String]::Compare((Get-Content -Path "$Global:ArtifactPath\ExpectedResourceMSUs.json"),$ExpectedResourceMSUs,$true) | Should -Be 0
                 }
             }
         }
@@ -146,15 +146,15 @@ try
             $Lab = Get-Lab -ConfigPath $Global:TestConfigOKPath
             [LabResourceMSU[]]$ResourceMSUs = Get-LabResourceMSU -Lab $Lab
 
-            Mock DownloadAndUnzipFile
+            Mock Invoke-LabDownloadAndUnzipFile
             Mock Test-Path -MockWith { $False }
 
             Context 'Valid configuration is passed and resources are missing' {
                 It 'Does not throw an Exception' {
-                    { Initialize-LabResourceMSU -Lab $Lab -ResourceMSUs $ResourceMSUs } | Should Not Throw
+                    { Initialize-LabResourceMSU -Lab $Lab -ResourceMSUs $ResourceMSUs } | Should -Not -Throw
                 }
                 It 'Calls Mocked commands' {
-                    Assert-MockCalled DownloadAndUnzipFile -Exactly 2
+                    Assert-MockCalled Invoke-LabDownloadAndUnzipFile -Exactly 2
                 }
             }
         }
@@ -167,29 +167,29 @@ try
                 It 'Throws a ResourceISONameIsEmptyError Exception' {
                     $Lab = Get-Lab -ConfigPath $Global:TestConfigOKPath
                     $Lab.labbuilderconfig.resources.iso[0].RemoveAttribute('name')
-                    $ExceptionParameters = @{
+                    $exceptionParameters = @{
                         errorId = 'ResourceISONameIsEmptyError'
                         errorCategory = 'InvalidArgument'
                         errorMessage = $($LocalizedData.ResourceISONameIsEmptyError)
                     }
-                    $Exception = GetException @ExceptionParameters
+                    $Exception = Get-LabException @exceptionParameters
 
-                    { Get-LabResourceISO -Lab $Lab } | Should Throw $Exception
+                    { Get-LabResourceISO -Lab $Lab } | Should -Throw $Exception
                 }
             }
             Context 'Configuration passed with resource ISO with Empty Path' {
                 It 'Throws a ResourceISOPathIsEmptyError Exception' {
                     $Lab = Get-Lab -ConfigPath $Global:TestConfigOKPath
                     $Lab.labbuilderconfig.resources.iso[0].path=''
-                    $ExceptionParameters = @{
+                    $exceptionParameters = @{
                         errorId = 'ResourceISOPathIsEmptyError'
                         errorCategory = 'InvalidArgument'
                         errorMessage = $($LocalizedData.ResourceISOPathIsEmptyError `
                             -f $Lab.labbuilderconfig.resources.iso[0].name)
                     }
-                    $Exception = GetException @ExceptionParameters
+                    $Exception = Get-LabException @exceptionParameters
 
-                    { Get-LabResourceISO -Lab $Lab } | Should Throw $Exception
+                    { Get-LabResourceISO -Lab $Lab } | Should -Throw $Exception
                 }
             }
             Context 'Configuration passed with resource ISO files that do exist.' {
@@ -201,7 +201,7 @@ try
                     $Lab.labbuilderconfig.resources.iso[1].RemoveAttribute('url')
                     $Lab.labbuilderconfig.resources.iso[1].SetAttribute('path',"$Global:TestConfigPath\ISOFiles\SQLFULL_ENU.iso")
 
-                    { Get-LabResourceISO -Lab $Lab } | Should Not Throw
+                    { Get-LabResourceISO -Lab $Lab } | Should -Not -Throw
                 }
             }
             Context 'Valid configuration is passed' {
@@ -216,7 +216,7 @@ try
                     })
                     Set-Content -Path "$Global:ArtifactPath\ExpectedResourceISOs.json" -Value ($ResourceISOs | ConvertTo-Json -Depth 4)
                     $ExpectedResourceISOs = Get-Content -Path "$Global:ExpectedContentPath\ExpectedResourceISOs.json"
-                    [String]::Compare((Get-Content -Path "$Global:ArtifactPath\ExpectedResourceISOs.json"),$ExpectedResourceISOs,$true) | Should Be 0
+                    [System.String]::Compare((Get-Content -Path "$Global:ArtifactPath\ExpectedResourceISOs.json"),$ExpectedResourceISOs,$true) | Should -Be 0
                 }
             }
             Context 'Valid configuration is passed with ISOPath set' {
@@ -231,7 +231,7 @@ try
                     })
                     Set-Content -Path "$Global:ArtifactPath\ExpectedResourceISOs.json" -Value ($ResourceISOs | ConvertTo-Json -Depth 4)
                     $ExpectedResourceISOs = Get-Content -Path "$Global:ExpectedContentPath\ExpectedResourceISOs.json"
-                    [String]::Compare((Get-Content -Path "$Global:ArtifactPath\ExpectedResourceISOs.json"),$ExpectedResourceISOs,$true) | Should Be 0
+                    [System.String]::Compare((Get-Content -Path "$Global:ArtifactPath\ExpectedResourceISOs.json"),$ExpectedResourceISOs,$true) | Should -Be 0
                 }
             }
         }
@@ -244,14 +244,14 @@ try
             $Lab.labbuilderconfig.resources.SetAttribute('isopath',$Path)
             [LabResourceISO[]]$ResourceISOs = Get-LabResourceISO -Lab $Lab
 
-            Mock DownloadAndUnzipFile
+            Mock Invoke-LabDownloadAndUnzipFile
 
             Context 'Valid configuration is passed and all ISOs exist' {
                 It 'Does not throw an Exception' {
-                    { Initialize-LabResourceISO -Lab $Lab -ResourceISOs $ResourceISOs } | Should Not Throw
+                    { Initialize-LabResourceISO -Lab $Lab -ResourceISOs $ResourceISOs } | Should -Not -Throw
                 }
                 It 'Calls Mocked commands' {
-                    Assert-MockCalled DownloadAndUnzipFile -Exactly 0
+                    Assert-MockCalled Invoke-LabDownloadAndUnzipFile -Exactly 0
                 }
             }
         }

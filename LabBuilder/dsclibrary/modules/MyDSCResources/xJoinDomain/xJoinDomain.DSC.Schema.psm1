@@ -4,7 +4,7 @@ DSC Template Configuration File For use by LabBuilder
     Join Domain DSC Module
 .Desription
     Joins Server to Domain
-.Parameters:          
+.Parameters:
     DomainName = "LABBUILDER.COM"
     DomainAdminPassword = "P@ssword!1"
     ComputerName = "Server01"
@@ -17,38 +17,38 @@ Configuration JOINDOMAIN
     (
         # Set the Domain Name
         [Parameter(Mandatory=$True,Position=1)]
-        [String]
+        [System.String]
         $DomainName,
-        
-        
+
+
         # Set the Domain Controller Name
         [Parameter(Mandatory=$True)]
-        [String]
+        [System.String]
         $DCName,
-                
+
         # Domain Administrator Credentials
         [Parameter(Mandatory=$True)]
-        [String]
+        [System.String]
         $DomainAdminPassword,
-        
+
         # Set the Computer Name
         [Parameter(Mandatory=$True)]
-        [String]
+        [System.String]
         $ComputerName
-                
-        
-        
+
+
+
     )
-    
+
     Import-DscResource -ModuleName 'PSDesiredStateConfiguration'
-    Import-DscResource -ModuleName xComputerManagement
+    Import-DscResource -ModuleName ComputerManagementDsc
     Import-DscResource -ModuleName xNetworking
 
         # Assemble the Local Admin Credentials
-        If ($LocalAdminPassword) {
+        if ($LocalAdminPassword) {
             [PSCredential]$LocalAdminCredential = New-Object System.Management.Automation.PSCredential ("Administrator", (ConvertTo-SecureString $LocalAdminPassword -AsPlainText -Force))
         }
-        If ($Node.DomainAdminPassword) {
+        if ($Node.DomainAdminPassword) {
             [PSCredential]$DomainAdminCredential = New-Object System.Management.Automation.PSCredential ("$DomainName\Administrator", (ConvertTo-SecureString $DomainAdminPassword -AsPlainText -Force))
         }
 
@@ -61,12 +61,12 @@ Configuration JOINDOMAIN
         }
 
 
-        xComputer JoinDomain 
-        { 
+        Computer JoinDomain
+        {
             Name          = $ComputerName
             DomainName    = $DomainName
-            Credential    = $DomainAdminCredential 
-            DependsOn = "[WaitForAll]DC" 
+            Credential    = $DomainAdminCredential
+            DependsOn = "[WaitForAll]DC"
         }
-    
+
 }

@@ -15,16 +15,17 @@ DSC Template Configuration File For use by LabBuilder
 Configuration MEMBER_FILESERVER_FSRMTEST
 {
     Import-DscResource -ModuleName 'PSDesiredStateConfiguration'
-    Import-DscResource -ModuleName xComputerManagement
-    Import-DscResource -ModuleName xStorage
+    Import-DscResource -ModuleName ComputerManagementDsc
+    Import-DscResource -ModuleName StorageDsc
     Import-DscResource -ModuleName xNetworking
-    Import-DscResource -ModuleName cFSRM
+    Import-DscResource -ModuleName FSRMDsc
+
     Node $AllNodes.NodeName {
         # Assemble the Local Admin Credentials
-        If ($Node.LocalAdminPassword) {
+        if ($Node.LocalAdminPassword) {
             [PSCredential]$LocalAdminCredential = New-Object System.Management.Automation.PSCredential ("Administrator", (ConvertTo-SecureString $Node.LocalAdminPassword -AsPlainText -Force))
         }
-        If ($Node.DomainAdminPassword) {
+        if ($Node.DomainAdminPassword) {
             [PSCredential]$DomainAdminCredential = New-Object System.Management.Automation.PSCredential ("$($Node.DomainName)\Administrator", (ConvertTo-SecureString $Node.DomainAdminPassword -AsPlainText -Force))
         }
 
@@ -101,7 +102,7 @@ Configuration MEMBER_FILESERVER_FSRMTEST
         }
 
         # Join this Server to the Domain
-        xComputer JoinDomain
+        Computer JoinDomain
         {
             Name          = $Node.NodeName
             DomainName    = $Node.DomainName
@@ -166,19 +167,19 @@ Configuration MEMBER_FILESERVER_FSRMTEST
             Enabled = 'True'
         }
 
-        xWaitforDisk Disk2
+        WaitforDisk Disk2
         {
             DiskId = 1
             RetryIntervalSec = 60
             RetryCount = 60
-            DependsOn = "[xComputer]JoinDomain"
+            DependsOn = "[Computer]JoinDomain"
         }
 
-        xDisk DVolume
+        Disk DVolume
         {
             DiskId = 1
             DriveLetter = 'D'
-            DependsOn = "[xWaitforDisk]Disk2"
+            DependsOn = "[WaitforDisk]Disk2"
         }
 
         File UsersFolder
@@ -186,10 +187,10 @@ Configuration MEMBER_FILESERVER_FSRMTEST
             DestinationPath = 'd:\Users'
             Ensure = 'Present'
             Type = 'Directory'
-            DependsOn = "[xDisk]DVolume"
+            DependsOn = "[Disk]DVolume"
         }
 
-        xFSRMQuotaTemplate HardLimit5GB
+        FSRMQuotaTemplate HardLimit5GB
         {
             Name = '5 GB Limit'
             Description = '5 GB Hard Limit'
@@ -200,7 +201,7 @@ Configuration MEMBER_FILESERVER_FSRMTEST
             DependsOn = "[File]UsersFolder"
         }
 
-        xFSRMQuotaTemplateAction HardLimit5GBEmail85
+        FSRMQuotaTemplateAction HardLimit5GBEmail85
         {
             Name = '5 GB Limit'
             Percentage = 85
@@ -211,10 +212,10 @@ Configuration MEMBER_FILESERVER_FSRMTEST
             MailBCC = ''
             MailCC = 'fileserveradmins@contoso.com'
             MailTo = '[Source Io Owner Email]'
-            DependsOn = "[xFSRMQuotaTemplate]HardLimit5GB"
-        } # End of xFSRMQuotaTemplateAction Resource
+            DependsOn = "[FSRMQuotaTemplate]HardLimit5GB"
+        } # End of FSRMQuotaTemplateAction Resource
 
-        xFSRMQuotaTemplateAction HardLimit5GBEvent85
+        FSRMQuotaTemplateAction HardLimit5GBEvent85
         {
             Name = '5 GB Limit'
             Percentage = 85
@@ -222,10 +223,10 @@ Configuration MEMBER_FILESERVER_FSRMTEST
             Type = 'Event'
             Body = 'User [Source Io Owner] has exceed the [Quota Threshold]% quota threshold for quota on [Quota Path] on server [Server]. The quota limit is [Quota Limit MB] MB and the current usage is [Quota Used MB] MB ([Quota Used Percent]% of limit).'
             EventType = 'Warning'
-            DependsOn = "[xFSRMQuotaTemplate]HardLimit5GB"
-        } # End of xFSRMQuotaTemplateAction Resource
+            DependsOn = "[FSRMQuotaTemplate]HardLimit5GB"
+        } # End of FSRMQuotaTemplateAction Resource
 
-        xFSRMQuotaTemplateAction HardLimit5GBEmail100
+        FSRMQuotaTemplateAction HardLimit5GBEmail100
         {
             Name = '5 GB Limit'
             Percentage = 100
@@ -236,28 +237,28 @@ Configuration MEMBER_FILESERVER_FSRMTEST
             MailBCC = ''
             MailCC = 'fileserveradmins@contoso.com'
             MailTo = '[Source Io Owner Email]'
-            DependsOn = "[xFSRMQuotaTemplate]HardLimit5GB"
-        } # End of xFSRMQuotaTemplateAction Resource
+            DependsOn = "[FSRMQuotaTemplate]HardLimit5GB"
+        } # End of FSRMQuotaTemplateAction Resource
 
-        xFSRMQuota DUsersQuota
+        FSRMQuota DUsersQuota
         {
             Path = 'd:\users'
             Description = '5 GB Hard Limit, YEAH!'
             Ensure = 'Present'
             Template = '5 GB Limit'
             MatchesTemplate = $true
-            DependsOn = "[xFSRMQuotaTemplateAction]HardLimit5GBEmail100"
-        } # End of xFSRMQuota Resource
+            DependsOn = "[FSRMQuotaTemplateAction]HardLimit5GBEmail100"
+        } # End of FSRMQuota Resource
 
         File SharedFolder
         {
             DestinationPath = 'd:\shared'
             Ensure = 'Present'
             Type = 'Directory'
-            DependsOn = "[xDisk]DVolume"
+            DependsOn = "[Disk]DVolume"
         }
 
-        xFSRMQuota DSharedQuota
+        FSRMQuota DSharedQuota
         {
             Path = 'd:\shared'
             Description = '5 GB Hard Limit'
@@ -266,9 +267,9 @@ Configuration MEMBER_FILESERVER_FSRMTEST
             SoftLimit = $False
             ThresholdPercentages = @( 75, 100 )
             DependsOn = "[File]SharedFolder"
-        } # End of xFSRMQuota Resource
+        } # End of FSRMQuota Resource
 
-        xFSRMQuotaAction DSharedEmail75
+        FSRMQuotaAction DSharedEmail75
         {
             Path = 'd:\shared'
             Percentage = 75
@@ -279,10 +280,10 @@ Configuration MEMBER_FILESERVER_FSRMTEST
             MailBCC = ''
             MailCC = 'fileserveradmins@contoso.com'
             MailTo = '[Source Io Owner Email]'
-            DependsOn = "[xFSRMQuota]DSharedQuota"
-        } # End of xFSRMQuotaAction Resource
+            DependsOn = "[FSRMQuota]DSharedQuota"
+        } # End of FSRMQuotaAction Resource
 
-        xFSRMQuotaAction DSharedEmail100
+        FSRMQuotaAction DSharedEmail100
         {
             Path = 'd:\shared'
             Percentage = 100
@@ -293,26 +294,26 @@ Configuration MEMBER_FILESERVER_FSRMTEST
             MailBCC = ''
             MailCC = 'fileserveradmins@contoso.com'
             MailTo = '[Source Io Owner Email]'
-            DependsOn = "[xFSRMQuota]DSharedQuota"
-        } # End of xFSRMQuotaAction Resource
+            DependsOn = "[FSRMQuota]DSharedQuota"
+        } # End of FSRMQuotaAction Resource
 
         File AutoFolder
         {
             DestinationPath = 'd:\auto'
             Ensure = 'Present'
             Type = 'Directory'
-            DependsOn = "[xDisk]DVolume"
+            DependsOn = "[Disk]DVolume"
         }
 
-        xFSRMAutoQuota DAutoQuota
+        FSRMAutoQuota DAutoQuota
         {
             Path = 'd:\auto'
             Ensure = 'Present'
             Template = '100 MB Limit'
             DependsOn = "[File]SharedFolder"
-        } # End of xFSRMQuota Resource
+        } # End of FSRMQuota Resource
 
-        xFSRMFileGroup FSRMFileGroupPortableFiles
+        FSRMFileGroup FSRMFileGroupPortableFiles
         {
             Name = 'Portable Document Files'
             Description = 'Files containing portable document formats'
@@ -320,16 +321,16 @@ Configuration MEMBER_FILESERVER_FSRMTEST
             IncludePattern = '*.eps','*.pdf','*.xps'
         }
 
-        xFSRMFileScreenTemplate FileScreenSomeFiles
+        FSRMFileScreenTemplate FileScreenSomeFiles
         {
             Name = 'Block Some Files'
             Description = 'File Screen for Blocking Some Files'
             Ensure = 'Present'
             Active = $true
             IncludeGroup = 'Audio and Video Files','Executable Files','Backup Files'
-        } # End of xFSRMFileScreenTemplate Resource
+        } # End of FSRMFileScreenTemplate Resource
 
-        xFSRMFileScreenTemplateAction FileScreenSomeFilesEmail
+        FSRMFileScreenTemplateAction FileScreenSomeFilesEmail
         {
             Name = 'Block Some Files'
             Ensure = 'Present'
@@ -339,29 +340,29 @@ Configuration MEMBER_FILESERVER_FSRMTEST
             MailBCC = ''
             MailCC = 'fileserveradmins@contoso.com'
             MailTo = '[Source Io Owner Email]'
-            DependsOn = "[xFSRMFileScreenTemplate]FileScreenSomeFiles"
-        } # End of xFSRMFileScreenTemplateAction Resource
+            DependsOn = "[FSRMFileScreenTemplate]FileScreenSomeFiles"
+        } # End of FSRMFileScreenTemplateAction Resource
 
-        xFSRMFileScreenTemplateAction FileScreenSomeFilesEvent
+        FSRMFileScreenTemplateAction FileScreenSomeFilesEvent
         {
             Name = 'Block Some Files'
             Ensure = 'Present'
             Type = 'Event'
             Body = 'The system detected that user [Source Io Owner] attempted to save [Source File Path] on [File Screen Path] on server [Server]. This file matches the [Violated File Group] file group which is not permitted on the system.'
             EventType = 'Warning'
-            DependsOn = "[xFSRMFileScreenTemplate]FileScreenSomeFiles"
-        } # End of xFSRMFileScreenTemplateAction Resource
+            DependsOn = "[FSRMFileScreenTemplate]FileScreenSomeFiles"
+        } # End of FSRMFileScreenTemplateAction Resource
 
-        xFSRMFileScreen DUsersFileScreen
+        FSRMFileScreen DUsersFileScreen
         {
             Path = 'd:\users'
             Description = 'File Screen for Blocking Some Files'
             Ensure = 'Present'
             Active = $true
             IncludeGroup = 'Audio and Video Files','Executable Files','Backup Files'
-        } # End of xFSRMFileScreen Resource
+        } # End of FSRMFileScreen Resource
 
-        xFSRMFileScreenAction DUsersFileScreenSomeFilesEmail
+        FSRMFileScreenAction DUsersFileScreenSomeFilesEmail
         {
             Path = 'd:\users'
             Ensure = 'Present'
@@ -371,28 +372,28 @@ Configuration MEMBER_FILESERVER_FSRMTEST
             MailBCC = ''
             MailCC = 'fileserveradmins@contoso.com'
             MailTo = '[Source Io Owner Email]'
-            DependsOn = "[xFSRMFileScreen]DUsersFileScreen"
-        } # End of xFSRMFileScreenAction Resource
+            DependsOn = "[FSRMFileScreen]DUsersFileScreen"
+        } # End of FSRMFileScreenAction Resource
 
-        xFSRMFileScreenAction DUsersFileScreenSomeFilesEvent
+        FSRMFileScreenAction DUsersFileScreenSomeFilesEvent
         {
             Path = 'd:\users'
             Ensure = 'Present'
             Type = 'Event'
             Body = 'The system detected that user [Source Io Owner] attempted to save [Source File Path] on [File Screen Path] on server [Server]. This file matches the [Violated File Group] file group which is not permitted on the system.'
             EventType = 'Warning'
-            DependsOn = "[xFSRMFileScreen]DUsersFileScreen"
-        } # End of xFSRMFileScreenAction Resource
+            DependsOn = "[FSRMFileScreen]DUsersFileScreen"
+        } # End of FSRMFileScreenAction Resource
 
-        xFSRMFileScreenException DUsersFileScreenException
+        FSRMFileScreenException DUsersFileScreenException
         {
             Path = 'd:\users'
             Description = 'File Screen Exclusion'
             Ensure = 'Present'
             IncludeGroup = 'E-mail Files'
-        } # End of xFSRMFileScreenException Resource
+        } # End of FSRMFileScreenException Resource
 
-        xFSRMClassificationProperty PrivacyClasificationProperty
+        FSRMClassificationProperty PrivacyClasificationProperty
         {
             Name = 'Privacy'
             DisplayName = 'File Privacy'
@@ -401,25 +402,25 @@ Configuration MEMBER_FILESERVER_FSRMTEST
             Type = 'SingleChoice'
             PossibleValue = 'Top Secret','Secret','Confidential','Public'
             Parameters = 'Parameter1=Value1','Parameter2=Value2'
-        } # End of xFSRMClassificationProperty Resource
+        } # End of FSRMClassificationProperty Resource
 
-        xFSRMClassificationPropertyValue PublicClasificationPropertyValue
+        FSRMClassificationPropertyValue PublicClasificationPropertyValue
         {
             Name = 'Public'
             PropertyName = 'Privacy'
             Description = 'Publically accessible files.'
             Ensure = 'Present'
-            DependsOn = "[xFSRMClassificationProperty]PrivacyClasificationProperty"
-        } # End of xFSRMClassificationPropertyValue Resource
+            DependsOn = "[FSRMClassificationProperty]PrivacyClasificationProperty"
+        } # End of FSRMClassificationPropertyValue Resource
 
-        xFSRMClassificationPropertyValue SecretClasificationPropertyValue
+        FSRMClassificationPropertyValue SecretClasificationPropertyValue
         {
             Name = 'Secret'
             PropertyName = 'Privacy'
             Ensure = 'Present'
-            DependsOn = "[xFSRMClassificationProperty]PrivacyClasificationProperty"
-        } # End of xFSRMClassificationPropertyValue Resource
-        xFSRMClassification FSRMClassificationSettings
+            DependsOn = "[FSRMClassificationProperty]PrivacyClasificationProperty"
+        } # End of FSRMClassificationPropertyValue Resource
+        FSRMClassification FSRMClassificationSettings
         {
             Id = 'Default'
             Continuous = $True
@@ -428,8 +429,8 @@ Configuration MEMBER_FILESERVER_FSRMTEST
             ScheduleWeekly = 'Monday','Tuesday','Wednesday'
             ScheduleRunDuration = 4
             ScheduleTime = '23:30'
-        } # End of xFSRMClassification Resource
-        xFSRMClassificationRule ConfidentialPrivacyClasificationRule
+        } # End of FSRMClassification Resource
+        FSRMClassificationRule ConfidentialPrivacyClasificationRule
         {
             Name = 'Confidential'
             Description = 'Set Confidential'
@@ -440,6 +441,6 @@ Configuration MEMBER_FILESERVER_FSRMTEST
             ContentString = 'Confidential'
             Namespace = '[FolderUsage_MS=User Files]','d:\Users'
             ReevaluateProperty = 'Overwrite'
-        } # End of xFSRMClassificationRule Resource
+        } # End of FSRMClassificationRule Resource
     }
 }

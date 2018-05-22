@@ -82,11 +82,11 @@ Enum LabCertificateSource {
 } # Enum LabCertificateSource
 
 class LabResourceModule:System.ICloneable {
-    [String] $Name
-    [String] $URL
-    [String] $Folder
-    [String] $MinimumVersion
-    [String] $RequiredVersion
+    [System.String] $Name
+    [System.String] $URL
+    [System.String] $Folder
+    [System.String] $MinimumVersion
+    [System.String] $RequiredVersion
 
     LabResourceModule() {}
 
@@ -105,10 +105,10 @@ class LabResourceModule:System.ICloneable {
 } # class LabResourceModule
 
 class LabResourceMSU:System.ICloneable {
-    [String] $Name
-    [String] $URL
-    [String] $Path
-    [String] $Filename
+    [System.String] $Name
+    [System.String] $URL
+    [System.String] $Path
+    [System.String] $Filename
 
     LabResourceMSU() {}
 
@@ -132,9 +132,9 @@ class LabResourceMSU:System.ICloneable {
 } # class LabResourceMSU
 
 class LabResourceISO:System.ICloneable {
-    [String] $Name
-    [String] $URL
-    [String] $Path
+    [System.String] $Name
+    [System.String] $URL
+    [System.String] $Path
 
     LabResourceISO() {}
 
@@ -153,8 +153,8 @@ class LabResourceISO:System.ICloneable {
 } # class LabResourceISO
 
 class LabSwitchAdapter:System.ICloneable {
-    [String] $Name
-    [String] $MACAddress
+    [System.String] $Name
+    [System.String] $MACAddress
     [Byte] $Vlan
 
     LabSwitchAdapter() {}
@@ -179,10 +179,10 @@ class LabSwitchAdapter:System.ICloneable {
 } # class LabSwitchAdapter
 
 class LabVMAdapterIPv4:System.ICloneable {
-    [String] $Address
-    [String] $DefaultGateway
+    [System.String] $Address
+    [System.String] $DefaultGateway
     [Byte] $SubnetMask
-    [String] $DNSServer
+    [System.String] $DNSServer
 
     LabVMAdapterIPv4() {}
 
@@ -202,10 +202,10 @@ class LabVMAdapterIPv4:System.ICloneable {
 } # class LabVMAdapterIPv4
 
 class LabVMAdapterIPv6:System.ICloneable {
-    [String] $Address
-    [String] $DefaultGateway
+    [System.String] $Address
+    [System.String] $DefaultGateway
     [Byte] $SubnetMask
-    [String] $DNSServer
+    [System.String] $DNSServer
 
     LabVMAdapterIPv6() {}
 
@@ -225,9 +225,9 @@ class LabVMAdapterIPv6:System.ICloneable {
 } # class LabVMAdapterIPv6
 
 class LabVMAdapter:System.ICloneable {
-    [String] $Name
-    [String] $SwitchName
-    [String] $MACAddress
+    [System.String] $Name
+    [System.String] $SwitchName
+    [System.String] $MACAddress
     [Boolean] $MACAddressSpoofing
     [Byte] $Vlan
     [LabVMAdapterIPv4] $IPv4
@@ -250,16 +250,16 @@ class LabVMAdapter:System.ICloneable {
 } # class LabVMAdapter
 
 class LabDataVHD:System.ICloneable {
-    [String] $VHD
+    [System.String] $VHD
     [LabVHDType] $VHDType
     [Uint64] $Size
-    [String] $SourceVHD
-    [String] $ParentVHD
+    [System.String] $SourceVHD
+    [System.String] $ParentVHD
     [Boolean] $MoveSourceVHD
-    [String] $CopyFolders
+    [System.String] $CopyFolders
     [LabFileSystem] $FileSystem
     [LabPartitionStyle] $PartitionStyle
-    [String] $FileSystemLabel
+    [System.String] $FileSystemLabel
     [Boolean] $Shared = $False
     [Boolean] $SupportPR = $False
 
@@ -280,8 +280,8 @@ class LabDataVHD:System.ICloneable {
 } # class LabDataVHD
 
 class LabDVDDrive:System.ICloneable {
-    [String] $ISO
-    [String] $Path
+    [System.String] $ISO
+    [System.String] $Path
 
     LabDVDDrive() {}
 
@@ -300,11 +300,11 @@ class LabDVDDrive:System.ICloneable {
 } # class LabDVDDrive
 
 class LabVMTemplateVHD:System.ICloneable {
-    [String] $Name
-    [String] $ISOPath
-    [String] $VHDPath
+    [System.String] $Name
+    [System.String] $ISOPath
+    [System.String] $VHDPath
     [LabOStype] $OSType = [LabOStype]::Server
-    [String] $Edition
+    [System.String] $Edition
     [Byte] $Generation = 2
     [LabVHDFormat] $VHDFormat = [LabVHDFormat]::VHDx
     [LabVHDType] $VHDType = [LabVHDType]::Dynamic
@@ -329,23 +329,23 @@ class LabVMTemplateVHD:System.ICloneable {
 } # class LabVMTemplateVHD
 
 class LabVMTemplate:System.ICloneable {
-    [String] $Name
-    [String] $VHD
-    [String] $SourceVHD
-    [String] $ParentVHD
-    [String] $TemplateVHD
+    [System.String] $Name
+    [System.String] $VHD
+    [System.String] $SourceVHD
+    [System.String] $ParentVHD
+    [System.String] $TemplateVHD
     [Uint64] $MemoryStartupBytes = 1GB
     [Boolean] $DynamicMemoryEnabled = $True
     [Boolean] $ExposeVirtualizationExtensions = $False
     [Byte] $ProcessorCount = 1
-    [String] $AdministratorPassword
-    [String] $ProductKey
-    [String] $Timezone="Pacific Standard Time"
+    [System.String] $AdministratorPassword
+    [System.String] $ProductKey
+    [System.String] $Timezone="Pacific Standard Time"
     [LabOStype] $OSType = [LabOStype]::Server
     [String[]] $IntegrationServices = @('Guest Service Interface','Heartbeat','Key-Value Pair Exchange','Shutdown','Time Synchronization','VSS')
     [String[]] $Packages
     [ValidateRange(1,2)][Byte] $Generation = 2
-    [ValidateSet("5.0","6.2","7.0","7.1","8.0","254.0","255.0")][String] $Version = '8.0'
+    [ValidateSet("5.0","6.2","7.0","7.1","8.0","254.0","255.0")][System.String] $Version = '8.0'
 
     LabVMTemplate() {}
 
@@ -364,13 +364,13 @@ class LabVMTemplate:System.ICloneable {
 } # class LabVMTemplate
 
 class LabSwitch:System.ICloneable {
-    [String] $Name
+    [System.String] $Name
     [LabSwitchType] $Type
     [Byte] $VLAN
-    [String] $BindingAdapterName
-    [String] $BindingAdapterMac
-    [String] $NatSubnet
-    [String] $NatGatewayAddress
+    [System.String] $BindingAdapterName
+    [System.String] $BindingAdapterMac
+    [System.String] $NatSubnet
+    [System.String] $NatGatewayAddress
     [LabSwitchAdapter[]] $Adapters
 
     LabSwitch() {}
@@ -395,9 +395,9 @@ class LabSwitch:System.ICloneable {
 } # class LabSwitch
 
 class LabDSC:System.ICloneable {
-    [String] $ConfigName
-    [String] $ConfigFile
-    [String] $Parameters
+    [System.String] $ConfigName
+    [System.String] $ConfigFile
+    [System.String] $Parameters
     [Boolean] $Logging = $False
 
     LabDSC() {}
@@ -422,34 +422,34 @@ class LabDSC:System.ICloneable {
 } # class LabDSC
 
 class LabVM:System.ICloneable {
-    [String] $Name
-    [String] $Template
-    [String] $ComputerName
+    [System.String] $Name
+    [System.String] $Template
+    [System.String] $ComputerName
     [Byte] $ProcessorCount
     [Uint64] $MemoryStartupBytes = 1GB
     [Boolean] $DynamicMemoryEnabled = $True
     [Boolean] $ExposeVirtualizationExtensions = $False
-    [String] $ParentVHD
+    [System.String] $ParentVHD
     [Boolean] $UseDifferencingDisk = $True
-    [String] $AdministratorPassword
-    [String] $ProductKey
-    [String] $Timezone="Pacific Standard Time"
+    [System.String] $AdministratorPassword
+    [System.String] $ProductKey
+    [System.String] $Timezone="Pacific Standard Time"
     [LabOStype] $OSType = [LabOStype]::Server
-    [String] $UnattendFile
-    [String] $SetupComplete
+    [System.String] $UnattendFile
+    [System.String] $SetupComplete
     [String[]] $Packages
     [ValidateRange(1,2)][Byte] $Generation = 2
-    [ValidateSet("5.0","6.2","7.0","7.1","8.0","254.0","255.0")][String] $Version = '8.0'
+    [ValidateSet("5.0","6.2","7.0","7.1","8.0","254.0","255.0")][System.String] $Version = '8.0'
     [Int] $BootOrder
     [String[]] $IntegrationServices = @('Guest Service Interface','Heartbeat','Key-Value Pair Exchange','Shutdown','Time Synchronization','VSS')
     [LabVMAdapter[]] $Adapters
     [LabDataVHD[]] $DataVHDs
     [LabDVDDrive[]] $DVDDrives
     [LabDSC] $DSC
-    [String] $VMRootPath
-    [String] $LabBuilderFilesPath
+    [System.String] $VMRootPath
+    [System.String] $LabBuilderFilesPath
     [LabCertificateSource] $CertificateSource = [LabCertificateSource]::Guest
-    [String] $NanoODJPath
+    [System.String] $NanoODJPath
 
     LabVM() {}
 
@@ -473,7 +473,7 @@ class LabVM:System.ICloneable {
 } # class LabVM
 
 class LabDSCModule:System.ICloneable {
-    [String] $ModuleName
+    [System.String] $ModuleName
     [Version] $ModuleVersion
     [Version] $MinimumVersion
 
@@ -501,18 +501,18 @@ class LabDSCModule:System.ICloneable {
 
 
 #region ModuleVariables
-[String] $Script:WorkingFolder = $ENV:Temp
+[System.String] $Script:WorkingFolder = $ENV:Temp
 
 # Supporting files
-[String] $Script:SupportConvertWindowsImagePath = Join-Path `
+[System.String] $Script:SupportConvertWindowsImagePath = Join-Path `
     -Path $PSScriptRoot `
     -ChildPath 'Support\Convert-WindowsImage.ps1'
-[String] $Script:SupportGertGenPath = Join-Path `
+[System.String] $Script:SupportGertGenPath = Join-Path `
     -Path $PSScriptRoot `
     -ChildPath 'Support\New-SelfSignedCertificateEx.ps1'
 
 # DSC Library
-[String] $Script:DSCLibraryPath = Join-Path `
+[System.String] $Script:DSCLibraryPath = Join-Path `
     -Path $PSScriptRoot `
     -ChildPath 'DSCLibrary'
 
@@ -522,13 +522,13 @@ class LabDSCModule:System.ICloneable {
 # Self-signed Certificate Parameters
 [Int] $Script:SelfSignedCertKeyLength = 2048
 # Warning - using KSP causes the Private Key to not be accessible to PS.
-[String] $Script:SelfSignedCertProviderName = 'Microsoft Enhanced Cryptographic Provider v1.0' # 'Microsoft Software Key Storage Provider'
-[String] $Script:SelfSignedCertAlgorithmName = 'RSA' # 'ECDH_P256' Or 'ECDH_P384' Or 'ECDH_P521'
-[String] $Script:SelfSignedCertSignatureAlgorithm = 'SHA256' # 'SHA1'
-[String] $Script:DSCEncryptionCert = 'DSCEncryption.cer'
-[String] $Script:DSCEncryptionPfxCert = 'DSCEncryption.pfx'
-[String] $Script:DSCCertificateFriendlyName = 'DSC Credential Encryption'
-[String] $Script:DSCCertificatePassword = 'E3jdNkd903mDn43NEk2nbDENjw'
+[System.String] $Script:SelfSignedCertProviderName = 'Microsoft Enhanced Cryptographic Provider v1.0' # 'Microsoft Software Key Storage Provider'
+[System.String] $Script:SelfSignedCertAlgorithmName = 'RSA' # 'ECDH_P256' Or 'ECDH_P384' Or 'ECDH_P521'
+[System.String] $Script:SelfSignedCertSignatureAlgorithm = 'SHA256' # 'SHA1'
+[System.String] $Script:DSCEncryptionCert = 'DSCEncryption.cer'
+[System.String] $Script:DSCEncryptionPfxCert = 'DSCEncryption.pfx'
+[System.String] $Script:DSCCertificateFriendlyName = 'DSC Credential Encryption'
+[System.String] $Script:DSCCertificatePassword = 'E3jdNkd903mDn43NEk2nbDENjw'
 [Int] $Script:RetryConnectSeconds = 5
 [Int] $Script:RetryHeartbeatSeconds = 1
 [Int] $Script:StartupTimeout = 90
@@ -538,12 +538,12 @@ class LabDSCModule:System.ICloneable {
     -Path 'hklm:\SOFTWARE\Microsoft\Windows NT\CurrentVersion').CurrentBuild
 
 # XML Stuff
-[String] $Script:ConfigurationXMLSchema = Join-Path `
+[System.String] $Script:ConfigurationXMLSchema = Join-Path `
     -Path $PSScriptRoot `
     -ChildPath 'schema\labbuilderconfig-schema.xsd'
-[String] $Script:ConfigurationXMLTemplate = Join-Path `
+[System.String] $Script:ConfigurationXMLTemplate = Join-Path `
     -Path $PSScriptRoot `
     -ChildPath 'template\labbuilderconfig-template.xml'
 
 # Nano Stuff
-[String] $Script:NanoPackageCulture = 'en-us'
+[System.String] $Script:NanoPackageCulture = 'en-us'

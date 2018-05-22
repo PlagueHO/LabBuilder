@@ -27,20 +27,21 @@ DSC Template Configuration File For use by LabBuilder
 Configuration MEMBER_SQLSERVER2016
 {
     Import-DscResource -ModuleName 'PSDesiredStateConfiguration'
-    Import-DscResource -ModuleName xComputerManagement
-    Import-DscResource -ModuleName xStorage
-    Import-DscResource -ModuleName xSQLServer
+    Import-DscResource -ModuleName ComputerManagementDsc
+    Import-DscResource -ModuleName StorageDsc
+    Import-DscResource -ModuleName SQLServerDsc
+
     Node $AllNodes.NodeName {
         # Assemble the Local Admin Credentials
-        If ($Node.LocalAdminPassword)
+        if ($Node.LocalAdminPassword)
         {
             [PSCredential]$LocalAdminCredential = New-Object System.Management.Automation.PSCredential ("Administrator", (ConvertTo-SecureString $Node.LocalAdminPassword -AsPlainText -Force))
         }
-        If ($Node.DomainAdminPassword)
+        if ($Node.DomainAdminPassword)
         {
             [PSCredential]$DomainAdminCredential = New-Object System.Management.Automation.PSCredential ("$($Node.DomainName)\Administrator", (ConvertTo-SecureString $Node.DomainAdminPassword -AsPlainText -Force))
         }
-        If ($Node.InstallerPassword)
+        if ($Node.InstallerPassword)
         {
             [PSCredential]$InstallerCredential = New-Object System.Management.Automation.PSCredential ("$($Node.DomainName)\$($Node.InstallerUsername)", (ConvertTo-SecureString $Node.InstallerPassword -AsPlainText -Force))
         }
@@ -60,7 +61,7 @@ Configuration MEMBER_SQLSERVER2016
             RetryCount       = 60
         }
 
-        xComputer JoinDomain
+        Computer JoinDomain
         {
             Name       = $Node.NodeName
             DomainName = $Node.DomainName
@@ -68,29 +69,29 @@ Configuration MEMBER_SQLSERVER2016
             DependsOn  = '[WaitForAll]DC'
         }
 
-        xWaitforDisk Disk2
+        WaitforDisk Disk2
         {
             DiskId           = 1
             RetryIntervalSec = 60
             RetryCount       = 60
-            DependsOn        = '[xComputer]JoinDomain'
+            DependsOn        = '[Computer]JoinDomain'
         }
 
-        xDisk DVolume
+        Disk DVolume
         {
             DiskId      = 1
             DriveLetter = $Node.SQLDataDrive
-            DependsOn   = '[xWaitforDisk]Disk2'
+            DependsOn   = '[WaitforDisk]Disk2'
         }
 
         foreach ($Instance in $Node.Instances)
         {
             $Features = $Instance.Features
-            if ([String]::IsNullOrEmpty($Features))
+            if ([System.String]::IsNullOrEmpty($Features))
             {
                 $Features = 'SQLENGINE,FULLTEXT,RS,AS,IS'
             } # if
-            xSqlServerSetup ($Instance.Name)
+            SqlServerSetup ($Instance.Name)
             {
                 SourcePath           = $Node.SourcePath
                 InstanceName         = $Instance.Name
@@ -111,27 +112,27 @@ Configuration MEMBER_SQLSERVER2016
                 ASTempDir            = "$($Node.SQLDataDrive):\Program Files\Microsoft SQL Server\MSAS11.MSSQLSERVER\OLAP\Temp"
                 ASConfigDir          = "$($Node.SQLDataDrive):\Program Files\Microsoft SQL Server\MSAS11.MSSQLSERVER\OLAP\Config"
                 PsDscRunAsCredential = $InstallerCredential
-                DependsOn            = "[xComputer]JoinDomain", "[WindowsFeature]NET35Install"
+                DependsOn            = "[Computer]JoinDomain", "[WindowsFeature]NET35Install"
             }
 
-            xSqlServerFirewall ($Instance.Name)
+            SqlServerFirewall ($Instance.Name)
             {
                 SourcePath   = $Node.SourcePath
                 InstanceName = $Instance.Name
                 Features     = $Features
-                DependsOn    = "[xSqlServerSetup]$($Instance.Name)"
+                DependsOn    = "[SqlServerSetup]$($Instance.Name)"
             }
         }
 
         if ($Node.InstallManagementTools)
         {
-            xSqlServerSetup SQLMT
+            SqlServerSetup SQLMT
             {
                 SourcePath           = $Node.SourcePath
                 InstanceName         = "NULL"
                 Features             = "SSMS,ADV_SSMS"
                 PsDscRunAsCredential = $InstallerCredential
-                DependsOn            = "[xComputer]JoinDomain", "[WindowsFeature]NET35Install"
+                DependsOn            = "[Computer]JoinDomain", "[WindowsFeature]NET35Install"
             }
         }
     }

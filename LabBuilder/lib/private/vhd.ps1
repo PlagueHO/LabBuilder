@@ -30,28 +30,28 @@
 function InitializeBootVHD {
     [CmdLetBinding()]
     param (
-        [Parameter(Mandatory)]
+        [Parameter(Mandatory = $true)]
         $Lab,
 
-        [Parameter(Mandatory)]
+        [Parameter(Mandatory = $true)]
         [LabVM] $VM,
 
-        [Parameter(Mandatory)]
-        [String] $VMBootDiskPath
+        [Parameter(Mandatory = $true)]
+        [System.String] $VMBootDiskPath
     )
 
     # Get path to Lab
-    [String] $LabPath = $Lab.labbuilderconfig.settings.labpath
+    [System.String] $LabPath = $Lab.labbuilderconfig.settings.labpath
 
     # Get Path to LabBuilder files
-    [String] $VMLabBuilderFiles = $VM.LabBuilderFilesPath
+    [System.String] $VMLabBuilderFiles = $VM.LabBuilderFilesPath
 
     # Mount the VMs Boot VHD so that files can be loaded into it
-    WriteMessage -Message $($LocalizedData.MountingVMBootDiskMessage `
+    Write-LabMessage -Message $($LocalizedData.MountingVMBootDiskMessage `
         -f $VM.Name,$VMBootDiskPath)
 
     # Create a mount point for mounting the Boot VHD
-    [String] $MountPoint = Join-Path `
+    [System.String] $MountPoint = Join-Path `
         -Path $VMLabBuilderFiles `
         -ChildPath 'Mount'
 
@@ -74,21 +74,21 @@ function InitializeBootVHD {
         if ($VM.OSType -eq [LabOSType]::Nano)
         {
             # Now specify the Nano Server packages to add.
-            [String] $NanoPackagesFolder = Join-Path `
+            [System.String] $NanoPackagesFolder = Join-Path `
                 -Path $LabPath `
                 -ChildPath 'NanoServerPackages'
             if (-not (Test-Path -Path $NanoPackagesFolder))
             {
-                $ExceptionParameters = @{
+                $exceptionParameters = @{
                     errorId = 'NanoServerPackagesFolderMissingError'
                     errorCategory = 'InvalidArgument'
                     errorMessage = $($LocalizedData.NanoServerPackagesFolderMissingError `
                     -f $NanoPackagesFolder)
                 }
-                ThrowException @ExceptionParameters
+                New-LabException @exceptionParameters
             }
             # Add DSC Package to packages list if missing
-            if ([String]::IsNullOrWhitespace($Packages))
+            if ([System.String]::IsNullOrWhitespace($Packages))
             {
                 $Packages = 'Microsoft-NanoServer-DSC-Package.cab'
             }
@@ -102,7 +102,7 @@ function InitializeBootVHD {
         } # if
 
         # Apply any listed packages to the Image
-        if (-not [String]::IsNullOrWhitespace($Packages))
+        if (-not [System.String]::IsNullOrWhitespace($Packages))
         {
             # Get the list of Lab Resource MSUs
             $ResourceMSUs = Get-LabResourceMSU `
@@ -122,17 +122,17 @@ function InitializeBootVHD {
                     # Does it exist?
                     if (-not (Test-Path -Path $PackagePath))
                     {
-                        $ExceptionParameters = @{
+                        $exceptionParameters = @{
                             errorId = 'NanoPackageNotFoundError'
                             errorCategory = 'InvalidArgument'
                             errorMessage = $($LocalizedData.NanoPackageNotFoundError `
                             -f $PackagePath)
                         }
-                        ThrowException @ExceptionParameters
+                        New-LabException @exceptionParameters
                     }
 
                     # Add the package
-                    WriteMessage -Message $($LocalizedData.ApplyingVMBootDiskFileMessage `
+                    Write-LabMessage -Message $($LocalizedData.ApplyingVMBootDiskFileMessage `
                         -f $VM.Name,$Package,$PackagePath)
 
                     $null = Add-WindowsPackage `
@@ -148,16 +148,16 @@ function InitializeBootVHD {
                     # Does it exist?
                     if (-not (Test-Path -Path $PackageLangFile))
                     {
-                        $ExceptionParameters = @{
+                        $exceptionParameters = @{
                             errorId = 'NanoPackageNotFoundError'
                             errorCategory = 'InvalidArgument'
                             errorMessage = $($LocalizedData.NanoPackageNotFoundError `
                             -f $PackageLangFile)
                         }
-                        ThrowException @ExceptionParameters
+                        New-LabException @exceptionParameters
                     }
 
-                    WriteMessage -Message $($LocalizedData.ApplyingVMBootDiskFileMessage `
+                    Write-LabMessage -Message $($LocalizedData.ApplyingVMBootDiskFileMessage `
                         -f $VM.Name,$Package,$PackageLangFile)
 
                     # Add the package
@@ -180,28 +180,28 @@ function InitializeBootVHD {
                     } # foreach
                     if (-not $Found)
                     {
-                        $ExceptionParameters = @{
+                        $exceptionParameters = @{
                             errorId = 'PackageNotFoundError'
                             errorCategory = 'InvalidArgument'
                             errorMessage = $($LocalizedData.PackageNotFoundError `
                             -f $Package)
                         }
-                        ThrowException @ExceptionParameters
+                        New-LabException @exceptionParameters
                     } # if
 
                     $PackagePath = $ResourceMSU.Filename
                     if (-not (Test-Path -Path $PackagePath))
                     {
-                        $ExceptionParameters = @{
+                        $exceptionParameters = @{
                             errorId = 'PackageMSUNotFoundError'
                             errorCategory = 'InvalidArgument'
                             errorMessage = $($LocalizedData.PackageMSUNotFoundError `
                             -f $Package,$PackagePath)
                         }
-                        ThrowException @ExceptionParameters
+                        New-LabException @exceptionParameters
                     } # if
                     # Apply a Package
-                    WriteMessage -Message $($LocalizedData.ApplyingVMBootDiskFileMessage `
+                    Write-LabMessage -Message $($LocalizedData.ApplyingVMBootDiskFileMessage `
                         -f $VM.Name,$Package,$PackagePath)
 
                     $null = Add-WindowsPackage `
@@ -214,7 +214,7 @@ function InitializeBootVHD {
     catch
     {
         # Dismount Disk Image before throwing exception
-        WriteMessage -Message $($LocalizedData.DismountingVMBootDiskMessage `
+        Write-LabMessage -Message $($LocalizedData.DismountingVMBootDiskMessage `
             -f $VM.Name,$VMBootDiskPath)
         $null = Dismount-WindowsImage -Path $MountPoint -Save
         $null = Remove-Item -Path $MountPoint -Recurse -Force
@@ -233,12 +233,12 @@ function InitializeBootVHD {
         -ItemType Directory
 
     # Apply an unattended setup file
-    WriteMessage -Message $($LocalizedData.ApplyingVMBootDiskFileMessage `
+    Write-LabMessage -Message $($LocalizedData.ApplyingVMBootDiskFileMessage `
         -f $VM.Name,'Unattend','Unattend.xml')
 
     if (-not (Test-Path -Path "$MountPoint\Windows\Panther" -PathType Container))
     {
-        WriteMessage -Message $($LocalizedData.CreatingVMBootDiskPantherFolderMessage `
+        Write-LabMessage -Message $($LocalizedData.CreatingVMBootDiskPantherFolderMessage `
             -f $VM.Name)
 
         $null = New-Item `
@@ -258,7 +258,7 @@ function InitializeBootVHD {
     if (Test-Path -Path $CertificatePfxPath)
     {
         # Apply the CMD Setup Complete File
-        WriteMessage -Message $($LocalizedData.ApplyingVMBootDiskFileMessage `
+        Write-LabMessage -Message $($LocalizedData.ApplyingVMBootDiskFileMessage `
             -f $VM.Name,'Credential Certificate PFX',$Script:DSCEncryptionPfxCert)
         $null = Copy-Item `
             -Path $CertificatePfxPath `
@@ -267,7 +267,7 @@ function InitializeBootVHD {
     }
 
     # Apply the CMD Setup Complete File
-    WriteMessage -Message $($LocalizedData.ApplyingVMBootDiskFileMessage `
+    Write-LabMessage -Message $($LocalizedData.ApplyingVMBootDiskFileMessage `
         -f $VM.Name,'Setup Complete CMD','SetupComplete.cmd')
     $null = Copy-Item `
         -Path (Join-Path -Path $VMLabBuilderFiles -ChildPath 'SetupComplete.cmd') `
@@ -275,7 +275,7 @@ function InitializeBootVHD {
         -Force
 
     # Apply the PowerShell Setup Complete file
-    WriteMessage -Message $($LocalizedData.ApplyingVMBootDiskFileMessage `
+    Write-LabMessage -Message $($LocalizedData.ApplyingVMBootDiskFileMessage `
         -f $VM.Name,'Setup Complete PowerShell','SetupComplete.ps1')
     $null = Copy-Item `
         -Path (Join-Path -Path $VMLabBuilderFiles -ChildPath 'SetupComplete.ps1') `
@@ -286,7 +286,7 @@ function InitializeBootVHD {
     if ($VM.OSType -ne [LabOSType]::Nano)
     {
         $CertGenFilename = Split-Path -Path $Script:SupportGertGenPath -Leaf
-        WriteMessage -Message $($LocalizedData.ApplyingVMBootDiskFileMessage `
+        Write-LabMessage -Message $($LocalizedData.ApplyingVMBootDiskFileMessage `
             -f $VM.Name,'Certificate Create Script',$CertGenFilename)
         $null = Copy-Item `
             -Path $Script:SupportGertGenPath `
@@ -295,7 +295,7 @@ function InitializeBootVHD {
     }
 
     # Dismount the VHD in preparation for boot
-    WriteMessage -Message $($LocalizedData.DismountingVMBootDiskMessage `
+    Write-LabMessage -Message $($LocalizedData.DismountingVMBootDiskMessage `
         -f $VM.Name,$VMBootDiskPath)
     $null = Dismount-WindowsImage -Path $MountPoint -Save
     $null = Remove-Item -Path $MountPoint -Recurse -Force
@@ -373,37 +373,37 @@ function InitializeVhd
 {
     [OutputType([Microsoft.Management.Infrastructure.CimInstance])]
     [CmdletBinding(DefaultParameterSetName = 'AssignDriveLetter')]
-    Param (
+    param (
         [Parameter(Mandatory=$True)]
         [ValidateNotNullOrEmpty()]
-        [String] $Path,
+        [System.String] $Path,
 
         [LabPartitionStyle] $PartitionStyle,
 
         [LabFileSystem] $FileSystem,
 
         [ValidateNotNullOrEmpty()]
-        [String] $FileSystemLabel,
+        [System.String] $FileSystemLabel,
 
         [Parameter(ParameterSetName = 'DriveLetter')]
         [ValidateNotNullOrEmpty()]
-        [String] $DriveLetter,
+        [System.String] $DriveLetter,
 
         [Parameter(ParameterSetName = 'AccessPath')]
         [ValidateNotNullOrEmpty()]
-        [String] $AccessPath
+        [System.String] $AccessPath
     )
 
     # Check file exists
     if (-not (Test-Path -Path $Path))
     {
-        $ExceptionParameters = @{
+        $exceptionParameters = @{
             errorId = 'FileNotFoundError'
             errorCategory = 'InvalidArgument'
             errorMessage = $($LocalizedData.FileNotFoundError `
             -f "VHD",$Path)
         }
-        ThrowException @ExceptionParameters
+        New-LabException @exceptionParameters
     } # if
 
     # Check disk is not already mounted
@@ -411,7 +411,7 @@ function InitializeVhd
         -Path $Path
     if (-not $VHD.Attached)
     {
-        WriteMessage -Message ($LocalizedData.InitializeVHDMountingMessage `
+        Write-LabMessage -Message ($LocalizedData.InitializeVHDMountingMessage `
             -f $Path)
 
         $null = Mount-VHD `
@@ -427,15 +427,15 @@ function InitializeVhd
     {
         if (-not $PartitionStyle)
         {
-            $ExceptionParameters = @{
+            $exceptionParameters = @{
                 errorId = 'InitializeVHDNotInitializedError'
                 errorCategory = 'InvalidArgument'
                 errorMessage = $($LocalizedData.InitializeVHDNotInitializedError `
                 -f $Path)
             }
-            ThrowException @ExceptionParameters
+            New-LabException @exceptionParameters
         } # if
-        WriteMessage -Message ($LocalizedData.InitializeVHDInitializingMessage `
+        Write-LabMessage -Message ($LocalizedData.InitializeVHDInitializingMessage `
             -f $Path,$PartitionStyle)
 
         $null = Initialize-Disk `
@@ -451,7 +451,7 @@ function InitializeVhd
     if (-not ($Partitions) `
         -or (($Partitions | Where-Object -Property Type -ne 'Reserved').Count -eq 0))
     {
-        WriteMessage -Message ($LocalizedData.InitializeVHDCreatePartitionMessage `
+        Write-LabMessage -Message ($LocalizedData.InitializeVHDCreatePartitionMessage `
             -f $Path)
 
         $Partitions = @(New-Partition `
@@ -470,7 +470,7 @@ function InitializeVhd
             -Partition $Partition).FileSystem
         if ($FileSystem)
         {
-            if (-not [String]::IsNullOrWhitespace($VolumeFileSystem))
+            if (-not [System.String]::IsNullOrWhitespace($VolumeFileSystem))
             {
                 # Found a formatted partition
                 $FoundFormattedPartition = $Partition
@@ -484,7 +484,7 @@ function InitializeVhd
         }
         else
         {
-            if (-not [String]::IsNullOrWhitespace($VolumeFileSystem))
+            if (-not [System.String]::IsNullOrWhitespace($VolumeFileSystem))
             {
                 # Found an formatted partition
                 $FoundFormattedPartition = $Partition
@@ -515,23 +515,23 @@ function InitializeVhd
         -Partition $Partition
 
     # Check for file system
-    if ([String]::IsNullOrWhitespace($Volume.FileSystem))
+    if ([System.String]::IsNullOrWhitespace($Volume.FileSystem))
     {
         # This volume is not formatted
         if (-not $FileSystem)
         {
             # A File System wasn't specified so can't continue
-            $ExceptionParameters = @{
+            $exceptionParameters = @{
                 errorId = 'InitializeVHDNotFormattedError'
                 errorCategory = 'InvalidArgument'
                 errorMessage = $($LocalizedData.InitializeVHDNotFormattedError `
                 -f $Path)
             }
-            ThrowException @ExceptionParameters
+            New-LabException @exceptionParameters
         }
 
         # Format the volume
-        WriteMessage -Message ($LocalizedData.InitializeVHDFormatVolumeMessage `
+        Write-LabMessage -Message ($LocalizedData.InitializeVHDFormatVolumeMessage `
             -f $Path,$FileSystem,$PartitionNumber)
         $FormatProperties = @{
             InputObject = $Volume
@@ -553,7 +553,7 @@ function InitializeVhd
         if (($FileSystemLabel) -and `
             ($Volume.FileSystemLabel -ne $FileSystemLabel))
         {
-            WriteMessage -Message ($LocalizedData.InitializeVHDSetLabelVolumeMessage `
+            Write-LabMessage -Message ($LocalizedData.InitializeVHDSetLabelVolumeMessage `
                 -f $Path,$FileSystemLabel)
             $Volume = Set-Volume `
                 -InputObject $Volume `
@@ -579,7 +579,7 @@ function InitializeVhd
                 $Volume = Get-Volume `
                     -Partition $Partition
 
-                WriteMessage -Message ($LocalizedData.InitializeVHDDriveLetterMessage `
+                Write-LabMessage -Message ($LocalizedData.InitializeVHDDriveLetterMessage `
                     -f $Path,$DriveLetter.ToUpper())
             }
             'AccessPath'
@@ -587,13 +587,13 @@ function InitializeVhd
                 # Check the Access folder exists
                 if (-not (Test-Path -Path $AccessPath -Type Container))
                 {
-                    $ExceptionParameters = @{
+                    $exceptionParameters = @{
                         errorId = 'InitializeVHDAccessPathNotFoundError'
                         errorCategory = 'InvalidArgument'
                         errorMessage = $($LocalizedData.InitializeVHDAccessPathNotFoundError `
                         -f $Path,$AccessPath)
                     }
-                    ThrowException @ExceptionParameters
+                    New-LabException @exceptionParameters
                 }
 
                 # Add the Partition Access Path
@@ -603,7 +603,7 @@ function InitializeVhd
                     -AccessPath $AccessPath `
                     -ErrorAction Stop
 
-                WriteMessage -Message ($LocalizedData.InitializeVHDAccessPathMessage `
+                Write-LabMessage -Message ($LocalizedData.InitializeVHDAccessPathMessage `
                     -f $Path,$AccessPath)
             }
         }

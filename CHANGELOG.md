@@ -1,5 +1,26 @@
 # Change Log
 
+## Unreleased
+
+- Clean up markdown errors in README.MD.
+- Updated code style to meet current best practices.
+- Updated tests to meet Pester v4 guidelines.
+- Convert sample labs to use ISCSIDsc resource module.
+- Convert sample labs to use FSRMDsc resource module.
+- Convert sample labs to use DFSDsc resource module.
+- Convert sample labs to use StorageDsc resource module.
+- Convert sample labs to use ActiveDirectoryCDDsc resource module.
+- Convert sample labs to use SQLServerDsc resource module.
+- Fix error that occurs when DSC ConfigurationData is specified
+  as a filename instead of a hashtable when compiling the MOF file.
+- Removed Visual Studio Solution and Proejct files.
+- DSCLibrary\MEMBER_DFSHUB.DSC.ps1: Added to enable Sample_WS2016_DFSHubAndSpoke
+  sample.
+- DSCLibrary\MEMBER_DFSSPOKE.DSC.ps1: Added to enable Sample_WS2016_DFSHubAndSpoke
+  sample.
+- Samples\Sample_WS2016_DFSHubAndSpoke.xml: Added to demonstrate Hub and Spoke DFS
+  replication gorup.
+
 ## 0.8.3.1140
 
 - Enforce xNetworking v5.0.0.0 is installed and used - fixes [Issue #289](https://github.com/PlagueHO/LabBuilder/issues/289).
@@ -34,8 +55,8 @@
 - Fix error occuring when starting DSC on node with no adapters.
 - LabDSCModule class: Added [Version] MinimuVersion property, converted ModuleVersion property to [Version].
 - Corrected format of Changelist.md.
-- Change SubnetMask to PrefixLength in xIPAdress DSC Config created by GetDSCNetworkingConfig.
-- Added support for specifying minimum module version in CreateDSCMOFFiles to enforce xNetworking 3.0.0.0 usage.
+- Change SubnetMask to PrefixLength in xIPAdress DSC Config created by Get-LabDSCNetworkingConfig.
+- Added support for specifying minimum module version in Update-LabDSC to enforce xNetworking 3.0.0.0 usage.
 
 ## 0.8.3.1068
 
@@ -75,7 +96,7 @@
 
 ## 0.8.1.0
 
-- Converted all Write-Verbose calls to WriteMessage function.
+- Converted all Write-Verbose calls to Write-LabMessage function.
 - Fix bug when creating a new Management adapter for a new Lab.
 
 ## 0.8.0.0
@@ -109,8 +130,8 @@
 - Private function UpdateSwitchManagementAdapter added.
 - Samples\Sample_WS2012R2_DCandDHCPOnly_NAT.xml: Added sample for testing NAT based Lab switches.
 - Improved ShouldProcess messages to be easier to read.
-- Utils\InstallPackageProviders: Added function for ensuring Package Providers are installed.
-- Utils\RegisterPackageSources: Added function for ensuring Package surces are registered.
+- Utils\Install-LabPackageProvider: Added function for ensuring Package Providers are installed.
+- Utils\Register-LabPackageSource: Added function for ensuring Package surces are registered.
 - Install-Lab: Added checks to ensure required PackageProviders and PackageSources are available.
 
 ## 0.7.8.0
@@ -202,7 +223,7 @@
 
 ## 0.7.1.0
 
-- GetDSCNetworkingConfig: Fix DSC error occuring when a blank DNS Server address or Default Gateway address is set on an Adapter.
+- Get-LabDSCNetworkingConfig: Fix DSC error occuring when a blank DNS Server address or Default Gateway address is set on an Adapter.
 - InitializeVhd: Prevent unnecessary results of disk partitioning and volume creation to console.
 - UpdateVMDataDisks: Fix to incorrectly reported Data VHD type change error.
 - DSCLibrary\MEMBER_BRANCHCACHE_HOST.DSC.ps1: Created resource for BranchCache Hosted Servers.
@@ -256,7 +277,7 @@
 - Get-ModulesInDSCConfig: Returns Array of objects containing ModuleName and ModuleVersion.
                          Now returns PSDesiredStateConfiguration module if listed -expected that calling function will ignore if required.
                          Added function to set the Module versions in a DSC Config.
-- CreateDSCMOFFiles: Updated to set Module versions in DSC Config files.
+- Update-LabDSC: Updated to set Module versions in DSC Config files.
 - DSC Library: Module Version numbers removed from all DSC Library Configrations.
 - Test Sample file code updated to remove switches when lab uninstalled.
 - Uninstall-Lab: Management Switch automatically removed when Lab uninstalled.
@@ -341,7 +362,7 @@
 - Added Initialize-VHD function.
 - Added support for formatting Data VHDs.
 - Added support for copying multiple folders to DataVHDs.
-- Updated Download-ResourceModule to use DownloadAndUnzipFile function.
+- Updated Download-ResourceModule to use Invoke-LabDownloadAndUnzipFile function.
 - Changed name of Settings\VMPath attribute to LabPath.
 
 ## 0.3.1.0

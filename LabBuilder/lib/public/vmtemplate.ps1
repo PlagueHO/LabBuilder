@@ -52,11 +52,11 @@ function Get-LabVMTemplate {
     } # if
 
     [LabVMTemplate[]] $VMTemplates = @()
-    [String] $VHDParentPath = $Lab.labbuilderconfig.settings.vhdparentpathfull
+    [System.String] $VHDParentPath = $Lab.labbuilderconfig.settings.vhdparentpathfull
 
     # Get a list of all templates in the Hyper-V system matching the phrase found in the fromvm
     # config setting
-    [String] $FromVM = $Lab.labbuilderconfig.templates.fromvm
+    [System.String] $FromVM = $Lab.labbuilderconfig.templates.fromvm
     if ($FromVM)
     {
         $Templates = @(Get-VM -Name $FromVM)
@@ -68,8 +68,8 @@ function Get-LabVMTemplate {
                 continue
             } # if
 
-            [String] $VHDFilepath = (Get-VMHardDiskDrive -VMName $Template.Name).Path
-            [String] $VHDFilename = [System.IO.Path]::GetFileName($VHDFilepath)
+            [System.String] $VHDFilepath = (Get-VMHardDiskDrive -VMName $Template.Name).Path
+            [System.String] $VHDFilename = [System.IO.Path]::GetFileName($VHDFilepath)
             [LabVMTemplate] $VMTemplate = [LabVMTemplate]::New($Template.Name)
             $VMTemplate.Vhd = $VHDFilename
             $VMTemplate.SourceVhd = $VHDFilepath
@@ -94,12 +94,12 @@ function Get-LabVMTemplate {
 
         if ($TemplateName -eq 'template')
         {
-            $ExceptionParameters = @{
+            $exceptionParameters = @{
                 errorId = 'EmptyTemplateNameError'
                 errorCategory = 'InvalidArgument'
                 errorMessage = $($LocalizedData.EmptyTemplateNameError)
             }
-            ThrowException @ExceptionParameters
+            New-LabException @exceptionParameters
         } # if
 
         # Does the template already exist in the list?
@@ -122,19 +122,19 @@ function Get-LabVMTemplate {
         } # if
 
         # Determine the Source VHD, Template VHD and VHD
-        [String] $SourceVHD = $Template.SourceVHD
-        [String] $TemplateVHD = $Template.TemplateVHD
+        [System.String] $SourceVHD = $Template.SourceVHD
+        [System.String] $TemplateVHD = $Template.TemplateVHD
 
         # Throw an error if both a TemplateVHD and SourceVHD are provided
         if ($TemplateVHD -and $SourceVHD)
         {
-            $ExceptionParameters = @{
+            $exceptionParameters = @{
                 errorId = 'TemplateSourceVHDAndTemplateVHDConflictError'
                 errorCategory = 'InvalidArgument'
                 errorMessage = $($LocalizedData.TemplateSourceVHDAndTemplateVHDConflictError `
                     -f $TemplateName)
             }
-            ThrowException @ExceptionParameters
+            New-LabException @exceptionParameters
         } # if
 
         if ($TemplateVHD)
@@ -163,13 +163,13 @@ function Get-LabVMTemplate {
             else
             {
                 # The TemplateVHD could not be found in the list
-                $ExceptionParameters = @{
+                $exceptionParameters = @{
                     errorId = 'TemplateTemplateVHDNotFoundError'
                     errorCategory = 'InvalidArgument'
                     errorMessage = $($LocalizedData.TemplateTemplateVHDNotFoundError `
                         -f $TemplateName,$TemplateVHD)
                 }
-                ThrowException @ExceptionParameters
+                New-LabException @exceptionParameters
             } # if
         }
         elseif ($SourceVHD)
@@ -190,13 +190,13 @@ function Get-LabVMTemplate {
             # A Source VHD file was specified - does it exist?
             if (-not (Test-Path -Path $VMTemplate.sourcevhd))
             {
-                $ExceptionParameters = @{
+                $exceptionParameters = @{
                     errorId = 'TemplateSourceVHDNotFoundError'
                     errorCategory = 'InvalidArgument'
                     errorMessage = $($LocalizedData.TemplateSourceVHDNotFoundError `
                         -f $TemplateName,$VMTemplate.sourcevhd)
                 }
-                ThrowException @ExceptionParameters
+                New-LabException @exceptionParameters
             } # if
 
             # if a VHD filename wasn't specified in the Template
@@ -221,13 +221,13 @@ function Get-LabVMTemplate {
         {
             # Neither a SourceVHD or TemplateVHD was provided
             # So throw an exception
-            $ExceptionParameters = @{
+            $exceptionParameters = @{
                 errorId = 'TemplateSourceVHDandTemplateVHDMissingError'
                 errorCategory = 'InvalidArgument'
                 errorMessage = $($LocalizedData.TemplateSourceVHDandTemplateVHDMissingError `
                     -f $TemplateName)
             }
-            ThrowException @ExceptionParameters
+            New-LabException @exceptionParameters
         } # if
 
         # Ensure the ParentVHD is up-to-date
@@ -393,7 +393,7 @@ function Initialize-LabVMTemplate {
             @PSBoundParameters
     }
 
-    [String] $LabPath = $Lab.labbuilderconfig.settings.labpath
+    [System.String] $LabPath = $Lab.labbuilderconfig.settings.labpath
 
     # Check each Parent VHD exists in the Parent VHDs folder for the
     # Lab. If it isn't, try and copy it from the SourceVHD
@@ -413,32 +413,32 @@ function Initialize-LabVMTemplate {
             if (-not (Test-Path $VMTemplate.SourceVhd))
             {
                 # The source VHD could not be found.
-                $ExceptionParameters = @{
+                $exceptionParameters = @{
                     errorId = 'TemplateSourceVHDNotFoundError'
                     errorCategory = 'InvalidArgument'
                     errorMessage = $($LocalizedData.TemplateSourceVHDNotFoundError `
                         -f $VMTemplate.Name,$VMTemplate.sourcevhd)
                 }
-                ThrowException @ExceptionParameters
+                New-LabException @exceptionParameters
             }
 
-            WriteMessage -Message $($LocalizedData.CopyingTemplateSourceVHDMessage `
+            Write-LabMessage -Message $($LocalizedData.CopyingTemplateSourceVHDMessage `
                 -f $VMTemplate.SourceVhd,$VMTemplate.ParentVhd)
             Copy-Item `
                 -Path $VMTemplate.SourceVhd `
                 -Destination $VMTemplate.ParentVhd
 
             # Add any packages to the template if required
-            if (-not [String]::IsNullOrWhitespace($VMTemplate.Packages))
+            if (-not [System.String]::IsNullOrWhitespace($VMTemplate.Packages))
             {
                 if ($VMTemplate.OSType -ne [LabOStype]::Nano)
                 {
                     # Mount the Template Boot VHD so that files can be loaded into it
-                    WriteMessage -Message $($LocalizedData.MountingTemplateBootDiskMessage `
+                    Write-LabMessage -Message $($LocalizedData.MountingTemplateBootDiskMessage `
                         -f $VMTemplate.Name,$VMTemplate.ParentVhd)
 
                     # Create a mount point for mounting the Boot VHD
-                    [String] $MountPoint = Join-Path `
+                    [System.String] $MountPoint = Join-Path `
                         -Path (Split-Path -Path $VMTemplate.ParentVHD) `
                         -ChildPath 'Mount'
 
@@ -478,7 +478,7 @@ function Initialize-LabVMTemplate {
                         if (-not $Found)
                         {
                             # Dismount before throwing the error
-                            WriteMessage -Message $($LocalizedData.DismountingTemplateBootDiskMessage `
+                            Write-LabMessage -Message $($LocalizedData.DismountingTemplateBootDiskMessage `
                                 -f $VMTemplate.Name,$VMTemplate.parentvhd)
                             $null = Dismount-WindowsImage `
                                 -Path $MountPoint `
@@ -488,20 +488,20 @@ function Initialize-LabVMTemplate {
                                 -Recurse `
                                 -Force
 
-                            $ExceptionParameters = @{
+                            $exceptionParameters = @{
                                 errorId = 'PackageNotFoundError'
                                 errorCategory = 'InvalidArgument'
                                 errorMessage = $($LocalizedData.PackageNotFoundError `
                                 -f $Package)
                             }
-                            ThrowException @ExceptionParameters
+                            New-LabException @exceptionParameters
                         } # if
 
                         $PackagePath = $ResourceMSU.Filename
                         if (-not (Test-Path -Path $PackagePath))
                         {
                             # Dismount before throwing the error
-                            WriteMessage -Message $($LocalizedData.DismountingTemplateBootDiskMessage `
+                            Write-LabMessage -Message $($LocalizedData.DismountingTemplateBootDiskMessage `
                                 -f $VMTemplate.Name,$VMTemplate.ParentVhd)
                             $null = Dismount-WindowsImage `
                                 -Path $MountPoint `
@@ -511,17 +511,17 @@ function Initialize-LabVMTemplate {
                                 -Recurse `
                                 -Force
 
-                            $ExceptionParameters = @{
+                            $exceptionParameters = @{
                                 errorId = 'PackageMSUNotFoundError'
                                 errorCategory = 'InvalidArgument'
                                 errorMessage = $($LocalizedData.PackageMSUNotFoundError `
                                 -f $Package,$PackagePath)
                             }
-                            ThrowException @ExceptionParameters
+                            New-LabException @exceptionParameters
                         } # if
 
                         # Apply a Pacakge
-                        WriteMessage -Message $($LocalizedData.ApplyingTemplateBootDiskFileMessage `
+                        Write-LabMessage -Message $($LocalizedData.ApplyingTemplateBootDiskFileMessage `
                             -f $VMTemplate.Name,$Package,$PackagePath)
 
                         $null = Add-WindowsPackage `
@@ -530,7 +530,7 @@ function Initialize-LabVMTemplate {
                     } # foreach
 
                     # Dismount the VHD
-                    WriteMessage -Message $($LocalizedData.DismountingTemplateBootDiskMessage `
+                    Write-LabMessage -Message $($LocalizedData.DismountingTemplateBootDiskMessage `
                         -f $VMTemplate.Name,$VMTemplate.parentvhd)
                     $null = Dismount-WindowsImage `
                         -Path $MountPoint `
@@ -542,7 +542,7 @@ function Initialize-LabVMTemplate {
                 } # if
             } # if
 
-            WriteMessage -Message $($LocalizedData.OptimizingParentVHDMessage `
+            Write-LabMessage -Message $($LocalizedData.OptimizingParentVHDMessage `
                 -f $VMTemplate.parentvhd)
             Set-ItemProperty `
                 -Path $VMTemplate.parentvhd `
@@ -551,7 +551,7 @@ function Initialize-LabVMTemplate {
             Optimize-VHD `
                 -Path $VMTemplate.parentvhd `
                 -Mode Full
-            WriteMessage -Message $($LocalizedData.SettingParentVHDReadonlyMessage `
+            Write-LabMessage -Message $($LocalizedData.SettingParentVHDReadonlyMessage `
                 -f $VMTemplate.parentvhd)
             Set-ItemProperty `
                 -Path $VMTemplate.parentvhd `
@@ -560,7 +560,7 @@ function Initialize-LabVMTemplate {
         }
         Else
         {
-            WriteMessage -Message $($LocalizedData.SkipParentVHDFileMessage `
+            Write-LabMessage -Message $($LocalizedData.SkipParentVHDFileMessage `
                 -f $VMTemplate.Name,$VMTemplate.parentvhd)
         }
 
@@ -568,17 +568,17 @@ function Initialize-LabVMTemplate {
         # NanoServerPackages folder is copied to our Lab folder
         if ($VMTemplate.OSType -eq [LabOStype]::Nano)
         {
-            [String] $VHDPackagesFolder = Join-Path `
+            [System.String] $VHDPackagesFolder = Join-Path `
                 -Path (Split-Path -Path $VMTemplate.SourceVhd -Parent)`
                 -ChildPath 'NanoServerPackages'
 
-            [String] $NanoPackagesFolder = Join-Path `
+            [System.String] $NanoPackagesFolder = Join-Path `
                 -Path $LabPath `
                 -ChildPath 'NanoServerPackages'
 
             if (-not (Test-Path -Path $NanoPackagesFolder -Type Container))
             {
-                WriteMessage -Message $($LocalizedData.CachingNanoServerPackagesMessage `
+                Write-LabMessage -Message $($LocalizedData.CachingNanoServerPackagesMessage `
                         -f $VHDPackagesFolder,$NanoPackagesFolder)
                 Copy-Item `
                     -Path $VHDPackagesFolder `
@@ -664,7 +664,7 @@ function Remove-LabVMTemplate {
                 -Path $VMTemplate.parentvhd `
                 -Name IsReadOnly `
                 -Value $False
-            WriteMessage -Message $($LocalizedData.DeletingParentVHDMessage `
+            Write-LabMessage -Message $($LocalizedData.DeletingParentVHDMessage `
                 -f $VMTemplate.ParentVhd)
             Remove-Item `
                 -Path $VMTemplate.ParentVhd `

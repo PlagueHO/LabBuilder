@@ -15,13 +15,16 @@ DSC Template Configuration File For use by LabBuilder
 Configuration MEMBER_NANO
 {
     Import-DscResource -ModuleName 'PSDesiredStateConfiguration'
-    Import-DscResource -ModuleName xComputerManagement
+    Import-DscResource -ModuleName ComputerManagementDsc
+
     Node $AllNodes.NodeName {
         # Assemble the Local Admin Credentials
-        If ($Node.LocalAdminPassword) {
+        if ($Node.LocalAdminPassword)
+        {
             [PSCredential]$LocalAdminCredential = New-Object System.Management.Automation.PSCredential ("Administrator", (ConvertTo-SecureString $Node.LocalAdminPassword -AsPlainText -Force))
         }
-        If ($Node.DomainAdminPassword) {
+        if ($Node.DomainAdminPassword)
+        {
             [PSCredential]$DomainAdminCredential = New-Object System.Management.Automation.PSCredential ("$($Node.DomainName)\Administrator", (ConvertTo-SecureString $Node.DomainAdminPassword -AsPlainText -Force))
         }
 
@@ -33,11 +36,11 @@ Configuration MEMBER_NANO
             RetryCount       = 60
         }
 
-        xOfflineDomainJoin JoinDomain 
+        xOfflineDomainJoin JoinDomain
         {
             IsSingleInstance = 'Yes'
             RequestFile      = $Node.ODJRequestFile
-            DependsOn        = '[WaitForAll]DC' 
+            DependsOn        = '[WaitForAll]DC'
         }
     }
 }

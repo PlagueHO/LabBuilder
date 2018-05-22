@@ -35,19 +35,19 @@ try
     .SYNOPSIS
     Helper function that just creates an exception record for testing.
     #>
-        function GetException
+        function Get-LabException
         {
             [CmdLetBinding()]
             param
             (
-                [Parameter(Mandatory)]
-                [String] $errorId,
+                [Parameter(Mandatory = $true)]
+                [System.String] $errorId,
 
-                [Parameter(Mandatory)]
+                [Parameter(Mandatory = $true)]
                 [System.Management.Automation.ErrorCategory] $errorCategory,
 
-                [Parameter(Mandatory)]
-                [String] $errorMessage,
+                [Parameter(Mandatory = $true)]
+                [System.String] $errorMessage,
 
                 [Switch]
                 $terminate
@@ -75,74 +75,74 @@ try
                 It 'Throws a EmptyTemplateNameError Exception' {
                     $Lab = Get-Lab -ConfigPath $Global:TestConfigOKPath
                     $Lab.labbuilderconfig.templates.template[0].RemoveAttribute('name')
-                    $ExceptionParameters = @{
+                    $exceptionParameters = @{
                         errorId = 'EmptyTemplateNameError'
                         errorCategory = 'InvalidArgument'
                         errorMessage = $($LocalizedData.EmptyTemplateNameError)
                     }
-                    $Exception = GetException @ExceptionParameters
+                    $Exception = Get-LabException @exceptionParameters
 
-                    { Get-LabVMTemplate -Lab $Lab } | Should Throw $Exception
+                    { Get-LabVMTemplate -Lab $Lab } | Should -Throw $Exception
                 }
             }
             Context 'Configuration passed with template with Source VHD set to relative non-existent file.' {
                 It 'Throws a TemplateSourceVHDNotFoundError Exception' {
                     $Lab = Get-Lab -ConfigPath $Global:TestConfigOKPath
                     $Lab.labbuilderconfig.templates.template[0].sourcevhd = 'This File Doesnt Exist.vhdx'
-                    $ExceptionParameters = @{
+                    $exceptionParameters = @{
                         errorId = 'TemplateSourceVHDNotFoundError'
                         errorCategory = 'InvalidArgument'
                         errorMessage = $($LocalizedData.TemplateSourceVHDNotFoundError `
                             -f $Lab.labbuilderconfig.templates.template[0].name,"$Global:TestConfigPath\This File Doesnt Exist.vhdx")
                     }
-                    $Exception = GetException @ExceptionParameters
+                    $Exception = Get-LabException @exceptionParameters
 
-                    { Get-LabVMTemplate -Lab $Lab } | Should Throw $Exception
+                    { Get-LabVMTemplate -Lab $Lab } | Should -Throw $Exception
                 }
             }
             Context 'Configuration passed with template with Source VHD set to absolute non-existent file.' {
                 It 'Throws a TemplateSourceVHDNotFoundError Exception' {
                     $Lab = Get-Lab -ConfigPath $Global:TestConfigOKPath
                     $Lab.labbuilderconfig.templates.template[0].sourcevhd = 'c:\This File Doesnt Exist.vhdx'
-                    $ExceptionParameters = @{
+                    $exceptionParameters = @{
                         errorId = 'TemplateSourceVHDNotFoundError'
                         errorCategory = 'InvalidArgument'
                         errorMessage = $($LocalizedData.TemplateSourceVHDNotFoundError `
                             -f $Lab.labbuilderconfig.templates.template[0].name,"c:\This File Doesnt Exist.vhdx")
                     }
-                    $Exception = GetException @ExceptionParameters
+                    $Exception = Get-LabException @exceptionParameters
 
-                    { Get-LabVMTemplate -Lab $Lab } | Should Throw $Exception
+                    { Get-LabVMTemplate -Lab $Lab } | Should -Throw $Exception
                 }
             }
             Context 'Configuration passed with template with Source VHD and Template VHD.' {
                 It 'Throws a TemplateSourceVHDAndTemplateVHDConflictError Exception' {
                     $Lab = Get-Lab -ConfigPath $Global:TestConfigOKPath
                     $Lab.labbuilderconfig.templates.template[0].SetAttribute('templatevhd','Windows Server 2012 R2 Datacenter FULL')
-                    $ExceptionParameters = @{
+                    $exceptionParameters = @{
                         errorId = 'TemplateSourceVHDAndTemplateVHDConflictError'
                         errorCategory = 'InvalidArgument'
                         errorMessage = $($LocalizedData.TemplateSourceVHDAndTemplateVHDConflictError `
                             -f $Lab.labbuilderconfig.templates.template[0].name)
                     }
-                    $Exception = GetException @ExceptionParameters
+                    $Exception = Get-LabException @exceptionParameters
 
-                    { Get-LabVMTemplate -Lab $Lab } | Should Throw $Exception
+                    { Get-LabVMTemplate -Lab $Lab } | Should -Throw $Exception
                 }
             }
             Context 'Configuration passed with template with no Source VHD and no Template VHD.' {
                 It 'Throws a TemplateSourceVHDandTemplateVHDMissingError Exception' {
                     $Lab = Get-Lab -ConfigPath $Global:TestConfigOKPath
                     $Lab.labbuilderconfig.templates.template[0].RemoveAttribute('sourcevhd')
-                    $ExceptionParameters = @{
+                    $exceptionParameters = @{
                         errorId = 'TemplateSourceVHDandTemplateVHDMissingError'
                         errorCategory = 'InvalidArgument'
                         errorMessage = $($LocalizedData.TemplateSourceVHDandTemplateVHDMissingError `
                             -f $Lab.labbuilderconfig.templates.template[0].name)
                     }
-                    $Exception = GetException @ExceptionParameters
+                    $Exception = Get-LabException @exceptionParameters
 
-                    { Get-LabVMTemplate -Lab $Lab } | Should Throw $Exception
+                    { Get-LabVMTemplate -Lab $Lab } | Should -Throw $Exception
                 }
             }
 
@@ -150,15 +150,15 @@ try
                 It 'Throws a TemplateSourceVHDAndTemplateVHDConflictError Exception' {
                     $Lab = Get-Lab -ConfigPath $Global:TestConfigOKPath
                     $Lab.labbuilderconfig.templates.template[1].TemplateVHD='Template VHD Does Not Exist'
-                    $ExceptionParameters = @{
+                    $exceptionParameters = @{
                         errorId = 'TemplateTemplateVHDNotFoundError'
                         errorCategory = 'InvalidArgument'
                         errorMessage = $($LocalizedData.TemplateTemplateVHDNotFoundError `
                             -f $Lab.labbuilderconfig.templates.template[1].name,'Template VHD Does Not Exist')
                     }
-                    $Exception = GetException @ExceptionParameters
+                    $Exception = Get-LabException @exceptionParameters
 
-                    { Get-LabVMTemplate -Lab $Lab } | Should Throw $Exception
+                    { Get-LabVMTemplate -Lab $Lab } | Should -Throw $Exception
                 }
             }
             Context 'Valid configuration is passed but no templates found' {
@@ -173,7 +173,7 @@ try
                     }
                     Set-Content -Path "$Global:ArtifactPath\ExpectedTemplates.json" -Value ($Templates | ConvertTo-Json -Depth 2)
                     $ExpectedTemplates = Get-Content -Path "$Global:ExpectedContentPath\ExpectedTemplates.json"
-                    [String]::Compare((Get-Content -Path "$Global:ArtifactPath\ExpectedTemplates.json"),$ExpectedTemplates,$true) | Should Be 0
+                    [System.String]::Compare((Get-Content -Path "$Global:ArtifactPath\ExpectedTemplates.json"),$ExpectedTemplates,$true) | Should -Be 0
                 }
                 It 'Calls Mocked commands' {
                     Assert-MockCalled Get-VM -Exactly 0
@@ -199,7 +199,7 @@ try
                     [Array] $Templates = Get-LabVMTemplate `
                         -Lab $Lab `
                         -Name $Lab.labbuilderconfig.Templates.template[0].Name
-                    $Templates.Count | Should Be 1
+                    $Templates.Count | Should -Be 1
                 }
             }
             Context 'Valid configuration is passed with a Name filter set to non-matching VM' {
@@ -209,7 +209,7 @@ try
                     [Array] $Templates = Get-LabVMTemplate `
                         -Lab $Lab `
                         -Name 'Does Not Exist'
-                    $Templates.Count | Should Be 0
+                    $Templates.Count | Should -Be 0
                 }
             }
             Context 'Valid configuration is passed and some templates are found' {
@@ -225,7 +225,7 @@ try
                     }
                     Set-Content -Path "$Global:ArtifactPath\ExpectedTemplates.FromVM.json" -Value ($Templates | ConvertTo-Json -Depth 2)
                     $ExpectedTemplates = Get-Content -Path "$Global:ExpectedContentPath\ExpectedTemplates.FromVM.json"
-                    [String]::Compare((Get-Content -Path "$Global:ArtifactPath\ExpectedTemplates.FromVM.json"),$ExpectedTemplates,$true) | Should Be 0
+                    [System.String]::Compare((Get-Content -Path "$Global:ArtifactPath\ExpectedTemplates.FromVM.json"),$ExpectedTemplates,$true) | Should -Be 0
                 }
                 It 'Calls Mocked commands' {
                     Assert-MockCalled Get-VM -Exactly 1
@@ -266,15 +266,15 @@ try
                 [LabVMTemplate[]] $Templates = @( $Template )
 
                 It 'Throws a TemplateSourceVHDNotFoundError Exception' {
-                    $ExceptionParameters = @{
+                    $exceptionParameters = @{
                         errorId = 'TemplateSourceVHDNotFoundError'
                         errorCategory = 'InvalidArgument'
                         errorMessage = $($LocalizedData.TemplateSourceVHDNotFoundError `
                             -f $Template.Name,$Template.SourceVHD)
                     }
-                    $Exception = GetException @ExceptionParameters
+                    $Exception = Get-LabException @exceptionParameters
 
-                    { Initialize-LabVMTemplate -Lab $Lab -VMTemplates $Templates } | Should Throw $Exception
+                    { Initialize-LabVMTemplate -Lab $Lab -VMTemplates $Templates } | Should -Throw $Exception
                 }
                 It 'Calls Mocked commands' {
                     Assert-MockCalled Copy-Item -Exactly 0
@@ -292,7 +292,7 @@ try
                 Mock Test-Path -ParameterFilter { $Path -eq $ResourceWMFMSUFile } -MockWith { $True }
                 Mock Test-Path -ParameterFilter { $Path -eq $ResourceRSATMSUFile } -MockWith { $True }
                 It 'Does not throw an Exception' {
-                    { Initialize-LabVMTemplate -Lab $Lab -VMTemplates $VMTemplates } | Should Not Throw
+                    { Initialize-LabVMTemplate -Lab $Lab -VMTemplates $VMTemplates } | Should -Not -Throw
                 }
                 It 'Calls Mocked commands' {
                     Assert-MockCalled Copy-Item -Exactly ($TemplateCount + 1)
@@ -310,7 +310,7 @@ try
                 Mock Test-Path -ParameterFilter { $Path -eq $ResourceWMFMSUFile } -MockWith { $True }
                 Mock Test-Path -ParameterFilter { $Path -eq $ResourceRSATMSUFile } -MockWith { $True }
                 It 'Does not throw an Exception' {
-                    { Initialize-LabVMTemplate -Lab $Lab } | Should Not Throw
+                    { Initialize-LabVMTemplate -Lab $Lab } | Should -Not -Throw
                 }
                 It 'Calls Mocked commands' {
                     Assert-MockCalled Copy-Item -Exactly ($TemplateCount + 1)
@@ -344,7 +344,7 @@ try
                 [Array]$Templates = Get-LabVMTemplate -Lab $Lab
 
                 It 'Does not throw an Exception' {
-                    { Remove-LabVMTemplate -Lab $Lab -VMTemplates $Templates } | Should Not Throw
+                    { Remove-LabVMTemplate -Lab $Lab -VMTemplates $Templates } | Should -Not -Throw
                 }
                 It 'Calls Mocked commands' {
                     Assert-MockCalled Set-ItemProperty -Exactly $TemplateCount -ParameterFilter { ($Name -eq 'IsReadOnly') -and ($Value -eq $False) }

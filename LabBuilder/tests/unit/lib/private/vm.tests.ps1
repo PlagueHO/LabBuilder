@@ -35,19 +35,19 @@ try
     .SYNOPSIS
     Helper function that just creates an exception record for testing.
     #>
-        function GetException
+        function Get-LabException
         {
             [CmdLetBinding()]
             param
             (
-                [Parameter(Mandatory)]
-                [String] $errorId,
+                [Parameter(Mandatory = $true)]
+                [System.String] $errorId,
 
-                [Parameter(Mandatory)]
+                [Parameter(Mandatory = $true)]
                 [System.Management.Automation.ErrorCategory] $errorCategory,
 
-                [Parameter(Mandatory)]
-                [String] $errorMessage,
+                [Parameter(Mandatory = $true)]
+                [System.String] $errorMessage,
 
                 [Switch]
                 $terminate
@@ -123,7 +123,7 @@ try
 
             Context 'Called' {
                 It 'Returns expected Integration Service names' {
-                    GetIntegrationServiceNames | Should Be @(
+                    GetIntegrationServiceNames | Should -Be @(
                         'VSS'
                         'Shutdown'
                         'Time Synchronization'
@@ -180,7 +180,7 @@ try
                 [Array]$VMs = Get-LabVM -Lab $Lab -VMTemplates $Templates -Switches $Switches
                 $VMs[0].IntegrationServices = $null
                 It 'Does not throw an Exception' {
-                    { UpdateVMIntegrationServices -VM $VMs[0] } | Should Not Throw
+                    { UpdateVMIntegrationServices -VM $VMs[0] } | Should -Not -Throw
                 }
                 It 'Calls Mocked commands' {
                     Assert-MockCalled Get-VMIntegrationService -Exactly 1
@@ -193,7 +193,7 @@ try
                 [Array]$VMs = Get-LabVM -Lab $Lab -VMTemplates $Templates -Switches $Switches
                 $VMs[0].IntegrationServices = ''
                 It 'Does not throw an Exception' {
-                    { UpdateVMIntegrationServices -VM $VMs[0] } | Should Not Throw
+                    { UpdateVMIntegrationServices -VM $VMs[0] } | Should -Not -Throw
                 }
                 It 'Calls Mocked commands' {
                     Assert-MockCalled Get-VMIntegrationService -Exactly 1
@@ -206,7 +206,7 @@ try
                 [Array]$VMs = Get-LabVM -Lab $Lab -VMTemplates $Templates -Switches $Switches
                 $VMs[0].IntegrationServices = 'VSS'
                 It 'Does not throw an Exception' {
-                    { UpdateVMIntegrationServices -VM $VMs[0] } | Should Not Throw
+                    { UpdateVMIntegrationServices -VM $VMs[0] } | Should -Not -Throw
                 }
                 It 'Calls Mocked commands' {
                     Assert-MockCalled Get-VMIntegrationService -Exactly 1
@@ -218,7 +218,7 @@ try
                 [Array]$VMs = Get-LabVM -Lab $Lab -VMTemplates $Templates -Switches $Switches
                 $VMs[0].IntegrationServices = 'Guest Service Interface'
                 It 'Does not throw an Exception' {
-                    { UpdateVMIntegrationServices -VM $VMs[0] } | Should Not Throw
+                    { UpdateVMIntegrationServices -VM $VMs[0] } | Should -Not -Throw
                 }
                 It 'Calls Mocked commands' {
                     Assert-MockCalled Get-VMIntegrationService -Exactly 1
@@ -268,7 +268,7 @@ try
             Context 'Valid configuration is passed with no DataVHDs' {
                 $VMs[0].DataVHDs = @()
                 It 'Does not throw an Exception' {
-                    { UpdateVMDataDisks -Lab $Lab -VM $VMs[0] } | Should Not Throw
+                    { UpdateVMDataDisks -Lab $Lab -VM $VMs[0] } | Should -Not -Throw
                 }
                 It 'Calls Mocked commands' {
                     Assert-MockCalled Get-VHD -Exactly 0
@@ -293,14 +293,14 @@ try
                     VhdType =  'Dynamic'
                 } }
                 It 'Throws VMDataDiskVHDConvertError Exception' {
-                    $ExceptionParameters = @{
+                    $exceptionParameters = @{
                         errorId = 'VMDataDiskVHDConvertError'
                         errorCategory = 'InvalidArgument'
                         errorMessage = $($LocalizedData.VMDataDiskVHDConvertError `
                             -f $VMs[0].Name,$VMs[0].DataVHDs.Vhd,$VMs[0].DataVHDs.VhdType)
                     }
-                    $Exception = GetException @ExceptionParameters
-                    { UpdateVMDataDisks -Lab $Lab -VM $VMs[0] } | Should Throw
+                    $Exception = Get-LabException @exceptionParameters
+                    { UpdateVMDataDisks -Lab $Lab -VM $VMs[0] } | Should -Throw
                 }
                 It 'Calls Mocked commands' {
                     Assert-MockCalled Get-VHD -Exactly 1
@@ -326,14 +326,14 @@ try
                     Size = 20GB
                 } }
                 It 'Throws VMDataDiskVHDShrinkError Exception' {
-                    $ExceptionParameters = @{
+                    $exceptionParameters = @{
                         errorId = 'VMDataDiskVHDShrinkError'
                         errorCategory = 'InvalidArgument'
                         errorMessage = $($LocalizedData.VMDataDiskVHDShrinkError `
                             -f $VMs[0].Name,$VMs[0].DataVHDs[0].Vhd,$VMs[0].DataVHDs[0].Size)
                     }
-                    $Exception = GetException @ExceptionParameters
-                    { UpdateVMDataDisks -Lab $Lab -VM $VMs[0] } | Should Throw $Exception
+                    $Exception = Get-LabException @exceptionParameters
+                    { UpdateVMDataDisks -Lab $Lab -VM $VMs[0] } | Should -Throw $Exception
                 }
                 It 'Calls Mocked commands' {
                     Assert-MockCalled Get-VHD -Exactly 1
@@ -359,7 +359,7 @@ try
                     Size = 20GB
                 } }
                 It 'Does not throw an Exception' {
-                    { UpdateVMDataDisks -Lab $Lab -VM $VMs[0] } | Should Not Throw
+                    { UpdateVMDataDisks -Lab $Lab -VM $VMs[0] } | Should -Not -Throw
                 }
                 It 'Calls Mocked commands' {
                     Assert-MockCalled Get-VHD -Exactly 1
@@ -381,14 +381,14 @@ try
                 $DataVHD.SourceVhd = 'DoesNotExist.Vhdx'
                 $VMs[0].DataVHDs = @( $DataVHD )
                 It 'Throws VMDataDiskSourceVHDNotFoundError Exception' {
-                    $ExceptionParameters = @{
+                    $exceptionParameters = @{
                         errorId = 'VMDataDiskSourceVHDNotFoundError'
                         errorCategory = 'InvalidArgument'
                         errorMessage = $($LocalizedData.VMDataDiskSourceVHDNotFoundError `
                             -f $VMs[0].Name,$VMs[0].DataVHDs[0].SourceVhd)
                     }
-                    $Exception = GetException @ExceptionParameters
-                    { UpdateVMDataDisks -Lab $Lab -VM $VMs[0] } | Should Throw $Exception
+                    $Exception = Get-LabException @exceptionParameters
+                    { UpdateVMDataDisks -Lab $Lab -VM $VMs[0] } | Should -Throw $Exception
                 }
                 It 'Calls Mocked commands' {
                     Assert-MockCalled Get-VHD -Exactly 0
@@ -409,7 +409,7 @@ try
                 $DataVHD.SourceVhd = 'DoesExist.Vhdx'
                 $VMs[0].DataVHDs = @( $DataVHD )
                 It 'Does not throw an Exception' {
-                    { UpdateVMDataDisks -Lab $Lab -VM $VMs[0] } | Should Not Throw
+                    { UpdateVMDataDisks -Lab $Lab -VM $VMs[0] } | Should -Not -Throw
                 }
                 It 'Calls Mocked commands' {
                     Assert-MockCalled Get-VHD -Exactly 0
@@ -432,7 +432,7 @@ try
                 $VMs[0].DataVHDs = @( $DataVHD )
 
                 It 'Does not throw an Exception' {
-                    { UpdateVMDataDisks -Lab $Lab -VM $VMs[0] } | Should Not Throw
+                    { UpdateVMDataDisks -Lab $Lab -VM $VMs[0] } | Should -Not -Throw
                 }
                 It 'Calls Mocked commands' {
                     Assert-MockCalled Get-VHD -Exactly 0
@@ -454,7 +454,7 @@ try
                 $DataVHD.Size = 10GB
                 $VMs[0].DataVHDs = @( $DataVHD )
                 It 'Does not throw an Exception' {
-                    { UpdateVMDataDisks -Lab $Lab -VM $VMs[0] } | Should Not Throw
+                    { UpdateVMDataDisks -Lab $Lab -VM $VMs[0] } | Should -Not -Throw
                 }
                 It 'Calls Mocked commands' {
                     Assert-MockCalled Get-VHD -Exactly 0
@@ -476,7 +476,7 @@ try
                 $DataVHD.Size = 10GB
                 $VMs[0].DataVHDs = @( $DataVHD )
                 It 'Does not throw an Exception' {
-                    { UpdateVMDataDisks -Lab $Lab -VM $VMs[0] } | Should Not Throw
+                    { UpdateVMDataDisks -Lab $Lab -VM $VMs[0] } | Should -Not -Throw
                 }
                 It 'Calls Mocked commands' {
                     Assert-MockCalled Get-VHD -Exactly 0
@@ -500,7 +500,7 @@ try
                 $DataVHD.FileSystem = [LabFileSystem]::NTFS
                 $VMs[0].DataVHDs = @( $DataVHD )
                 It 'Does not throw an Exception' {
-                    { UpdateVMDataDisks -Lab $Lab -VM $VMs[0] } | Should Not Throw
+                    { UpdateVMDataDisks -Lab $Lab -VM $VMs[0] } | Should -Not -Throw
                 }
                 It 'Calls Mocked commands' {
                     Assert-MockCalled Get-VHD -Exactly 0
@@ -525,7 +525,7 @@ try
                 $DataVHD.CopyFolders = "$Global:TestConfigPath\ExpectedContent"
                 $VMs[0].DataVHDs = @( $DataVHD )
                 It 'Does not throw an Exception' {
-                    { UpdateVMDataDisks -Lab $Lab -VM $VMs[0] } | Should Not Throw
+                    { UpdateVMDataDisks -Lab $Lab -VM $VMs[0] } | Should -Not -Throw
                 }
                 It 'Calls Mocked commands' {
                     Assert-MockCalled Get-VHD -Exactly 0
@@ -548,7 +548,7 @@ try
                 $DataVHD.CopyFolders = "$Global:TestConfigPath\ExpectedContent"
                 $VMs[0].DataVHDs = @( $DataVHD )
                 It 'Does not throw an Exception' {
-                    { UpdateVMDataDisks -Lab $Lab -VM $VMs[0] } | Should Not Throw
+                    { UpdateVMDataDisks -Lab $Lab -VM $VMs[0] } | Should -Not -Throw
                 }
                 It 'Calls Mocked commands' {
                     Assert-MockCalled Get-VHD -Exactly 0
@@ -570,14 +570,14 @@ try
                 $DataVHD.Size = 10GB
                 $VMs[0].DataVHDs = @( $DataVHD )
                 It 'Throws VMDataDiskParentVHDMissingError Exception' {
-                    $ExceptionParameters = @{
+                    $exceptionParameters = @{
                         errorId = 'VMDataDiskParentVHDMissingError'
                         errorCategory = 'InvalidArgument'
                         errorMessage = $($LocalizedData.VMDataDiskParentVHDMissingError `
                             -f $VMs[0].Name)
                     }
-                    $Exception = GetException @ExceptionParameters
-                    { UpdateVMDataDisks -Lab $Lab -VM $VMs[0] } | Should Throw $Exception
+                    $Exception = Get-LabException @exceptionParameters
+                    { UpdateVMDataDisks -Lab $Lab -VM $VMs[0] } | Should -Throw $Exception
                 }
                 It 'Calls Mocked commands' {
                     Assert-MockCalled Get-VHD -Exactly 0
@@ -600,14 +600,14 @@ try
                 $DataVHD.ParentVHD = 'DoesNotExist.vhdx'
                 $VMs[0].DataVHDs = @( $DataVHD )
                 It 'Throws VMDataDiskParentVHDNotFoundError Exception' {
-                    $ExceptionParameters = @{
+                    $exceptionParameters = @{
                         errorId = 'VMDataDiskParentVHDNotFoundError'
                         errorCategory = 'InvalidArgument'
                         errorMessage = $($LocalizedData.VMDataDiskParentVHDNotFoundError `
                             -f $VMs[0].Name,$VMs[0].DataVHDs[0].ParentVhd)
                     }
-                    $Exception = GetException @ExceptionParameters
-                    { UpdateVMDataDisks -Lab $Lab -VM $VMs[0] } | Should Throw $Exception
+                    $Exception = Get-LabException @exceptionParameters
+                    { UpdateVMDataDisks -Lab $Lab -VM $VMs[0] } | Should -Throw $Exception
                 }
                 It 'Calls Mocked commands' {
                     Assert-MockCalled Get-VHD -Exactly 0
@@ -630,7 +630,7 @@ try
                 $DataVHD.ParentVHD = 'DoesExist.vhdx'
                 $VMs[0].DataVHDs = @( $DataVHD )
                 It 'Does not throw an Exception' {
-                    { UpdateVMDataDisks -Lab $Lab -VM $VMs[0] } | Should Not Throw
+                    { UpdateVMDataDisks -Lab $Lab -VM $VMs[0] } | Should -Not -Throw
                 }
                 It 'Calls Mocked commands' {
                     Assert-MockCalled Get-VHD -Exactly 0
@@ -657,7 +657,7 @@ try
                 $DataVHD.Size = 10GB
                 $VMs[0].DataVHDs = @( $DataVHD )
                 It 'Does not throw an Exception' {
-                    { UpdateVMDataDisks -Lab $Lab -VM $VMs[0] } | Should Not Throw
+                    { UpdateVMDataDisks -Lab $Lab -VM $VMs[0] } | Should -Not -Throw
                 }
                 It 'Calls Mocked commands' {
                     Assert-MockCalled Get-VHD -Exactly 1
@@ -699,7 +699,7 @@ try
             Context 'Valid configuration is passed with no DVDDrives' {
                 $VMs[0].DVDDrives = @()
                 It 'Does not throw an Exception' {
-                    { UpdateVMDVDDrives -Lab $Lab -VM $VMs[0] } | Should Not Throw
+                    { UpdateVMDVDDrives -Lab $Lab -VM $VMs[0] } | Should -Not -Throw
                 }
                 It 'Calls Mocked commands' {
                     Assert-MockCalled Get-VMDVDDrive -Exactly 0
@@ -716,7 +716,7 @@ try
                     ControllerLocation = 1
                 } }
                 It 'Does not throw an Exception' {
-                    { UpdateVMDVDDrives -Lab $Lab -VM $VMs[0] } | Should Not Throw
+                    { UpdateVMDVDDrives -Lab $Lab -VM $VMs[0] } | Should -Not -Throw
                 }
                 It 'Calls Mocked commands' {
                     Assert-MockCalled Get-VMDVDDrive -Exactly 1
@@ -733,7 +733,7 @@ try
                     ControllerLocation = 1
                 } }
                 It 'Does not throw an Exception' {
-                    { UpdateVMDVDDrives -Lab $Lab -VM $VMs[0] } | Should Not Throw
+                    { UpdateVMDVDDrives -Lab $Lab -VM $VMs[0] } | Should -Not -Throw
                 }
                 It 'Calls Mocked commands' {
                     Assert-MockCalled Get-VMDVDDrive -Exactly 1
@@ -751,7 +751,7 @@ try
                     ControllerLocation = 1
                 } }
                 It 'Does not throw an Exception' {
-                    { UpdateVMDVDDrives -Lab $Lab -VM $VMs[0] } | Should Not Throw
+                    { UpdateVMDVDDrives -Lab $Lab -VM $VMs[0] } | Should -Not -Throw
                 }
                 It 'Calls Mocked commands' {
                     Assert-MockCalled Get-VMDVDDrive -Exactly 1
@@ -769,7 +769,7 @@ try
                     ControllerLocation = 1
                 } }
                 It 'Does not throw an Exception' {
-                    { UpdateVMDVDDrives -Lab $Lab -VM $VMs[0] } | Should Not Throw
+                    { UpdateVMDVDDrives -Lab $Lab -VM $VMs[0] } | Should -Not -Throw
                 }
                 It 'Calls Mocked commands' {
                     Assert-MockCalled Get-VMDVDDrive -Exactly 1
@@ -787,7 +787,7 @@ try
                     ControllerLocation = 1
                 } }
                 It 'Does not throw an Exception' {
-                    { UpdateVMDVDDrives -Lab $Lab -VM $VMs[0] } | Should Not Throw
+                    { UpdateVMDVDDrives -Lab $Lab -VM $VMs[0] } | Should -Not -Throw
                 }
                 It 'Calls Mocked commands' {
                     Assert-MockCalled Get-VMDVDDrive -Exactly 1
@@ -801,7 +801,7 @@ try
                 $VMs[0].DVDDrives = @( $DVDDrive )
                 Mock Get-VMDVDDrive
                 It 'Does not throw an Exception' {
-                    { UpdateVMDVDDrives -Lab $Lab -VM $VMs[0] } | Should Not Throw
+                    { UpdateVMDVDDrives -Lab $Lab -VM $VMs[0] } | Should -Not -Throw
                 }
                 It 'Calls Mocked commands' {
                     Assert-MockCalled Get-VMDVDDrive -Exactly 1
@@ -814,7 +814,7 @@ try
                 $VMs[0].DVDDrives = @( $DVDDrive )
                 Mock Get-VMDVDDrive
                 It 'Does not throw an Exception' {
-                    { UpdateVMDVDDrives -Lab $Lab -VM $VMs[0] } | Should Not Throw
+                    { UpdateVMDVDDrives -Lab $Lab -VM $VMs[0] } | Should -Not -Throw
                 }
                 It 'Calls Mocked commands' {
                     Assert-MockCalled Get-VMDVDDrive -Exactly 1

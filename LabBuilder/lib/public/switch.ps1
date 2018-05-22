@@ -17,24 +17,25 @@
 .OUTPUTS
     Returns an array of LabSwitch objects.
 #>
-function Get-LabSwitch {
+function Get-LabSwitch
+{
     [OutputType([LabSwitch[]])]
     [CmdLetBinding()]
     param
     (
         [Parameter(
-            Position=1,
-            Mandatory=$true)]
+            Position = 1,
+            Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
         $Lab,
 
         [Parameter(
-            Position=2)]
+            Position = 2)]
         [ValidateNotNullOrEmpty()]
         [String[]] $Name
     )
 
-    [String] $LabId = $Lab.labbuilderconfig.settings.labid
+    [System.String] $LabId = $Lab.labbuilderconfig.settings.labid
     [LabSwitch[]] $Switches = @()
     $ConfigSwitches = $Lab.labbuilderconfig.Switches.Switch
 
@@ -52,12 +53,12 @@ function Get-LabSwitch {
 
         if ($SwitchName -eq 'switch')
         {
-            $ExceptionParameters = @{
-                errorId = 'SwitchNameIsEmptyError'
+            $exceptionParameters = @{
+                errorId       = 'SwitchNameIsEmptyError'
                 errorCategory = 'InvalidArgument'
-                errorMessage = $($LocalizedData.SwitchNameIsEmptyError)
+                errorMessage  = $($LocalizedData.SwitchNameIsEmptyError)
             }
-            ThrowException @ExceptionParameters
+            New-LabException @exceptionParameters
         }
 
         # Convert the switch type string to a LabSwitchType
@@ -67,13 +68,13 @@ function Get-LabSwitch {
         # set to null.
         if (-not $SwitchType)
         {
-            $ExceptionParameters = @{
-                errorId = 'UnknownSwitchTypeError'
+            $exceptionParameters = @{
+                errorId       = 'UnknownSwitchTypeError'
                 errorCategory = 'InvalidArgument'
-                errorMessage = $($LocalizedData.UnknownSwitchTypeError `
-                    -f $ConfigSwitch.Type,$SwitchName)
+                errorMessage  = $($LocalizedData.UnknownSwitchTypeError `
+                        -f $ConfigSwitch.Type, $SwitchName)
             }
-            ThrowException @ExceptionParameters
+            New-LabException @exceptionParameters
         } # if
 
         # if a LabId is set for the lab, prepend it to the Switch name as long as it isn't
@@ -103,15 +104,15 @@ function Get-LabSwitch {
                 $ConfigAdapters += @( $ConfigAdapter )
             } # foreach
             if (($ConfigAdapters.Count -gt 0) `
-                -and ($SwitchType -notin [LabSwitchType]::External,[LabSwitchType]::Internal))
+                    -and ($SwitchType -notin [LabSwitchType]::External, [LabSwitchType]::Internal))
             {
-                $ExceptionParameters = @{
-                    errorId = 'AdapterSpecifiedError'
+                $exceptionParameters = @{
+                    errorId       = 'AdapterSpecifiedError'
                     errorCategory = 'InvalidArgument'
-                    errorMessage = $($LocalizedData.AdapterSpecifiedError `
-                        -f $SwitchType,$SwitchName)
+                    errorMessage  = $($LocalizedData.AdapterSpecifiedError `
+                            -f $SwitchType, $SwitchName)
                 }
-                ThrowException @ExceptionParameters
+                New-LabException @exceptionParameters
             } # if
         }
         else
@@ -120,7 +121,7 @@ function Get-LabSwitch {
         } # if
 
         # Create the new Switch object
-        [LabSwitch] $NewSwitch = [LabSwitch]::New($SwitchName,$SwitchType)
+        [LabSwitch] $NewSwitch = [LabSwitch]::New($SwitchName, $SwitchType)
         $NewSwitch.VLAN = $ConfigSwitch.VLan
         $NewSwitch.BindingAdapterName = $ConfigSwitch.BindingAdapterName
         $NewSwitch.BindingAdapterMac = $ConfigSwitch.BindingAdapterMac
@@ -163,23 +164,24 @@ function Get-LabSwitch {
 .OUTPUTS
     None.
 #>
-function Initialize-LabSwitch {
+function Initialize-LabSwitch
+{
     [CmdLetBinding()]
     param
     (
         [Parameter(
-            Position=1,
-            Mandatory=$true)]
+            Position = 1,
+            Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
         $Lab,
 
         [Parameter(
-            Position=2)]
+            Position = 2)]
         [ValidateNotNullOrEmpty()]
         [String[]] $Name,
 
         [Parameter(
-            Position=3)]
+            Position = 3)]
         [LabSwitch[]] $Switches
     )
 
@@ -201,19 +203,19 @@ function Initialize-LabSwitch {
 
         if ((Get-VMSwitch | Where-Object -Property Name -eq $($VMSwitch.Name)).Count -eq 0)
         {
-            [String] $SwitchName = $VMSwitch.Name
+            [System.String] $SwitchName = $VMSwitch.Name
             if (-not $SwitchName)
             {
-                $ExceptionParameters = @{
-                    errorId = 'SwitchNameIsEmptyError'
+                $exceptionParameters = @{
+                    errorId       = 'SwitchNameIsEmptyError'
                     errorCategory = 'InvalidArgument'
-                    errorMessage = $($LocalizedData.SwitchNameIsEmptyError)
+                    errorMessage  = $($LocalizedData.SwitchNameIsEmptyError)
                 }
-                ThrowException @ExceptionParameters
+                New-LabException @exceptionParameters
             }
             [LabSwitchType] $SwitchType = $VMSwitch.Type
-            WriteMessage -Message $($LocalizedData.CreatingVirtualSwitchMessage `
-                -f $SwitchType,$SwitchName)
+            Write-LabMessage -Message $($LocalizedData.CreatingVirtualSwitchMessage `
+                    -f $SwitchType, $SwitchName)
             Switch ($SwitchType)
             {
                 'External'
@@ -222,7 +224,7 @@ function Initialize-LabSwitch {
                     if ($VMSwitch.BindingAdapterMac)
                     {
                         $BindingAdapter = Get-NetAdapter | Where-Object {
-                            ($_.MacAddress -replace '-','') -eq $VMSwitch.BindingAdapterMac
+                            ($_.MacAddress -replace '-', '') -eq $VMSwitch.BindingAdapterMac
                         }
                         $ErrorDetail = "with a MAC address '$($VMSwitch.BindingAdapterMac)' "
                     }
@@ -237,55 +239,60 @@ function Initialize-LabSwitch {
                     {
                         $BindingAdapter = Get-NetAdapter | `
                             Where-Object {
-                                ($_.Status -eq 'Up') `
+                            ($_.Status -eq 'Up') `
                                 -and (-not $_.Virtual) `
-                            } | Select-Object -First 1
+                        } | Select-Object -First 1
                         $ErrorDetail = ''
                     } # if
+
                     # Check that a Binding Adapter was found
                     if (-not $BindingAdapter)
                     {
-                        $ExceptionParameters = @{
-                            errorId = 'BindingAdapterNotFoundError'
+                        $exceptionParameters = @{
+                            errorId       = 'BindingAdapterNotFoundError'
                             errorCategory = 'InvalidArgument'
-                            errorMessage = $($LocalizedData.BindingAdapterNotFoundError `
-                                -f $SwitchName,$ErrorDetail)
+                            errorMessage  = $($LocalizedData.BindingAdapterNotFoundError `
+                                    -f $SwitchName, $ErrorDetail)
                         }
-                        ThrowException @ExceptionParameters
+                        New-LabException @exceptionParameters
                     } # if
+
                     # Check this adapter is not already bound to a switch
                     $VMSwitchNames = (Get-VMSwitch | Where-Object {
-                        $_.SwitchType -eq 'External'
-                    }).Name
+                            $_.SwitchType -eq 'External'
+                        }).Name
                     $MacAddress = @()
-                    ForEach ($VmSwitchName in $VmSwitchNames)
+
+                    foreach ($VmSwitchName in $VmSwitchNames)
                     {
                         $MacAddress += (Get-VMNetworkAdapter `
-                            -ManagementOS `
-                            -SwitchName $VmSwitchName `
-                            -Name $VmSwitchName `
-                            -ErrorAction SilentlyContinue).MacAddress
+                                -ManagementOS `
+                                -SwitchName $VmSwitchName `
+                                -Name $VmSwitchName `
+                                -ErrorAction SilentlyContinue).MacAddress
                     } # foreach
 
                     $UsedAdapters = @((Get-NetAdapter | Where-Object {
-                        ($_.MacAddress -replace '-','') -in $MacAddress
-                        }).Name)
+                                ($_.MacAddress -replace '-', '') -in $MacAddress
+                            }).Name)
                     if ($BindingAdapter.Name -in $UsedAdapters)
                     {
-                        $ExceptionParameters = @{
-                            errorId = 'BindingAdapterUsedError'
+                        $exceptionParameters = @{
+                            errorId       = 'BindingAdapterUsedError'
                             errorCategory = 'InvalidArgument'
-                            errorMessage = $($LocalizedData.BindingAdapterUsedError `
-                                -f $SwitchName,$BindingAdapter.Name)
+                            errorMessage  = $($LocalizedData.BindingAdapterUsedError `
+                                    -f $SwitchName, $BindingAdapter.Name)
                         }
-                        ThrowException @ExceptionParameters
+                        New-LabException @exceptionParameters
                     } # if
+
                     # Create the swtich
                     $null = New-VMSwitch `
                         -Name $SwitchName `
                         -NetAdapterName $BindingAdapter.Name
                     break
                 } # 'External'
+
                 'Private'
                 {
                     $null = New-VMSwitch `
@@ -293,6 +300,7 @@ function Initialize-LabSwitch {
                         -SwitchType Private
                     Break
                 } # 'Private'
+
                 'Internal'
                 {
                     $null = New-VMSwitch `
@@ -300,63 +308,66 @@ function Initialize-LabSwitch {
                         -SwitchType Internal
                     Break
                 } # 'Internal'
+
                 'NAT'
                 {
                     if ($Script:CurrentBuild -lt 14295)
                     {
-                        $ExceptionParameters = @{
-                            errorId = 'NatSwitchNotSupportedError'
+                        $exceptionParameters = @{
+                            errorId       = 'NatSwitchNotSupportedError'
                             errorCategory = 'InvalidArgument'
-                            errorMessage = $($LocalizedData.NatSwitchNotSupportedError `
-                                -f $SwitchName)
+                            errorMessage  = $($LocalizedData.NatSwitchNotSupportedError -f $SwitchName)
                         }
-                        ThrowException @ExceptionParameters
+                        New-LabException @exceptionParameters
                     }
+
                     $NatSubnet = $VMSwitch.NatSubnet
                     # Check Nat Subnet is set
-                    if (-not $NatSubnet) {
-                        $ExceptionParameters = @{
-                            errorId = 'NatSubnetEmptyError'
+                    if (-not $NatSubnet)
+                    {
+                        $exceptionParameters = @{
+                            errorId       = 'NatSubnetEmptyError'
                             errorCategory = 'InvalidArgument'
-                            errorMessage = $($LocalizedData.NatSubnetEmptyError `
-                                -f $SwitchName)
+                            errorMessage  = $($LocalizedData.NatSubnetEmptyError `
+                                    -f $SwitchName)
                         }
-                        ThrowException @ExceptionParameters
+                        New-LabException @exceptionParameters
                     } # if
                     # Ensure Nat Subnet looks valid
-                    if ($NatSubnet -notmatch '[0-9]+.[0-9]+.[0-9]+.[0-9]+/[0-9]+') {
-                        $ExceptionParameters = @{
-                            errorId = 'NatSubnetInvalidError'
+                    if ($NatSubnet -notmatch '[0-9]+.[0-9]+.[0-9]+.[0-9]+/[0-9]+')
+                    {
+                        $exceptionParameters = @{
+                            errorId       = 'NatSubnetInvalidError'
                             errorCategory = 'InvalidArgument'
-                            errorMessage = $($LocalizedData.NatSubnetInvalidError `
-                                -f $SwitchName,$NatSubnet)
+                            errorMessage  = $($LocalizedData.NatSubnetInvalidError `
+                                    -f $SwitchName, $NatSubnet)
                         }
-                        ThrowException @ExceptionParameters
+                        New-LabException @exceptionParameters
                     } # if
                     $NatSubnetComponents = ($NatSubnet -split '/')
                     $NatSubnetAddress = $NatSubnetComponents[0]
                     # Validate the Nat Subnet Address
                     if (-not ([System.Net.Ipaddress]::TryParse($NatSubnetAddress, [ref]0)))
                     {
-                        $ExceptionParameters = @{
-                            errorId = 'NatSubnetAddressInvalidError'
+                        $exceptionParameters = @{
+                            errorId       = 'NatSubnetAddressInvalidError'
                             errorCategory = 'InvalidArgument'
-                            errorMessage = $($LocalizedData.NatSubnetAddressInvalidError `
-                                -f $SwitchName,$NatSubnetAddress)
+                            errorMessage  = $($LocalizedData.NatSubnetAddressInvalidError `
+                                    -f $SwitchName, $NatSubnetAddress)
                         }
-                        ThrowException @ExceptionParameters
+                        New-LabException @exceptionParameters
                     } # if
                     # Validate the Nat Subnet Prefix Length
                     [int] $NatSubnetPrefixLength = $NatSubnetComponents[1]
                     if (($NatSubnetPrefixLength -lt 1) -or ($NatSubnetPrefixLength -gt 31))
                     {
-                        $ExceptionParameters = @{
-                            errorId = 'NatSubnetPrefixLengthInvalidError'
+                        $exceptionParameters = @{
+                            errorId       = 'NatSubnetPrefixLengthInvalidError'
                             errorCategory = 'InvalidArgument'
-                            errorMessage = $($LocalizedData.NatSubnetPrefixLengthInvalidError `
-                                -f $SwitchName,$NatSubnetPrefixLength)
+                            errorMessage  = $($LocalizedData.NatSubnetPrefixLengthInvalidError `
+                                    -f $SwitchName, $NatSubnetPrefixLength)
                         }
-                        ThrowException @ExceptionParameters
+                        New-LabException @exceptionParameters
                     } # if
                     $NatGatewayAddress = $VMSwitch.NatGatewayAddress
 
@@ -367,36 +378,36 @@ function Initialize-LabSwitch {
                         -ErrorAction Stop
                     # Set the IP Address on the default adapter connected to the NAT switch
                     $MacAddress = (Get-VMNetworkAdapter `
-                        -ManagementOS `
-                        -SwitchName $SwitchName `
-                        -Name $SwitchName `
-                        -ErrorAction Stop).MacAddress
-                    if ([String]::IsNullOrEmpty($MacAddress))
+                            -ManagementOS `
+                            -SwitchName $SwitchName `
+                            -Name $SwitchName `
+                            -ErrorAction Stop).MacAddress
+                    if ([System.String]::IsNullOrEmpty($MacAddress))
                     {
-                        $ExceptionParameters = @{
-                            errorId = 'NatSwitchDefaultAdapterMacEmptyError'
+                        $exceptionParameters = @{
+                            errorId       = 'NatSwitchDefaultAdapterMacEmptyError'
                             errorCategory = 'InvalidArgument'
-                            errorMessage = $($LocalizedData.NatSwitchDefaultAdapterMacEmptyError `
-                                -f $SwitchName)
+                            errorMessage  = $($LocalizedData.NatSwitchDefaultAdapterMacEmptyError `
+                                    -f $SwitchName)
                         }
-                        ThrowException @ExceptionParameters
+                        New-LabException @exceptionParameters
                     } # if
                     $Adapter = Get-NetAdapter |
-                        Where-Object { ($_.MacAddress -replace '-','') -eq $MacAddress }
+                        Where-Object { ($_.MacAddress -replace '-', '') -eq $MacAddress }
                     if (-not $Adapter)
                     {
-                        $ExceptionParameters = @{
-                            errorId = 'NatSwitchDefaultAdapterNotFoundError'
+                        $exceptionParameters = @{
+                            errorId       = 'NatSwitchDefaultAdapterNotFoundError'
                             errorCategory = 'InvalidArgument'
-                            errorMessage = $($LocalizedData.NatSwitchDefaultAdapterNotFoundError `
-                                -f $SwitchName)
+                            errorMessage  = $($LocalizedData.NatSwitchDefaultAdapterNotFoundError `
+                                    -f $SwitchName)
                         }
-                        ThrowException @ExceptionParameters
+                        New-LabException @exceptionParameters
                     }
                     $null = $Adapter | New-NetIPAddress `
-                            -IPAddress $NatGatewayAddress `
-                            -PrefixLength $NatSubnetPrefixLength `
-                            -ErrorAction Stop
+                        -IPAddress $NatGatewayAddress `
+                        -PrefixLength $NatSubnetPrefixLength `
+                        -ErrorAction Stop
                     # Does the NAT already exist?
                     $NetNat = Get-NetNat `
                         -Name $SwitchName `
@@ -415,13 +426,13 @@ function Initialize-LabSwitch {
                 } # 'NAT'
                 Default
                 {
-                    $ExceptionParameters = @{
-                        errorId = 'UnknownSwitchTypeError'
+                    $exceptionParameters = @{
+                        errorId       = 'UnknownSwitchTypeError'
                         errorCategory = 'InvalidArgument'
-                        errorMessage = $($LocalizedData.UnknownSwitchTypeError `
-                            -f $SwitchType,$SwitchName)
+                        errorMessage  = $($LocalizedData.UnknownSwitchTypeError `
+                                -f $SwitchType, $SwitchName)
                     }
-                    ThrowException @ExceptionParameters
+                    New-LabException @exceptionParameters
                 }
             } # switch
 
@@ -429,7 +440,7 @@ function Initialize-LabSwitch {
             {
                 # Configure the VLan on the default Management Adapter
                 $Splat = @{
-                    Name = $SwitchName
+                    Name       = $SwitchName
                     SwitchName = $SwitchName
                 }
                 if ($VMSwitch.VLan)
@@ -444,7 +455,7 @@ function Initialize-LabSwitch {
                     foreach ($Adapter in $VMSwitch.Adapters)
                     {
                         $Splat = @{
-                            Name = $Adapter.Name
+                            Name       = $Adapter.Name
                             SwitchName = $SwitchName
                         }
                         if ($Adapter.MacAddress)
@@ -492,23 +503,24 @@ function Initialize-LabSwitch {
 .OUTPUTS
     None.
 #>
-function Remove-LabSwitch {
+function Remove-LabSwitch
+{
     [CmdLetBinding()]
     param
     (
         [Parameter(
-            Position=1,
-            Mandatory=$true)]
+            Position = 1,
+            Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
         $Lab,
 
         [Parameter(
-            Position=2)]
+            Position = 2)]
         [ValidateNotNullOrEmpty()]
         [String[]] $Name,
 
         [Parameter(
-            Position=3)]
+            Position = 3)]
         [LabSwitch[]] $Switches
     )
 
@@ -530,19 +542,19 @@ function Remove-LabSwitch {
 
         if ((Get-VMSwitch | Where-Object -Property Name -eq $VMSwitch.Name).Count -ne 0)
         {
-            [String] $SwitchName = $VMSwitch.Name
+            [System.String] $SwitchName = $VMSwitch.Name
             if (-not $SwitchName)
             {
-                $ExceptionParameters = @{
-                    errorId = 'SwitchNameIsEmptyError'
+                $exceptionParameters = @{
+                    errorId       = 'SwitchNameIsEmptyError'
                     errorCategory = 'InvalidArgument'
-                    errorMessage = $($LocalizedData.SwitchNameIsEmptyError)
+                    errorMessage  = $($LocalizedData.SwitchNameIsEmptyError)
                 }
-                ThrowException @ExceptionParameters
+                New-LabException @exceptionParameters
             }
             [LabSwitchType] $SwitchType = $VMSwitch.Type
-            WriteMessage -Message $($LocalizedData.DeleteingVirtualSwitchMessage `
-                -f $SwitchType,$SwitchName)
+            Write-LabMessage -Message $($LocalizedData.DeleteingVirtualSwitchMessage `
+                    -f $SwitchType, $SwitchName)
             Switch ($SwitchType)
             {
                 'External'
@@ -550,10 +562,10 @@ function Remove-LabSwitch {
                     if ($VMSwitch.Adapters)
                     {
                         $VMSwitch.Adapters.foreach( {
-                            $null = Remove-VMNetworkAdapter `
-                                -ManagementOS `
-                                -Name $_.Name
-                        } )
+                                $null = Remove-VMNetworkAdapter `
+                                    -ManagementOS `
+                                    -Name $_.Name
+                            } )
                     } # if
                     Remove-VMSwitch `
                         -Name $SwitchName
@@ -572,10 +584,10 @@ function Remove-LabSwitch {
                     if ($VMSwitch.Adapters)
                     {
                         $VMSwitch.Adapters.foreach( {
-                            $null = Remove-VMNetworkAdapter `
-                                -ManagementOS `
-                                -Name $_.Name
-                        } )
+                                $null = Remove-VMNetworkAdapter `
+                                    -ManagementOS `
+                                    -Name $_.Name
+                            } )
                     } # if
                     Break
                 } # 'Internal'
@@ -590,13 +602,13 @@ function Remove-LabSwitch {
 
                 Default
                 {
-                    $ExceptionParameters = @{
-                        errorId = 'UnknownSwitchTypeError'
+                    $exceptionParameters = @{
+                        errorId       = 'UnknownSwitchTypeError'
                         errorCategory = 'InvalidArgument'
-                        errorMessage = $($LocalizedData.UnknownSwitchTypeError `
-                            -f $SwitchType,$SwitchName)
+                        errorMessage  = $($LocalizedData.UnknownSwitchTypeError `
+                                -f $SwitchType, $SwitchName)
                     }
-                    ThrowException @ExceptionParameters
+                    New-LabException @exceptionParameters
                 }
             } # Switch
         } # if

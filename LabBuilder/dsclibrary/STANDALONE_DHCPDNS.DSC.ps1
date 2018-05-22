@@ -66,71 +66,76 @@ Configuration STANDALONE_DHCPDNS
     Import-DscResource -ModuleName 'PSDesiredStateConfiguration'
     Import-DscResource -ModuleName xDNSServer
     Import-DscResource -ModuleName xDHCPServer
+
     Node $AllNodes.NodeName {
         # Assemble the Local Admin Credentials
-        If ($Node.LocalAdminPassword) {
+        if ($Node.LocalAdminPassword)
+        {
             [PSCredential]$LocalAdminCredential = New-Object System.Management.Automation.PSCredential ("Administrator", (ConvertTo-SecureString $Node.LocalAdminPassword -AsPlainText -Force))
         }
 
-        WindowsFeature DHCPInstall 
+        WindowsFeature DHCPInstall
         {
-            Ensure = "Present" 
-            Name = "DHCP" 
+            Ensure = "Present"
+            Name   = "DHCP"
         }
 
-        WindowsFeature DNSInstall 
+        WindowsFeature DNSInstall
         {
-            Ensure = "Present" 
-            Name = "DNS" 
+            Ensure = "Present"
+            Name   = "DNS"
         }
 
         # Add the DHCP Scope, Reservation and Options from
         # the node configuration
-        [Int]$Count=0
-        Foreach ($Scope in $Node.Scopes) {
+        [Int]$Count = 0
+        Foreach ($Scope in $Node.Scopes)
+        {
             $Count++
             xDhcpServerScope "Scope$Count"
             {
-                Ensure = 'Present'
-                IPStartRange = $Scope.Start
-                IPEndRange = $Scope.End
-                Name = $Scope.Name
-                SubnetMask = $Scope.SubnetMask
-                State = 'Active'
+                Ensure        = 'Present'
+                IPStartRange  = $Scope.Start
+                IPEndRange    = $Scope.End
+                Name          = $Scope.Name
+                SubnetMask    = $Scope.SubnetMask
+                State         = 'Active'
                 LeaseDuration = '00:08:00'
                 AddressFamily = $Scope.AddressFamily
-                DependsOn = '[WindowsFeature]DHCPInstall'
+                DependsOn     = '[WindowsFeature]DHCPInstall'
             }
         }
-        [Int]$Count=0
-        Foreach ($Reservation in $Node.Reservations) {
+        [Int]$Count = 0
+        Foreach ($Reservation in $Node.Reservations)
+        {
             $Count++
             xDhcpServerReservation "Reservation$Count"
             {
-                Ensure = 'Present'
-                ScopeID = $Reservation.ScopeId
+                Ensure           = 'Present'
+                ScopeID          = $Reservation.ScopeId
                 ClientMACAddress = $Reservation.ClientMACAddress
-                IPAddress = $Reservation.IPAddress
-                Name = $Reservation.Name
-                AddressFamily = $Reservation.AddressFamily
-                DependsOn = '[WindowsFeature]DHCPInstall'
+                IPAddress        = $Reservation.IPAddress
+                Name             = $Reservation.Name
+                AddressFamily    = $Reservation.AddressFamily
+                DependsOn        = '[WindowsFeature]DHCPInstall'
             }
         }
-        [Int]$Count=0
-        Foreach ($ScopeOption in $Node.ScopeOptions) {
+        [Int]$Count = 0
+        Foreach ($ScopeOption in $Node.ScopeOptions)
+        {
             $Count++
             xDhcpServerOption "ScopeOption$Count"
             {
-                Ensure = 'Present'
-                ScopeID = $ScopeOption.ScopeId
-                DnsDomain = $Node.DomainName
+                Ensure             = 'Present'
+                ScopeID            = $ScopeOption.ScopeId
+                DnsDomain          = $Node.DomainName
                 DnsServerIPAddress = $ScopeOption.DNServerIPAddress
-                Router = $ScopeOption.Router
-                AddressFamily = $ScopeOption.AddressFamily
-                DependsOn = '[WindowsFeature]DHCPInstall'
+                Router             = $ScopeOption.Router
+                AddressFamily      = $ScopeOption.AddressFamily
+                DependsOn          = '[WindowsFeature]DHCPInstall'
             }
         }
-        
+
         # DNS Server Settings
         if ($Node.Forwarders)
         {
@@ -138,13 +143,14 @@ Configuration STANDALONE_DHCPDNS
             {
                 IsSingleInstance = 'Yes'
                 IPAddresses      = $Node.Forwarders
-                Credential       = $DomainAdminCredential 
-                DependsOn        = '[xComputer]JoinDomain'
+                Credential       = $DomainAdminCredential
+                DependsOn        = '[Computer]JoinDomain'
             }
         }
 
-        [Int]$Count=0
-        Foreach ($ADZone in $Node.ADZones) {
+        [Int]$Count = 0
+        Foreach ($ADZone in $Node.ADZones)
+        {
             $Count++
             xDnsServerADZone "ADZone$Count"
             {
@@ -152,13 +158,14 @@ Configuration STANDALONE_DHCPDNS
                 Name             = $ADZone.Name
                 DynamicUpdate    = $ADZone.DynamicUpdate
                 ReplicationScope = $ADZone.ReplicationScope
-                Credential       = $DomainAdminCredential 
-                DependsOn        = '[xComputer]JoinDomain'
+                Credential       = $DomainAdminCredential
+                DependsOn        = '[Computer]JoinDomain'
             }
         }
 
-        [Int]$Count=0
-        Foreach ($PrimaryZone in $Node.PrimaryZones) {
+        [Int]$Count = 0
+        Foreach ($PrimaryZone in $Node.PrimaryZones)
+        {
             $Count++
             xDnsServerSecondaryZone "PrimaryZone$Count"
             {
@@ -166,8 +173,8 @@ Configuration STANDALONE_DHCPDNS
                 Name          = $PrimaryZone.Name
                 ZoneFile      = $PrimaryZone.ZoneFile
                 DynamicUpdate = $PrimaryZone.DynamicUpdate
-                Credential    = $DomainAdminCredential 
-                DependsOn     = '[xComputer]JoinDomain'
+                Credential    = $DomainAdminCredential
+                DependsOn     = '[Computer]JoinDomain'
             }
         }
     }

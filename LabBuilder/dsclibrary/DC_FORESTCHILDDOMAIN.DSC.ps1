@@ -33,12 +33,15 @@ Configuration DC_FORESTCHILDDOMAIN
     Import-DscResource -ModuleName 'PSDesiredStateConfiguration'
     Import-DscResource -ModuleName xActiveDirectory
     Import-DscResource -ModuleName xDNSServer
+
     Node $AllNodes.NodeName {
         # Assemble the Local Admin Credentials
-        If ($Node.LocalAdminPassword) {
+        if ($Node.LocalAdminPassword)
+        {
             [PSCredential]$LocalAdminCredential = New-Object System.Management.Automation.PSCredential ("Administrator", (ConvertTo-SecureString $Node.LocalAdminPassword -AsPlainText -Force))
         }
-        If ($Node.DomainAdminPassword) {
+        if ($Node.DomainAdminPassword)
+        {
             [PSCredential]$DomainAdminCredential = New-Object System.Management.Automation.PSCredential ("$($Node.ParentDomainName)\Administrator", (ConvertTo-SecureString $Node.DomainAdminPassword -AsPlainText -Force))
         }
 
@@ -60,7 +63,7 @@ Configuration DC_FORESTCHILDDOMAIN
             Name      = "AD-Domain-Services"
             DependsOn = "[WindowsFeature]DNSInstall"
         }
-        
+
         WindowsFeature RSAT-AD-PowerShellInstall
         {
             Ensure    = "Present"
@@ -73,7 +76,7 @@ Configuration DC_FORESTCHILDDOMAIN
             WindowsFeature RSAT-ManagementTools
             {
                 Ensure    = "Present"
-                Name      = "RSAT-AD-Tools","RSAT-DNS-Server"
+                Name      = "RSAT-AD-Tools", "RSAT-DNS-Server"
                 DependsOn = "[WindowsFeature]ADDSInstall"
             }
         }
@@ -86,9 +89,9 @@ Configuration DC_FORESTCHILDDOMAIN
             RetryIntervalSec     = 10
             DependsOn            = "[WindowsFeature]ADDSInstall"
         }
-        
-        xADDomain PrimaryDC 
-        { 
+
+        xADDomain PrimaryDC
+        {
             DomainName                    = $Node.DomainName
             ParentDomainName              = $Node.ParentDomainName
             DomainAdministratorCredential = $DomainAdminCredential
@@ -106,8 +109,9 @@ Configuration DC_FORESTCHILDDOMAIN
                 DependsOn        = "[xADDomain]PrimaryDC"
             }
         }
-        [Int]$Count=0
-        Foreach ($ADZone in $Node.ADZones) {
+        [Int]$Count = 0
+        Foreach ($ADZone in $Node.ADZones)
+        {
             $Count++
             xDnsServerADZone "ADZone$Count"
             {
@@ -118,8 +122,9 @@ Configuration DC_FORESTCHILDDOMAIN
                 DependsOn        = "[xADDomain]PrimaryDC"
             }
         }
-        [Int]$Count=0
-        Foreach ($PrimaryZone in $Node.PrimaryZones) {
+        [Int]$Count = 0
+        Foreach ($PrimaryZone in $Node.PrimaryZones)
+        {
             $Count++
             xDnsServerPrimaryZone "PrimaryZone$Count"
             {

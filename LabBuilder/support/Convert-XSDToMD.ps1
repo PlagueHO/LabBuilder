@@ -10,13 +10,13 @@
 #>
 param
 (
-    [String]
+    [System.String]
     $XmlFile,
-    
-    [String]
+
+    [System.String]
     $XslFile,
-    
-    [String]
+
+    [System.String]
     $OutputFile
 )
 & "$PSScriptRoot\tools\msxsl.exe" @($XmlFile,$XslFile,'-o',$OutputFile)

@@ -35,19 +35,19 @@ try
     .SYNOPSIS
     Helper function that just creates an exception record for testing.
     #>
-        function GetException
+        function Get-LabException
         {
             [CmdLetBinding()]
             param
             (
-                [Parameter(Mandatory)]
-                [String] $errorId,
+                [Parameter(Mandatory = $true)]
+                [System.String] $errorId,
 
-                [Parameter(Mandatory)]
+                [Parameter(Mandatory = $true)]
                 [System.Management.Automation.ErrorCategory] $errorCategory,
 
-                [Parameter(Mandatory)]
-                [String] $errorMessage,
+                [Parameter(Mandatory = $true)]
+                [System.String] $errorMessage,
 
                 [Switch]
                 $terminate
@@ -69,71 +69,71 @@ try
                 Mock Get-Location -MockWith { @{ Path = $Global:TestConfigPath} }
                 It 'Returns XmlDocument object with valid content' {
                     $Lab = Get-Lab -ConfigPath (Split-Path -Path $Global:TestConfigOKPath -Leaf)
-                    $Lab.GetType().Name | Should Be 'XmlDocument'
-                    $Lab.labbuilderconfig | Should Not Be $null
+                    $Lab.GetType().Name | Should -Be 'XmlDocument'
+                    $Lab.labbuilderconfig | Should -Not -Be $null
                 }
             }
             Context 'Path is provided and valid XML file exists' {
                 It 'Returns XmlDocument object with valid content' {
                     $Lab = Get-Lab -ConfigPath $Global:TestConfigOKPath
-                    $Lab.GetType().Name | Should Be 'XmlDocument'
-                    $Lab.labbuilderconfig | Should Not Be $null
+                    $Lab.GetType().Name | Should -Be 'XmlDocument'
+                    $Lab.labbuilderconfig | Should -Not -Be $null
                 }
             }
             Context 'Path and LabPath are provided and valid XML file exists' {
                 It 'Returns XmlDocument object with valid content' {
                     $Lab = Get-Lab -ConfigPath $Global:TestConfigOKPath `
                         -LabPath 'c:\Pester Lab'
-                    $Lab.GetType().Name | Should Be 'XmlDocument'
-                    $Lab.labbuilderconfig.settings.labpath | Should Be 'c:\Pester Lab'
-                    $Lab.labbuilderconfig | Should Not Be $null
+                    $Lab.GetType().Name | Should -Be 'XmlDocument'
+                    $Lab.labbuilderconfig.settings.labpath | Should -Be 'c:\Pester Lab'
+                    $Lab.labbuilderconfig | Should -Not -Be $null
                 }
                 It 'Prepends Module Path to $ENV:PSModulePath' {
-                    $env:PSModulePath.ToLower().Contains('c:\Pester Lab\Modules'.ToLower() + ';') | Should Be $True
+                    $env:PSModulePath.ToLower().Contains('c:\Pester Lab\Modules'.ToLower() + ';') | Should -Be $True
                 }
             }
             Context 'Path is provided but file does not exist' {
                 It 'Throws ConfigurationFileNotFoundError Exception' {
-                    $ExceptionParameters = @{
+                    $exceptionParameters = @{
                         errorId = 'ConfigurationFileNotFoundError'
                         errorCategory = 'InvalidArgument'
                         errorMessage = $($LocalizedData.ConfigurationFileNotFoundError `
                             -f 'c:\doesntexist.xml')
                     }
-                    $Exception = GetException @ExceptionParameters
+                    $Exception = Get-LabException @exceptionParameters
 
                     Mock Test-Path -MockWith { $false }
 
-                    { Get-Lab -ConfigPath 'c:\doesntexist.xml' } | Should Throw $Exception
+                    { Get-Lab -ConfigPath 'c:\doesntexist.xml' } | Should -Throw $Exception
                 }
             }
             Context 'Path is provided and file exists but is empty' {
                 It 'Throws ConfigurationFileEmptyError Exception' {
-                    $ExceptionParameters = @{
+                    $exceptionParameters = @{
                         errorId = 'ConfigurationFileEmptyError'
                         errorCategory = 'InvalidArgument'
                         errorMessage = $($LocalizedData.ConfigurationFileEmptyError `
                             -f 'c:\isempty.xml')
                     }
-                    $Exception = GetException @ExceptionParameters
+                    $Exception = Get-LabException @exceptionParameters
 
                     Mock Test-Path -MockWith { $true }
                     Mock Get-Content -MockWith {''}
 
-                    { Get-Lab -ConfigPath 'c:\isempty.xml' } | Should Throw $Exception
+                    { Get-Lab -ConfigPath 'c:\isempty.xml' } | Should -Throw $Exception
                 }
             }
             $Script:CurrentBuild = 10000
             Context 'Path is provided and file exists but host build version requirement not met' {
                 It 'Throws RequiredBuildNotMetError Exception' {
-                    $ExceptionParameters = @{
+                    $exceptionParameters = @{
                         errorId = 'RequiredBuildNotMetError'
                         errorCategory = 'InvalidArgument'
                         errorMessage = $($LocalizedData.RequiredBuildNotMetError `
                             -f $Script:CurrentBuild,'10560')
                     }
-                    $Exception = GetException @ExceptionParameters
-                    { Get-Lab -ConfigPath $Global:TestConfigOKPath } | Should Throw $Exception
+                    $Exception = Get-LabException @exceptionParameters
+                    { Get-Lab -ConfigPath $Global:TestConfigOKPath } | Should -Throw $Exception
                 }
             }
             $Script:CurrentBuild = 10586
@@ -157,7 +157,7 @@ try
 
             Context 'Valid configuration is passed' {
                 It 'Does not throw an Exception' {
-                    { Install-Lab -Lab $Lab } | Should Not Throw
+                    { Install-Lab -Lab $Lab } | Should -Not -Throw
                 }
                 It 'Calls appropriate mocks' {
                     Assert-MockCalled Get-VMSwitch -Exactly 1

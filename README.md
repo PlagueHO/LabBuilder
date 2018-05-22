@@ -9,11 +9,9 @@ Waffle Board: [![Stories in Ready](https://badge.waffle.io/PlagueHO/LabBuilder.s
 
 Gitter Chat: [![Join the chat at https://gitter.im/PlagueHO/LabBuilder](https://badges.gitter.im/PlagueHO/LabBuilder.svg)](https://gitter.im/PlagueHO/LabBuilder?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 
-
 ## Summary
 
 This module will build a multiple machine Hyper-V Lab environment from an XML configuration file and other optional installation scripts.
-
 
 ## Introduction
 
@@ -33,7 +31,6 @@ This had the following advantages:
 + The configuration files could be created by people without knowledge of PowerShell or DSC.
 + UI based applications could be easily created to generate the configuration XML.
 
-
 ## Goals
 
 The general goals of this module are:
@@ -46,7 +43,6 @@ The general goals of this module are:
 + **Minimal Disk Usage**: Minimize Lab footprint by utilizing differencing disks where possible.
 + **Configuration Flexibility**: Allow GUI based tools to be easily created to create Lab configurations.
 + **Extensible**: Enable new Lab VM machine types to be configured by supplying different DSC library resources.
-
 
 ## Requirements
 
@@ -77,7 +73,6 @@ To use this Module you will require on your Lab Host:
 ## Contributing
 
 If you wish to contribute to this project, please read the [Contributing.md](/.github/CONTRIBUTING.md) document first. We would be very grateful of any contributions.
-
 
 ## Basic Usage Guide
 
@@ -144,7 +139,6 @@ _Note: Boot Order is an optional attribute defined in the Lab Configuration that
 
 You can of course just shut down the Virtual Machines in a Lab yourself via Hyper-V (or some other mechanism), but using Stop-Lab ensures the Virtual Machines are shutdown in a specific order defined in the Lab (e.g. Domain Controllers shut down last).
 
-
 ## Starting a Lab
 
 Once the Lab has been installed and then stopped, it can be started back up using this PowerShell command:
@@ -159,7 +153,6 @@ LabBuilder will wait for all machines with the same Boot Order to be started up 
 _Note: Boot Order is an optional attribute defined in the Lab Configuration that controls the order Lab Virtual Machines should be booted in._
 
 You can of course just start up the Virtual Machines in a Lab yourself via Hyper-V (or some other mechanism), but using Start-Lab ensures the Virtual Machines are started up in a specific order defined in the Lab (e.g. Domain Controllers started up first).
-
 
 ## ISO Files
 
@@ -261,7 +254,6 @@ As long as you a valid Lab Configuration file and any required Windows Installat
 Depending on the size of the Lab you are building and whether or not the ISO files need to be converted to VHD files, this could take from 5 minutes to many hours.
 For example, an Lab containing eight Windows Server 2012 R2 Virtual Machines configured as an AD Domain containing various services installed on a Host with four CPU cores, 32 GB RAM and an SSD will take about 45 minutes to install.
 
-
 ## Windows Management Framework 5.0 (WMF 5.0)
 
 All Lab Guest Virtual Machines must have WMF 5.0 installed onto them before they are first booted in a Lab environment. This is to ensure the Self-Signed certificate can be generated and returned to the host for DSC MOF encryption.
@@ -337,11 +329,9 @@ Get-Help -Name Install-Lab
 
 For a list of changes to versions, see the [CHANGELOG.md](CHANGELOG.md) file.
 
-
 ## Project Management Dashboard
 
 [![Throughput Graph](https://graphs.waffle.io/PlagueHO/LabBuilder/throughput.svg)](https://waffle.io/PlagueHO/LabBuilder/metrics/throughput)
-
 
 ## Links
 
