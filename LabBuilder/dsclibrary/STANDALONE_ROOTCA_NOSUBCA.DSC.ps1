@@ -60,6 +60,7 @@ Configuration STANDALONE_ROOTCA_NOSUBCA
         ADCSCertificationAuthority ConfigCA
         {
             Ensure                    = 'Present'
+            IsSingleInstnace          = 'Yes'
             Credential                = $LocalAdminCredential
             CAType                    = 'StandaloneRootCA'
             CACommonName              = $Node.CACommonName

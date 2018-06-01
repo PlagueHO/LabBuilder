@@ -147,6 +147,7 @@ Configuration MEMBER_ROOTCA
         ADCSCertificationAuthority ConfigCA
         {
             Ensure                    = 'Present'
+            IsSingleInstnace          = 'Yes'
             Credential                = $DomainAdminCredential
             CAType                    = 'EnterpriseRootCA'
             CACommonName              = $Node.CACommonName

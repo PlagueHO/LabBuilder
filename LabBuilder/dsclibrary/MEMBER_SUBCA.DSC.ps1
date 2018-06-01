@@ -188,6 +188,7 @@ Configuration MEMBER_SUBCA
         ADCSCertificationAuthority ConfigCA
         {
             Ensure = 'Present'
+            IsSingleInstnace          = 'Yes'
             Credential = $DomainAdminCredential
             CAType = 'EnterpriseSubordinateCA'
             CACommonName = $Node.CACommonName
