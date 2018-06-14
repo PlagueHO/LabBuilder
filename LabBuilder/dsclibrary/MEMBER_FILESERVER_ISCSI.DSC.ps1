@@ -41,7 +41,7 @@ Configuration MEMBER_FILESERVER_ISCSI
     Import-DscResource -ModuleName 'PSDesiredStateConfiguration'
     Import-DscResource -ModuleName ComputerManagementDsc
     Import-DscResource -ModuleName StorageDsc
-    Import-DscResource -ModuleName xNetworking
+    Import-DscResource -ModuleName NetworkingDsc
     Import-DscResource -ModuleName ISCSI
 
     Node $AllNodes.NodeName {
@@ -136,56 +136,56 @@ Configuration MEMBER_FILESERVER_ISCSI
         }
 
         # Enable FSRM FireWall rules so we can remote manage FSRM
-        xFirewall FSRMFirewall1
+        Firewall FSRMFirewall1
         {
             Name    = "FSRM-WMI-ASYNC-In-TCP"
             Ensure  = 'Present'
             Enabled = 'True'
         }
 
-        xFirewall FSRMFirewall2
+        Firewall FSRMFirewall2
         {
             Name    = "FSRM-WMI-WINMGMT-In-TCP"
             Ensure  = 'Present'
             Enabled = 'True'
         }
 
-        xFirewall FSRMFirewall3
+        Firewall FSRMFirewall3
         {
             Name    = "FSRM-RemoteRegistry-In (RPC)"
             Ensure  = 'Present'
             Enabled = 'True'
         }
 
-        xFirewall FSRMFirewall4
+        Firewall FSRMFirewall4
         {
             Name    = "FSRM-Task-Scheduler-In (RPC)"
             Ensure  = 'Present'
             Enabled = 'True'
         }
 
-        xFirewall FSRMFirewall5
+        Firewall FSRMFirewall5
         {
             Name    = "FSRM-SrmReports-In (RPC)"
             Ensure  = 'Present'
             Enabled = 'True'
         }
 
-        xFirewall FSRMFirewall6
+        Firewall FSRMFirewall6
         {
             Name    = "FSRM-RpcSs-In (RPC-EPMAP)"
             Ensure  = 'Present'
             Enabled = 'True'
         }
 
-        xFirewall FSRMFirewall7
+        Firewall FSRMFirewall7
         {
             Name    = "FSRM-System-In (TCP-445)"
             Ensure  = 'Present'
             Enabled = 'True'
         }
 
-        xFirewall FSRMFirewall8
+        Firewall FSRMFirewall8
         {
             Name    = "FSRM-SrmSvc-In (RPC)"
             Ensure  = 'Present'

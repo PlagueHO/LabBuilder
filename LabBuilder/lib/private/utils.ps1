@@ -197,7 +197,7 @@ function Invoke-LabDownloadAndUnzipFile
 
     .EXAMPLE
         Invoke-LabDownloadResourceModule `
-            -Name xNetworking `
+            -Name NetworkingDsc `
             -RequiredVersion 2.7.0.0
         Downloads the Resource Module xNetowrking version 2.7.0.0
 

@@ -18,7 +18,7 @@ Configuration MEMBER_DFSSPOKE
     Import-DscResource -ModuleName ComputerManagementDsc
     Import-DscResource -ModuleName DFSDsc
     Import-DscResource -ModuleName StorageDsc
-    Import-DscResource -ModuleName xNetworking
+    Import-DscResource -ModuleName NetworkingDsc
 
     Node $AllNodes.NodeName {
         # Assemble the Local Admin Credentials

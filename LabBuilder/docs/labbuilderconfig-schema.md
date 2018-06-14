@@ -183,7 +183,7 @@ This is usually only required if the Lab requires the use of development resourc
 The Name of the PowerShell (DSC) Module that this Lab requires.
 If a URL attribute is not specified, the PowerShell Gallery will be searched for a module with this name and downloaded.
 
-``` name="xNetworking" ```
+``` name="NetworkingDsc" ```
 
 ### 3.1.2a - URL Optional Attribute
 > url="xs:string"
@@ -192,16 +192,16 @@ If a URL attribute is not specified, the PowerShell Gallery will be searched for
 An optional URL that will be used to download the PowerShell (DSC) Module from. Setting this attribute prevent LabBuilder from using PowerShell Get to download the Module if it is missing.
 This is commonly used to download PowerShell (DSC) Modules directly from GitHub or other repositories.
 
-``` url="https://github.com/PowerShell/xNetworking/archive/dev.zip" ```
+``` url="https://github.com/PowerShell/NetworkingDsc/archive/dev.zip" ```
 
 ### 3.1.3a - FOLDER Optional Attribute
 > folder="xs:string"
 
 
 This optional attribute only needs to be set if the zip file downloaded by the URL in the URL attribute contains a folder that the PowerShell (DSC) Module is in.
-This is usually used when the URL specifies a GitHub repository branch, which will cause the downloaded zip file to contain a folder named 'name-branch' (e.g. xNetworking-dev).
+This is usually used when the URL specifies a GitHub repository branch, which will cause the downloaded zip file to contain a folder named 'name-branch' (e.g. NetworkingDsc-dev).
 
-``` folder="xNetworking-dev" ```
+``` folder="NetworkingDsc-dev" ```
 
 ### 3.1.4a - MINIMUMVERSION Optional Attribute
 > minimumversion="xs:string"

@@ -265,7 +265,7 @@ try
                 Mock -CommandName Find-Module -MockWith { @{ name = 'TestModule' } }
                 Mock -CommandName Install-Module
                 Mock -CommandName Test-Path `
-                    -ParameterFilter { ($Path -like '*TestModule') -or ($Path -like '*xNetworking') } `
+                    -ParameterFilter { ($Path -like '*TestModule') -or ($Path -like '*NetworkingDsc') } `
                     -MockWith { $true }
                 Mock -CommandName Copy-Item
                 Mock -CommandName Request-SelfSignedCertificate `
@@ -301,7 +301,7 @@ try
                 Mock -CommandName Find-Module -MockWith { @{ name = 'TestModule' } }
                 Mock -CommandName Install-Module
                 Mock -CommandName Test-Path `
-                    -ParameterFilter { ($Path -like '*TestModule') -or ($Path -like '*xNetworking') } `
+                    -ParameterFilter { ($Path -like '*TestModule') -or ($Path -like '*NetworkingDsc') } `
                     -MockWith { $true }
                 Mock -CommandName Copy-Item
                 Mock -CommandName Request-SelfSignedCertificate -MockWith { $true }

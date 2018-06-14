@@ -1,8 +1,8 @@
 [
     {
-        "Name":  "xNetworking",
-        "URL":  "https://github.com/PlagueHO/xNetworking/archive/dev.zip",
-        "Folder":  "xNetworking-dev",
+        "Name":  "NetworkingDsc",
+        "URL":  "https://github.com/PlagueHO/NetworkingDsc/archive/dev.zip",
+        "Folder":  "NetworkingDsc-dev",
         "MinimumVersion":  "",
         "RequiredVersion":  ""
     },

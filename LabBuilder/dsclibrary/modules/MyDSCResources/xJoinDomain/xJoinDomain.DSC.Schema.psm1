@@ -42,7 +42,7 @@ Configuration JOINDOMAIN
 
     Import-DscResource -ModuleName 'PSDesiredStateConfiguration'
     Import-DscResource -ModuleName ComputerManagementDsc
-    Import-DscResource -ModuleName xNetworking
+    Import-DscResource -ModuleName NetworkingDsc
 
         # Assemble the Local Admin Credentials
         if ($LocalAdminPassword) {
