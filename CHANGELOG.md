@@ -1,6 +1,6 @@
 # Change Log
 
-## Unreleased
+## 0.8.5.1171
 
 - Samples\Sample_WS2016_DCandDHCPandCA.xml: Added to easily create a Windows
   Server 2016 domain with a enterprise root CA.
@@ -407,6 +407,7 @@
 ## 0.1.0.0
 
 - Initial Release.
+
 
 
 
