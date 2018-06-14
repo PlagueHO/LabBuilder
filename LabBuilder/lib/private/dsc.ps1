@@ -275,11 +275,11 @@ function Update-LabDSC
     [LabDSCModule[]] $dscModules = Get-ModulesInDSCConfig `
         -DSCConfigContent $dscConfigContent
 
-    # Add the xNetworking DSC Resource because it is always used
-    $module = [LabDSCModule]::New('xNetworking')
+    # Add the NetworkingDsc DSC Resource because it is always used
+    $module = [LabDSCModule]::New('NetworkingDsc')
 
-    # It must be 5.0.0.0 or greater
-    $module.MinimumVersion = [Version] '5.0.0.0'
+    # It must be 6.0.0.0 or greater
+    $module.MinimumVersion = [Version] '6.0.0.0'
     $dscModules += @( $module )
 
     foreach ($dscModule in $dscModules)
@@ -479,13 +479,13 @@ function Update-LabDSC
     # Now create the Networking DSC Config file
     $dscNetworkingConfig = Get-LabDSCNetworkingConfig `
         -Lab $Lab -VM $VM
-    $xNetworkingFile = Join-Path `
+    $NetworkingDscFile = Join-Path `
         -Path $vmLabBuilderFiles `
         -ChildPath 'DSCNetworking.ps1'
     $null = Set-Content `
-        -Path $xNetworkingFile `
+        -Path $NetworkingDscFile `
         -Value $dscNetworkingConfig
-    . $xNetworkingFile
+    . $NetworkingDscFile
     $dscFile = Join-Path `
         -Path $vmLabBuilderFiles `
         -ChildPath 'DSC.ps1'
@@ -980,8 +980,8 @@ function Start-LabDSC
                 -Raw
             [LabDSCModule[]] $dscModules = Get-ModulesInDSCConfig -DSCConfigContent $dscContent
 
-            # Add the xNetworking DSC Resource because it is always used
-            $module = [LabDSCModule]::New('xNetworking')
+            # Add the NetworkingDsc DSC Resource because it is always used
+            $module = [LabDSCModule]::New('NetworkingDsc')
             $dscModules += @( $module )
 
             foreach ($dscModule in $dscModules)
@@ -1070,7 +1070,7 @@ function Start-LabDSC
     .EXAMPLE
         $Lab = Get-Lab -ConfigPath c:\mylab\config.xml
         $VMs = Get-LabVM -Lab $Lab
-        $xNetworking = Get-LabDSCNetworkingConfig -Lab $Lab -VM $VMs[0]
+        $NetworkingDsc = Get-LabDSCNetworkingConfig -Lab $Lab -VM $VMs[0]
         Return the Networking DSC for the first VM in the Lab c:\mylab\config.xml for DSC configuration.
 
     .PARAMETER Lab
@@ -1095,15 +1095,15 @@ function Get-LabDSCNetworkingConfig
         [LabVM] $VM
     )
 
-    $xNetworkingVersion = (`
-            Get-Module -Name xNetworking -ListAvailable `
+    $NetworkingDscVersion = (`
+            Get-Module -Name NetworkingDsc -ListAvailable `
             | Sort-Object version -Descending `
             | Select-Object -First 1 `
     ).Version.ToString()
 
     $dscNetworkingConfig = @"
 Configuration Networking {
-    Import-DscResource -ModuleName xNetworking -ModuleVersion $xNetworkingVersion
+    Import-DscResource -ModuleName NetworkingDsc -ModuleVersion $NetworkingDscVersion
 
 "@
     $adapterCount = 0
@@ -1117,7 +1117,7 @@ Configuration Networking {
             if (-not [System.String]::IsNullOrWhitespace($adapter.IPv4.Address))
             {
                 $dscNetworkingConfig += @"
-    xIPAddress IPv4_$adapterCount {
+    IPAddress IPv4_$adapterCount {
         InterfaceAlias = '$($adapter.Name)'
         AddressFamily  = 'IPv4'
         IPAddress      = '$($adapter.IPv4.Address.Replace(',',"','"))/$($adapter.IPv4.SubnetMask)'
@@ -1127,7 +1127,7 @@ Configuration Networking {
                 if (-not [System.String]::IsNullOrWhitespace($adapter.IPv4.DefaultGateway))
                 {
                     $dscNetworkingConfig += @"
-    xDefaultGatewayAddress IPv4G_$adapterCount {
+    DefaultGatewayAddress IPv4G_$adapterCount {
         InterfaceAlias = '$($adapter.Name)'
         AddressFamily  = 'IPv4'
         Address        = '$($adapter.IPv4.DefaultGateway)'
@@ -1138,7 +1138,7 @@ Configuration Networking {
                 else
                 {
                     $dscNetworkingConfig += @"
-    xDefaultGatewayAddress IPv4G_$adapterCount {
+    DefaultGatewayAddress IPv4G_$adapterCount {
         InterfaceAlias = '$($adapter.Name)'
         AddressFamily  = 'IPv4'
     }
@@ -1149,7 +1149,7 @@ Configuration Networking {
             else
             {
                 $dscNetworkingConfig += @"
-    xDhcpClient IPv4DHCP_$adapterCount {
+    DhcpClient IPv4DHCP_$adapterCount {
         InterfaceAlias = '$($adapter.Name)'
         AddressFamily  = 'IPv4'
         State          = 'Enabled'
@@ -1162,7 +1162,7 @@ Configuration Networking {
             if (-not [System.String]::IsNullOrWhitespace($adapter.IPv4.DNSServer))
             {
                 $dscNetworkingConfig += @"
-    xDnsServerAddress IPv4D_$adapterCount {
+    DnsServerAddress IPv4D_$adapterCount {
         InterfaceAlias = '$($adapter.Name)'
         AddressFamily  = 'IPv4'
         Address        = '$($adapter.IPv4.DNSServer.Replace(',',"','"))'
@@ -1177,7 +1177,7 @@ Configuration Networking {
             if (-not [System.String]::IsNullOrWhitespace($adapter.IPv6.Address))
             {
                 $dscNetworkingConfig += @"
-    xIPAddress IPv6_$adapterCount {
+    IPAddress IPv6_$adapterCount {
         InterfaceAlias = '$($adapter.Name)'
         AddressFamily  = 'IPv6'
         IPAddress      = '$($adapter.IPv6.Address.Replace(',',"','"))/$($adapter.IPv6.SubnetMask)'
@@ -1187,7 +1187,7 @@ Configuration Networking {
                 if (-not [System.String]::IsNullOrWhitespace($adapter.IPv6.DefaultGateway))
                 {
                     $dscNetworkingConfig += @"
-    xDefaultGatewayAddress IPv6G_$adapterCount {
+    DefaultGatewayAddress IPv6G_$adapterCount {
         InterfaceAlias = '$($adapter.Name)'
         AddressFamily  = 'IPv6'
         Address        = '$($adapter.IPv6.DefaultGateway)'
@@ -1198,7 +1198,7 @@ Configuration Networking {
                 else
                 {
                     $dscNetworkingConfig += @"
-    xDefaultGatewayAddress IPv6G_$adapterCount {
+    DefaultGatewayAddress IPv6G_$adapterCount {
         InterfaceAlias = '$($adapter.Name)'
         AddressFamily  = 'IPv6'
     }
@@ -1209,7 +1209,7 @@ Configuration Networking {
             else
             {
                 $dscNetworkingConfig += @"
-    xDhcpClient IPv6DHCP_$adapterCount {
+    DhcpClient IPv6DHCP_$adapterCount {
         InterfaceAlias = '$($adapter.Name)'
         AddressFamily  = 'IPv6'
         State          = 'Enabled'
@@ -1222,7 +1222,7 @@ Configuration Networking {
             if (-not [System.String]::IsNullOrWhitespace($adapter.IPv6.DNSServer))
             {
                 $dscNetworkingConfig += @"
-    xDnsServerAddress IPv6D_$adapterCount {
+    DnsServerAddress IPv6D_$adapterCount {
         InterfaceAlias = '$($adapter.Name)'
         AddressFamily  = 'IPv6'
         Address        = '$($adapter.IPv6.DNSServer.Replace(',',"','"))'

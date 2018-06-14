@@ -12,7 +12,7 @@ Configuration STANDALONE_JENKINS
 {
     Import-DscResource -ModuleName 'PSDesiredStateConfiguration'
     Import-DscResource -ModuleName cChoco
-    Import-DscResource -ModuleName xNetworking
+    Import-DscResource -ModuleName NetworkingDsc
 
     Node $AllNodes.NodeName {
         WindowsFeature NetFrameworkCore

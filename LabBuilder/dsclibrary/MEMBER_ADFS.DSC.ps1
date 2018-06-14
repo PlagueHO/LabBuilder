@@ -57,21 +57,21 @@ Configuration MEMBER_ADFS
         }
 
         # Enable ADFS FireWall rules
-        xFirewall ADFSFirewall1
+        Firewall ADFSFirewall1
         {
             Name    = "ADFSSrv-HTTP-In-TCP"
             Ensure  = 'Present'
             Enabled = 'True'
         }
 
-        xFirewall ADFSFirewall2
+        Firewall ADFSFirewall2
         {
             Name    = "ADFSSrv-HTTPS-In-TCP"
             Ensure  = 'Present'
             Enabled = 'True'
         }
 
-        xFirewall ADFSFirewall3
+        Firewall ADFSFirewall3
         {
             Name    = "ADFSSrv-SmartcardAuthN-HTTPS-In-TCP"
             Ensure  = 'Present'

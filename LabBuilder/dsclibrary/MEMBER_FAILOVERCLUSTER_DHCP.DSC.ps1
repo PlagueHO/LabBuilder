@@ -145,13 +145,13 @@ Configuration MEMBER_FAILOVERCLUSTER_FS
             } # End of ISCSITarget Resource
 
             # Enable iSCSI FireWall rules so that the Initiator can be added to iSNS
-            xFirewall iSCSIFirewallIn
+            Firewall iSCSIFirewallIn
             {
                 Name    = "MsiScsi-In-TCP"
                 Ensure  = 'Present'
                 Enabled = 'True'
             }
-            xFirewall iSCSIFirewallOut
+            Firewall iSCSIFirewallOut
             {
                 Name    = "MsiScsi-Out-TCP"
                 Ensure  = 'Present'

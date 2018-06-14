@@ -30,7 +30,7 @@ Configuration MEMBER_ROOTCA
     Import-DscResource -ModuleName ComputerManagementDsc
     Import-DscResource -ModuleName ActiveDirectoryCSDsc
     Import-DscResource -ModuleName xPSDesiredStateConfiguration
-    Import-DscResource -ModuleName xNetworking
+    Import-DscResource -ModuleName NetworkingDsc
 
     Node $AllNodes.NodeName {
         # Assemble the Local Admin Credentials
@@ -147,6 +147,7 @@ Configuration MEMBER_ROOTCA
         ADCSCertificationAuthority ConfigCA
         {
             Ensure                    = 'Present'
+            IsSingleInstance          = 'Yes'
             Credential                = $DomainAdminCredential
             CAType                    = 'EnterpriseRootCA'
             CACommonName              = $Node.CACommonName
@@ -283,21 +284,21 @@ Configuration MEMBER_ROOTCA
             }
 
             # Enable Online Responder FireWall rules so we can remote manage Online Responder
-            xFirewall OnlineResponderFirewall1
+            Firewall OnlineResponderFirewall1
             {
                 Name      = "Microsoft-Windows-OnlineRevocationServices-OcspSvc-DCOM-In"
                 Enabled   = "True"
                 DependsOn = "[ADCSOnlineResponder]ConfigOnlineResponder"
             }
 
-            xFirewall OnlineResponderirewall2
+            Firewall OnlineResponderirewall2
             {
                 Name      = "Microsoft-Windows-CertificateServices-OcspSvc-RPC-TCP-In"
                 Enabled   = "True"
                 DependsOn = "[ADCSOnlineResponder]ConfigOnlineResponder"
             }
 
-            xFirewall OnlineResponderFirewall3
+            Firewall OnlineResponderFirewall3
             {
                 Name      = "Microsoft-Windows-OnlineRevocationServices-OcspSvc-TCP-Out"
                 Enabled   = "True"

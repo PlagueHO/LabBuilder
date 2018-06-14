@@ -16,7 +16,7 @@ Configuration MEMBER_BRANCHCACHE_HOST
     Import-DscResource -ModuleName 'PSDesiredStateConfiguration'
     Import-DscResource -ModuleName ComputerManagementDsc
     Import-DscResource -ModuleName StorageDsc
-    Import-DscResource -ModuleName xNetworking
+    Import-DscResource -ModuleName NetworkingDsc
 
     Node $AllNodes.NodeName {
         # Assemble the Local Admin Credentials
@@ -54,14 +54,14 @@ Configuration MEMBER_BRANCHCACHE_HOST
         }
 
         # Enable BranchCache Hosted Mode Firewall Fules
-        xFirewall FSRMFirewall1
+        Firewall FSRMFirewall1
         {
             Name    = "Microsoft-Windows-PeerDist-HostedServer-In"
             Ensure  = 'Present'
             Enabled = 'True'
         }
 
-        xFirewall FSRMFirewall2
+        Firewall FSRMFirewall2
         {
             Name    = "Microsoft-Windows-PeerDist-HostedServer-Out"
             Ensure  = 'Present'

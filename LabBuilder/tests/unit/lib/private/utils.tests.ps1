@@ -173,13 +173,13 @@ try
         }
 
         Describe '\Lib\Private\Utils.ps1\Invoke-LabDownloadResourceModule' {
-            $URL = 'https://github.com/PowerShell/xNetworking/archive/dev.zip'
+            $URL = 'https://github.com/PowerShell/NetworkingDsc/archive/dev.zip'
 
-            Mock -CommandName Get-Module -MockWith { @( New-Object -TypeName PSObject -Property @{ Name = 'xNetworking'; Version = '2.4.0.0'; } ) }
+            Mock -CommandName Get-Module -MockWith { @( New-Object -TypeName PSObject -Property @{ Name = 'NetworkingDsc'; Version = '2.4.0.0'; } ) }
             Mock -CommandName Invoke-WebRequest
             Mock -CommandName Expand-Archive
             Mock -CommandName Rename-Item
-            Mock -CommandName Test-Path -MockWith { $false } -ParameterFilter { $Path -eq "$($ENV:ProgramFiles)\WindowsPowerShell\Modules\xNetworking" }
+            Mock -CommandName Test-Path -MockWith { $false } -ParameterFilter { $Path -eq "$($ENV:ProgramFiles)\WindowsPowerShell\Modules\NetworkingDsc" }
             Mock -CommandName Test-Path -MockWith { $true } -ParameterFilter { $Path -eq "$($ENV:ProgramFiles)\WindowsPowerShell\Modules\" }
             Mock -CommandName Remove-Item
             Mock -CommandName Get-PackageProvider
@@ -189,9 +189,9 @@ try
                 It 'Does not throw an Exception' {
                     {
                         Invoke-LabDownloadResourceModule `
-                            -Name 'xNetworking' `
+                            -Name 'NetworkingDsc' `
                             -URL $URL `
-                            -Folder 'xNetworkingDev'
+                            -Folder 'NetworkingDscDev'
                     } | Should -Not -Throw
                 }
 
@@ -200,7 +200,7 @@ try
                     Assert-MockCalled -CommandName Invoke-WebRequest -Exactly -Times 0
                     Assert-MockCalled -CommandName Expand-Archive -Exactly -Times 0
                     Assert-MockCalled -CommandName Rename-Item -Exactly -Times 0
-                    Assert-MockCalled -CommandName Test-Path -ParameterFilter { $Path -eq "$($ENV:ProgramFiles)\WindowsPowerShell\Modules\xNetworking" } -Exactly -Times 0
+                    Assert-MockCalled -CommandName Test-Path -ParameterFilter { $Path -eq "$($ENV:ProgramFiles)\WindowsPowerShell\Modules\NetworkingDsc" } -Exactly -Times 0
                     Assert-MockCalled -CommandName Test-Path -ParameterFilter { $Path -eq $Path -eq "$($ENV:ProgramFiles)\WindowsPowerShell\Modules\" } -Exactly -Times 0
                     Assert-MockCalled -CommandName Remove-Item -Exactly -Times 0
                     Assert-MockCalled -CommandName Get-PackageProvider -Exactly -Times 0
@@ -214,9 +214,9 @@ try
                 It 'Does not throw an Exception' {
                     {
                         Invoke-LabDownloadResourceModule `
-                            -Name 'xNetworking' `
+                            -Name 'NetworkingDsc' `
                             -URL $URL `
-                            -Folder 'xNetworkingDev'
+                            -Folder 'NetworkingDscDev'
                     } | Should -Not -Throw
                 }
 
@@ -225,7 +225,7 @@ try
                     Assert-MockCalled -CommandName Invoke-WebRequest -Exactly -Times 1
                     Assert-MockCalled -CommandName Expand-Archive -Exactly -Times 1
                     Assert-MockCalled -CommandName Rename-Item -Exactly -Times 1
-                    Assert-MockCalled -CommandName Test-Path -ParameterFilter { $Path -eq "$($ENV:ProgramFiles)\WindowsPowerShell\Modules\xNetworking" } -Exactly -Times 1
+                    Assert-MockCalled -CommandName Test-Path -ParameterFilter { $Path -eq "$($ENV:ProgramFiles)\WindowsPowerShell\Modules\NetworkingDsc" } -Exactly -Times 1
                     Assert-MockCalled -CommandName Test-Path -ParameterFilter { $Path -eq $Path -eq "$($ENV:ProgramFiles)\WindowsPowerShell\Modules\" } -Exactly -Times 1
                     Assert-MockCalled -CommandName Remove-Item -Exactly -Times 1
                     Assert-MockCalled -CommandName Get-PackageProvider -Exactly -Times 0
@@ -237,7 +237,7 @@ try
                 It 'Does not throw an Exception' {
                     {
                         Invoke-LabDownloadResourceModule `
-                            -Name 'xNetworking'
+                            -Name 'NetworkingDsc'
                     } | Should -Not -Throw
                 }
 
@@ -253,15 +253,15 @@ try
                 }
             }
 
-            Mock -CommandName Get-Module -MockWith { @( New-Object -TypeName PSObject -Property @{ Name = 'xNetworking'; Version = '2.4.0.0'; } ) }
+            Mock -CommandName Get-Module -MockWith { @( New-Object -TypeName PSObject -Property @{ Name = 'NetworkingDsc'; Version = '2.4.0.0'; } ) }
 
             Context 'Wrong version of module is installed; Valid URL, Folder and Required Version passed' {
                 It 'Does not throw an Exception' {
                     {
                         Invoke-LabDownloadResourceModule `
-                            -Name 'xNetworking' `
+                            -Name 'NetworkingDsc' `
                             -URL $URL `
-                            -Folder 'xNetworkingDev' `
+                            -Folder 'NetworkingDscDev' `
                             -RequiredVersion '2.5.0.0'
                     } | Should -Not -Throw
                 }
@@ -271,7 +271,7 @@ try
                     Assert-MockCalled -CommandName Invoke-WebRequest -Exactly -Times 1
                     Assert-MockCalled -CommandName Expand-Archive -Exactly -Times 1
                     Assert-MockCalled -CommandName Rename-Item -Exactly -Times 1
-                    Assert-MockCalled -CommandName Test-Path -ParameterFilter { $Path -eq "$($ENV:ProgramFiles)\WindowsPowerShell\Modules\xNetworking" } -Exactly -Times 1
+                    Assert-MockCalled -CommandName Test-Path -ParameterFilter { $Path -eq "$($ENV:ProgramFiles)\WindowsPowerShell\Modules\NetworkingDsc" } -Exactly -Times 1
                     Assert-MockCalled -CommandName Test-Path -ParameterFilter { $Path -eq $Path -eq "$($ENV:ProgramFiles)\WindowsPowerShell\Modules\" } -Exactly -Times 1
                     Assert-MockCalled -CommandName Remove-Item -Exactly -Times 1
                     Assert-MockCalled -CommandName Get-PackageProvider -Exactly -Times 0
@@ -283,7 +283,7 @@ try
                 It 'Does not throw an Exception' {
                     {
                         Invoke-LabDownloadResourceModule `
-                            -Name 'xNetworking' `
+                            -Name 'NetworkingDsc' `
                             -RequiredVersion '2.5.0.0'
                     } | Should -Not -Throw
                 }
@@ -304,9 +304,9 @@ try
                 It 'Does not throw an Exception' {
                     {
                         Invoke-LabDownloadResourceModule `
-                            -Name 'xNetworking' `
+                            -Name 'NetworkingDsc' `
                             -URL $URL `
-                            -Folder 'xNetworkingDev' `
+                            -Folder 'NetworkingDscDev' `
                             -RequiredVersion '2.4.0.0'
                     } | Should -Not -Throw
                 }
@@ -327,7 +327,7 @@ try
                 It 'Does not throw an Exception' {
                     {
                         Invoke-LabDownloadResourceModule `
-                            -Name 'xNetworking' `
+                            -Name 'NetworkingDsc' `
                             -RequiredVersion '2.4.0.0'
                     } | Should -Not -Throw
                 }
@@ -348,9 +348,9 @@ try
                 It 'Does not throw an Exception' {
                     {
                         Invoke-LabDownloadResourceModule `
-                            -Name 'xNetworking' `
+                            -Name 'NetworkingDsc' `
                             -URL $URL `
-                            -Folder 'xNetworkingDev' `
+                            -Folder 'NetworkingDscDev' `
                             -MinimumVersion '2.5.0.0'
                     } | Should -Not -Throw
                 }
@@ -360,7 +360,7 @@ try
                     Assert-MockCalled -CommandName Invoke-WebRequest -Exactly -Times 1
                     Assert-MockCalled -CommandName Expand-Archive -Exactly -Times 1
                     Assert-MockCalled -CommandName Rename-Item -Exactly -Times 1
-                    Assert-MockCalled -CommandName Test-Path -ParameterFilter { $Path -eq "$($ENV:ProgramFiles)\WindowsPowerShell\Modules\xNetworking" } -Exactly -Times 1
+                    Assert-MockCalled -CommandName Test-Path -ParameterFilter { $Path -eq "$($ENV:ProgramFiles)\WindowsPowerShell\Modules\NetworkingDsc" } -Exactly -Times 1
                     Assert-MockCalled -CommandName Test-Path -ParameterFilter { $Path -eq $Path -eq "$($ENV:ProgramFiles)\WindowsPowerShell\Modules\" } -Exactly -Times 1
                     Assert-MockCalled -CommandName Remove-Item -Exactly -Times 1
                     Assert-MockCalled -CommandName Get-PackageProvider -Exactly -Times 0
@@ -372,7 +372,7 @@ try
                 It 'Does not throw an Exception' {
                     {
                         Invoke-LabDownloadResourceModule `
-                            -Name 'xNetworking' `
+                            -Name 'NetworkingDsc' `
                             -MinimumVersion '2.5.0.0'
                     } | Should -Not -Throw
                 }
@@ -393,9 +393,9 @@ try
                 It 'Does not throw an Exception' {
                     {
                         Invoke-LabDownloadResourceModule `
-                            -Name 'xNetworking' `
+                            -Name 'NetworkingDsc' `
                             -URL $URL `
-                            -Folder 'xNetworkingDev' `
+                            -Folder 'NetworkingDscDev' `
                             -MinimumVersion '2.4.0.0'
                     } | Should -Not -Throw
                 }
@@ -416,7 +416,7 @@ try
                 It 'Does not throw an Exception' {
                     {
                         Invoke-LabDownloadResourceModule `
-                            -Name 'xNetworking' `
+                            -Name 'NetworkingDsc' `
                             -MinimumVersion '2.4.0.0'
                     } | Should -Not -Throw
                 }
@@ -448,9 +448,9 @@ try
 
                     {
                         Invoke-LabDownloadResourceModule `
-                            -Name 'xNetworking' `
+                            -Name 'NetworkingDsc' `
                             -URL $URL `
-                            -Folder 'xNetworkingDev'
+                            -Folder 'NetworkingDscDev'
                     } | Should -Throw $Exception
                 }
 
@@ -496,7 +496,7 @@ try
                 }
             }
 
-            Mock -CommandName Install-Module -MockWith { Throw ("No match was found for the specified search criteria and module name 'xNetworking'" )}
+            Mock -CommandName Install-Module -MockWith { Throw ("No match was found for the specified search criteria and module name 'NetworkingDsc'" )}
 
             Context 'Wrong version of module is installed; No URL or Folder passed, but Required Version passed. Required Version is not available' {
                 It ' Throws a ModuleNotAvailableError Exception' {
@@ -504,13 +504,13 @@ try
                         errorId = 'ModuleNotAvailableError'
                         errorCategory = 'InvalidArgument'
                         errorMessage = $($LocalizedData.ModuleNotAvailableError `
-                            -f 'xNetworking','2.5.0.0',"No match was found for the specified search criteria and module name 'xNetworking'" )
+                            -f 'NetworkingDsc','2.5.0.0',"No match was found for the specified search criteria and module name 'NetworkingDsc'" )
                     }
                     $Exception = Get-LabException @exceptionParameters
 
                     {
                         Invoke-LabDownloadResourceModule `
-                            -Name 'xNetworking' `
+                            -Name 'NetworkingDsc' `
                             -RequiredVersion '2.5.0.0'
                     } | Should -Throw $Exception
                 }
@@ -533,13 +533,13 @@ try
                         errorId = 'ModuleNotAvailableError'
                         errorCategory = 'InvalidArgument'
                         errorMessage = $($LocalizedData.ModuleNotAvailableError `
-                            -f 'xNetworking','min 2.5.0.0',"No match was found for the specified search criteria and module name 'xNetworking'" )
+                            -f 'NetworkingDsc','min 2.5.0.0',"No match was found for the specified search criteria and module name 'NetworkingDsc'" )
                     }
                     $Exception = Get-LabException @exceptionParameters
 
                     {
                         Invoke-LabDownloadResourceModule `
-                            -Name 'xNetworking' `
+                            -Name 'NetworkingDsc' `
                             -MinimumVersion '2.5.0.0'
                     } | Should -Throw $Exception
                 }
