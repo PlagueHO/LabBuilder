@@ -13,15 +13,15 @@
 | dev | [![ap-image-dev][]][ap-site-dev] | [![av-image-dev][]][av-site-dev] | [![cc-image-dev][]][cc-site-dev] |
 | master | [![ap-image-master][]][ap-site-master] | [![av-image-master][]][av-site-master] | [![cc-image-master][]][cc-site-master] |
 
-[ap-image-dev]: https://dev.azure.com/dscottraynsford/GitHub/_apis/build/status/PlagueHO.CosmosDB?branchName=dev
-[ap-site-dev]: https://dev.azure.com/dscottraynsford/GitHub/_build/latest?definitionId=4
+[ap-image-dev]: https://dev.azure.com/dscottraynsford/GitHub/_apis/build/status/PlagueHO.LabBuilder?branchName=dev
+[ap-site-dev]: https://dev.azure.com/dscottraynsford/GitHub/_build/latest?definitionId=5
 [av-image-dev]: https://ci.appveyor.com/api/projects/status/rcg7xmm97qhg2bjr/branch/dev?svg=true
-[av-site-dev]: https://ci.appveyor.com/project/PlagueHO/labbuilder/branch/master
+[av-site-dev]: https://ci.appveyor.com/project/PlagueHO/labbuilder/branch/dev
 [cc-image-dev]: https://codecov.io/gh/PlagueHO/LabBuilder/branch/dev/graph/badge.svg
 [cc-site-dev]: https://codecov.io/gh/PlagueHO/LabBuilder/branch/dev
 
-[ap-image-master]: https://dev.azure.com/dscottraynsford/GitHub/_apis/build/status/PlagueHO.CosmosDB?branchName=master
-[ap-site-master]: https://dev.azure.com/dscottraynsford/GitHub/_build/latest?definitionId=4
+[ap-image-master]: https://dev.azure.com/dscottraynsford/GitHub/_apis/build/status/PlagueHO.LabBuilder?branchName=master
+[ap-site-master]: https://dev.azure.com/dscottraynsford/GitHub/_build/latest?definitionId=5
 [av-image-master]: https://ci.appveyor.com/api/projects/status/rcg7xmm97qhg2bjr/branch/master?svg=true
 [av-site-master]: https://ci.appveyor.com/project/PlagueHO/labbuilder/branch/master
 [cc-image-master]: https://codecov.io/gh/PlagueHO/LabBuilder/branch/master/graph/badge.svg
