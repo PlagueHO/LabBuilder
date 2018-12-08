@@ -1,0 +1,145 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<labbuilderconfig xmlns="labbuilderconfig"
+                  name=""
+                  version="">
+
+  <description></description>
+
+  <settings labpath="" />
+
+  <resources>
+    <msu name="WMF5.1-WS2012R2-W81"
+         url="https://download.microsoft.com/download/6/F/5/6F5FF66C-6775-42B0-86C4-47D41F2DA187/W2K12-KB3191565-x64.msu" />
+    <msu name="WMF5.0-WS2012-W8"
+         url="https://download.microsoft.com/download/2/C/6/2C6E1B4A-EBE5-48A6-B225-2D2058A9CEFB/W2K12-KB3134759-x64.msu" />
+    <msu name="WMF5.0-WS2008R2-W7"
+         url="https://download.microsoft.com/download/2/C/6/2C6E1B4A-EBE5-48A6-B225-2D2058A9CEFB/Win7AndW2K8R2-KB3134760-x64.msu" />
+  </resources>
+
+  <switches>
+    <switch name="External" type="External" >
+      <adapters>
+        <adapter name="Cluster" macaddress="00155D010701" vlan="5"/>
+        <adapter name="Management" macaddress="00155D010702" vlan="6"/>
+        <adapter name="SMB" macaddress="00155D010703" />
+        <adapter name="LM" macaddress="00155D010704" />
+      </adapters>
+    </switch>
+  </switches>
+
+  <templatevhds isopath="ISOFiles"
+                vhdpath="VHDFiles" >
+    <templatevhd name="Windows Server 2012 R2 Datacenter Full"
+                 iso="9600.17050.WINBLUE_REFRESH.140317-1640_X64FRE_SERVER_EVAL_EN-US-IR3_SSS_X64FREE_EN-US_DV9.iso"
+                 url="https://www.microsoft.com/en-us/evalcenter/evaluate-windows-server-2012-r2"
+                 vhd="Windows Server 2012 R2 Datacenter Full.vhdx"
+                 edition="Windows Server 2012 R2 SERVERDATACENTER"
+                 ostype="Server"
+                 packages="WMF5.1-WS2012R2-W81"
+                 vhdformat="vhdx"
+                 vhdtype="dynamic"
+                 generation="2"
+                 vhdsize="40GB" />
+    <templatevhd name="Windows Server 2012 R2 Datacenter Core"
+                 iso="9600.17050.WINBLUE_REFRESH.140317-1640_X64FRE_SERVER_EVAL_EN-US-IR3_SSS_X64FREE_EN-US_DV9.iso"
+                 url="https://www.microsoft.com/en-us/evalcenter/evaluate-windows-server-2012-r2"
+                 vhd="Windows Server 2012 R2 Datacenter Core.vhdx"
+                 edition="Windows Server 2012 R2 SERVERDATACENTERCORE"
+                 ostype="Server"
+                 packages="WMF5.1-WS2012R2-W81"
+                 vhdformat="vhdx"
+                 vhdtype="dynamic"
+                 generation="2"
+                 vhdsize="25GB" />
+    <templatevhd name="Windows Server 2016 TP5 Datacenter FULL"
+                 iso="14300.1000.160324-1723.RS1_RELEASE_SVC_SERVER_OEMRET_X64FRE_EN-US.ISO"
+                 url="https://www.microsoft.com/en-us/evalcenter/evaluate-windows-server-technical-preview"
+                 vhd="Windows Server 2016 TP5 Datacenter Full.vhdx"
+                 edition="Windows Server 2016 Technical Preview 4 SERVERDATACENTER"
+                 ostype="Server"
+                 vhdformat="vhdx"
+                 vhdtype="dynamic"
+                 generation="2"
+                 vhdsize="40GB" />
+    <templatevhd name="Windows Server 2016 TP5 Datacenter CORE"
+                 iso="14300.1000.160324-1723.RS1_RELEASE_SVC_SERVER_OEMRET_X64FRE_EN-US.ISO"
+                 url="https://www.microsoft.com/en-us/evalcenter/evaluate-windows-server-technical-preview"
+                 vhd="Windows Server 2016 TP5 Datacenter Core.vhdx"
+                 edition="Windows Server 2016 Technical Preview 4 SERVERDATACENTERCORE"
+                 ostype="Server"
+                 vhdformat="vhdx"
+                 vhdtype="dynamic"
+                 generation="2"
+                 vhdsize="25GB" />
+    <templatevhd name="Windows 10 Enterprise"
+                 iso="10586.0.151029-1700.TH2_RELEASE_CLIENTENTERPRISEEVAL_OEMRET_X64FRE_EN-US.ISO"
+                 url="https://www.microsoft.com/en-us/evalcenter/evaluate-windows-10-enterprise"
+                 vhd="Windows 10 Enterprise.vhdx"
+                 edition="Windows 10 Enterprise"
+                 ostype="Client"
+                 vhdformat="vhdx"
+                 vhdtype="dynamic"
+                 generation="2"
+                 vhdsize="25GB" />
+    <templatevhd name="Nano Server 2016 TP5 Basic"
+                 iso="14300.1000.160324-1723.RS1_RELEASE_SVC_SERVER_OEMRET_X64FRE_EN-US.ISO"
+                 url="https://www.microsoft.com/en-us/evalcenter/evaluate-windows-server-technical-preview"
+                 vhd="Nano Server 2016 TP5 Basic.vhdx"
+                 ostype="Nano"
+                 packages="Microsoft-NanoServer-Guest-Package.cab"
+                 vhdformat="vhdx"
+                 vhdtype="dynamic"
+                 generation="2"
+                 vhdsize="25GB" />
+  </templatevhds>
+
+  <templates>
+    <template name="Pester Windows Server 2012 R2 Datacenter Full"
+              vhd="Server 2012 R2 Datacenter Full.vhdx"
+              sourcevhd="VhdFiles\Windows Server 2012 R2 Datacenter Full.vhdx"
+              memorystartupbytes="1GB"
+              dynamicmemoryenabled="Y"
+              processorcount="1"
+              administratorpassword="None"
+              productkey="AAAAA-AAAAA-AAAAA-AAAAA-AAAAA"
+              timezone="Pacific Standard Time"
+              ostype="Server"
+              integrationservices="Guest Service Interface,Heartbeat,Key-Value Pair Exchange,Shutdown,Time Synchronization,VSS" />
+    <template name="Windows Server 2012 R2 Datacenter Core"
+              vhd="Windows Server 2012 R2 Datacenter Core.vhdx"
+              templatevhd="Windows Server 2012 R2 Datacenter Core"
+              memorystartupbytes="1GB"
+              dynamicmemoryenabled="N"
+              processorcount="1"
+              exposevirtualizationextensions="Y"
+              administratorpassword="None"
+              productkey="BBBBB-BBBBB-BBBBB-BBBBB-BBBBB"
+              timezone="Pacific Standard Time"
+              ostype="Server"
+              integrationservices="Guest Service Interface,Heartbeat,Key-Value Pair Exchange,Shutdown,Time Synchronization,VSS" />
+    <template name="Windows 10 Enterprise"
+              templatevhd="Windows 10 Enterprise"
+              memorystartupbytes="2GB"
+              processorcount="1"
+              administratorpassword="None"
+              productkey="CCCCC-CCCCC-CCCCC-CCCCC-CCCCC"
+              timezone="Pacific Standard Time"
+              ostype="Client"
+              integrationservices="Guest Service Interface,Heartbeat,Key-Value Pair Exchange,Shutdown,Time Synchronization,VSS" />
+    <template name="Pester Nano Server"
+              vhd="MyNanoServerVHD.vhdx"
+              sourcevhd="VhdFiles\Nano Server 2016 TP5 Basic.vhdx"
+              memorystartupbytes="1GB"
+              processorcount="1"
+              administratorpassword="None"
+              timezone="Pacific Standard Time"
+              ostype="Nano"
+              integrationservices="Guest Service Interface,Heartbeat,Key-Value Pair Exchange,Shutdown,Time Synchronization,VSS"
+              packages="Storage"/>
+  </templates>
+
+  <vms>
+  </vms>
+
+</labbuilderconfig>

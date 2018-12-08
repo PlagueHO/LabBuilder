@@ -1,12 +1,15 @@
 # Change Log
 
-## 0.8.5.1171
+## Unreleased
 
 - Samples\Sample_WS2016_DCandDHCPandCA.xml: Added to easily create a Windows
   Server 2016 domain with a enterprise root CA.
 - Correct certificate authority DSC Resources with ADCSCertificationAuthority
   to be IsSingleInstance.
 - Convert xNetworking to NetworkingDsc.
+- Converted repository structure and build pipeline to more modern standards.
+- Convert module to require WMF 5.1 and all the samples to install WMF 5.1.
+- DSCLibrary\MEMBER_MEMBER_DHCP*.ps1: Fixed to support xDHCPServer 2.0.0.0.
 
 ## 0.8.4.1160
 

@@ -1,13 +1,31 @@
-# LabBuilder
+[![License](https://img.shields.io/badge/license-MIT-blue.svg)](https://github.com/PlagueHO/LabBuilder/blob/dev/LICENSE)
+[![Documentation - LabBuilder](https://img.shields.io/badge/Documentation-LabBuilder-blue.svg)](https://github.com/PlagueHO/LabBuilder/wiki)
+[![PowerShell Gallery - LabBuilder](https://img.shields.io/badge/PowerShell%20Gallery-LabBuilder-blue.svg)](https://www.powershellgallery.com/packages/LabBuilder)
+[![Minimum Supported PowerShell Version](https://img.shields.io/badge/PowerShell-5.1-blue.svg)](https://github.com/PlagueHO/LabBuilder)
+[![Join the chat at https://gitter.im/PlagueHO/LabBuilder](https://badges.gitter.im/PlagueHO/LabBuilder.svg)](https://gitter.im/PlagueHO/LabBuilder?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 
-| Branch | Build Status | Code Coverage |
-| --- | --- | --- |
-| dev | [![Build status](https://ci.appveyor.com/api/projects/status/rcg7xmm97qhg2bjr/branch/dev?svg=true)](https://ci.appveyor.com/project/PlagueHO/labbuilder/branch/dev) | [![codecov](https://codecov.io/gh/PlagueHO/LabBuilder/branch/dev/graph/badge.svg)](https://codecov.io/gh/PlagueHO/LabBuilder/branch/dev) |
-| master | [![Build status](https://ci.appveyor.com/api/projects/status/rcg7xmm97qhg2bjr/branch/master?svg=true)](https://ci.appveyor.com/project/PlagueHO/labbuilder/branch/master) | [![codecov](https://codecov.io/gh/PlagueHO/LabBuilder/branch/master/graph/badge.svg)](https://codecov.io/gh/PlagueHO/LabBuilder/branch/master) |
+# LabBuilder PowerShell Module
 
-Waffle Board: [![Stories in Ready](https://badge.waffle.io/PlagueHO/LabBuilder.svg?label=ready&title=Ready)](http://waffle.io/PlagueHO/LabBuilder)
+## Module Build Status
 
-Gitter Chat: [![Join the chat at https://gitter.im/PlagueHO/LabBuilder](https://badges.gitter.im/PlagueHO/LabBuilder.svg)](https://gitter.im/PlagueHO/LabBuilder?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+| Branch | AzurePipelines CI | AppVeyor CI | Code Coverage |
+| --- | --- | --- | --- |
+| dev | [![ap-image-dev][]][ap-site-dev] | [![av-image-dev][]][av-site-dev] | [![cc-image-dev][]][cc-site-dev] |
+| master | [![ap-image-master][]][ap-site-master] | [![av-image-master][]][av-site-master] | [![cc-image-master][]][cc-site-master] |
+
+[ap-image-dev]: https://dev.azure.com/dscottraynsford/GitHub/_apis/build/status/PlagueHO.LabBuilder?branchName=dev
+[ap-site-dev]: https://dev.azure.com/dscottraynsford/GitHub/_build/latest?definitionId=5
+[av-image-dev]: https://ci.appveyor.com/api/projects/status/rcg7xmm97qhg2bjr/branch/dev?svg=true
+[av-site-dev]: https://ci.appveyor.com/project/PlagueHO/labbuilder/branch/dev
+[cc-image-dev]: https://codecov.io/gh/PlagueHO/LabBuilder/branch/dev/graph/badge.svg
+[cc-site-dev]: https://codecov.io/gh/PlagueHO/LabBuilder/branch/dev
+
+[ap-image-master]: https://dev.azure.com/dscottraynsford/GitHub/_apis/build/status/PlagueHO.LabBuilder?branchName=master
+[ap-site-master]: https://dev.azure.com/dscottraynsford/GitHub/_build/latest?definitionId=5
+[av-image-master]: https://ci.appveyor.com/api/projects/status/rcg7xmm97qhg2bjr/branch/master?svg=true
+[av-site-master]: https://ci.appveyor.com/project/PlagueHO/labbuilder/branch/master
+[cc-image-master]: https://codecov.io/gh/PlagueHO/LabBuilder/branch/master/graph/badge.svg
+[cc-site-master]: https://codecov.io/gh/PlagueHO/LabBuilder/branch/master
 
 ## Summary
 
@@ -55,16 +73,16 @@ To use this Module you will require on your Lab Host:
 + Windows 8.0
 + Windows 8.1
 + Windows 10
-1. **Windows Management Framework 5.0 (WMF5.0)** installed.
+1. **Windows Management Framework 5.1 (WMF5.1)** installed.
 
-    _WMF 5.0 is installed on Windows 10 and Windows Server 2016 out of the box, but for Windows Server 2012/R2 and Windows 8/8.1 it will need to be installed separately._
-    _WMF 5.0 can be downloaded from [here](https://www.microsoft.com/en-us/download/details.aspx?id=50395)._
+    _WMF 5.1 is installed on Windows 10 and Windows Server 2016 out of the box, but for Windows Server 2012/R2 and Windows 8/8.1 it will need to be installed separately._
+    _WMF 5.1 can be downloaded from [here](https://www.microsoft.com/en-us/download/details.aspx?id=54616)._
 
 1. **Hyper-V** available (which requires intel-VT CPU support).
 1. To use labs that contain Nested Hyper-V hosts only Windows 10 built 10586 or later and Windows Server 2016 TP3 or later are supported.
 1. Copies of the **Windows installation media** for any Operating Systems that will be used in your Labs.
 + Note: Most Lab configuration files can contain a URL where the relevant trial media can be downloaded from, but you can use any Windows Install Media source you choose (including custom built ISOs).
-1. An **internet connection** to download the WMF 5.0 MSU and any other optional MSU packages required by the Lab.
+1. An **internet connection** to download the WMF 5.1 MSU and any other optional MSU packages required by the Lab.
 + Note: This only needs to be done during the Install-Lab phase and can be disabled after this phase is complete.
 1. **WS-Man** enabled to allow communication with the Lab Virtual Machines.
 + * Note: if WS-Man is not enabled, the Install-Lab cmdlet will attempt to install it with confirmation being required from the user.
@@ -96,7 +114,7 @@ The easiest way to download and install the LabBuilder module is using PowerShel
 Install-Module -Name LabBuilder
 ```
 
-PowerShell Get is built into Windows Management Framework 5.0, which is a requirement of this project, so it should already be installed onto your host.
+PowerShell Get is built into Windows Management Framework 5.1, which is a requirement of this project, so it should already be installed onto your host.
 If it is not installed, download it from [here](https://www.microsoft.com/en-us/download/details.aspx?id=50395).
 
 ## Installing a Lab
@@ -254,17 +272,17 @@ As long as you a valid Lab Configuration file and any required Windows Installat
 Depending on the size of the Lab you are building and whether or not the ISO files need to be converted to VHD files, this could take from 5 minutes to many hours.
 For example, an Lab containing eight Windows Server 2012 R2 Virtual Machines configured as an AD Domain containing various services installed on a Host with four CPU cores, 32 GB RAM and an SSD will take about 45 minutes to install.
 
-## Windows Management Framework 5.0 (WMF 5.0)
+## Windows Management Framework 5.1 (WMF 5.1)
 
-All Lab Guest Virtual Machines must have WMF 5.0 installed onto them before they are first booted in a Lab environment. This is to ensure the Self-Signed certificate can be generated and returned to the host for DSC MOF encryption.
+All Lab Guest Virtual Machines must have WMF 5.1 installed onto them before they are first booted in a Lab environment. This is to ensure the Self-Signed certificate can be generated and returned to the host for DSC MOF encryption.
 
-If WMF 5.0 is not installed before the Lab VM Guest first boot then DSC configuration will not proceed, and the Lab Guest VM will boot with a clean OS, but none of the specific features installed or configured (e.g. DC's not promoted).
+If WMF 5.1 is not installed before the Lab VM Guest first boot then DSC configuration will not proceed, and the Lab Guest VM will boot with a clean OS, but none of the specific features installed or configured (e.g. DC's not promoted).
 
-WMF 5.0 is only required to be installed onto Windows 7, 8 and 8.1 or Windows Server 2008 R2, Windows Server 2012 and Windows Server 2012 R2. Windows 10 and Windows Server 2016 already include WMF 5.0 so it doesn't need to be installed.
+WMF 5.1 is only required to be installed onto Windows 7, 8 and 8.1 or Windows Server 2008 R2, Windows Server 2012 and Windows Server 2012 R2. Windows 10 and Windows Server 2016 already include WMF 5.1 so it doesn't need to be installed.
 
-_Most Labs_ are configured to install WMF 5.0 **completely automatically** so you don't need to install worry about it.
+_Most Labs_ are configured to install WMF 5.1 **completely automatically** so you don't need to install worry about it.
 
-Note: It is possible to change a Lab Configuration file to prevent automatic installation of the WMF 5.0 MSU package onto Guest Lab VM's, but this is not recommended unless there is a good reason for doing so.
+Note: It is possible to change a Lab Configuration file to prevent automatic installation of the WMF 5.1 MSU package onto Guest Lab VM's, but this is not recommended unless there is a good reason for doing so.
 
 LabBuilder supports automatically installing any MSU package that can be downloaded from the internet onto the Lab Guest VMs during installation of the Lab.
 These MSU packages can be installed during any of the following phases of Lab installation:
@@ -273,14 +291,14 @@ These MSU packages can be installed during any of the following phases of Lab in
 + Copy Template VHD to ParentVHD folder in Lab.
 + Create new VM Boot VHD from ParentVHD folder in Lab.
 
-By default, Lab configuration files are configured to ensure WMF 5.0 is installed at each of the above phases.
+By default, Lab configuration files are configured to ensure WMF 5.1 is installed at each of the above phases.
 
-The WMF 5.0 MSU package is controlled by adding a new MSU element to the &lt;Resources&gt; element in a Lab Configuration.
+The WMF 5.1 MSU package is controlled by adding a new MSU element to the &lt;Resources&gt; element in a Lab Configuration.
 E.g.
 
 ```xml
-     <msu name="WMF5.0-WS2012R2-W81"
-         url="https://download.microsoft.com/download/2/C/6/2C6E1B4A-EBE5-48A6-B225-2D2058A9CEFB/Win8.1AndW2K12R2-KB3134758-x64.msu" />
+     <msu name="WMF5.1-WS2012R2-W81"
+         url="https://download.microsoft.com/download/6/F/5/6F5FF66C-6775-42B0-86C4-47D41F2DA187/W2K12-KB3191565-x64.msu" />
 ```
 
 This defines the name of the MSU package and the Download location.
@@ -294,7 +312,7 @@ E.g.
                 vhd="Windows Server 2012 R2 Datacenter Full.vhdx"
                 edition="Windows Server 2012 R2 SERVERDATACENTER"
                 ostype="Server"
-                packages="WMF5.0-WS2012R2-W81"
+                packages="WMF5.1-WS2012R2-W81"
                 vhdformat="vhdx"
                 vhdtype="dynamic"
                 generation="2"
