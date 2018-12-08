@@ -1,5 +1,5 @@
 ﻿<#
-.EXTERNALHELP CosmosDB-help.xml
+.EXTERNALHELP LabBuilder-help.xml
 #>
 #Requires -version 5.1
 #Requires -RunAsAdministrator
