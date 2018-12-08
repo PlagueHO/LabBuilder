@@ -1,13 +1,31 @@
-# LabBuilder
+[![License](https://img.shields.io/badge/license-MIT-blue.svg)](https://github.com/PlagueHO/LabBuilder/blob/dev/LICENSE)
+[![Documentation - LabBuilder](https://img.shields.io/badge/Documentation-LabBuilder-blue.svg)](https://github.com/PlagueHO/LabBuilder/wiki)
+[![PowerShell Gallery - LabBuilder](https://img.shields.io/badge/PowerShell%20Gallery-LabBuilder-blue.svg)](https://www.powershellgallery.com/packages/LabBuilder)
+[![Minimum Supported PowerShell Version](https://img.shields.io/badge/PowerShell-5.1-blue.svg)](https://github.com/PlagueHO/LabBuilder)
+[![Join the chat at https://gitter.im/PlagueHO/LabBuilder](https://badges.gitter.im/PlagueHO/LabBuilder.svg)](https://gitter.im/PlagueHO/LabBuilder?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 
-| Branch | Build Status | Code Coverage |
-| --- | --- | --- |
-| dev | [![Build status](https://ci.appveyor.com/api/projects/status/rcg7xmm97qhg2bjr/branch/dev?svg=true)](https://ci.appveyor.com/project/PlagueHO/labbuilder/branch/dev) | [![codecov](https://codecov.io/gh/PlagueHO/LabBuilder/branch/dev/graph/badge.svg)](https://codecov.io/gh/PlagueHO/LabBuilder/branch/dev) |
-| master | [![Build status](https://ci.appveyor.com/api/projects/status/rcg7xmm97qhg2bjr/branch/master?svg=true)](https://ci.appveyor.com/project/PlagueHO/labbuilder/branch/master) | [![codecov](https://codecov.io/gh/PlagueHO/LabBuilder/branch/master/graph/badge.svg)](https://codecov.io/gh/PlagueHO/LabBuilder/branch/master) |
+# LabBuilder PowerShell Module
 
-Waffle Board: [![Stories in Ready](https://badge.waffle.io/PlagueHO/LabBuilder.svg?label=ready&title=Ready)](http://waffle.io/PlagueHO/LabBuilder)
+## Module Build Status
 
-Gitter Chat: [![Join the chat at https://gitter.im/PlagueHO/LabBuilder](https://badges.gitter.im/PlagueHO/LabBuilder.svg)](https://gitter.im/PlagueHO/LabBuilder?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+| Branch | AzurePipelines CI | AppVeyor CI | Code Coverage |
+| --- | --- | --- | --- | --- |
+| dev | [![ap-image-dev][]][ap-site-dev] | [![av-image-dev][]][av-site-dev] | [![cc-image-dev][]][cc-site-dev] |
+| master | [![ap-image-master][]][ap-site-master] | [![av-image-master][]][av-site-master] | [![cc-image-master][]][cc-site-master] |
+
+[ap-image-dev]: https://dev.azure.com/dscottraynsford/GitHub/_apis/build/status/PlagueHO.CosmosDB?branchName=dev
+[ap-site-dev]: https://dev.azure.com/dscottraynsford/GitHub/_build/latest?definitionId=4
+[av-image-dev]: https://ci.appveyor.com/api/projects/status/rcg7xmm97qhg2bjr/branch/dev?svg=true
+[av-site-dev]: https://ci.appveyor.com/project/PlagueHO/labbuilder/branch/master
+[cc-image-dev]: https://codecov.io/gh/PlagueHO/LabBuilder/branch/dev/graph/badge.svg
+[cc-site-dev]: https://codecov.io/gh/PlagueHO/LabBuilder/branch/dev
+
+[ap-image-master]: https://dev.azure.com/dscottraynsford/GitHub/_apis/build/status/PlagueHO.CosmosDB?branchName=master
+[ap-site-master]: https://dev.azure.com/dscottraynsford/GitHub/_build/latest?definitionId=4
+[av-image-master]: https://ci.appveyor.com/api/projects/status/rcg7xmm97qhg2bjr/branch/master?svg=true
+[av-site-master]: https://ci.appveyor.com/project/PlagueHO/labbuilder/branch/master
+[cc-image-master]: https://codecov.io/gh/PlagueHO/LabBuilder/branch/master/graph/badge.svg
+[cc-site-master]: https://codecov.io/gh/PlagueHO/LabBuilder/branch/master
 
 ## Summary
 
