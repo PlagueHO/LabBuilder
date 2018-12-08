@@ -9,7 +9,7 @@
 ## Module Build Status
 
 | Branch | AzurePipelines CI | AppVeyor CI | Code Coverage |
-| --- | --- | --- | --- | --- |
+| --- | --- | --- | --- |
 | dev | [![ap-image-dev][]][ap-site-dev] | [![av-image-dev][]][av-site-dev] | [![cc-image-dev][]][cc-site-dev] |
 | master | [![ap-image-master][]][ap-site-master] | [![av-image-master][]][av-site-master] | [![cc-image-master][]][cc-site-master] |
 
