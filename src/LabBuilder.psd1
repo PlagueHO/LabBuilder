@@ -3,7 +3,7 @@
     RootModule            = 'LabBuilder.psm1'
 
     # Version number of this module.
-    ModuleVersion         = '1.0.0.0'
+    ModuleVersion         = '1.0.0.6'
 
     # Supported PSEditions
     CompatiblePSEditions  = @('PSEdition_Desktop')
@@ -112,7 +112,7 @@
 
             # ReleaseNotes of this module
             ReleaseNotes = '
-            ## What is New in LabBuilder Unreleased
+            ## What is New in LabBuilder 1.0.0.6
 
             December 8, 2018
 
