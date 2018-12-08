@@ -1,0 +1,440 @@
+[
+    {
+        "MemoryStartupBytes":  2147483648,
+        "DynamicMemoryEnabled":  false,
+        "ExposeVirtualizationExtensions":  true,
+        "UseDifferencingDisk":  true,
+        "Timezone":  "Pacific Standard Time",
+        "OSType":  1,
+        "Generation":  2,
+        "Version":  "8.0",
+        "IntegrationServices":  [
+                                    "Guest Service Interface,Heartbeat,Key-Value Pair Exchange,Shutdown,Time Synchronization,VSS"
+                                ],
+        "CertificateSource":  2,
+        "Name":  "TestLab PESTER011",
+        "Template":  "Pester Windows Server 2012 R2 Datacenter Full",
+        "ComputerName":  "PESTER011",
+        "ProcessorCount":  1,
+        "ParentVHD":  "C:\\Pester Lab\\Virtual Hard Disk Templates\\Windows Server 2012 R2 Datacenter Full.vhdx",
+        "AdministratorPassword":  "Something",
+        "ProductKey":  "DDDDD-DDDDD-DDDDD-DDDDD-DDDDD",
+        "UnattendFile":  "",
+        "SetupComplete":  "",
+        "Packages":  [
+                         "WMF5.1-WS2012R2-W81"
+                     ],
+        "BootOrder":  9,
+        "Adapters":  [
+                         {
+                             "Name":  "External",
+                             "SwitchName":  "External",
+                             "MACAddress":  "00155D010801",
+                             "MACAddressSpoofing":  false,
+                             "Vlan":  0,
+                             "IPv4":  null,
+                             "IPv6":  null
+                         },
+                         {
+                             "Name":  "TestLab Private Vlan",
+                             "SwitchName":  "TestLab Private Vlan",
+                             "MACAddress":  "00155D010901",
+                             "MACAddressSpoofing":  false,
+                             "Vlan":  2,
+                             "IPv4":  {
+                                          "Address":  "192.168.16.1",
+                                          "DefaultGateway":  "",
+                                          "SubnetMask":  24,
+                                          "DNSServer":  "192.168.16.1"
+                                      },
+                             "IPv6":  {
+                                          "Address":  "fd53:ccc5:895a::1",
+                                          "DefaultGateway":  "",
+                                          "SubnetMask":  64,
+                                          "DNSServer":  "fd53:ccc5:895a:0000::1"
+                                      }
+                         },
+                         {
+                             "Name":  "TestLab Internal Vlan",
+                             "SwitchName":  "TestLab Internal Vlan",
+                             "MACAddress":  "00155D011001",
+                             "MACAddressSpoofing":  true,
+                             "Vlan":  3,
+                             "IPv4":  {
+                                          "Address":  "192.168.17.1",
+                                          "DefaultGateway":  "",
+                                          "SubnetMask":  24,
+                                          "DNSServer":  "192.168.17.1"
+                                      },
+                             "IPv6":  {
+                                          "Address":  "fd53:ccc5:895a:1::1",
+                                          "DefaultGateway":  "",
+                                          "SubnetMask":  64,
+                                          "DNSServer":  "fd53:ccc5:895a:0001::1"
+                                      }
+                         },
+                         {
+                             "Name":  "TestLab Private",
+                             "SwitchName":  "TestLab Private",
+                             "MACAddress":  "00155D011101",
+                             "MACAddressSpoofing":  false,
+                             "Vlan":  3,
+                             "IPv4":  {
+                                          "Address":  "192.168.18.1",
+                                          "DefaultGateway":  "",
+                                          "SubnetMask":  24,
+                                          "DNSServer":  "192.168.18.1"
+                                      },
+                             "IPv6":  {
+                                          "Address":  "fd53:ccc5:895a:2::1",
+                                          "DefaultGateway":  "",
+                                          "SubnetMask":  64,
+                                          "DNSServer":  "fd53:ccc5:895a:0002::1"
+                                      }
+                         },
+                         {
+                             "Name":  "TestLab Internal",
+                             "SwitchName":  "TestLab Internal",
+                             "MACAddress":  "00155D011201",
+                             "MACAddressSpoofing":  false,
+                             "Vlan":  4,
+                             "IPv4":  {
+                                          "Address":  "192.168.19.1",
+                                          "DefaultGateway":  "",
+                                          "SubnetMask":  24,
+                                          "DNSServer":  "192.168.19.1"
+                                      },
+                             "IPv6":  {
+                                          "Address":  "fd53:ccc5:895a:3::1",
+                                          "DefaultGateway":  "",
+                                          "SubnetMask":  64,
+                                          "DNSServer":  "fd53:ccc5:895a:0003::1"
+                                      }
+                         }
+                     ],
+        "DataVHDs":  [
+                         {
+                             "Shared":  false,
+                             "SupportPR":  false,
+                             "VHD":  "C:\\Pester Lab\\TestLab PESTER011\\Virtual Hard Disks\\DataDiskCopy.vhdx",
+                             "VHDType":  0,
+                             "Size":  0,
+                             "SourceVHD":  "Intentionally Removed",
+                             "ParentVHD":  "Intentionally Removed",
+                             "MoveSourceVHD":  false,
+                             "CopyFolders":  "isofiles",
+                             "FileSystem":  0,
+                             "PartitionStyle":  0,
+                             "FileSystemLabel":  null
+                         },
+                         {
+                             "Shared":  false,
+                             "SupportPR":  false,
+                             "VHD":  "C:\\Pester Lab\\TestLab PESTER011\\Virtual Hard Disks\\DataDiskFixed.vhdx",
+                             "VHDType":  1,
+                             "Size":  10737418240,
+                             "SourceVHD":  "Intentionally Removed",
+                             "ParentVHD":  "Intentionally Removed",
+                             "MoveSourceVHD":  false,
+                             "CopyFolders":  null,
+                             "FileSystem":  3,
+                             "PartitionStyle":  1,
+                             "FileSystemLabel":  null
+                         },
+                         {
+                             "Shared":  false,
+                             "SupportPR":  false,
+                             "VHD":  "C:\\Pester Lab\\TestLab PESTER011\\Virtual Hard Disks\\DataDiskDynamic.vhdx",
+                             "VHDType":  2,
+                             "Size":  10737418240,
+                             "SourceVHD":  "Intentionally Removed",
+                             "ParentVHD":  "Intentionally Removed",
+                             "MoveSourceVHD":  false,
+                             "CopyFolders":  null,
+                             "FileSystem":  3,
+                             "PartitionStyle":  2,
+                             "FileSystemLabel":  "ToolsDisk"
+                         },
+                         {
+                             "Shared":  false,
+                             "SupportPR":  false,
+                             "VHD":  "C:\\Pester Lab\\TestLab PESTER011\\Virtual Hard Disks\\DataDiskDifferencing.vhdx",
+                             "VHDType":  3,
+                             "Size":  10737418240,
+                             "SourceVHD":  "Intentionally Removed",
+                             "ParentVHD":  "Intentionally Removed",
+                             "MoveSourceVHD":  false,
+                             "CopyFolders":  null,
+                             "FileSystem":  0,
+                             "PartitionStyle":  0,
+                             "FileSystemLabel":  null
+                         },
+                         {
+                             "Shared":  false,
+                             "SupportPR":  false,
+                             "VHD":  "C:\\Pester Lab\\TestLab PESTER011\\Virtual Hard Disks\\DataDiskMove.vhdx",
+                             "VHDType":  0,
+                             "Size":  0,
+                             "SourceVHD":  "Intentionally Removed",
+                             "ParentVHD":  "Intentionally Removed",
+                             "MoveSourceVHD":  true,
+                             "CopyFolders":  null,
+                             "FileSystem":  0,
+                             "PartitionStyle":  0,
+                             "FileSystemLabel":  null
+                         },
+                         {
+                             "Shared":  true,
+                             "SupportPR":  true,
+                             "VHD":  "C:\\Pester Lab\\TestLab PESTER011\\Virtual Hard Disks\\DataDiskShared.vhdx",
+                             "VHDType":  1,
+                             "Size":  10737418240,
+                             "SourceVHD":  "Intentionally Removed",
+                             "ParentVHD":  "Intentionally Removed",
+                             "MoveSourceVHD":  false,
+                             "CopyFolders":  null,
+                             "FileSystem":  0,
+                             "PartitionStyle":  0,
+                             "FileSystemLabel":  null
+                         }
+                     ],
+        "DVDDrives":  [
+                          {
+                              "ISO":  "SQL2012_FULL_ENU",
+                              "Path":  "C:\\Pester Lab\\Resource\\isofiles\\SQLFULL_ENU.iso"
+                          },
+                          {
+                              "ISO":  null,
+                              "Path":  null
+                          }
+                      ],
+        "DSC":  {
+                    "Logging":  true,
+                    "ConfigName":  "STANDALONE_DEFAULT",
+                    "ConfigFile":  "",
+                    "Parameters":  "\r\n          Dummy = \"Dummy\"\r\n        "
+                },
+        "VMRootPath":  "C:\\Pester Lab\\TestLab PESTER011",
+        "LabBuilderFilesPath":  "C:\\Pester Lab\\TestLab PESTER011\\LabBuilder Files",
+        "NanoODJPath":  ""
+    },
+    {
+        "MemoryStartupBytes":  2147483648,
+        "DynamicMemoryEnabled":  false,
+        "ExposeVirtualizationExtensions":  true,
+        "UseDifferencingDisk":  true,
+        "Timezone":  "Pacific Standard Time",
+        "OSType":  1,
+        "Generation":  2,
+        "Version":  "8.0",
+        "IntegrationServices":  [
+                                    "Guest Service Interface,Heartbeat,Key-Value Pair Exchange,Shutdown,Time Synchronization,VSS"
+                                ],
+        "CertificateSource":  2,
+        "Name":  "TestLab PESTER012",
+        "Template":  "Pester Windows Server 2012 R2 Datacenter Full",
+        "ComputerName":  "PESTER012",
+        "ProcessorCount":  1,
+        "ParentVHD":  "C:\\Pester Lab\\Virtual Hard Disk Templates\\Windows Server 2012 R2 Datacenter Full.vhdx",
+        "AdministratorPassword":  "Something",
+        "ProductKey":  "DDDDD-DDDDD-DDDDD-DDDDD-DDDDD",
+        "UnattendFile":  "",
+        "SetupComplete":  "",
+        "Packages":  [
+                         "WMF5.1-WS2012R2-W81"
+                     ],
+        "BootOrder":  9,
+        "Adapters":  [
+                         {
+                             "Name":  "External",
+                             "SwitchName":  "External",
+                             "MACAddress":  "00155D010802",
+                             "MACAddressSpoofing":  false,
+                             "Vlan":  0,
+                             "IPv4":  null,
+                             "IPv6":  null
+                         },
+                         {
+                             "Name":  "TestLab Private Vlan",
+                             "SwitchName":  "TestLab Private Vlan",
+                             "MACAddress":  "00155D010902",
+                             "MACAddressSpoofing":  false,
+                             "Vlan":  2,
+                             "IPv4":  {
+                                          "Address":  "192.168.16.2",
+                                          "DefaultGateway":  "",
+                                          "SubnetMask":  24,
+                                          "DNSServer":  "192.168.16.1"
+                                      },
+                             "IPv6":  {
+                                          "Address":  "fd53:ccc5:895a::2",
+                                          "DefaultGateway":  "",
+                                          "SubnetMask":  64,
+                                          "DNSServer":  "fd53:ccc5:895a:0000::1"
+                                      }
+                         },
+                         {
+                             "Name":  "TestLab Internal Vlan",
+                             "SwitchName":  "TestLab Internal Vlan",
+                             "MACAddress":  "00155D011002",
+                             "MACAddressSpoofing":  true,
+                             "Vlan":  3,
+                             "IPv4":  {
+                                          "Address":  "192.168.17.2",
+                                          "DefaultGateway":  "",
+                                          "SubnetMask":  24,
+                                          "DNSServer":  "192.168.17.1"
+                                      },
+                             "IPv6":  {
+                                          "Address":  "fd53:ccc5:895a:1::2",
+                                          "DefaultGateway":  "",
+                                          "SubnetMask":  64,
+                                          "DNSServer":  "fd53:ccc5:895a:0001::1"
+                                      }
+                         },
+                         {
+                             "Name":  "TestLab Private",
+                             "SwitchName":  "TestLab Private",
+                             "MACAddress":  "00155D011102",
+                             "MACAddressSpoofing":  false,
+                             "Vlan":  3,
+                             "IPv4":  {
+                                          "Address":  "192.168.18.2",
+                                          "DefaultGateway":  "",
+                                          "SubnetMask":  24,
+                                          "DNSServer":  "192.168.18.1"
+                                      },
+                             "IPv6":  {
+                                          "Address":  "fd53:ccc5:895a:2::2",
+                                          "DefaultGateway":  "",
+                                          "SubnetMask":  64,
+                                          "DNSServer":  "fd53:ccc5:895a:0002::1"
+                                      }
+                         },
+                         {
+                             "Name":  "TestLab Internal",
+                             "SwitchName":  "TestLab Internal",
+                             "MACAddress":  "00155D011202",
+                             "MACAddressSpoofing":  false,
+                             "Vlan":  4,
+                             "IPv4":  {
+                                          "Address":  "192.168.19.2",
+                                          "DefaultGateway":  "",
+                                          "SubnetMask":  24,
+                                          "DNSServer":  "192.168.19.1"
+                                      },
+                             "IPv6":  {
+                                          "Address":  "fd53:ccc5:895a:3::2",
+                                          "DefaultGateway":  "",
+                                          "SubnetMask":  64,
+                                          "DNSServer":  "fd53:ccc5:895a:0003::1"
+                                      }
+                         }
+                     ],
+        "DataVHDs":  [
+                         {
+                             "Shared":  false,
+                             "SupportPR":  false,
+                             "VHD":  "C:\\Pester Lab\\TestLab PESTER012\\Virtual Hard Disks\\DataDiskCopy.vhdx",
+                             "VHDType":  0,
+                             "Size":  0,
+                             "SourceVHD":  "Intentionally Removed",
+                             "ParentVHD":  "Intentionally Removed",
+                             "MoveSourceVHD":  false,
+                             "CopyFolders":  "isofiles",
+                             "FileSystem":  0,
+                             "PartitionStyle":  0,
+                             "FileSystemLabel":  null
+                         },
+                         {
+                             "Shared":  false,
+                             "SupportPR":  false,
+                             "VHD":  "C:\\Pester Lab\\TestLab PESTER012\\Virtual Hard Disks\\DataDiskFixed.vhdx",
+                             "VHDType":  1,
+                             "Size":  10737418240,
+                             "SourceVHD":  "Intentionally Removed",
+                             "ParentVHD":  "Intentionally Removed",
+                             "MoveSourceVHD":  false,
+                             "CopyFolders":  null,
+                             "FileSystem":  3,
+                             "PartitionStyle":  1,
+                             "FileSystemLabel":  null
+                         },
+                         {
+                             "Shared":  false,
+                             "SupportPR":  false,
+                             "VHD":  "C:\\Pester Lab\\TestLab PESTER012\\Virtual Hard Disks\\DataDiskDynamic.vhdx",
+                             "VHDType":  2,
+                             "Size":  10737418240,
+                             "SourceVHD":  "Intentionally Removed",
+                             "ParentVHD":  "Intentionally Removed",
+                             "MoveSourceVHD":  false,
+                             "CopyFolders":  null,
+                             "FileSystem":  3,
+                             "PartitionStyle":  2,
+                             "FileSystemLabel":  "ToolsDisk"
+                         },
+                         {
+                             "Shared":  false,
+                             "SupportPR":  false,
+                             "VHD":  "C:\\Pester Lab\\TestLab PESTER012\\Virtual Hard Disks\\DataDiskDifferencing.vhdx",
+                             "VHDType":  3,
+                             "Size":  10737418240,
+                             "SourceVHD":  "Intentionally Removed",
+                             "ParentVHD":  "Intentionally Removed",
+                             "MoveSourceVHD":  false,
+                             "CopyFolders":  null,
+                             "FileSystem":  0,
+                             "PartitionStyle":  0,
+                             "FileSystemLabel":  null
+                         },
+                         {
+                             "Shared":  false,
+                             "SupportPR":  false,
+                             "VHD":  "C:\\Pester Lab\\TestLab PESTER012\\Virtual Hard Disks\\DataDiskMove.vhdx",
+                             "VHDType":  0,
+                             "Size":  0,
+                             "SourceVHD":  "Intentionally Removed",
+                             "ParentVHD":  "Intentionally Removed",
+                             "MoveSourceVHD":  true,
+                             "CopyFolders":  null,
+                             "FileSystem":  0,
+                             "PartitionStyle":  0,
+                             "FileSystemLabel":  null
+                         },
+                         {
+                             "Shared":  true,
+                             "SupportPR":  true,
+                             "VHD":  "C:\\Pester Lab\\TestLab PESTER012\\Virtual Hard Disks\\DataDiskShared.vhdx",
+                             "VHDType":  1,
+                             "Size":  10737418240,
+                             "SourceVHD":  "Intentionally Removed",
+                             "ParentVHD":  "Intentionally Removed",
+                             "MoveSourceVHD":  false,
+                             "CopyFolders":  null,
+                             "FileSystem":  0,
+                             "PartitionStyle":  0,
+                             "FileSystemLabel":  null
+                         }
+                     ],
+        "DVDDrives":  [
+                          {
+                              "ISO":  "SQL2012_FULL_ENU",
+                              "Path":  "C:\\Pester Lab\\Resource\\isofiles\\SQLFULL_ENU.iso"
+                          },
+                          {
+                              "ISO":  null,
+                              "Path":  null
+                          }
+                      ],
+        "DSC":  {
+                    "Logging":  true,
+                    "ConfigName":  "STANDALONE_DEFAULT",
+                    "ConfigFile":  "",
+                    "Parameters":  "\r\n          Dummy = \"Dummy\"\r\n        "
+                },
+        "VMRootPath":  "C:\\Pester Lab\\TestLab PESTER012",
+        "LabBuilderFilesPath":  "C:\\Pester Lab\\TestLab PESTER012\\LabBuilder Files",
+        "NanoODJPath":  ""
+    }
+]

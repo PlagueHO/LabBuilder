@@ -1,0 +1,82 @@
+name: $(rev:r)
+jobs:
+  - job: Build_PS_Win2016
+    pool:
+      vmImage: vs2017-win2016
+
+    steps:
+    - checkout: self
+      persistCredentials: true
+
+    - powershell: |
+        .\build.ps1 -TaskList Test -Verbose
+      displayName: 'Execute Tests'
+      env:
+        azureApplicationId: $(azureApplicationId)
+        azureApplicationPassword: $(azureApplicationPassword)
+        azureSubscriptionId: $(azureSubscriptionId)
+        azureTenantId: $(azureTenantId)
+        githubRepoToken: $(githubRepoToken)
+
+    - task: PublishTestResults@2
+      inputs:
+        testRunner: 'NUnit'
+        testResultsFiles: '**/Unit/TestResults.unit.xml'
+        testRunTitle: 'PS_Win2016_Unit'
+      displayName: 'Publish Unit Test Results'
+      condition: in(variables['Agent.JobStatus'], 'Succeeded', 'SucceededWithIssues', 'Failed')
+
+    - task: PublishCodeCoverageResults@1
+      inputs:
+        summaryFileLocation: '**/Unit/CodeCoverage.xml'
+        failIfCoverageEmpty: true
+      displayName: 'Publish Unit Test Code Coverage'
+      condition: and(in(variables['Agent.JobStatus'], 'Succeeded', 'SucceededWithIssues', 'Failed'), eq(variables['System.PullRequest.IsFork'], false))
+
+    - task: PublishTestResults@2
+      inputs:
+        testRunner: 'NUnit'
+        testResultsFiles: '**/Integration/TestResults.integration.xml'
+        testRunTitle: 'PS_Win2016_Integration'
+      displayName: 'Publish Integration Test Results'
+      condition: in(variables['Agent.JobStatus'], 'Succeeded', 'SucceededWithIssues', 'Failed')
+
+    - powershell: |
+        .\build.ps1 -TaskList Build -Verbose
+      displayName: 'Build and Stage Module'
+      env:
+        azureApplicationId: $(azureApplicationId)
+        azureApplicationPassword: $(azureApplicationPassword)
+        azureSubscriptionId: $(azureSubscriptionId)
+        azureTenantId: $(azureTenantId)
+        githubRepoToken: $(githubRepoToken)
+
+    - task: PublishBuildArtifacts@1
+      inputs:
+        pathtoPublish: 'staging/LabBuilder'
+        artifactName: 'LabBuilder'
+      displayName: 'Publish Module'
+
+    - task: PublishBuildArtifacts@1
+      inputs:
+        pathtoPublish: 'staging/zip'
+        artifactName: 'zip'
+      displayName: 'Publish Module Zip'
+
+    - task: PublishBuildArtifacts@1
+      inputs:
+        pathtoPublish: 'psakefile.ps1'
+        artifactName: 'scripts'
+      displayName: 'Publish PSake File'
+
+    - task: PublishBuildArtifacts@1
+      inputs:
+        pathtoPublish: 'LabBuilder.depend.psd1'
+        artifactName: 'scripts'
+      displayName: 'Publish PSDepend File'
+
+    - task: PublishBuildArtifacts@1
+      inputs:
+        pathtoPublish: 'psake.ps1'
+        artifactName: 'scripts'
+      displayName: 'Publish Psake Bootstrap File'

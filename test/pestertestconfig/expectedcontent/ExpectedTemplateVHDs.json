@@ -1,0 +1,92 @@
+[
+    {
+        "OSType":  1,
+        "Generation":  2,
+        "VHDFormat":  2,
+        "VHDType":  2,
+        "VHDSize":  42949672960,
+        "Name":  "Windows Server 2012 R2 Datacenter Full",
+        "ISOPath":  "Intentionally Removed",
+        "VHDPath":  "Intentionally Removed",
+        "Edition":  "Windows Server 2012 R2 SERVERDATACENTER",
+        "Packages":  [
+                         "WMF5.1-WS2012R2-W81"
+                     ],
+        "Features":  null
+    },
+    {
+        "OSType":  1,
+        "Generation":  2,
+        "VHDFormat":  2,
+        "VHDType":  2,
+        "VHDSize":  26843545600,
+        "Name":  "Windows Server 2012 R2 Datacenter Core",
+        "ISOPath":  "Intentionally Removed",
+        "VHDPath":  "Intentionally Removed",
+        "Edition":  "Windows Server 2012 R2 SERVERDATACENTERCORE",
+        "Packages":  [
+                         "WMF5.1-WS2012R2-W81"
+                     ],
+        "Features":  null
+    },
+    {
+        "OSType":  1,
+        "Generation":  2,
+        "VHDFormat":  2,
+        "VHDType":  2,
+        "VHDSize":  42949672960,
+        "Name":  "Windows Server 2016 Datacenter Full",
+        "ISOPath":  "Intentionally Removed",
+        "VHDPath":  "Intentionally Removed",
+        "Edition":  "Windows Server 2016 SERVERDATACENTER",
+        "Packages":  [
+                         "WMF5.1-WS2012R2-W81"
+                     ],
+        "Features":  null
+    },
+    {
+        "OSType":  1,
+        "Generation":  2,
+        "VHDFormat":  2,
+        "VHDType":  2,
+        "VHDSize":  26843545600,
+        "Name":  "Windows Server 2016 Datacenter Core",
+        "ISOPath":  "Intentionally Removed",
+        "VHDPath":  "Intentionally Removed",
+        "Edition":  "Windows Server 2016 SERVERDATACENTERCORE",
+        "Packages":  [
+                         "WMF5.1-WS2012R2-W81"
+                     ],
+        "Features":  null
+    },
+    {
+        "OSType":  3,
+        "Generation":  2,
+        "VHDFormat":  2,
+        "VHDType":  2,
+        "VHDSize":  26843545600,
+        "Name":  "Windows 10 Enterprise",
+        "ISOPath":  "Intentionally Removed",
+        "VHDPath":  "Intentionally Removed",
+        "Edition":  "Windows 10 Enterprise",
+        "Packages":  [
+                         "RSAT-W10"
+                     ],
+        "Features":  null
+    },
+    {
+        "OSType":  2,
+        "Generation":  2,
+        "VHDFormat":  2,
+        "VHDType":  2,
+        "VHDSize":  26843545600,
+        "Name":  "Nano Server 2016 Datacenter",
+        "ISOPath":  "Intentionally Removed",
+        "VHDPath":  "Intentionally Removed",
+        "Edition":  "Windows Server 2016 SERVERDATACENTERNANO",
+        "Packages":  [
+                         "Microsoft-NanoServer-Guest-Package.cab"
+                     ],
+        "Features":  null
+    }
+]

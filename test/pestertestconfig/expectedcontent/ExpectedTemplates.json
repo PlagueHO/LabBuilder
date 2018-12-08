@@ -1,0 +1,94 @@
+[
+    {
+        "MemoryStartupBytes":  1073741824,
+        "DynamicMemoryEnabled":  true,
+        "ExposeVirtualizationExtensions":  false,
+        "ProcessorCount":  1,
+        "Timezone":  "Pacific Standard Time",
+        "OSType":  1,
+        "IntegrationServices":  [
+                                    "Guest Service Interface,Heartbeat,Key-Value Pair Exchange,Shutdown,Time Synchronization,VSS"
+                                ],
+        "Generation":  2,
+        "Version":  "8.0",
+        "Name":  "Pester Windows Server 2012 R2 Datacenter Full",
+        "VHD":  "Windows Server 2012 R2 Datacenter Full.vhdx",
+        "SourceVHD":  "Intentionally Removed",
+        "ParentVHD":  "C:\\Pester Lab\\Virtual Hard Disk Templates\\Windows Server 2012 R2 Datacenter Full.vhdx",
+        "TemplateVHD":  null,
+        "AdministratorPassword":  "None",
+        "ProductKey":  "AAAAA-AAAAA-AAAAA-AAAAA-AAAAA",
+        "Packages":  [
+                         "WMF5.1-WS2012R2-W81"
+                     ]
+    },
+    {
+        "MemoryStartupBytes":  1073741824,
+        "DynamicMemoryEnabled":  false,
+        "ExposeVirtualizationExtensions":  true,
+        "ProcessorCount":  1,
+        "Timezone":  "Pacific Standard Time",
+        "OSType":  1,
+        "IntegrationServices":  [
+                                    "Guest Service Interface,Heartbeat,Key-Value Pair Exchange,Shutdown,Time Synchronization,VSS"
+                                ],
+        "Generation":  2,
+        "Version":  "8.0",
+        "Name":  "Pester Windows Server 2012 R2 Datacenter Core",
+        "VHD":  "Windows Server 2012 R2 Datacenter Core.vhdx",
+        "SourceVHD":  "Intentionally Removed",
+        "ParentVHD":  "C:\\Pester Lab\\Virtual Hard Disk Templates\\Windows Server 2012 R2 Datacenter Core.vhdx",
+        "TemplateVHD":  null,
+        "AdministratorPassword":  "None",
+        "ProductKey":  "BBBBB-BBBBB-BBBBB-BBBBB-BBBBB",
+        "Packages":  [
+                         "WMF5.1-WS2012R2-W81"
+                     ]
+    },
+    {
+        "MemoryStartupBytes":  2147483648,
+        "DynamicMemoryEnabled":  true,
+        "ExposeVirtualizationExtensions":  false,
+        "ProcessorCount":  1,
+        "Timezone":  "Pacific Standard Time",
+        "OSType":  3,
+        "IntegrationServices":  [
+                                    "Guest Service Interface,Heartbeat,Key-Value Pair Exchange,Shutdown,Time Synchronization,VSS"
+                                ],
+        "Generation":  2,
+        "Version":  "8.0",
+        "Name":  "Pester Windows 10 Enterprise",
+        "VHD":  "Windows 10 Enterprise.vhdx",
+        "SourceVHD":  "Intentionally Removed",
+        "ParentVHD":  "C:\\Pester Lab\\Virtual Hard Disk Templates\\Windows 10 Enterprise.vhdx",
+        "TemplateVHD":  null,
+        "AdministratorPassword":  "None",
+        "ProductKey":  "CCCCC-CCCCC-CCCCC-CCCCC-CCCCC",
+        "Packages":  [
+                         "RSAT-W10"
+                     ]
+    },
+    {
+        "MemoryStartupBytes":  1073741824,
+        "DynamicMemoryEnabled":  true,
+        "ExposeVirtualizationExtensions":  false,
+        "ProcessorCount":  1,
+        "Timezone":  "Pacific Standard Time",
+        "OSType":  2,
+        "IntegrationServices":  [
+                                    "Guest Service Interface,Heartbeat,Key-Value Pair Exchange,Shutdown,Time Synchronization,VSS"
+                                ],
+        "Generation":  2,
+        "Version":  "8.0",
+        "Name":  "Pester Nano Server",
+        "VHD":  "MyNanoServerVHD.vhdx",
+        "SourceVHD":  "Intentionally Removed",
+        "ParentVHD":  "C:\\Pester Lab\\Virtual Hard Disk Templates\\MyNanoServerVHD.vhdx",
+        "TemplateVHD":  null,
+        "AdministratorPassword":  "None",
+        "ProductKey":  null,
+        "Packages":  [
+                         "Storage"
+                     ]
+    }
+]

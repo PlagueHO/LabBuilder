@@ -1,0 +1,252 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<labbuilderconfig xmlns="labbuilderconfig"
+                  name="PesterTestConfig"
+                  version="1.0">
+  <description>Configuration File Used with Pester Tests</description>
+
+  <settings labid="TestLab "
+            domainname="PESTER.LOCAL"
+            email="tester@pester.local"
+            labpath="C:\Pester Lab"
+            vhdparentpath="C:\Pester Lab\Virtual Hard Disk Templates"
+            dsclibrarypath="DSCLibrary"
+            resourcepath="Resource"
+            modulepath="Modules"
+            dismpath="C:\dism"
+            requiredwindowsbuild="10560" />
+
+  <resources isopath="isofiles">
+    <module name="NetworkingDsc" url="https://github.com/PlagueHO/NetworkingDsc/archive/dev.zip" folder="NetworkingDsc-dev" />
+    <module name="xActiveDirectory" />
+    <module name="xExchange" minimumversion="1.3.0.0" />
+    <module name="xDNSServer" requiredversion="1.2.0.0" />
+    <msu name="WMF5.1-WS2012R2-W81"
+         url="https://download.microsoft.com/download/6/F/5/6F5FF66C-6775-42B0-86C4-47D41F2DA187/W2K12-KB3191565-x64.msu" />
+    <msu name="RSAT-W10"
+         url="http://download.microsoft.com/download/1/D/8/1D8B5022-5477-4B9A-8104-6A71FF9D98AB/WindowsTH-KB2693643-x64.msu" />
+    <iso name="SQL2014SP1_FULL_ENU"
+         path="SQLServer2014SP1-FullSlipstream-x64-ENU.iso"
+         url="https://www.microsoft.com/en-us/evalcenter/evaluate-sql-server-2014" />
+    <iso name="SQL2012_FULL_ENU"
+          path="SQLFULL_ENU.iso"
+          url="https://download.microsoft.com/download/4/C/7/4C7D40B9-BCF8-4F8A-9E76-06E9B92FE5AE/ENU/SQLFULL_ENU.iso" />
+           </resources>
+
+  <switches>
+    <switch name="External" type="External" bindingadaptername="Ethernet">
+      <adapters>
+        <adapter name="Cluster" macaddress="00155D010701" vlan="5"/>
+        <adapter name="Management" macaddress="00155D010702" vlan="6"/>
+        <adapter name="SMB" macaddress="00155D010703" />
+        <adapter name="LM" macaddress="00155D010704" />
+      </adapters>
+    </switch>
+    <switch name="Private Vlan" type="Private" vlan="2" />
+    <switch name="Private" type="Private" />
+    <switch name="Internal Vlan" type="Internal" vlan="3" />
+    <switch name="Internal" type="Internal" />
+    <switch name="NAT" type="NAT" natsubnet="192.168.22.0/24" natgatewayaddress="192.168.22.1"/>
+  </switches>
+
+  <templatevhds isopath="isofiles"
+                vhdpath="vhdfiles"
+                prefix="" >
+    <templatevhd name="Windows Server 2012 R2 Datacenter Full"
+                 iso="9600.17050.WINBLUE_REFRESH.140317-1640_X64FRE_SERVER_EVAL_EN-US-IR3_SSS_X64FREE_EN-US_DV9.iso"
+                 url="https://www.microsoft.com/en-us/evalcenter/evaluate-windows-server-2012-r2"
+                 vhd="Windows Server 2012 R2 Datacenter Full.vhdx"
+                 edition="Windows Server 2012 R2 SERVERDATACENTER"
+                 ostype="Server"
+                 packages="WMF5.1-WS2012R2-W81"
+                 vhdformat="vhdx"
+                 vhdtype="dynamic"
+                 generation="2"
+                 vhdsize="40GB" />
+    <templatevhd name="Windows Server 2012 R2 Datacenter Core"
+                 iso="9600.17050.WINBLUE_REFRESH.140317-1640_X64FRE_SERVER_EVAL_EN-US-IR3_SSS_X64FREE_EN-US_DV9.iso"
+                 url="https://www.microsoft.com/en-us/evalcenter/evaluate-windows-server-2012-r2"
+                 vhd="Windows Server 2012 R2 Datacenter Core.vhdx"
+                 edition="Windows Server 2012 R2 SERVERDATACENTERCORE"
+                 ostype="Server"
+                 packages="WMF5.1-WS2012R2-W81"
+                 vhdformat="vhdx"
+                 vhdtype="dynamic"
+                 generation="2"
+                 vhdsize="25GB" />
+    <templatevhd name="Windows Server 2016 Datacenter Full"
+                 iso="14393.0.161119-1705.RS1_REFRESH_SERVER_EVAL_X64FRE_EN-US.ISO"
+                 url="https://www.microsoft.com/en-us/evalcenter/evaluate-windows-server-2016"
+                 vhd="Windows Server 2016 Datacenter Full.vhdx"
+                 edition="Windows Server 2016 SERVERDATACENTER"
+                 ostype="Server"
+                 vhdformat="vhdx"
+                 vhdtype="dynamic"
+                 generation="2"
+                 vhdsize="40GB" />
+    <templatevhd name="Windows Server 2016 Datacenter Core"
+                 iso="14393.0.161119-1705.RS1_REFRESH_SERVER_EVAL_X64FRE_EN-US.ISO"
+                 url="https://www.microsoft.com/en-us/evalcenter/evaluate-windows-server-2016"
+                 vhd="Windows Server 2016 Datacenter Core.vhdx"
+                 edition="Windows Server 2016 SERVERDATACENTERCORE"
+                 ostype="Server"
+                 vhdformat="vhdx"
+                 vhdtype="dynamic"
+                 generation="2"
+                 vhdsize="25GB" />
+    <templatevhd name="Windows 10 Enterprise"
+                 iso="10586.0.151029-1700.TH2_RELEASE_CLIENTENTERPRISEEVAL_OEMRET_X64FRE_EN-US.ISO"
+                 url="https://www.microsoft.com/en-us/evalcenter/evaluate-windows-10-enterprise"
+                 vhd="Windows 10 Enterprise.vhdx"
+                 edition="Windows 10 Enterprise"
+                 ostype="Client"
+                 packages="RSAT-W10"
+                 vhdformat="vhdx"
+                 vhdtype="dynamic"
+                 generation="2"
+                 vhdsize="25GB" />
+    <templatevhd name="Nano Server 2016 Datacenter"
+                 iso="14393.0.161119-1705.RS1_REFRESH_SERVER_EVAL_X64FRE_EN-US.ISO"
+                 url="https://www.microsoft.com/en-us/evalcenter/evaluate-windows-server-2016"
+                 vhd="Nano Server 2016 Datacenter.vhdx"
+                 edition="Windows Server 2016 SERVERDATACENTERNANO"
+                 ostype="Nano"
+                 packages="Microsoft-NanoServer-Guest-Package.cab"
+                 vhdformat="vhdx"
+                 vhdtype="dynamic"
+                 generation="2"
+                 vhdsize="25GB" />
+  </templatevhds>
+
+  <templates>
+    <template name="Pester Windows Server 2012 R2 Datacenter Full"
+              vhd="Windows Server 2012 R2 Datacenter Full.vhdx"
+              sourcevhd="vhdfiles\Windows Server 2012 R2 Datacenter Full.vhdx"
+              memorystartupbytes="1GB"
+              dynamicmemoryenabled="Y"
+              processorcount="1"
+              administratorpassword="None"
+              productkey="AAAAA-AAAAA-AAAAA-AAAAA-AAAAA"
+              timezone="Pacific Standard Time"
+              ostype="Server"
+              packages="WMF5.1-WS2012R2-W81"
+              integrationservices="Guest Service Interface,Heartbeat,Key-Value Pair Exchange,Shutdown,Time Synchronization,VSS" />
+    <template name="Pester Windows Server 2012 R2 Datacenter Core"
+              vhd="Windows Server 2012 R2 Datacenter Core.vhdx"
+              templatevhd="Windows Server 2012 R2 Datacenter Core"
+              memorystartupbytes="1GB"
+              dynamicmemoryenabled="N"
+              processorcount="1"
+              exposevirtualizationextensions="Y"
+              administratorpassword="None"
+              productkey="BBBBB-BBBBB-BBBBB-BBBBB-BBBBB"
+              timezone="Pacific Standard Time"
+              ostype="Server"
+              packages="WMF5.1-WS2012R2-W81"
+              integrationservices="Guest Service Interface,Heartbeat,Key-Value Pair Exchange,Shutdown,Time Synchronization,VSS" />
+    <template name="Pester Windows 10 Enterprise"
+              templatevhd="Windows 10 Enterprise"
+              memorystartupbytes="2GB"
+              processorcount="1"
+              administratorpassword="None"
+              productkey="CCCCC-CCCCC-CCCCC-CCCCC-CCCCC"
+              timezone="Pacific Standard Time"
+              ostype="Client"
+              packages="RSAT-W10"
+              integrationservices="Guest Service Interface,Heartbeat,Key-Value Pair Exchange,Shutdown,Time Synchronization,VSS" />
+    <template name="Pester Nano Server"
+              vhd="MyNanoServerVHD.vhdx"
+              sourcevhd="vhdfiles\Nano Server 2016 Datacenter.vhdx"
+              memorystartupbytes="1GB"
+              processorcount="1"
+              administratorpassword="None"
+              timezone="Pacific Standard Time"
+              ostype="Nano"
+              integrationservices="Guest Service Interface,Heartbeat,Key-Value Pair Exchange,Shutdown,Time Synchronization,VSS"
+              packages="Storage"/>
+  </templates>
+
+  <vms>
+    <vm name="PESTER01"
+        template="Pester Windows Server 2012 R2 Datacenter Full"
+        computername="PESTER01"
+        memorystartupbytes="2GB"
+        dynamicmemoryenabled="N"
+        exposevirtualizationextensions="Y"
+        usedifferencingdisk="Y"
+        administratorpassword="Something"
+        productkey="DDDDD-DDDDD-DDDDD-DDDDD-DDDDD"
+        timezone="Pacific Standard Time"
+        unattendfile=""
+        setupcomplete=""
+        integrationservices="Guest Service Interface,Heartbeat,Key-Value Pair Exchange,Shutdown,Time Synchronization,VSS"
+        packages=""
+        bootorder="9"
+        certificatesource="Host"
+        instancecount="1" >
+      <datavhds>
+        <datavhd vhd="DataDiskCopy.vhdx" sourcevhd="vhdfiles\DataDisk.vhdx" copyfolders="isofiles" />
+        <datavhd vhd="DataDiskFixed.vhdx" type="fixed" size="10GB" supportpr="N" partitionstyle="MBR" filesystem="NTFS" />
+        <datavhd vhd="DataDiskDynamic.vhdx" type="dynamic" size="10GB" partitionstyle="GPT" filesystem="NTFS" filesystemlabel="ToolsDisk" />
+        <datavhd vhd="DataDiskDifferencing.vhdx" type="differencing" size="10GB" parentvhd="vhdfiles\DataDisk.vhdx" />
+        <datavhd vhd="DataDiskMove.vhdx" sourcevhd="vhdfiles\DataDisk.vhdx" movesourcevhd="Y" />
+        <datavhd vhd="DataDiskShared.vhdx" type="fixed" size="10GB" shared="Y" supportpr="Y" />
+      </datavhds>
+      <dvddrives>
+        <dvddrive iso="SQL2012_FULL_ENU" />
+        <dvddrive/>
+      </dvddrives>
+      <adapters>
+        <adapter name="External" switchname="External" macaddress="00155D010801" />
+        <adapter name="Private Vlan" switchname="Private Vlan" macaddress="00155D010901" macaddressspoofing="Y" >
+          <ipv4 address="192.168.16.1"
+                defaultgateway=""
+                subnetmask="24"
+                dnsserver="192.168.16.1"/>
+          <ipv6 address="fd53:ccc5:895a:0000::1"
+                defaultgateway=""
+                subnetmask="64"
+                dnsserver="fd53:ccc5:895a:0000::1"/>
+        </adapter>
+        <adapter name="Internal Vlan" switchname="Internal Vlan" macaddress="00155D011001" macaddressspoofing="On">
+          <ipv4 address="192.168.17.1"
+                defaultgateway=""
+                subnetmask="24"
+                dnsserver="192.168.17.1"/>
+          <ipv6 address="fd53:ccc5:895a:0001::1"
+                defaultgateway=""
+                subnetmask="64"
+                dnsserver="fd53:ccc5:895a:0001::1"/>
+        </adapter>
+        <adapter name="Private" switchname="Private" macaddress="00155D011101" vlan="3" >
+          <ipv4 address="192.168.18.1"
+                defaultgateway=""
+                subnetmask="24"
+                dnsserver="192.168.18.1"/>
+          <ipv6 address="fd53:ccc5:895a:0002::1"
+                defaultgateway=""
+                subnetmask="64"
+                dnsserver="fd53:ccc5:895a:0002::1"/>
+        </adapter>
+        <adapter name="Internal" switchname="Internal" macaddress="00155D011201" vlan="4" >
+          <ipv4 address="192.168.19.1"
+                defaultgateway=""
+                subnetmask="24"
+                dnsserver="192.168.19.1"/>
+          <ipv6 address="fd53:ccc5:895a:0003::1"
+                defaultgateway=""
+                subnetmask="64"
+                dnsserver="fd53:ccc5:895a:0003::1"/>
+        </adapter>
+      </adapters>
+      <dsc configname="STANDALONE_DEFAULT"
+           configfile="PesterTest.DSC.ps1"
+           logging="Y">
+        <parameters>
+          Dummy = "Dummy"
+        </parameters>
+      </dsc>
+    </vm>
+  </vms>
+
+</labbuilderconfig>

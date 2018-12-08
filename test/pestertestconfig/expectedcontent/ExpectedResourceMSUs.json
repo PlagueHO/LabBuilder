@@ -1,0 +1,14 @@
+[
+    {
+        "Name":  "WMF5.1-WS2012R2-W81",
+        "URL":  "https://download.microsoft.com/download/6/F/5/6F5FF66C-6775-42B0-86C4-47D41F2DA187/W2K12-KB3191565-x64.msu",
+        "Path":  "C:\\Pester Lab\\Resource",
+        "Filename":  "C:\\Pester Lab\\Resource\\W2K12-KB3191565-x64.msu"
+    },
+    {
+        "Name":  "RSAT-W10",
+        "URL":  "http://download.microsoft.com/download/1/D/8/1D8B5022-5477-4B9A-8104-6A71FF9D98AB/WindowsTH-KB2693643-x64.msu",
+        "Path":  "C:\\Pester Lab\\Resource",
+        "Filename":  "C:\\Pester Lab\\Resource\\WindowsTH-KB2693643-x64.msu"
+    }
+]
