@@ -9,13 +9,9 @@ jobs:
       persistCredentials: true
 
     - powershell: |
-        .\build.ps1 -TaskList Test -Verbose
+        .\psake.ps1 -TaskList Test -Verbose
       displayName: 'Execute Tests'
       env:
-        azureApplicationId: $(azureApplicationId)
-        azureApplicationPassword: $(azureApplicationPassword)
-        azureSubscriptionId: $(azureSubscriptionId)
-        azureTenantId: $(azureTenantId)
         githubRepoToken: $(githubRepoToken)
 
     - task: PublishTestResults@2
@@ -42,7 +38,7 @@ jobs:
       condition: in(variables['Agent.JobStatus'], 'Succeeded', 'SucceededWithIssues', 'Failed')
 
     - powershell: |
-        .\build.ps1 -TaskList Build -Verbose
+        .\psake.ps1 -TaskList Build -Verbose
       displayName: 'Build and Stage Module'
       env:
         azureApplicationId: $(azureApplicationId)
