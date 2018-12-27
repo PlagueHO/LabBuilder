@@ -8,6 +8,7 @@ Properties {
         $ProjectRoot = $PSScriptRoot
     }
 
+    $ModuleName = 'LabBuilder'
     $Timestamp = Get-Date -uformat "%Y%m%d-%H%M%S"
     $PSVersion = $PSVersionTable.PSVersion.Major
     $separator = '----------------------------------------------------------------------'
@@ -197,7 +198,7 @@ Task Build -Depends Init {
         -Tags 'Build'
 
     # Generate the next version by adding the build system build number to the manifest version
-    $manifestPath = Join-Path -Path $ProjectRoot -ChildPath 'src/LabBuilder.psd1'
+    $manifestPath = Join-Path -Path $ProjectRoot -ChildPath "src/$ModuleName.psd1"
     $newVersion = Get-VersionNumber `
         -ManifestPath $manifestPath `
         -Build $ENV:BHBuildNumber
@@ -210,7 +211,7 @@ Task Build -Depends Init {
 
     # Determine the folder names for staging the module
     $StagingFolder = Join-Path -Path $ProjectRoot -ChildPath 'staging'
-    $ModuleFolder = Join-Path -Path $StagingFolder -ChildPath 'LabBuilder'
+    $ModuleFolder = Join-Path -Path $StagingFolder -ChildPath $ModuleName
 
     # Determine the folder names for staging the module
     $versionFolder = Join-Path -Path $ModuleFolder -ChildPath $newVersion
@@ -222,8 +223,7 @@ Task Build -Depends Init {
     $null = New-Item -Path $versionFolder -Type directory
 
     # Populate Version Folder
-    $null = Copy-Item -Path (Join-Path -Path $ProjectRoot -ChildPath 'src/LabBuilder.psd1') -Destination $versionFolder
-    $null = Copy-Item -Path (Join-Path -Path $ProjectRoot -ChildPath 'src/LabBuilder.psm1') -Destination $versionFolder
+    $null = Copy-Item -Path (Join-Path -Path $ProjectRoot -ChildPath "src/$ModuleName.psm1") -Destination $versionFolder
     $null = Copy-Item -Path (Join-Path -Path $ProjectRoot -ChildPath 'src/en-US') -Destination $versionFolder -Recurse
     $null = Copy-Item -Path (Join-Path -Path $ProjectRoot -ChildPath 'src/samples') -Destination $VersionFolder -Recurse
     $null = Copy-Item -Path (Join-Path -Path $ProjectRoot -ChildPath 'src/dsclibrary') -Destination $VersionFolder -Recurse
@@ -256,7 +256,7 @@ Task Build -Depends Init {
         Region. Then add the content of the $libFilesStringBuilder string builder
         immediately following the end of the region.
     #>
-    $modulePath = Join-Path -Path $versionFolder -ChildPath 'LabBuilder.psm1'
+    $modulePath = Join-Path -Path $versionFolder -ChildPath "$ModuleName.psm1"
     $moduleContent = Get-Content -Path $modulePath
     $moduleStringBuilder = [System.Text.StringBuilder]::new()
     $importFunctionsRegionFound = $false
@@ -293,13 +293,49 @@ Task Build -Depends Init {
         -OutputPath $versionFolder `
         -Force
 
-    # Set the new version number in the staged Module Manifest
+    # Create the module manifest in the staging folder
     'Updating module manifest'
-    $stagedManifestPath = Join-Path -Path $versionFolder -ChildPath 'LabBuilder.psd1'
-    $stagedManifestContent = Get-Content -Path $stagedManifestPath -Raw
-    $stagedManifestContent = $stagedManifestContent -replace '(?<=ModuleVersion\s+=\s+'')(?<ModuleVersion>.*)(?='')', $newVersion
-    $stagedManifestContent = $stagedManifestContent -replace '## What is New in LabBuilder Unreleased', "## What is New in LabBuilder $newVersion"
-    Set-Content -Path $stagedManifestPath -Value $stagedManifestContent -NoNewLine -Force
+    $stagedManifestPath = Join-Path -Path $versionFolder -ChildPath "$ModuleName.psd1"
+    $tempManifestPath = Join-Path -Path $ENV:Temp -ChildPath "$ModuleName.psd1"
+
+    Import-LocalizedData `
+        -BindingVariable 'stagedManifestContent' `
+        -FileName "$ModuleName.psd1" `
+        -BaseDirectory (Join-Path -Path $ProjectRoot -ChildPath 'src')
+    $stagedManifestContent.ModuleVersion = $newVersion
+    $stagedManifestContent.Copyright = "(c) $((Get-Date).Year) Daniel Scott-Raynsford. All rights reserved."
+
+    # Extract the PrivateData values and remove it because it can not be splatted
+    'LicenseUri','Tags','ProjectUri','IconUri','ReleaseNotes' | Foreach-Object -Process {
+        $privateDataValue = $stagedManifestContent.PrivateData.PSData.$_
+        if ($privateDataValue)
+        {
+            $null = $stagedManifestContent.Add($_, $privateDataValue)
+        }
+    }
+
+    $stagedManifestContent.ReleaseNotes = $stagedManifestContent.ReleaseNotes -replace "## What is New in $ModuleName Unreleased", "## What is New in $ModuleName $newVersion"
+    $stagedManifestContent.Remove('PrivateData')
+
+    # Create the module manifest file
+    New-ModuleManifest `
+        -Path $tempManifestPath `
+        @stagedManifestContent
+
+    # Make sure the manifest is encoded as UTF8
+    'Convert manifest to UTF8'
+    $temporaryManifestContent = Get-Content -Path $tempManifestPath -Raw
+    $utf8NoBomEncoding = New-Object -TypeName System.Text.UTF8Encoding -ArgumentList ($false)
+    [System.IO.File]::WriteAllLines($stagedManifestPath, $temporaryManifestContent, $utf8NoBomEncoding)
+
+    # Remove the temporary manifest
+    $null = Remove-Item -Path $tempManifestPath -Force
+
+    # Validate the module manifest
+    if (-not (Test-ModuleManifest -Path $stagedManifestPath))
+    {
+        throw "The generated module manifest '$stagedManifestPath' was invalid"
+    }
 
     # Set the new version number in the staged CHANGELOG.md
     'Updating CHANGELOG.MD'
@@ -312,7 +348,7 @@ Task Build -Depends Init {
     'Updating RELEASENOTES.MD'
     $stagedReleaseNotesPath = Join-Path -Path $versionFolder -ChildPath 'RELEASENOTES.md'
     $stagedReleaseNotesContent = Get-Content -Path $stagedReleaseNotesPath -Raw
-    $stagedReleaseNotesContent = $stagedReleaseNotesContent -replace '## What is New in LabBuilder Unreleased', "## What is New in LabBuilder $newVersion"
+    $stagedReleaseNotesContent = $stagedReleaseNotesContent -replace "## What is New in $ModuleName Unreleased", "## What is New in $ModuleName $newVersion"
     Set-Content -Path $stagedReleaseNotesPath -Value $stagedReleaseNotesContent -NoNewLine -Force
 
     # Create zip artifact
@@ -418,7 +454,7 @@ Task Deploy {
     $separator
 
     # Determine the folder name for the Module
-    $ModuleFolder = Join-Path -Path $ProjectRoot -ChildPath 'LabBuilder'
+    $ModuleFolder = Join-Path -Path $ProjectRoot -ChildPath $ModuleName
 
     # Install any dependencies required for the Deploy stage
     Invoke-PSDepend `
@@ -430,7 +466,7 @@ Task Deploy {
 
     # Copy the module to the PSModulePath
     $PSModulePath = ($ENV:PSModulePath -split ';')[0]
-    $destinationPath = Join-Path -Path $PSModulePath -ChildPath 'LabBuilder'
+    $destinationPath = Join-Path -Path $PSModulePath -ChildPath $ModuleName
 
     "Copying Module from $ModuleFolder to $destinationPath"
     Copy-Item `
@@ -440,7 +476,7 @@ Task Deploy {
         -Recurse `
         -Force
 
-    $installedModule = Get-Module -Name LabBuilder -ListAvailable
+    $installedModule = Get-Module -Name $ModuleName -ListAvailable
 
     $versionNumber = $installedModule.Version |
         Sort-Object -Descending |
@@ -448,17 +484,17 @@ Task Deploy {
 
     if (-not $versionNumber)
     {
-        Throw "LabBuilder Module could not be found after copying to $PSModulePath"
+        Throw "$ModuleName Module could not be found after copying to $PSModulePath"
     }
 
     # This is a deploy from the staging folder
-    "Publishing LabBuilder Module version '$versionNumber' to PowerShell Gallery"
+    "Publishing $ModuleName Module version '$versionNumber' to PowerShell Gallery"
     $null = Get-PackageProvider `
         -Name NuGet `
         -ForceBootstrap
 
     Publish-Module `
-        -Name 'LabBuilder' `
+        -Name $ModuleName `
         -RequiredVersion $versionNumber `
         -NuGetApiKey $ENV:PowerShellGalleryApiKey `
         -Confirm:$false

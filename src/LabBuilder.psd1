@@ -6,7 +6,7 @@
     ModuleVersion         = '1.0.0.6'
 
     # Supported PSEditions
-    CompatiblePSEditions  = @('PSEdition_Desktop')
+    CompatiblePSEditions  = 'Desktop'
 
     # ID used to uniquely identify this module
     GUID                  = 'e229850e-7a90-4123-9a30-37814119d3a3'
@@ -15,7 +15,7 @@
     Author                = 'Daniel Scott-Raynsford'
 
     # Company or vendor of this module
-    CompanyName           = ''
+    CompanyName           = 'None'
 
     # Copyright statement for this module
     Copyright             = '(c) 2018 Daniel Scott-Raynsford. All rights reserved.'
@@ -112,21 +112,20 @@
 
             # ReleaseNotes of this module
             ReleaseNotes = '
-            ## What is New in LabBuilder 1.0.0.6
+## What is New in LabBuilder 1.0.0.6
 
-            December 8, 2018
+December 8, 2018
 
-            - Samples\Sample_WS2016_DCandDHCPandCA.xml: Added to easily create a Windows
-              Server 2016 domain with a enterprise root CA.
-            - Correct certificate authority DSC Resources with ADCSCertificationAuthority
-              to be IsSingleInstance.
-            - Convert xNetworking to NetworkingDsc.
-            - Converted repository structure and build pipeline to more modern standards.
-            - Enabled Azure DevOps build pipeline.
-            - Convert module to require WMF 5.1 and all the samples to install WMF 5.1.
-            - DSCLibrary\MEMBER_MEMBER_DHCP*.ps1: Fixed to support xDHCPServer 2.0.0.0.
-            '
-
+- Samples\Sample_WS2016_DCandDHCPandCA.xml: Added to easily create a Windows
+  Server 2016 domain with a enterprise root CA.
+- Correct certificate authority DSC Resources with ADCSCertificationAuthority
+  to be IsSingleInstance.
+- Convert xNetworking to NetworkingDsc.
+- Converted repository structure and build pipeline to more modern standards.
+- Enabled Azure DevOps build pipeline.
+- Convert module to require WMF 5.1 and all the samples to install WMF 5.1.
+- DSCLibrary\MEMBER_MEMBER_DHCP*.ps1: Fixed to support xDHCPServer 2.0.0.0.
+'
             # ExternalModuleDependencies = ''
         } # End of PSData hashtable
     } # End of PrivateData hashtable

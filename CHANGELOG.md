@@ -1,5 +1,12 @@
 # Change Log
 
+## Unreleased
+
+- Refactored module manifest generation process to be more reliable
+  and robust.
+- Convert module name to be a variable in PSake file to make it more
+  easily portable between projects.
+
 ## 1.0.0.6
 
 - Samples\Sample_WS2016_DCandDHCPandCA.xml: Added to easily create a Windows
