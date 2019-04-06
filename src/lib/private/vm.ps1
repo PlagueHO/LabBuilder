@@ -1615,7 +1615,7 @@ function UpdateVMDataDisks {
                     Write-LabMessage -Message $($LocalizedData.InitializingVMDiskMessage `
                         -f $VM.Name,$VHD)
 
-                    InitializeVHD `
+                    Initialize-LabVHD `
                         @InitializeVHDParams `
                         -ErrorAction Stop
 

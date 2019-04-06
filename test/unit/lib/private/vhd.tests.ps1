@@ -33,7 +33,7 @@ InModuleScope LabBuilder {
         -Force `
         -ErrorAction SilentlyContinue
 
-    Describe '\lib\private\Vhd.ps1\InitializeBootVHD' {
+    Describe '\lib\private\Vhd.ps1\Initialize-LabBootVHD' {
         $Lab = Get-Lab -ConfigPath $script:TestConfigOKPath
         [array] $VMs = Get-LabVM -Lab $Lab
         $NanoServerPackagesFolder = Join-Path -Path $Lab.labbuilderconfig.settings.labpath -ChildPath 'NanoServerPackages'
@@ -57,7 +57,7 @@ InModuleScope LabBuilder {
                         -f 'DoesNotExist')
                 }
                 $Exception = Get-LabException @exceptionParameters
-                { InitializeBootVHD -Lab $Lab -VM $VM -VMBootDiskPath 'c:\Dummy\' } | Should -Throw $Exception
+                { Initialize-LabBootVHD -Lab $Lab -VM $VM -VMBootDiskPath 'c:\Dummy\' } | Should -Throw $Exception
             }
 
             It 'Calls Mocked commands' {
@@ -76,7 +76,7 @@ InModuleScope LabBuilder {
             It 'Does Not Throw Exception' {
                 $VM = $VMs[0].Clone()
                 $VM.Packages = 'WMF5.1-WS2012R2-W81'
-                { InitializeBootVHD -Lab $Lab -VM $VM -VMBootDiskPath 'c:\Dummy\' } | Should -Not -Throw
+                { Initialize-LabBootVHD -Lab $Lab -VM $VM -VMBootDiskPath 'c:\Dummy\' } | Should -Not -Throw
             }
 
             It 'Calls Mocked commands' {
@@ -102,7 +102,7 @@ InModuleScope LabBuilder {
                         -f 'WMF5.1-WS2012R2-W81',$ResourceMSUFile)
                 }
                 $exception = Get-LabException @exceptionParameters
-                { InitializeBootVHD -Lab $Lab -VM $VM -VMBootDiskPath 'c:\Dummy\' } | Should -Throw $exception
+                { Initialize-LabBootVHD -Lab $Lab -VM $VM -VMBootDiskPath 'c:\Dummy\' } | Should -Throw $exception
             }
 
             It 'Calls Mocked commands' {
@@ -124,7 +124,7 @@ InModuleScope LabBuilder {
                 $VM = $VMs[0].Clone()
                 $VM.Packages = ''
                 $VM.OSType = [LabOStype]::Nano
-                { InitializeBootVHD -Lab $Lab -VM $VM -VMBootDiskPath 'c:\Dummy\' } | Should -Not -Throw
+                { Initialize-LabBootVHD -Lab $Lab -VM $VM -VMBootDiskPath 'c:\Dummy\' } | Should -Not -Throw
             }
 
             It 'Calls Mocked commands' {
@@ -146,7 +146,7 @@ InModuleScope LabBuilder {
                 $VM = $VMs[0].Clone()
                 $VM.OSType = [LabOStype]::Nano
                 $VM.Packages = 'Microsoft-NanoServer-Containers-Package.cab,Microsoft-NanoServer-Guest-Package.cab'
-                { InitializeBootVHD -Lab $Lab -VM $VM -VMBootDiskPath 'c:\Dummy\' } | Should -Not -Throw
+                { Initialize-LabBootVHD -Lab $Lab -VM $VM -VMBootDiskPath 'c:\Dummy\' } | Should -Not -Throw
             }
 
             It 'Calls Mocked commands' {
@@ -169,7 +169,7 @@ InModuleScope LabBuilder {
                 $VM = $VMs[0].Clone()
                 $VM.OSType = [LabOStype]::Nano
                 $VM.Packages = 'Microsoft-NanoServer-Containers-Package.cab,Microsoft-NanoServer-Guest-Package.cab,WMF5.1-WS2012R2-W81'
-                { InitializeBootVHD -Lab $Lab -VM $VM -VMBootDiskPath 'c:\Dummy\' } | Should -Not -Throw
+                { Initialize-LabBootVHD -Lab $Lab -VM $VM -VMBootDiskPath 'c:\Dummy\' } | Should -Not -Throw
             }
 
             It 'Calls Mocked commands' {
@@ -197,7 +197,7 @@ InModuleScope LabBuilder {
                         -f $NanoServerPackagesFolder)
                 }
                 $Exception = Get-LabException @exceptionParameters
-                { InitializeBootVHD -Lab $Lab -VM $VM -VMBootDiskPath 'c:\Dummy\' } | Should -Throw $Exception
+                { Initialize-LabBootVHD -Lab $Lab -VM $VM -VMBootDiskPath 'c:\Dummy\' } | Should -Throw $Exception
             }
 
             It 'Calls Mocked commands' {
@@ -216,7 +216,7 @@ InModuleScope LabBuilder {
 
             It 'Does Not Throw Exception' {
                 $VM = $VMs[0].Clone()
-                { InitializeBootVHD -Lab $Lab -VM $VM -VMBootDiskPath 'c:\Dummy\' } | Should -Not -Throw
+                { Initialize-LabBootVHD -Lab $Lab -VM $VM -VMBootDiskPath 'c:\Dummy\' } | Should -Not -Throw
             }
 
             It 'Calls Mocked commands' {
@@ -231,7 +231,7 @@ InModuleScope LabBuilder {
         }
     }
 
-    Describe '\lib\private\Vhd.ps1\InitializeVHD' {
+    Describe '\lib\private\Vhd.ps1\Initialize-LabVHD' {
         function Get-VHD {}
         function Mount-VHD {}
 
@@ -332,7 +332,7 @@ InModuleScope LabBuilder {
                 }
                 $Exception = Get-LabException @exceptionParameters
 
-                { InitializeVHD @Splat } | Should -Throw $Exception
+                { Initialize-LabVHD @Splat } | Should -Throw $Exception
             }
 
             It 'Calls appropriate mocks' {
@@ -365,7 +365,7 @@ InModuleScope LabBuilder {
                 }
                 $Exception = Get-LabException @exceptionParameters
 
-                { InitializeVHD @Splat } | Should -Throw $Exception
+                { Initialize-LabVHD @Splat } | Should -Throw $Exception
             }
 
             It 'Calls appropriate mocks' {
@@ -394,7 +394,7 @@ InModuleScope LabBuilder {
                 $Splat = $VHDLabel.Clone()
                 $Splat.FileSystemLabel = 'Different'
 
-                InitializeVHD @Splat | Should -Be $RenamedVolume
+                Initialize-LabVHD @Splat | Should -Be $RenamedVolume
             }
 
             It 'Calls appropriate mocks' {
@@ -421,7 +421,7 @@ InModuleScope LabBuilder {
                 $Splat = $VHDLabel.Clone()
                 $Splat.FileSystemLabel = 'Different'
 
-                InitializeVHD @Splat | Should -Be $RenamedVolume
+                Initialize-LabVHD @Splat | Should -Be $RenamedVolume
             }
 
             It 'Calls appropriate mocks' {
@@ -449,7 +449,7 @@ InModuleScope LabBuilder {
             It 'Returns Expected Volume' {
                 $Splat = $VHDLabel.Clone()
 
-                InitializeVHD @Splat | Should -Be $NewVolume
+                Initialize-LabVHD @Splat | Should -Be $NewVolume
             }
 
             It 'Calls appropriate mocks' {
@@ -472,7 +472,7 @@ InModuleScope LabBuilder {
                 $Splat = $VHDLabel.Clone()
                 $Splat.DriveLetter = 'X'
 
-                InitializeVHD @Splat | Should -Be $UnformattedVolume # would be NewVolume but Get-Volume is mocked to this.
+                Initialize-LabVHD @Splat | Should -Be $UnformattedVolume # would be NewVolume but Get-Volume is mocked to this.
             }
 
             It 'Calls appropriate mocks' {
@@ -495,7 +495,7 @@ InModuleScope LabBuilder {
                 $Splat = $VHDLabel.Clone()
                 $Splat.AccessPath = 'c:\Exists'
 
-                InitializeVHD @Splat | Should -Be $NewVolume
+                Initialize-LabVHD @Splat | Should -Be $NewVolume
             }
 
             It 'Calls appropriate mocks' {
@@ -528,7 +528,7 @@ InModuleScope LabBuilder {
                 }
                 $Exception = Get-LabException @exceptionParameters
 
-                { InitializeVHD @Splat } | Should -Throw $Exception
+                { Initialize-LabVHD @Splat } | Should -Throw $Exception
             }
 
             It 'Calls appropriate mocks' {

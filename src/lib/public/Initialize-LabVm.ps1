@@ -111,7 +111,7 @@ function Initialize-LabVM
                     -VM $VM
 
                 # Because this is a new boot disk apply any required initialization
-                InitializeBootVHD `
+                Initialize-LabBootVHD `
                     -Lab $Lab `
                     -VM $VM `
                     -VMBootDiskPath $VMBootDiskPath

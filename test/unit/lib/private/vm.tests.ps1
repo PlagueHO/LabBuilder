@@ -228,7 +228,7 @@ InModuleScope LabBuilder {
         Mock -CommandName Add-VMHardDiskDrive
         Mock -CommandName Test-Path -ParameterFilter { $Path -eq 'DoesNotExist.Vhdx' } -MockWith { $false }
         Mock -CommandName Test-Path -ParameterFilter { $Path -eq 'DoesExist.Vhdx' } -MockWith { $true }
-        Mock -CommandName InitializeVHD
+        Mock -CommandName Initialize-LabVHD
         Mock -CommandName Mount-VHD
         Mock -CommandName Dismount-VHD
         Mock -CommandName Copy-Item
@@ -256,7 +256,7 @@ InModuleScope LabBuilder {
                 Assert-MockCalled -CommandName New-VHD -Exactly 0
                 Assert-MockCalled -CommandName Get-VMHardDiskDrive -Exactly 0
                 Assert-MockCalled -CommandName Add-VMHardDiskDrive -Exactly 0
-                Assert-MockCalled -CommandName InitializeVHD -Exactly 0
+                Assert-MockCalled -CommandName Initialize-LabVHD -Exactly 0
                 Assert-MockCalled -CommandName Mount-VHD -Exactly 0
                 Assert-MockCalled -CommandName Dismount-VHD -Exactly 0
                 Assert-MockCalled -CommandName New-Item -Exactly 0
@@ -292,7 +292,7 @@ InModuleScope LabBuilder {
                 Assert-MockCalled -CommandName New-VHD -Exactly 0
                 Assert-MockCalled -CommandName Get-VMHardDiskDrive -Exactly 0
                 Assert-MockCalled -CommandName Add-VMHardDiskDrive -Exactly 0
-                Assert-MockCalled -CommandName InitializeVHD -Exactly 0
+                Assert-MockCalled -CommandName Initialize-LabVHD -Exactly 0
                 Assert-MockCalled -CommandName Mount-VHD -Exactly 0
                 Assert-MockCalled -CommandName Dismount-VHD -Exactly 0
                 Assert-MockCalled -CommandName New-Item -Exactly 0
@@ -328,7 +328,7 @@ InModuleScope LabBuilder {
                 Assert-MockCalled -CommandName New-VHD -Exactly 0
                 Assert-MockCalled -CommandName Get-VMHardDiskDrive -Exactly 0
                 Assert-MockCalled -CommandName Add-VMHardDiskDrive -Exactly 0
-                Assert-MockCalled -CommandName InitializeVHD -Exactly 0
+                Assert-MockCalled -CommandName Initialize-LabVHD -Exactly 0
                 Assert-MockCalled -CommandName Mount-VHD -Exactly 0
                 Assert-MockCalled -CommandName Dismount-VHD -Exactly 0
                 Assert-MockCalled -CommandName New-Item -Exactly 0
@@ -358,7 +358,7 @@ InModuleScope LabBuilder {
                 Assert-MockCalled -CommandName New-VHD -Exactly 0
                 Assert-MockCalled -CommandName Get-VMHardDiskDrive -Exactly 1
                 Assert-MockCalled -CommandName Add-VMHardDiskDrive -Exactly 1
-                Assert-MockCalled -CommandName InitializeVHD -Exactly 0
+                Assert-MockCalled -CommandName Initialize-LabVHD -Exactly 0
                 Assert-MockCalled -CommandName Mount-VHD -Exactly 0
                 Assert-MockCalled -CommandName Dismount-VHD -Exactly 0
                 Assert-MockCalled -CommandName New-Item -Exactly 0
@@ -390,7 +390,7 @@ InModuleScope LabBuilder {
                 Assert-MockCalled -CommandName New-VHD -Exactly 0
                 Assert-MockCalled -CommandName Get-VMHardDiskDrive -Exactly 0
                 Assert-MockCalled -CommandName Add-VMHardDiskDrive -Exactly 0
-                Assert-MockCalled -CommandName InitializeVHD -Exactly 0
+                Assert-MockCalled -CommandName Initialize-LabVHD -Exactly 0
                 Assert-MockCalled -CommandName Mount-VHD -Exactly 0
                 Assert-MockCalled -CommandName Dismount-VHD -Exactly 0
                 Assert-MockCalled -CommandName New-Item -Exactly 0
@@ -414,7 +414,7 @@ InModuleScope LabBuilder {
                 Assert-MockCalled -CommandName New-VHD -Exactly 0
                 Assert-MockCalled -CommandName Get-VMHardDiskDrive -Exactly 1
                 Assert-MockCalled -CommandName Add-VMHardDiskDrive -Exactly 1
-                Assert-MockCalled -CommandName InitializeVHD -Exactly 0
+                Assert-MockCalled -CommandName Initialize-LabVHD -Exactly 0
                 Assert-MockCalled -CommandName Mount-VHD -Exactly 0
                 Assert-MockCalled -CommandName Dismount-VHD -Exactly 0
                 Assert-MockCalled -CommandName New-Item -Exactly 0
@@ -438,7 +438,7 @@ InModuleScope LabBuilder {
                 Assert-MockCalled -CommandName New-VHD -Exactly 0
                 Assert-MockCalled -CommandName Get-VMHardDiskDrive -Exactly 1
                 Assert-MockCalled -CommandName Add-VMHardDiskDrive -Exactly 1
-                Assert-MockCalled -CommandName InitializeVHD -Exactly 0
+                Assert-MockCalled -CommandName Initialize-LabVHD -Exactly 0
                 Assert-MockCalled -CommandName Mount-VHD -Exactly 0
                 Assert-MockCalled -CommandName Dismount-VHD -Exactly 0
                 Assert-MockCalled -CommandName New-Item -Exactly 0
@@ -463,7 +463,7 @@ InModuleScope LabBuilder {
                 Assert-MockCalled -CommandName New-VHD -Exactly 1
                 Assert-MockCalled -CommandName Get-VMHardDiskDrive -Exactly 1
                 Assert-MockCalled -CommandName Add-VMHardDiskDrive -Exactly 1
-                Assert-MockCalled -CommandName InitializeVHD -Exactly 0
+                Assert-MockCalled -CommandName Initialize-LabVHD -Exactly 0
                 Assert-MockCalled -CommandName Mount-VHD -Exactly 0
                 Assert-MockCalled -CommandName Dismount-VHD -Exactly 0
                 Assert-MockCalled -CommandName New-Item -Exactly 0
@@ -488,7 +488,7 @@ InModuleScope LabBuilder {
                 Assert-MockCalled -CommandName New-VHD -Exactly 1
                 Assert-MockCalled -CommandName Get-VMHardDiskDrive -Exactly 1
                 Assert-MockCalled -CommandName Add-VMHardDiskDrive -Exactly 1
-                Assert-MockCalled -CommandName InitializeVHD -Exactly 0
+                Assert-MockCalled -CommandName Initialize-LabVHD -Exactly 0
                 Assert-MockCalled -CommandName Mount-VHD -Exactly 0
                 Assert-MockCalled -CommandName Dismount-VHD -Exactly 0
                 Assert-MockCalled -CommandName New-Item -Exactly 0
@@ -515,7 +515,7 @@ InModuleScope LabBuilder {
                 Assert-MockCalled -CommandName New-VHD -Exactly 1
                 Assert-MockCalled -CommandName Get-VMHardDiskDrive -Exactly 1
                 Assert-MockCalled -CommandName Add-VMHardDiskDrive -Exactly 1
-                Assert-MockCalled -CommandName InitializeVHD -Exactly 1
+                Assert-MockCalled -CommandName Initialize-LabVHD -Exactly 1
                 Assert-MockCalled -CommandName Mount-VHD -Exactly 0
                 Assert-MockCalled -CommandName Dismount-VHD -Exactly 1
                 Assert-MockCalled -CommandName New-Item -Exactly 0
@@ -543,7 +543,7 @@ InModuleScope LabBuilder {
                 Assert-MockCalled -CommandName New-VHD -Exactly 1
                 Assert-MockCalled -CommandName Get-VMHardDiskDrive -Exactly 1
                 Assert-MockCalled -CommandName Add-VMHardDiskDrive -Exactly 1
-                Assert-MockCalled -CommandName InitializeVHD -Exactly 1
+                Assert-MockCalled -CommandName Initialize-LabVHD -Exactly 1
                 Assert-MockCalled -CommandName Mount-VHD -Exactly 0
                 Assert-MockCalled -CommandName Dismount-VHD -Exactly 1
                 Assert-MockCalled -CommandName New-Item -Exactly 1
@@ -569,7 +569,7 @@ InModuleScope LabBuilder {
                 Assert-MockCalled -CommandName New-VHD -Exactly 1
                 Assert-MockCalled -CommandName Get-VMHardDiskDrive -Exactly 1
                 Assert-MockCalled -CommandName Add-VMHardDiskDrive -Exactly 1
-                Assert-MockCalled -CommandName InitializeVHD -Exactly 1
+                Assert-MockCalled -CommandName Initialize-LabVHD -Exactly 1
                 Assert-MockCalled -CommandName Mount-VHD -Exactly 0
                 Assert-MockCalled -CommandName Dismount-VHD -Exactly 1
                 Assert-MockCalled -CommandName New-Item -Exactly 1
@@ -601,7 +601,7 @@ InModuleScope LabBuilder {
                 Assert-MockCalled -CommandName New-VHD -Exactly 0
                 Assert-MockCalled -CommandName Get-VMHardDiskDrive -Exactly 0
                 Assert-MockCalled -CommandName Add-VMHardDiskDrive -Exactly 0
-                Assert-MockCalled -CommandName InitializeVHD -Exactly 0
+                Assert-MockCalled -CommandName Initialize-LabVHD -Exactly 0
                 Assert-MockCalled -CommandName Mount-VHD -Exactly 0
                 Assert-MockCalled -CommandName Dismount-VHD -Exactly 0
                 Assert-MockCalled -CommandName New-Item -Exactly 0
@@ -634,7 +634,7 @@ InModuleScope LabBuilder {
                 Assert-MockCalled -CommandName New-VHD -Exactly 0
                 Assert-MockCalled -CommandName Get-VMHardDiskDrive -Exactly 0
                 Assert-MockCalled -CommandName Add-VMHardDiskDrive -Exactly 0
-                Assert-MockCalled -CommandName InitializeVHD -Exactly 0
+                Assert-MockCalled -CommandName Initialize-LabVHD -Exactly 0
                 Assert-MockCalled -CommandName Mount-VHD -Exactly 0
                 Assert-MockCalled -CommandName Dismount-VHD -Exactly 0
                 Assert-MockCalled -CommandName New-Item -Exactly 0
@@ -660,7 +660,7 @@ InModuleScope LabBuilder {
                 Assert-MockCalled -CommandName New-VHD -Exactly 1
                 Assert-MockCalled -CommandName Get-VMHardDiskDrive -Exactly 1
                 Assert-MockCalled -CommandName Add-VMHardDiskDrive -Exactly 1
-                Assert-MockCalled -CommandName InitializeVHD -Exactly 0
+                Assert-MockCalled -CommandName Initialize-LabVHD -Exactly 0
                 Assert-MockCalled -CommandName Mount-VHD -Exactly 0
                 Assert-MockCalled -CommandName Dismount-VHD -Exactly 0
                 Assert-MockCalled -CommandName New-Item -Exactly 0
@@ -691,7 +691,7 @@ InModuleScope LabBuilder {
                 Assert-MockCalled -CommandName New-VHD -Exactly 0
                 Assert-MockCalled -CommandName Get-VMHardDiskDrive -Exactly 1
                 Assert-MockCalled -CommandName Add-VMHardDiskDrive -Exactly 0
-                Assert-MockCalled -CommandName InitializeVHD -Exactly 0
+                Assert-MockCalled -CommandName Initialize-LabVHD -Exactly 0
                 Assert-MockCalled -CommandName Mount-VHD -Exactly 0
                 Assert-MockCalled -CommandName Dismount-VHD -Exactly 0
                 Assert-MockCalled -CommandName New-Item -Exactly 0
