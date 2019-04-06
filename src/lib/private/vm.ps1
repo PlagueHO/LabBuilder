@@ -133,6 +133,7 @@ Add-Content ``
     -Path "C:\WINDOWS\Setup\Scripts\SetupComplete.log" ``
     -Value 'SetupComplete.ps1 Script Started...' ``
     -Encoding Ascii
+Start-Sleep -Seconds 30
 $GetCertPs
 Add-Content ``
     -Path `"`$(`$ENV:SystemRoot)\Setup\Scripts\SetupComplete.log`" ``
@@ -195,8 +196,6 @@ certoc.exe -ImportPFX -p $Script:DSCCertificatePassword root $ENV:SystemRoot\$Sc
         $SetupCompleteCmd = @"
 @echo SetupComplete.cmd Script Started... >> %SYSTEMROOT%\Setup\Scripts\SetupComplete.log`r
 $SetupCompleteCmd
-@echo SetupComplete.cmd Starting Timeout 30... >> %SYSTEMROOT%\Setup\Scripts\SetupComplete.log`r
-Timeout 30
 @echo SetupComplete.cmd Execute SetupComplete.ps1... >> %SYSTEMROOT%\Setup\Scripts\SetupComplete.log`r
 powerShell.exe -ExecutionPolicy Unrestricted -Command `"%SYSTEMROOT%\Setup\Scripts\SetupComplete.ps1`" `r
 @echo SetupComplete.cmd Script Finished... >> %SYSTEMROOT%\Setup\Scripts\SetupComplete.log

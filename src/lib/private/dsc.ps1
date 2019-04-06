@@ -416,7 +416,8 @@ function Update-LabDSC
             -Path $modulePath `
             -Destination $destinationPath `
             -Recurse `
-            -Force
+            -Force `
+            -ErrorAction Continue
     } # Foreach
 
     if ($VM.CertificateSource -eq [LabCertificateSource]::Guest)

@@ -34,7 +34,7 @@ InModuleScope LabBuilder {
         -ErrorAction SilentlyContinue
 
     Describe 'Get-Lab' {
-        Context 'Relative Path is provided and valid XML file exists' {
+        Context 'When relative path is provided and valid XML file exists' {
             Mock Get-Location -MockWith { @{ Path = $script:TestConfigPath} }
 
             It 'Returns XmlDocument object with valid content' {
@@ -44,7 +44,7 @@ InModuleScope LabBuilder {
             }
         }
 
-        Context 'Path is provided and valid XML file exists' {
+        Context 'When path is provided and valid XML file exists' {
             It 'Returns XmlDocument object with valid content' {
                 $Lab = Get-Lab -ConfigPath $script:TestConfigOKPath
                 $Lab.GetType().Name | Should -Be 'XmlDocument'
@@ -52,7 +52,7 @@ InModuleScope LabBuilder {
             }
         }
 
-        Context 'Path and LabPath are provided and valid XML file exists' {
+        Context 'When path and LabPath are provided and valid XML file exists' {
             It 'Returns XmlDocument object with valid content' {
                 $Lab = Get-Lab -ConfigPath $script:TestConfigOKPath `
                     -LabPath 'c:\Pester Lab'
@@ -66,7 +66,7 @@ InModuleScope LabBuilder {
             }
         }
 
-        Context 'Path is provided but file does not exist' {
+        Context 'When path is provided but file does not exist' {
             It 'Throws ConfigurationFileNotFoundError Exception' {
                 $exceptionParameters = @{
                     errorId = 'ConfigurationFileNotFoundError'
@@ -82,7 +82,7 @@ InModuleScope LabBuilder {
             }
         }
 
-        Context 'Path is provided and file exists but is empty' {
+        Context 'When path is provided and file exists but is empty' {
             It 'Throws ConfigurationFileEmptyError Exception' {
                 $exceptionParameters = @{
                     errorId = 'ConfigurationFileEmptyError'
@@ -101,7 +101,7 @@ InModuleScope LabBuilder {
 
         $Script:CurrentBuild = 10000
 
-        Context 'Path is provided and file exists but host build version requirement not met' {
+        Context 'When path is provided and file exists but host build version requirement not met' {
             It 'Throws RequiredBuildNotMetError Exception' {
                 $exceptionParameters = @{
                     errorId = 'RequiredBuildNotMetError'
@@ -128,7 +128,7 @@ InModuleScope LabBuilder {
         Mock Get-VMNetworkAdapterVlan
         Mock Set-VMNetworkAdapterVlan
 
-        Context 'Valid configuration is passed' {
+        Context 'When valid configuration is passed' {
             It 'Does not throw an Exception' {
                 { Install-Lab -Lab $Lab } | Should -Not -Throw
             }

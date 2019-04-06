@@ -34,7 +34,7 @@ InModuleScope LabBuilder {
         -ErrorAction SilentlyContinue
 
     Describe 'Get-LabSwitch' {
-        Context 'Configuration passed with switch missing Switch Name.' {
+        Context 'When valid configuration passed with switch missing Switch Name.' {
             It 'Throws a SwitchNameIsEmptyError Exception' {
                 $Lab = Get-Lab -ConfigPath $script:TestConfigOKPath
                 $Lab.labbuilderconfig.switches.switch[0].RemoveAttribute('name')
@@ -49,7 +49,7 @@ InModuleScope LabBuilder {
             }
         }
 
-        Context 'Configuration passed with switch missing Switch Type.' {
+        Context 'When valid configuration passed with switch missing Switch Type.' {
             It 'Throws a UnknownSwitchTypeError Exception' {
                 $Lab = Get-Lab -ConfigPath $script:TestConfigOKPath
                 $Lab.labbuilderconfig.switches.switch[0].RemoveAttribute('type')
@@ -65,7 +65,7 @@ InModuleScope LabBuilder {
             }
         }
 
-        Context 'Configuration passed with switch invalid Switch Type.' {
+        Context 'When valid configuration passed with switch invalid Switch Type.' {
             It 'Throws a UnknownSwitchTypeError Exception' {
                 $Lab = Get-Lab -ConfigPath $script:TestConfigOKPath
                 $Lab.labbuilderconfig.switches.switch[0].type='BadType'
@@ -81,7 +81,7 @@ InModuleScope LabBuilder {
             }
         }
 
-        Context 'Configuration passed with switch containing adapters but is not External type.' {
+        Context 'When valid configuration passed with switch containing adapters but is not External type.' {
             $Lab = Get-Lab -ConfigPath $script:TestConfigOKPath
             $Lab.labbuilderconfig.switches.switch[0].type='Private'
             It 'Throws a AdapterSpecifiedError Exception' {
@@ -97,7 +97,7 @@ InModuleScope LabBuilder {
             }
         }
 
-        Context 'Valid configuration is passed with and Name filter set to matching switch' {
+        Context 'When valid configuration is passed with and Name filter set to matching switch' {
             It 'Returns a Single Switch object' {
                 $Lab = Get-Lab -ConfigPath $script:TestConfigOKPath
                 [Array] $Switches = Get-LabSwitch -Lab $Lab -Name $Lab.labbuilderconfig.switches.switch[0].name
@@ -105,7 +105,7 @@ InModuleScope LabBuilder {
             }
         }
 
-        Context 'Valid configuration is passed with and Name filter set to non-matching switch' {
+        Context 'When valid configuration is passed with and Name filter set to non-matching switch' {
             It 'Returns a Single Switch object' {
                 $Lab = Get-Lab -ConfigPath $script:TestConfigOKPath
                 [Array] $Switches = Get-LabSwitch -Lab $Lab -Name 'Does Not Exist'
@@ -113,7 +113,7 @@ InModuleScope LabBuilder {
             }
         }
 
-        Context 'Valid configuration is passed' {
+        Context 'When valid configuration is passed' {
             It 'Returns Switches Object that matches Expected Object' {
                 $Lab = Get-Lab -ConfigPath $script:TestConfigOKPath
                 [Array] $Switches = Get-LabSwitch -Lab $Lab
@@ -202,7 +202,7 @@ InModuleScope LabBuilder {
 
         $script:CurrentBuild = 14295
 
-        Context 'Valid configuration is passed' {
+        Context 'When valid configuration is passed' {
             It 'Does not throw an Exception' {
                 { Initialize-LabSwitch -Lab $Lab -Switches $Switches } | Should -Not -Throw
             }
@@ -221,7 +221,7 @@ InModuleScope LabBuilder {
             }
         }
 
-        Context 'Valid configuration without switches is passed' {
+        Context 'When valid configuration without switches is passed' {
             It 'Does not throw an Exception' {
                 { Initialize-LabSwitch -Lab $Lab } | Should -Not -Throw
             }
@@ -240,7 +240,7 @@ InModuleScope LabBuilder {
             }
         }
 
-        Context 'Valid configuration NAT with blank NAT Subnet' {
+        Context 'When valid configuration NAT with blank NAT Subnet' {
             $Switches[0].Type = [LabSwitchType]::NAT
             $Switches[0].NatSubnet = ''
 
@@ -272,7 +272,7 @@ InModuleScope LabBuilder {
 
         $script:CurrentBuild = 10586
 
-        Context 'Valid configuration NAT on unsupported build' {
+        Context 'When valid configuration NAT on unsupported build' {
             $Switches[0].Type = [LabSwitchType]::NAT
 
             It 'Throws a NatSubnetEmptyError Exception' {
@@ -303,7 +303,7 @@ InModuleScope LabBuilder {
 
         $script:CurrentBuild = 14295
 
-        Context 'Valid configuration NAT with invalid NAT Subnet' {
+        Context 'When valid configuration NAT with invalid NAT Subnet' {
             $Switches[0].Type = [LabSwitchType]::NAT
             $Switches[0].NatSubnet = 'Invalid'
 
@@ -333,7 +333,7 @@ InModuleScope LabBuilder {
             }
         }
 
-        Context 'Valid configuration NAT with invalid NAT Subnet Address' {
+        Context 'When valid configuration NAT with invalid NAT Subnet Address' {
             $Switches[0].Type = [LabSwitchType]::NAT
             $Switches[0].NatSubnet = '192.168.1.1000/24'
 
@@ -363,7 +363,7 @@ InModuleScope LabBuilder {
             }
         }
 
-        Context 'Valid configuration NAT with invalid NAT Subnet Address' {
+        Context 'When valid configuration NAT with invalid NAT Subnet Address' {
             $Switches[0].Type = [LabSwitchType]::NAT
             $Switches[0].NatSubnet = '192.168.1.0/33'
 
@@ -395,7 +395,7 @@ InModuleScope LabBuilder {
 
         Mock Get-VMNetworkAdapter -ParameterFilter { $SwitchName -eq 'TestLab NAT' } -MockWith { @{ MacAddress = '' } }
 
-        Context 'Valid configuration NAT with switch default network adapter missing MAC address' {
+        Context 'When valid configuration NAT with switch default network adapter missing MAC address' {
             $Switches[0].Name = 'TestLab NAT'
             $Switches[0].Type = [LabSwitchType]::NAT
             $Switches[0].NatSubnet = '192.168.1.0/24'
@@ -428,7 +428,7 @@ InModuleScope LabBuilder {
 
         Mock Get-VMNetworkAdapter -ParameterFilter { $SwitchName -eq 'TestLab NAT' } -MockWith { @{ MacAddress = '001122334455' } }
 
-        Context 'Valid configuration with blank switch name passed' {
+        Context 'When valid configuration with blank switch name passed' {
             $Switches[0].Type = [LabSwitchType]::External
             $Switches[0].Name = ''
 
@@ -459,7 +459,7 @@ InModuleScope LabBuilder {
 
         [LabSwitch[]] $Switches = Get-LabSwitch -Lab $Lab
 
-        Context 'Valid configuration with External switch with binding Adapter name bad' {
+        Context 'When valid configuration with External switch with binding Adapter name bad' {
             Mock Get-NetAdapter
 
             It 'Throws a BindingAdapterNotFoundError Exception' {
@@ -488,7 +488,7 @@ InModuleScope LabBuilder {
             }
         }
 
-        Context 'Valid configuration with External switch with binding Adapter MAC bad' {
+        Context 'When valid configuration with External switch with binding Adapter MAC bad' {
             Mock Get-NetAdapter
             $Switches[0].BindingAdapterName = ''
             $Switches[0].BindingAdapterMac = '1111111111'
@@ -534,7 +534,7 @@ InModuleScope LabBuilder {
         Mock Remove-VMNetworkAdapter
         Mock Remove-NetNat
 
-        Context 'Valid configuration is passed without RemoveExternal Switch' {
+        Context 'When valid configuration is passed without RemoveExternal Switch' {
             It 'Does not throw an Exception' {
                 { Remove-LabSwitch -Lab $Lab -Switches $Switches } | Should -Not -Throw
             }
@@ -547,7 +547,7 @@ InModuleScope LabBuilder {
             }
         }
 
-        Context 'Valid configuration is passed without switches without RemoveExternal Switch' {
+        Context 'When valid configuration is passed without switches without RemoveExternal Switch' {
             It 'Does not throw an Exception' {
                 { Remove-LabSwitch -Lab $Lab } | Should -Not -Throw
             }
@@ -560,7 +560,7 @@ InModuleScope LabBuilder {
             }
         }
 
-        Context 'Valid configuration with blank switch name passed without RemoveExternal Switch' {
+        Context 'When valid configuration with blank switch name passed without RemoveExternal Switch' {
             $Switches[0].Name = ''
 
             It 'Throws a SwitchNameIsEmptyError Exception' {
@@ -582,7 +582,7 @@ InModuleScope LabBuilder {
             }
         }
 
-        Context 'Valid configuration is passed with RemoveExternal Switch' {
+        Context 'When valid configuration is passed with RemoveExternal Switch' {
             It 'Does not throw an Exception' {
                 { Remove-LabSwitch -Lab $Lab -RemoveExternal } | Should -Not -Throw
             }
