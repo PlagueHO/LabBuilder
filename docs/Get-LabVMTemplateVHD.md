@@ -84,8 +84,9 @@ For more information, see about_CommonParameters (http://go.microsoft.com/fwlink
 
 ## OUTPUTS
 
-Returns an array of LabVMTemplateVHD objects.
-It will return Null if the TemplateVHDs node does not exist or contains no TemplateVHD nodes.
+### Returns an array of LabVMTemplateVHD objects
+
+It will return Null if the TemplateVHDs node does not exist or contains no TemplateVHD nodes
 
 ## NOTES
 

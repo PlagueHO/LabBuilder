@@ -99,7 +99,7 @@ For more information, see about_CommonParameters (http://go.microsoft.com/fwlink
 
 ## OUTPUTS
 
-The Lab object representing the Lab Configuration that was loaded.
+### The Lab object representing the Lab Configuration that was loaded.
 
 ## NOTES
 

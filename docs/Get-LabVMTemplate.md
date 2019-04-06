@@ -99,7 +99,7 @@ For more information, see about_CommonParameters (http://go.microsoft.com/fwlink
 
 ## OUTPUTS
 
-Returns an array of LabVMTemplate objects.
+### Returns an array of LabVMTemplate objects
 
 ## NOTES
 

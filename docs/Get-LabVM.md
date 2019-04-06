@@ -129,7 +129,7 @@ For more information, see about_CommonParameters (http://go.microsoft.com/fwlink
 
 ## OUTPUTS
 
-Returns an array of LabVM objects.
+### Returns an array of LabVM objects
 
 ## NOTES
 

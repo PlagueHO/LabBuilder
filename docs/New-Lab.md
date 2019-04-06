@@ -227,7 +227,7 @@ For more information, see about_CommonParameters (http://go.microsoft.com/fwlink
 
 ## OUTPUTS
 
-The Lab object representing the new Lab Configuration that was created.
+### The Lab object representing the new Lab Configuration that was created
 
 ## NOTES
 

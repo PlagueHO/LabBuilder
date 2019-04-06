@@ -77,7 +77,7 @@ For more information, see about_CommonParameters (http://go.microsoft.com/fwlink
 
 ## OUTPUTS
 
-Returns an array of LabModuleResource objects.
+### Returns an array of LabModuleResource objects
 
 ## NOTES
 

@@ -78,7 +78,7 @@ For more information, see about_CommonParameters (http://go.microsoft.com/fwlink
 
 ## OUTPUTS
 
-Returns an array of LabSwitch objects.
+### Returns an array of LabSwitch objects
 
 ## NOTES
 
