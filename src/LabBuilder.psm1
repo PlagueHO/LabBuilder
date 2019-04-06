@@ -291,8 +291,8 @@ class LabVMTemplateVHD:System.ICloneable {
     [LabVHDFormat] $VHDFormat = [LabVHDFormat]::VHDx
     [LabVHDType] $VHDType = [LabVHDType]::Dynamic
     [Uint64] $VHDSize = 0
-    [String[]] $Packages
-    [String[]] $Features
+    [System.String[]] $Packages
+    [System.String[]] $Features
 
     LabVMTemplateVHD() {}
 
@@ -324,8 +324,8 @@ class LabVMTemplate:System.ICloneable {
     [System.String] $ProductKey
     [System.String] $Timezone="Pacific Standard Time"
     [LabOStype] $OSType = [LabOStype]::Server
-    [String[]] $IntegrationServices = @('Guest Service Interface','Heartbeat','Key-Value Pair Exchange','Shutdown','Time Synchronization','VSS')
-    [String[]] $Packages
+    [System.String[]] $IntegrationServices = @('Guest Service Interface','Heartbeat','Key-Value Pair Exchange','Shutdown','Time Synchronization','VSS')
+    [System.String[]] $Packages
     [ValidateRange(1,2)][Byte] $Generation = 2
     [ValidateSet("5.0","6.2","7.0","7.1","8.0","254.0","255.0")][System.String] $Version = '8.0'
 
@@ -419,11 +419,11 @@ class LabVM:System.ICloneable {
     [LabOStype] $OSType = [LabOStype]::Server
     [System.String] $UnattendFile
     [System.String] $SetupComplete
-    [String[]] $Packages
+    [System.String[]] $Packages
     [ValidateRange(1,2)][Byte] $Generation = 2
     [ValidateSet("5.0","6.2","7.0","7.1","8.0","254.0","255.0")][System.String] $Version = '8.0'
     [Int] $BootOrder
-    [String[]] $IntegrationServices = @('Guest Service Interface','Heartbeat','Key-Value Pair Exchange','Shutdown','Time Synchronization','VSS')
+    [System.String[]] $IntegrationServices = @('Guest Service Interface','Heartbeat','Key-Value Pair Exchange','Shutdown','Time Synchronization','VSS')
     [LabVMAdapter[]] $Adapters
     [LabDataVHD[]] $DataVHDs
     [LabDVDDrive[]] $DVDDrives

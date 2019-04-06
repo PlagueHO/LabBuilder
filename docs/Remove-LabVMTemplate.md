@@ -8,16 +8,18 @@ schema: 2.0.0
 # Remove-LabVMTemplate
 
 ## SYNOPSIS
+
 Removes all Lab Virtual Machine Template VHDs.
 
 ## SYNTAX
 
-```
+```powershell
 Remove-LabVMTemplate [-Lab] <Object> [[-Name] <String[]>] [[-VMTemplates] <LabVMTemplate[]>]
  [<CommonParameters>]
 ```
 
 ## DESCRIPTION
+
 This cmdlet is used to remove any Virtual Machine Template VHDs that were copied when
 creating this Lab.
 
@@ -30,7 +32,8 @@ the Lab Virtual Hard Drives to become corrupt.
 ## EXAMPLES
 
 ### EXAMPLE 1
-```
+
+```powershell
 $Lab = Get-Lab -ConfigPath c:\mylab\config.xml
 ```
 
@@ -39,7 +42,8 @@ Remove-LabVMTemplate -Lab $Lab -VMTemplates $VMTemplates
 Removes any Virtual Machine template VHDs configured in the Lab c:\mylab\config.xml
 
 ### EXAMPLE 2
-```
+
+```powershell
 $Lab = Get-Lab -ConfigPath c:\mylab\config.xml
 ```
 
@@ -49,6 +53,7 @@ Removes any Virtual Machine template VHDs configured in the Lab c:\mylab\config.
 ## PARAMETERS
 
 ### -Lab
+
 Contains the Lab object that was loaded by the Get-Lab object.
 
 ```yaml
@@ -64,6 +69,7 @@ Accept wildcard characters: False
 ```
 
 ### -Name
+
 An optional array of VM Template names.
 
 Only VM Templates matching names in this list will be removed.
@@ -81,6 +87,7 @@ Accept wildcard characters: False
 ```
 
 ### -VMTemplates
+
 The array of LabVMTemplate objects pulled from the Lab using Get-LabVMTemplate.
 
 If not provided it will attempt to pull the list from the Lab.
@@ -98,6 +105,7 @@ Accept wildcard characters: False
 ```
 
 ### CommonParameters
+
 This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable, -InformationAction, -InformationVariable, -OutVariable, -OutBuffer, -PipelineVariable, -Verbose, -WarningAction, and -WarningVariable.
 For more information, see about_CommonParameters (http://go.microsoft.com/fwlink/?LinkID=113216).
 
@@ -105,7 +113,8 @@ For more information, see about_CommonParameters (http://go.microsoft.com/fwlink
 
 ## OUTPUTS
 
-### None.
+None.
+
 ## NOTES
 
 ## RELATED LINKS

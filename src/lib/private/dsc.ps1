@@ -668,8 +668,8 @@ function Set-LabDSC
 
     # Relabel the Network Adapters so that they match what the DSC Networking config will use
     # This is because unfortunately the Hyper-V Device Naming feature doesn't work.
-    $managementSwitchName = GetmanagementSwitchName -Lab $Lab
-    $adapters = [String[]] ($VM.Adapters).Name
+    $managementSwitchName = Get-LabManagementSwitchName -Lab $Lab
+    $adapters = [System.String[]] ($VM.Adapters).Name
     $adapters += @($managementSwitchName)
 
     foreach ($adapter in $adapters)

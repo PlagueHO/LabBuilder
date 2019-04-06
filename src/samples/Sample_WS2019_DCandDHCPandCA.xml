@@ -1,12 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 
 <labbuilderconfig xmlns="labbuilderconfig"
-                  name="Sample_WS2016_DcandDHCPandCA"
+                  name="Sample_WS2019_DcandDHCPandCA"
                   version="1.0">
   <description>
-  Sample Windows Server 2016 Lab Configuration Domain with multiple DCs, DHCP Servers, PKI with enterprise CA.
+  Sample Windows Server 2019 Lab Configuration Domain with multiple DCs, DHCP Servers, PKI with enterprise CA.
 
-  Useful for general experimentation and testing of Windows Server 2016 features.
+  Useful for general experimentation and testing of Windows Server 2019 features.
   </description>
 
   <settings labid="LABBUILDER-DCANDDHCPANDCA.COM "
@@ -30,21 +30,21 @@
   <templatevhds isopath="ISOFiles"
                 vhdpath="VHDFiles"
                 prefix="" >
-    <templatevhd name="Windows Server 2016 Datacenter Full"
-                 iso="14393.0.161119-1705.RS1_REFRESH_SERVER_EVAL_X64FRE_EN-US.ISO"
-                 url="https://www.microsoft.com/en-us/evalcenter/evaluate-windows-server-2016"
-                 vhd="Windows Server 2016 Datacenter Full.vhdx"
-                 edition="Windows Server 2016 SERVERDATACENTER"
+    <templatevhd name="Windows Server 2019 Datacenter Full"
+                 iso="17763.379.190312-0539.rs5_release_svc_refresh_SERVER_EVAL_x64FRE_en-us.iso"
+                 url="https://software-download.microsoft.com/download/sg/"
+                 vhd="Windows Server 2019 Datacenter Full.vhdx"
+                 edition="Windows Server 2019 SERVERDATACENTER"
                  ostype="Server"
                  vhdformat="vhdx"
                  vhdtype="dynamic"
                  generation="2"
                  vhdsize="40GB" />
-    <templatevhd name="Windows Server 2016 Datacenter CORE"
-                 iso="14393.0.161119-1705.RS1_REFRESH_SERVER_EVAL_X64FRE_EN-US.ISO"
-                 url="https://www.microsoft.com/en-us/evalcenter/evaluate-windows-server-2016"
-                 vhd="Windows Server 2016 Datacenter Core.vhdx"
-                 edition="Windows Server 2016 SERVERDATACENTERCORE"
+    <templatevhd name="Windows Server 2019 Datacenter CORE"
+                 iso="17763.379.190312-0539.rs5_release_svc_refresh_SERVER_EVAL_x64FRE_en-us.iso"
+                 url="https://software-download.microsoft.com/download/sg/"
+                 vhd="Windows Server 2019 Datacenter Core.vhdx"
+                 edition="Windows Server 2019 SERVERDATACENTERCORE"
                  ostype="Server"
                  vhdformat="vhdx"
                  vhdtype="dynamic"
@@ -53,15 +53,15 @@
   </templatevhds>
 
   <templates>
-    <template name="Template Windows Server 2016 Datacenter Full"
-              templatevhd="Windows Server 2016 Datacenter Full"
+    <template name="Template Windows Server 2019 Datacenter Full"
+              templatevhd="Windows Server 2019 Datacenter Full"
               memorystartupbytes="1GB"
               processorcount="1"
               administratorpassword="P@ssword!1"
               timezone="New Zealand Standard Time"
               ostype="Server" />
-    <template name="Template Windows Server 2016 Datacenter CORE"
-              templatevhd="Windows Server 2016 Datacenter CORE"
+    <template name="Template Windows Server 2019 Datacenter CORE"
+              templatevhd="Windows Server 2019 Datacenter CORE"
               memorystartupbytes="1GB"
               processorcount="1"
               administratorpassword="P@ssword!1"
@@ -71,7 +71,7 @@
 
   <vms>
     <vm name="SA-DC1"
-        template="Template Windows Server 2016 Datacenter CORE"
+        template="Template Windows Server 2019 Datacenter CORE"
         computername="SA-DC1">
       <dsc configname="DC_FORESTPRIMARY"
            configfile="DC_FORESTPRIMARY.DSC.ps1">
@@ -99,7 +99,7 @@
     </vm>
 
     <vm name="SA-DHCP1"
-        template="Template Windows Server 2016 Datacenter CORE"
+        template="Template Windows Server 2019 Datacenter CORE"
         computername="SA-DHCP1">
       <dsc configname="MEMBER_DHCP"
            configfile="MEMBER_DHCP.DSC.ps1">
@@ -163,7 +163,7 @@
     </vm>
 
     <vm name="SA-ROOTCA"
-      template="Template Windows Server 2016 Datacenter Full"
+      template="Template Windows Server 2019 Datacenter Full"
       computername="SA-ROOTCA">
       <dsc configname="MEMBER_ROOTCA"
            configfile="MEMBER_ROOTCA.DSC.ps1"

@@ -1,11 +1,11 @@
 ﻿# Set the name of the sample Lab from the samples folder:
 [System.String]$Script:ConfigPath = "$PSScriptRoot\..\src\Samples\Sample_WS2016_DCandDHCPandCA.xml"
-[System.String]$Script:ModulePath = "$PSScriptRoot\..\LabBuilder.psd1"
+[System.String]$Script:ModulePath = "$PSScriptRoot\..\src\LabBuilder.psd1"
 
 ####################################################################################################
 Function Test-StartLabVM {
     param (
-        [String[]]$StartVMs
+        [System.String[]]$StartVMs
     )
     $Lab = Get-Lab -Config $Script:ConfigPath
     [Array]$VMs = Get-LabVM `
@@ -49,7 +49,7 @@ Function Test-LabBuilderLoadModule {
 } # Function Test-LabBuilderLoadModule
 ####################################################################################################
 
-#Test-LabBuilderLoadModule
+# Test-LabBuilderLoadModule
 
 # Comment/Uncomment lines below and run this script to execute the LabBuilder commands
 Test-LabBuilderInstall

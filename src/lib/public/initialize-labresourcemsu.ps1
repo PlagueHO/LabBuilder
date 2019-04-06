@@ -12,7 +12,7 @@ function Initialize-LabResourceMSU
         [Parameter(
             Position = 2)]
         [ValidateNotNullOrEmpty()]
-        [String[]] $Name,
+        [System.String[]] $Name,
 
         [Parameter(
             Position = 3)]

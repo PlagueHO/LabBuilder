@@ -13,7 +13,7 @@ function Get-LabResourceModule
         [Parameter(
             Position = 2)]
         [ValidateNotNullOrEmpty()]
-        [String[]] $Name
+        [System.String[]] $Name
     )
 
     [LabResourceModule[]] $ResourceModules = @()

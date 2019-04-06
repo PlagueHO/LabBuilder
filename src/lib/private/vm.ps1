@@ -149,6 +149,7 @@ Add-Content ``
     if ($VM.SetupComplete)
     {
         [System.String] $SetupComplete = $VM.SetupComplete
+
         if (-not (Test-Path -Path $SetupComplete))
         {
             $exceptionParameters = @{
@@ -159,7 +160,9 @@ Add-Content ``
             }
             New-LabException @exceptionParameters
         }
+
         [System.String] $Extension = [System.IO.Path]::GetExtension($SetupComplete)
+
         Switch ($Extension.ToLower())
         {
             '.ps1'
@@ -167,6 +170,7 @@ Add-Content ``
                 $SetupCompletePs += Get-Content -Path $SetupComplete
                 Break
             } # 'ps1'
+
             '.cmd'
             {
                 $SetupCompleteCmd += Get-Content -Path $SetupComplete
@@ -191,7 +195,9 @@ certoc.exe -ImportPFX -p $Script:DSCCertificatePassword root $ENV:SystemRoot\$Sc
         $SetupCompleteCmd = @"
 @echo SetupComplete.cmd Script Started... >> %SYSTEMROOT%\Setup\Scripts\SetupComplete.log`r
 $SetupCompleteCmd
+@echo SetupComplete.cmd Starting Timeout 30... >> %SYSTEMROOT%\Setup\Scripts\SetupComplete.log`r
 Timeout 30
+@echo SetupComplete.cmd Execute SetupComplete.ps1... >> %SYSTEMROOT%\Setup\Scripts\SetupComplete.log`r
 powerShell.exe -ExecutionPolicy Unrestricted -Command `"%SYSTEMROOT%\Setup\Scripts\SetupComplete.ps1`" `r
 @echo SetupComplete.cmd Script Finished... >> %SYSTEMROOT%\Setup\Scripts\SetupComplete.log
 @echo Initial Setup Completed - this file indicates that setup has completed. >> %SYSTEMROOT%\Setup\Scripts\InitialSetupCompleted.txt
@@ -217,7 +223,6 @@ Add-Content ``
     $null = Set-Content `
         -Path (Join-Path -Path $VMLabBuilderFiles -ChildPath 'SetupComplete.ps1') `
         -Value $SetupCompletePs -Force
-
 
     # If ODJ file specified copy it to the labuilder path.
     if ($VM.OSType -eq [LabOSType]::Nano `
@@ -929,7 +934,7 @@ function GetVMManagementIPAddress {
         [Parameter(Mandatory = $true)]
         [LabVM] $VM
     )
-    [System.String] $ManagementSwitchName = GetManagementSwitchName `
+    [System.String] $ManagementSwitchName = Get-LabManagementSwitchName `
         -Lab $Lab
     [System.String] $IPAddress = (Get-VMNetworkAdapter -VMName $VM.Name).`
         Where({$_.SwitchName -eq $ManagementSwitchName}).`

@@ -61,7 +61,7 @@ function Get-Lab
     }
 
     # The XML passes the Schema check so load it.
-    [XML] $Lab = New-Object System.Xml.XmlDocument
+    $Lab = New-Object -TypeName System.Xml.XmlDocument
     $Lab.PreserveWhitespace = $true
     $Lab.LoadXML($Content)
 

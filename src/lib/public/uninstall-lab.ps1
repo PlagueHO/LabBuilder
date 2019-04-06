@@ -134,7 +134,7 @@ function Uninstall-Lab
             } # if
 
             # Remove the LabBuilder Management Network switch
-            [System.String] $ManagementSwitchName = GetManagementSwitchName `
+            [System.String] $ManagementSwitchName = Get-LabManagementSwitchName `
                 -Lab $Lab
             if ((Get-VMSwitch | Where-Object -Property Name -eq $ManagementSwitchName).Count -ne 0)
             {

@@ -12,7 +12,7 @@ function Get-LabVMTemplate {
         [Parameter(
             Position=2)]
         [ValidateNotNullOrEmpty()]
-        [String[]] $Name,
+        [System.String[]] $Name,
 
         [Parameter(
             Position=3)]
@@ -307,7 +307,7 @@ function Initialize-LabVMTemplate {
         [Parameter(
             Position=2)]
         [ValidateNotNullOrEmpty()]
-        [String[]] $Name,
+        [System.String[]] $Name,
 
         [Parameter(
             Position=3)]
@@ -535,7 +535,7 @@ function Remove-LabVMTemplate {
         [Parameter(
             Position=2)]
         [ValidateNotNullOrEmpty()]
-        [String[]] $Name,
+        [System.String[]] $Name,
 
         [Parameter(
             Position=3)]

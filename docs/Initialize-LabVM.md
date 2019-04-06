@@ -8,21 +8,24 @@ schema: 2.0.0
 # Initialize-LabVM
 
 ## SYNOPSIS
+
 Initializes the Virtual Machines used by a Lab from a provided array.
 
 ## SYNTAX
 
-```
+```powershell
 Initialize-LabVM [-Lab] <Object> [[-Name] <String[]>] [[-VMs] <LabVM[]>] [<CommonParameters>]
 ```
 
 ## DESCRIPTION
+
 Takes an array of LabVM objects that were configured in the Lab.
 
 ## EXAMPLES
 
 ### EXAMPLE 1
-```
+
+```powershell
 $Lab = Get-Lab -ConfigPath c:\mylab\config.xml
 ```
 
@@ -33,7 +36,8 @@ Initialize-LabVM \`
 Initializes the Virtual Machines in the configured in the Lab c:\mylab\config.xml
 
 ### EXAMPLE 2
-```
+
+```powershell
 $Lab = Get-Lab -ConfigPath c:\mylab\config.xml
 ```
 
@@ -43,6 +47,7 @@ Initializes the Virtual Machines in the configured in the Lab c:\mylab\config.xm
 ## PARAMETERS
 
 ### -Lab
+
 Contains the Lab object that was loaded by the Get-Lab object.
 
 ```yaml
@@ -58,6 +63,7 @@ Accept wildcard characters: False
 ```
 
 ### -Name
+
 An optional array of VM names.
 
 Only VMs matching names in this list will be initialized.
@@ -75,6 +81,7 @@ Accept wildcard characters: False
 ```
 
 ### -VMs
+
 An array of LabVM objects pulled from a Lab object.
 
 If not provided it will attempt to pull the list from the Lab object.
@@ -92,6 +99,7 @@ Accept wildcard characters: False
 ```
 
 ### CommonParameters
+
 This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable, -InformationAction, -InformationVariable, -OutVariable, -OutBuffer, -PipelineVariable, -Verbose, -WarningAction, and -WarningVariable.
 For more information, see about_CommonParameters (http://go.microsoft.com/fwlink/?LinkID=113216).
 
@@ -99,7 +107,8 @@ For more information, see about_CommonParameters (http://go.microsoft.com/fwlink
 
 ## OUTPUTS
 
-### None.
+None.
+
 ## NOTES
 
 ## RELATED LINKS

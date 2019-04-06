@@ -8,16 +8,18 @@ schema: 2.0.0
 # Get-LabVMTemplate
 
 ## SYNOPSIS
+
 Gets an Array of VM Templates for a Lab.
 
 ## SYNTAX
 
-```
+```powershell
 Get-LabVMTemplate [-Lab] <Object> [[-Name] <String[]>] [[-VMTemplateVHDs] <LabVMTemplateVHD[]>]
  [<CommonParameters>]
 ```
 
 ## DESCRIPTION
+
 Takes the provided Lab and returns the list of Virtul Machine template machines
 that will be used to create the Virtual Machines in this lab.
 
@@ -26,7 +28,8 @@ This list is usually passed to Initialize-LabVMTemplate.
 ## EXAMPLES
 
 ### EXAMPLE 1
-```
+
+```powershell
 $Lab = Get-Lab -ConfigPath c:\mylab\config.xml
 ```
 
@@ -36,6 +39,7 @@ Loads a Lab and pulls the array of VMTemplates from it.
 ## PARAMETERS
 
 ### -Lab
+
 Contains the Lab object that was loaded by the Get-Lab object.
 
 ```yaml
@@ -51,6 +55,7 @@ Accept wildcard characters: False
 ```
 
 ### -Name
+
 An optional array of VM Template names.
 
 Only VM Templates matching names in this list will be returned in the array.
@@ -68,6 +73,7 @@ Accept wildcard characters: False
 ```
 
 ### -VMTemplateVHDs
+
 The array of VMTemplateVHDs pulled from the Lab using Get-LabVMTemplateVHD.
 
 If not provided it will attempt to pull the list from the Lab.
@@ -85,6 +91,7 @@ Accept wildcard characters: False
 ```
 
 ### CommonParameters
+
 This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable, -InformationAction, -InformationVariable, -OutVariable, -OutBuffer, -PipelineVariable, -Verbose, -WarningAction, and -WarningVariable.
 For more information, see about_CommonParameters (http://go.microsoft.com/fwlink/?LinkID=113216).
 
@@ -92,7 +99,8 @@ For more information, see about_CommonParameters (http://go.microsoft.com/fwlink
 
 ## OUTPUTS
 
-### Returns an array of LabVMTemplate objects.
+Returns an array of LabVMTemplate objects.
+
 ## NOTES
 
 ## RELATED LINKS

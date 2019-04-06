@@ -8,17 +8,19 @@ schema: 2.0.0
 # New-Lab
 
 ## SYNOPSIS
+
 Creates a new Lab Builder Configuration file and Lab folder.
 
 ## SYNTAX
 
-```
+```powershell
 New-Lab [-ConfigPath] <String> [-LabPath] <String> [-Name] <String> [[-Version] <String>] [[-Id] <String>]
  [[-Description] <String>] [[-DomainName] <String>] [[-Email] <String>] [-WhatIf] [-Confirm]
  [<CommonParameters>]
 ```
 
 ## DESCRIPTION
+
 This function will take a path to a new Lab folder and a path or filename
 for a new Lab Configuration file and creates them using the standard XML
 template.
@@ -33,7 +35,8 @@ Lab.
 ## EXAMPLES
 
 ### EXAMPLE 1
-```
+
+```powershell
 $MyLab = New-Lab `
 ```
 
@@ -47,6 +50,7 @@ c:\MyLab and populates it with default DSCLibrary file and supporting folders.
 ## PARAMETERS
 
 ### -ConfigPath
+
 This is the path to the Lab Builder configuration file to create.
 If it is
 not rooted the configuration file is created in the LabPath folder.
@@ -64,6 +68,7 @@ Accept wildcard characters: False
 ```
 
 ### -LabPath
+
 This is a required path of the new Lab to create.
 
 ```yaml
@@ -79,6 +84,7 @@ Accept wildcard characters: False
 ```
 
 ### -Name
+
 This is a required name of the Lab that gets added to the new Lab Configration
 file.
 
@@ -95,6 +101,7 @@ Accept wildcard characters: False
 ```
 
 ### -Version
+
 This is a required version of the Lab that gets added to the new Lab Configration
 file.
 
@@ -111,6 +118,7 @@ Accept wildcard characters: False
 ```
 
 ### -Id
+
 This is the optional Lab Id that gets set in the new Lab Configuration
 file.
 
@@ -127,6 +135,7 @@ Accept wildcard characters: False
 ```
 
 ### -Description
+
 This is the optional Lab description that gets set in the new Lab Configuration
 file.
 
@@ -143,6 +152,7 @@ Accept wildcard characters: False
 ```
 
 ### -DomainName
+
 This is the optional Lab domain name that gets set in the new Lab Configuration
 file.
 
@@ -159,6 +169,7 @@ Accept wildcard characters: False
 ```
 
 ### -Email
+
 This is the optional Lab email address that gets set in the new Lab Configuration
 file.
 
@@ -175,6 +186,7 @@ Accept wildcard characters: False
 ```
 
 ### -WhatIf
+
 Shows what would happen if the cmdlet runs.
 The cmdlet is not run.
 
@@ -191,6 +203,7 @@ Accept wildcard characters: False
 ```
 
 ### -Confirm
+
 Prompts you for confirmation before running the cmdlet.
 
 ```yaml
@@ -206,6 +219,7 @@ Accept wildcard characters: False
 ```
 
 ### CommonParameters
+
 This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable, -InformationAction, -InformationVariable, -OutVariable, -OutBuffer, -PipelineVariable, -Verbose, -WarningAction, and -WarningVariable.
 For more information, see about_CommonParameters (http://go.microsoft.com/fwlink/?LinkID=113216).
 
@@ -213,7 +227,8 @@ For more information, see about_CommonParameters (http://go.microsoft.com/fwlink
 
 ## OUTPUTS
 
-### The Lab object representing the new Lab Configuration that was created.
+The Lab object representing the new Lab Configuration that was created.
+
 ## NOTES
 
 ## RELATED LINKS

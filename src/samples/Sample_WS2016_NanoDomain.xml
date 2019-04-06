@@ -26,8 +26,8 @@
     <switch name="Domain Private SMB" type="Private" vlan="33" />
   </switches>
 
-  <templatevhds isopath="d:\ISOs"
-                vhdpath="d:\VHDs"
+  <templatevhds isopath="ISOFiles"
+                vhdpath="VHDFiles"
                 prefix="" >
     <templatevhd name="Windows Server 2016 Datacenter Full"
                  iso="14393.0.161119-1705.RS1_REFRESH_SERVER_EVAL_X64FRE_EN-US.ISO"

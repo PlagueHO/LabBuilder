@@ -12,12 +12,21 @@ function Remove-LabSwitch
         [Parameter(
             Position = 2)]
         [ValidateNotNullOrEmpty()]
-        [String[]] $Name,
+        [System.String[]]
+        $Name,
 
         [Parameter(
             Position = 3)]
-        [LabSwitch[]] $Switches
+        [LabSwitch[]]
+        $Switches,
+
+        [Parameter(
+            Position = 4)]
+        [Switch]
+        $RemoveExternal
     )
+
+    $PSBoundParameters.Remove('RemoveExternal')
 
     # if switches were not passed so pull them
     if (-not $PSBoundParameters.ContainsKey('switches'))
@@ -35,9 +44,12 @@ function Remove-LabSwitch
             continue
         } # if
 
-        if ((Get-VMSwitch | Where-Object -Property Name -eq $VMSwitch.Name).Count -ne 0)
+        $existingVMSwitch = Get-VMSwitch | Where-Object -Property Name -eq $VMSwitch.Name
+
+        if ($existingVMSwitch.Count -ne 0)
         {
-            [System.String] $SwitchName = $VMSwitch.Name
+            $SwitchName = $VMSwitch.Name
+
             if (-not $SwitchName)
             {
                 $exceptionParameters = @{
@@ -47,9 +59,12 @@ function Remove-LabSwitch
                 }
                 New-LabException @exceptionParameters
             }
+
             [LabSwitchType] $SwitchType = $VMSwitch.Type
+
             Write-LabMessage -Message $($LocalizedData.DeleteingVirtualSwitchMessage `
                     -f $SwitchType, $SwitchName)
+
             Switch ($SwitchType)
             {
                 'External'
@@ -58,41 +73,53 @@ function Remove-LabSwitch
                     {
                         $VMSwitch.Adapters.foreach( {
                                 $null = Remove-VMNetworkAdapter `
+                                    -SwitchName $SwitchName `
+                                    -Name $_.Name `
                                     -ManagementOS `
-                                    -Name $_.Name
+                                    -ErrorAction SilentlyContinue
                             } )
                     } # if
-                    Remove-VMSwitch `
-                        -Name $SwitchName
-                    Break
+
+                    if ($RemoveExternal)
+                    {
+                        Remove-VMSwitch `
+                            -Name $SwitchName
+                    }
+                    break
                 } # 'External'
+
                 'Private'
                 {
                     Remove-VMSwitch `
                         -Name $SwitchName
-                    Break
+                    break
                 } # 'Private'
+
                 'Internal'
                 {
-                    Remove-VMSwitch `
-                        -Name $SwitchName
                     if ($VMSwitch.Adapters)
                     {
                         $VMSwitch.Adapters.foreach( {
                                 $null = Remove-VMNetworkAdapter `
+                                    -SwitchName $SwitchName `
+                                    -Name $_.Name `
                                     -ManagementOS `
-                                    -Name $_.Name
-                            } )
+                                    -ErrorAction SilentlyContinue
+                                } )
                     } # if
-                    Break
+
+                    Remove-VMSwitch `
+                        -Name $SwitchName
+                    break
                 } # 'Internal'
+
                 'NAT'
                 {
                     Remove-NetNat `
                         -Name $SwitchName
                     Remove-VMSwitch `
                         -Name $SwitchName
-                    Break
+                    break
                 } # 'Internal'
 
                 Default
@@ -108,4 +135,4 @@ function Remove-LabSwitch
             } # Switch
         } # if
     } # foreach
-} # Remove-LabSwitch
+}

@@ -13,7 +13,7 @@ function Get-LabSwitch
         [Parameter(
             Position = 2)]
         [ValidateNotNullOrEmpty()]
-        [String[]] $Name
+        [System.String[]] $Name
     )
 
     [System.String] $LabId = $Lab.labbuilderconfig.settings.labid

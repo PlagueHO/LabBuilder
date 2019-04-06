@@ -12,7 +12,7 @@ function Initialize-LabVM
         [Parameter(
             Position=2)]
         [ValidateNotNullOrEmpty()]
-        [String[]] $Name,
+        [System.String[]] $Name,
 
         [Parameter(
             Position=3)]
@@ -37,7 +37,7 @@ function Initialize-LabVM
     [System.String] $LabPath = $Lab.labbuilderconfig.settings.labpath
 
     # Figure out the name of the LabBuilder control switch
-    $ManagementSwitchName = GetManagementSwitchName `
+    $ManagementSwitchName = Get-LabManagementSwitchName `
         -Lab $Lab
     if ($Lab.labbuilderconfig.switches.ManagementVlan)
     {

@@ -6,6 +6,14 @@
   and robust.
 - Convert module name to be a variable in PSake file to make it more
   easily portable between projects.
+- Added samples for Windows Server 2019.
+- Cleaned up unit test initialization and fixtures.
+- Refactored `Install-Lab` to move Management Switch creation into a
+  new function `Initialize-LabManagementSwitch` and created unit tests.
+- Added more log information to `SetupComplete.cmd` to diagnose issues
+  with initial machine boot on Windows Server 2019.
+- Fix bug in `Remove-LabSwitch` where adapter
+- Correct documentation markdown errors.
 
 ## 1.0.0.6
 

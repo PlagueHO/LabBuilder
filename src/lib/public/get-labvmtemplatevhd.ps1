@@ -13,7 +13,7 @@ function Get-LabVMTemplateVHD
         [Parameter(
             Position = 2)]
         [ValidateNotNullOrEmpty()]
-        [String[]] $Name
+        [System.String[]] $Name
     )
 
     # return null if the TemplateVHDs node does not exist

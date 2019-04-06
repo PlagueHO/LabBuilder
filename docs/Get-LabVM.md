@@ -8,23 +8,26 @@ schema: 2.0.0
 # Get-LabVM
 
 ## SYNOPSIS
+
 Gets an Array of LabVM objects from a Lab.
 
 ## SYNTAX
 
-```
+```powershell
 Get-LabVM [-Lab] <Object> [[-Name] <String[]>] [[-VMTemplates] <LabVMTemplate[]>] [[-Switches] <LabSwitch[]>]
  [<CommonParameters>]
 ```
 
 ## DESCRIPTION
+
 Takes the provided Lab and returns the list of VM objects that will be created in this lab.
 This list is usually passed to Initialize-LabVM.
 
 ## EXAMPLES
 
 ### EXAMPLE 1
-```
+
+```powershell
 $Lab = Get-Lab -ConfigPath c:\mylab\config.xml
 ```
 
@@ -37,7 +40,8 @@ $VMs = Get-LabVM \`
 Loads a Lab and pulls the array of VMs from it.
 
 ### EXAMPLE 2
-```
+
+```powershell
 $Lab = Get-Lab -ConfigPath c:\mylab\config.xml
 ```
 
@@ -47,6 +51,7 @@ Loads a Lab and pulls the array of VMs from it.
 ## PARAMETERS
 
 ### -Lab
+
 Contains the Lab Builder Lab object that was loaded by the Get-Lab object.
 
 ```yaml
@@ -62,6 +67,7 @@ Accept wildcard characters: False
 ```
 
 ### -Name
+
 An optional array of VM names.
 
 Only VMs matching names in this list will be returned in the array.
@@ -79,6 +85,7 @@ Accept wildcard characters: False
 ```
 
 ### -VMTemplates
+
 Contains the array of LabVMTemplate objects returned by Get-LabVMTemplate from this Lab.
 
 If not provided it will attempt to pull the list from the Lab.
@@ -96,6 +103,7 @@ Accept wildcard characters: False
 ```
 
 ### -Switches
+
 Contains the array of LabVMSwitch objects returned by Get-LabSwitch from this Lab.
 
 If not provided it will attempt to pull the list from the Lab.
@@ -113,6 +121,7 @@ Accept wildcard characters: False
 ```
 
 ### CommonParameters
+
 This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable, -InformationAction, -InformationVariable, -OutVariable, -OutBuffer, -PipelineVariable, -Verbose, -WarningAction, and -WarningVariable.
 For more information, see about_CommonParameters (http://go.microsoft.com/fwlink/?LinkID=113216).
 
@@ -120,7 +129,8 @@ For more information, see about_CommonParameters (http://go.microsoft.com/fwlink
 
 ## OUTPUTS
 
-### Returns an array of LabVM objects.
+Returns an array of LabVM objects.
+
 ## NOTES
 
 ## RELATED LINKS

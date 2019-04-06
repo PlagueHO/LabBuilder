@@ -8,21 +8,25 @@ schema: 2.0.0
 # Start-Lab
 
 ## SYNOPSIS
+
 Starts an existing Lab.
 
 ## SYNTAX
 
 ### Lab (Default)
-```
+
+```powershell
 Start-Lab [-Lab] <Object> [[-StartupTimeout] <Int32>] [<CommonParameters>]
 ```
 
 ### File
-```
+
+```powershell
 Start-Lab [-ConfigPath] <String> [[-LabPath] <String>] [[-StartupTimeout] <Int32>] [<CommonParameters>]
 ```
 
 ## DESCRIPTION
+
 This cmdlet will start all the Hyper-V virtual machines definied in a Lab
 configuration.
 
@@ -58,14 +62,16 @@ the Lab is created.
 ## EXAMPLES
 
 ### EXAMPLE 1
-```
+
+```powershell
 Start-Lab -ConfigPath c:\mylab\config.xml
 ```
 
 Start the lab defined in the c:\mylab\config.xml LabBuilder configuration file.
 
 ### EXAMPLE 2
-```
+
+```powershell
 Get-Lab -ConfigPath c:\mylab\config.xml | Start-Lab
 ```
 
@@ -74,6 +80,7 @@ Start the lab defined in the c:\mylab\config.xml LabBuilder configuration file.
 ## PARAMETERS
 
 ### -ConfigPath
+
 The path to the LabBuilder configuration XML file.
 
 ```yaml
@@ -89,6 +96,7 @@ Accept wildcard characters: False
 ```
 
 ### -LabPath
+
 The optional path to install the Lab to - overrides the LabPath setting in the
 configuration file.
 
@@ -105,6 +113,7 @@ Accept wildcard characters: False
 ```
 
 ### -Lab
+
 The Lab object returned by Get-Lab of the lab to start.
 
 ```yaml
@@ -120,6 +129,7 @@ Accept wildcard characters: False
 ```
 
 ### -StartupTimeout
+
 The maximum number of seconds that the process will wait for a VM to startup.
 Defaults to 90 seconds.
 
@@ -136,6 +146,7 @@ Accept wildcard characters: False
 ```
 
 ### CommonParameters
+
 This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable, -InformationAction, -InformationVariable, -OutVariable, -OutBuffer, -PipelineVariable, -Verbose, -WarningAction, and -WarningVariable.
 For more information, see about_CommonParameters (http://go.microsoft.com/fwlink/?LinkID=113216).
 
@@ -143,7 +154,8 @@ For more information, see about_CommonParameters (http://go.microsoft.com/fwlink
 
 ## OUTPUTS
 
-### None
+None.
+
 ## NOTES
 
 ## RELATED LINKS
