@@ -173,7 +173,7 @@ function New-SelfSignedCertificateEx {
 		[Alias('KU')]
 		[Security.Cryptography.X509Certificates.X509KeyUsageFlags]$KeyUsage,
 		[Alias('SAN')]
-		[String[]]$SubjectAlternativeName,
+		[System.String[]]$SubjectAlternativeName,
 		[bool]$IsCA,
 		[int]$PathLength = -1,
 		[Security.Cryptography.X509Certificates.X509ExtensionCollection]$CustomExtension,

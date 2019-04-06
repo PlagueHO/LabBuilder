@@ -534,7 +534,7 @@ function Get-VersionNumber
     Foreach ($ver in (0..2))
     {
         $sem = $versionArray[$ver]
-        if ([String]::IsNullOrEmpty($sem))
+        if ([System.String]::IsNullOrEmpty($sem))
         {
             $sem = '0'
         }

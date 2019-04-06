@@ -13,7 +13,7 @@ function Get-LabResourceISO
         [Parameter(
             Position = 2)]
         [ValidateNotNullOrEmpty()]
-        [String[]] $Name
+        [System.String[]] $Name
     )
 
     # Determine the ISORootPath where the ISO files should be found.

@@ -8,21 +8,25 @@ schema: 2.0.0
 # Stop-Lab
 
 ## SYNOPSIS
+
 Stop an existing Lab.
 
 ## SYNTAX
 
 ### Lab (Default)
-```
+
+```powershell
 Stop-Lab [-Lab] <Object> [<CommonParameters>]
 ```
 
 ### File
-```
+
+```powershell
 Stop-Lab [-ConfigPath] <String> [[-LabPath] <String>] [<CommonParameters>]
 ```
 
 ## DESCRIPTION
+
 This cmdlet will stop all the Hyper-V virtual machines definied in a Lab
 configuration.
 
@@ -55,14 +59,16 @@ will be thown but the Stop process will continue.
 ## EXAMPLES
 
 ### EXAMPLE 1
-```
+
+```powershell
 Stop-Lab -ConfigPath c:\mylab\config.xml
 ```
 
 Stop the lab defined in the c:\mylab\config.xml LabBuilder configuration file.
 
 ### EXAMPLE 2
-```
+
+```powershell
 Get-Lab -ConfigPath c:\mylab\config.xml | Stop-Lab
 ```
 
@@ -71,6 +77,7 @@ Stop the lab defined in the c:\mylab\config.xml LabBuilder configuration file.
 ## PARAMETERS
 
 ### -ConfigPath
+
 The path to the LabBuilder configuration XML file.
 
 ```yaml
@@ -86,6 +93,7 @@ Accept wildcard characters: False
 ```
 
 ### -LabPath
+
 The optional path to install the Lab to - overrides the LabPath setting in the
 configuration file.
 
@@ -102,6 +110,7 @@ Accept wildcard characters: False
 ```
 
 ### -Lab
+
 The Lab object returned by Get-Lab of the lab to start.
 
 ```yaml
@@ -117,6 +126,7 @@ Accept wildcard characters: False
 ```
 
 ### CommonParameters
+
 This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable, -InformationAction, -InformationVariable, -OutVariable, -OutBuffer, -PipelineVariable, -Verbose, -WarningAction, and -WarningVariable.
 For more information, see about_CommonParameters (http://go.microsoft.com/fwlink/?LinkID=113216).
 
@@ -125,6 +135,7 @@ For more information, see about_CommonParameters (http://go.microsoft.com/fwlink
 ## OUTPUTS
 
 ### None
+
 ## NOTES
 
 ## RELATED LINKS

@@ -12,7 +12,7 @@ function Initialize-LabSwitch
         [Parameter(
             Position = 2)]
         [ValidateNotNullOrEmpty()]
-        [String[]] $Name,
+        [System.String[]] $Name,
 
         [Parameter(
             Position = 3)]
@@ -273,34 +273,45 @@ function Initialize-LabSwitch
             if ($SwitchType -ne 'Private')
             {
                 # Configure the VLan on the default Management Adapter
-                $Splat = @{
+                $setLabSwitchAdapterParameters = @{
                     Name       = $SwitchName
                     SwitchName = $SwitchName
                 }
+
                 if ($VMSwitch.VLan)
                 {
-                    $Splat += @{ VlanId = $VMSwitch.Vlan }
+                    $setLabSwitchAdapterParameters += @{
+                        VlanId = $VMSwitch.Vlan
+                    }
                 } # if
-                UpdateSwitchManagementAdapter @Splat
+
+                Set-LabSwitchAdapter @setLabSwitchAdapterParameters
 
                 # Add any management OS adapters to the switch
                 if ($VMSwitch.Adapters)
                 {
                     foreach ($Adapter in $VMSwitch.Adapters)
                     {
-                        $Splat = @{
+                        $setLabSwitchAdapterParameters = @{
                             Name       = $Adapter.Name
                             SwitchName = $SwitchName
                         }
+
                         if ($Adapter.MacAddress)
                         {
-                            $Splat += @{ StaticMacAddress = $Adapter.MacAddress }
+                            $setLabSwitchAdapterParameters += @{
+                                StaticMacAddress = $Adapter.MacAddress
+                            }
                         } # if
+
                         if ($VMSwitch.VLan)
                         {
-                            $Splat += @{ VlanId = $VMSwitch.Vlan }
+                            $setLabSwitchAdapterParameters += @{
+                                VlanId = $VMSwitch.Vlan
+                            }
                         } # if
-                        UpdateSwitchManagementAdapter @Splat
+
+                        Set-LabSwitchAdapter @setLabSwitchAdapterParameters
                     } # foreach
                 } # if
             } # if

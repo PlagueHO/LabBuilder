@@ -6,6 +6,22 @@
   and robust.
 - Convert module name to be a variable in PSake file to make it more
   easily portable between projects.
+- Added samples for Windows Server 2019 - fixes [Issue #305](https://github.com/PlagueHO/LabBuilder/issues/305).
+- Cleaned up unit test initialization and fixtures.
+- Refactored `Install-Lab` to move Management Switch creation into a
+  new function `Initialize-LabManagementSwitch` and created unit tests.
+- Added more log information to `SetupComplete.cmd` to diagnose issues
+  with initial machine boot on Windows Server 2019.
+- Fix bug in `Remove-LabSwitch` where adapter
+- Correct documentation markdown errors.
+- Removed `Timeout 30` from the Initial `SetupComplete.cmd` that runs
+  on each VM when first intialized because it fails to execute on
+  Windows Server 2019. Replaced with `Start-Sleep` in `SetupComplete.ps1`
+  that is called by `SetupComplete.cmd` - fixes [Issue #308](https://github.com/PlagueHO/LabBuilder/issues/308).
+- Change `Update-LabDSC` so that module copy process to Lab Files will
+  continue even if destination path is too long. This is to allow DSC
+  Resource modules that have example filenames that result in a long
+  path.
 
 ## 1.0.0.6
 

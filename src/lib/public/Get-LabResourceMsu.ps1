@@ -13,7 +13,7 @@ function Get-LabResourceMSU
         [Parameter(
             Position = 2)]
         [ValidateNotNullOrEmpty()]
-        [String[]] $Name
+        [System.String[]] $Name
     )
 
     [LabResourceMSU[]] $ResourceMSUs = @()

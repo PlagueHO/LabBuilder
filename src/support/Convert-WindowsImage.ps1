@@ -189,7 +189,7 @@ Convert-WindowsImage
 
         [Parameter(ParameterSetName="SRC")]
         [Alias("SKU")]
-        [string[]]
+        [System.String[]]
         [ValidateNotNullOrEmpty()]
         $Edition,
 
@@ -258,18 +258,18 @@ Convert-WindowsImage
         $EnableDebugger = "None",
 
         [Parameter(ParameterSetName="SRC")]
-        [string[]]
+        [System.String[]]
         [ValidateNotNullOrEmpty()]
         $Feature,
 
         [Parameter(ParameterSetName="SRC")]
-        [string[]]
+        [System.String[]]
         [ValidateNotNullOrEmpty()]
         [ValidateScript({ Test-Path $(Resolve-Path $_) })]
         $Driver,
 
         [Parameter(ParameterSetName="SRC")]
-        [string[]]
+        [System.String[]]
         [ValidateNotNullOrEmpty()]
         [ValidateScript({ Test-Path $(Resolve-Path $_) })]
         $Package,
@@ -851,7 +851,7 @@ You can use the fields below to configure the VHD or VHDX that you want to creat
                 $Executable,
 
                 [Parameter(Mandatory=$true)]
-                [string[]]
+                [System.String[]]
                 [ValidateNotNullOrEmpty()]
                 $Arguments,
 
