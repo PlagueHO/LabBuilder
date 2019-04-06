@@ -278,8 +278,8 @@ function Update-LabDSC
     # Add the NetworkingDsc DSC Resource because it is always used
     $module = [LabDSCModule]::New('NetworkingDsc')
 
-    # It must be 6.0.0.0 or greater
-    $module.MinimumVersion = [Version] '6.0.0.0'
+    # It must be 7.0.0.0 or greater
+    $module.MinimumVersion = [Version] '7.0.0.0'
     $dscModules += @( $module )
 
     foreach ($dscModule in $dscModules)
@@ -1150,10 +1150,10 @@ Configuration Networking {
             else
             {
                 $dscNetworkingConfig += @"
-    DhcpClient IPv4DHCP_$adapterCount {
+    NetIPInterface IPv4DHCP_$adapterCount {
         InterfaceAlias = '$($adapter.Name)'
         AddressFamily  = 'IPv4'
-        State          = 'Enabled'
+        Dhcp           = 'Enabled'
     }
 
 "@
@@ -1210,10 +1210,10 @@ Configuration Networking {
             else
             {
                 $dscNetworkingConfig += @"
-    DhcpClient IPv6DHCP_$adapterCount {
+    NetIPInterface IPv6DHCP_$adapterCount {
         InterfaceAlias = '$($adapter.Name)'
         AddressFamily  = 'IPv6'
-        State          = 'Enabled'
+        Dhcp           = 'Enabled'
     }
 
 "@
