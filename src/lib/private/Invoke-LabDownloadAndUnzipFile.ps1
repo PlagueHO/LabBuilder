@@ -10,7 +10,7 @@
 function Invoke-LabDownloadAndUnzipFile
 {
     [CmdletBinding()]
-    Param
+    param
     (
         [Parameter(Mandatory = $true)]
         [ValidateNotNullOrEmpty()]

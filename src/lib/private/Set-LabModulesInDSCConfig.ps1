@@ -30,7 +30,7 @@ function Set-LabModulesInDSCConfig
 {
     [CmdLetBinding(DefaultParameterSetName = "Content")]
     [OutputType([System.String])]
-    Param
+    param
     (
         [parameter(
             Position = 1,

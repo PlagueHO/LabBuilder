@@ -26,10 +26,12 @@ function Get-LabNextIpAddress
     (
         [Parameter(Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
-        [System.String] $IpAddress,
+        [System.String]
+        $IpAddress,
 
         [Parameter()]
-        [System.Byte] $Step = 1
+        [System.Byte]
+        $Step = 1
     )
 
     # Check the IP Address is valid

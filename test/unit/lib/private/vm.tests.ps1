@@ -60,7 +60,7 @@ InModuleScope LabBuilder {
     Describe '\lib\private\Vm.ps1\WaitVMOff' -Tags 'Incomplete'  {
     }
 
-    Describe '\lib\private\Vm.ps1\GetIntegrationServiceNames' {
+    Describe '\lib\private\Vm.ps1\Get-LabIntegrationServiceName' {
         Mock -CommandName Get-CimInstance `
             -ParameterFilter { $Class -eq 'Msvm_VssComponentSettingData' } `
             -MockWith { @{ Caption = 'VSS' }}
@@ -82,7 +82,7 @@ InModuleScope LabBuilder {
 
         Context 'When called' {
             It 'Returns expected Integration Service names' {
-                GetIntegrationServiceNames | Should -Be @(
+                Get-LabIntegrationServiceName | Should -Be @(
                     'VSS'
                     'Shutdown'
                     'Time Synchronization'
@@ -98,7 +98,7 @@ InModuleScope LabBuilder {
         }
     }
 
-    Describe '\lib\private\Vm.ps1\UpdateVMIntegrationServices' {
+    Describe '\lib\private\Vm.ps1\Update-LabVMIntegrationService' {
         function Get-VMIntegrationService {}
         function Enable-VMIntegrationService {
             [CmdletBinding()]
@@ -121,7 +121,7 @@ InModuleScope LabBuilder {
             )
         }
 
-        Mock -CommandName GetIntegrationServiceNames -MockWith {
+        Mock -CommandName Get-LabIntegrationServiceName -MockWith {
             @(
                 'VSS'
                 'Shutdown'
@@ -151,7 +151,7 @@ InModuleScope LabBuilder {
             $VMs[0].IntegrationServices = $null
 
             It 'Does not throw an Exception' {
-                { UpdateVMIntegrationServices -VM $VMs[0] } | Should -Not -Throw
+                { Update-LabVMIntegrationService -VM $VMs[0] } | Should -Not -Throw
             }
 
             It 'Calls Mocked commands' {
@@ -166,7 +166,7 @@ InModuleScope LabBuilder {
             $VMs[0].IntegrationServices = ''
 
             It 'Does not throw an Exception' {
-                { UpdateVMIntegrationServices -VM $VMs[0] } | Should -Not -Throw
+                { Update-LabVMIntegrationService -VM $VMs[0] } | Should -Not -Throw
             }
 
             It 'Calls Mocked commands' {
@@ -181,7 +181,7 @@ InModuleScope LabBuilder {
             $VMs[0].IntegrationServices = 'VSS'
 
             It 'Does not throw an Exception' {
-                { UpdateVMIntegrationServices -VM $VMs[0] } | Should -Not -Throw
+                { Update-LabVMIntegrationService -VM $VMs[0] } | Should -Not -Throw
             }
 
             It 'Calls Mocked commands' {
@@ -196,7 +196,7 @@ InModuleScope LabBuilder {
             $VMs[0].IntegrationServices = 'Guest Service Interface'
 
             It 'Does not throw an Exception' {
-                { UpdateVMIntegrationServices -VM $VMs[0] } | Should -Not -Throw
+                { Update-LabVMIntegrationService -VM $VMs[0] } | Should -Not -Throw
             }
 
             It 'Calls Mocked commands' {

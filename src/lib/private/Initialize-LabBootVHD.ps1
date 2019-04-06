@@ -33,9 +33,11 @@
     .OUTPUTS
         None.
 #>
-function Initialize-LabBootVHD {
+function Initialize-LabBootVHD
+{
     [CmdLetBinding()]
-    param (
+    param
+    (
         [Parameter(Mandatory = $true)]
         $Lab,
 

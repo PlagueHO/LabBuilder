@@ -27,7 +27,8 @@
     .OUTPUTS
         None.
 #>
-function Update-LabVMDataDisk {
+function Update-LabVMDataDisk
+{
     [CmdLetBinding()]
     param
     (
@@ -41,7 +42,8 @@ function Update-LabVMDataDisk {
             Mandatory,
             Position=1)]
         [ValidateNotNullOrEmpty()]
-        [LabVM] $VM
+        [LabVM]
+        $VM
     )
 
     # If there are no data VHDs just return

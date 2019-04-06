@@ -9,18 +9,18 @@
         If The -ModuleVersion parameter is included then the ModuleVersion property in the returned
         LabDSCModule object will be set, otherwise it will be null.
 
-    .PARAMETER DSCConfigFile
+    .PARAMETER DscConfigFile
         Contains the path to the DSC Config file to extract resource module names from.
 
-    .PARAMETER DSCConfigContent
+    .PARAMETER DscConfigContent
         Contains the content of the DSC Config to extract resource module names from.
 
     .EXAMPLE
-        Get-LabModulesInDSCConfig -DSCConfigFile c:\mydsc\Server01.ps1
+        Get-LabModulesInDSCConfig -DscConfigFile c:\mydsc\Server01.ps1
         Return the DSC Resource module list from file c:\mydsc\server01.ps1
 
     .EXAMPLE
-        Get-LabModulesInDSCConfig -DSCConfigContent $DSCConfig
+        Get-LabModulesInDSCConfig -DscConfigContent $DSCConfig
         Return the DSC Resource module list from the DSC Config in $DSCConfig.
 
     .OUTPUTS
@@ -31,31 +31,33 @@ function Get-LabModulesInDSCConfig
 {
     [CmdLetBinding(DefaultParameterSetName = "Content")]
     [OutputType([Object[]])]
-    Param
+    param
     (
         [parameter(
             Position = 1,
             ParameterSetName = "Content",
             Mandatory = $true)]
-        [System.String] $dscConfigContent,
+        [System.String]
+        $DscConfigContent,
 
         [parameter(
             Position = 2,
             ParameterSetName = "File",
             Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
-        [System.String] $DSCConfigFile
+        [System.String]
+        $DscConfigFile
     )
 
     [LabDSCModule[]] $modules = $null
 
     if ($PSCmdlet.ParameterSetName -eq 'File')
     {
-        $dscConfigContent = Get-Content -Path $DSCConfigFile -Raw
+        $DscConfigContent = Get-Content -Path $DscConfigFile -Raw
     } # if
 
     $regex = "[ \t]*?Import\-DscResource[ \t]+(?:\-ModuleName[ \t])?'?`"?([A-Za-z0-9._-]+)`"?'?(([ \t]+-ModuleVersion)?[ \t]+'?`"?([0-9.]+)`"?`?)?[ \t]*?[\r\n]+?"
-    $moduleMatches = [regex]::matches($dscConfigContent, $regex, 'IgnoreCase')
+    $moduleMatches = [regex]::matches($DscConfigContent, $regex, 'IgnoreCase')
 
     foreach ($moduleMatch in $moduleMatches)
     {

@@ -21,7 +21,8 @@ function Register-LabPackageSource
     param
     (
         [Parameter()]
-        [Switch] $Force
+        [Switch]
+        $Force
     )
 
     $requiredPackageSources = @(

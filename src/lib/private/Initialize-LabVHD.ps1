@@ -80,25 +80,35 @@ function Initialize-LabVHD
 {
     [OutputType([Microsoft.Management.Infrastructure.CimInstance])]
     [CmdletBinding(DefaultParameterSetName = 'AssignDriveLetter')]
-    param (
+    param
+    (
         [Parameter(Mandatory=$true)]
         [ValidateNotNullOrEmpty()]
-        [System.String] $Path,
+        [System.String]
+        $Path,
 
-        [LabPartitionStyle] $PartitionStyle,
+        [Parameter()]
+        [LabPartitionStyle]
+        $PartitionStyle,
 
-        [LabFileSystem] $FileSystem,
+        [Parameter()]
+        [LabFileSystem]
+        $FileSystem,
 
+        [Parameter()]
         [ValidateNotNullOrEmpty()]
-        [System.String] $FileSystemLabel,
+        [System.String]
+        $FileSystemLabel,
 
         [Parameter(ParameterSetName = 'DriveLetter')]
         [ValidateNotNullOrEmpty()]
-        [System.String] $DriveLetter,
+        [System.String]
+        $DriveLetter,
 
         [Parameter(ParameterSetName = 'AccessPath')]
         [ValidateNotNullOrEmpty()]
-        [System.String] $AccessPath
+        [System.String]
+        $AccessPath
     )
 
     # Check file exists

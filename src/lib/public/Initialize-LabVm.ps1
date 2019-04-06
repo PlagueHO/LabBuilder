@@ -208,7 +208,7 @@ function Initialize-LabVM
         } # if
 
         # Enable/Disable the Integration Services
-        UpdateVMIntegrationServices `
+        Update-LabVMIntegrationService `
             -VM $VM
 
         # Update the data disks for the VM

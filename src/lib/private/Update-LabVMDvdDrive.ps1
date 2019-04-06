@@ -26,7 +26,8 @@
     .OUTPUTS
         None.
 #>
-function Update-LabVMDvdDrive {
+function Update-LabVMDvdDrive
+{
     [CmdLetBinding()]
     param
     (

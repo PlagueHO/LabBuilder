@@ -28,16 +28,19 @@
     .OUTPUTS
         None.
 #>
-function Copy-LabOdjFile {
+function Copy-LabOdjFile
+{
     [CmdLetBinding()]
     param (
         [Parameter(Mandatory = $true)]
         $Lab,
 
         [Parameter(Mandatory = $true)]
-        [LabVM] $VM,
+        [LabVM]
+        $VM,
 
-        [Int] $Timeout = 300
+        [System.Int32]
+        $Timeout = 300
     )
     [DateTime] $StartTime = Get-Date
     [System.Management.Automation.Runspaces.PSSession] $Session = $null

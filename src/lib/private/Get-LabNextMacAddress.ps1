@@ -28,5 +28,6 @@ function Get-NextMacAddress
         [System.Byte]
         $Step = 1
     )
-    Return [System.String]::Format("{0:X}", [Convert]::ToUInt64($MACAddress, 16) + $Step).PadLeft(12, '0')
+
+    return [System.String]::Format("{0:X}", [Convert]::ToUInt64($MACAddress, 16) + $Step).PadLeft(12, '0')
 }
