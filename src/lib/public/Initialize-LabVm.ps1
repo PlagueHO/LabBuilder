@@ -212,12 +212,12 @@ function Initialize-LabVM
             -VM $VM
 
         # Update the data disks for the VM
-        UpdateVMDataDisks `
+        Update-LabVMDataDisk `
             -Lab $Lab `
             -VM $VM
 
         # Update the DVD Drives for the VM
-        UpdateVMDVDDrives `
+        Update-LabVMDvdDrive `
             -Lab $Lab `
             -VM $VM
 

@@ -208,7 +208,7 @@ InModuleScope LabBuilder {
     }
 
 
-    Describe '\lib\private\Vm.ps1\UpdateVMDataDisks' {
+    Describe '\lib\private\Vm.ps1\Update-LabVMDataDisk' {
         function Get-VM {}
         function Get-VHD {}
         function Resize-VHD {}
@@ -245,7 +245,7 @@ InModuleScope LabBuilder {
             $VMs[0].DataVHDs = @()
 
             It 'Does not throw an Exception' {
-                { UpdateVMDataDisks -Lab $Lab -VM $VMs[0] } | Should -Not -Throw
+                { Update-LabVMDataDisk -Lab $Lab -VM $VMs[0] } | Should -Not -Throw
             }
 
             It 'Calls Mocked commands' {
@@ -281,7 +281,7 @@ InModuleScope LabBuilder {
                         -f $VMs[0].Name,$VMs[0].DataVHDs.Vhd,$VMs[0].DataVHDs.VhdType)
                 }
                 $exception = Get-LabException @exceptionParameters
-                { UpdateVMDataDisks -Lab $Lab -VM $VMs[0] } | Should -Throw $exception
+                { Update-LabVMDataDisk -Lab $Lab -VM $VMs[0] } | Should -Throw $exception
             }
 
             It 'Calls Mocked commands' {
@@ -317,7 +317,7 @@ InModuleScope LabBuilder {
                         -f $VMs[0].Name,$VMs[0].DataVHDs[0].Vhd,$VMs[0].DataVHDs[0].Size)
                 }
                 $Exception = Get-LabException @exceptionParameters
-                { UpdateVMDataDisks -Lab $Lab -VM $VMs[0] } | Should -Throw $Exception
+                { Update-LabVMDataDisk -Lab $Lab -VM $VMs[0] } | Should -Throw $Exception
             }
 
             It 'Calls Mocked commands' {
@@ -347,7 +347,7 @@ InModuleScope LabBuilder {
             } }
 
             It 'Does not throw an Exception' {
-                { UpdateVMDataDisks -Lab $Lab -VM $VMs[0] } | Should -Not -Throw
+                { Update-LabVMDataDisk -Lab $Lab -VM $VMs[0] } | Should -Not -Throw
             }
 
             It 'Calls Mocked commands' {
@@ -379,7 +379,7 @@ InModuleScope LabBuilder {
                         -f $VMs[0].Name,$VMs[0].DataVHDs[0].SourceVhd)
                 }
                 $Exception = Get-LabException @exceptionParameters
-                { UpdateVMDataDisks -Lab $Lab -VM $VMs[0] } | Should -Throw $Exception
+                { Update-LabVMDataDisk -Lab $Lab -VM $VMs[0] } | Should -Throw $Exception
             }
 
             It 'Calls Mocked commands' {
@@ -403,7 +403,7 @@ InModuleScope LabBuilder {
             $VMs[0].DataVHDs = @( $DataVHD )
 
             It 'Does not throw an Exception' {
-                { UpdateVMDataDisks -Lab $Lab -VM $VMs[0] } | Should -Not -Throw
+                { Update-LabVMDataDisk -Lab $Lab -VM $VMs[0] } | Should -Not -Throw
             }
 
             It 'Calls Mocked commands' {
@@ -428,7 +428,7 @@ InModuleScope LabBuilder {
             $VMs[0].DataVHDs = @( $DataVHD )
 
             It 'Does not throw an Exception' {
-                { UpdateVMDataDisks -Lab $Lab -VM $VMs[0] } | Should -Not -Throw
+                { Update-LabVMDataDisk -Lab $Lab -VM $VMs[0] } | Should -Not -Throw
             }
             It 'Calls Mocked commands' {
                 Assert-MockCalled -CommandName Get-VHD -Exactly 0
@@ -452,7 +452,7 @@ InModuleScope LabBuilder {
             $VMs[0].DataVHDs = @( $DataVHD )
 
             It 'Does not throw an Exception' {
-                { UpdateVMDataDisks -Lab $Lab -VM $VMs[0] } | Should -Not -Throw
+                { Update-LabVMDataDisk -Lab $Lab -VM $VMs[0] } | Should -Not -Throw
             }
 
             It 'Calls Mocked commands' {
@@ -477,7 +477,7 @@ InModuleScope LabBuilder {
             $VMs[0].DataVHDs = @( $DataVHD )
 
             It 'Does not throw an Exception' {
-                { UpdateVMDataDisks -Lab $Lab -VM $VMs[0] } | Should -Not -Throw
+                { Update-LabVMDataDisk -Lab $Lab -VM $VMs[0] } | Should -Not -Throw
             }
 
             It 'Calls Mocked commands' {
@@ -504,7 +504,7 @@ InModuleScope LabBuilder {
             $VMs[0].DataVHDs = @( $DataVHD )
 
             It 'Does not throw an Exception' {
-                { UpdateVMDataDisks -Lab $Lab -VM $VMs[0] } | Should -Not -Throw
+                { Update-LabVMDataDisk -Lab $Lab -VM $VMs[0] } | Should -Not -Throw
             }
 
             It 'Calls Mocked commands' {
@@ -532,7 +532,7 @@ InModuleScope LabBuilder {
             $VMs[0].DataVHDs = @( $DataVHD )
 
             It 'Does not throw an Exception' {
-                { UpdateVMDataDisks -Lab $Lab -VM $VMs[0] } | Should -Not -Throw
+                { Update-LabVMDataDisk -Lab $Lab -VM $VMs[0] } | Should -Not -Throw
             }
 
             It 'Calls Mocked commands' {
@@ -558,7 +558,7 @@ InModuleScope LabBuilder {
             $VMs[0].DataVHDs = @( $DataVHD )
 
             It 'Does not throw an Exception' {
-                { UpdateVMDataDisks -Lab $Lab -VM $VMs[0] } | Should -Not -Throw
+                { Update-LabVMDataDisk -Lab $Lab -VM $VMs[0] } | Should -Not -Throw
             }
 
             It 'Calls Mocked commands' {
@@ -590,7 +590,7 @@ InModuleScope LabBuilder {
                         -f $VMs[0].Name)
                 }
                 $Exception = Get-LabException @exceptionParameters
-                { UpdateVMDataDisks -Lab $Lab -VM $VMs[0] } | Should -Throw $Exception
+                { Update-LabVMDataDisk -Lab $Lab -VM $VMs[0] } | Should -Throw $Exception
             }
 
             It 'Calls Mocked commands' {
@@ -623,7 +623,7 @@ InModuleScope LabBuilder {
                         -f $VMs[0].Name,$VMs[0].DataVHDs[0].ParentVhd)
                 }
                 $Exception = Get-LabException @exceptionParameters
-                { UpdateVMDataDisks -Lab $Lab -VM $VMs[0] } | Should -Throw $Exception
+                { Update-LabVMDataDisk -Lab $Lab -VM $VMs[0] } | Should -Throw $Exception
             }
 
             It 'Calls Mocked commands' {
@@ -649,7 +649,7 @@ InModuleScope LabBuilder {
             $VMs[0].DataVHDs = @( $DataVHD )
 
             It 'Does not throw an Exception' {
-                { UpdateVMDataDisks -Lab $Lab -VM $VMs[0] } | Should -Not -Throw
+                { Update-LabVMDataDisk -Lab $Lab -VM $VMs[0] } | Should -Not -Throw
             }
 
             It 'Calls Mocked commands' {
@@ -680,7 +680,7 @@ InModuleScope LabBuilder {
             $VMs[0].DataVHDs = @( $DataVHD )
 
             It 'Does not throw an Exception' {
-                { UpdateVMDataDisks -Lab $Lab -VM $VMs[0] } | Should -Not -Throw
+                { Update-LabVMDataDisk -Lab $Lab -VM $VMs[0] } | Should -Not -Throw
             }
 
             It 'Calls Mocked commands' {
@@ -699,7 +699,7 @@ InModuleScope LabBuilder {
         }
     }
 
-    Describe '\lib\private\Vm.ps1\UpdateVMDVDDrives' {
+    Describe '\lib\private\Vm.ps1\Update-LabVMDvdDrive' {
         function Get-VMDVDDrive {}
         function Add-VMDVDDrive {}
         function Set-VMDVDDrive {}
@@ -719,7 +719,7 @@ InModuleScope LabBuilder {
             $VMs[0].DVDDrives = @()
 
             It 'Does not throw an Exception' {
-                { UpdateVMDVDDrives -Lab $Lab -VM $VMs[0] } | Should -Not -Throw
+                { Update-LabVMDvdDrive -Lab $Lab -VM $VMs[0] } | Should -Not -Throw
             }
 
             It 'Calls Mocked commands' {
@@ -740,7 +740,7 @@ InModuleScope LabBuilder {
             } }
 
             It 'Does not throw an Exception' {
-                { UpdateVMDVDDrives -Lab $Lab -VM $VMs[0] } | Should -Not -Throw
+                { Update-LabVMDvdDrive -Lab $Lab -VM $VMs[0] } | Should -Not -Throw
             }
 
             It 'Calls Mocked commands' {
@@ -761,7 +761,7 @@ InModuleScope LabBuilder {
             } }
 
             It 'Does not throw an Exception' {
-                { UpdateVMDVDDrives -Lab $Lab -VM $VMs[0] } | Should -Not -Throw
+                { Update-LabVMDvdDrive -Lab $Lab -VM $VMs[0] } | Should -Not -Throw
             }
 
             It 'Calls Mocked commands' {
@@ -783,7 +783,7 @@ InModuleScope LabBuilder {
             } }
 
             It 'Does not throw an Exception' {
-                { UpdateVMDVDDrives -Lab $Lab -VM $VMs[0] } | Should -Not -Throw
+                { Update-LabVMDvdDrive -Lab $Lab -VM $VMs[0] } | Should -Not -Throw
             }
 
             It 'Calls Mocked commands' {
@@ -805,7 +805,7 @@ InModuleScope LabBuilder {
             } }
 
             It 'Does not throw an Exception' {
-                { UpdateVMDVDDrives -Lab $Lab -VM $VMs[0] } | Should -Not -Throw
+                { Update-LabVMDvdDrive -Lab $Lab -VM $VMs[0] } | Should -Not -Throw
             }
 
             It 'Calls Mocked commands' {
@@ -827,7 +827,7 @@ InModuleScope LabBuilder {
             } }
 
             It 'Does not throw an Exception' {
-                { UpdateVMDVDDrives -Lab $Lab -VM $VMs[0] } | Should -Not -Throw
+                { Update-LabVMDvdDrive -Lab $Lab -VM $VMs[0] } | Should -Not -Throw
             }
 
             It 'Calls Mocked commands' {
@@ -845,7 +845,7 @@ InModuleScope LabBuilder {
             Mock -CommandName Get-VMDVDDrive
 
             It 'Does not throw an Exception' {
-                { UpdateVMDVDDrives -Lab $Lab -VM $VMs[0] } | Should -Not -Throw
+                { Update-LabVMDvdDrive -Lab $Lab -VM $VMs[0] } | Should -Not -Throw
             }
 
             It 'Calls Mocked commands' {
@@ -862,7 +862,7 @@ InModuleScope LabBuilder {
             Mock -CommandName Get-VMDVDDrive
 
             It 'Does not throw an Exception' {
-                { UpdateVMDVDDrives -Lab $Lab -VM $VMs[0] } | Should -Not -Throw
+                { Update-LabVMDvdDrive -Lab $Lab -VM $VMs[0] } | Should -Not -Throw
             }
 
             It 'Calls Mocked commands' {

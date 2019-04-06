@@ -72,7 +72,7 @@ function Install-LabVM
         if ($VM.OSType -in ([LabOStype]::Nano))
         {
         # Copy ODJ Files if it Exists
-            CopyODJ `
+            Copy-LabOdjFile `
                 -Lab $Lab `
                 -VM $VM
         } # if
