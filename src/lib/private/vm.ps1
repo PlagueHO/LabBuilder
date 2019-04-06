@@ -1545,7 +1545,7 @@ function UpdateVMDataDisks {
                         -ItemType Directory
                 }
                 # Yes, initialize the disk (or check it is)
-                $InitializeVHDParams = @{
+                $initializeLabVHDParams = @{
                     Path = $VHD
                     AccessPath = $MountPoint
                 }
@@ -1553,14 +1553,14 @@ function UpdateVMDataDisks {
                 if ($DataVHD.PartitionStyle -and $DataVHD.FileSystem)
                 {
                     # Yes, initialize the disk
-                    $InitializeVHDParams += @{
+                    $initializeLabVHDParams += @{
                         PartitionStyle = $DataVHD.PartitionStyle
                         FileSystem = $DataVHD.FileSystem
                     }
                     # Set a FileSystemLabel too?
                     if ($DataVHD.FileSystemLabel)
                     {
-                        $InitializeVHDParams += @{
+                        $initializeLabVHDParams += @{
                             FileSystemLabel = $DataVHD.FileSystemLabel
                         }
                     }
@@ -1568,8 +1568,8 @@ function UpdateVMDataDisks {
                 Write-LabMessage -Message $($LocalizedData.InitializingVMDiskMessage `
                     -f $VM.Name,$VHD)
 
-                InitializeVHD `
-                    @InitializeVHDParams `
+                Initialize-LabVHD `
+                    @initializeLabVHDParams `
                     -ErrorAction Stop
 
                 # Copy each folder to the VM Data Disk
