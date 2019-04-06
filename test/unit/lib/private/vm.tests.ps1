@@ -54,10 +54,10 @@ InModuleScope LabBuilder {
     Describe '\lib\private\Vm.ps1\WaitVMInitializationComplete' -Tags 'Incomplete' {
     }
 
-    Describe '\lib\private\Vm.ps1\WaitVMStarted' -Tags 'Incomplete'  {
+    Describe '\lib\private\Vm.ps1\Wait-LabVMStarted' -Tags 'Incomplete'  {
     }
 
-    Describe '\lib\private\Vm.ps1\WaitVMOff' -Tags 'Incomplete'  {
+    Describe '\lib\private\Vm.ps1\Wait-LabVMOff' -Tags 'Incomplete'  {
     }
 
     Describe '\lib\private\Vm.ps1\Get-LabIntegrationServiceName' {

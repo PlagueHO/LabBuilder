@@ -750,7 +750,7 @@ InModuleScope LabBuilder {
         #region Mocks
         Mock Get-VM -MockWith { [PSObject]@{ Name = 'TestLab PESTER01'; State = 'Running'; } }
         Mock Stop-VM
-        Mock WaitVMOff -MockWith { Return $true }
+        Mock Wait-LabVMOff -MockWith { Return $true }
         Mock Remove-VM
         Mock Remove-Item
         Mock Test-Path -MockWith { Return $true }
@@ -770,7 +770,7 @@ InModuleScope LabBuilder {
             It 'Calls Mocked commands' {
                 Assert-MockCalled Get-VM -Exactly 3
                 Assert-MockCalled Stop-VM -Exactly 1
-                Assert-MockCalled WaitVMOff -Exactly 1
+                Assert-MockCalled Wait-LabVMOff -Exactly 1
                 Assert-MockCalled Remove-VM -Exactly 1
                 Assert-MockCalled Remove-Item -Exactly 0
             }
@@ -787,7 +787,7 @@ InModuleScope LabBuilder {
             It 'Calls Mocked commands' {
                 Assert-MockCalled Get-VM -Exactly 3
                 Assert-MockCalled Stop-VM -Exactly 1
-                Assert-MockCalled WaitVMOff -Exactly 1
+                Assert-MockCalled Wait-LabVMOff -Exactly 1
                 Assert-MockCalled Remove-VM -Exactly 1
                 Assert-MockCalled Remove-Item -Exactly 0
             }
@@ -807,7 +807,7 @@ InModuleScope LabBuilder {
             It 'Calls Mocked commands' {
                 Assert-MockCalled Get-VM -Exactly 3
                 Assert-MockCalled Stop-VM -Exactly 1
-                Assert-MockCalled WaitVMOff -Exactly 1
+                Assert-MockCalled Wait-LabVMOff -Exactly 1
                 Assert-MockCalled Remove-VM -Exactly 1
                 Assert-MockCalled Remove-Item -Exactly 1
             }
