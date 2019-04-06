@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Update to use NetworkingDsc 7.0.0.0 and converted DhcpClient
+  resource to NetIpInterface - fixes [Issue #304](https://github.com/PlagueHO/LabBuilder/issues/304).
 - Refactored module manifest generation process to be more reliable
   and robust.
 - Convert module name to be a variable in PSake file to make it more
