@@ -110,7 +110,7 @@ try
         Describe 'Validate XML schema of lab test files' {
             Context 'PesterTestConfig.OK.XML' {
                 It 'Does not throw an exception' {
-                    { Assert-ValidConfigurationXMLSchema -ConfigPath $Global:TestConfigOKPath -Verbose } | Should -Not -Throw
+                    { Assert-LabValidConfigurationXMLSchema -ConfigPath $Global:TestConfigOKPath -Verbose } | Should -Not -Throw
                 }
             }
         }
@@ -122,7 +122,7 @@ try
             {
                 Context "Samples\$SampleFile" {
                     It 'Does not throw an exception' {
-                        { Assert-ValidConfigurationXMLSchema -ConfigPath $($SampleFile.Fullname) -Verbose } | Should -Not -Throw
+                        { Assert-LabValidConfigurationXMLSchema -ConfigPath $($SampleFile.Fullname) -Verbose } | Should -Not -Throw
                     }
                 }
             }

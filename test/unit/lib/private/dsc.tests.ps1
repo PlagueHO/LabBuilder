@@ -33,10 +33,10 @@ InModuleScope LabBuilder {
         -Force `
         -ErrorAction SilentlyContinue
 
-    Describe '\lib\private\Dsc.ps1\Get-ModulesInDSCConfig' {
+    Describe '\lib\private\Dsc.ps1\Get-LabModulesInDSCConfig' {
         Context 'When Called with Test DSC Resource File' {
             It 'Returns DSCModules Object that matches Expected Object' {
-                $dscModules = Get-ModulesInDSCConfig `
+                $dscModules = Get-LabModulesInDSCConfig `
                     -DSCConfigFile (Join-Path -Path $script:TestConfigPath -ChildPath 'dsclibrary\PesterTest.DSC.ps1') `
                     -Verbose
 
@@ -52,7 +52,7 @@ InModuleScope LabBuilder {
         Context 'When Called with Test DSC Resource Content' {
             It 'Returns DSCModules Object that matches Expected Object' {
                 $content = Get-Content -Path (Join-Path -Path $script:TestConfigPath -ChildPath 'dsclibrary\PesterTest.DSC.ps1') -RAW
-                $dscModules = Get-ModulesInDSCConfig `
+                $dscModules = Get-LabModulesInDSCConfig `
                     -DSCConfigContent $content `
                     -Verbose
 
@@ -66,7 +66,7 @@ InModuleScope LabBuilder {
         }
     }
 
-    Describe '\lib\private\Dsc.ps1\Set-ModulesInDSCConfig' {
+    Describe '\lib\private\Dsc.ps1\Set-LabModulesInDSCConfig' {
         $module1 = [LabDSCModule]::New('PSDesiredStateConfiguration', '1.0')
         $module2 = [LabDSCModule]::New('xActiveDirectory')
         $module3 = [LabDSCModule]::New('ComputerManagementDsc', '1.4.0.0')
@@ -75,7 +75,7 @@ InModuleScope LabBuilder {
 
         Context 'When called with Test DSC Resource File' {
             It 'Returns DSCConfig Content that matches Expected String' {
-                $dscConfig = Set-ModulesInDSCConfig `
+                $dscConfig = Set-LabModulesInDSCConfig `
                     -DSCConfigFile (Join-Path -Path $script:TestConfigPath -ChildPath 'dsclibrary\PesterTest.DSC.ps1') `
                     -Modules $UpdateModules `
                     -Verbose
@@ -91,7 +91,7 @@ InModuleScope LabBuilder {
         Context 'When called with Test DSC Resource Content' {
             It 'Returns DSCModules Content that matches Expected String' {
                 $content = Get-Content -Path (Join-Path -Path $script:TestConfigPath -ChildPath 'dsclibrary\PesterTest.DSC.ps1') -Raw
-                $dscConfig = Set-ModulesInDSCConfig `
+                $dscConfig = Set-LabModulesInDSCConfig `
                     -DSCConfigContent $Content `
                     -Modules $UpdateModules `
                     -Verbose
@@ -160,7 +160,7 @@ InModuleScope LabBuilder {
 
         Context 'Empty DSC Config' {
             Mock -CommandName Get-Module
-            Mock -CommandName Get-ModulesInDSCConfig -MockWith { @('TestModule') }
+            Mock -CommandName Get-LabModulesInDSCConfig -MockWith { @('TestModule') }
 
             $vm = $vms[0].Clone()
             $vmConfigFile = $vm.DSC.ConfigFile
@@ -179,7 +179,7 @@ InModuleScope LabBuilder {
 
         Context 'DSC Module Not Found' {
             Mock -CommandName Get-Module
-            Mock -CommandName Get-ModulesInDSCConfig -MockWith { @('TestModule') }
+            Mock -CommandName Get-LabModulesInDSCConfig -MockWith { @('TestModule') }
             Mock -CommandName Find-Module
 
             $vm = $vms[0].Clone()
@@ -197,14 +197,14 @@ InModuleScope LabBuilder {
 
             It 'Calls Mocked commands' {
                 Assert-MockCalled -CommandName Get-Module -Exactly -Times 1
-                Assert-MockCalled -CommandName Get-ModulesInDSCConfig -Exactly -Times 1
+                Assert-MockCalled -CommandName Get-LabModulesInDSCConfig -Exactly -Times 1
                 Assert-MockCalled -CommandName Find-Module -Exactly -Times 1
             }
         }
 
         Context 'When DSC Module Download Error' {
             Mock -CommandName Get-Module
-            Mock -CommandName Get-ModulesInDSCConfig -MockWith { @('TestModule') }
+            Mock -CommandName Get-LabModulesInDSCConfig -MockWith { @('TestModule') }
             Mock -CommandName Find-Module -MockWith { @{ name = 'TestModule' } }
             Mock -CommandName Install-Module -MockWith { Throw }
 
@@ -223,14 +223,14 @@ InModuleScope LabBuilder {
 
             It 'Calls Mocked commands' {
                 Assert-MockCalled -CommandName Get-Module -Exactly -Times 1
-                Assert-MockCalled -CommandName Get-ModulesInDSCConfig -Exactly -Times 1
+                Assert-MockCalled -CommandName Get-LabModulesInDSCConfig -Exactly -Times 1
                 Assert-MockCalled -CommandName Find-Module -Exactly -Times 1
             }
         }
 
         Context 'When DSC Module Not Found in Path' {
             Mock -CommandName Get-Module
-            Mock -CommandName Get-ModulesInDSCConfig -MockWith { @('TestModule') }
+            Mock -CommandName Get-LabModulesInDSCConfig -MockWith { @('TestModule') }
             Mock -CommandName Find-Module -MockWith { @{ name = 'TestModule' } }
             Mock -CommandName Install-Module
             Mock -CommandName Test-Path `
@@ -252,7 +252,7 @@ InModuleScope LabBuilder {
 
             It 'Calls Mocked commands' {
                 Assert-MockCalled -CommandName Get-Module -Exactly -Times 1
-                Assert-MockCalled -CommandName Get-ModulesInDSCConfig -Exactly -Times 1
+                Assert-MockCalled -CommandName Get-LabModulesInDSCConfig -Exactly -Times 1
                 Assert-MockCalled -CommandName Find-Module -Exactly -Times 1
                 Assert-MockCalled -CommandName Install-Module -Exactly -Times 1
             }
@@ -260,7 +260,7 @@ InModuleScope LabBuilder {
 
         Context 'When Certificate Create Failed' {
             Mock -CommandName Get-Module
-            Mock -CommandName Get-ModulesInDSCConfig -MockWith { @('TestModule') }
+            Mock -CommandName Get-LabModulesInDSCConfig -MockWith { @('TestModule') }
             Mock -CommandName Find-Module -MockWith { @{ name = 'TestModule' } }
             Mock -CommandName Install-Module
             Mock -CommandName Test-Path `
@@ -286,7 +286,7 @@ InModuleScope LabBuilder {
 
             It 'Calls Mocked commands' {
                 Assert-MockCalled -CommandName Get-Module -Exactly -Times 1
-                Assert-MockCalled -CommandName Get-ModulesInDSCConfig -Exactly -Times 1
+                Assert-MockCalled -CommandName Get-LabModulesInDSCConfig -Exactly -Times 1
                 Assert-MockCalled -CommandName Find-Module -Exactly -Times 2
                 Assert-MockCalled -CommandName Install-Module -Exactly -Times 2
                 Assert-MockCalled -CommandName Copy-Item -Exactly -Times 2
@@ -296,7 +296,7 @@ InModuleScope LabBuilder {
 
         Context 'When Meta MOF Create Failed' {
             Mock -CommandName Get-Module
-            Mock -CommandName Get-ModulesInDSCConfig -MockWith { @('TestModule') }
+            Mock -CommandName Get-LabModulesInDSCConfig -MockWith { @('TestModule') }
             Mock -CommandName Find-Module -MockWith { @{ name = 'TestModule' } }
             Mock -CommandName Install-Module
             Mock -CommandName Test-Path `
@@ -330,7 +330,7 @@ InModuleScope LabBuilder {
 
             It 'Calls Mocked commands' {
                 Assert-MockCalled -CommandName Get-Module -Exactly -Times 1
-                Assert-MockCalled -CommandName Get-ModulesInDSCConfig -Exactly -Times 1
+                Assert-MockCalled -CommandName Get-LabModulesInDSCConfig -Exactly -Times 1
                 Assert-MockCalled -CommandName Find-Module -Exactly -Times 2
                 Assert-MockCalled -CommandName Install-Module -Exactly -Times 2
                 Assert-MockCalled -CommandName Copy-Item -Exactly -Times 2

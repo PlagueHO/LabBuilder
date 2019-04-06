@@ -628,7 +628,7 @@ InModuleScope LabBuilder {
         }
     }
 
-    Describe '\lib\private\Utils.ps1\Assert-ValidConfigurationXMLSchema' -Tag 'Incomplete' {
+    Describe '\lib\private\Utils.ps1\Assert-LabValidConfigurationXMLSchema' -Tag 'Incomplete' {
     }
 
     Describe '\lib\private\Utils.ps1\Get-NextMacAddress' {
@@ -656,7 +656,7 @@ InModuleScope LabBuilder {
         }
     }
 
-    Describe '\lib\private\Utils.ps1\Get-NextIpAddress' {
+    Describe '\lib\private\Utils.ps1\Get-LabNextIpAddress' {
         Context 'When Invalid IP Address is passed' {
             It 'Throws a IPAddressError Exception' {
                 $exceptionParameters = @{
@@ -668,7 +668,7 @@ InModuleScope LabBuilder {
                 $Exception = Get-LabException @exceptionParameters
 
                 {
-                    Get-NextIpAddress `
+                    Get-LabNextIpAddress `
                         -IpAddress '192.168.1.999'
                 } | Should -Throw $Exception
             }
@@ -676,21 +676,21 @@ InModuleScope LabBuilder {
 
         Context 'When IP address 192.168.1.1 is passed' {
             It 'Returns IP address 192.168.1.2' {
-                Get-NextIpAddress `
+                Get-LabNextIpAddress `
                     -IpAddress '192.168.1.1' | Should -Be '192.168.1.2'
             }
         }
 
         Context 'When IP address 192.168.1.255 is passed' {
             It 'Returns IP address 192.168.2.0' {
-                Get-NextIpAddress `
+                Get-LabNextIpAddress `
                     -IpAddress '192.168.1.255' | Should -Be '192.168.2.0'
             }
         }
 
         Context 'When IP address 192.168.1.255 and Step 10 is passed' {
             It 'Returns IP address 192.168.2.9' {
-                Get-NextIpAddress `
+                Get-LabNextIpAddress `
                     -IpAddress '192.168.1.255' `
                     -Step 10 | Should -Be '192.168.2.9'
             }
@@ -698,7 +698,7 @@ InModuleScope LabBuilder {
 
         Context 'When IP address 192.168.1.255 and Step 0 is passed' {
             It 'Returns IP address 192.168.1.255' {
-                Get-NextIpAddress `
+                Get-LabNextIpAddress `
                     -IpAddress '192.168.1.255' `
                     -Step 0 | Should -Be '192.168.1.255'
             }
@@ -706,23 +706,23 @@ InModuleScope LabBuilder {
 
         Context 'When IP address 10.255.255.255 is passed' {
             It 'Returns IP address 11.0.0.0' {
-                Get-NextIpAddress `
+                Get-LabNextIpAddress `
                     -IpAddress '10.255.255.255' | Should -Be '11.0.0.0'
             }
         }
 
         Context 'When IP address fe80::15b4:b934:5d23:1a31 is passed' {
             It 'Returns IP address fe80::15b4:b934:5d23:1a32' {
-                Get-NextIpAddress `
+                Get-LabNextIpAddress `
                     -IpAddress 'fe80::15b4:b934:5d23:1a31' | Should -Be 'fe80::15b4:b934:5d23:1a32'
             }
         }
     }
 
-    Describe '\lib\private\Utils.ps1\Assert-ValidIpAddress' {
+    Describe '\lib\private\Utils.ps1\Assert-LabValidIpAddress' {
         Context 'When IP address 192.168.1.1 is passed' {
             It 'Returns IP Address' {
-                Assert-ValidIpAddress `
+                Assert-LabValidIpAddress `
                     -IpAddress '192.168.1.1' | Should -Be '192.168.1.1'
             }
         }
@@ -730,7 +730,7 @@ InModuleScope LabBuilder {
         Context 'When IP address 192.168.1.1000 is passed' {
             It 'Should Throw an Exception' {
                 {
-                    Assert-ValidIpAddress `
+                    Assert-LabValidIpAddress `
                         -IpAddress '192.168.1.1000'
                 } | Should -Throw $($LocalizedData.IPAddressError -f '192.168.1.1000')
             }
@@ -738,7 +738,7 @@ InModuleScope LabBuilder {
 
         Context 'When IP address fe80::15b4:b934:5d23:1a31 is passed' {
             It 'Returns IP Address' {
-                Assert-ValidIpAddress `
+                Assert-LabValidIpAddress `
                     -IpAddress 'fe80::15b4:b934:5d23:1a31' | Should -Be 'fe80::15b4:b934:5d23:1a31'
             }
         }
@@ -746,7 +746,7 @@ InModuleScope LabBuilder {
         Context 'When IP address fe80::15b4:b934:5d23:1a3x is passed' {
             It 'Should Throw an Exception' {
                 {
-                    Assert-ValidIpAddress `
+                    Assert-LabValidIpAddress `
                         -IpAddress 'fe80::15b4:b934:5d23:1a3x'
                 } | Should -Throw $($LocalizedData.IPAddressError -f 'fe80::15b4:b934:5d23:1a3x')
             }
