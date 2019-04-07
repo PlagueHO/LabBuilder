@@ -19,7 +19,7 @@ function Connect-LabVM
     [PSCredential] $AdminCredential = New-LabCredential `
         -Username '.\Administrator' `
         -Password $VM.AdministratorPassword
-    [Boolean] $FatalException = $false
+    [System.Boolean] $FatalException = $false
 
     while (($null -eq $Session) `
         -and (((Get-Date) - $StartTime).TotalSeconds) -lt $ConnectTimeout `

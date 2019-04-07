@@ -40,7 +40,7 @@ function Install-LabVM
 
                 if ($VM.CertificateSource -eq [LabCertificateSource]::Guest)
                 {
-                    if (Recieve-SelfSignedCertificate -Lab $Lab -VM $VM)
+                    if (Recieve-LabSelfSignedCertificate -Lab $Lab -VM $VM)
                     {
                         Write-LabMessage -Message $($LocalizedData.CertificateDownloadCompleteMessage `
                             -f $VM.Name)

@@ -42,7 +42,7 @@ InModuleScope LabBuilder {
     Describe '\lib\private\Vm.ps1\GetCertificatePsFileContent' -Tags 'Incomplete' {
     }
 
-    Describe '\lib\private\Vm.ps1\Recieve-SelfSignedCertificate' -Tags 'Incomplete' {
+    Describe '\lib\private\Vm.ps1\Recieve-LabSelfSignedCertificate' -Tags 'Incomplete' {
     }
 
     Describe '\lib\private\Vm.ps1\Request-LabSelfSignedCertificate' -Tags 'Incomplete' {

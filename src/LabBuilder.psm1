@@ -210,7 +210,7 @@ class LabVMAdapter:System.ICloneable {
     [System.String] $Name
     [System.String] $SwitchName
     [System.String] $MACAddress
-    [Boolean] $MACAddressSpoofing
+    [System.Boolean] $MACAddressSpoofing
     [Byte] $Vlan
     [LabVMAdapterIPv4] $IPv4
     [LabVMAdapterIPv6] $IPv6
@@ -237,13 +237,13 @@ class LabDataVHD:System.ICloneable {
     [Uint64] $Size
     [System.String] $SourceVHD
     [System.String] $ParentVHD
-    [Boolean] $MoveSourceVHD
+    [System.Boolean] $MoveSourceVHD
     [System.String] $CopyFolders
     [LabFileSystem] $FileSystem
     [LabPartitionStyle] $PartitionStyle
     [System.String] $FileSystemLabel
-    [Boolean] $Shared = $false
-    [Boolean] $SupportPR = $false
+    [System.Boolean] $Shared = $false
+    [System.Boolean] $SupportPR = $false
 
     LabDataVHD() {}
 
@@ -317,8 +317,8 @@ class LabVMTemplate:System.ICloneable {
     [System.String] $ParentVHD
     [System.String] $TemplateVHD
     [Uint64] $MemoryStartupBytes = 1GB
-    [Boolean] $DynamicMemoryEnabled = $true
-    [Boolean] $ExposeVirtualizationExtensions = $false
+    [System.Boolean] $DynamicMemoryEnabled = $true
+    [System.Boolean] $ExposeVirtualizationExtensions = $false
     [Byte] $ProcessorCount = 1
     [System.String] $AdministratorPassword
     [System.String] $ProductKey
@@ -380,7 +380,7 @@ class LabDSC:System.ICloneable {
     [System.String] $ConfigName
     [System.String] $ConfigFile
     [System.String] $Parameters
-    [Boolean] $Logging = $false
+    [System.Boolean] $Logging = $false
 
     LabDSC() {}
 
@@ -409,10 +409,10 @@ class LabVM:System.ICloneable {
     [System.String] $ComputerName
     [Byte] $ProcessorCount
     [Uint64] $MemoryStartupBytes = 1GB
-    [Boolean] $DynamicMemoryEnabled = $true
-    [Boolean] $ExposeVirtualizationExtensions = $false
+    [System.Boolean] $DynamicMemoryEnabled = $true
+    [System.Boolean] $ExposeVirtualizationExtensions = $false
     [System.String] $ParentVHD
-    [Boolean] $UseDifferencingDisk = $true
+    [System.Boolean] $UseDifferencingDisk = $true
     [System.String] $AdministratorPassword
     [System.String] $ProductKey
     [System.String] $Timezone="Pacific Standard Time"

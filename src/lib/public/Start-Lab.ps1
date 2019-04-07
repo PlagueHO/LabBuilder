@@ -66,8 +66,8 @@ function Start-Lab
                 Where-Object -FilterScript { ($_.BootOrder -eq $BootPhase) } )
 
             [DateTime] $StartPhase = Get-Date
-            [boolean] $PhaseComplete = $false
-            [boolean] $PhaseAllBooted = $true
+            [System.Boolean] $PhaseComplete = $false
+            [System.Boolean] $PhaseAllBooted = $true
             [System.Int32] $VMCount = $BootVMs.Count
             [System.Int32] $VMNumber = 0
 

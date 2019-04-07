@@ -46,7 +46,7 @@ function Wait-LabVMInitializationComplete
 
     [DateTime] $StartTime = Get-Date
     [System.Management.Automation.Runspaces.PSSession] $Session = $null
-    [Boolean] $Complete = $false
+    [System.Boolean] $Complete = $false
 
     # Get the root path of the VM
     [System.String] $VMRootPath = $VM.VMRootPath

@@ -19,7 +19,7 @@
             SkipPublisherCheck = $true
         }
         Target         = 'CurrentUser'
-        Version        = '4.4.2'
+        Version        = '4.7.3'
         Tags           = 'Test'
     }
 
@@ -31,7 +31,7 @@
             SkipPublisherCheck = $true
         }
         Target         = 'CurrentUser'
-        Version        = '1.17.1'
+        Version        = '1.18.0'
         Tags           = 'Test'
     }
 
@@ -43,7 +43,7 @@
             SkipPublisherCheck = $true
         }
         Target         = 'CurrentUser'
-        Version        = '2.0.0'
+        Version        = '2.0.8'
         Tags           = 'Init'
     }
 
@@ -55,7 +55,7 @@
             SkipPublisherCheck = $true
         }
         Target         = 'CurrentUser'
-        Version        = '1.0'
+        Version        = '1.0.1'
         Tags           = 'Deploy'
     }
 
@@ -67,7 +67,7 @@
             SkipPublisherCheck = $true
         }
         Target         = 'CurrentUser'
-        Version        = '0.12.0'
+        Version        = '0.14.0'
         Tags           = 'Build'
     }
 }

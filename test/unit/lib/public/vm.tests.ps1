@@ -703,7 +703,7 @@ InModuleScope LabBuilder {
         Mock Add-VMNetworkAdapter
         Mock Start-VM
         Mock Wait-LabVMInitializationComplete -MockWith { $true }
-        Mock Recieve-SelfSignedCertificate
+        Mock Recieve-LabSelfSignedCertificate
         Mock Initialize-LabVMDSC
         Mock Install-LabVMDSC
         #endregion
@@ -731,7 +731,7 @@ InModuleScope LabBuilder {
                 Assert-MockCalled Add-VMNetworkAdapter -Exactly 4
                 Assert-MockCalled Start-VM -Exactly 1
                 Assert-MockCalled Wait-LabVMInitializationComplete -Exactly 1
-                Assert-MockCalled Recieve-SelfSignedCertificate -Exactly 1
+                Assert-MockCalled Recieve-LabSelfSignedCertificate -Exactly 1
                 Assert-MockCalled Initialize-LabVMDSC -Exactly 1
                 Assert-MockCalled Install-LabVMDSC -Exactly 1
             }
@@ -820,7 +820,7 @@ InModuleScope LabBuilder {
         Mock Get-VM -ParameterFilter { $Name -eq 'pester template *' }
         Mock Start-VM
         Mock Wait-LabVMInitializationComplete -MockWith { $true }
-        Mock Recieve-SelfSignedCertificate -MockWith { $true }
+        Mock Recieve-LabSelfSignedCertificate -MockWith { $true }
         Mock Initialize-LabVMDSC
         Mock Install-LabVMDSC
         #endregion
@@ -843,7 +843,7 @@ InModuleScope LabBuilder {
                 Assert-MockCalled Get-VM -ParameterFilter { $Name -eq 'pester template *' } -Exactly 1
                 Assert-MockCalled Start-VM -Exactly 1
                 Assert-MockCalled Wait-LabVMInitializationComplete -Exactly 1
-                Assert-MockCalled Recieve-SelfSignedCertificate -Exactly 1
+                Assert-MockCalled Recieve-LabSelfSignedCertificate -Exactly 1
                 Assert-MockCalled Initialize-LabVMDSC -Exactly 1
                 Assert-MockCalled Install-LabVMDSC -Exactly 1
             }

@@ -126,7 +126,7 @@ Start-DSCConfiguration ``
 
     $dscStartPsDebug = @"
 param (
-    [boolean] `$WaitForDebugger
+    [System.Boolean] `$WaitForDebugger
 )
 Set-DscLocalConfigurationManager ``
     -Path `"`$(`$ENV:SystemRoot)\Setup\Scripts\`" ``

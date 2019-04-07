@@ -79,7 +79,7 @@ function Get-LabVMTemplate
         } # if
 
         # Does the template already exist in the list?
-        [Boolean] $Found = $false
+        [System.Boolean] $Found = $false
         foreach ($VMTemplate in $VMTemplates)
         {
             if ($VMTemplate.Name -eq $TemplateName)

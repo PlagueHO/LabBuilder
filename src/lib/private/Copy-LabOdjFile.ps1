@@ -44,8 +44,8 @@ function Copy-LabOdjFile
     )
     [DateTime] $StartTime = Get-Date
     [System.Management.Automation.Runspaces.PSSession] $Session = $null
-    [Boolean] $Complete = $false
-    [Boolean] $ODJCopyComplete = $false
+    [System.Boolean] $Complete = $false
+    [System.Boolean] $ODJCopyComplete = $false
     [System.String] $ODJFilename = Join-Path `
         -Path $VMLabBuilderFiles `
         -ChildPath "$($VM.ComputerName).txt"

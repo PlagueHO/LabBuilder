@@ -104,7 +104,7 @@ function Get-LabVM
 
             # Find the template that this VM uses and get the VHD Path
             [System.String] $ParentVHDPath = ''
-            [Boolean] $Found = $false
+            [System.Boolean] $Found = $false
             foreach ($VMTemplate in $VMTemplates) {
                 if ($VMTemplate.Name -eq $VM.Template) {
                     $ParentVHDPath = $VMTemplate.ParentVHD
@@ -170,7 +170,7 @@ function Get-LabVM
                 } # if
 
                 # Check the switch is in the switch list
-                [Boolean] $Found = $false
+                [System.Boolean] $Found = $false
                 foreach ($Switch in $Switches)
                 {
                     # Match the switch name to the Adapter Switch Name or
@@ -213,7 +213,7 @@ function Get-LabVM
                     $VLan = $SwitchVLan
                 } # if
 
-                [Boolean] $MACAddressSpoofing = ($VMAdapter.macaddressspoofing -eq 'On')
+                [System.Boolean] $MACAddressSpoofing = ($VMAdapter.macaddressspoofing -eq 'On')
 
                 # Have we got any IPv4 settings?
                 Remove-Variable -Name IPv4 -ErrorAction SilentlyContinue
@@ -700,7 +700,7 @@ function Get-LabVM
             } # if
 
             # Load the DSC Parameters
-            [Boolean] $LabDSC.Logging = ($VM.DSC.Logging -eq 'Y')
+            [System.Boolean] $LabDSC.Logging = ($VM.DSC.Logging -eq 'Y')
 
             # Get the Memory Startup Bytes (from the template or VM)
             [Int64] $MemoryStartupBytes = 1GB
@@ -714,7 +714,7 @@ function Get-LabVM
             } # if
 
             # Get the Dynamic Memory Enabled flag
-            [Boolean] $DynamicMemoryEnabled = $true
+            [System.Boolean] $DynamicMemoryEnabled = $true
             if ($VM.DynamicMemoryEnabled)
             {
                 $DynamicMemoryEnabled = ($VM.DynamicMemoryEnabled -eq 'Y')
@@ -758,7 +758,7 @@ function Get-LabVM
                 New-LabException @exceptionParameters
             } # if
 
-            [Boolean] $UseDifferencingDisk = $true
+            [System.Boolean] $UseDifferencingDisk = $true
             if ($VM.UseDifferencingDisk -eq 'N')
             {
                 $UseDifferencingDisk = $false

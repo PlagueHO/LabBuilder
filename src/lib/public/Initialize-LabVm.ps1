@@ -78,7 +78,7 @@ function Initialize-LabVM
                 -f $VM.Name)
 
             # Make sure the appropriate folders exist
-            InitializeVMPaths `
+            Initialize-LabVMPath `
                 -VMPath $VMRootPath
 
             # Create the boot disk
