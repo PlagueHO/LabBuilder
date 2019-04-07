@@ -165,7 +165,7 @@ function New-SelfSignedCertificateEx {
 		[Alias('CSP')]
 		[System.String]$ProviderName = "Microsoft Enhanced Cryptographic Provider v1.0",
 		[System.String]$AlgorithmName = "RSA",
-		[int]$KeyLength = 2048,
+		[System.Int32]$KeyLength = 2048,
 		[validateSet("Exchange","Signature")]
 		[System.String]$KeySpec = "Exchange",
 		[Alias('EKU')]
@@ -175,7 +175,7 @@ function New-SelfSignedCertificateEx {
 		[Alias('SAN')]
 		[System.String[]]$SubjectAlternativeName,
 		[bool]$IsCA,
-		[int]$PathLength = -1,
+		[System.Int32]$PathLength = -1,
 		[Security.Cryptography.X509Certificates.X509ExtensionCollection]$CustomExtension,
 		[ValidateSet('MD5','SHA1','SHA256','SHA384','SHA512')]
 		[System.String]$SignatureAlgorithm = "SHA1",
@@ -256,7 +256,7 @@ function New-SelfSignedCertificateEx {
 #region Key Usages processing
 	if ($KeyUsage -ne $null) {
 		$KU = New-Object -ComObject X509Enrollment.CX509ExtensionKeyUsage
-		$KU.InitializeEncode([int]$KeyUsage)
+		$KU.InitializeEncode([System.Int32]$KeyUsage)
 		$KU.Critical = $true
 		$ExtensionsToAdd += "KU"
 	}

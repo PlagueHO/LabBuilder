@@ -745,7 +745,7 @@ You can use the fields below to configure the VHD or VHDX that you want to creat
         Get-WindowsBuildNumber
         {
             $os = Get-WmiObject -Class Win32_OperatingSystem
-            return [int]($os.BuildNumber)
+            return [System.Int32]($os.BuildNumber)
         }
 
         ##########################################################################################
@@ -753,7 +753,7 @@ You can use the fields below to configure the VHD or VHDX that you want to creat
         function
         Test-WindowsVersion
         {
-            $isWin8 = ((Get-WindowsBuildNumber) -ge [int]$lowestSupportedBuild)
+            $isWin8 = ((Get-WindowsBuildNumber) -ge [System.Int32]$lowestSupportedBuild)
 
             Write-W2VTrace "is Windows 8 or Higher? $isWin8"
             return $isWin8
@@ -856,7 +856,7 @@ You can use the fields below to configure the VHD or VHDX that you want to creat
                 $Arguments,
 
                 [Parameter()]
-                [int]
+                [System.Int32]
                 [ValidateNotNullOrEmpty()]
                 $SuccessfulErrorCode = 0
 

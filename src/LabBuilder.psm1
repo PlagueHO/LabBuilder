@@ -422,7 +422,7 @@ class LabVM:System.ICloneable {
     [System.String[]] $Packages
     [ValidateRange(1,2)][Byte] $Generation = 2
     [ValidateSet("5.0","6.2","7.0","7.1","8.0","254.0","255.0")][System.String] $Version = '8.0'
-    [Int] $BootOrder
+    [System.Int32] $BootOrder
     [System.String[]] $IntegrationServices = @('Guest Service Interface','Heartbeat','Key-Value Pair Exchange','Shutdown','Time Synchronization','VSS')
     [LabVMAdapter[]] $Adapters
     [LabDataVHD[]] $DataVHDs
@@ -499,10 +499,10 @@ class LabDSCModule:System.ICloneable {
     -ChildPath 'dsclibrary'
 
 # Virtual Networking Parameters
-[Int] $Script:DefaultManagementVLan = 99
+[System.Int32] $Script:DefaultManagementVLan = 99
 
 # Self-signed Certificate Parameters
-[Int] $Script:SelfSignedCertKeyLength = 2048
+[System.Int32] $Script:SelfSignedCertKeyLength = 2048
 # Warning - using KSP causes the Private Key to not be accessible to PS.
 [System.String] $Script:SelfSignedCertProviderName = 'Microsoft Enhanced Cryptographic Provider v1.0' # 'Microsoft Software Key Storage Provider'
 [System.String] $Script:SelfSignedCertAlgorithmName = 'RSA' # 'ECDH_P256' Or 'ECDH_P384' Or 'ECDH_P521'
@@ -511,12 +511,12 @@ class LabDSCModule:System.ICloneable {
 [System.String] $Script:DSCEncryptionPfxCert = 'DSCEncryption.pfx'
 [System.String] $Script:DSCCertificateFriendlyName = 'DSC Credential Encryption'
 [System.String] $Script:DSCCertificatePassword = 'E3jdNkd903mDn43NEk2nbDENjw'
-[Int] $Script:RetryConnectSeconds = 5
-[Int] $Script:RetryHeartbeatSeconds = 1
-[Int] $Script:StartupTimeout = 90
+[System.Int32] $Script:RetryConnectSeconds = 5
+[System.Int32] $Script:RetryHeartbeatSeconds = 1
+[System.Int32] $Script:StartupTimeout = 90
 
 # System Info
-[Int] $Script:CurrentBuild = (Get-ItemProperty `
+[System.Int32] $Script:CurrentBuild = (Get-ItemProperty `
     -Path 'hklm:\SOFTWARE\Microsoft\Windows NT\CurrentVersion').CurrentBuild
 
 # XML Stuff

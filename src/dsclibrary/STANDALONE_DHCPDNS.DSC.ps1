@@ -88,7 +88,7 @@ Configuration STANDALONE_DHCPDNS
 
         # Add the DHCP Scope, Reservation and Options from
         # the node configuration
-        [Int]$Count = 0
+        $Count=0
         Foreach ($Scope in $Node.Scopes)
         {
             $Count++
@@ -105,7 +105,7 @@ Configuration STANDALONE_DHCPDNS
                 DependsOn     = '[WindowsFeature]DHCPInstall'
             }
         }
-        [Int]$Count = 0
+        $Count=0
         Foreach ($Reservation in $Node.Reservations)
         {
             $Count++
@@ -120,7 +120,7 @@ Configuration STANDALONE_DHCPDNS
                 DependsOn        = '[WindowsFeature]DHCPInstall'
             }
         }
-        [Int]$Count = 0
+        $Count=0
         Foreach ($ScopeOption in $Node.ScopeOptions)
         {
             $Count++
@@ -148,7 +148,7 @@ Configuration STANDALONE_DHCPDNS
             }
         }
 
-        [Int]$Count = 0
+        $Count=0
         Foreach ($ADZone in $Node.ADZones)
         {
             $Count++
@@ -163,7 +163,7 @@ Configuration STANDALONE_DHCPDNS
             }
         }
 
-        [Int]$Count = 0
+        $Count=0
         Foreach ($PrimaryZone in $Node.PrimaryZones)
         {
             $Count++

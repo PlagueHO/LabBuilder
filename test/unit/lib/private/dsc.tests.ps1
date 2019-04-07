@@ -267,7 +267,7 @@ InModuleScope LabBuilder {
                 -ParameterFilter { ($Path -like '*TestModule') -or ($Path -like '*NetworkingDsc') } `
                 -MockWith { $true }
             Mock -CommandName Copy-Item
-            Mock -CommandName Request-SelfSignedCertificate `
+            Mock -CommandName Request-LabSelfSignedCertificate `
                 -MockWith { $false }
 
             $vm = $vms[0].Clone()
@@ -290,7 +290,7 @@ InModuleScope LabBuilder {
                 Assert-MockCalled -CommandName Find-Module -Exactly -Times 2
                 Assert-MockCalled -CommandName Install-Module -Exactly -Times 2
                 Assert-MockCalled -CommandName Copy-Item -Exactly -Times 2
-                Assert-MockCalled -CommandName Request-SelfSignedCertificate -Exactly -Times 1
+                Assert-MockCalled -CommandName Request-LabSelfSignedCertificate -Exactly -Times 1
             }
         }
 
@@ -303,7 +303,7 @@ InModuleScope LabBuilder {
                 -ParameterFilter { ($Path -like '*TestModule') -or ($Path -like '*NetworkingDsc') } `
                 -MockWith { $true }
             Mock -CommandName Copy-Item
-            Mock -CommandName Request-SelfSignedCertificate -MockWith { $true }
+            Mock -CommandName Request-LabSelfSignedCertificate -MockWith { $true }
             Mock -CommandName Import-Certificate
             Mock -CommandName Get-ChildItem `
                 -ParameterFilter { $path -eq 'cert:\LocalMachine\My' } `
@@ -334,7 +334,7 @@ InModuleScope LabBuilder {
                 Assert-MockCalled -CommandName Find-Module -Exactly -Times 2
                 Assert-MockCalled -CommandName Install-Module -Exactly -Times 2
                 Assert-MockCalled -CommandName Copy-Item -Exactly -Times 2
-                Assert-MockCalled -CommandName Request-SelfSignedCertificate -Exactly -Times 1
+                Assert-MockCalled -CommandName Request-LabSelfSignedCertificate -Exactly -Times 1
                 Assert-MockCalled -CommandName Import-Certificate -Exactly -Times 1
                 Assert-MockCalled -CommandName Get-ChildItem -ParameterFilter { $path -eq 'cert:\LocalMachine\My' } -Exactly -Times 1
                 Assert-MockCalled -CommandName Remove-Item

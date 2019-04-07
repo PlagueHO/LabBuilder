@@ -51,7 +51,7 @@ function Update-LabVMDvdDrive
         return
     }
 
-    [int] $DVDDriveCount = 0
+    [System.Int32] $DVDDriveCount = 0
     foreach ($DVDDrive in @($VM.DVDDrives))
     {
         # Get a list of DVD Drives attached to the VM

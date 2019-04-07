@@ -33,7 +33,7 @@ function Install-LabVM
         if (-not (Test-Path "$LabPath\$($VM.Name)\LabBuilder Files\$Script:DSCEncryptionCert"))
         {
             # No, so check it is initialized and download the cert if required
-            if (WaitVMInitializationComplete -VM $VM -ErrorAction Continue)
+            if (Wait-LabVMInitializationComplete -VM $VM -ErrorAction Continue)
             {
                 Write-LabMessage -Message $($LocalizedData.CertificateDownloadStartedMessage `
                     -f $VM.Name)

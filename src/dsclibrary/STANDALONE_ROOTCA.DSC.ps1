@@ -229,7 +229,7 @@ Configuration STANDALONE_ROOTCA
                         Write-Verbose -Message "Error getting Request ID from SubCA certificate submission."
                         Throw "Error getting Request ID from SubCA certificate submission."
                     }
-                    [int]$RequestId = $Matches.Groups[1].Value
+                    [System.Int32]$RequestId = $Matches.Groups[1].Value
                     Write-Verbose -Message "Issuing $RequestId in $($Using:Node.CACommonName)"
                     [System.String]$SubmitResult = & "$($ENV:SystemRoot)\System32\CertUtil.exe" -Resubmit $RequestId
                     if ($SubmitResult -notlike 'Certificate issued.*')

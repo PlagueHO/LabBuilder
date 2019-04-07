@@ -215,7 +215,7 @@ function Update-LabDSC
     if ($VM.CertificateSource -eq [LabCertificateSource]::Guest)
     {
         # Recreate the certificate if it the source is the Guest
-        if (-not (Request-SelfSignedCertificate -Lab $Lab -VM $VM))
+        if (-not (Request-LabSelfSignedCertificate -Lab $Lab -VM $VM))
         {
             $exceptionParameters = @{
                 errorId       = 'CertificateCreateError'

@@ -133,7 +133,7 @@ function Get-LabVM
 
             # Assemble the Network adapters that this VM will use
             [LabVMAdapter[]] $VMAdapters = @()
-            [Int] $AdapterCount = 0
+            [System.Int32] $AdapterCount = 0
             foreach ($VMAdapter in $VM.Adapters.Adapter)
             {
                 $AdapterCount++
@@ -264,7 +264,7 @@ function Get-LabVM
 
             # Assemble the Data Disks this VM will use
             [LabDataVHD[]] $DataVhds = @()
-            [Int] $DataVhdCount = 0
+            [System.Int32] $DataVhdCount = 0
             foreach ($VMDataVhd in $VM.DataVhds.DataVhd)
             {
                 $DataVhdCount++
@@ -537,7 +537,7 @@ function Get-LabVM
 
             # Assemble the DVD Drives this VM will use
             [LabDVDDrive[]] $DVDDrives = @()
-            [Int] $DVDDriveCount = 0
+            [System.Int32] $DVDDriveCount = 0
             foreach ($VMDVDDrive in $VM.DVDDrives.DVDDrive)
             {
                 $DVDDriveCount++
@@ -725,7 +725,7 @@ function Get-LabVM
             } # if
 
             # Get the Number of vCPUs (from the template or VM)
-            [Int] $ProcessorCount = 1
+            [System.Int32] $ProcessorCount = 1
             if ($VM.processorcount)
             {
                 $ProcessorCount = (Invoke-Expression $VM.processorcount)

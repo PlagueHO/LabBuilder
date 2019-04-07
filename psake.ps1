@@ -39,4 +39,4 @@ Invoke-Psake `
     -nologo `
     @PSBoundParameters
 
-exit ( [int]( -not $psake.build_success ) )
+exit ( [System.Int32]( -not $psake.build_success ) )

@@ -163,7 +163,7 @@ Configuration FILESERVER
             Enabled = 'True'
         }
 
-        [Int]$Count=0
+        [System.Int32]$Count=0
         ForEach ($Disk in $Disks) {
         $Count++
 

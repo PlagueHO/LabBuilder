@@ -45,13 +45,13 @@ InModuleScope LabBuilder {
     Describe '\lib\private\Vm.ps1\Recieve-SelfSignedCertificate' -Tags 'Incomplete' {
     }
 
-    Describe '\lib\private\Vm.ps1\Request-SelfSignedCertificate' -Tags 'Incomplete' {
+    Describe '\lib\private\Vm.ps1\Request-LabSelfSignedCertificate' -Tags 'Incomplete' {
     }
 
-    Describe '\lib\private\Vm.ps1\CreateHostSelfSignedCertificate' -Tags 'Incomplete' {
+    Describe '\lib\private\Vm.ps1\New-LabHostSelfSignedCertificate' -Tags 'Incomplete' {
     }
 
-    Describe '\lib\private\Vm.ps1\WaitVMInitializationComplete' -Tags 'Incomplete' {
+    Describe '\lib\private\Vm.ps1\Wait-LabVMInitializationComplete' -Tags 'Incomplete' {
     }
 
     Describe '\lib\private\Vm.ps1\Wait-LabVMStarted' -Tags 'Incomplete'  {
