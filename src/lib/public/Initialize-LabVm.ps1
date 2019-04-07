@@ -106,7 +106,7 @@ function Initialize-LabVM
                 }
 
                 # Create all the required initialization files for this VM
-                CreateVMInitializationFiles `
+                New-LabVMInitializationFile `
                     -Lab $Lab `
                     -VM $VM
 

@@ -9,7 +9,7 @@
             2. SetupComplete.cmd - the command file that gets run after the Windows OOBE is complete.
             3. SetupComplete.ps1 - this PowerShell script file that is run at the the end of the
                                     SetupComplete.cmd.
-        The files should have already been prepared by the CreateVMInitializationFiles function.
+        The files should have already been prepared by the New-LabVMInitializationFile function.
         The VM VHD image should contain an installed copy of Windows still in OOBE mode.
 
         This function also applies optional MSU package files from the Lab resource folder if

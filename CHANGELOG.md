@@ -29,6 +29,8 @@
   - BuildHelpers: 2.0.8
   - PSDeploy: 1.0.1
   - Platyps: 0.14.0
+- Split Private Lib functions into individual .ps1 files.
+- Refactored Private Lib functions to improve code style standards.
 
 ## 1.0.0.6
 

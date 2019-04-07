@@ -55,7 +55,7 @@ function Request-LabSelfSignedCertificate
     $vmLabBuilderFiles = $VM.LabBuilderFilesPath
 
     # Ensure the certificate generation script has been created
-    $getCertPs = GetCertificatePsFileContent `
+    $getCertPs = Get-LabCertificatePsFileContent `
         -Lab $Lab `
         -VM $VM `
         -CertificateSource Guest

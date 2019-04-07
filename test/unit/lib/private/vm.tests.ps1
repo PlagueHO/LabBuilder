@@ -33,13 +33,13 @@ InModuleScope LabBuilder {
         -Force `
         -ErrorAction SilentlyContinue
 
-    Describe '\lib\private\Vm.ps1\CreateVMInitializationFiles' -Tags 'Incomplete' {
+    Describe '\lib\private\Vm.ps1\New-LabVMInitializationFile' -Tags 'Incomplete' {
     }
 
-    Describe '\lib\private\Vm.ps1\GetUnattendFileContent' -Tags 'Incomplete' {
+    Describe '\lib\private\Vm.ps1\Get-LabUnattendFileContent' -Tags 'Incomplete' {
     }
 
-    Describe '\lib\private\Vm.ps1\GetCertificatePsFileContent' -Tags 'Incomplete' {
+    Describe '\lib\private\Vm.ps1\Get-LabCertificatePsFileContent' -Tags 'Incomplete' {
     }
 
     Describe '\lib\private\Vm.ps1\Recieve-LabSelfSignedCertificate' -Tags 'Incomplete' {
