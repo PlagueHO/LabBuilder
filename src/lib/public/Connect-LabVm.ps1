@@ -7,67 +7,74 @@ function Connect-LabVM
         [Parameter(
             Position=1,
             Mandatory=$true)]
-        [LabVM] $VM,
+        [LabVM]
+        $VM,
 
         [Parameter(
             Position=2)]
-        [System.Int32] $ConnectTimeout = 300
+        [System.Int32]
+        $ConnectTimeout = 300
     )
 
-    [DateTime] $StartTime = Get-Date
-    [System.Management.Automation.Runspaces.PSSession] $Session = $null
-    [PSCredential] $AdminCredential = New-LabCredential `
+    $startTime = Get-Date
+    $session = $null
+    $adminCredential = New-LabCredential `
         -Username '.\Administrator' `
         -Password $VM.AdministratorPassword
-    [System.Boolean] $FatalException = $false
+    $FatalException = $false
 
-    while (($null -eq $Session) `
-        -and (((Get-Date) - $StartTime).TotalSeconds) -lt $ConnectTimeout `
+    while (($null -eq $session) `
+        -and (((Get-Date) - $startTime).TotalSeconds) -lt $ConnectTimeout `
         -and -not $FatalException)
     {
         try
         {
-            # Get the Management IP Address of the VM
-            # We repeat this because the IP Address will only be assiged
-            # once the VM is fully booted.
-            $IPAddress = Get-LabVMManagementIPAddress `
+            <#
+                Get the Management IP Address of the VM
+                We repeat this because the IP Address will only be assiged
+                once the VM is fully booted.
+            #>
+            $ipAddress = Get-LabVMManagementIPAddress `
                 -Lab $Lab `
                 -VM $VM
 
-            # Add the IP Address to trusted hosts if not already in it
-            # This could be avoided if able to use SSL or if PS Direct is used.
-            # Also, don't add if TrustedHosts is already *
-            $TrustedHosts = (Get-Item -Path WSMAN::localhost\Client\TrustedHosts).Value
-            if (($TrustedHosts -notlike "*$IPAddress*") -and ($TrustedHosts -ne '*'))
+            <#
+                Add the IP Address to trusted hosts if not already in it
+                This could be avoided if able to use SSL or if PS Direct is used.
+                Also, don't add if TrustedHosts is already *
+            #>
+            $trustedHosts = (Get-Item -Path WSMAN::localhost\Client\TrustedHosts).Value
+
+            if (($trustedHosts -notlike "*$ipAddress*") -and ($trustedHosts -ne '*'))
             {
-                if ([System.String]::IsNullOrWhitespace($TrustedHosts))
+                if ([System.String]::IsNullOrWhitespace($trustedHosts))
                 {
-                    $TrustedHosts = $IPAddress
+                    $trustedHosts = $ipAddress
                 }
                 else
                 {
-                    $TrustedHosts = "$TrustedHosts,$IPAddress"
+                    $trustedHosts = "$trustedHosts,$ipAddress"
                 }
                 Set-Item `
                     -Path WSMAN::localhost\Client\TrustedHosts `
-                    -Value $TrustedHosts `
+                    -Value $trustedHosts `
                     -Force
                 Write-LabMessage -Message $($LocalizedData.AddingIPAddressToTrustedHostsMessage `
-                    -f $VM.Name,$IPAddress)
+                    -f $VM.Name,$ipAddress)
             }
 
             Write-LabMessage -Message $($LocalizedData.ConnectingVMMessage `
-                -f $VM.Name,$IPAddress)
+                -f $VM.Name,$ipAddress)
 
-            $Session = New-PSSession `
+            $session = New-PSSession `
                 -Name 'LabBuilder' `
-                -ComputerName $IPAddress `
-                -Credential $AdminCredential `
+                -ComputerName $ipAddress `
+                -Credential $adminCredential `
                 -ErrorAction Stop
         }
         catch
         {
-            if (-not $IPAddress)
+            if (-not $ipAddress)
             {
                 Write-LabMessage -Message $($LocalizedData.WaitingForIPAddressAssignedMessage `
                     -f $VM.Name,$Script:RetryConnectSeconds)
@@ -77,13 +84,14 @@ function Connect-LabVM
                 Write-LabMessage -Message $($LocalizedData.ConnectingVMFailedMessage `
                     -f $VM.Name,$Script:RetryConnectSeconds,$_.Exception.Message)
             }
+
             Start-Sleep -Seconds $Script:RetryConnectSeconds
         } # Try
     } # While
 
     # if a fatal exception occured or the connection just couldn't be established
     # then throw an exception so it can be caught by the calling code.
-    if ($FatalException -or ($null -eq $Session))
+    if ($FatalException -or ($null -eq $session))
     {
         # The connection failed so throw an error
         $exceptionParameters = @{
@@ -94,5 +102,5 @@ function Connect-LabVM
         }
         New-LabException @exceptionParameters
     }
-    Return $Session
+    Return $session
 } # Connect-LabVM
