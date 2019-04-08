@@ -273,7 +273,7 @@ function Initialize-LabVMTemplateVHD
                     else
                     {
                         # Tihs is a ResourceMSU type package
-                        [Boolean] $Found = $false
+                        [System.Boolean] $Found = $false
                         foreach ($ResourceMSU in $ResourceMSUs)
                         {
                             if ($ResourceMSU.Name -eq $Package)

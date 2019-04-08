@@ -55,7 +55,7 @@ function Remove-LabVM
                 Stop-VM `
                     -Name $VM.Name
                 # Wait for it to completely shut down and report that it is off.
-                WaitVMOff `
+                Wait-LabVMOff `
                     -VM $VM
             }
 

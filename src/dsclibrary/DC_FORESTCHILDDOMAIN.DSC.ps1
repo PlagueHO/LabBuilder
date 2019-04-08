@@ -109,7 +109,7 @@ Configuration DC_FORESTCHILDDOMAIN
                 DependsOn        = "[xADDomain]PrimaryDC"
             }
         }
-        [Int]$Count = 0
+        $Count=0
         Foreach ($ADZone in $Node.ADZones)
         {
             $Count++
@@ -122,7 +122,7 @@ Configuration DC_FORESTCHILDDOMAIN
                 DependsOn        = "[xADDomain]PrimaryDC"
             }
         }
-        [Int]$Count = 0
+        $Count=0
         Foreach ($PrimaryZone in $Node.PrimaryZones)
         {
             $Count++

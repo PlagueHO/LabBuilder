@@ -702,8 +702,8 @@ InModuleScope LabBuilder {
         Mock Get-VMNetworkAdapter
         Mock Add-VMNetworkAdapter
         Mock Start-VM
-        Mock WaitVMInitializationComplete -MockWith { $true }
-        Mock Recieve-SelfSignedCertificate
+        Mock Wait-LabVMInitializationComplete -MockWith { $true }
+        Mock Recieve-LabSelfSignedCertificate
         Mock Initialize-LabVMDSC
         Mock Install-LabVMDSC
         #endregion
@@ -730,8 +730,8 @@ InModuleScope LabBuilder {
                 Assert-MockCalled Get-VMNetworkAdapter -Exactly 9
                 Assert-MockCalled Add-VMNetworkAdapter -Exactly 4
                 Assert-MockCalled Start-VM -Exactly 1
-                Assert-MockCalled WaitVMInitializationComplete -Exactly 1
-                Assert-MockCalled Recieve-SelfSignedCertificate -Exactly 1
+                Assert-MockCalled Wait-LabVMInitializationComplete -Exactly 1
+                Assert-MockCalled Recieve-LabSelfSignedCertificate -Exactly 1
                 Assert-MockCalled Initialize-LabVMDSC -Exactly 1
                 Assert-MockCalled Install-LabVMDSC -Exactly 1
             }
@@ -750,7 +750,7 @@ InModuleScope LabBuilder {
         #region Mocks
         Mock Get-VM -MockWith { [PSObject]@{ Name = 'TestLab PESTER01'; State = 'Running'; } }
         Mock Stop-VM
-        Mock WaitVMOff -MockWith { Return $true }
+        Mock Wait-LabVMOff -MockWith { Return $true }
         Mock Remove-VM
         Mock Remove-Item
         Mock Test-Path -MockWith { Return $true }
@@ -770,7 +770,7 @@ InModuleScope LabBuilder {
             It 'Calls Mocked commands' {
                 Assert-MockCalled Get-VM -Exactly 3
                 Assert-MockCalled Stop-VM -Exactly 1
-                Assert-MockCalled WaitVMOff -Exactly 1
+                Assert-MockCalled Wait-LabVMOff -Exactly 1
                 Assert-MockCalled Remove-VM -Exactly 1
                 Assert-MockCalled Remove-Item -Exactly 0
             }
@@ -787,7 +787,7 @@ InModuleScope LabBuilder {
             It 'Calls Mocked commands' {
                 Assert-MockCalled Get-VM -Exactly 3
                 Assert-MockCalled Stop-VM -Exactly 1
-                Assert-MockCalled WaitVMOff -Exactly 1
+                Assert-MockCalled Wait-LabVMOff -Exactly 1
                 Assert-MockCalled Remove-VM -Exactly 1
                 Assert-MockCalled Remove-Item -Exactly 0
             }
@@ -807,7 +807,7 @@ InModuleScope LabBuilder {
             It 'Calls Mocked commands' {
                 Assert-MockCalled Get-VM -Exactly 3
                 Assert-MockCalled Stop-VM -Exactly 1
-                Assert-MockCalled WaitVMOff -Exactly 1
+                Assert-MockCalled Wait-LabVMOff -Exactly 1
                 Assert-MockCalled Remove-VM -Exactly 1
                 Assert-MockCalled Remove-Item -Exactly 1
             }
@@ -819,8 +819,8 @@ InModuleScope LabBuilder {
         Mock Get-VM -ParameterFilter { $Name -eq 'PESTER01' } -MockWith { [PSObject]@{ Name='PESTER01'; State='Off' } }
         Mock Get-VM -ParameterFilter { $Name -eq 'pester template *' }
         Mock Start-VM
-        Mock WaitVMInitializationComplete -MockWith { $true }
-        Mock Recieve-SelfSignedCertificate -MockWith { $true }
+        Mock Wait-LabVMInitializationComplete -MockWith { $true }
+        Mock Recieve-LabSelfSignedCertificate -MockWith { $true }
         Mock Initialize-LabVMDSC
         Mock Install-LabVMDSC
         #endregion
@@ -842,8 +842,8 @@ InModuleScope LabBuilder {
                 Assert-MockCalled Get-VM -ParameterFilter { $Name -eq 'PESTER01' } -Exactly 1
                 Assert-MockCalled Get-VM -ParameterFilter { $Name -eq 'pester template *' } -Exactly 1
                 Assert-MockCalled Start-VM -Exactly 1
-                Assert-MockCalled WaitVMInitializationComplete -Exactly 1
-                Assert-MockCalled Recieve-SelfSignedCertificate -Exactly 1
+                Assert-MockCalled Wait-LabVMInitializationComplete -Exactly 1
+                Assert-MockCalled Recieve-LabSelfSignedCertificate -Exactly 1
                 Assert-MockCalled Initialize-LabVMDSC -Exactly 1
                 Assert-MockCalled Install-LabVMDSC -Exactly 1
             }

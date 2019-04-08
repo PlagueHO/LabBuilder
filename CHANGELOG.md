@@ -24,6 +24,12 @@
   continue even if destination path is too long. This is to allow DSC
   Resource modules that have example filenames that result in a long
   path.
+- Update CI module dependencies in `Requirements.psd1` to latest version:
+  - PSScriptAnalyzer: 1.18.0
+  - PSDeploy: 1.0.1
+  - Platyps: 0.14.0
+- Split Private Lib functions into individual .ps1 files.
+- Refactored Private Lib functions to improve code style standards.
 
 ## 1.0.0.6
 

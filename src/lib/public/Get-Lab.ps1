@@ -55,7 +55,7 @@ function Get-Lab
     if (-not $SkipXMLValidation)
     {
         # Validate the XML
-        Assert-ValidConfigurationXMLSchema `
+        Assert-LabValidConfigurationXMLSchema `
             -ConfigPath $ConfigPath `
             -ErrorAction Stop
     }

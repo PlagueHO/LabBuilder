@@ -78,7 +78,7 @@ function Initialize-LabVM
                 -f $VM.Name)
 
             # Make sure the appropriate folders exist
-            InitializeVMPaths `
+            Initialize-LabVMPath `
                 -VMPath $VMRootPath
 
             # Create the boot disk
@@ -106,12 +106,12 @@ function Initialize-LabVM
                 }
 
                 # Create all the required initialization files for this VM
-                CreateVMInitializationFiles `
+                New-LabVMInitializationFile `
                     -Lab $Lab `
                     -VM $VM
 
                 # Because this is a new boot disk apply any required initialization
-                InitializeBootVHD `
+                Initialize-LabBootVHD `
                     -Lab $Lab `
                     -VM $VM `
                     -VMBootDiskPath $VMBootDiskPath
@@ -208,16 +208,16 @@ function Initialize-LabVM
         } # if
 
         # Enable/Disable the Integration Services
-        UpdateVMIntegrationServices `
+        Update-LabVMIntegrationService `
             -VM $VM
 
         # Update the data disks for the VM
-        UpdateVMDataDisks `
+        Update-LabVMDataDisk `
             -Lab $Lab `
             -VM $VM
 
         # Update the DVD Drives for the VM
-        UpdateVMDVDDrives `
+        Update-LabVMDvdDrive `
             -Lab $Lab `
             -VM $VM
 

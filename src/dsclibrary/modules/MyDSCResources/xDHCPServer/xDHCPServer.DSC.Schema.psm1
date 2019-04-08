@@ -71,7 +71,7 @@
             }
             DependsOn = '[WindowsFeature]DHCPInstall'
         }
-        [Int]$Count=0
+        [System.Int32]$Count=0
         Foreach ($Scope in $Scopes) {
             $Count++
             xDhcpServerScope "Scope$Count"
@@ -86,7 +86,7 @@
                 AddressFamily = $Scope.AddressFamily
             }
         }
-        [Int]$Count=0
+        [System.Int32]$Count=0
         Foreach ($Reservation in $Reservations) {
             $Count++
             xDhcpServerReservation "Reservation$Count"
@@ -99,7 +99,7 @@
                 AddressFamily = $Reservation.AddressFamily
             }
         }
-        [Int]$Count=0
+        [System.Int32]$Count=0
         Foreach ($ScopeOption in $ScopeOptions) {
             $Count++
             xDhcpServerOption "ScopeOption$Count"

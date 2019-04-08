@@ -192,7 +192,7 @@ function Initialize-LabSwitch
                         New-LabException @exceptionParameters
                     } # if
                     # Validate the Nat Subnet Prefix Length
-                    [int] $NatSubnetPrefixLength = $NatSubnetComponents[1]
+                    [System.Int32] $NatSubnetPrefixLength = $NatSubnetComponents[1]
                     if (($NatSubnetPrefixLength -lt 1) -or ($NatSubnetPrefixLength -gt 31))
                     {
                         $exceptionParameters = @{

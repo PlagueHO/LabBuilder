@@ -104,7 +104,7 @@ function Get-LabVM
 
             # Find the template that this VM uses and get the VHD Path
             [System.String] $ParentVHDPath = ''
-            [Boolean] $Found = $false
+            [System.Boolean] $Found = $false
             foreach ($VMTemplate in $VMTemplates) {
                 if ($VMTemplate.Name -eq $VM.Template) {
                     $ParentVHDPath = $VMTemplate.ParentVHD
@@ -133,7 +133,7 @@ function Get-LabVM
 
             # Assemble the Network adapters that this VM will use
             [LabVMAdapter[]] $VMAdapters = @()
-            [Int] $AdapterCount = 0
+            [System.Int32] $AdapterCount = 0
             foreach ($VMAdapter in $VM.Adapters.Adapter)
             {
                 $AdapterCount++
@@ -170,7 +170,7 @@ function Get-LabVM
                 } # if
 
                 # Check the switch is in the switch list
-                [Boolean] $Found = $false
+                [System.Boolean] $Found = $false
                 foreach ($Switch in $Switches)
                 {
                     # Match the switch name to the Adapter Switch Name or
@@ -213,7 +213,7 @@ function Get-LabVM
                     $VLan = $SwitchVLan
                 } # if
 
-                [Boolean] $MACAddressSpoofing = ($VMAdapter.macaddressspoofing -eq 'On')
+                [System.Boolean] $MACAddressSpoofing = ($VMAdapter.macaddressspoofing -eq 'On')
 
                 # Have we got any IPv4 settings?
                 Remove-Variable -Name IPv4 -ErrorAction SilentlyContinue
@@ -222,7 +222,7 @@ function Get-LabVM
                     if ($VMAdapter.IPv4.Address)
                     {
                         $IPv4 = [LabVMAdapterIPv4]::New(`
-                            (Get-NextIpAddress `
+                            (Get-LabNextIpAddress `
                                 -IpAddress $VMAdapter.IPv4.Address`
                                 -Step $IncNetIds)`
                             ,$VMAdapter.IPv4.SubnetMask)
@@ -238,7 +238,7 @@ function Get-LabVM
                     if ($VMAdapter.IPv6.Address)
                     {
                         $IPv6 = [LabVMAdapterIPv6]::New(`
-                            (Get-NextIpAddress `
+                            (Get-LabNextIpAddress `
                                 -IpAddress $VMAdapter.IPv6.Address`
                                 -Step $IncNetIds)`
                             ,$VMAdapter.IPv6.SubnetMask)
@@ -264,7 +264,7 @@ function Get-LabVM
 
             # Assemble the Data Disks this VM will use
             [LabDataVHD[]] $DataVhds = @()
-            [Int] $DataVhdCount = 0
+            [System.Int32] $DataVhdCount = 0
             foreach ($VMDataVhd in $VM.DataVhds.DataVhd)
             {
                 $DataVhdCount++
@@ -537,7 +537,7 @@ function Get-LabVM
 
             # Assemble the DVD Drives this VM will use
             [LabDVDDrive[]] $DVDDrives = @()
-            [Int] $DVDDriveCount = 0
+            [System.Int32] $DVDDriveCount = 0
             foreach ($VMDVDDrive in $VM.DVDDrives.DVDDrive)
             {
                 $DVDDriveCount++
@@ -700,7 +700,7 @@ function Get-LabVM
             } # if
 
             # Load the DSC Parameters
-            [Boolean] $LabDSC.Logging = ($VM.DSC.Logging -eq 'Y')
+            [System.Boolean] $LabDSC.Logging = ($VM.DSC.Logging -eq 'Y')
 
             # Get the Memory Startup Bytes (from the template or VM)
             [Int64] $MemoryStartupBytes = 1GB
@@ -714,7 +714,7 @@ function Get-LabVM
             } # if
 
             # Get the Dynamic Memory Enabled flag
-            [Boolean] $DynamicMemoryEnabled = $true
+            [System.Boolean] $DynamicMemoryEnabled = $true
             if ($VM.DynamicMemoryEnabled)
             {
                 $DynamicMemoryEnabled = ($VM.DynamicMemoryEnabled -eq 'Y')
@@ -725,7 +725,7 @@ function Get-LabVM
             } # if
 
             # Get the Number of vCPUs (from the template or VM)
-            [Int] $ProcessorCount = 1
+            [System.Int32] $ProcessorCount = 1
             if ($VM.processorcount)
             {
                 $ProcessorCount = (Invoke-Expression $VM.processorcount)
@@ -758,7 +758,7 @@ function Get-LabVM
                 New-LabException @exceptionParameters
             } # if
 
-            [Boolean] $UseDifferencingDisk = $true
+            [System.Boolean] $UseDifferencingDisk = $true
             if ($VM.UseDifferencingDisk -eq 'N')
             {
                 $UseDifferencingDisk = $false

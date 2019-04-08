@@ -11,7 +11,7 @@ function Connect-LabVM
 
         [Parameter(
             Position=2)]
-        [Int] $ConnectTimeout = 300
+        [System.Int32] $ConnectTimeout = 300
     )
 
     [DateTime] $StartTime = Get-Date
@@ -19,7 +19,7 @@ function Connect-LabVM
     [PSCredential] $AdminCredential = New-LabCredential `
         -Username '.\Administrator' `
         -Password $VM.AdministratorPassword
-    [Boolean] $FatalException = $false
+    [System.Boolean] $FatalException = $false
 
     while (($null -eq $Session) `
         -and (((Get-Date) - $StartTime).TotalSeconds) -lt $ConnectTimeout `
@@ -30,7 +30,7 @@ function Connect-LabVM
             # Get the Management IP Address of the VM
             # We repeat this because the IP Address will only be assiged
             # once the VM is fully booted.
-            $IPAddress = GetVMManagementIPAddress `
+            $IPAddress = Get-LabVMManagementIPAddress `
                 -Lab $Lab `
                 -VM $VM
 

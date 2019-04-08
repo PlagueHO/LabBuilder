@@ -14,7 +14,7 @@ function Disconnect-LabVM
         -Password $VM.AdministratorPassword
 
     # Get the Management IP Address of the VM
-    $IPAddress = GetVMManagementIPAddress `
+    $IPAddress = Get-LabVMManagementIPAddress `
         -Lab $Lab `
         -VM $VM
 

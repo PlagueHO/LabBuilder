@@ -244,7 +244,7 @@ function Get-LabVMTemplateVHD
         } # if
 
         # Get the Template VM Generation
-        [int] $Generation = 2
+        [System.Int32] $Generation = 2
         if ($TemplateVHD.Generation)
         {
             $Generation = $TemplateVHD.Generation

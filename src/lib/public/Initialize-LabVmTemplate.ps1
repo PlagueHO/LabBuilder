@@ -102,7 +102,7 @@ function Initialize-LabVMTemplate
                     foreach ($Package in $ApplyPackages)
                     {
                         # Find the package in the Resources
-                        [Boolean] $Found = $false
+                        [System.Boolean] $Found = $false
                         foreach ($ResourceMSU in $ResourceMSUs)
                         {
                             if ($ResourceMSU.Name -eq $Package)

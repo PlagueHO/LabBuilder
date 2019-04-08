@@ -79,7 +79,7 @@ Configuration MEMBER_DNS
                 DependsOn        = '[Computer]JoinDomain'
             }
         }
-        [Int]$Count = 0
+        $Count=0
         Foreach ($PrimaryZone in $Node.PrimaryZones)
         {
             $Count++

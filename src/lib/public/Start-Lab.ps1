@@ -26,7 +26,7 @@ function Start-Lab
 
         [Parameter(
             Position=4)]
-        [Int] $StartupTimeout = $Script:StartupTimeout
+        [System.Int32] $StartupTimeout = $Script:StartupTimeout
     ) # Param
 
     begin
@@ -66,10 +66,10 @@ function Start-Lab
                 Where-Object -FilterScript { ($_.BootOrder -eq $BootPhase) } )
 
             [DateTime] $StartPhase = Get-Date
-            [boolean] $PhaseComplete = $false
-            [boolean] $PhaseAllBooted = $true
-            [int] $VMCount = $BootVMs.Count
-            [int] $VMNumber = 0
+            [System.Boolean] $PhaseComplete = $false
+            [System.Boolean] $PhaseAllBooted = $true
+            [System.Int32] $VMCount = $BootVMs.Count
+            [System.Int32] $VMNumber = 0
 
             # Loop through all the VMs in this "Bootphase" repeatedly
             # until timeout occurs or PhaseComplete is marked as complete
@@ -108,7 +108,7 @@ function Start-Lab
 
                 # Use the allocation of a Management IP Address as an indicator
                 # the machine has booted
-                $ManagementIP = GetVMManagementIPAddress `
+                $ManagementIP = Get-LabVMManagementIPAddress `
                     -Lab $Lab `
                     -VM $VM `
                     -ErrorAction SilentlyContinue

@@ -110,7 +110,7 @@ Configuration MEMBER_WEBSERVER
         }
 
         # Create the Web App Pools
-        [Int]$Count=0
+        [System.Int32]$Count=0
         Foreach ($WebAppPool in $Node.WebAppPools) {
             $Count++
             xWebAppPool "WebAppPool$Count"
@@ -122,7 +122,7 @@ Configuration MEMBER_WEBSERVER
         }
 
         # Create the Web Sites
-        [Int]$Count=0
+        [System.Int32]$Count=0
         Foreach ($WebSite in $Node.WebSites) {
             $Count++
 
@@ -161,7 +161,7 @@ Configuration MEMBER_WEBSERVER
         }
 
         # Create the Web Applications
-        [Int]$Count=0
+        [System.Int32]$Count=0
         Foreach ($WebApplication in $Node.WebApplications) {
             $Count++
 
@@ -199,7 +199,7 @@ Configuration MEMBER_WEBSERVER
         }
 
         # Create the Web Virtual Directories
-        [Int]$Count=0
+        [System.Int32]$Count=0
         Foreach ($WebVirtualDirectory in $Node.WebVirtualDirectories) {
             $Count++
 

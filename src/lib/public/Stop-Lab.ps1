@@ -60,10 +60,10 @@ function Stop-Lab
                 Where-Object -FilterScript { ($_.BootOrder -eq $BootPhase) } )
 
             [DateTime] $StartPhase = Get-Date
-            [boolean] $PhaseComplete = $false
-            [boolean] $PhaseAllStopped = $true
-            [int] $VMCount = $BootVMs.Count
-            [int] $VMNumber = 0
+            [System.Boolean] $PhaseComplete = $false
+            [System.Boolean] $PhaseAllStopped = $true
+            [System.Int32] $VMCount = $BootVMs.Count
+            [System.Int32] $VMNumber = 0
 
             # Loop through all the VMs in this "Bootphase" repeatedly
             while (-not $PhaseComplete)

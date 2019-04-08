@@ -130,7 +130,7 @@ Configuration MEMBER_DHCPNPAS2016
             }
             DependsOn            = '[Computer]JoinDomain'
         }
-        [Int]$Count = 0
+        $Count=0
         Foreach ($Scope in $Node.Scopes)
         {
             $Count++
@@ -147,7 +147,7 @@ Configuration MEMBER_DHCPNPAS2016
                 AddressFamily = $Scope.AddressFamily
             }
         }
-        [Int]$Count = 0
+        $Count=0
         Foreach ($Reservation in $Node.Reservations)
         {
             $Count++
@@ -161,7 +161,7 @@ Configuration MEMBER_DHCPNPAS2016
                 AddressFamily    = $Reservation.AddressFamily
             }
         }
-        [Int]$Count = 0
+        $Count=0
         Foreach ($ScopeOption in $Node.ScopeOptions)
         {
             $Count++

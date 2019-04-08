@@ -33,34 +33,34 @@ InModuleScope LabBuilder {
         -Force `
         -ErrorAction SilentlyContinue
 
-    Describe '\lib\private\Vm.ps1\CreateVMInitializationFiles' -Tags 'Incomplete' {
+    Describe '\lib\private\Vm.ps1\New-LabVMInitializationFile' -Tags 'Incomplete' {
     }
 
-    Describe '\lib\private\Vm.ps1\GetUnattendFileContent' -Tags 'Incomplete' {
+    Describe '\lib\private\Vm.ps1\Get-LabUnattendFileContent' -Tags 'Incomplete' {
     }
 
-    Describe '\lib\private\Vm.ps1\GetCertificatePsFileContent' -Tags 'Incomplete' {
+    Describe '\lib\private\Vm.ps1\Get-LabCertificatePsFileContent' -Tags 'Incomplete' {
     }
 
-    Describe '\lib\private\Vm.ps1\Recieve-SelfSignedCertificate' -Tags 'Incomplete' {
+    Describe '\lib\private\Vm.ps1\Recieve-LabSelfSignedCertificate' -Tags 'Incomplete' {
     }
 
-    Describe '\lib\private\Vm.ps1\Request-SelfSignedCertificate' -Tags 'Incomplete' {
+    Describe '\lib\private\Vm.ps1\Request-LabSelfSignedCertificate' -Tags 'Incomplete' {
     }
 
-    Describe '\lib\private\Vm.ps1\CreateHostSelfSignedCertificate' -Tags 'Incomplete' {
+    Describe '\lib\private\Vm.ps1\New-LabHostSelfSignedCertificate' -Tags 'Incomplete' {
     }
 
-    Describe '\lib\private\Vm.ps1\WaitVMInitializationComplete' -Tags 'Incomplete' {
+    Describe '\lib\private\Vm.ps1\Wait-LabVMInitializationComplete' -Tags 'Incomplete' {
     }
 
-    Describe '\lib\private\Vm.ps1\WaitVMStarted' -Tags 'Incomplete'  {
+    Describe '\lib\private\Vm.ps1\Wait-LabVMStarted' -Tags 'Incomplete'  {
     }
 
-    Describe '\lib\private\Vm.ps1\WaitVMOff' -Tags 'Incomplete'  {
+    Describe '\lib\private\Vm.ps1\Wait-LabVMOff' -Tags 'Incomplete'  {
     }
 
-    Describe '\lib\private\Vm.ps1\GetIntegrationServiceNames' {
+    Describe '\lib\private\Vm.ps1\Get-LabIntegrationServiceName' {
         Mock -CommandName Get-CimInstance `
             -ParameterFilter { $Class -eq 'Msvm_VssComponentSettingData' } `
             -MockWith { @{ Caption = 'VSS' }}
@@ -82,7 +82,7 @@ InModuleScope LabBuilder {
 
         Context 'When called' {
             It 'Returns expected Integration Service names' {
-                GetIntegrationServiceNames | Should -Be @(
+                Get-LabIntegrationServiceName | Should -Be @(
                     'VSS'
                     'Shutdown'
                     'Time Synchronization'
@@ -98,7 +98,7 @@ InModuleScope LabBuilder {
         }
     }
 
-    Describe '\lib\private\Vm.ps1\UpdateVMIntegrationServices' {
+    Describe '\lib\private\Vm.ps1\Update-LabVMIntegrationService' {
         function Get-VMIntegrationService {}
         function Enable-VMIntegrationService {
             [CmdletBinding()]
@@ -121,7 +121,7 @@ InModuleScope LabBuilder {
             )
         }
 
-        Mock -CommandName GetIntegrationServiceNames -MockWith {
+        Mock -CommandName Get-LabIntegrationServiceName -MockWith {
             @(
                 'VSS'
                 'Shutdown'
@@ -151,7 +151,7 @@ InModuleScope LabBuilder {
             $VMs[0].IntegrationServices = $null
 
             It 'Does not throw an Exception' {
-                { UpdateVMIntegrationServices -VM $VMs[0] } | Should -Not -Throw
+                { Update-LabVMIntegrationService -VM $VMs[0] } | Should -Not -Throw
             }
 
             It 'Calls Mocked commands' {
@@ -166,7 +166,7 @@ InModuleScope LabBuilder {
             $VMs[0].IntegrationServices = ''
 
             It 'Does not throw an Exception' {
-                { UpdateVMIntegrationServices -VM $VMs[0] } | Should -Not -Throw
+                { Update-LabVMIntegrationService -VM $VMs[0] } | Should -Not -Throw
             }
 
             It 'Calls Mocked commands' {
@@ -181,7 +181,7 @@ InModuleScope LabBuilder {
             $VMs[0].IntegrationServices = 'VSS'
 
             It 'Does not throw an Exception' {
-                { UpdateVMIntegrationServices -VM $VMs[0] } | Should -Not -Throw
+                { Update-LabVMIntegrationService -VM $VMs[0] } | Should -Not -Throw
             }
 
             It 'Calls Mocked commands' {
@@ -196,7 +196,7 @@ InModuleScope LabBuilder {
             $VMs[0].IntegrationServices = 'Guest Service Interface'
 
             It 'Does not throw an Exception' {
-                { UpdateVMIntegrationServices -VM $VMs[0] } | Should -Not -Throw
+                { Update-LabVMIntegrationService -VM $VMs[0] } | Should -Not -Throw
             }
 
             It 'Calls Mocked commands' {
@@ -208,7 +208,7 @@ InModuleScope LabBuilder {
     }
 
 
-    Describe '\lib\private\Vm.ps1\UpdateVMDataDisks' {
+    Describe '\lib\private\Vm.ps1\Update-LabVMDataDisk' {
         function Get-VM {}
         function Get-VHD {}
         function Resize-VHD {}
@@ -228,7 +228,7 @@ InModuleScope LabBuilder {
         Mock -CommandName Add-VMHardDiskDrive
         Mock -CommandName Test-Path -ParameterFilter { $Path -eq 'DoesNotExist.Vhdx' } -MockWith { $false }
         Mock -CommandName Test-Path -ParameterFilter { $Path -eq 'DoesExist.Vhdx' } -MockWith { $true }
-        Mock -CommandName InitializeVHD
+        Mock -CommandName Initialize-LabVHD
         Mock -CommandName Mount-VHD
         Mock -CommandName Dismount-VHD
         Mock -CommandName Copy-Item
@@ -245,7 +245,7 @@ InModuleScope LabBuilder {
             $VMs[0].DataVHDs = @()
 
             It 'Does not throw an Exception' {
-                { UpdateVMDataDisks -Lab $Lab -VM $VMs[0] } | Should -Not -Throw
+                { Update-LabVMDataDisk -Lab $Lab -VM $VMs[0] } | Should -Not -Throw
             }
 
             It 'Calls Mocked commands' {
@@ -256,7 +256,7 @@ InModuleScope LabBuilder {
                 Assert-MockCalled -CommandName New-VHD -Exactly 0
                 Assert-MockCalled -CommandName Get-VMHardDiskDrive -Exactly 0
                 Assert-MockCalled -CommandName Add-VMHardDiskDrive -Exactly 0
-                Assert-MockCalled -CommandName InitializeVHD -Exactly 0
+                Assert-MockCalled -CommandName Initialize-LabVHD -Exactly 0
                 Assert-MockCalled -CommandName Mount-VHD -Exactly 0
                 Assert-MockCalled -CommandName Dismount-VHD -Exactly 0
                 Assert-MockCalled -CommandName New-Item -Exactly 0
@@ -281,7 +281,7 @@ InModuleScope LabBuilder {
                         -f $VMs[0].Name,$VMs[0].DataVHDs.Vhd,$VMs[0].DataVHDs.VhdType)
                 }
                 $exception = Get-LabException @exceptionParameters
-                { UpdateVMDataDisks -Lab $Lab -VM $VMs[0] } | Should -Throw $exception
+                { Update-LabVMDataDisk -Lab $Lab -VM $VMs[0] } | Should -Throw $exception
             }
 
             It 'Calls Mocked commands' {
@@ -292,7 +292,7 @@ InModuleScope LabBuilder {
                 Assert-MockCalled -CommandName New-VHD -Exactly 0
                 Assert-MockCalled -CommandName Get-VMHardDiskDrive -Exactly 0
                 Assert-MockCalled -CommandName Add-VMHardDiskDrive -Exactly 0
-                Assert-MockCalled -CommandName InitializeVHD -Exactly 0
+                Assert-MockCalled -CommandName Initialize-LabVHD -Exactly 0
                 Assert-MockCalled -CommandName Mount-VHD -Exactly 0
                 Assert-MockCalled -CommandName Dismount-VHD -Exactly 0
                 Assert-MockCalled -CommandName New-Item -Exactly 0
@@ -317,7 +317,7 @@ InModuleScope LabBuilder {
                         -f $VMs[0].Name,$VMs[0].DataVHDs[0].Vhd,$VMs[0].DataVHDs[0].Size)
                 }
                 $Exception = Get-LabException @exceptionParameters
-                { UpdateVMDataDisks -Lab $Lab -VM $VMs[0] } | Should -Throw $Exception
+                { Update-LabVMDataDisk -Lab $Lab -VM $VMs[0] } | Should -Throw $Exception
             }
 
             It 'Calls Mocked commands' {
@@ -328,7 +328,7 @@ InModuleScope LabBuilder {
                 Assert-MockCalled -CommandName New-VHD -Exactly 0
                 Assert-MockCalled -CommandName Get-VMHardDiskDrive -Exactly 0
                 Assert-MockCalled -CommandName Add-VMHardDiskDrive -Exactly 0
-                Assert-MockCalled -CommandName InitializeVHD -Exactly 0
+                Assert-MockCalled -CommandName Initialize-LabVHD -Exactly 0
                 Assert-MockCalled -CommandName Mount-VHD -Exactly 0
                 Assert-MockCalled -CommandName Dismount-VHD -Exactly 0
                 Assert-MockCalled -CommandName New-Item -Exactly 0
@@ -347,7 +347,7 @@ InModuleScope LabBuilder {
             } }
 
             It 'Does not throw an Exception' {
-                { UpdateVMDataDisks -Lab $Lab -VM $VMs[0] } | Should -Not -Throw
+                { Update-LabVMDataDisk -Lab $Lab -VM $VMs[0] } | Should -Not -Throw
             }
 
             It 'Calls Mocked commands' {
@@ -358,7 +358,7 @@ InModuleScope LabBuilder {
                 Assert-MockCalled -CommandName New-VHD -Exactly 0
                 Assert-MockCalled -CommandName Get-VMHardDiskDrive -Exactly 1
                 Assert-MockCalled -CommandName Add-VMHardDiskDrive -Exactly 1
-                Assert-MockCalled -CommandName InitializeVHD -Exactly 0
+                Assert-MockCalled -CommandName Initialize-LabVHD -Exactly 0
                 Assert-MockCalled -CommandName Mount-VHD -Exactly 0
                 Assert-MockCalled -CommandName Dismount-VHD -Exactly 0
                 Assert-MockCalled -CommandName New-Item -Exactly 0
@@ -379,7 +379,7 @@ InModuleScope LabBuilder {
                         -f $VMs[0].Name,$VMs[0].DataVHDs[0].SourceVhd)
                 }
                 $Exception = Get-LabException @exceptionParameters
-                { UpdateVMDataDisks -Lab $Lab -VM $VMs[0] } | Should -Throw $Exception
+                { Update-LabVMDataDisk -Lab $Lab -VM $VMs[0] } | Should -Throw $Exception
             }
 
             It 'Calls Mocked commands' {
@@ -390,7 +390,7 @@ InModuleScope LabBuilder {
                 Assert-MockCalled -CommandName New-VHD -Exactly 0
                 Assert-MockCalled -CommandName Get-VMHardDiskDrive -Exactly 0
                 Assert-MockCalled -CommandName Add-VMHardDiskDrive -Exactly 0
-                Assert-MockCalled -CommandName InitializeVHD -Exactly 0
+                Assert-MockCalled -CommandName Initialize-LabVHD -Exactly 0
                 Assert-MockCalled -CommandName Mount-VHD -Exactly 0
                 Assert-MockCalled -CommandName Dismount-VHD -Exactly 0
                 Assert-MockCalled -CommandName New-Item -Exactly 0
@@ -403,7 +403,7 @@ InModuleScope LabBuilder {
             $VMs[0].DataVHDs = @( $DataVHD )
 
             It 'Does not throw an Exception' {
-                { UpdateVMDataDisks -Lab $Lab -VM $VMs[0] } | Should -Not -Throw
+                { Update-LabVMDataDisk -Lab $Lab -VM $VMs[0] } | Should -Not -Throw
             }
 
             It 'Calls Mocked commands' {
@@ -414,7 +414,7 @@ InModuleScope LabBuilder {
                 Assert-MockCalled -CommandName New-VHD -Exactly 0
                 Assert-MockCalled -CommandName Get-VMHardDiskDrive -Exactly 1
                 Assert-MockCalled -CommandName Add-VMHardDiskDrive -Exactly 1
-                Assert-MockCalled -CommandName InitializeVHD -Exactly 0
+                Assert-MockCalled -CommandName Initialize-LabVHD -Exactly 0
                 Assert-MockCalled -CommandName Mount-VHD -Exactly 0
                 Assert-MockCalled -CommandName Dismount-VHD -Exactly 0
                 Assert-MockCalled -CommandName New-Item -Exactly 0
@@ -428,7 +428,7 @@ InModuleScope LabBuilder {
             $VMs[0].DataVHDs = @( $DataVHD )
 
             It 'Does not throw an Exception' {
-                { UpdateVMDataDisks -Lab $Lab -VM $VMs[0] } | Should -Not -Throw
+                { Update-LabVMDataDisk -Lab $Lab -VM $VMs[0] } | Should -Not -Throw
             }
             It 'Calls Mocked commands' {
                 Assert-MockCalled -CommandName Get-VHD -Exactly 0
@@ -438,7 +438,7 @@ InModuleScope LabBuilder {
                 Assert-MockCalled -CommandName New-VHD -Exactly 0
                 Assert-MockCalled -CommandName Get-VMHardDiskDrive -Exactly 1
                 Assert-MockCalled -CommandName Add-VMHardDiskDrive -Exactly 1
-                Assert-MockCalled -CommandName InitializeVHD -Exactly 0
+                Assert-MockCalled -CommandName Initialize-LabVHD -Exactly 0
                 Assert-MockCalled -CommandName Mount-VHD -Exactly 0
                 Assert-MockCalled -CommandName Dismount-VHD -Exactly 0
                 Assert-MockCalled -CommandName New-Item -Exactly 0
@@ -452,7 +452,7 @@ InModuleScope LabBuilder {
             $VMs[0].DataVHDs = @( $DataVHD )
 
             It 'Does not throw an Exception' {
-                { UpdateVMDataDisks -Lab $Lab -VM $VMs[0] } | Should -Not -Throw
+                { Update-LabVMDataDisk -Lab $Lab -VM $VMs[0] } | Should -Not -Throw
             }
 
             It 'Calls Mocked commands' {
@@ -463,7 +463,7 @@ InModuleScope LabBuilder {
                 Assert-MockCalled -CommandName New-VHD -Exactly 1
                 Assert-MockCalled -CommandName Get-VMHardDiskDrive -Exactly 1
                 Assert-MockCalled -CommandName Add-VMHardDiskDrive -Exactly 1
-                Assert-MockCalled -CommandName InitializeVHD -Exactly 0
+                Assert-MockCalled -CommandName Initialize-LabVHD -Exactly 0
                 Assert-MockCalled -CommandName Mount-VHD -Exactly 0
                 Assert-MockCalled -CommandName Dismount-VHD -Exactly 0
                 Assert-MockCalled -CommandName New-Item -Exactly 0
@@ -477,7 +477,7 @@ InModuleScope LabBuilder {
             $VMs[0].DataVHDs = @( $DataVHD )
 
             It 'Does not throw an Exception' {
-                { UpdateVMDataDisks -Lab $Lab -VM $VMs[0] } | Should -Not -Throw
+                { Update-LabVMDataDisk -Lab $Lab -VM $VMs[0] } | Should -Not -Throw
             }
 
             It 'Calls Mocked commands' {
@@ -488,7 +488,7 @@ InModuleScope LabBuilder {
                 Assert-MockCalled -CommandName New-VHD -Exactly 1
                 Assert-MockCalled -CommandName Get-VMHardDiskDrive -Exactly 1
                 Assert-MockCalled -CommandName Add-VMHardDiskDrive -Exactly 1
-                Assert-MockCalled -CommandName InitializeVHD -Exactly 0
+                Assert-MockCalled -CommandName Initialize-LabVHD -Exactly 0
                 Assert-MockCalled -CommandName Mount-VHD -Exactly 0
                 Assert-MockCalled -CommandName Dismount-VHD -Exactly 0
                 Assert-MockCalled -CommandName New-Item -Exactly 0
@@ -504,7 +504,7 @@ InModuleScope LabBuilder {
             $VMs[0].DataVHDs = @( $DataVHD )
 
             It 'Does not throw an Exception' {
-                { UpdateVMDataDisks -Lab $Lab -VM $VMs[0] } | Should -Not -Throw
+                { Update-LabVMDataDisk -Lab $Lab -VM $VMs[0] } | Should -Not -Throw
             }
 
             It 'Calls Mocked commands' {
@@ -515,7 +515,7 @@ InModuleScope LabBuilder {
                 Assert-MockCalled -CommandName New-VHD -Exactly 1
                 Assert-MockCalled -CommandName Get-VMHardDiskDrive -Exactly 1
                 Assert-MockCalled -CommandName Add-VMHardDiskDrive -Exactly 1
-                Assert-MockCalled -CommandName InitializeVHD -Exactly 1
+                Assert-MockCalled -CommandName Initialize-LabVHD -Exactly 1
                 Assert-MockCalled -CommandName Mount-VHD -Exactly 0
                 Assert-MockCalled -CommandName Dismount-VHD -Exactly 1
                 Assert-MockCalled -CommandName New-Item -Exactly 0
@@ -532,7 +532,7 @@ InModuleScope LabBuilder {
             $VMs[0].DataVHDs = @( $DataVHD )
 
             It 'Does not throw an Exception' {
-                { UpdateVMDataDisks -Lab $Lab -VM $VMs[0] } | Should -Not -Throw
+                { Update-LabVMDataDisk -Lab $Lab -VM $VMs[0] } | Should -Not -Throw
             }
 
             It 'Calls Mocked commands' {
@@ -543,7 +543,7 @@ InModuleScope LabBuilder {
                 Assert-MockCalled -CommandName New-VHD -Exactly 1
                 Assert-MockCalled -CommandName Get-VMHardDiskDrive -Exactly 1
                 Assert-MockCalled -CommandName Add-VMHardDiskDrive -Exactly 1
-                Assert-MockCalled -CommandName InitializeVHD -Exactly 1
+                Assert-MockCalled -CommandName Initialize-LabVHD -Exactly 1
                 Assert-MockCalled -CommandName Mount-VHD -Exactly 0
                 Assert-MockCalled -CommandName Dismount-VHD -Exactly 1
                 Assert-MockCalled -CommandName New-Item -Exactly 1
@@ -558,7 +558,7 @@ InModuleScope LabBuilder {
             $VMs[0].DataVHDs = @( $DataVHD )
 
             It 'Does not throw an Exception' {
-                { UpdateVMDataDisks -Lab $Lab -VM $VMs[0] } | Should -Not -Throw
+                { Update-LabVMDataDisk -Lab $Lab -VM $VMs[0] } | Should -Not -Throw
             }
 
             It 'Calls Mocked commands' {
@@ -569,7 +569,7 @@ InModuleScope LabBuilder {
                 Assert-MockCalled -CommandName New-VHD -Exactly 1
                 Assert-MockCalled -CommandName Get-VMHardDiskDrive -Exactly 1
                 Assert-MockCalled -CommandName Add-VMHardDiskDrive -Exactly 1
-                Assert-MockCalled -CommandName InitializeVHD -Exactly 1
+                Assert-MockCalled -CommandName Initialize-LabVHD -Exactly 1
                 Assert-MockCalled -CommandName Mount-VHD -Exactly 0
                 Assert-MockCalled -CommandName Dismount-VHD -Exactly 1
                 Assert-MockCalled -CommandName New-Item -Exactly 1
@@ -590,7 +590,7 @@ InModuleScope LabBuilder {
                         -f $VMs[0].Name)
                 }
                 $Exception = Get-LabException @exceptionParameters
-                { UpdateVMDataDisks -Lab $Lab -VM $VMs[0] } | Should -Throw $Exception
+                { Update-LabVMDataDisk -Lab $Lab -VM $VMs[0] } | Should -Throw $Exception
             }
 
             It 'Calls Mocked commands' {
@@ -601,7 +601,7 @@ InModuleScope LabBuilder {
                 Assert-MockCalled -CommandName New-VHD -Exactly 0
                 Assert-MockCalled -CommandName Get-VMHardDiskDrive -Exactly 0
                 Assert-MockCalled -CommandName Add-VMHardDiskDrive -Exactly 0
-                Assert-MockCalled -CommandName InitializeVHD -Exactly 0
+                Assert-MockCalled -CommandName Initialize-LabVHD -Exactly 0
                 Assert-MockCalled -CommandName Mount-VHD -Exactly 0
                 Assert-MockCalled -CommandName Dismount-VHD -Exactly 0
                 Assert-MockCalled -CommandName New-Item -Exactly 0
@@ -623,7 +623,7 @@ InModuleScope LabBuilder {
                         -f $VMs[0].Name,$VMs[0].DataVHDs[0].ParentVhd)
                 }
                 $Exception = Get-LabException @exceptionParameters
-                { UpdateVMDataDisks -Lab $Lab -VM $VMs[0] } | Should -Throw $Exception
+                { Update-LabVMDataDisk -Lab $Lab -VM $VMs[0] } | Should -Throw $Exception
             }
 
             It 'Calls Mocked commands' {
@@ -634,7 +634,7 @@ InModuleScope LabBuilder {
                 Assert-MockCalled -CommandName New-VHD -Exactly 0
                 Assert-MockCalled -CommandName Get-VMHardDiskDrive -Exactly 0
                 Assert-MockCalled -CommandName Add-VMHardDiskDrive -Exactly 0
-                Assert-MockCalled -CommandName InitializeVHD -Exactly 0
+                Assert-MockCalled -CommandName Initialize-LabVHD -Exactly 0
                 Assert-MockCalled -CommandName Mount-VHD -Exactly 0
                 Assert-MockCalled -CommandName Dismount-VHD -Exactly 0
                 Assert-MockCalled -CommandName New-Item -Exactly 0
@@ -649,7 +649,7 @@ InModuleScope LabBuilder {
             $VMs[0].DataVHDs = @( $DataVHD )
 
             It 'Does not throw an Exception' {
-                { UpdateVMDataDisks -Lab $Lab -VM $VMs[0] } | Should -Not -Throw
+                { Update-LabVMDataDisk -Lab $Lab -VM $VMs[0] } | Should -Not -Throw
             }
 
             It 'Calls Mocked commands' {
@@ -660,7 +660,7 @@ InModuleScope LabBuilder {
                 Assert-MockCalled -CommandName New-VHD -Exactly 1
                 Assert-MockCalled -CommandName Get-VMHardDiskDrive -Exactly 1
                 Assert-MockCalled -CommandName Add-VMHardDiskDrive -Exactly 1
-                Assert-MockCalled -CommandName InitializeVHD -Exactly 0
+                Assert-MockCalled -CommandName Initialize-LabVHD -Exactly 0
                 Assert-MockCalled -CommandName Mount-VHD -Exactly 0
                 Assert-MockCalled -CommandName Dismount-VHD -Exactly 0
                 Assert-MockCalled -CommandName New-Item -Exactly 0
@@ -680,7 +680,7 @@ InModuleScope LabBuilder {
             $VMs[0].DataVHDs = @( $DataVHD )
 
             It 'Does not throw an Exception' {
-                { UpdateVMDataDisks -Lab $Lab -VM $VMs[0] } | Should -Not -Throw
+                { Update-LabVMDataDisk -Lab $Lab -VM $VMs[0] } | Should -Not -Throw
             }
 
             It 'Calls Mocked commands' {
@@ -691,7 +691,7 @@ InModuleScope LabBuilder {
                 Assert-MockCalled -CommandName New-VHD -Exactly 0
                 Assert-MockCalled -CommandName Get-VMHardDiskDrive -Exactly 1
                 Assert-MockCalled -CommandName Add-VMHardDiskDrive -Exactly 0
-                Assert-MockCalled -CommandName InitializeVHD -Exactly 0
+                Assert-MockCalled -CommandName Initialize-LabVHD -Exactly 0
                 Assert-MockCalled -CommandName Mount-VHD -Exactly 0
                 Assert-MockCalled -CommandName Dismount-VHD -Exactly 0
                 Assert-MockCalled -CommandName New-Item -Exactly 0
@@ -699,7 +699,7 @@ InModuleScope LabBuilder {
         }
     }
 
-    Describe '\lib\private\Vm.ps1\UpdateVMDVDDrives' {
+    Describe '\lib\private\Vm.ps1\Update-LabVMDvdDrive' {
         function Get-VMDVDDrive {}
         function Add-VMDVDDrive {}
         function Set-VMDVDDrive {}
@@ -719,7 +719,7 @@ InModuleScope LabBuilder {
             $VMs[0].DVDDrives = @()
 
             It 'Does not throw an Exception' {
-                { UpdateVMDVDDrives -Lab $Lab -VM $VMs[0] } | Should -Not -Throw
+                { Update-LabVMDvdDrive -Lab $Lab -VM $VMs[0] } | Should -Not -Throw
             }
 
             It 'Calls Mocked commands' {
@@ -740,7 +740,7 @@ InModuleScope LabBuilder {
             } }
 
             It 'Does not throw an Exception' {
-                { UpdateVMDVDDrives -Lab $Lab -VM $VMs[0] } | Should -Not -Throw
+                { Update-LabVMDvdDrive -Lab $Lab -VM $VMs[0] } | Should -Not -Throw
             }
 
             It 'Calls Mocked commands' {
@@ -761,7 +761,7 @@ InModuleScope LabBuilder {
             } }
 
             It 'Does not throw an Exception' {
-                { UpdateVMDVDDrives -Lab $Lab -VM $VMs[0] } | Should -Not -Throw
+                { Update-LabVMDvdDrive -Lab $Lab -VM $VMs[0] } | Should -Not -Throw
             }
 
             It 'Calls Mocked commands' {
@@ -783,7 +783,7 @@ InModuleScope LabBuilder {
             } }
 
             It 'Does not throw an Exception' {
-                { UpdateVMDVDDrives -Lab $Lab -VM $VMs[0] } | Should -Not -Throw
+                { Update-LabVMDvdDrive -Lab $Lab -VM $VMs[0] } | Should -Not -Throw
             }
 
             It 'Calls Mocked commands' {
@@ -805,7 +805,7 @@ InModuleScope LabBuilder {
             } }
 
             It 'Does not throw an Exception' {
-                { UpdateVMDVDDrives -Lab $Lab -VM $VMs[0] } | Should -Not -Throw
+                { Update-LabVMDvdDrive -Lab $Lab -VM $VMs[0] } | Should -Not -Throw
             }
 
             It 'Calls Mocked commands' {
@@ -827,7 +827,7 @@ InModuleScope LabBuilder {
             } }
 
             It 'Does not throw an Exception' {
-                { UpdateVMDVDDrives -Lab $Lab -VM $VMs[0] } | Should -Not -Throw
+                { Update-LabVMDvdDrive -Lab $Lab -VM $VMs[0] } | Should -Not -Throw
             }
 
             It 'Calls Mocked commands' {
@@ -845,7 +845,7 @@ InModuleScope LabBuilder {
             Mock -CommandName Get-VMDVDDrive
 
             It 'Does not throw an Exception' {
-                { UpdateVMDVDDrives -Lab $Lab -VM $VMs[0] } | Should -Not -Throw
+                { Update-LabVMDvdDrive -Lab $Lab -VM $VMs[0] } | Should -Not -Throw
             }
 
             It 'Calls Mocked commands' {
@@ -862,7 +862,7 @@ InModuleScope LabBuilder {
             Mock -CommandName Get-VMDVDDrive
 
             It 'Does not throw an Exception' {
-                { UpdateVMDVDDrives -Lab $Lab -VM $VMs[0] } | Should -Not -Throw
+                { Update-LabVMDvdDrive -Lab $Lab -VM $VMs[0] } | Should -Not -Throw
             }
 
             It 'Calls Mocked commands' {

@@ -59,7 +59,7 @@ Configuration STANDALONE_INTERNET
 
         # Add the DHCP Scope, Reservation and Options from
         # the node configuration
-        [Int]$Count = 0
+        $Count=0
         Foreach ($Scope in $Node.Scopes)
         {
             $Count++
@@ -76,7 +76,7 @@ Configuration STANDALONE_INTERNET
                 DependsOn     = '[WindowsFeature]DHCPInstall'
             }
         }
-        [Int]$Count = 0
+        $Count=0
         Foreach ($Reservation in $Node.Reservations)
         {
             $Count++
@@ -91,7 +91,7 @@ Configuration STANDALONE_INTERNET
                 DependsOn        = '[WindowsFeature]DHCPInstall'
             }
         }
-        [Int]$Count = 0
+        $Count=0
         Foreach ($ScopeOption in $Node.ScopeOptions)
         {
             $Count++

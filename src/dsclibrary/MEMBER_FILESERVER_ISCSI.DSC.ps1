@@ -216,7 +216,7 @@ Configuration MEMBER_FILESERVER_ISCSI
         }
 
         $DependsOn = '[File]VirtualDisksFolder'
-        [Int] $Count = 0
+        [System.Int32] $Count = 0
         foreach ($VirtualDisk in $Node.VirtualDisks)
         {
             $Count++
