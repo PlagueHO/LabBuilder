@@ -11,19 +11,19 @@
             labpath="c:\vm\LBFUNCTIONS.LOCAL"
             dsclibrarypath="..\DSCLibrary\" />
 
-	<resources isopath="ISOFiles">
-		<iso name="SQL2016_Full_ENU"
-			 path="SQLServer2016-x64-ENU.iso"
-			 url="https://www.microsoft.com/en-us/evalcenter/evaluate-sql-server-2016" />
-	</resources>
+  <resources isopath="ISOFiles">
+    <iso name="SQL2016_Full_ENU"
+       path="SQLServer2016-x64-ENU.iso"
+       url="https://www.microsoft.com/en-us/evalcenter/evaluate-sql-server-2016" />
+  </resources>
 
-	<switches managementvlan="97">
+  <switches managementvlan="97">
     <switch name="General Purpose External" type="External" />
     <switch name="Domain Private" type="Private" />
   </switches>
 
-  <templatevhds isopath="d:\ISOs"
-                vhdpath="d:\VHDs"
+  <templatevhds isopath="ISOFiles"
+                vhdpath="VHDFiles"
                 prefix="" >
     <templatevhd name="Windows Server 2016 Datacenter Full"
                  iso="14393.0.161119-1705.RS1_REFRESH_SERVER_EVAL_X64FRE_EN-US.ISO"
@@ -250,7 +250,7 @@
       </adapters>
     </vm>
 
-	<vm name="SA-FS1"
+  <vm name="SA-FS1"
         template="Template Windows Server 2016 Datacenter CORE"
         computername="SA-FS1">
       <datavhds>
@@ -281,7 +281,7 @@
       </adapters>
     </vm>
 
-	<vm name="SA-SQL1"
+  <vm name="SA-SQL1"
       template="Template Windows Server 2016 Datacenter Full"
       computername="SA-SQL1"
       bootorder="4">

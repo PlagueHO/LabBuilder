@@ -135,7 +135,7 @@ Configuration MEMBER_DHCPDNS
             DependsOn            = '[Computer]JoinDomain'
         }
 
-        [Int]$Count = 0
+        $Count=0
         Foreach ($Scope in $Node.Scopes)
         {
             $Count++
@@ -152,7 +152,7 @@ Configuration MEMBER_DHCPDNS
                 AddressFamily = $Scope.AddressFamily
             }
         }
-        [Int]$Count = 0
+        $Count=0
         Foreach ($Reservation in $Node.Reservations)
         {
             $Count++
@@ -166,7 +166,7 @@ Configuration MEMBER_DHCPDNS
                 AddressFamily    = $Reservation.AddressFamily
             }
         }
-        [Int]$Count = 0
+        $Count=0
         Foreach ($ScopeOption in $Node.ScopeOptions)
         {
             $Count++
@@ -192,7 +192,7 @@ Configuration MEMBER_DHCPDNS
                 DependsOn        = '[Computer]JoinDomain'
             }
         }
-        [Int]$Count = 0
+        $Count=0
         Foreach ($PrimaryZone in $Node.PrimaryZones)
         {
             $Count++

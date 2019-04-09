@@ -105,7 +105,7 @@ Configuration DC_SECONDARY
                 DependsOn        = "[xADDomainController]SecondaryDC"
             }
         }
-        [Int]$Count=0
+        [System.Int32]$Count=0
         Foreach ($ADZone in $Node.ADZones) {
             $Count++
             xDnsServerADZone "ADZone$Count"
@@ -117,7 +117,7 @@ Configuration DC_SECONDARY
                 DependsOn        = "[xADDomainController]SecondaryDC"
             }
         }
-        [Int]$Count=0
+        [System.Int32]$Count=0
         Foreach ($PrimaryZone in $Node.PrimaryZones) {
             $Count++
             xDnsServerPrimaryZone "PrimaryZone$Count"

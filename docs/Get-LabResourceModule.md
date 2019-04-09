@@ -8,21 +8,24 @@ schema: 2.0.0
 # Get-LabResourceModule
 
 ## SYNOPSIS
+
 Gets an array of Module Resources from a Lab.
 
 ## SYNTAX
 
-```
+```powershell
 Get-LabResourceModule [-Lab] <Object> [[-Name] <String[]>] [<CommonParameters>]
 ```
 
 ## DESCRIPTION
+
 Takes a provided Lab and returns the list of module resources required for this Lab.
 
 ## EXAMPLES
 
 ### EXAMPLE 1
-```
+
+```powershell
 $Lab = Get-Lab -ConfigPath c:\mylab\config.xml
 ```
 
@@ -32,6 +35,7 @@ Loads a Lab and pulls the array of Module Resources from it.
 ## PARAMETERS
 
 ### -Lab
+
 Contains the Lab object that was loaded by the Get-Lab object.
 
 ```yaml
@@ -47,6 +51,7 @@ Accept wildcard characters: False
 ```
 
 ### -Name
+
 An optional array of Module names.
 
 Only Module Resources matching names in this list will be pulled into the returned in the array.
@@ -64,6 +69,7 @@ Accept wildcard characters: False
 ```
 
 ### CommonParameters
+
 This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable, -InformationAction, -InformationVariable, -OutVariable, -OutBuffer, -PipelineVariable, -Verbose, -WarningAction, and -WarningVariable.
 For more information, see about_CommonParameters (http://go.microsoft.com/fwlink/?LinkID=113216).
 
@@ -71,7 +77,8 @@ For more information, see about_CommonParameters (http://go.microsoft.com/fwlink
 
 ## OUTPUTS
 
-### Returns an array of LabModuleResource objects.
+### Returns an array of LabModuleResource objects
+
 ## NOTES
 
 ## RELATED LINKS

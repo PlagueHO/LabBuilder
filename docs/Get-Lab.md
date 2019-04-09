@@ -8,15 +8,17 @@ schema: 2.0.0
 # Get-Lab
 
 ## SYNOPSIS
+
 Loads a Lab Builder Configuration file and returns a Lab object
 
 ## SYNTAX
 
-```
+```powershell
 Get-Lab [-ConfigPath] <String> [[-LabPath] <String>] [-SkipXMLValidation] [<CommonParameters>]
 ```
 
 ## DESCRIPTION
+
 Takes the path to a valid LabBuilder Configiration XML file and loads it.
 
 It will perform simple validation on the XML file and throw an exception
@@ -30,7 +32,8 @@ XML Configurartion without using this function is not advised.
 ## EXAMPLES
 
 ### EXAMPLE 1
-```
+
+```powershell
 $MyLab = Get-Lab -ConfigPath c:\MyLab\LabConfig1.xml
 ```
 
@@ -39,6 +42,7 @@ Loads the LabConfig1.xml configuration and returns Lab object.
 ## PARAMETERS
 
 ### -ConfigPath
+
 This is the path to the Lab Builder configuration file to load.
 
 ```yaml
@@ -54,6 +58,7 @@ Accept wildcard characters: False
 ```
 
 ### -LabPath
+
 This is an optional path that is used to Override the LabPath in the config
 file passed.
 
@@ -70,6 +75,7 @@ Accept wildcard characters: False
 ```
 
 ### -SkipXMLValidation
+
 {{Fill SkipXMLValidation Description}}
 
 ```yaml
@@ -85,6 +91,7 @@ Accept wildcard characters: False
 ```
 
 ### CommonParameters
+
 This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable, -InformationAction, -InformationVariable, -OutVariable, -OutBuffer, -PipelineVariable, -Verbose, -WarningAction, and -WarningVariable.
 For more information, see about_CommonParameters (http://go.microsoft.com/fwlink/?LinkID=113216).
 
@@ -93,6 +100,7 @@ For more information, see about_CommonParameters (http://go.microsoft.com/fwlink
 ## OUTPUTS
 
 ### The Lab object representing the Lab Configuration that was loaded.
+
 ## NOTES
 
 ## RELATED LINKS

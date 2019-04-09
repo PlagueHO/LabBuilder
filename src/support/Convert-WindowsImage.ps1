@@ -189,7 +189,7 @@ Convert-WindowsImage
 
         [Parameter(ParameterSetName="SRC")]
         [Alias("SKU")]
-        [string[]]
+        [System.String[]]
         [ValidateNotNullOrEmpty()]
         $Edition,
 
@@ -258,18 +258,18 @@ Convert-WindowsImage
         $EnableDebugger = "None",
 
         [Parameter(ParameterSetName="SRC")]
-        [string[]]
+        [System.String[]]
         [ValidateNotNullOrEmpty()]
         $Feature,
 
         [Parameter(ParameterSetName="SRC")]
-        [string[]]
+        [System.String[]]
         [ValidateNotNullOrEmpty()]
         [ValidateScript({ Test-Path $(Resolve-Path $_) })]
         $Driver,
 
         [Parameter(ParameterSetName="SRC")]
-        [string[]]
+        [System.String[]]
         [ValidateNotNullOrEmpty()]
         [ValidateScript({ Test-Path $(Resolve-Path $_) })]
         $Package,
@@ -745,7 +745,7 @@ You can use the fields below to configure the VHD or VHDX that you want to creat
         Get-WindowsBuildNumber
         {
             $os = Get-WmiObject -Class Win32_OperatingSystem
-            return [int]($os.BuildNumber)
+            return [System.Int32]($os.BuildNumber)
         }
 
         ##########################################################################################
@@ -753,7 +753,7 @@ You can use the fields below to configure the VHD or VHDX that you want to creat
         function
         Test-WindowsVersion
         {
-            $isWin8 = ((Get-WindowsBuildNumber) -ge [int]$lowestSupportedBuild)
+            $isWin8 = ((Get-WindowsBuildNumber) -ge [System.Int32]$lowestSupportedBuild)
 
             Write-W2VTrace "is Windows 8 or Higher? $isWin8"
             return $isWin8
@@ -851,12 +851,12 @@ You can use the fields below to configure the VHD or VHDX that you want to creat
                 $Executable,
 
                 [Parameter(Mandatory=$true)]
-                [string[]]
+                [System.String[]]
                 [ValidateNotNullOrEmpty()]
                 $Arguments,
 
                 [Parameter()]
-                [int]
+                [System.Int32]
                 [ValidateNotNullOrEmpty()]
                 $SuccessfulErrorCode = 0
 

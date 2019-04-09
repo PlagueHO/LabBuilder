@@ -69,10 +69,14 @@ To use this Module you will require on your Lab Host:
 1. Operating Systems supported:
 + Windows Server 2012
 + Windows Server 2012 R2
-+ Windows Server 2016 TP5
++ Windows Server 2016
++ Windows Server 2016, version 1709
++ Windows Server 2016, version 1803
++ Windows Server 2019
 + Windows 8.0
 + Windows 8.1
 + Windows 10
+
 1. **Windows Management Framework 5.1 (WMF5.1)** installed.
 
     _WMF 5.1 is installed on Windows 10 and Windows Server 2016 out of the box, but for Windows Server 2012/R2 and Windows 8/8.1 it will need to be installed separately._
@@ -85,8 +89,8 @@ To use this Module you will require on your Lab Host:
 1. An **internet connection** to download the WMF 5.1 MSU and any other optional MSU packages required by the Lab.
 + Note: This only needs to be done during the Install-Lab phase and can be disabled after this phase is complete.
 1. **WS-Man** enabled to allow communication with the Lab Virtual Machines.
-+ * Note: if WS-Man is not enabled, the Install-Lab cmdlet will attempt to install it with confirmation being required from the user.
-    Confirmation can be suppressed using the -force option.
++ Note: if WS-Man is not enabled, the Install-Lab cmdlet will attempt to install it with confirmation being required from the user.
+  Confirmation can be suppressed using the -force option.
 
 ## Contributing
 

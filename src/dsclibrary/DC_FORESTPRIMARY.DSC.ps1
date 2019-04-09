@@ -135,7 +135,7 @@ Configuration DC_FORESTPRIMARY
                 DependsOn        = "[xWaitForADDomain]DscForestWait"
             }
         }
-        [Int]$Count = 0
+        $Count=0
         Foreach ($ADZone in $Node.ADZones)
         {
             $Count++
@@ -148,7 +148,7 @@ Configuration DC_FORESTPRIMARY
                 DependsOn        = "[xWaitForADDomain]DscForestWait"
             }
         }
-        [Int]$Count = 0
+        $Count=0
         Foreach ($PrimaryZone in $Node.PrimaryZones)
         {
             $Count++

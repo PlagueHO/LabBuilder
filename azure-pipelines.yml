@@ -63,7 +63,7 @@ jobs:
 
     - task: PublishBuildArtifacts@1
       inputs:
-        pathtoPublish: 'LabBuilder.depend.psd1'
+        pathtoPublish: 'requirements.psd1'
         artifactName: 'scripts'
       displayName: 'Publish PSDepend File'
 
