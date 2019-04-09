@@ -1,6 +1,6 @@
 # Change Log
 
-## Unreleased
+## 1.0.1.39
 
 - Update to use NetworkingDsc 7.0.0.0 and converted DhcpClient
   resource to NetIpInterface - fixes [Issue #304](https://github.com/PlagueHO/LabBuilder/issues/304).
