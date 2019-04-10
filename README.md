@@ -328,7 +328,7 @@ Multiple MSU Packages can be installed to the same VHD by comma delimiting the P
 
 ## Configuration XML
 
-Documentation for the LabBuilder Configuration XML can be found in the file [docs/labbuilderconfig-schema.md](LabBuilder/docs/labbuilderconfig-schema.md).
+Documentation for the LabBuilder Configuration XML can be found in the file [docs/labbuilderconfig-schema.md](docs/labbuilderconfig-schema.md).
 
 ## Cmdlets
 
