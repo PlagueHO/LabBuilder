@@ -27,10 +27,10 @@ Author = 'Daniel Scott-Raynsford'
 CompanyName = 'None'
 
 # Copyright statement for this module
-Copyright = '(c) 2019 Daniel Scott-Raynsford. All rights reserved.'
+Copyright = '(c) Daniel Scott-Raynsford. All rights reserved.'
 
 # Description of the functionality provided by this module
-Description = 'Builds Hyper-V Windows Labs out of text based configuration files'
+Description = 'Builds Hyper-V Windows multi-machine/Active Directory labs using XML configuration files and DSC Resources.'
 
 # Minimum version of the Windows PowerShell engine required by this module
 PowerShellVersion = '5.1'
@@ -69,14 +69,14 @@ FormatsToProcess = @()
 # NestedModules = @()
 
 # Functions to export from this module, for best performance, do not use wildcards and do not delete the entry, use an empty array if there are no functions to export.
-FunctionsToExport = 'Get-LabResourceModule', 'Initialize-LabResourceModule', 
-               'Get-LabResourceMSU', 'Initialize-LabResourceMSU', 
-               'Get-LabResourceISO', 'Initialize-LabResourceISO', 'Get-LabSwitch', 
-               'Initialize-LabSwitch', 'Remove-LabSwitch', 'Get-LabVMTemplateVHD', 
-               'Initialize-LabVMTemplateVHD', 'Remove-LabVMTemplateVHD', 
-               'Get-LabVMTemplate', 'Initialize-LabVMTemplate', 
-               'Remove-LabVMTemplate', 'Get-LabVM', 'Initialize-LabVM', 
-               'Install-LabVM', 'Remove-LabVM', 'Get-Lab', 'New-Lab', 'Install-Lab', 
+FunctionsToExport = 'Get-LabResourceModule', 'Initialize-LabResourceModule',
+               'Get-LabResourceMSU', 'Initialize-LabResourceMSU',
+               'Get-LabResourceISO', 'Initialize-LabResourceISO', 'Get-LabSwitch',
+               'Initialize-LabSwitch', 'Remove-LabSwitch', 'Get-LabVMTemplateVHD',
+               'Initialize-LabVMTemplateVHD', 'Remove-LabVMTemplateVHD',
+               'Get-LabVMTemplate', 'Initialize-LabVMTemplate',
+               'Remove-LabVMTemplate', 'Get-LabVM', 'Initialize-LabVM',
+               'Install-LabVM', 'Remove-LabVM', 'Get-Lab', 'New-Lab', 'Install-Lab',
                'Update-Lab', 'Uninstall-Lab', 'Start-Lab', 'Stop-Lab'
 
 # Cmdlets to export from this module, for best performance, do not use wildcards and do not delete the entry, use an empty array if there are no cmdlets to export.

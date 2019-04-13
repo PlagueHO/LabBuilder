@@ -1,5 +1,9 @@
 # Change Log
 
+## Unreleased
+
+- Reword module description in Manifest.
+
 ## 1.0.1.39
 
 - Update to use NetworkingDsc 7.0.0.0 and converted DhcpClient
