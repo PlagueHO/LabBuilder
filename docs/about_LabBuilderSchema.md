@@ -2,14 +2,13 @@
 ## about_LabBuilderSchema
 
 # SHORT DESCRIPTION
-
 LabBuilder Configuration XML File Format
 
 # LONG DESCRIPTION
 
 > labbuilderconfig xmlns="labbuilderconfig"
 
-## 1.0a - NAME Required Attribute
+### 1.0a - NAME Required Attribute
 
 > name="xs:string"
 
@@ -17,7 +16,7 @@ This required attribute should be used to set a descriptive name for this Lab co
 
 ```name="WS2012R2-DOMAIN-CLUSTER"```
 
-## 2.0a - VERSION Required Attribute
+### 2.0a - VERSION Required Attribute
 
 > version="xs:decimal"
 
@@ -26,7 +25,7 @@ It should be updated each time the Lab configuration is changed.
 
 ```version="2.1"```
 
-## 1.0e - DESCRIPTION Optional Element
+### 1.0e - DESCRIPTION Optional Element
 
 > description="xs:string"
 
@@ -34,13 +33,13 @@ This optional element should contain a brief description of this Lab.
 
 ```<description>This Lab builds two Domain Controllers and two DHCP Servers.</description>```
 
-## 2.0e - SETTINGS Required Element
+### 2.0e - SETTINGS Required Element
 
 This required element contains settings attributes controlling general settings of this Lab.
 
 ```<settings />```
 
-## 2.1a - LABID Optional Attribute
+### 2.1a - LABID Optional Attribute
 
 > labid="xs:string"
 
@@ -49,7 +48,7 @@ This identifier will be pre-pended to the names of any Virtual Machines, Switche
 
 ```labid="WS2012R2-CLUSTER-TEST"```
 
-## 2.2a - DOMAINNAME Optional Attribute
+### 2.2a - DOMAINNAME Optional Attribute
 
 > domainname="xs:string"
 
@@ -57,7 +56,7 @@ This optional attribute contains the Domain Name identifier used by Virtual Mach
 
 ```domainname="CONTOSO.COM"```
 
-## 2.3a - EMAIL Optional Attribute
+### 2.3a - EMAIL Optional Attribute
 
 > email="xs:string"
 
@@ -65,7 +64,7 @@ This optional attribute contains an E-mail address of the Administrator of this 
 
 ```email="dev@contoso.com"```
 
-## 2.4a - LABPATH Optional Attribute
+### 2.4a - LABPATH Optional Attribute
 
 > labpath="xs:string"
 
@@ -75,7 +74,7 @@ The Virtual Machines, Virtual Hard Disk drives and other Lab related files will 
 
 ```labpath="f:\Labs\WS2012R2-CLUSTER-TEST-01"```
 
-## 2.5a - VHDPARENTPATH Optional Attribute
+### 2.5a - VHDPARENTPATH Optional Attribute
 
 > vhdparentpath="xs:string"
 
@@ -87,7 +86,7 @@ The Parent VHD files are used as Parent VHD's to any Lab VM boot disks or cloned
 
 ```vhdparentpath="f:\Labs\WS2012R2-CLUSTER-TEST-01\ParentVHDs"```
 
-## 2.6a - DSCLIBRARYPATH Optional Attribute
+### 2.6a - DSCLIBRARYPATH Optional Attribute
 
 > dsclibrarypath="xs:string"
 
@@ -102,7 +101,7 @@ Each Virtual Machine that is set to be configured by DSC requires a DSC configur
 
 ```dsclibrarypath="C:\DSC\MyLibrary"```
 
-## 2.7a - RESOURCEPATH Optional Attribute
+### 2.7a - RESOURCEPATH Optional Attribute
 
 > resourcepath="xs:string"
 
@@ -114,7 +113,7 @@ If this folder is not rooted, it will be assumed to be a subfolder of the 'labpa
 
 ```resourcepath="f:\SharedResources\"```
 
-## 2.8a - MODULEPATH Optional Attribute
+### 2.8a - MODULEPATH Optional Attribute
 
 > modulepath="xs:string"
 
@@ -125,7 +124,7 @@ If this folder is not rooted, it will be assumed to be a subfolder of the 'labpa
 
 ```modulepath="f:\SharedModules\"```
 
-## 2.9a - DISMPATH Optional Attribute
+### 2.9a - DISMPATH Optional Attribute
 
 > dismpath="xs:string"
 
@@ -137,7 +136,7 @@ You should not include the DISM.EXE application name in the path.
 
 ```resourcepath="C:\Program Files (x86)\Windows Kits\10\Assessment and Deployment Kit\Deployment Tools\amd64\DISM\"```
 
-## 2.10a - REQUIREDWINDOWSBUILD Optional Attribute
+### 2.10a - REQUIREDWINDOWSBUILD Optional Attribute
 
 > requiredwindowsbuild="xs:integer"
 
@@ -148,7 +147,7 @@ If this attribute is not set then the Lab Configuration will be able to installe
 
 ```requiredwindowsbuild="14295"```
 
-## 3.0e - RESOURCES Optional Element
+### 3.0e - RESOURCES Optional Element
 
 This optional element can contain one or more resources that will be required for this Lab to be installed.
 These resources may be downloaded from the Internet automatically depending on the resource type.
@@ -162,7 +161,7 @@ Currently the Resource types that are supported are:
 
 ```<resources>...</resources>```
 
-## 3.1a - ISOPATH Optional Attribute
+### 3.1a - ISOPATH Optional Attribute
 
 > isopath="xs:string"
 
@@ -174,7 +173,7 @@ If a relative path is set, it will be relative to the full path of the Lab Resou
 
 ```isopath="d:\LabShared\ISOs"```
 
-## 3.1e - MODULE Optional Element
+### 3.1e - MODULE Optional Element
 
 A PowerShell (DSC) Module that will be downloaded and installed to the Lab Host when this Lab is installed.
 
@@ -230,7 +229,7 @@ This attribute should only be used if URL is not set.
 
 ```requiredversion="2.1.0.0"```
 
-## 3.2e - MSU Optional Element
+### 3.2e - MSU Optional Element
 
 An Microsoft Update (MSU) package file to be installed into a Boot VM.
 
@@ -256,9 +255,9 @@ Note: If the Lab contains Windows Server 2012 R2, Windows Server 2012 or Windows
 
 To download these packages:
 
-- Windows Server 2012 R2 - [https://download.microsoft.com/download/6/F/5/6F5FF66C-6775-42B0-86C4-47D41F2DA187/W2K12-KB3191565-x64.msu](https://download.microsoft.com/download/6/F/5/6F5FF66C-6775-42B0-86C4-47D41F2DA187/W2K12-KB3191565-x64.msu)
-- Windows Server 2012 - [https://download.microsoft.com/download/2/C/6/2C6E1B4A-EBE5-48A6-B225-2D2058A9CEFB/W2K12-KB3134759-x64.msu](https://download.microsoft.com/download/2/C/6/2C6E1B4A-EBE5-48A6-B225-2D2058A9CEFB/W2K12-KB3134759-x64.msu)
-- Windows Server 2008 R2 - [https://download.microsoft.com/download/2/C/6/2C6E1B4A-EBE5-48A6-B225-2D2058A9CEFB/Win7AndW2K8R2-KB3134760-x64.msu](https://download.microsoft.com/download/2/C/6/2C6E1B4A-EBE5-48A6-B225-2D2058A9CEFB/Win7AndW2K8R2-KB3134760-x64.msu)
+- Windows Server 2012 R2 - https://download.microsoft.com/download/6/F/5/6F5FF66C-6775-42B0-86C4-47D41F2DA187/W2K12-KB3191565-x64.msu
+- Windows Server 2012 - https://download.microsoft.com/download/2/C/6/2C6E1B4A-EBE5-48A6-B225-2D2058A9CEFB/W2K12-KB3134759-x64.msu
+- Windows Server 2008 R2 - https://download.microsoft.com/download/2/C/6/2C6E1B4A-EBE5-48A6-B225-2D2058A9CEFB/Win7AndW2K8R2-KB3134760-x64.msu
 
 ```url="https://download.microsoft.com/download/6/F/5/6F5FF66C-6775-42B0-86C4-47D41F2DA187/W2K12-KB3191565-x64.msu"```
 
@@ -270,7 +269,7 @@ This optional attribute can be used to set an optional path this package will be
 
 ```path="f:\LabBuilder\sharedpackages\"```
 
-## 3.3e - ISO Optional Element
+### 3.3e - ISO Optional Element
 
 An ISO file that can be mounted into one or more Lab Virtual Machines.
 
@@ -307,7 +306,7 @@ If the ISO file does not exist but a URL is provided that does not contain an IS
 
 ```path="f:\isos\SQLFULL_ENU.iso"```
 
-## 4.0e - SWITCHES Optional Element
+### 4.0e - SWITCHES Optional Element
 
 This optional element contains a collection of zero or more Switch nodes representing the Hyper-V Virtual Switches that are required for this Lab.
 Any missing switches in this list will be created on the Lab Host when this Lab is installed.
@@ -316,7 +315,7 @@ Note: A Private Management Virtual Switch will always be created for each instal
 
 ```<switches>...</switches>```
 
-## 4.1a - MANAGEMENTVLAN Optional Attribute
+### 4.1a - MANAGEMENTVLAN Optional Attribute
 
 > managementvlan="xs:unsignedByte"
 
@@ -326,7 +325,7 @@ All Virtual Network Adapters automatically created and attached to the Managemen
 
 ```managementvlan="55"```
 
-## 4.1e - SWITCH Optional Element
+### 4.1e - SWITCH Optional Element
 
 This optional element represents a Hyper-V Virtual Switch that is required for this Lab.
 A Lab may contain one or more Internal, Private, External or NAT Virtual Switches.
@@ -414,14 +413,14 @@ This should element should only be added for External or Private switches.
 
 ```<adapters>...</adapters>```
 
-#### 4.1.1.1e - ADAPTER Optional Element
+### 4.1.1.1e - ADAPTER Optional Element
 
 This optional element represents a Hyper-V Virtual Network Adapter that will be used as a Management Adapter for the Host Operating system to connect to this Virtual Switch.
 These Management Adapters are usually used to allow access to the Internet by the Virtual Machines in a Lab.
 
 ```<switch>...</switch>```
 
-##### 4.1.1.1.1a - NAME Required Attribute
+### 4.1.1.1.1a - NAME Required Attribute
 
 > name="xs:string"
 
@@ -431,7 +430,7 @@ Note: If this Lab configuration has got a LabId setting defined, it will be pre-
 
 ```name="Cluster Network"```
 
-##### 4.1.1.1.2a - MACADDRESS Required Attribute
+### 4.1.1.1.2a - MACADDRESS Required Attribute
 
 > macaddress="xs:string"
 
@@ -439,7 +438,7 @@ This required attribute is used to set the MAC Address of the Management Virtual
 
 ```macaddress="00155D010703"```
 
-##### 4.1.1.1.3a - VLAN Optional Attribute
+### 4.1.1.1.3a - VLAN Optional Attribute
 
 > vlan="xs:unsignedByte"
 
@@ -447,14 +446,14 @@ This optional attribute is used to set a VLAN ID of the Management Virtual Adapt
 
 ```vlan="10"```
 
-## 5.0e - TEMPLATEVHDS Optional Element
+### 5.0e - TEMPLATEVHDS Optional Element
 
 This optional element contains a collection of zero or more TemplateVHD nodes representing the Template Virtual Hard Disk files that are required by the Templates and/or Virtual Machines in this Lab.
 These Template VHD files will be created from Windows Install Media ISO files if they can't be found in the specified VHDPath folder during the Lab Install process.
 
 ```<templatevhds>...</templatevhds>```
 
-## 5.1a - ISOPATH Optional Attribute
+### 5.1a - ISOPATH Optional Attribute
 
 > isopath="xs:string"
 
@@ -465,7 +464,7 @@ If a relative path is set, it will be relative to the full path of the Lab confi
 
 ```isopath="d:\LabShared\ISOs"```
 
-## 5.2a - VHDPATH Optional Attribute
+### 5.2a - VHDPATH Optional Attribute
 
 > vhdpath="xs:string"
 
@@ -476,7 +475,7 @@ If a relative path is set, it will be relative to the full path of the Lab confi
 
 ```isopath="d:\LabShared\VHDs"```
 
-## 5.3a - PREFIX Optional Attribute
+### 5.3a - PREFIX Optional Attribute
 
 > prefix="xs:string"
 
@@ -484,7 +483,7 @@ This optional attribute can be used to pre-pend a string to the VHD Template fil
 
 ```prefix="Templates "```
 
-## 5.1e - TEMPLATEVHD Optional Element
+### 5.1e - TEMPLATEVHD Optional Element
 
 This optional element represents a Template VHD (Virtual Hard Disk) that will be created and used by a Virtual Machine Template to create boot disks for Virtual Machines.
 If the VHD/VHDx file for this Template VHD can not be found it will be created using the specified Windows Install Media ISO file.
@@ -626,7 +625,7 @@ Valid Values for Nano Server:
 
 ```packages="Microsoft-NanoServer-DNS-Package.cab,SomePackage.msu"```
 
-## 6.0e - TEMPLATES Optional Element
+### 6.0e - TEMPLATES Optional Element
 
 This optional element contains a collection of zero or more Template nodes representing the Virtual Machine Templates used to build the Virtual Machines in this Lab.
 The Virtual Machine Templates in this list may refer to a TemplateVHD or define a direct path to a Source VHD file.
@@ -635,7 +634,7 @@ Every Virtual Machine defined in this Lab must refer to a Template in this colle
 
 ```<templates>...</templates>```
 
-## 6.1a - FROMVM Optional Attribute
+### 6.1a - FROMVM Optional Attribute
 
 > fromvm="xs:string"
 
@@ -646,7 +645,7 @@ After the list of Hyper-V Virtual Machines to use a templates is pulled in, any 
 
 ```fromvm="Template *"```
 
-## 6.1e - TEMPLATE Optional Element
+### 6.1e - TEMPLATE Optional Element
 
 This optional element represents a Virtual Machine Template that will be created when this Lab is installed.
 
@@ -833,7 +832,7 @@ Valid Values for Nano Server:
 
 ```packages="Microsoft-NanoServer-DNS-Package.cab,SomePackage.msu"```
 
-## 7.0e - VMS Optional Element
+### 7.0e - VMS Optional Element
 
 This optional element contains a collection of zero or more VM nodes, each representing a Virtual Machine that will be created when this Lab is installed.
 Each Virtual Machine will refer back to a Template that is found in the Templates collection.
@@ -841,7 +840,7 @@ If the Template used by this Virtual Machine can not be found, an error will occ
 
 ```<vms>...</vms>```
 
-## 7.1e - VM Optional Element
+### 7.1e - VM Optional Element
 
 This optional element represents a Virtual Machine that will be created when this Lab is installed.
 
@@ -1086,13 +1085,13 @@ This optional element contains a collection of zero or more DataVHD nodes, each 
 
 ```<datavhds>...</datavhds>```
 
-#### 7.1.1.1e - DATAVHD Optional Element
+### 7.1.1.1e - DATAVHD Optional Element
 
 This optional element represents a Data Virtual Hard Drive that will be created and attached to the Virtual Machine when the Lab is installed.
 
 ```<datavhd>...</datavhd>```
 
-##### 7.1.1.1.1a - VHD Required Attribute
+### 7.1.1.1.1a - VHD Required Attribute
 
 > vhd="xs:string"
 
@@ -1102,7 +1101,7 @@ If this VHD does not exist then it may be created using the additional attribute
 
 ```vhd="DataDisks/DataDisk1.vhdx"```
 
-##### 7.1.1.1.2a - SOURCEVHD Optional Attribute
+### 7.1.1.1.2a - SOURCEVHD Optional Attribute
 
 > sourcevhd="xs:string"
 
@@ -1113,7 +1112,7 @@ If the MoveSourceVHD attribute is set to 'Y' then this file will be moved to Dat
 
 ```vhd="DataDisks/DataDisk1.vhdx"```
 
-##### 7.1.1.1.3a - COPYFOLDERS Optional Attribute
+### 7.1.1.1.3a - COPYFOLDERS Optional Attribute
 
 > copyfolders="xs:string"
 
@@ -1124,7 +1123,7 @@ This attribute should only be set if both the partitionstyle and filesystem attr
 
 ```copyfolders="f:\data\tools"```
 
-##### 7.1.1.1.4a - TYPE Optional Attribute
+### 7.1.1.1.4a - TYPE Optional Attribute
 
 > type="xs:string"
 
@@ -1137,7 +1136,7 @@ If the value of this attribute is Differencing then the ParentVHD attribute must
 
 ```type="Dynamic"```
 
-##### 7.1.1.1.5a - SIZE Optional Attribute
+### 7.1.1.1.5a - SIZE Optional Attribute
 
 > size="xs:string"
 
@@ -1149,7 +1148,7 @@ This attribute should not be defined if the SourceVHD attribute is defined.
 
 ```size="100GB"```
 
-##### 7.1.1.1.6a - SUPPORTPR Optional Attribute
+### 7.1.1.1.6a - SUPPORTPR Optional Attribute
 
 > supportpr="xs:string"
 
@@ -1161,7 +1160,7 @@ This attribute is only used when the Data VHD has the Shared attribute set to 'Y
 
 ```supportpr="Y"```
 
-##### 7.1.1.1.7a - PARTITIONSTYLE Optional Attribute
+### 7.1.1.1.7a - PARTITIONSTYLE Optional Attribute
 
 > partitionstyle="xs:string"
 
@@ -1175,7 +1174,7 @@ If this attribute is defined then the FileSystem attribute must also be defined.
 
 ```partitionstyle="GPT"```
 
-##### 7.1.1.1.8a - FILESYSTEM Optional Attribute
+### 7.1.1.1.8a - FILESYSTEM Optional Attribute
 
 > filesystem="xs:string"
 
@@ -1191,7 +1190,7 @@ Note: REFS can only be used if the host is Windows Server 2012 or above. However
 
 ```filesystem="NTFS"```
 
-##### 7.1.1.1.9a - FILESYSTEMLABEL Optional Attribute
+### 7.1.1.1.9a - FILESYSTEMLABEL Optional Attribute
 
 > filesystemlabel="xs:string"
 
@@ -1202,7 +1201,7 @@ If this attribute is defined then both the PartitionStyle and FileSystem attribu
 
 ```filesystemlabel="ToolsDisk"```
 
-##### 7.1.1.1.10a - PARENTVHD Optional Attribute
+### 7.1.1.1.10a - PARENTVHD Optional Attribute
 
 > parentvhd="xs:string"
 
@@ -1213,7 +1212,7 @@ If this attribute is defined then the Type attribute must be set to Differencing
 
 ```parentvhd="..\..\ToolsDiskParent.vhdx"```
 
-##### 7.1.1.1.11a - MOVESOURCEVHD Optional Attribute
+### 7.1.1.1.11a - MOVESOURCEVHD Optional Attribute
 
 > movesourcevhd="xs:string"
 
@@ -1224,7 +1223,7 @@ This attribute should only be set to 'Y' if this SourceVHD attribute is defined.
 
 ```movesourcevhd="Y"```
 
-##### 7.1.1.1.12a - SHARED Optional Attribute
+### 7.1.1.1.12a - SHARED Optional Attribute
 
 > shared="xs:string"
 
@@ -1235,19 +1234,19 @@ This attribute should only be set to 'Y' if this DataVHD is being stored on a Cl
 
 ```shared="Y"```
 
-##### 7.1.2e - DVDDRIVES Optional Element
+### 7.1.2e - DVDDRIVES Optional Element
 
 This optional element contains a collection of zero or more DVDDrive nodes, each representing a Virtual DVD Drive that will be created and attached to this Virtual Machine when this Lab is installed.
 
 ```<dvddrives>...</dvedrives>```
 
-#### 7.1.2.1e - DVDDRIVE Optional Element
+### 7.1.2.1e - DVDDRIVE Optional Element
 
 This optional element represents a Virtual DVD Drive that will be created and attached to the Virtual Machine when the Lab is installed.
 
 ```<dvddrive>...</dvddrive>```
 
-##### 7.1.2.1.1a - ISO Optional Attribute
+### 7.1.2.1.1a - ISO Optional Attribute
 
 > iso="xs:string"
 
@@ -1261,13 +1260,13 @@ This optional element contains a collection of zero or more Adapter nodes, each 
 
 ```<adapters>...</adapters>```
 
-#### 7.1.3.1e - ADAPTER Optional Element
+### 7.1.3.1e - ADAPTER Optional Element
 
 This optional element represents a Virtual Network Adapter that will be created, attached to the Virtual Machine and connected to a Virtual Switch when the Lab is installed.
 
 ```<adapter>...</adapter>```
 
-##### 7.1.3.1.1a - NAME Required Attribute
+### 7.1.3.1.1a - NAME Required Attribute
 
 > name="xs:string"
 
@@ -1280,7 +1279,7 @@ Note: If this Lab configuration has got a LabId setting defined, it will be pre-
 
 ```name="Cluster Comms"```
 
-##### 7.1.3.1.2a - SWITCHNAME Required Attribute
+### 7.1.3.1.2a - SWITCHNAME Required Attribute
 
 > switchname="xs:string"
 
@@ -1290,7 +1289,7 @@ Note: If this Lab configuration has got a LabId setting defined, it will be pre-
 
 ```switchname="Cluster"```
 
-##### 7.1.3.1.3a - MACADDRESS Optional Attribute
+### 7.1.3.1.3a - MACADDRESS Optional Attribute
 
 > macaddress="xs:string"
 
@@ -1299,7 +1298,7 @@ Care should be taken to ensure that this MAC Address is unique on the Virtual Sw
 
 ```macaddress="00155D010801"```
 
-##### 7.1.3.1.4a - VLAN Optional Attribute
+### 7.1.3.1.4a - VLAN Optional Attribute
 
 > vlan="xs:unsignedByte"
 
@@ -1309,7 +1308,7 @@ If this attribute is not set but the VLAN ID is set on the Virtual Switch that t
 
 ```vlan="80"```
 
-##### 7.1.3.1.5a - MACADDRESSSPOOFING Optional Attribute
+### 7.1.3.1.5a - MACADDRESSSPOOFING Optional Attribute
 
 > macaddressspoofing="xs:string"
 
@@ -1327,7 +1326,7 @@ This optional element contains the settings related to configuring Desired State
 
 ```<dsc>...</dsc>```
 
-#### 7.1.4.1a - CONFIGNAME Required Attribute
+### 7.1.4.1a - CONFIGNAME Required Attribute
 
 > configname="xs:string"
 
@@ -1335,7 +1334,7 @@ This required attribute contains the configuration name that is set in the DSC L
 
 ```configname="DC_FORESTPRIMARY"```
 
-#### 7.1.4.2a - CONFIGFILE Required Attribute
+### 7.1.4.2a - CONFIGFILE Required Attribute
 
 > configfile="xs:string"
 
@@ -1344,7 +1343,7 @@ If a relative path is used for this attribute then it will be appended onto the 
 
 ```configfile="DC_FORESTPRIMARY.DSC.ps1"```
 
-#### 7.1.4.3a - LOGGING Optional Attribute
+### 7.1.4.3a - LOGGING Optional Attribute
 
 > logging="xs:string"
 
@@ -1355,7 +1354,7 @@ This optional attribute enables DSC Logging on the Virtual Machine in the DSC Ev
 
 ```logging="Y"```
 
-#### 7.1.4.1e - PARAMETERS Optional Element
+### 7.1.4.1e - PARAMETERS Optional Element
 
 > parameters="xs:string"
 
