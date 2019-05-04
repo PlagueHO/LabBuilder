@@ -1,5 +1,11 @@
-﻿
-# LabBuilder Configuration XML File Format
+﻿# LabBuilderSchema
+## about_LabBuilderSchema
+
+# SHORT DESCRIPTION
+LabBuilder Configuration XML File Format
+
+# LONG DESCRIPTION
+
 > labbuilderconfig xmlns="labbuilderconfig"
 
 ### 1.0a - NAME Required Attribute

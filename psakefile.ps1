@@ -230,7 +230,6 @@ Task Build -Depends Init {
     $null = Copy-Item -Path (Join-Path -Path $ProjectRoot -ChildPath 'src/support') -Destination $VersionFolder -Recurse
     $null = Copy-Item -Path (Join-Path -Path $ProjectRoot -ChildPath 'src/schema') -Destination $VersionFolder -Recurse
     $null = Copy-Item -Path (Join-Path -Path $ProjectRoot -ChildPath 'src/template') -Destination $VersionFolder -Recurse
-    $null = Copy-Item -Path (Join-Path -Path $ProjectRoot -ChildPath 'src/docs') -Destination $VersionFolder -Recurse
     $null = Copy-Item -Path (Join-Path -Path $ProjectRoot -ChildPath 'LICENSE') -Destination $versionFolder
     $null = Copy-Item -Path (Join-Path -Path $ProjectRoot -ChildPath 'README.md') -Destination $versionFolder
     $null = Copy-Item -Path (Join-Path -Path $ProjectRoot -ChildPath 'CHANGELOG.md') -Destination $versionFolder
