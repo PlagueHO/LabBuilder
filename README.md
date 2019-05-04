@@ -67,15 +67,16 @@ The general goals of this module are:
 To use this Module you will require on your Lab Host:
 
 1. Operating Systems supported:
-+ Windows Server 2012
-+ Windows Server 2012 R2
-+ Windows Server 2016
-+ Windows Server 2016, version 1709
-+ Windows Server 2016, version 1803
-+ Windows Server 2019
-+ Windows 8.0
-+ Windows 8.1
-+ Windows 10
+
+    + Windows Server 2012
+    + Windows Server 2012 R2
+    + Windows Server 2016
+    + Windows Server 2016, version 1709
+    + Windows Server 2016, version 1803
+    + Windows Server 2019
+    + Windows 8.0
+    + Windows 8.1
+    + Windows 10
 
 1. **Windows Management Framework 5.1 (WMF5.1)** installed.
 
@@ -83,14 +84,21 @@ To use this Module you will require on your Lab Host:
     _WMF 5.1 can be downloaded from [here](https://www.microsoft.com/en-us/download/details.aspx?id=54616)._
 
 1. **Hyper-V** available (which requires intel-VT CPU support).
-1. To use labs that contain Nested Hyper-V hosts only Windows 10 built 10586 or later and Windows Server 2016 TP3 or later are supported.
-1. Copies of the **Windows installation media** for any Operating Systems that will be used in your Labs.
-+ Note: Most Lab configuration files can contain a URL where the relevant trial media can be downloaded from, but you can use any Windows Install Media source you choose (including custom built ISOs).
-1. An **internet connection** to download the WMF 5.1 MSU and any other optional MSU packages required by the Lab.
-+ Note: This only needs to be done during the Install-Lab phase and can be disabled after this phase is complete.
+1. To use labs that contain Nested Hyper-V hosts only Windows 10 built 10586
+  or later and Windows Server 2016 TP3 or later are supported.
+1. Copies of the **Windows installation media** for any Operating Systems
+  that will be used in your Labs.
+  _Note: Most Lab configuration files can contain a URL where the relevant
+  trial media can be downloaded from, but you can use any Windows Install
+  Media source you choose (including custom built ISOs)._
+1. An **internet connection** to download the WMF 5.1 MSU and any other
+  optional MSU packages required by the Lab.
+  _Note: This only needs to be done during the Install-Lab phase and can
+  be disabled after this phase is complete._
 1. **WS-Man** enabled to allow communication with the Lab Virtual Machines.
-+ Note: if WS-Man is not enabled, the Install-Lab cmdlet will attempt to install it with confirmation being required from the user.
-  Confirmation can be suppressed using the -force option.
+  _Note: if WS-Man is not enabled, the Install-Lab cmdlet will attempt to
+  install it with confirmation being required from the user.
+  Confirmation can be suppressed using the -force option._
 
 ## Contributing
 
@@ -187,9 +195,10 @@ If it can't find an ISO file it needs, you will be notified of an official downl
 
 Some common ISO download locations:
 
-+ Windows Server 2012 R2: https://www.microsoft.com/en-us/evalcenter/evaluate-windows-server-2012-r2
-+ Windows 10 Enterprise: https://www.microsoft.com/en-us/evalcenter/evaluate-windows-10-enterprise
-+ Windows Server 2016: https://www.microsoft.com/en-us/evalcenter/evaluate-windows-server-2016
++ Windows Server 2012 R2: [https://www.microsoft.com/en-us/evalcenter/evaluate-windows-server-2012-r2](https://www.microsoft.com/en-us/evalcenter/evaluate-windows-server-2012-r2)
++ Windows 10 Enterprise: [https://www.microsoft.com/en-us/evalcenter/evaluate-windows-10-enterprise](https://www.microsoft.com/en-us/evalcenter/evaluate-windows-10-enterprise)
++ Windows Server 2016: [https://www.microsoft.com/en-us/evalcenter/evaluate-windows-server-2016](https://www.microsoft.com/en-us/evalcenter/evaluate-windows-server-2016)
++ Windows Server 2019: [https://www.microsoft.com/en-us/evalcenter/evaluate-windows-server-2019](https://www.microsoft.com/en-us/evalcenter/evaluate-windows-server-2019)
 
 **Important**: If you are converting Windows Server 2016 ISO files or adding packages to VHDs please see the [Windows Server 2016](#Windows Server 2016) section.
 

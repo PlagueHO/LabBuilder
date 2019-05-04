@@ -5,8 +5,14 @@
 - Reword module description in Manifest.
 - Fix bug when connecting to a Lab VM when TrustedHosts is empty - fixes
   [Issue #314](https://github.com/PlagueHO/LabBuilder/issues/314).
+- Moved Schema documentation file into docs folder and converted to
+  PlatyPS compatible file.
+- Cleaned up Schema documentation file to remove most markdown rule
+  violations.
+- Cleaned up README.MD file to remove most markdown rule
+  violations.
 
-## 1.0.1.39
+## 1.0.1.40
 
 - Update to use NetworkingDsc 7.0.0.0 and converted DhcpClient
   resource to NetIpInterface - fixes [Issue #304](https://github.com/PlagueHO/LabBuilder/issues/304).

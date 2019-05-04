@@ -710,8 +710,8 @@ InModuleScope LabBuilder {
 
         Context 'When valid configuration is passed' {
             $Lab = Get-Lab -ConfigPath $script:TestConfigOKPath
-            New-Item -Path $Lab.labbuilderconfig.settings.labpath -ItemType Directory -Force -ErrorAction SilentlyContinue
-            New-Item -Path $Lab.labbuilderconfig.settings.vhdparentpath -ItemType Directory -Force -ErrorAction SilentlyContinue
+            $null = New-Item -Path $Lab.labbuilderconfig.settings.labpath -ItemType Directory -Force -ErrorAction SilentlyContinue
+            $null = New-Item -Path $Lab.labbuilderconfig.settings.vhdparentpath -ItemType Directory -Force -ErrorAction SilentlyContinue
 
             [Array]$Templates = Get-LabVMTemplate -Lab $Lab
             [Array]$Switches = Get-LabSwitch -Lab $Lab
@@ -827,8 +827,8 @@ InModuleScope LabBuilder {
 
         Context 'When valid configuration is passed' {
             $Lab = Get-Lab -ConfigPath $script:TestConfigOKPath
-            New-Item -Path $Lab.labbuilderconfig.settings.labpath -ItemType Directory -Force -ErrorAction SilentlyContinue
-            New-Item -Path $Lab.labbuilderconfig.settings.vhdparentpath -ItemType Directory -Force -ErrorAction SilentlyContinue
+            $null = New-Item -Path $Lab.labbuilderconfig.settings.labpath -ItemType Directory -Force -ErrorAction SilentlyContinue
+            $null = New-Item -Path $Lab.labbuilderconfig.settings.vhdparentpath -ItemType Directory -Force -ErrorAction SilentlyContinue
 
             [Array]$Templates = Get-LabVMTemplate -Lab $Lab
             [Array]$Switches = Get-LabSwitch -Lab $Lab

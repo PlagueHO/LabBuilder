@@ -12,7 +12,7 @@
 RootModule = 'LabBuilder.psm1'
 
 # Version number of this module.
-ModuleVersion = '1.0.1.39'
+ModuleVersion = '1.0.2.39'
 
 # Supported PSEditions
 CompatiblePSEditions = 'Desktop'
@@ -116,7 +116,21 @@ PrivateData = @{
 
         # ReleaseNotes of this module
         ReleaseNotes = '
-## What is New in LabBuilder Ureleased
+## What is New in LabBuilder Unreleased
+
+May 5, 2019
+
+- Reword module description in Manifest.
+- Fix bug when connecting to a Lab VM when TrustedHosts is empty - fixes
+    [Issue #314](https://github.com/PlagueHO/LabBuilder/issues/314).
+- Moved Schema documentation file into docs folder and converted to
+    PlatyPS compatible file.
+- Cleaned up Schema documentation file to remove most markdown rule
+    violations.
+- Cleaned up README.MD file to remove most markdown rule
+    violations.
+
+## What is New in LabBuilder 1.0.1.40
 
 April 8, 2019
 
