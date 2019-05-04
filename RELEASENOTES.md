@@ -13,6 +13,12 @@ May 5, 2019
   violations.
 - Cleaned up README.MD file to remove most markdown rule
   violations.
+- Fix infinite loop bug occuring in `Stop-Lab` when Lab VM does not
+  exist - fixes [Issue #316](https://github.com/PlagueHO/LabBuilder/issues/316).
+- Fix infinite loop bug occuring in `Start-Lab` when Lab VM does not
+  exist.
+- DSCLibrary\MEMBER_NANO.DSC.ps1: Rename xOfflineDomainJoin to
+  OfflineDomainJoin - fixes [Issue #317](https://github.com/PlagueHO/LabBuilder/issues/317).
 
 ## What is New in LabBuilder 1.0.1.40
 
