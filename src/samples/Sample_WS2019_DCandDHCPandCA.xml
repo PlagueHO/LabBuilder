@@ -16,7 +16,7 @@
             dsclibrarypath="..\DSCLibrary\" />
 
   <switches>
-    <switch name="General Purpose External Wired" type="External">
+    <switch name="External" type="External">
       <adapters>
         <adapter name="Cluster" macaddress="00155D010701" />
         <adapter name="Management" macaddress="00155D010702" />
@@ -27,8 +27,8 @@
     <switch name="Domain Private Site A" type="Private" vlan="2" />
   </switches>
 
-  <templatevhds isopath="D:\ISOFiles"
-                vhdpath="D:\VHDFiles"
+  <templatevhds isopath="ISOFiles"
+                vhdpath="VHDFiles"
                 prefix="" >
     <templatevhd name="Windows Server 2019 Datacenter Full"
                  iso="17763.379.190312-0539.rs5_release_svc_refresh_SERVER_EVAL_x64FRE_en-us.iso"
@@ -82,8 +82,8 @@
         </parameters>
       </dsc>
       <adapters>
-        <adapter name="General Purpose External Wired"
-                 switchname="General Purpose External Wired" />
+        <adapter name="External"
+                 switchname="External" />
         <adapter name="Domain Private Site A"
                  switchname="Domain Private Site A">
           <ipv4 address="192.168.128.10"
@@ -146,8 +146,8 @@
         </parameters>
       </dsc>
       <adapters>
-        <adapter name="General Purpose External Wired"
-                 switchname="General Purpose External Wired" />
+        <adapter name="External"
+                 switchname="External" />
         <adapter name="Domain Private Site A"
                  switchname="Domain Private Site A">
           <ipv4 address="192.168.128.16"
@@ -182,8 +182,8 @@
         </parameters>
       </dsc>
       <adapters>
-        <adapter name="General Purpose External Wired"
-                 switchname="General Purpose External Wired" />
+        <adapter name="External"
+                 switchname="External" />
         <adapter name="Domain Private Site A"
                  switchname="Domain Private Site A">
           <ipv4 address="192.168.128.23"
