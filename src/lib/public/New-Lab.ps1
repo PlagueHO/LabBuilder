@@ -73,7 +73,7 @@ function New-Lab
         Write-LabMessage -Message $($LocalizedData.CreatingLabFolderMessage `
             -f 'LabPath',$LabPath)
 
-        New-Item `
+       $null = New-Item `
             -Path $LabPath `
             -Type Directory
     } # if
@@ -132,19 +132,19 @@ function New-Lab
     $Lab.Save($ConfigPath)
 
     # Create ISOFiles folder
-    New-Item `
+    $null = New-Item `
         -Path (Join-Path -Path $LabPath -ChildPath 'ISOFiles')`
         -Type Directory `
         -ErrorAction SilentlyContinue
 
     # Create VDFFiles folder
-    New-Item `
+    $null = New-Item `
         -Path (Join-Path -Path $LabPath -ChildPath 'VHDFiles')`
         -Type Directory `
         -ErrorAction SilentlyContinue
 
     # Copy the DSCLibrary
-    Copy-Item `
+    $null = Copy-Item `
         -Path $Script:DSCLibraryPath `
         -Destination $LabPath `
         -Recurse `

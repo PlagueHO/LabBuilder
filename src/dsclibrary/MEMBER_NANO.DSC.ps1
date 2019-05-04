@@ -36,7 +36,7 @@ Configuration MEMBER_NANO
             RetryCount       = 60
         }
 
-        xOfflineDomainJoin JoinDomain
+        OfflineDomainJoin JoinDomain
         {
             IsSingleInstance = 'Yes'
             RequestFile      = $Node.ODJRequestFile

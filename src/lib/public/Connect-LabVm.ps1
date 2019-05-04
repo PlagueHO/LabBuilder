@@ -21,11 +21,11 @@ function Connect-LabVM
     $adminCredential = New-LabCredential `
         -Username '.\Administrator' `
         -Password $VM.AdministratorPassword
-    $FatalException = $false
+    $fatalException = $false
 
     while (($null -eq $session) `
         -and (((Get-Date) - $startTime).TotalSeconds) -lt $ConnectTimeout `
-        -and -not $FatalException)
+        -and -not $fatalException)
     {
         try
         {
@@ -49,12 +49,13 @@ function Connect-LabVM
             {
                 if ([System.String]::IsNullOrWhitespace($trustedHosts))
                 {
-                    $trustedHosts = $ipAddress
+                    $trustedHosts = "$ipAddress"
                 }
                 else
                 {
                     $trustedHosts = "$trustedHosts,$ipAddress"
                 }
+
                 Set-Item `
                     -Path WSMAN::localhost\Client\TrustedHosts `
                     -Value $trustedHosts `
@@ -89,9 +90,11 @@ function Connect-LabVM
         } # Try
     } # While
 
-    # if a fatal exception occured or the connection just couldn't be established
-    # then throw an exception so it can be caught by the calling code.
-    if ($FatalException -or ($null -eq $session))
+    <#
+        If a fatal exception occured or the connection just couldn't be established
+        then throw an exception so it can be caught by the calling code.
+    #>
+    if ($fatalException -or ($null -eq $session))
     {
         # The connection failed so throw an error
         $exceptionParameters = @{
@@ -102,5 +105,6 @@ function Connect-LabVM
         }
         New-LabException @exceptionParameters
     }
-    Return $session
+
+    return $session
 } # Connect-LabVM

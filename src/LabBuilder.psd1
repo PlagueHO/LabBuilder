@@ -12,7 +12,7 @@
 RootModule = 'LabBuilder.psm1'
 
 # Version number of this module.
-ModuleVersion = '1.0.1.39'
+ModuleVersion = '1.0.2.39'
 
 # Supported PSEditions
 CompatiblePSEditions = 'Desktop'
@@ -27,10 +27,10 @@ Author = 'Daniel Scott-Raynsford'
 CompanyName = 'None'
 
 # Copyright statement for this module
-Copyright = '(c) 2019 Daniel Scott-Raynsford. All rights reserved.'
+Copyright = '(c) Daniel Scott-Raynsford. All rights reserved.'
 
 # Description of the functionality provided by this module
-Description = 'Builds Hyper-V Windows Labs out of text based configuration files'
+Description = 'Builds Hyper-V Windows multi-machine/Active Directory labs using XML configuration files and DSC Resources.'
 
 # Minimum version of the Windows PowerShell engine required by this module
 PowerShellVersion = '5.1'
@@ -69,14 +69,14 @@ FormatsToProcess = @()
 # NestedModules = @()
 
 # Functions to export from this module, for best performance, do not use wildcards and do not delete the entry, use an empty array if there are no functions to export.
-FunctionsToExport = 'Get-LabResourceModule', 'Initialize-LabResourceModule', 
-               'Get-LabResourceMSU', 'Initialize-LabResourceMSU', 
-               'Get-LabResourceISO', 'Initialize-LabResourceISO', 'Get-LabSwitch', 
-               'Initialize-LabSwitch', 'Remove-LabSwitch', 'Get-LabVMTemplateVHD', 
-               'Initialize-LabVMTemplateVHD', 'Remove-LabVMTemplateVHD', 
-               'Get-LabVMTemplate', 'Initialize-LabVMTemplate', 
-               'Remove-LabVMTemplate', 'Get-LabVM', 'Initialize-LabVM', 
-               'Install-LabVM', 'Remove-LabVM', 'Get-Lab', 'New-Lab', 'Install-Lab', 
+FunctionsToExport = 'Get-LabResourceModule', 'Initialize-LabResourceModule',
+               'Get-LabResourceMSU', 'Initialize-LabResourceMSU',
+               'Get-LabResourceISO', 'Initialize-LabResourceISO', 'Get-LabSwitch',
+               'Initialize-LabSwitch', 'Remove-LabSwitch', 'Get-LabVMTemplateVHD',
+               'Initialize-LabVMTemplateVHD', 'Remove-LabVMTemplateVHD',
+               'Get-LabVMTemplate', 'Initialize-LabVMTemplate',
+               'Remove-LabVMTemplate', 'Get-LabVM', 'Initialize-LabVM',
+               'Install-LabVM', 'Remove-LabVM', 'Get-Lab', 'New-Lab', 'Install-Lab',
                'Update-Lab', 'Uninstall-Lab', 'Start-Lab', 'Stop-Lab'
 
 # Cmdlets to export from this module, for best performance, do not use wildcards and do not delete the entry, use an empty array if there are no cmdlets to export.
@@ -116,7 +116,27 @@ PrivateData = @{
 
         # ReleaseNotes of this module
         ReleaseNotes = '
-## What is New in LabBuilder Ureleased
+## What is New in LabBuilder Unreleased
+
+May 5, 2019
+
+- Reword module description in Manifest.
+- Fix bug when connecting to a Lab VM when TrustedHosts is empty - fixes
+    [Issue #314](https://github.com/PlagueHO/LabBuilder/issues/314).
+- Moved Schema documentation file into docs folder and converted to
+    PlatyPS compatible file.
+- Cleaned up Schema documentation file to remove most markdown rule
+    violations.
+- Cleaned up README.MD file to remove most markdown rule
+    violations.
+- Fix infinite loop bug occuring in `Stop-Lab` when Lab VM does not
+  exist - fixes [Issue #316](https://github.com/PlagueHO/LabBuilder/issues/316).
+- Fix infinite loop bug occuring in `Start-Lab` when Lab VM does not
+  exist.
+- DSCLibrary\MEMBER_NANO.DSC.ps1: Rename xOfflineDomainJoin to
+  OfflineDomainJoin - fixes [Issue #317](https://github.com/PlagueHO/LabBuilder/issues/317).
+
+## What is New in LabBuilder 1.0.1.40
 
 April 8, 2019
 

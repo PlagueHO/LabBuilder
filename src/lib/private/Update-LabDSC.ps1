@@ -199,7 +199,7 @@ function Update-LabDSC
         if (-not (Test-Path -Path $destinationPath))
         {
             # Create the DSC Modules folder if it doesn't exist.
-            New-Item -Path $destinationPath -ItemType Directory -Force
+            $null = New-Item -Path $destinationPath -ItemType Directory -Force
         } # if
 
         Write-LabMessage -Message $($LocalizedData.DSCConfigCopyingModuleMessage `
