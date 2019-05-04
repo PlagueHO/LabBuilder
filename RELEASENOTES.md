@@ -1,6 +1,6 @@
 # Release Notes
 
-## What is New in LabBuilder Unreleased
+## What is New in LabBuilder 1.0.2.58
 
 May 5, 2019
 

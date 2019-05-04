@@ -1,6 +1,6 @@
 # Change Log
 
-## Unreleased
+## 1.0.2.58
 
 - Reword module description in Manifest.
 - Fix bug when connecting to a Lab VM when TrustedHosts is empty - fixes
