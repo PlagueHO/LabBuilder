@@ -3,6 +3,8 @@
 ## Unreleased
 
 - Reword module description in Manifest.
+- Fix bug when connecting to a Lab VM when TrustedHosts is empty - fixes
+  [Issue #314](https://github.com/PlagueHO/LabBuilder/issues/314).
 
 ## 1.0.1.39
 

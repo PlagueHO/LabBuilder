@@ -40,7 +40,9 @@ function Get-LabVMManagementIPAddress
         Where-Object -Property SwitchName -EQ -Value $managementSwitchName
     $managementAdapterIpAddresses = $managementAdapter.IPAddresses
     $managementAdapterIpAddress = $managementAdapterIpAddresses |
-        Where-Object -FilterScript { $_.Contains('.') }
+        Where-Object -FilterScript {
+            $_.Contains('.')
+        }
 
     if (-not $managementAdapterIpAddress) {
         $exceptionParameters = @{
