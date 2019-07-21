@@ -76,7 +76,7 @@ Configuration MEMBER_NPS_DFSTEST
             DependsOn = "[WaitForAll]DC"
         }
 
-        DFSRepGroup RGPublic
+        DFSReplicationGroup RGPublic
         {
             GroupName = 'Public'
             Description = 'Public files for use by all departments'

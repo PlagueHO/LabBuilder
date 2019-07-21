@@ -50,6 +50,8 @@
   - Update to require xDhcpServer resource 2.0.0.0.
 - `dsclibrary\MEMBER_DHCP.DSC.ps1`:
   - Update to require xDhcpServer resource 2.0.0.0.
+- `dsclibrary\MEMBER_NPS_DFSTEST.ps1`:
+  - Fix to use correct name of the DFSReplicationGroup resource.
 
 ## 1.0.2.58
 
