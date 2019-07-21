@@ -42,58 +42,59 @@ function Copy-LabOdjFile
         [System.Int32]
         $Timeout = 300
     )
-    [DateTime] $StartTime = Get-Date
-    [System.Management.Automation.Runspaces.PSSession] $Session = $null
-    [System.Boolean] $Complete = $false
-    [System.Boolean] $ODJCopyComplete = $false
-    [System.String] $ODJFilename = Join-Path `
-        -Path $VMLabBuilderFiles `
+
+    $startTime = Get-Date
+    $session = $null
+    $complete = $false
+    $odjCopyComplete = $false
+    $odjFilename = Join-Path `
+        -Path $vmLabBuilderFiles `
         -ChildPath "$($VM.ComputerName).txt"
 
     # If ODJ file does not exist then return
-    if (-not (Test-Path -Path $ODJFilename))
+    if (-not (Test-Path -Path $odjFilename))
     {
         return
     } # if
 
     # Get Path to LabBuilder files
-    [System.String] $VMLabBuilderFiles = $VM.LabBuilderFilesPath
+    $vmLabBuilderFiles = $VM.LabBuilderFilesPath
 
-    While ((-not $Complete) `
-        -and (((Get-Date) - $StartTime).TotalSeconds) -lt $TimeOut)
+    while ((-not $complete) `
+        -and (((Get-Date) - $startTime).TotalSeconds) -lt $TimeOut)
     {
         # Connect to the VM
-        $Session = Connect-LabVM `
+        $session = Connect-LabVM `
             -VM $VM `
             -ErrorAction Continue
 
         # Failed to connnect to the VM
-        if (-not $Session)
+        if (-not $session)
         {
             $exceptionParameters = @{
                 errorId = 'ODJCopyError'
                 errorCategory = 'OperationTimeout'
                 errorMessage = $($LocalizedData.ODJCopyError `
-                    -f $VM.Name,$ODJFilename)
+                    -f $VM.Name,$odjFilename)
             }
             New-LabException @exceptionParameters
             return
         } # if
 
-        if (($Session) `
-            -and ($Session.State -eq 'Opened') `
-            -and (-not $ODJCopyComplete))
+        if (($session) `
+            -and ($session.State -eq 'Opened') `
+            -and (-not $odjCopyComplete))
         {
             $CopyParameters = @{
                 Destination = 'C:\Windows\Setup\ODJFiles\'
-                ToSession = $Session
+                ToSession = $session
                 Force = $true
                 ErrorAction = 'Stop'
             }
 
             # Connection has been made OK, upload the ODJ files
-            While ((-not $ODJCopyComplete) `
-                -and (((Get-Date) - $StartTime).TotalSeconds) -lt $TimeOut)
+            While ((-not $odjCopyComplete) `
+                -and (((Get-Date) - $startTime).TotalSeconds) -lt $TimeOut)
             {
                 Try
                 {
@@ -103,10 +104,10 @@ function Copy-LabOdjFile
                      Copy-Item `
                         @CopyParameters `
                         -Path (Join-Path `
-                            -Path $VMLabBuilderFiles `
+                            -Path $vmLabBuilderFiles `
                             -ChildPath "$($VM.ComputerName).txt") `
                         -Verbose
-                    $ODJCopyComplete = $true
+                    $odjCopyComplete = $true
                 }
                 Catch
                 {
@@ -119,8 +120,8 @@ function Copy-LabOdjFile
         } # if
 
         # If the copy didn't complete and we're out of time throw an exception
-        if ((-not $ODJCopyComplete) `
-            -and (((Get-Date) - $StartTime).TotalSeconds) -ge $TimeOut)
+        if ((-not $odjCopyComplete) `
+            -and (((Get-Date) - $startTime).TotalSeconds) -ge $TimeOut)
         {
             # Disconnect from the VM
             Disconnect-LabVM `
@@ -131,7 +132,7 @@ function Copy-LabOdjFile
                 errorId = 'ODJCopyError'
                 errorCategory = 'OperationTimeout'
                 errorMessage = $($LocalizedData.ODJCopyError `
-                    -f $VM.Name,$ODJFilename)
+                    -f $VM.Name,$odjFilename)
             }
             New-LabException @exceptionParameters
         } # if
@@ -142,6 +143,6 @@ function Copy-LabOdjFile
                 -VM $VM `
                 -ErrorAction Continue
 
-            $Complete = $true
+            $complete = $true
     } # while
 }

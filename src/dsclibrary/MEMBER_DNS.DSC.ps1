@@ -80,7 +80,7 @@ Configuration MEMBER_DNS
             }
         }
         $Count=0
-        Foreach ($PrimaryZone in $Node.PrimaryZones)
+        foreach ($PrimaryZone in $Node.PrimaryZones)
         {
             $Count++
             xDnsServerPrimaryZone "PrimaryZone$Count"

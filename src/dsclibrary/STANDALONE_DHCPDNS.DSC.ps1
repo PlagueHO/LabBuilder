@@ -65,7 +65,7 @@ Configuration STANDALONE_DHCPDNS
 {
     Import-DscResource -ModuleName 'PSDesiredStateConfiguration'
     Import-DscResource -ModuleName xDNSServer
-    Import-DscResource -ModuleName xDHCPServer
+    Import-DscResource -ModuleName xDHCPServer -ModuleVersion 2.0.0.0
 
     Node $AllNodes.NodeName {
         # Assemble the Local Admin Credentials
@@ -86,15 +86,18 @@ Configuration STANDALONE_DHCPDNS
             Name   = "DNS"
         }
 
-        # Add the DHCP Scope, Reservation and Options from
-        # the node configuration
-        $Count=0
-        Foreach ($Scope in $Node.Scopes)
+        <#
+            Add the DHCP Scope, Reservation and Options from
+            the node configuration
+        #>
+        $count=0
+        foreach ($Scope in $Node.Scopes)
         {
-            $Count++
-            xDhcpServerScope "Scope$Count"
+            $count++
+            xDhcpServerScope "Scope$count"
             {
                 Ensure        = 'Present'
+                ScopeId       = $Scope.Name
                 IPStartRange  = $Scope.Start
                 IPEndRange    = $Scope.End
                 Name          = $Scope.Name
@@ -105,11 +108,12 @@ Configuration STANDALONE_DHCPDNS
                 DependsOn     = '[WindowsFeature]DHCPInstall'
             }
         }
-        $Count=0
-        Foreach ($Reservation in $Node.Reservations)
+
+        $count=0
+        foreach ($Reservation in $Node.Reservations)
         {
-            $Count++
-            xDhcpServerReservation "Reservation$Count"
+            $count++
+            xDhcpServerReservation "Reservation$count"
             {
                 Ensure           = 'Present'
                 ScopeID          = $Reservation.ScopeId
@@ -120,11 +124,12 @@ Configuration STANDALONE_DHCPDNS
                 DependsOn        = '[WindowsFeature]DHCPInstall'
             }
         }
-        $Count=0
-        Foreach ($ScopeOption in $Node.ScopeOptions)
+
+        $count=0
+        foreach ($ScopeOption in $Node.ScopeOptions)
         {
-            $Count++
-            xDhcpServerOption "ScopeOption$Count"
+            $count++
+            xDhcpServerOption "ScopeOption$count"
             {
                 Ensure             = 'Present'
                 ScopeID            = $ScopeOption.ScopeId
@@ -148,11 +153,11 @@ Configuration STANDALONE_DHCPDNS
             }
         }
 
-        $Count=0
-        Foreach ($ADZone in $Node.ADZones)
+        $count=0
+        foreach ($ADZone in $Node.ADZones)
         {
-            $Count++
-            xDnsServerADZone "ADZone$Count"
+            $count++
+            xDnsServerADZone "ADZone$count"
             {
                 Ensure           = 'Present'
                 Name             = $ADZone.Name
@@ -163,11 +168,11 @@ Configuration STANDALONE_DHCPDNS
             }
         }
 
-        $Count=0
-        Foreach ($PrimaryZone in $Node.PrimaryZones)
+        $count=0
+        foreach ($PrimaryZone in $Node.PrimaryZones)
         {
-            $Count++
-            xDnsServerSecondaryZone "PrimaryZone$Count"
+            $count++
+            xDnsServerSecondaryZone "PrimaryZone$count"
             {
                 Ensure        = 'Present'
                 Name          = $PrimaryZone.Name

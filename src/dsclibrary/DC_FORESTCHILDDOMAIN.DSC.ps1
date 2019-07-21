@@ -110,7 +110,7 @@ Configuration DC_FORESTCHILDDOMAIN
             }
         }
         $Count=0
-        Foreach ($ADZone in $Node.ADZones)
+        foreach ($ADZone in $Node.ADZones)
         {
             $Count++
             xDnsServerADZone "ADZone$Count"
@@ -123,7 +123,7 @@ Configuration DC_FORESTCHILDDOMAIN
             }
         }
         $Count=0
-        Foreach ($PrimaryZone in $Node.PrimaryZones)
+        foreach ($PrimaryZone in $Node.PrimaryZones)
         {
             $Count++
             xDnsServerPrimaryZone "PrimaryZone$Count"

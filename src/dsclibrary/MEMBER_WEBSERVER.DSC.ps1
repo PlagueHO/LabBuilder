@@ -111,7 +111,7 @@ Configuration MEMBER_WEBSERVER
 
         # Create the Web App Pools
         [System.Int32]$Count=0
-        Foreach ($WebAppPool in $Node.WebAppPools) {
+        foreach ($WebAppPool in $Node.WebAppPools) {
             $Count++
             xWebAppPool "WebAppPool$Count"
             {
@@ -123,7 +123,7 @@ Configuration MEMBER_WEBSERVER
 
         # Create the Web Sites
         [System.Int32]$Count=0
-        Foreach ($WebSite in $Node.WebSites) {
+        foreach ($WebSite in $Node.WebSites) {
             $Count++
 
             # Create an empty folder or copy content from Source Path
@@ -161,14 +161,14 @@ Configuration MEMBER_WEBSERVER
         }
 
         # Create the Web Applications
-        [System.Int32]$Count=0
-        Foreach ($WebApplication in $Node.WebApplications) {
-            $Count++
+        $count=0
+        foreach ($WebApplication in $Node.WebApplications) {
+            $count++
 
             # Create an empty folder or copy content from Source Path
             if ($WebApplication.SourcePath)
             {
-                File "WebApplicationContent$Count"
+                File "WebApplicationContent$count"
                 {
                     Ensure          = "Present"
                     SourcePath      = $WebApplication.SourcePath
@@ -179,7 +179,7 @@ Configuration MEMBER_WEBSERVER
             }
             else
             {
-                File "WebApplicationContent$Count"
+                File "WebApplicationContent$count"
                 {
                     Ensure          = "Present"
                     Type            = "Directory"
@@ -187,26 +187,26 @@ Configuration MEMBER_WEBSERVER
                 }
             } # if
 
-            xWebApplication "WebApplication$Count"
+            xWebApplication "WebApplication$count"
             {
                 Ensure             = $WebApplication.Ensure
                 WebSite            = $WebApplication.WebSite
                 Name               = $WebApplication.Name
                 WebAppPool         = $WebApplication.WebAppPool
                 PhysicalPath       = $WebApplication.PhysicalPath
-                DependsOn          = "[File]WebApplicationContent$Count"
+                DependsOn          = "[File]WebApplicationContent$count"
             }
         }
 
         # Create the Web Virtual Directories
-        [System.Int32]$Count=0
-        Foreach ($WebVirtualDirectory in $Node.WebVirtualDirectories) {
-            $Count++
+        $count=0
+        foreach ($WebVirtualDirectory in $Node.WebVirtualDirectories) {
+            $count++
 
             # Create an empty folder or copy content from Source Path
             if ($WebVirtualDirectory.SourcePath)
             {
-                File "WebVirtualDirectoryContent$Count"
+                File "WebVirtualDirectoryContent$count"
                 {
                     Ensure          = "Present"
                     SourcePath      = $WebVirtualDirectory.SourcePath
@@ -217,7 +217,7 @@ Configuration MEMBER_WEBSERVER
             }
             else
             {
-                File "WebVirtualDirectoryContent$Count"
+                File "WebVirtualDirectoryContent$count"
                 {
                     Ensure          = "Present"
                     Type            = "Directory"
@@ -225,14 +225,14 @@ Configuration MEMBER_WEBSERVER
                 }
             } # if
 
-            xWebVirtualDirectory "WebVirtualDirectory$Count"
+            xWebVirtualDirectory "WebVirtualDirectory$count"
             {
                 Ensure             = $WebVirtualDirectory.Ensure
                 WebSite            = $WebVirtualDirectory.WebSite
                 WebApplication     = $WebVirtualDirectory.WebApplication
                 PhysicalPath       = $WebVirtualDirectory.PhysicalPath
                 Name               = $WebVirtualDirectory.Name
-                DependsOn          = "[File]WebVirtualDirectoryContent$Count"
+                DependsOn          = "[File]WebVirtualDirectoryContent$count"
             }
         }
     }

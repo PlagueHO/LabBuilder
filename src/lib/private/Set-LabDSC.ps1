@@ -47,8 +47,10 @@ function Set-LabDSC
     # Get Path to LabBuilder files
     $vmLabBuilderFiles = $VM.LabBuilderFilesPath
 
-    # Relabel the Network Adapters so that they match what the DSC Networking config will use
-    # This is because unfortunately the Hyper-V Device Naming feature doesn't work.
+    <#
+        Relabel the Network Adapters so that they match what the DSC Networking config will use
+        This is because unfortunately the Hyper-V Device Naming feature doesn't work.
+    #>
     $managementSwitchName = Get-LabManagementSwitchName -Lab $Lab
     $adapters = [System.String[]] ($VM.Adapters).Name
     $adapters += @($managementSwitchName)
@@ -89,9 +91,11 @@ Get-NetAdapter ``
 "@
     } # Foreach
 
-    # Enable DSC logging (as long as it hasn't been already)
-    # Nano Server doesn't have the Microsoft-Windows-Dsc/Analytic channels so
-    # Logging can't be enabled.
+    <#
+        Enable DSC logging (as long as it hasn't been already)
+        Nano Server doesn't have the Microsoft-Windows-Dsc/Analytic channels so
+        Logging can't be enabled.
+    #>
     if ($VM.OSType -ne [LabOSType]::Nano)
     {
         $logging = ($VM.DSC.Logging).ToString()
