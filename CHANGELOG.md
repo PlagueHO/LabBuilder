@@ -2,11 +2,11 @@
 
 ## Unreleased
 
-- `DSCLibrary\MEMBER_SUBCA.DSC.ps1`:
+- `dsclibrary\MEMBER_SUBCA.DSC.ps1`:
   - CAServer parameter removed from ADCSWebEnrollment - fixes [Issue-320](https://github.com/PlagueHO/LabBuilder/issues/320).
   - Fix error occuring when `c:\windows\setup\scripts\` folder does not exist when
     setting the advanced CA configuration settings - fixes [Issue-325](https://github.com/PlagueHO/LabBuilder/issues/325).
-- `DSCLibrary\MEMBER_ROOTCA.DSC.ps1`:
+- `dsclibrary\MEMBER_ROOTCA.DSC.ps1`:
   - CAServer parameter removed from ADCSWebEnrollment - fixes [Issue-320](https://github.com/PlagueHO/LabBuilder/issues/320).
   - Change `DiscreteSignatureAlgorithm` to `AlternateSignatureAlgorithm` and set
     it to 0 - fixes [Issue-322](https://github.com/PlagueHO/LabBuilder/issues/322).
@@ -14,19 +14,42 @@
     setting the advanced CA configuration settings - fixes [Issue-325](https://github.com/PlagueHO/LabBuilder/issues/325).
   - Changed CApolicy.inf RenewalKeyLength to 4096, CNGHashAlgorithm to SHA256 and
     LoadDefaultTemplates to 0 - fixes [Issue-324](https://github.com/PlagueHO/LabBuilder/issues/324).
-- `DSCLibrary\STANDALONE_ROOTCA.DSC.ps1`:
+- `dsclibrary\STANDALONE_ROOTCA.DSC.ps1`:
   - Correct SubCA resource name to wait for - fixes [Issue-321](https://github.com/PlagueHO/LabBuilder/issues/321).
   - Change `DiscreteSignatureAlgorithm` to `AlternateSignatureAlgorithm` and set
     it to 0 - fixes [Issue-322](https://github.com/PlagueHO/LabBuilder/issues/322).
   - Fix error occuring when `c:\windows\setup\scripts\` folder does not exist when
     setting the advanced CA configuration settings - fixes [Issue-325](https://github.com/PlagueHO/LabBuilder/issues/325).
-- `DSCLibrary\STANDALONE_ROOTCA_NOSUBCA.DSC.ps1`:
+- `dsclibrary\STANDALONE_ROOTCA_NOSUBCA.DSC.ps1`:
   - Change `DiscreteSignatureAlgorithm` to `AlternateSignatureAlgorithm` and set
     it to 0 - fixes [Issue-322](https://github.com/PlagueHO/LabBuilder/issues/322).
   - Fix error occuring when `c:\windows\setup\scripts\` folder does not exist when
     setting the advanced CA configuration settings - fixes [Issue-325](https://github.com/PlagueHO/LabBuilder/issues/325).
 - Added `.markdownlint.json` file.
 - Fix markdown rule violations in `CHANGELOG.MD`.
+- `dsclibrary\MEMBER_FAILOVERCLUSTER_DHCP.DSC.ps1`:
+  - Fix DHCP scope to work with newer version of xDhcpServerScope DSC resource.
+  - Update to require xDhcpServer resource 2.0.0.0.
+- `dsclibrary\STANDALONE_DHCPDNS.DSC.DSC.ps1`:
+  - Fix DHCP scope to work with newer version of xDhcpServerScope DSC resource.
+  - Update to require xDhcpServer resource 2.0.0.0.
+- `dsclibrary\STANDALONE_INTERNET.DSC.DSC.ps1`:
+  - Fix DHCP scope to work with newer version of xDhcpServerScope DSC resource.
+  - Update to require xDhcpServer resource 2.0.0.0.
+- `dsclibrary\MEMBER_DHCP.DSC.ps1`:
+  - Update to require xDhcpServer resource 2.0.0.0.
+- `dsclibrary\MEMBER_DHCPDNS.DSC.ps1`:
+  - Update to require xDhcpServer resource 2.0.0.0.
+- `dsclibrary\MEMBER_DHCPNPAS2016.DSC.ps1`:
+  - Update to require xDhcpServer resource 2.0.0.0.
+- `dsclibrary\MEMBER_DHCP.DSC.ps1`:
+  - Update to require xDhcpServer resource 2.0.0.0.
+- `dsclibrary\MEMBER_DHCP.DSC.ps1`:
+  - Update to require xDhcpServer resource 2.0.0.0.
+- `dsclibrary\MEMBER_DHCP.DSC.ps1`:
+  - Update to require xDhcpServer resource 2.0.0.0.
+- `dsclibrary\MEMBER_DHCP.DSC.ps1`:
+  - Update to require xDhcpServer resource 2.0.0.0.
 
 ## 1.0.2.58
 

@@ -220,7 +220,7 @@ Configuration STANDALONE_ROOTCA
         }
 
         # Generate Issuing certificates for any SubCAs
-        Foreach ($SubCA in $Node.SubCAs)
+        foreach ($SubCA in $Node.SubCAs)
         {
 
             # Wait for SubCA to generate REQ
