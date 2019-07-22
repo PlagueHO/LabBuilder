@@ -65,7 +65,7 @@ Configuration MEMBER_DHCPDNS
     Import-DscResource -ModuleName 'PSDesiredStateConfiguration'
     Import-DscResource -ModuleName ComputerManagementDsc
     Import-DscResource -ModuleName xDNSServer
-    Import-DscResource -ModuleName xDHCPServer
+    Import-DscResource -ModuleName xDHCPServer -ModuleVersion 2.0.0.0
 
     Node $AllNodes.NodeName {
         # Assemble the Local Admin Credentials
@@ -135,11 +135,11 @@ Configuration MEMBER_DHCPDNS
             DependsOn            = '[Computer]JoinDomain'
         }
 
-        $Count=0
-        Foreach ($Scope in $Node.Scopes)
+        $count=0
+        foreach ($Scope in $Node.Scopes)
         {
-            $Count++
-            xDhcpServerScope "Scope$Count"
+            $count++
+            xDhcpServerScope "Scope$count"
             {
                 Ensure        = 'Present'
                 ScopeId       = $Scope.Name
@@ -152,11 +152,12 @@ Configuration MEMBER_DHCPDNS
                 AddressFamily = $Scope.AddressFamily
             }
         }
-        $Count=0
-        Foreach ($Reservation in $Node.Reservations)
+
+        $count=0
+        foreach ($Reservation in $Node.Reservations)
         {
-            $Count++
-            xDhcpServerReservation "Reservation$Count"
+            $count++
+            xDhcpServerReservation "Reservation$count"
             {
                 Ensure           = 'Present'
                 ScopeID          = $Reservation.ScopeId
@@ -166,11 +167,12 @@ Configuration MEMBER_DHCPDNS
                 AddressFamily    = $Reservation.AddressFamily
             }
         }
-        $Count=0
-        Foreach ($ScopeOption in $Node.ScopeOptions)
+
+        $count=0
+        foreach ($ScopeOption in $Node.ScopeOptions)
         {
-            $Count++
-            xDhcpServerOption "ScopeOption$Count"
+            $count++
+            xDhcpServerOption "ScopeOption$count"
             {
                 Ensure             = 'Present'
                 ScopeID            = $ScopeOption.ScopeId
@@ -192,11 +194,12 @@ Configuration MEMBER_DHCPDNS
                 DependsOn        = '[Computer]JoinDomain'
             }
         }
-        $Count=0
-        Foreach ($PrimaryZone in $Node.PrimaryZones)
+
+        $count=0
+        foreach ($PrimaryZone in $Node.PrimaryZones)
         {
-            $Count++
-            xDnsServerPrimaryZone "PrimaryZone$Count"
+            $count++
+            xDnsServerPrimaryZone "PrimaryZone$count"
             {
                 Ensure        = 'Present'
                 Name          = $PrimaryZone.Name

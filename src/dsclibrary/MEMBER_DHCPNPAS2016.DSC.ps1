@@ -61,7 +61,7 @@ Configuration MEMBER_DHCPNPAS2016
 {
     Import-DscResource -ModuleName 'PSDesiredStateConfiguration'
     Import-DscResource -ModuleName ComputerManagementDsc
-    Import-DscResource -ModuleName xDHCPServer
+    Import-DscResource -ModuleName xDHCPServer -ModuleVersion 2.0.0.0
 
     Node $AllNodes.NodeName {
         # Assemble the Local Admin Credentials
@@ -130,11 +130,12 @@ Configuration MEMBER_DHCPNPAS2016
             }
             DependsOn            = '[Computer]JoinDomain'
         }
-        $Count=0
-        Foreach ($Scope in $Node.Scopes)
+
+        $count=0
+        foreach ($Scope in $Node.Scopes)
         {
-            $Count++
-            xDhcpServerScope "Scope$Count"
+            $count++
+            xDhcpServerScope "Scope$count"
             {
                 Ensure        = 'Present'
                 ScopeId       = $Scope.Name
@@ -147,11 +148,12 @@ Configuration MEMBER_DHCPNPAS2016
                 AddressFamily = $Scope.AddressFamily
             }
         }
-        $Count=0
-        Foreach ($Reservation in $Node.Reservations)
+
+        $count=0
+        foreach ($Reservation in $Node.Reservations)
         {
-            $Count++
-            xDhcpServerReservation "Reservation$Count"
+            $count++
+            xDhcpServerReservation "Reservation$count"
             {
                 Ensure           = 'Present'
                 ScopeID          = $Reservation.ScopeId
@@ -161,11 +163,12 @@ Configuration MEMBER_DHCPNPAS2016
                 AddressFamily    = $Reservation.AddressFamily
             }
         }
-        $Count=0
-        Foreach ($ScopeOption in $Node.ScopeOptions)
+
+        $count=0
+        foreach ($ScopeOption in $Node.ScopeOptions)
         {
-            $Count++
-            xDhcpServerOption "ScopeOption$Count"
+            $count++
+            xDhcpServerOption "ScopeOption$count"
             {
                 Ensure             = 'Present'
                 ScopeID            = $ScopeOption.ScopeId
