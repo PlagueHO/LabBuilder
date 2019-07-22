@@ -1,6 +1,6 @@
 # Change Log
 
-## Unreleased
+## 1.0.3.69
 
 - `dsclibrary\MEMBER_SUBCA.DSC.ps1`:
   - CAServer parameter removed from ADCSWebEnrollment - fixes [Issue-320](https://github.com/PlagueHO/LabBuilder/issues/320).
