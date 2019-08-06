@@ -43,7 +43,7 @@
             SkipPublisherCheck = $true
         }
         Target         = 'CurrentUser'
-        Version        = '2.0.0'
+        Version        = '2.0.10'
         Tags           = 'Init'
     }
 
