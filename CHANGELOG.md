@@ -1,5 +1,10 @@
 # Change Log
 
+## Unreleased
+
+- Change `psakefile.ps1` to detect Azure Pipelines correctly.
+- Updated `BuildHelpers` support module for CI pipelines to 2.0.10.
+
 ## 1.0.3.69
 
 - `dsclibrary\MEMBER_SUBCA.DSC.ps1`:
@@ -54,8 +59,6 @@
   - Fix to use correct name of the DFSReplicationGroup resource.
 - `dsclibrary\MEMBER_WDS.DSC.ps1`:
   - Fix configuration.
-- Change `psakefile.ps1` to detect Azure Pipelines correctly.
-- Updated `BuildHelpers` support module for CI pipelines to 2.0.10.
 
 ## 1.0.2.58
 
