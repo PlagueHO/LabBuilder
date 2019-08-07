@@ -1,9 +1,9 @@
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](https://github.com/PlagueHO/LabBuilder/blob/dev/LICENSE)
 [![Documentation - LabBuilder](https://img.shields.io/badge/Documentation-LabBuilder-blue.svg)](https://github.com/PlagueHO/LabBuilder/wiki)
 [![PowerShell Gallery - LabBuilder](https://img.shields.io/badge/PowerShell%20Gallery-LabBuilder-blue.svg)](https://www.powershellgallery.com/packages/LabBuilder)
+[![PowerShell Gallery](https://img.shields.io/powershellgallery/dt/labbuilder.svg)](https://www.powershellgallery.com/packages/LabBuilder)
 [![Minimum Supported PowerShell Version](https://img.shields.io/badge/PowerShell-5.1-blue.svg)](https://github.com/PlagueHO/LabBuilder)
 [![Join the chat at https://gitter.im/PlagueHO/LabBuilder](https://badges.gitter.im/PlagueHO/LabBuilder.svg)](https://gitter.im/PlagueHO/LabBuilder?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
-[![PowerShell Gallery](https://img.shields.io/powershellgallery/dt/labbuilder.svg)](https://www.powershellgallery.com/packages/LabBuilder)
 
 # LabBuilder PowerShell Module
 
