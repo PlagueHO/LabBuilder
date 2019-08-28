@@ -27,7 +27,7 @@ function Install-LabVM
     } # if
 
     # We only perform this section of VM Initialization (DSC, Cert, etc) with Server OS
-    if ($VM.OSType -in ([LabOStype]::Server,[LabOStype]::Nano))
+    if ($VM.DSC.ConfigFile)
     {
         # Has this VM been initialized before (do we have a cert for it)
         if (-not (Test-Path "$LabPath\$($VM.Name)\LabBuilder Files\$Script:DSCEncryptionCert"))
