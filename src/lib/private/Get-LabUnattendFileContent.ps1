@@ -87,6 +87,10 @@ function Get-LabUnattendFileContent
                         <Order>1</Order>
                         <Path>net user administrator /active:yes</Path>
                     </RunSynchronousCommand>
+                    <RunSynchronousCommand wcm:action="add">
+                        <Order>2</Order>
+                        <Path>powershell.exe -Command "Enable-PSRemoting -SkipNetworkProfileCheck -Force"</Path>
+                    </RunSynchronousCommand>
                 </RunSynchronous>
             </component>
 
