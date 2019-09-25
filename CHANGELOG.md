@@ -12,7 +12,7 @@
 - `Connect-LabVM.ps1`:
   - Test WinRM connectivity prior to initializing DSC
 - `Install-LabVM.ps1`:
-  - Test for a DSC Configuration file declaration in XML configuration file prior to calling DSC (this allows for non domain-joined VMs to be created using LabBuilder)
+  - Check for DSC Configuration section in XML file prior to calling DSC
 
 ## 1.0.3.69
 
