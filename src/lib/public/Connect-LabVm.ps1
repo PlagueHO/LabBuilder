@@ -5,13 +5,13 @@ function Connect-LabVM
     param
     (
         [Parameter(
-            Position=1,
-            Mandatory=$true)]
+            Position = 1,
+            Mandatory = $true)]
         [LabVM]
         $VM,
 
         [Parameter(
-            Position=2)]
+            Position = 2)]
         [System.Int32]
         $ConnectTimeout = 300
     )
@@ -24,8 +24,8 @@ function Connect-LabVM
     $fatalException = $false
 
     while (($null -eq $session) `
-        -and (((Get-Date) - $startTime).TotalSeconds) -lt $ConnectTimeout `
-        -and -not $fatalException)
+            -and (((Get-Date) - $startTime).TotalSeconds) -lt $ConnectTimeout `
+            -and -not $fatalException)
     {
         try
         {
@@ -61,29 +61,37 @@ function Connect-LabVM
                     -Value $trustedHosts `
                     -Force
                 Write-LabMessage -Message $($LocalizedData.AddingIPAddressToTrustedHostsMessage `
-                    -f $VM.Name,$ipAddress)
+                        -f $VM.Name, $ipAddress)
             }
 
-            Write-LabMessage -Message $($LocalizedData.ConnectingVMMessage `
-                -f $VM.Name,$ipAddress)
+            if (Test-WSMan -ComputerName $ipAddress -ErrorAction SilentlyContinue)
+            {
+                Write-LabMessage -Message $($LocalizedData.ConnectingVMMessage `
+                        -f $VM.Name, $ipAddress)
 
-            $session = New-PSSession `
-                -Name 'LabBuilder' `
-                -ComputerName $ipAddress `
-                -Credential $adminCredential `
-                -ErrorAction Stop
+                $session = New-PSSession `
+                    -Name 'LabBuilder' `
+                    -ComputerName $ipAddress `
+                    -Credential $adminCredential `
+                    -ErrorAction Stop
+            }
+            else
+            {
+                Write-LabMessage -Message $($LocalizedData.WaitingForIPAddressAssignedMessage `
+                        -f $VM.Name, $Script:RetryConnectSeconds)
+            }
         }
         catch
         {
             if (-not $ipAddress)
             {
                 Write-LabMessage -Message $($LocalizedData.WaitingForIPAddressAssignedMessage `
-                    -f $VM.Name,$Script:RetryConnectSeconds)
+                        -f $VM.Name, $Script:RetryConnectSeconds)
             }
             else
             {
                 Write-LabMessage -Message $($LocalizedData.ConnectingVMFailedMessage `
-                    -f $VM.Name,$Script:RetryConnectSeconds,$_.Exception.Message)
+                        -f $VM.Name, $Script:RetryConnectSeconds, $_.Exception.Message)
             }
 
             Start-Sleep -Seconds $Script:RetryConnectSeconds
@@ -98,10 +106,10 @@ function Connect-LabVM
     {
         # The connection failed so throw an error
         $exceptionParameters = @{
-            errorId = 'RemotingConnectionError'
+            errorId       = 'RemotingConnectionError'
             errorCategory = 'ConnectionError'
-            errorMessage = $($LocalizedData.RemotingConnectionError `
-                -f $VM.Name)
+            errorMessage  = $($LocalizedData.RemotingConnectionError `
+                    -f $VM.Name)
         }
         New-LabException @exceptionParameters
     }
