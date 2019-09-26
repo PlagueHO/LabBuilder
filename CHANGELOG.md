@@ -5,6 +5,14 @@
 - Change `psakefile.ps1` to detect Azure Pipelines correctly.
 - Updated `BuildHelpers` support module for CI pipelines to 2.0.10.
 - Added PowerShell Gallery badge to `README.md`.
+- `Get-LabUnattendFileContent.ps1`:
+  - Enabled PSRemoting in Unattend.xml (allows DSC to initialize properly on newer OS's)
+  - Enabled local administrator account for Client OS's (Win10)
+  - Enabled PowerShell script execution for both 32-bit and 64-bit processes
+- `Connect-LabVM.ps1`:
+  - Test WinRM connectivity prior to initializing DSC
+- `Install-LabVM.ps1`:
+  - Check for DSC Configuration section in XML file prior to calling DSC
 
 ## 1.0.3.69
 
