@@ -1,5 +1,18 @@
 # Release Notes
 
+## What is New in LabBuilder Unreleased
+
+- `Get-LabUnattendFileContent.ps1`:
+  - Enabled PSRemoting in Unattend.xml (allows DSC to initialize properly on
+    newer operating systems).
+  - Enabled local administrator account for Client operating systems
+    (Windows 10).
+  - Enabled PowerShell script execution for both 32-bit and 64-bit processes.
+- `Connect-LabVM.ps1`:
+  - Test WinRM connectivity prior to initializing DSC.
+- `Install-LabVM.ps1`:
+  - Check for DSC Configuration section in XML file prior to calling DSC.
+
 ## What is New in LabBuilder 1.0.3.69
 
 July 21, 2019
