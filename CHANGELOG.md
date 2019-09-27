@@ -1,6 +1,6 @@
 # Change Log
 
-## Unreleased
+## 1.0.4.83
 
 - Change `psakefile.ps1` to detect Azure Pipelines correctly.
 - Updated `BuildHelpers` support module for CI pipelines to 2.0.10.

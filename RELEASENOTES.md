@@ -1,6 +1,6 @@
 # Release Notes
 
-## What is New in LabBuilder Unreleased
+## What is New in LabBuilder 1.0.4.83
 
 - `Get-LabUnattendFileContent.ps1`:
   - Enabled PSRemoting in Unattend.xml (allows DSC to initialize properly on
