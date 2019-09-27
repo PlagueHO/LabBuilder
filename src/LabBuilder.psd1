@@ -12,7 +12,7 @@
 RootModule = 'LabBuilder.psm1'
 
 # Version number of this module.
-ModuleVersion = '1.0.3.69'
+ModuleVersion = '1.0.4.69'
 
 # Supported PSEditions
 CompatiblePSEditions = 'Desktop'
@@ -69,14 +69,14 @@ FormatsToProcess = @()
 # NestedModules = @()
 
 # Functions to export from this module, for best performance, do not use wildcards and do not delete the entry, use an empty array if there are no functions to export.
-FunctionsToExport = 'Get-LabResourceModule', 'Initialize-LabResourceModule', 
-               'Get-LabResourceMSU', 'Initialize-LabResourceMSU', 
-               'Get-LabResourceISO', 'Initialize-LabResourceISO', 'Get-LabSwitch', 
-               'Initialize-LabSwitch', 'Remove-LabSwitch', 'Get-LabVMTemplateVHD', 
-               'Initialize-LabVMTemplateVHD', 'Remove-LabVMTemplateVHD', 
-               'Get-LabVMTemplate', 'Initialize-LabVMTemplate', 
-               'Remove-LabVMTemplate', 'Get-LabVM', 'Initialize-LabVM', 
-               'Install-LabVM', 'Remove-LabVM', 'Get-Lab', 'New-Lab', 'Install-Lab', 
+FunctionsToExport = 'Get-LabResourceModule', 'Initialize-LabResourceModule',
+               'Get-LabResourceMSU', 'Initialize-LabResourceMSU',
+               'Get-LabResourceISO', 'Initialize-LabResourceISO', 'Get-LabSwitch',
+               'Initialize-LabSwitch', 'Remove-LabSwitch', 'Get-LabVMTemplateVHD',
+               'Initialize-LabVMTemplateVHD', 'Remove-LabVMTemplateVHD',
+               'Get-LabVMTemplate', 'Initialize-LabVMTemplate',
+               'Remove-LabVMTemplate', 'Get-LabVM', 'Initialize-LabVM',
+               'Install-LabVM', 'Remove-LabVM', 'Get-Lab', 'New-Lab', 'Install-Lab',
                'Update-Lab', 'Uninstall-Lab', 'Start-Lab', 'Stop-Lab'
 
 # Cmdlets to export from this module, for best performance, do not use wildcards and do not delete the entry, use an empty array if there are no cmdlets to export.
@@ -116,7 +116,18 @@ PrivateData = @{
 
         # ReleaseNotes of this module
         ReleaseNotes = '
-## What is New in LabBuilder 1.0.3.69
+## What is New in LabBuilder Unreleased
+
+- `Get-LabUnattendFileContent.ps1`:
+- Enabled PSRemoting in Unattend.xml (allows DSC to initialize properly on
+   newer operating systems).
+- Enabled local administrator account for Client operating systems
+  (Windows 10).
+- Enabled PowerShell script execution for both 32-bit and 64-bit processes.
+- `Connect-LabVM.ps1`:
+- Test WinRM connectivity prior to initializing DSC.
+- `Install-LabVM.ps1`:
+  - Check for DSC Configuration section in XML file prior to calling DSC.
 
 July 21, 2019
 

@@ -367,8 +367,8 @@ Task Build -Depends Init {
     $null = Add-Type -assemblyname System.IO.Compression.FileSystem
     [System.IO.Compression.ZipFile]::CreateFromDirectory($ModuleFolder, $zipFilePath)
 
-    # Update the Git Repo if this is the master branch build in VSTS
-    if ($ENV:BHBuildSystem -eq 'VSTS')
+    # Update the Git Repo if this is the master branch build in Azure Pipelines
+    if ($ENV:BHBuildSystem -eq 'Azure Pipelines')
     {
         if ($ENV:BHBranchName -eq 'master')
         {

@@ -53,60 +53,62 @@ function Update-LabVMDataDisk
     }
 
     # Get the root path of the VM
-    [System.String] $VMRootPath = $VM.VMRootPath
+    $vmRootPath = $VM.VMRootPath
 
     # Get the Virtual Hard Disk Path
-    [System.String] $VHDPath = Join-Path `
-        -Path $VMRootPath `
+    $vhdPath = Join-Path `
+        -Path $vmRootPath `
         -ChildPath 'Virtual Hard Disks'
 
-    foreach ($DataVhd in @($VM.DataVHDs))
+    foreach ($dataVhd in @($VM.DataVHDs))
     {
-        $Vhd = $DataVhd.Vhd
-        if (Test-Path -Path $Vhd)
+        $vhd = $dataVhd.Vhd
+        if (Test-Path -Path $vhd)
         {
             Write-LabMessage -Message $($LocalizedData.VMDiskAlreadyExistsMessage `
-                -f $VM.Name,$Vhd,'Data')
+                -f $VM.Name,$vhd,'Data')
 
             # Check the parameters of the VHD match
-            $ExistingVhd = Get-VHD -Path $Vhd
+            $existingVhd = Get-VHD -Path $vhd
 
             # Check the VHD Type
-            if (($DataVhd.VhdType) `
-                -and ($ExistingVhd.VhdType.ToString() -ne $DataVhd.VhdType.ToString()))
+            if (($dataVhd.VhdType) `
+                -and ($existingVhd.VhdType.ToString() -ne $dataVhd.VhdType.ToString()))
             {
                 # The type of disk can't be changed.
                 $exceptionParameters = @{
                     errorId = 'VMDataDiskVHDConvertError'
                     errorCategory = 'InvalidArgument'
                     errorMessage = $($LocalizedData.VMDataDiskVHDConvertError `
-                        -f $VM.name,$Vhd,$DataVhd.VhdType)
+                        -f $VM.name,$vhd,$dataVhd.VhdType)
                 }
                 New-LabException @exceptionParameters
             }
 
             # Check the size
-            if ($DataVhd.Size)
+            if ($dataVhd.Size)
             {
-                if ($ExistingVhd.Size -lt $DataVhd.Size)
+                if ($existingVhd.Size -lt $dataVhd.Size)
                 {
                     # Expand the disk
                     Write-LabMessage -Message $($LocalizedData.ExpandingVMDiskMessage `
-                        -f $VM.Name,$Vhd,'Data',$DataVhd.Size)
+                        -f $VM.Name,$vhd,'Data',$dataVhd.Size)
 
                     $null = Resize-VHD `
-                        -Path $Vhd `
-                        -SizeBytes $DataVhd.Size
+                        -Path $vhd `
+                        -SizeBytes $dataVhd.Size
                 }
-                elseif ($ExistingVhd.Size -gt $DataVhd.Size)
+                elseif ($existingVhd.Size -gt $dataVhd.Size)
                 {
-                    # The disk size can't be reduced.
-                    # This could be revisited later.
+                    <#
+                        The disk size can't be reduced.
+                        This could be revisited later.
+                    #>
                     $exceptionParameters = @{
                         errorId = 'VMDataDiskVHDShrinkError'
                         errorCategory = 'InvalidArgument'
                         errorMessage = $($LocalizedData.VMDataDiskVHDShrinkError `
-                            -f $VM.name,$Vhd,$DataVhd.Size)
+                            -f $VM.name,$vhd,$dataVhd.Size)
                     }
                     New-LabException @exceptionParameters
                 } # if
@@ -115,7 +117,7 @@ function Update-LabVMDataDisk
         else
         {
             # The data disk VHD does not exist so create it
-            $SourceVhd = $DataVhd.SourceVhd
+            $SourceVhd = $dataVhd.SourceVhd
             if ($SourceVhd)
             {
                 # A source VHD was specified to create the new VHD using
@@ -129,66 +131,72 @@ function Update-LabVMDataDisk
                     }
                     New-LabException @exceptionParameters
                 } # if
+
                 # Should the Source VHD be copied or moved
-                if ($DataVhd.MoveSourceVHD)
+                if ($dataVhd.MoveSourceVHD)
                 {
                     Write-LabMessage -Message $($LocalizedData.CreatingVMDiskByMovingSourceVHDMessage `
-                        -f $VM.Name,$Vhd,$SourceVhd)
+                        -f $VM.Name,$vhd,$SourceVhd)
 
                     $null = Move-Item `
                         -Path $SourceVhd `
-                        -Destination $VHDPath `
+                        -Destination $vhdPath `
                         -Force `
                         -ErrorAction Stop
                 }
                 else
                 {
                     Write-LabMessage -Message $($LocalizedData.CreatingVMDiskByCopyingSourceVHDMessage `
-                        -f $VM.Name,$Vhd,$SourceVhd)
+                        -f $VM.Name,$vhd,$SourceVhd)
 
                     $null = Copy-Item `
                         -Path $SourceVhd `
-                        -Destination $VHDPath `
+                        -Destination $vhdPath `
                         -Force `
                         -ErrorAction Stop
                 } # if
             }
             else
             {
-                $Size = $DataVhd.size
-                switch ($DataVhd.VhdType)
+                $size = $dataVhd.size
+
+                switch ($dataVhd.VhdType)
                 {
                     'fixed'
                     {
                         # Create a new Fixed VHD
                         Write-LabMessage -Message $($LocalizedData.CreatingVMDiskMessage `
-                            -f $VM.Name,$Vhd,'Fixed Data')
+                            -f $VM.Name,$vhd,'Fixed Data')
 
                         $null = New-VHD `
-                            -Path $Vhd `
-                            -SizeBytes $Size `
+                            -Path $vhd `
+                            -SizeBytes $size `
                             -Fixed `
                             -ErrorAction Stop
                         break;
                     } # 'fixed'
+
                     'dynamic'
                     {
                         # Create a new Dynamic VHD
                         Write-LabMessage -Message $($LocalizedData.CreatingVMDiskMessage `
-                            -f $VM.Name,$Vhd,'Dynamic Data')
+                            -f $VM.Name,$vhd,'Dynamic Data')
 
                         $null = New-VHD `
-                            -Path $Vhd `
-                            -SizeBytes $Size `
+                            -Path $vhd `
+                            -SizeBytes $size `
                             -Dynamic `
                             -ErrorAction Stop
                         break;
                     } # 'dynamic'
+
                     'differencing'
                     {
-                        # A differencing disk is specified so check the Parent VHD
-                        # is specified and exists
-                        $ParentVhd = $DataVhd.ParentVhd
+                        <#
+                            A differencing disk is specified so check the Parent VHD
+                            is specified and exists.
+                        #>
+                        $ParentVhd = $dataVhd.ParentVhd
                         if (-not $ParentVhd)
                         {
                             $exceptionParameters = @{
@@ -212,23 +220,24 @@ function Update-LabVMDataDisk
 
                         # Create a new Differencing VHD
                         Write-LabMessage -Message $($LocalizedData.CreatingVMDiskMessage `
-                            -f $VM.Name,$Vhd,"Differencing Data using Parent '$ParentVhd'")
+                            -f $VM.Name,$vhd,"Differencing Data using Parent '$ParentVhd'")
 
                         $null = New-VHD `
-                            -Path $Vhd `
-                            -SizeBytes $Size `
+                            -Path $vhd `
+                            -SizeBytes $size `
                             -Differencing `
                             -ParentPath $ParentVhd `
                             -ErrorAction Stop
                         break;
                     } # 'differencing'
+
                     default
                     {
                         $exceptionParameters = @{
                             errorId = 'VMDataDiskUnknownTypeError'
                             errorCategory = 'InvalidArgument'
                             errorMessage = $($LocalizedData.VMDataDiskUnknownTypeError `
-                                -f $VM.Name,$Vhd,$DataVhd.VhdType)
+                                -f $VM.Name,$vhd,$dataVhd.VhdType)
                         }
                         New-LabException @exceptionParameters
                     } # default
@@ -236,93 +245,101 @@ function Update-LabVMDataDisk
             } # if
 
             # Do folders need to be copied to this Data Disk?
-            if ($null -ne $DataVhd.CopyFolders)
+            if ($null -ne $dataVhd.CopyFolders)
             {
-                # Files need to be copied to this Data VHD so
-                # set up a mount folder for it to be mounted to.
-                # Get Path to LabBuilder files
-                [System.String] $VMLabBuilderFiles = $VM.LabBuilderFilesPath
+                <#
+                    Files need to be copied to this Data VHD so
+                    set up a mount folder for it to be mounted to.
+                    Get Path to LabBuilder files
+                #>
+                $vmLabBuilderFiles = $VM.LabBuilderFilesPath
 
-                [System.String] $MountPoint = Join-Path `
-                    -Path $VMLabBuilderFiles `
+                $mountPoint = Join-Path `
+                    -Path $vmLabBuilderFiles `
                     -ChildPath 'VHDMount'
 
-                if (-not (Test-Path -Path $MountPoint -PathType Container))
+                if (-not (Test-Path -Path $mountPoint -PathType Container))
                 {
                     $null = New-Item `
-                        -Path $MountPoint `
+                        -Path $mountPoint `
                         -ItemType Directory
                 }
+
                 # Yes, initialize the disk (or check it is)
                 $initializeLabVHDParams = @{
-                    Path = $VHD
-                    AccessPath = $MountPoint
+                    Path = $vhd
+                    AccessPath = $mountPoint
                 }
+
                 # Are we allowed to initialize/format the disk?
-                if ($DataVHD.PartitionStyle -and $DataVHD.FileSystem)
+                if ($dataVhd.PartitionStyle -and $dataVhd.FileSystem)
                 {
                     # Yes, initialize the disk
                     $initializeLabVHDParams += @{
-                        PartitionStyle = $DataVHD.PartitionStyle
-                        FileSystem = $DataVHD.FileSystem
+                        PartitionStyle = $dataVhd.PartitionStyle
+                        FileSystem = $dataVhd.FileSystem
                     }
+
                     # Set a FileSystemLabel too?
-                    if ($DataVHD.FileSystemLabel)
+                    if ($dataVhd.FileSystemLabel)
                     {
                         $initializeLabVHDParams += @{
-                            FileSystemLabel = $DataVHD.FileSystemLabel
+                            FileSystemLabel = $dataVhd.FileSystemLabel
                         }
                     }
                 }
+
                 Write-LabMessage -Message $($LocalizedData.InitializingVMDiskMessage `
-                    -f $VM.Name,$VHD)
+                    -f $VM.Name,$vhd)
 
                 Initialize-LabVHD `
                     @initializeLabVHDParams `
                     -ErrorAction Stop
 
                 # Copy each folder to the VM Data Disk
-                foreach ($CopyFolder in @($DataVHD.CopyFolders))
+                foreach ($copyFolder in @($dataVhd.CopyFolders))
                 {
                     Write-LabMessage -Message $($LocalizedData.CopyingFoldersToVMDiskMessage `
-                        -f $VM.Name,$VHD,$CopyFolder)
+                        -f $VM.Name,$vhd,$copyFolder)
 
                     Copy-item `
-                        -Path $CopyFolder `
-                        -Destination $MountPoint `
+                        -Path $copyFolder `
+                        -Destination $mountPoint `
                         -Recurse `
                         -Force
                 }
 
                 # Dismount the VM Data Disk
                 Write-LabMessage -Message $($LocalizedData.DismountingVMDiskMessage `
-                    -f $VM.Name,$VHD)
+                    -f $VM.Name,$vhd)
 
                 Dismount-VHD `
-                    -Path $VHD `
+                    -Path $vhd `
                     -ErrorAction Stop
             }
             else
             {
-                # No folders need to be copied but check if we
-                # need to initialize the new disk.
-                if ($DataVHD.PartitionStyle -and $DataVHD.FileSystem)
+                <#
+                    No folders need to be copied but check if we
+                    need to initialize the new disk.
+                #>
+                if ($dataVhd.PartitionStyle -and $dataVhd.FileSystem)
                 {
                     $InitializeVHDParams = @{
-                        Path = $VHD
-                        PartitionStyle = $DataVHD.PartitionStyle
-                        FileSystem = $DataVHD.FileSystem
+                        Path = $vhd
+                        PartitionStyle = $dataVhd.PartitionStyle
+                        FileSystem = $dataVhd.FileSystem
                     }
 
-                    if ($DataVHD.FileSystemLabel)
+                    if ($dataVhd.FileSystemLabel)
                     {
                         $InitializeVHDParams += @{
-                            FileSystemLabel = $DataVHD.FileSystemLabel
+                            FileSystemLabel = $dataVhd.FileSystemLabel
                         }
                     } # if
 
                     Write-LabMessage -Message $($LocalizedData.InitializingVMDiskMessage `
-                        -f $VM.Name,$VHD)
+                        -f $VM.Name,$vhd)
 
                     Initialize-LabVHD `
                         @InitializeVHDParams `
@@ -330,10 +347,10 @@ function Update-LabVMDataDisk
 
                     # Dismount the VM Data Disk
                     Write-LabMessage -Message $($LocalizedData.DismountingVMDiskMessage `
-                        -f $VM.Name,$VHD)
+                        -f $VM.Name,$vhd)
 
                     Dismount-VHD `
-                        -Path $VHD `
+                        -Path $vhd `
                         -ErrorAction Stop
                 } # if
             } # if
@@ -344,33 +361,37 @@ function Update-LabVMDataDisk
             -VMName $VM.Name
 
         # The data disk VHD will now exist so ensure it is attached
-        if (($VMHardDiskDrives | Where-Object -Property Path -eq $Vhd).Count -eq 0)
+        if (($VMHardDiskDrives | Where-Object -Property Path -eq $vhd).Count -eq 0)
         {
             # The data disk is not yet attached
             Write-LabMessage -Message $($LocalizedData.AddingVMDiskMessage `
-                -f $VM.Name,$Vhd,'Data')
+                -f $VM.Name,$vhd,'Data')
 
-            # Determine the ControllerLocation and ControllerNumber to
-            # attach the VHD to.
-            $ControllerLocation = ($VMHardDiskDrives |
+            <#
+                Determine the ControllerLocation and ControllerNumber to
+                attach the VHD to.
+            #>
+            $controllerLocation = ($VMHardDiskDrives |
                 Measure-Object -Property ControllerLocation -Maximum).Maximum + 1
 
-            $NewHardDiskParams = @{
+            $newHardDiskParams = @{
                 VMName = $VM.Name
-                Path = $Vhd
+                Path = $vhd
                 ControllerType = 'SCSI'
-                ControllerLocation = $ControllerLocation
+                ControllerLocation = $controllerLocation
                 ControllerNumber = 0
                 ErrorAction = 'Stop'
             }
-            if ($DataVhd.Shared -or $DataVHD.SupportPR)
+            if ($dataVhd.Shared -or $dataVhd.SupportPR)
             {
-                    $NewHardDiskParams += @{
+                $newHardDiskParams += @{
                     SupportPersistentReservations = $true
-                    }
-
+                }
             } # if
-            $null = Add-VMHardDiskDrive @NewHardDiskParams
+
+            Write-Verbose -Message ($newHardDiskParams | Out-String | Fl *) -Verbose
+
+            $null = Add-VMHardDiskDrive @newHardDiskParams
         } # if
     } # foreach
 }
