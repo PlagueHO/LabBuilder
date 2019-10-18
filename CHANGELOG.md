@@ -4,6 +4,10 @@
 
 - Samples\Sample_WS2019_AzureADConnect.xml: Added sample for installing Azure AD
   Connect.
+- Convert all DSC configurations to use ActiveDirectoryDsc version
+  4.1.0.0.
+- `dsclibrary\RODC_SECONDARY.DSC.ps1`:
+  - Enable RODC creation because it is supported by ActiveDirectoryDsc.
 
 ## 1.0.4.83
 

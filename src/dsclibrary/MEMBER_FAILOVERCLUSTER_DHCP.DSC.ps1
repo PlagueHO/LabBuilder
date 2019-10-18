@@ -98,7 +98,7 @@ Configuration MEMBER_FAILOVERCLUSTER_FS
         # Wait for the Domain to be available so we can join it.
         WaitForAll DC
         {
-            ResourceName     = '[xADDomain]PrimaryDC'
+            ResourceName     = '[ADDomain]PrimaryDC'
             NodeName         = $Node.DCname
             RetryIntervalSec = 15
             RetryCount       = 60

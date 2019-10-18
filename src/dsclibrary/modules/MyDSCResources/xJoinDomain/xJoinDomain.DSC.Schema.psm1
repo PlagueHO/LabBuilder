@@ -54,7 +54,7 @@ Configuration JOINDOMAIN
 
         WaitForAll DC
         {
-        ResourceName      = '[xADDomain]CreateDC'
+        ResourceName      = '[ADDomain]CreateDC'
         NodeName          = $DCname
         RetryIntervalSec  = 15
         RetryCount        = 60

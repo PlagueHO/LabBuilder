@@ -37,80 +37,70 @@ Configuration DC
         [Parameter(Mandatory=$false)]
         [System.String]
         $OUName
-
-
-
-
     )
 
-
-
-
     Import-DscResource -ModuleName 'PSDesiredStateConfiguration'
-    Import-DscResource -ModuleName xActiveDirectory
+    Import-DscResource -ModuleName ActiveDirectoryDsc -ModuleVersion 4.1.0.0
     Import-DscResource -ModuleName xDNSServer
 
-        # Assemble the Local Admin Credentials
-        if ($LocalAdminPassword) {
-            [PSCredential]$LocalAdminCredential = New-Object System.Management.Automation.PSCredential ("Administrator", (ConvertTo-SecureString $LocalAdminPassword -AsPlainText -Force))
-        }
-        if ($DomainAdminPassword) {
-            [PSCredential]$DomainAdminCredential = New-Object System.Management.Automation.PSCredential ("Administrator", (ConvertTo-SecureString $DomainAdminPassword -AsPlainText -Force))
-        }
+    # Assemble the Local Admin Credentials
+    if ($LocalAdminPassword) {
+        [PSCredential]$LocalAdminCredential = New-Object System.Management.Automation.PSCredential ("Administrator", (ConvertTo-SecureString $LocalAdminPassword -AsPlainText -Force))
+    }
+    if ($DomainAdminPassword) {
+        [PSCredential]$DomainAdminCredential = New-Object System.Management.Automation.PSCredential ("Administrator", (ConvertTo-SecureString $DomainAdminPassword -AsPlainText -Force))
+    }
 
-        WindowsFeature BackupInstall
-        {
-            Ensure = "Present"
-            Name = "Windows-Server-Backup"
-        }
+    WindowsFeature BackupInstall
+    {
+        Ensure = "Present"
+        Name = "Windows-Server-Backup"
+    }
 
-        WindowsFeature DNSInstall
-        {
-            Ensure = "Present"
-            Name = "DNS"
-        }
+    WindowsFeature DNSInstall
+    {
+        Ensure = "Present"
+        Name = "DNS"
+    }
 
-        WindowsFeature ADDSInstall
-        {
-            Ensure = "Present"
-            Name = "AD-Domain-Services"
-            DependsOn = "[WindowsFeature]DNSInstall"
-        }
+    WindowsFeature ADDSInstall
+    {
+        Ensure = "Present"
+        Name = "AD-Domain-Services"
+        DependsOn = "[WindowsFeature]DNSInstall"
+    }
 
-        WindowsFeature RSAT-AD-PowerShellInstall
-        {
-            Ensure = "Present"
-            Name = "RSAT-AD-PowerShell"
-            DependsOn = "[WindowsFeature]ADDSInstall"
-        }
+    WindowsFeature RSAT-AD-PowerShellInstall
+    {
+        Ensure = "Present"
+        Name = "RSAT-AD-PowerShell"
+        DependsOn = "[WindowsFeature]ADDSInstall"
+    }
 
-        xADDomain CreateDC
-        {
-            DomainName = $DomainName
-            DomainAdministratorCredential = $DomainAdminCredential
-            SafemodeAdministratorPassword = $LocalAdminCredential
-            DependsOn = "[WindowsFeature]ADDSInstall"
-        }
+    ADDomain ADDomainCreateDC
+    {
+        DomainName = $DomainName
+        Credential                    = $DomainAdminCredential
+        SafemodeAdministratorPassword = $LocalAdminCredential
+        DependsOn = "[WindowsFeature]ADDSInstall"
+    }
 
-        xWaitForADDomain DscForestWait
-        {
-            DomainName = $DomainName
-            DomainUserCredential = $DomainAdminCredential
-            RetryCount = 20
-            RetryIntervalSec = 30
-            DependsOn = "[xADDomain]CreateDC"
-        }
+    WaitForADDomain DscDomainWait
+    {
+        DomainName   = $Node.ParentDomainName
+        Credential   = $DomainAdminCredential
+        WaitTimeout  = 300
+        RestartCount = 5
+        DependsOn    = "[WindowsFeature]ADDSInstall"
+    }
 
-
-		xADOrganizationalUnit NewOU
-        {
-			Name = $OUName
-			Path = $OUPath
-			ProtectedFromAccidentalDeletion = $true
-			Description = $OUDescription
-			Ensure = 'Present'
-			DependsOn = "[xADDomain]CreateDC"
-        }
-
-
+    ADOrganizationalUnit NewOU
+    {
+        Name = $OUName
+        Path = $OUPath
+        ProtectedFromAccidentalDeletion = $true
+        Description = $OUDescription
+        Ensure = 'Present'
+        DependsOn = "[WaitForADDomain]DscDomainWait"
+    }
 }

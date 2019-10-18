@@ -55,7 +55,7 @@ Configuration MEMBER_SQLSERVER2014
 
         WaitForAll DC
         {
-            ResourceName     = '[xADDomain]PrimaryDC'
+            ResourceName     = '[ADDomain]PrimaryDC'
             NodeName         = $Node.DCname
             RetryIntervalSec = 15
             RetryCount       = 60

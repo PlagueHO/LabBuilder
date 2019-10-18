@@ -4,7 +4,6 @@ DSC Template Configuration File For use by LabBuilder
     RODC_SECONDARY
 .Desription
     Builds a Read Only Domain Controller and adds it to the existing domain provided in the Parameter DomainName.
-    The RODC will not be installed at the moment because the xActiveDirectory DSC Resource does not support RODC.
 .Parameters:
     DomainName = "LABBUILDER.COM"
     DomainAdminPassword = "P@ssword!1"
@@ -16,7 +15,7 @@ DSC Template Configuration File For use by LabBuilder
 Configuration RODC_SECONDARY
 {
     Import-DscResource -ModuleName 'PSDesiredStateConfiguration'
-    Import-DscResource -ModuleName xActiveDirectory
+    Import-DscResource -ModuleName ActiveDirectoryDsc -ModuleVersion 4.1.0.0
 
     Node $AllNodes.NodeName {
         # Assemble the Local Admin Credentials
@@ -66,20 +65,20 @@ Configuration RODC_SECONDARY
         # Wait for the Domain to be available so we can join it.
         WaitForAll DC
         {
-            ResourceName     = '[xADDomain]PrimaryDC'
+            ResourceName     = '[ADDomain]PrimaryDC'
             NodeName         = $Node.DCname
             RetryIntervalSec = 15
             RetryCount       = 60
         }
 
-<#
-        xADDomainController SecondaryDC
+
+        ADDomainController SecondaryDC
         {
-            DomainName = $Node.DomainName
-            DomainAdministratorCredential = $DomainAdminCredential
+            DomainName                    = $Node.DomainName
+            Credential                    = $DomainAdminCredential
             SafemodeAdministratorPassword = $LocalAdminCredential
-            DependsOn = "[xWaitForADDomain]DscDomainWait"
+            ReadOnlyReplica               = $true
+            DependsOn                     = "[WaitForADDomain]DscDomainWait"
         }
-#>
     }
 }
