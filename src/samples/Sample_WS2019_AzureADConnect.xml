@@ -5,10 +5,10 @@
                   version="1.0">
   <description>Sample Windows Server 2019 Lab Configuration DC, DHCP, Edge and a Member for testing Azure AD Connect.</description>
 
-  <settings labid="LABBUILDER-DCDHCPEDGE.COM "
-            domainname="LABBUILDER-DCDHCPEDGE.COM"
-            email="admina@LABBUILDER-DCDHCPEDGE.COM"
-            labpath="c:\vm\LABBUILDER-DCDHCPEDGE.COM"
+  <settings labid="LABBUILDER-AZUREADCONNECT.COM "
+            domainname="LABBUILDER-AZUREADCONNECT.COM"
+            email="admina@LABBUILDER-AZUREADCONNECT.COM"
+            labpath="c:\vm\LABBUILDER-AZUREADCONNECT.COM"
             dsclibrarypath="..\DSCLibrary\" />
 
   <switches>
