@@ -5,10 +5,13 @@ DSC Template Configuration File For use by LabBuilder
 .Desription
     Builds a Domain Controller as the first DC in a forest with the name of the Domain Name
     parameter passed.
+    The optional parameter DomainNetBiosName can be used to set the NetBios name of the domain
+    if it needs to be different from the DomainName.
     Setting optional parameters Forwarders, ADZones and PrimaryZones will allow additional
     configuration of the DNS Server.
 .Parameters:
     DomainName = "LABBUILDER.COM"
+    DomainNetBiosName = "LABBUILDER"
     DomainAdminPassword = "P@ssword!1"
     InstallRSATTools = $true
     Forwarders = @('8.8.8.8','8.8.4.4')
@@ -79,12 +82,26 @@ Configuration DC_FORESTPRIMARY
             }
         }
 
-        ADDomain PrimaryDC
+        if ($Node.DomainNetBiosName)
         {
-            DomainName                    = $Node.DomainName
-            Credential                    = $DomainAdminCredential
-            SafemodeAdministratorPassword = $LocalAdminCredential
-            DependsOn                     = "[WindowsFeature]ADDSInstall"
+            ADDomain PrimaryDC
+            {
+                DomainName                    = $Node.DomainName
+                DomainNetBiosName             = $Node.DomainNetBiosName
+                Credential                    = $DomainAdminCredential
+                SafemodeAdministratorPassword = $LocalAdminCredential
+                DependsOn                     = "[WindowsFeature]ADDSInstall"
+            }
+        }
+        else
+        {
+            ADDomain PrimaryDC
+            {
+                DomainName                    = $Node.DomainName
+                Credential                    = $DomainAdminCredential
+                SafemodeAdministratorPassword = $LocalAdminCredential
+                DependsOn                     = "[WindowsFeature]ADDSInstall"
+            }
         }
 
         WaitForADDomain DscDomainWait

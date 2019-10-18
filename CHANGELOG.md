@@ -8,6 +8,8 @@
   4.1.0.0.
 - `dsclibrary\RODC_SECONDARY.DSC.ps1`:
   - Enable RODC creation because it is supported by ActiveDirectoryDsc.
+- `dsclibrary\DC_FORESTPRIMARY.DSC.ps1`:
+  - Enabled customizing of Domain NetBios name.
 
 ## 1.0.4.83
 
