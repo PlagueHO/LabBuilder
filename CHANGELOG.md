@@ -1,5 +1,10 @@
 # Change Log
 
+## Unreleased
+
+- Samples\Sample_WS2019_AzureADConnect.xml: Added sample for installing Azure AD
+  Connect.
+
 ## 1.0.4.83
 
 - Change `psakefile.ps1` to detect Azure Pipelines correctly.
