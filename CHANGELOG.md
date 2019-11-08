@@ -10,6 +10,8 @@
   - Enable RODC creation because it is supported by ActiveDirectoryDsc.
 - `dsclibrary\DC_FORESTPRIMARY.DSC.ps1`:
   - Enabled customizing of Domain NetBios name.
+- `Get-LabVm.ps1`:
+  - Clean up code style.
 
 ## 1.0.4.83
 

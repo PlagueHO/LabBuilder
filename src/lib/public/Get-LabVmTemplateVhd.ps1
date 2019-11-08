@@ -237,7 +237,7 @@ function Get-LabVMTemplateVHD
         } # if
 
         # Get the disk size if provided
-        [Int64] $VHDSize = 25GB
+        [System.Int64] $VHDSize = 25GB
         if ($TemplateVHD.VHDSize)
         {
             $VHDSize = (Invoke-Expression $TemplateVHD.VHDSize)
