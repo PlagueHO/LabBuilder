@@ -5,23 +5,28 @@ function Get-Lab
     param
     (
         [Parameter(
-            Position=1,
-            Mandatory=$true)]
+            Position = 1,
+            Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
-        [System.String] $ConfigPath,
+        [System.String]
+        $ConfigPath,
 
         [Parameter(
-            Position=2)]
+            Position = 2)]
         [ValidateNotNullOrEmpty()]
-        [System.String] $LabPath,
+        [System.String]
+        $labPath,
 
         [Parameter(
-            Position=3)]
-        [Switch] $SkipXMLValidation
-    ) # Param
+            Position = 3)]
+        [Switch]
+        $SkipXMLValidation
+    )
 
-    # If a relative path to the config has been specified
-    # then convert it to absolute path
+    <#
+        If a relative path to the config has been specified
+        then convert it to absolute path
+    #>
     if (-not [System.IO.Path]::IsPathRooted($ConfigPath))
     {
         $ConfigPath = Join-Path `
@@ -32,22 +37,23 @@ function Get-Lab
     if (-not (Test-Path -Path $ConfigPath))
     {
         $exceptionParameters = @{
-            errorId = 'ConfigurationFileNotFoundError'
+            errorId       = 'ConfigurationFileNotFoundError'
             errorCategory = 'InvalidArgument'
-            errorMessage = $($LocalizedData.ConfigurationFileNotFoundError `
-                -f $ConfigPath)
+            errorMessage  = $($LocalizedData.ConfigurationFileNotFoundError `
+                    -f $ConfigPath)
         }
         New-LabException @exceptionParameters
     } # if
 
-    $Content = Get-Content -Path $ConfigPath -Raw
-    if (-not $Content)
+    $content = Get-Content -Path $ConfigPath -Raw
+
+    if (-not $content)
     {
         $exceptionParameters = @{
-            errorId = 'ConfigurationFileEmptyError'
+            errorId       = 'ConfigurationFileEmptyError'
             errorCategory = 'InvalidArgument'
-            errorMessage = $($LocalizedData.ConfigurationFileEmptyError `
-                -f $ConfigPath)
+            errorMessage  = $($LocalizedData.ConfigurationFileEmptyError `
+                    -f $ConfigPath)
         }
         New-LabException @exceptionParameters
     } # if
@@ -61,118 +67,107 @@ function Get-Lab
     }
 
     # The XML passes the Schema check so load it.
-    $Lab = New-Object -TypeName System.Xml.XmlDocument
-    $Lab.PreserveWhitespace = $true
-    $Lab.LoadXML($Content)
+    $lab = New-Object -TypeName System.Xml.XmlDocument
+    $lab.PreserveWhitespace = $true
+    $lab.LoadXML($content)
 
     # Check the Required Windows Build
-    $RequiredWindowsBuild = $Lab.labbuilderconfig.settings.requiredwindowsbuild
-    if ($RequiredWindowsBuild -and `
-        ($Script:CurrentBuild -lt $RequiredWindowsBuild))
+    $requiredWindowsBuild = $lab.labbuilderconfig.settings.requiredwindowsbuild
+
+    if ($requiredWindowsBuild -and `
+        ($Script:CurrentBuild -lt $requiredWindowsBuild))
     {
         $exceptionParameters = @{
-            errorId = 'RequiredBuildNotMetError'
+            errorId       = 'RequiredBuildNotMetError'
             errorCategory = 'InvalidArgument'
-            errorMessage = $($LocalizedData.RequiredBuildNotMetError `
-                -f $Script:CurrentBuild,$RequiredWindowsBuild)
+            errorMessage  = $($LocalizedData.RequiredBuildNotMetError `
+                    -f $Script:CurrentBuild, $requiredWindowsBuild)
         }
         New-LabException @exceptionParameters
     } # if
 
-    # Figure out the Config path and load it into the XML object (if we can)
-    # This path is used to find any additional configuration files that might
-    # be provided with config
+    <#
+        Figure out the Config path and load it into the XML object (if we can)
+        This path is used to find any additional configuration files that might
+        be provided with config
+    #>
     [System.String] $ConfigPath = [System.IO.Path]::GetDirectoryName($ConfigPath)
-    [System.String] $XMLConfigPath = $Lab.labbuilderconfig.settings.configpath
-    if ($XMLConfigPath) {
-        if (-not [System.IO.Path]::IsPathRooted($XMLConfigurationPath))
-        {
-            # A relative path was provided in the config path so add the actual path of the
-            # XML to it
-            [System.String] $FullConfigPath = Join-Path `
-                -Path $ConfigPath `
-                -ChildPath $XMLConfigPath
-        } # if
+    [System.String] $xmlConfigPath = $lab.labbuilderconfig.settings.configpath
+
+    if ($xmlConfigPath)
+    {
+        $xmlConfigPath = ConvertTo-LabAbsolutePath -Path $xmlConfigPath -BasePath $labPath
     }
     else
     {
-        [System.String] $FullConfigPath = $ConfigPath
+        [System.String] $fullConfigPath = $ConfigPath
     }
-    $Lab.labbuilderconfig.settings.setattribute('fullconfigpath',$FullConfigPath)
+
+    $lab.labbuilderconfig.settings.setattribute('fullconfigpath', $fullConfigPath)
 
     # if the LabPath was passed as a parameter, set it in the config
-    if ($LabPath)
+    if ($labPath)
     {
-        $Lab.labbuilderconfig.settings.SetAttribute('labpath',$LabPath)
+        $lab.labbuilderconfig.settings.SetAttribute('labpath', $labPath)
     }
     else
     {
-        [System.String] $LabPath = $Lab.labbuilderconfig.settings.labpath
+        [System.String] $labPath = $lab.labbuilderconfig.settings.labpath
     }
 
     # Get the VHDParentPathFull - if it isn't supplied default
-    [System.String] $VHDParentPath = $Lab.labbuilderconfig.settings.vhdparentpath
-    if (-not $VHDParentPath)
+    [System.String] $vhdParentPath = $lab.labbuilderconfig.settings.vhdparentpath
+
+    if (-not $vhdParentPath)
     {
-        $VHDParentPath = 'Virtual Hard Disk Templates'
+        $vhdParentPath = 'Virtual Hard Disk Templates'
     }
+
     # if the resulting parent path is not rooted make the root the Lab Path
-    if (-not ([System.IO.Path]::IsPathRooted($VHDParentPath)))
-    {
-        $VHDParentPath = Join-Path `
-            -Path $LabPath `
-            -ChildPath $VHDParentPath
-    } # if
-    $Lab.labbuilderconfig.settings.setattribute('vhdparentpathfull',$VHDParentPath)
+    $vhdParentPath = ConvertTo-LabAbsolutePath -Path $vhdParentPath -BasePath $labPath
+    $lab.labbuilderconfig.settings.setattribute('vhdparentpathfull', $vhdParentPath)
 
     # Get the DSCLibraryPathFull - if it isn't supplied default
-    [System.String] $DSCLibraryPath = $Lab.labbuilderconfig.settings.dsclibrarypath
-    if (-not $DSCLibraryPath)
+    [System.String] $dscLibraryPath = $lab.labbuilderconfig.settings.dsclibrarypath
+
+    if (-not $dscLibraryPath)
     {
-        $DSCLibraryPath = 'DSCLibrary'
+        $dscLibraryPath = Get-LabBuilderModulePath | Join-Path -ChildPath 'dsclibrary'
     } # if
+
     # if the resulting parent path is not rooted make the root the Full config path
-    if (-not [System.IO.Path]::IsPathRooted($DSCLibraryPath))
-    {
-        $DSCLibraryPath = Join-Path `
-            -Path $Lab.labbuilderconfig.settings.fullconfigpath `
-            -ChildPath $DSCLibraryPath
-    } # if
-    $Lab.labbuilderconfig.settings.setattribute('dsclibrarypathfull',$DSCLibraryPath)
+    $dscLibraryPath = ConvertTo-LabAbsolutePath -Path $dscLibraryPath -BasePath $labPath
+    $lab.labbuilderconfig.settings.setattribute('dsclibrarypathfull', $dscLibraryPath)
 
     # Get the ResourcePathFull - if it isn't supplied default
-    [System.String] $ResourcePath = $Lab.labbuilderconfig.settings.resourcepath
-    if (-not $ResourcePath)
+    [System.String] $resourcePath = $lab.labbuilderconfig.settings.resourcepath
+
+    if (-not $resourcePath)
     {
-        $ResourcePath = 'Resource'
+        $resourcePath = 'Resource'
     } # if
+
     # if the resulting Resource path is not rooted make the root the Lab Path
-    if (-not [System.IO.Path]::IsPathRooted($ResourcePath))
-    {
-        $ResourcePath = Join-Path `
-            -Path $LabPath `
-            -ChildPath $ResourcePath
-    } # if
-    $Lab.labbuilderconfig.settings.setattribute('resourcepathfull',$ResourcePath)
+    $resourcePath = ConvertTo-LabAbsolutePath -Path $resourcePath -BasePath $labPath
+    $lab.labbuilderconfig.settings.setattribute('resourcepathfull', $resourcePath)
 
-    # Determine the ModulePath where alternate Lab PowerShell Modules can be found.
-    # If a path is specified but it is relative, make it relative to the lab path.
-    # Otherwise use it as is.
-    [System.String] $ModulePath = $Lab.labbuilderconfig.settings.modulepath
-    if ($ModulePath)
+    <#
+        Determine the ModulePath where alternate Lab PowerShell Modules can be found.
+        If a path is specified but it is relative, make it relative to the lab path.
+        Otherwise use it as is.
+    #>
+    [System.String] $modulePath = $lab.labbuilderconfig.settings.modulepath
+
+    if ($modulePath)
     {
-        if (-not [System.IO.Path]::IsPathRooted($ModulePath))
-        {
-            $ModulePath = Join-Path `
-                -Path $LabPath `
-                -ChildPath $ModulePath
-        } # if
+        $modulePath = ConvertTo-LabAbsolutePath -Path $modulePath -BasePath $labPath
+
         # If the path is not included in the PSModulePath add it
-        if (-not $env:PSModulePath.ToLower().Contains($ModulePath.ToLower() + ';'))
+        if (-not $env:PSModulePath.ToLower().Contains($modulePath.ToLower() + ';'))
         {
-            $env:PSModulePath = "$ModulePath;" + $env:PSModulePath
+            $env:PSModulePath = "$modulePath;" + $env:PSModulePath
         } # if
     } # if
 
-    Return $Lab
+    return $lab
 } # Get-Lab

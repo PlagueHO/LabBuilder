@@ -9,7 +9,6 @@
             domainname="LABBUILDER-DOMAINCLUSTERING.COM"
             email="admin@LABBUILDER-DOMAINCLUSTERING.COM"
             labpath="c:\vm\LABBUILDER-DOMAINCLUSTERING.COM"
-            dsclibrarypath="..\DSCLibrary\"
             requiredwindowsbuild="10586" />
 
   <resources>

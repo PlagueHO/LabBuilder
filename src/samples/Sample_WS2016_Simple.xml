@@ -8,8 +8,7 @@
   <settings labid="LABBUILDER-SIMPLE.COM "
             domainname="LABBUILDER-SIMPLE.COM"
             email="admin@LABBUILDER-SIMPLE.COM"
-            labpath="c:\vm\LABBUILDER-SIMPLE.COM"
-            dsclibrarypath="..\DSCLibrary\" />
+            labpath="c:\vm\LABBUILDER-SIMPLE.COM" />
 
   <switches>
     <switch name="External" type="External">

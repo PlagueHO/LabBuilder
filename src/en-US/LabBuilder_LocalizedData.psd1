@@ -104,6 +104,7 @@ ConvertFrom-StringData -StringData @'
     BindingAdapterUsedError = Error binding physical network adapter '{1}' to External Switch '{0}' because it is already bound to another External Switch.
     IPAddressError = The IP Address '{0}' is invalid.
     WSManNotEnabledError = WS-Man is not enabled.
+    WinRMServiceFailedToStartError = The WinRM service failed to start.
     PackageProviderNotInstalledError = The required package provider '{0}' is not installed.
     PackageSourceNotTrustedError = The required package source '{0}' is not trusted.
     PackageSourceNotRegisteredError = The required package source '{0}' is not registered.

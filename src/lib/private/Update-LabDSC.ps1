@@ -109,9 +109,9 @@ function Update-LabDSC
         }
 
         $module = ($installedModules |
-                Where-Object -FilterScript $filterScript |
-                Sort-Object -Property Version -Descending |
-                Select-Object -First 1)
+            Where-Object -FilterScript $filterScript |
+            Sort-Object -Property Version -Descending |
+            Select-Object -First 1)
 
         if ($module)
         {
@@ -227,9 +227,9 @@ function Update-LabDSC
         }
 
         # Remove any old self-signed certifcates for this VM
-        Get-ChildItem -Path cert:\LocalMachine\My `
-            | Where-Object { $_.FriendlyName -eq $Script:DSCCertificateFriendlyName } `
-            | Remove-Item
+        Get-ChildItem -Path cert:\LocalMachine\My |
+            Where-Object { $_.FriendlyName -eq $Script:DSCCertificateFriendlyName } |
+            Remove-Item
     } # if
 
     # Add the VM Self-Signed Certificate to the Local Machine store and get the Thumbprint
@@ -294,6 +294,7 @@ function Update-LabDSC
         # Find the location of the line containing "Node $AllNodes.NodeName {"
         [System.String] $Regex = '\s*Node\s.*{.*'
         $Matches = [regex]::matches($dscConfigContent, $Regex, 'IgnoreCase')
+
         if ($Matches.Count -eq 1)
         {
             $dscConfigContent = $dscConfigContent.`

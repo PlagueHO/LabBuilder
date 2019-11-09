@@ -9,7 +9,6 @@
             domainname="LABBUILDER-NAT.COM"
             email="admina@LABBUILDER-NAT.COM"
             labpath="c:\vm\LABBUILDER-NAT.COM"
-            dsclibrarypath="..\DSCLibrary\"
             requiredwindowsbuild="14295" />
 
   <resources>
