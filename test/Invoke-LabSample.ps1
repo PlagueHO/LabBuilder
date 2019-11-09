@@ -8,7 +8,7 @@ Function Test-StartLabVM {
         [System.String[]]$StartVMs
     )
     $Lab = Get-Lab -Config $Script:ConfigPath
-    [Array]$VMs = Get-LabVM `
+    [array] $VMs = Get-LabVM `
         -Lab $Lab `
         -Name $StartVMs
     Foreach ($VM in $VMs) {
