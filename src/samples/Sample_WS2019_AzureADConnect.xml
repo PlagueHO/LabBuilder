@@ -8,8 +8,7 @@
   <settings labid="LABBUILDER-AZUREADCONNECT.COM "
             domainname="LABBUILDER-AZUREADCONNECT.COM"
             email="admina@LABBUILDER-AZUREADCONNECT.COM"
-            labpath="c:\vm\LABBUILDER-AZUREADCONNECT.COM"
-            dsclibrarypath="..\DSCLibrary\" />
+            labpath="c:\vm\LABBUILDER-AZUREADCONNECT.COM" />
 
   <switches>
     <switch name="External" type="External">

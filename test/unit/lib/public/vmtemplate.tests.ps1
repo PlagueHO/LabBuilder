@@ -138,7 +138,7 @@ InModuleScope LabBuilder {
         Context 'When valid configuration is passed but no templates found' {
             It 'Returns Template Object that matches Expected Object' {
                 $Lab = Get-Lab -ConfigPath $script:TestConfigOKPath
-                [Array]$Templates = Get-LabVMTemplate -Lab $Lab
+                [array] $Templates = Get-LabVMTemplate -Lab $Lab
                 # Remove the SourceVHD values for any templates because they
                 # will usually be relative to the test folder and won't exist
                 foreach ($Template in $Templates)
@@ -193,7 +193,7 @@ InModuleScope LabBuilder {
             It 'Returns Template Object that matches Expected Object' {
                 $Lab = Get-Lab -ConfigPath $script:TestConfigOKPath
                 $Lab.labbuilderconfig.templates.SetAttribute('fromvm','Pester *')
-                [Array]$Templates = Get-LabVMTemplate -Lab $Lab
+                [array] $Templates = Get-LabVMTemplate -Lab $Lab
                 # Remove the SourceVHD values for any templates because they
                 # will usually be relative to the test folder and won't exist
                 foreach ($Template in $Templates)
@@ -324,7 +324,7 @@ InModuleScope LabBuilder {
         Mock Get-VM
 
         Context 'When Valid configuration is passed' {
-            [Array]$Templates = Get-LabVMTemplate -Lab $Lab
+            [array] $Templates = Get-LabVMTemplate -Lab $Lab
 
             It 'Does not throw an Exception' {
                 { Remove-LabVMTemplate -Lab $Lab -VMTemplates $Templates } | Should -Not -Throw

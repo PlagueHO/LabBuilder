@@ -212,7 +212,7 @@ function Get-LabVMTemplate
             -ChildPath ([System.IO.Path]::GetFileName($VMTemplate.vhd))
 
         # Write any template specific default VM attributes
-        [Int64] $MemoryStartupBytes = 1GB
+        [System.Int64] $MemoryStartupBytes = 1GB
         if ($Template.MemoryStartupBytes)
         {
             $MemoryStartupBytes = (Invoke-Expression $Template.MemoryStartupBytes)

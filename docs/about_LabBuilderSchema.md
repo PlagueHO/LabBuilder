@@ -92,7 +92,7 @@ The Parent VHD files are used as Parent VHD's to any Lab VM boot disks or cloned
 
 This optional attribute contains the path to the folder that will contain the DSC Library files used by the Virtual Machines in this Lab.
 If this folder is not rooted, it will be assumed to be a subfolder of the 'labpath'.
-If this setting is not set it will default to 'dsclibrary' and will therefore be a subfolder of the 'labpath'.
+If this setting is not set it will default to the 'dsclibrary' folder within this module and will not be a subfolder of the 'labpath'.
 Usually the content of this folder will either be provided with the Lab or created by copying the DSCLibrary folder provided with the LabBuilder module.
 
 Each Virtual Machine that is set to be configured by DSC requires a DSC configuration file that must be found in this folder.

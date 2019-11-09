@@ -4,21 +4,23 @@
 #Requires -version 5.1
 #Requires -RunAsAdministrator
 
-$moduleRoot = Split-Path `
+$script:LabBuidlerModuleRoot = Split-Path `
     -Path $MyInvocation.MyCommand.Path `
     -Parent
 
 #region LocalizedData
-$Culture = 'en-us'
-if (Test-Path -Path (Join-Path -Path $moduleRoot -ChildPath $PSUICulture))
+$culture = 'en-us'
+
+if (Test-Path -Path (Join-Path -Path $script:LabBuidlerModuleRoot -ChildPath $PSUICulture))
 {
-    $Culture = $PSUICulture
+    $culture = $PSUICulture
 }
+
 Import-LocalizedData `
     -BindingVariable LocalizedData `
     -Filename 'LabBuilder_LocalizedData.psd1' `
-    -BaseDirectory $moduleRoot `
-    -UICulture $Culture
+    -BaseDirectory $script:LabBuidlerModuleRoot `
+    -UICulture $culture
 #endregion
 
 #region Types
@@ -533,11 +535,11 @@ class LabDSCModule:System.ICloneable {
 #region ImportFunctions
 # Dot source any functions in the libs folder
 $libFiles = Get-ChildItem `
-    -Path (Join-Path -Path $moduleRoot -ChildPath 'lib') `
+    -Path (Join-Path -Path $script:LabBuidlerModuleRoot -ChildPath 'lib') `
     -Include '*.ps1' `
     -Recurse
 
-Foreach ($libFile in $libFiles)
+foreach ($libFile in $libFiles)
 {
     Write-Verbose -Message $($LocalizedData.ImportingLibFileMessage -f $libFile.Fullname)
     . $libFile.Fullname

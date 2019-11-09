@@ -8,8 +8,7 @@
   <settings labid="LBFUNCTIONS.LOCAL "
             domainname="LBFUNCTIONS.LOCAL"
             email="daniel@LBFUNCTIONS.LOCAL"
-            labpath="c:\vm\LBFUNCTIONS.LOCAL"
-            dsclibrarypath="..\DSCLibrary\" />
+            labpath="c:\vm\LBFUNCTIONS.LOCAL" />
 
   <resources isopath="ISOFiles">
     <iso name="SQL2016_Full_ENU"

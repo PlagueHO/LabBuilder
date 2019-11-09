@@ -8,8 +8,7 @@
   <settings labid="NANOTEST.COM "
             domainname="NANOTEST.COM"
             email="daniel@NANOTEST.COM"
-            labpath="c:\vm\NANOTEST.COM"
-            dsclibrarypath="..\DSCLibrary\" />
+            labpath="c:\vm\NANOTEST.COM" />
 
   <switches managementvlan="97">
     <switch name="General Purpose External" type="External">

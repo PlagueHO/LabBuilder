@@ -21,8 +21,7 @@
   <settings labid="DOMAINSQL2016.COM "
             domainname="DOMAINSQL2016.COM"
             email="admina@DOMAINSQL2016.COM"
-            labpath="c:\vm\DOMAINSQL2016.COM"
-            dsclibrarypath="..\DSCLibrary\" />
+            labpath="c:\vm\DOMAINSQL2016.COM" />
 
   <resources isopath="ISOFiles">
     <iso name="SQL2016_Full_ENU"

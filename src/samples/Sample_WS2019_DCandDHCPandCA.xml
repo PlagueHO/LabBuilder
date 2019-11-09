@@ -12,8 +12,7 @@
   <settings labid="LABBUILDER-DCANDDHCPANDCA.COM "
             domainname="LABBUILDER-DCANDDHCPANDCA.COM"
             email="admin@LABBUILDER-DCANDDHCPANDCA.COM"
-            labpath="c:\vm\LABBUILDER-DCANDDHCPANDCA.COM"
-            dsclibrarypath="..\DSCLibrary\" />
+            labpath="c:\vm\LABBUILDER-DCANDDHCPANDCA.COM" />
 
   <switches>
     <switch name="External" type="External">

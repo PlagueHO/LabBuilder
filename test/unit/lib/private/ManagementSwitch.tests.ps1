@@ -7,7 +7,8 @@ if (Get-Module -Name LabBuilder -All)
 
 Import-Module -Name (Join-Path -Path $global:LabBuilderProjectRoot -ChildPath 'src\LabBuilder.psd1') `
     -Force `
-    -DisableNameChecking
+    -DisableNameChecking `
+    -Verbose:$false
 Import-Module -Name (Join-Path -Path $global:LabBuilderProjectRoot -ChildPath 'test\testhelper\testhelper.psm1') `
     -Global
 

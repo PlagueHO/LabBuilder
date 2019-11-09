@@ -16,8 +16,7 @@
   <settings labid="LABBUILDER-ADFS.COM "
             domainname="LABBUILDER-ADFS.COM"
             email="admina@LABBUILDER-ADFS.COM"
-            labpath="c:\vm\LABBUILDER-ADFS.COM"
-            dsclibrarypath="..\DSCLibrary\" />
+            labpath="c:\vm\LABBUILDER-ADFS.COM" />
 
   <resources>
     <msu name="WMF5.1-WS2012R2-W81"
