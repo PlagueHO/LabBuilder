@@ -18,7 +18,7 @@ function Get-LabBuilderModulePath
         $exceptionParameters = @{
             errorId       = 'LabBuilderModuleNotLoadedError'
             errorCategory = 'InvalidArgument'
-            errorMessage  = $($LocalizedData.LabBuilderModulePathDetectionError)
+            errorMessage  = $($LocalizedData.LabBuilderModuleNotLoadedError)
         }
         New-LabException @exceptionParameters
     }
