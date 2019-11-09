@@ -99,7 +99,7 @@ Configuration MEMBER_DHCPNPAS
 
         WaitForAll DC
         {
-            ResourceName     = '[xADDomain]PrimaryDC'
+            ResourceName     = '[ADDomainPrimaryDC'
             NodeName         = $Node.DCname
             RetryIntervalSec = 15
             RetryCount       = 60

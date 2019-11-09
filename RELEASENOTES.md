@@ -1,5 +1,32 @@
 # Release Notes
 
+## What is New In LabBuilder Unreleased
+
+- Samples\Sample_WS2019_AzureADConnect.xml: Added sample for installing Azure AD
+  Connect.
+- Convert all DSC configurations to use ActiveDirectoryDsc version
+  4.1.0.0.
+- `dsclibrary\RODC_SECONDARY.DSC.ps1`:
+  - Enable RODC creation because it is supported by ActiveDirectoryDsc.
+- `dsclibrary\DC_FORESTPRIMARY.DSC.ps1`:
+  - Enabled customizing of Domain NetBios name.
+- `Get-LabVm.ps1`:
+  - Clean up code style.
+- `Enable-LabWSMan.ps1`:
+  - Improved function so that if WinRM Service is stopped it will be started.
+- `Get-Lab.ps1`:
+  - Clean up code style.
+  - Fix bug reading `configpath` from `settings` node.
+  - Changed to use `ConvertTo-LabAbsolutePath.ps1` to simplify code.
+  - Changed to automatically use the `DSCLibrary` folder that comes as part of
+    the LabBuilder module if the `dsclibrarypath` setting is not specified
+    in the lab configuration - fixes [Issue-335](https://github.com/PlagueHO/LabBuilder/issues/335).
+- `ConvertTo-LabAbsolutePath.ps1`:
+  - Added function to create an absolute path from a relative lab path.
+- Removed `dsclibrarypath` setting from all samples as it is no longer required.
+- `Get-LabResourceISO.ps1`:
+  - Clean up code style.
+
 ## What is New in LabBuilder 1.0.4.83
 
 - `Get-LabUnattendFileContent.ps1`:

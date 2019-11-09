@@ -13,41 +13,43 @@ function Get-LabResourceISO
         [Parameter(
             Position = 2)]
         [ValidateNotNullOrEmpty()]
-        [System.String[]] $Name
+        [System.String[]]
+        $Name
     )
 
-    # Determine the ISORootPath where the ISO files should be found.
-    # If no path is specified then look in the resource path.
-    # If a path is specified but it is relative, make it relative to the resource path.
-    # Otherwise use it as is.
-    [System.String] $ISORootPath = $Lab.labbuilderconfig.Resources.ISOPath
-    if ($ISORootPath)
+    <#
+        Determine the ISORootPath where the ISO files should be found.
+        If no path is specified then look in the resource path.
+        If a path is specified but it is relative, make it relative to the resource path.
+        Otherwise use it as is.
+    #>
+    [System.String] $isoRootPath = $Lab.labbuilderconfig.Resources.ISOPath
+
+    if ($isoRootPath)
     {
-        if (-not [System.IO.Path]::IsPathRooted($ISORootPath))
-        {
-            $ISORootPath = Join-Path `
-                -Path $Lab.labbuilderconfig.settings.resourcepathfull `
-                -ChildPath $ISORootPath
-        } # if
+        $isoRootPath = ConvertTo-LabAbsolutePath -Path $isoRootPath `
+            -BasePath $Lab.labbuilderconfig.settings.resourcepathfull
     }
     else
     {
-        $ISORootPath = $Lab.labbuilderconfig.settings.resourcepathfull
+        $isoRootPath = $Lab.labbuilderconfig.settings.resourcepathfull
     } # if
 
-    [LabResourceISO[]] $ResourceISOs = @()
+    [LabResourceISO[]] $resourceISOs = @()
+
     if ($Lab.labbuilderconfig.resources)
     {
-        foreach ($ISO in $Lab.labbuilderconfig.resources.iso)
+        foreach ($iso in $Lab.labbuilderconfig.resources.iso)
         {
-            $ISOName = $ISO.Name
-            if ($Name -and ($ISOName -notin $Name))
+            $isoName = $iso.Name
+
+            if ($Name -and ($isoName -notin $Name))
             {
                 # A names list was passed but this ISO wasn't included
                 continue
             } # if
 
-            if ($ISOName -eq 'iso')
+            if ($isoName -eq 'iso')
             {
                 $exceptionParameters = @{
                     errorId       = 'ResourceISONameIsEmptyError'
@@ -56,16 +58,13 @@ function Get-LabResourceISO
                 }
                 New-LabException @exceptionParameters
             } # if
-            $ResourceISO = [LabResourceISO]::New($ISOName)
-            $Path = $ISO.Path
-            if ($Path)
+
+            $resourceISO = [LabResourceISO]::New($isoName)
+            $path = $iso.Path
+
+            if ($path)
             {
-                if (-not [System.IO.Path]::IsPathRooted($Path))
-                {
-                    $Path = Join-Path `
-                        -Path $ISORootPath `
-                        -ChildPath $Path
-                } # if
+                $path = ConvertTo-LabAbsolutePath -Path $path -BasePath $isoRootPath
             }
             else
             {
@@ -74,17 +73,20 @@ function Get-LabResourceISO
                     errorId       = 'ResourceISOPathIsEmptyError'
                     errorCategory = 'InvalidArgument'
                     errorMessage  = $($LocalizedData.ResourceISOPathIsEmptyError `
-                            -f $ISOName)
+                            -f $isoName)
                 }
                 New-LabException @exceptionParameters
             }
-            if ($ISO.URL)
+
+            if ($iso.URL)
             {
-                $ResourceISO.URL = $ISO.URL
+                $resourceISO.URL = $iso.URL
             } # if
-            $ResourceISO.Path = $Path
-            $ResourceISOs += @( $ResourceISO )
+
+            $resourceISO.Path = $path
+            $resourceISOs += @( $resourceISO )
         } # foreach
     } # if
-    return $ResourceISOs
+
+    return $resourceISOs
 } # Get-LabResourceISO

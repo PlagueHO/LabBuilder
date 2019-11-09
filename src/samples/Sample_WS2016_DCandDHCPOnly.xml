@@ -8,8 +8,7 @@
   <settings labid="LABBUILDER-WS2016.COM "
             domainname="LABBUILDER-WS2016.COM"
             email="admin@LABBUILDER-WS2016.COM"
-            labpath="c:\vm\LABBUILDER-WS2016.COM"
-            dsclibrarypath="..\DSCLibrary\" />
+            labpath="c:\vm\LABBUILDER-WS2016.COM" />
 
   <resources>
   </resources>

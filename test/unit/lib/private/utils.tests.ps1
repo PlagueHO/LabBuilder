@@ -7,7 +7,8 @@ if (Get-Module -Name LabBuilder -All)
 
 Import-Module -Name (Join-Path -Path $global:LabBuilderProjectRoot -ChildPath 'src\LabBuilder.psd1') `
     -Force `
-    -DisableNameChecking
+    -DisableNameChecking `
+    -Verbose:$false
 Import-Module -Name (Join-Path -Path $global:LabBuilderProjectRoot -ChildPath 'test\testhelper\testhelper.psm1') `
     -Global
 
@@ -33,7 +34,7 @@ InModuleScope LabBuilder {
         -Force `
         -ErrorAction SilentlyContinue
 
-    Describe '\lib\private\Utils.ps1\Invoke-LabDownloadAndUnzipFile' {
+    Describe '\lib\private\Invoke-LabDownloadAndUnzipFile.ps1' {
         $URL = 'https://raw.githubusercontent.com/PlagueHO/LabBuilder/dev/LICENSE'
 
         Context 'When Download folder does not exist' {
@@ -143,7 +144,7 @@ InModuleScope LabBuilder {
         }
     }
 
-    Describe '\lib\private\Utils.ps1\Invoke-LabDownloadResourceModule' {
+    Describe '\lib\private\Invoke-LabDownloadResourceModule.ps1' {
         $URL = 'https://github.com/PowerShell/NetworkingDsc/archive/dev.zip'
 
         Mock -CommandName Get-Module -MockWith { @( New-Object -TypeName PSObject -Property @{ Name = 'NetworkingDsc'; Version = '2.4.0.0'; } ) }
@@ -528,7 +529,7 @@ InModuleScope LabBuilder {
         }
     }
 
-    Describe '\lib\private\Utils.ps1\New-LabCredential' {
+    Describe '\lib\private\New-LabCredential.ps1' {
         Context 'When Username and Password provided' {
             $testUsername = 'testUsername'
             $testPassword = 'testPassword'
@@ -544,7 +545,7 @@ InModuleScope LabBuilder {
         }
     }
 
-    Describe '\lib\private\Utils.ps1\Install-LabHyperV' {
+    Describe '\lib\private\Install-LabHyperV.ps1' {
         $Lab = Get-Lab -ConfigPath $script:TestConfigOKPath
 
         if ((Get-CimInstance Win32_OperatingSystem).ProductType -eq 1) {
@@ -587,7 +588,7 @@ InModuleScope LabBuilder {
         }
     }
 
-    Describe '\lib\private\Utils.ps1\Enable-LabWSMan' {
+    Describe '\lib\private\Enable-LabWSMan.ps1' {
         Context 'When WS-Man is already enabled' {
             Mock -CommandName Start-Service
             Mock -CommandName Get-PSProvider -MockWith {
@@ -628,10 +629,10 @@ InModuleScope LabBuilder {
         }
     }
 
-    Describe '\lib\private\Utils.ps1\Assert-LabValidConfigurationXMLSchema' -Tag 'Incomplete' {
+    Describe '\lib\private\Assert-LabValidConfigurationXMLSchema.ps1' -Tag 'Incomplete' {
     }
 
-    Describe '\lib\private\Utils.ps1\Get-NextMacAddress' {
+    Describe '\lib\private\Get-NextMacAddress.ps1' {
         Context 'When MAC address 00155D0106ED is passed' {
             It 'Returns MAC address 00155D0106EE' {
                 Get-NextMacAddress `
@@ -656,7 +657,7 @@ InModuleScope LabBuilder {
         }
     }
 
-    Describe '\lib\private\Utils.ps1\Get-LabNextIpAddress' {
+    Describe '\lib\private\Get-LabNextIpAddress.ps1' {
         Context 'When Invalid IP Address is passed' {
             It 'Throws a IPAddressError Exception' {
                 $exceptionParameters = @{
@@ -719,7 +720,7 @@ InModuleScope LabBuilder {
         }
     }
 
-    Describe '\lib\private\Utils.ps1\Assert-LabValidIpAddress' {
+    Describe '\lib\private\Assert-LabValidIpAddress.ps1' {
         Context 'When IP address 192.168.1.1 is passed' {
             It 'Returns IP Address' {
                 Assert-LabValidIpAddress `
@@ -753,7 +754,7 @@ InModuleScope LabBuilder {
         }
     }
 
-    Describe '\lib\private\Utils.ps1\Install-LabPackageProvider' {
+    Describe '\lib\private\Install-LabPackageProvider.ps1' {
         Context 'When Required package providers already installed' {
             Mock -CommandName Get-PackageProvider -MockWith {
                 @(
@@ -791,7 +792,7 @@ InModuleScope LabBuilder {
 
 
 
-    Describe '\lib\private\Utils.ps1\Register-LabPackageSource' {
+    Describe '\lib\private\Register-LabPackageSource.ps1' {
         # Define this function because the built in definition does not
         # Mock -CommandName properly - the ProviderName parameter is not definied.
         function Register-PackageSource
@@ -899,7 +900,7 @@ InModuleScope LabBuilder {
         }
     }
 
-    Describe '\lib\private\Utils.ps1\Write-LabMessage' {
+    Describe '\lib\private\Write-LabMessage.ps1' {
         $script:testMessage = 'Test Message'
         $script:testMessageTime = Get-Date -UFormat %T
         $script:testMessageWithTime = ('[{0}]: {1}' -f $script:testMessageTime, $script:testMessage)
@@ -989,6 +990,26 @@ InModuleScope LabBuilder {
             It 'Calls appropriate mocks' {
                 Assert-MockCalled -CommandName Write-Host -ParameterFilter { $Object -eq $script:testMessage } -Exactly -Times 1
             }
+        }
+    }
+
+    Describe '\lib\private\ConvertTo-LabAbsolutePath.ps1' {
+        Context 'When absolute Path is passed' {
+            It 'Should return the absolute path' {
+                ConvertTo-LabAbsolutePath -Path 'c:\absolutepath' -BasePath 'c:\mylab' | Should -BeExactly 'c:\absolutepath'
+            }
+        }
+
+        Context 'When relative Path is passed' {
+            It 'Should return the absolute path' {
+                ConvertTo-LabAbsolutePath -Path 'relativepath' -BasePath 'c:\mylab' | Should -BeExactly 'c:\mylab\relativepath'
+            }
+        }
+    }
+
+    Describe '\lib\private\Get-LabBuilderModulePath.ps1' {
+        It 'Should return the path to the LabBuilder Module' {
+            Get-LabBuilderModulePath | Should -BeExactly (Join-Path -Path $global:LabBuilderProjectRoot -ChildPath 'src')
         }
     }
 }

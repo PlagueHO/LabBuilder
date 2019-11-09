@@ -16,8 +16,7 @@
   <settings labid="LABBUILDER-TWOFORESTS.COM "
             domainname="LABBUILDER-TWOFORESTS.COM"
             email="admina@LABBUILDER-TWOFORESTS.COM"
-            labpath="c:\vm\LABBUILDER-TWOFORESTS.COM"
-            dsclibrarypath="..\DSCLibrary\" />
+            labpath="c:\vm\LABBUILDER-TWOFORESTS.COM" />
 
   <resources>
     <msu name="WMF5.1-WS2012R2-W81"

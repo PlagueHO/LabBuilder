@@ -8,8 +8,7 @@
   <settings labid="LABBUILDER-SIMPLE.COM "
             domainname="LABBUILDER-SIMPLE.COM"
             email="admin@LABBUILDER-SIMPLE.COM"
-            labpath="c:\vm\LABBUILDER-SIMPLE.COM"
-            dsclibrarypath="..\DSCLibrary\" />
+            labpath="c:\vm\LABBUILDER-SIMPLE.COM" />
 
   <resources>
     <msu name="WMF5.1-WS2012R2-W81"

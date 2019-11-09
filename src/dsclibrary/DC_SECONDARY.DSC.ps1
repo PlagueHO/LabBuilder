@@ -30,7 +30,7 @@ DSC Template Configuration File For use by LabBuilder
 Configuration DC_SECONDARY
 {
     Import-DscResource -ModuleName 'PSDesiredStateConfiguration'
-    Import-DscResource -ModuleName xActiveDirectory
+    Import-DscResource -ModuleName ActiveDirectoryDsc -ModuleVersion 4.1.0.0
     Import-DscResource -ModuleName xDNSServer
 
     Node $AllNodes.NodeName {
@@ -78,21 +78,21 @@ Configuration DC_SECONDARY
             }
         }
 
-        xWaitForADDomain DscDomainWait
+        WaitForADDomain DscDomainWait
         {
-            DomainName           = $Node.DomainName
-            DomainUserCredential = $DomainAdminCredential
-            RetryCount           = 100
-            RetryIntervalSec     = 10
-            DependsOn            = "[WindowsFeature]ADDSInstall"
+            DomainName   = $Node.DomainName
+            Credential   = $DomainAdminCredential
+            WaitTimeout  = 300
+            RestartCount = 5
+            DependsOn    = "[WindowsFeature]ADDSInstall"
         }
 
-        xADDomainController SecondaryDC
+        ADDomainController SecondaryDC
         {
             DomainName                    = $Node.DomainName
-            DomainAdministratorCredential = $DomainAdminCredential
+            Credential                    = $DomainAdminCredential
             SafemodeAdministratorPassword = $LocalAdminCredential
-            DependsOn                     = "[xWaitForADDomain]DscDomainWait"
+            DependsOn                     = "[WaitForADDomain]DscDomainWait"
         }
 
         # DNS Server Settings
@@ -102,7 +102,7 @@ Configuration DC_SECONDARY
             {
                 IsSingleInstance = 'Yes'
                 IPAddresses      = $Node.Forwarders
-                DependsOn        = "[xADDomainController]SecondaryDC"
+                DependsOn        = "[ADDomainController]SecondaryDC"
             }
         }
         [System.Int32]$Count=0
@@ -114,7 +114,7 @@ Configuration DC_SECONDARY
                 Name             = $ADZone.Name
                 DynamicUpdate    = $ADZone.DynamicUpdate
                 ReplicationScope = $ADZone.ReplicationScope
-                DependsOn        = "[xADDomainController]SecondaryDC"
+                DependsOn        = "[ADDomainController]SecondaryDC"
             }
         }
         [System.Int32]$Count=0
@@ -126,7 +126,7 @@ Configuration DC_SECONDARY
                 Name          = $PrimaryZone.Name
                 ZoneFile      = $PrimaryZone.ZoneFile
                 DynamicUpdate = $PrimaryZone.DynamicUpdate
-                DependsOn     = "[xADDomainController]SecondaryDC"
+                DependsOn     = "[ADDomainController]SecondaryDC"
             }
         }
     }

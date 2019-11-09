@@ -50,4 +50,22 @@ function Enable-LabWSMan
             New-LabException @exceptionParameters
         } # if
     } # if
+
+    # Make sure the WinRM service is running
+    if ((Get-Service -Name WinRM).Status -ne 'Running')
+    {
+        try
+        {
+            Start-Service -Name WinRm -ErrorAction Stop
+        }
+        catch
+        {
+            $exceptionParameters = @{
+                errorId       = 'WinRMServiceFailedToStartError'
+                errorCategory = 'InvalidArgument'
+                errorMessage  = $($LocalizedData.WinRMServiceFailedToStartError)
+            }
+            New-LabException @exceptionParameters
+        }
+    }
 }

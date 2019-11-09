@@ -31,7 +31,8 @@
 function Copy-LabOdjFile
 {
     [CmdLetBinding()]
-    param (
+    param
+    (
         [Parameter(Mandatory = $true)]
         $Lab,
 
@@ -93,10 +94,10 @@ function Copy-LabOdjFile
             }
 
             # Connection has been made OK, upload the ODJ files
-            While ((-not $odjCopyComplete) `
+            while ((-not $odjCopyComplete) `
                 -and (((Get-Date) - $startTime).TotalSeconds) -lt $TimeOut)
             {
-                Try
+                try
                 {
                     Write-LabMessage -Message $($LocalizedData.CopyingFilesToVMMessage `
                         -f $VM.Name,'ODJ')
@@ -109,7 +110,7 @@ function Copy-LabOdjFile
                         -Verbose
                     $odjCopyComplete = $true
                 }
-                Catch
+                catch
                 {
                     Write-LabMessage -Message $($LocalizedData.CopyingFilesToVMFailedMessage `
                         -f $VM.Name,'ODJ',$Script:RetryConnectSeconds)
@@ -138,11 +139,11 @@ function Copy-LabOdjFile
         } # if
 
 
-            # Disconnect from the VM
-            Disconnect-LabVM `
-                -VM $VM `
-                -ErrorAction Continue
+        # Disconnect from the VM
+        Disconnect-LabVM `
+            -VM $VM `
+            -ErrorAction Continue
 
-            $complete = $true
+        $complete = $true
     } # while
 }

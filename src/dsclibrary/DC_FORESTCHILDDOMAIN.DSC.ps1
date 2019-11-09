@@ -31,7 +31,7 @@ DSC Template Configuration File For use by LabBuilder
 Configuration DC_FORESTCHILDDOMAIN
 {
     Import-DscResource -ModuleName 'PSDesiredStateConfiguration'
-    Import-DscResource -ModuleName xActiveDirectory
+    Import-DscResource -ModuleName ActiveDirectoryDsc -ModuleVersion 4.1.0.0
     Import-DscResource -ModuleName xDNSServer
 
     Node $AllNodes.NodeName {
@@ -81,22 +81,22 @@ Configuration DC_FORESTCHILDDOMAIN
             }
         }
 
-        xWaitForADDomain DscDomainWait
+        WaitForADDomain DscDomainWait
         {
             DomainName           = $Node.ParentDomainName
-            DomainUserCredential = $DomainAdminCredential
-            RetryCount           = 100
-            RetryIntervalSec     = 10
+            Credential           = $DomainAdminCredential
+            WaitTimeout          = 300
+            RestartCount         = 5
             DependsOn            = "[WindowsFeature]ADDSInstall"
         }
 
-        xADDomain PrimaryDC
+        ADDomain PrimaryDC
         {
             DomainName                    = $Node.DomainName
             ParentDomainName              = $Node.ParentDomainName
-            DomainAdministratorCredential = $DomainAdminCredential
+            Credential                    = $DomainAdminCredential
             SafemodeAdministratorPassword = $LocalAdminCredential
-            DependsOn                     = "[xWaitForADDomain]DscDomainWait"
+            DependsOn                     = "[WaitForADDomain]DscDomainWait"
         }
 
         # DNS Server Settings
@@ -106,7 +106,7 @@ Configuration DC_FORESTCHILDDOMAIN
             {
                 IsSingleInstance = 'Yes'
                 IPAddresses      = $Node.Forwarders
-                DependsOn        = "[xADDomain]PrimaryDC"
+                DependsOn        = "[ADDomain]PrimaryDC"
             }
         }
         $Count=0
@@ -119,7 +119,7 @@ Configuration DC_FORESTCHILDDOMAIN
                 Name             = $ADZone.Name
                 DynamicUpdate    = $ADZone.DynamicUpdate
                 ReplicationScope = $ADZone.ReplicationScope
-                DependsOn        = "[xADDomain]PrimaryDC"
+                DependsOn        = "[ADDomain]PrimaryDC"
             }
         }
         $Count=0
@@ -132,7 +132,7 @@ Configuration DC_FORESTCHILDDOMAIN
                 Name          = $PrimaryZone.Name
                 ZoneFile      = $PrimaryZone.ZoneFile
                 DynamicUpdate = $PrimaryZone.DynamicUpdate
-                DependsOn     = "[xADDomain]PrimaryDC"
+                DependsOn     = "[ADDomain]PrimaryDC"
             }
         }
     }

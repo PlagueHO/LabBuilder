@@ -5,10 +5,13 @@ DSC Template Configuration File For use by LabBuilder
 .Desription
     Builds a Domain Controller as the first DC in a forest with the name of the Domain Name
     parameter passed.
+    The optional parameter DomainNetBiosName can be used to set the NetBios name of the domain
+    if it needs to be different from the DomainName.
     Setting optional parameters Forwarders, ADZones and PrimaryZones will allow additional
     configuration of the DNS Server.
 .Parameters:
     DomainName = "LABBUILDER.COM"
+    DomainNetBiosName = "LABBUILDER"
     DomainAdminPassword = "P@ssword!1"
     InstallRSATTools = $true
     Forwarders = @('8.8.8.8','8.8.4.4')
@@ -29,7 +32,7 @@ DSC Template Configuration File For use by LabBuilder
 Configuration DC_FORESTPRIMARY
 {
     Import-DscResource -ModuleName 'PSDesiredStateConfiguration'
-    Import-DscResource -ModuleName xActiveDirectory
+    Import-DscResource -ModuleName ActiveDirectoryDsc -ModuleVersion 4.1.0.0
     Import-DscResource -ModuleName xDNSServer
 
     Node $AllNodes.NodeName {
@@ -79,36 +82,51 @@ Configuration DC_FORESTPRIMARY
             }
         }
 
-        xADDomain PrimaryDC
+        if ($Node.DomainNetBiosName)
         {
-            DomainName                    = $Node.DomainName
-            DomainAdministratorCredential = $DomainAdminCredential
-            SafemodeAdministratorPassword = $LocalAdminCredential
-            DependsOn                     = "[WindowsFeature]ADDSInstall"
+            ADDomain PrimaryDC
+            {
+                DomainName                    = $Node.DomainName
+                DomainNetBiosName             = $Node.DomainNetBiosName
+                Credential                    = $DomainAdminCredential
+                SafemodeAdministratorPassword = $LocalAdminCredential
+                DependsOn                     = "[WindowsFeature]ADDSInstall"
+            }
+        }
+        else
+        {
+            ADDomain PrimaryDC
+            {
+                DomainName                    = $Node.DomainName
+                Credential                    = $DomainAdminCredential
+                SafemodeAdministratorPassword = $LocalAdminCredential
+                DependsOn                     = "[WindowsFeature]ADDSInstall"
+            }
         }
 
-        xWaitForADDomain DscForestWait
+        WaitForADDomain DscDomainWait
         {
-            DomainName           = $Node.DomainName
-            DomainUserCredential = $DomainAdminCredential
-            RetryCount           = 20
-            RetryIntervalSec     = 30
-            DependsOn            = "[xADDomain]PrimaryDC"
+            DomainName   = $Node.DomainName
+            Credential   = $DomainAdminCredential
+            WaitTimeout  = 300
+            RestartCount = 5
+            DependsOn    = "[ADDomain]PrimaryDC"
         }
 
         # Enable AD Recycle bin
-        xADRecycleBin RecycleBin
+        ADOptionalFeature RecycleBin
         {
+            FeatureName                       = "Recycle Bin Feature"
             EnterpriseAdministratorCredential = $DomainAdminCredential
             ForestFQDN                        = $Node.DomainName
-            DependsOn                         = "[xWaitForADDomain]DscForestWait"
+            DependsOn                         = "[WaitForADDomain]DscDomainWait"
         }
 
         # Install a KDS Root Key so we can create MSA/gMSA accounts
         Script CreateKDSRootKey
         {
             SetScript  = {
-                Add-KDSRootKey -EffectiveTime ((Get-Date).AddHours(-10))            }
+                Add-KDSRootKey -EffectiveTime ((Get-Date).AddHours(-10)) }
             GetScript  = {
                 Return @{
                     KDSRootKey = (Get-KDSRootKey)
@@ -122,7 +140,7 @@ Configuration DC_FORESTPRIMARY
                 }
                 Return $true
             }
-            DependsOn  = '[xWaitForADDomain]DscForestWait'
+            DependsOn  = '[WaitForADDomain]DscDomainWait'
         }
 
         # DNS Server Settings
@@ -132,10 +150,11 @@ Configuration DC_FORESTPRIMARY
             {
                 IsSingleInstance = 'Yes'
                 IPAddresses      = $Node.Forwarders
-                DependsOn        = "[xWaitForADDomain]DscForestWait"
+                DependsOn        = "[WaitForADDomain]DscDomainWait"
             }
         }
-        $Count=0
+
+        $Count = 0
         foreach ($ADZone in $Node.ADZones)
         {
             $Count++
@@ -145,10 +164,11 @@ Configuration DC_FORESTPRIMARY
                 Name             = $ADZone.Name
                 DynamicUpdate    = $ADZone.DynamicUpdate
                 ReplicationScope = $ADZone.ReplicationScope
-                DependsOn        = "[xWaitForADDomain]DscForestWait"
+                DependsOn        = "[WaitForADDomain]DscDomainWait"
             }
         }
-        $Count=0
+
+        $Count = 0
         foreach ($PrimaryZone in $Node.PrimaryZones)
         {
             $Count++
@@ -158,7 +178,7 @@ Configuration DC_FORESTPRIMARY
                 Name          = $PrimaryZone.Name
                 ZoneFile      = $PrimaryZone.ZoneFile
                 DynamicUpdate = $PrimaryZone.DynamicUpdate
-                DependsOn     = "[xWaitForADDomain]DscForestWait"
+                DependsOn     = "[WaitForADDomain]DscDomainWait"
             }
         }
         <#
@@ -168,7 +188,7 @@ Configuration DC_FORESTPRIMARY
             Name = $Node.ReverseZone
             DynamicUpdate =
             Ensure = 'Present'
-            DependsOn = '[xWaitForADDomain]DscForestWait'
+            DependsOn = '[WaitForADDomain]DscDomainWait'
         }
 
         # Create a Global Names zone - can't do this until the resource supports it
@@ -177,7 +197,7 @@ Configuration DC_FORESTPRIMARY
             Name = 'GlobalNames'
             DynamicUpdate =
             Ensure = 'Present'
-            DependsOn = '[xWaitForADDomain]DscForestWait'
+            DependsOn = '[WaitForADDomain]DscDomainWait'
         }
 
         # Enable GlobalNames in DNS Server

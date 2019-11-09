@@ -12,7 +12,7 @@
 RootModule = 'LabBuilder.psm1'
 
 # Version number of this module.
-ModuleVersion = '1.0.4.83'
+ModuleVersion = '1.0.5.83'
 
 # Supported PSEditions
 CompatiblePSEditions = 'Desktop'
@@ -69,14 +69,14 @@ FormatsToProcess = @()
 # NestedModules = @()
 
 # Functions to export from this module, for best performance, do not use wildcards and do not delete the entry, use an empty array if there are no functions to export.
-FunctionsToExport = 'Get-LabResourceModule', 'Initialize-LabResourceModule', 
-               'Get-LabResourceMSU', 'Initialize-LabResourceMSU', 
-               'Get-LabResourceISO', 'Initialize-LabResourceISO', 'Get-LabSwitch', 
-               'Initialize-LabSwitch', 'Remove-LabSwitch', 'Get-LabVMTemplateVHD', 
-               'Initialize-LabVMTemplateVHD', 'Remove-LabVMTemplateVHD', 
-               'Get-LabVMTemplate', 'Initialize-LabVMTemplate', 
-               'Remove-LabVMTemplate', 'Get-LabVM', 'Initialize-LabVM', 
-               'Install-LabVM', 'Remove-LabVM', 'Get-Lab', 'New-Lab', 'Install-Lab', 
+FunctionsToExport = 'Get-LabResourceModule', 'Initialize-LabResourceModule',
+               'Get-LabResourceMSU', 'Initialize-LabResourceMSU',
+               'Get-LabResourceISO', 'Initialize-LabResourceISO', 'Get-LabSwitch',
+               'Initialize-LabSwitch', 'Remove-LabSwitch', 'Get-LabVMTemplateVHD',
+               'Initialize-LabVMTemplateVHD', 'Remove-LabVMTemplateVHD',
+               'Get-LabVMTemplate', 'Initialize-LabVMTemplate',
+               'Remove-LabVMTemplate', 'Get-LabVM', 'Initialize-LabVM',
+               'Install-LabVM', 'Remove-LabVM', 'Get-Lab', 'New-Lab', 'Install-Lab',
                'Update-Lab', 'Uninstall-Lab', 'Start-Lab', 'Stop-Lab'
 
 # Cmdlets to export from this module, for best performance, do not use wildcards and do not delete the entry, use an empty array if there are no cmdlets to export.
@@ -116,6 +116,33 @@ PrivateData = @{
 
         # ReleaseNotes of this module
         ReleaseNotes = '
+## What is New In LabBuilder Unreleased
+
+- Samples\Sample_WS2019_AzureADConnect.xml: Added sample for installing Azure AD
+  Connect.
+- Convert all DSC configurations to use ActiveDirectoryDsc version
+  4.1.0.0.
+- `dsclibrary\RODC_SECONDARY.DSC.ps1`:
+  - Enable RODC creation because it is supported by ActiveDirectoryDsc.
+- `dsclibrary\DC_FORESTPRIMARY.DSC.ps1`:
+  - Enabled customizing of Domain NetBios name.
+- `Get-LabVm.ps1`:
+  - Clean up code style.
+- `Enable-LabWSMan.ps1`:
+  - Improved function so that if WinRM Service is stopped it will be started.
+- `Get-Lab.ps1`:
+  - Clean up code style.
+  - Fix bug reading `configpath` from `settings` node.
+  - Changed to use `ConvertTo-LabAbsolutePath.ps1` to simplify code.
+  - Changed to automatically use the `DSCLibrary` folder that comes as part of
+    the LabBuilder module if the `dsclibrarypath` setting is not specified
+    in the lab configuration - fixes [Issue-335](https://github.com/PlagueHO/LabBuilder/issues/335).
+- `ConvertTo-LabAbsolutePath.ps1`:
+  - Added function to create an absolute path from a relative lab path.
+- Removed `dsclibrarypath` setting from all samples as it is no longer required.
+- `Get-LabResourceISO.ps1`:
+  - Clean up code style.
+
 ## What is New in LabBuilder 1.0.4.83
 
 - `Get-LabUnattendFileContent.ps1`:

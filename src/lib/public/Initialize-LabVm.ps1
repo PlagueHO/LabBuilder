@@ -164,8 +164,10 @@ function Initialize-LabVM
         } # if
 
         # Enable/Disable Dynamic Memory
+        Write-Verbose -Message "Checking Dynamic Memory: $($VM.DynamicMemoryEnabled) = $((Get-VMMemory -VMName $VM.Name).DynamicMemoryEnabled)" -Verbose
         if ($VM.DynamicMemoryEnabled -ne (Get-VMMemory -VMName $VM.Name).DynamicMemoryEnabled)
         {
+            Write-Verbose -Message "Checking Dynamic Memory: $($VM.DynamicMemoryEnabled)" -Verbose
             Set-VMMemory `
                 -VMName $VM.Name `
                 -DynamicMemoryEnabled:$($VM.DynamicMemoryEnabled)

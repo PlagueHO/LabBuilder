@@ -7,7 +7,8 @@ if (Get-Module -Name LabBuilder -All)
 
 Import-Module -Name (Join-Path -Path $global:LabBuilderProjectRoot -ChildPath 'src\LabBuilder.psd1') `
     -Force `
-    -DisableNameChecking
+    -DisableNameChecking `
+    -Verbose:$false
 Import-Module -Name (Join-Path -Path $global:LabBuilderProjectRoot -ChildPath 'test\testhelper\testhelper.psm1') `
     -Global
 
@@ -143,11 +144,11 @@ InModuleScope LabBuilder {
         Mock -CommandName Disable-VMIntegrationService
 
         $Lab = Get-Lab -ConfigPath $script:TestConfigOKPath
-        [Array]$Templates = Get-LabVMTemplate -Lab $Lab
-        [Array]$Switches = Get-LabSwitch -Lab $Lab
+        [array] $Templates = Get-LabVMTemplate -Lab $Lab
+        [array] $Switches = Get-LabSwitch -Lab $Lab
 
         Context 'When valid configuration is passed with null Integration Services' {
-            [Array]$VMs = Get-LabVM -Lab $Lab -VMTemplates $Templates -Switches $Switches
+            [array] $VMs = Get-LabVM -Lab $Lab -VMTemplates $Templates -Switches $Switches
             $VMs[0].IntegrationServices = $null
 
             It 'Does not throw an Exception' {
@@ -162,7 +163,7 @@ InModuleScope LabBuilder {
         }
 
         Context 'When valid configuration is passed with blank Integration Services' {
-            [Array]$VMs = Get-LabVM -Lab $Lab -VMTemplates $Templates -Switches $Switches
+            [array] $VMs = Get-LabVM -Lab $Lab -VMTemplates $Templates -Switches $Switches
             $VMs[0].IntegrationServices = ''
 
             It 'Does not throw an Exception' {
@@ -177,7 +178,7 @@ InModuleScope LabBuilder {
         }
 
         Context 'When valid configuration is passed with VSS only enabled' {
-            [Array]$VMs = Get-LabVM -Lab $Lab -VMTemplates $Templates -Switches $Switches
+            [array] $VMs = Get-LabVM -Lab $Lab -VMTemplates $Templates -Switches $Switches
             $VMs[0].IntegrationServices = 'VSS'
 
             It 'Does not throw an Exception' {
@@ -192,7 +193,7 @@ InModuleScope LabBuilder {
         }
 
         Context 'When valid configuration is passed with Guest Service Interface only enabled' {
-            [Array]$VMs = Get-LabVM -Lab $Lab -VMTemplates $Templates -Switches $Switches
+            [array] $VMs = Get-LabVM -Lab $Lab -VMTemplates $Templates -Switches $Switches
             $VMs[0].IntegrationServices = 'Guest Service Interface'
 
             It 'Does not throw an Exception' {
@@ -237,9 +238,9 @@ InModuleScope LabBuilder {
         # The same VM will be used for all tests, but a different
         # DataVHds array will be created/assigned for each test.
         $Lab = Get-Lab -ConfigPath $script:TestConfigOKPath
-        [Array]$Templates = Get-LabVMTemplate -Lab $Lab
-        [Array]$Switches = Get-LabSwitch -Lab $Lab
-        [Array]$VMs = Get-LabVM -Lab $Lab -VMTemplates $Templates -Switches $Switches
+        [array] $Templates = Get-LabVMTemplate -Lab $Lab
+        [array] $Switches = Get-LabSwitch -Lab $Lab
+        [array] $VMs = Get-LabVM -Lab $Lab -VMTemplates $Templates -Switches $Switches
 
         Context 'When valid configuration is passed with no DataVHDs' {
             $VMs[0].DataVHDs = @()
@@ -711,9 +712,9 @@ InModuleScope LabBuilder {
         # The same VM will be used for all tests, but a different
         # DVD Drives array will be created/assigned for each test.
         $Lab = Get-Lab -ConfigPath $script:TestConfigOKPath
-        [Array]$Templates = Get-LabVMTemplate -Lab $Lab
-        [Array]$Switches = Get-LabSwitch -Lab $Lab
-        [Array]$VMs = Get-LabVM -Lab $Lab -VMTemplates $Templates -Switches $Switches
+        [array] $Templates = Get-LabVMTemplate -Lab $Lab
+        [array] $Switches = Get-LabSwitch -Lab $Lab
+        [array] $VMs = Get-LabVM -Lab $Lab -VMTemplates $Templates -Switches $Switches
 
         Context 'When valid configuration is passed with no DVDDrives' {
             $VMs[0].DVDDrives = @()

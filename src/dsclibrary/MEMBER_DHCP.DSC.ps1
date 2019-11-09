@@ -88,7 +88,7 @@ Configuration MEMBER_DHCP
 
         WaitForAll DC
         {
-            ResourceName     = '[xADDomain]PrimaryDC'
+            ResourceName     = '[ADDomainPrimaryDC'
             NodeName         = $Node.DCname
             RetryIntervalSec = 15
             RetryCount       = 60

@@ -1,18 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
 
 <labbuilderconfig xmlns="labbuilderconfig"
-                  name="Sample_WS2019_DcandDHCPandCA"
+                  name="Sample_WS2019_AzureADConnect"
                   version="1.0">
-  <description>
-  Sample Windows Server 2019 Lab Configuration Domain with multiple DCs, DHCP Servers, PKI with enterprise CA.
+  <description>Sample Windows Server 2019 Lab Configuration DC, DHCP, Edge and a Member for testing Azure AD Connect.</description>
 
-  Useful for general experimentation and testing of Windows Server 2019 features.
-  </description>
-
-  <settings labid="LABBUILDER-DCANDDHCPANDCA.COM "
-            domainname="LABBUILDER-DCANDDHCPANDCA.COM"
-            email="admin@LABBUILDER-DCANDDHCPANDCA.COM"
-            labpath="c:\vm\LABBUILDER-DCANDDHCPANDCA.COM" />
+  <settings labid="LABBUILDER-AZUREADCONNECT.COM "
+            domainname="LABBUILDER-AZUREADCONNECT.COM"
+            email="admina@LABBUILDER-AZUREADCONNECT.COM"
+            labpath="c:\vm\LABBUILDER-AZUREADCONNECT.COM" />
 
   <switches>
     <switch name="External" type="External">
@@ -23,6 +19,7 @@
         <adapter name="LM" macaddress="00155D010704" />
       </adapters>
     </switch>
+    <switch name="Domain Internal" type="Internal" />
     <switch name="Domain Private Site A" type="Private" vlan="2" />
   </switches>
 
@@ -30,7 +27,7 @@
                 vhdpath="VHDFiles"
                 prefix="" >
     <templatevhd name="Windows Server 2019 Datacenter Full"
-                 iso="17763.379.190312-0539.rs5_release_svc_refresh_SERVER_EVAL_x64FRE_en-us.iso"
+                 iso="14393.0.161119-1705.RS1_REFRESH_SERVER_EVAL_X64FRE_EN-US.ISO"
                  url="https://software-download.microsoft.com/download/sg/"
                  vhd="Windows Server 2019 Datacenter Full.vhdx"
                  edition="Windows Server 2019 SERVERDATACENTER"
@@ -40,7 +37,7 @@
                  generation="2"
                  vhdsize="40GB" />
     <templatevhd name="Windows Server 2019 Datacenter CORE"
-                 iso="17763.379.190312-0539.rs5_release_svc_refresh_SERVER_EVAL_x64FRE_en-us.iso"
+                 iso="14393.0.161119-1705.RS1_REFRESH_SERVER_EVAL_X64FRE_EN-US.ISO"
                  url="https://software-download.microsoft.com/download/sg/"
                  vhd="Windows Server 2019 Datacenter Core.vhdx"
                  edition="Windows Server 2019 SERVERDATACENTERCORE"
@@ -128,10 +125,16 @@
                  IPAddress = '192.168.128.16';
                  AddressFamily = 'IPv4'
               },
-              @{ Name = 'SA-ROOTCA';
+              @{ Name = 'SA-AADC';
                  ScopeID = '192.168.128.0';
-                 ClientMACAddress = '000000000009';
-                 IPAddress = '192.168.128.23';
+                 ClientMACAddress = '000000000005';
+                 IPAddress = '192.168.128.17';
+                 AddressFamily = 'IPv4'
+              },
+              @{ Name = 'SA-EDGE1';
+                 ScopeID = '192.168.128.0';
+                 ClientMACAddress = '000000000005';
+                 IPAddress = '192.168.128.19';
                  AddressFamily = 'IPv4'
               }
             )
@@ -161,41 +164,62 @@
       </adapters>
     </vm>
 
-    <vm name="SA-ROOTCA"
+    <vm name="SA-AADC"
       template="Template Windows Server 2019 Datacenter Full"
-      computername="SA-ROOTCA">
-      <dsc configname="MEMBER_ROOTCA"
-           configfile="MEMBER_ROOTCA.DSC.ps1"
-           logging="Y">
+      computername="SA-AADC"
+      bootorder="3">
+      <dsc configname="MEMBER_DEFAULT"
+           configfile="MEMBER_DEFAULT.DSC.ps1">
         <parameters>
           DomainName = "LABBUILDER.COM"
           DomainAdminPassword = "P@ssword!1"
           DCName = "SA-DC1"
           PSDscAllowDomainUser = $true
-          InstallOnlineResponder = $true
-          InstallEnrollmentWebService = $true
-          CACommonName = "LABBUILDER.COM Issuing CA"
-          CADistinguishedNameSuffix = "DC=LABBUILDER,DC=COM"
-          CRLPublicationURLs = "65:C:\Windows\system32\CertSrv\CertEnroll\%3%8%9.crl\n79:ldap:///CN=%7%8,CN=%2,CN=CDP,CN=Public Key Services,CN=Services,%6%10\n6:http://pki.labbuilder.com/CertEnroll/%3%8%9.crl"
-          CACertPublicationURLs = "1:C:\Windows\system32\CertSrv\CertEnroll\%1_%3%4.crt\n2:ldap:///CN=%7,CN=AIA,CN=Public Key Services,CN=Services,%6%11\n2:http://pki.labbuilder.com/CertEnroll/%1_%3%4.crt"
         </parameters>
       </dsc>
       <adapters>
-        <adapter name="External"
-                 switchname="External" />
         <adapter name="Domain Private Site A"
                  switchname="Domain Private Site A">
-          <ipv4 address="192.168.128.23"
-                defaultgateway="192.168.128.19"
+          <ipv4 address="192.168.128.17"
+                defaultgateway=""
                 subnetmask="24"
-                dnsserver="192.168.128.10,192.168.128.11"/>
-          <ipv6 address="fd53:ccc5:895a:bc00::17"
-                defaultgateway="fd53:ccc5:895a:bc00::13"
+                dnsserver="192.168.128.10"/>
+          <ipv6 address="fd53:ccc5:895a:bc00::b"
+                defaultgateway=""
                 subnetmask="64"
                 dnsserver="fd53:ccc5:895a:bc00::a"/>
         </adapter>
       </adapters>
     </vm>
-  </vms>
 
+    <vm name="SA-EDGE1"
+      template="Template Windows Server 2019 Datacenter Full"
+      computername="SA-EDGE1"
+      bootorder="3">
+      <dsc configname="MEMBER_REMOTEACCESS"
+           configfile="MEMBER_REMOTEACCESS.DSC.ps1">
+        <parameters>
+          DomainName = "LABBUILDER.COM"
+          DomainAdminPassword = "P@ssword!1"
+          DCName = "SA-DC1"
+          PSDscAllowDomainUser = $true
+        </parameters>
+      </dsc>
+      <adapters>
+        <adapter name="Domain Private Site A"
+                 switchname="Domain Private Site A">
+          <ipv4 address="192.168.128.19"
+                defaultgateway=""
+                subnetmask="24"
+                dnsserver="192.168.128.10"/>
+          <ipv6 address="fd53:ccc5:895a:bc00::13"
+                defaultgateway=""
+                subnetmask="64"
+                dnsserver="fd53:ccc5:895a:bc00::a"/>
+        </adapter>
+        <adapter name="External"
+                 switchname="External" />
+      </adapters>
+    </vm>
+  </vms>
 </labbuilderconfig>

@@ -20,8 +20,7 @@
   <settings labid="DOMAINSQL2014.COM "
             domainname="DOMAINSQL2014.COM"
             email="admina@DOMAINSQL2014.COM"
-            labpath="c:\vm\DOMAINSQL2014.COM"
-            dsclibrarypath="..\DSCLibrary\" />
+            labpath="c:\vm\DOMAINSQL2014.COM" />
 
   <resources isopath="ISOFiles">
     <msu name="WMF5.1-WS2012R2-W81"

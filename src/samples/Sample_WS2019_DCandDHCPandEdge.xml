@@ -8,8 +8,7 @@
   <settings labid="LABBUILDER-DCDHCPEDGE.COM "
             domainname="LABBUILDER-DCDHCPEDGE.COM"
             email="admina@LABBUILDER-DCDHCPEDGE.COM"
-            labpath="c:\vm\LABBUILDER-DCDHCPEDGE.COM"
-            dsclibrarypath="..\DSCLibrary\" />
+            labpath="c:\vm\LABBUILDER-DCDHCPEDGE.COM" />
 
   <switches>
     <switch name="External" type="External">

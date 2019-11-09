@@ -62,6 +62,7 @@ Task UnitTest -Depends Init, PrepareTest {
 
     # Execute tests
     $testScriptsPath = Join-Path -Path $ProjectRoot -ChildPath 'test\unit'
+
     if (-not (Test-Path -Path $testScriptsPath))
     {
         'Skipping unit tests because none exist'
@@ -96,6 +97,7 @@ Task UnitTest -Depends Init, PrepareTest {
                 -RepoRoot $ProjectRoot
 
             'Uploading CodeCoverage to CodeCov.io'
+
             try
             {
                 Invoke-UploadCoveCoveIoReport -Path $jsonPath
@@ -145,6 +147,7 @@ Task IntegrationTest -Depends Init, PrepareTest {
 
     # Execute tests
     $testScriptsPath = Join-Path -Path $ProjectRoot -ChildPath 'test\integration'
+
     if (-not (Test-Path -Path $testScriptsPath))
     {
         'Skipping integration tests because none exist'
