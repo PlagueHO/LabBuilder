@@ -554,7 +554,7 @@ InModuleScope LabBuilder {
                 $lab.labbuilderconfig.vms.vm.dsc.configfile = 'ThisFileDoesntExist.ps1'
                 [array] $Switches = Get-LabSwitch -Lab $lab
                 [array] $Templates = Get-LabVMTemplate -Lab $lab
-                $expectedPath = Split-Path -Path $script:LabBuidlerModuleRoot -Parent |
+                $expectedPath = Split-Path -Path (Join-Path -Path $script:LabBuidlerModuleRoot -ChildPath 'src') -Parent |
                     Join-Path -ChildPath 'DSCLibrary' | Join-Path -ChildPath $lab.labbuilderconfig.vms.vm.dsc.configfile
                 $exceptionParameters = @{
                     errorId = 'DSCConfigFileMissingError'
@@ -572,7 +572,7 @@ InModuleScope LabBuilder {
                 $lab.labbuilderconfig.vms.vm.dsc.configfile = 'FileWithBadType.xyz'
                 [array] $Switches = Get-LabSwitch -Lab $lab
                 [array] $Templates = Get-LabVMTemplate -Lab $lab
-                $expectedPath = Split-Path -Path $script:LabBuidlerModuleRoot -Parent |
+                $expectedPath = Split-Path -Path (Join-Path -Path $script:LabBuidlerModuleRoot -ChildPath 'src') -Parent |
                     Join-Path -ChildPath 'DSCLibrary' | Join-Path -ChildPath $lab.labbuilderconfig.vms.vm.dsc.configfile
                 $exceptionParameters = @{
                     errorId = 'DSCConfigFileBadTypeError'
