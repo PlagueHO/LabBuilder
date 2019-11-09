@@ -110,8 +110,6 @@ ConvertFrom-StringData -StringData @'
     PackageSourceNotRegisteredError = The required package source '{0}' is not registered.
     ODJCopyError = Error copying Offline Domain Join file '{1}' to VM '{0}'.
     VMNotRunningHeartbeatError = Virtual Machine '{0}' is not running, so waiting for heartbeat failed.
-    LabBuilderModuleNotLoadedError = The path to the LabBuilder module failed to be detected because the module is not loaded.
-    LabBuilderModulePathNullError = The path to the LabBuilder module failed to be detected because the module path is null.
 
     ImportingLibFileMessage = Importing function library '{0}'.
     EnablingWSManMessage = Enabling WS-Man for communication with Lab Guests.

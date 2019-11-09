@@ -309,7 +309,7 @@ InModuleScope LabBuilder {
         # Mock Convert-WindowsImage
         if (-not (Test-Path -Path Function:Convert-WindowsImage))
         {
-            . (Join-Path -Path $script:ModuleRoot -ChildPath 'support\Convert-WindowsImage.ps1')
+            . (Join-Path -Path $script:LabBuidlerModuleRoot -ChildPath 'support\Convert-WindowsImage.ps1')
         }
         Mock Convert-WindowsImage
         Mock Resolve-Path -MockWith { 'X:\Sources\Install.WIM' }

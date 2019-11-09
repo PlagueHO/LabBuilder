@@ -11,27 +11,5 @@ function Get-LabBuilderModulePath
     [OutputType([System.String])]
     param ()
 
-    $module = Get-Module -Name LabBuilder
-
-    if (-not $module)
-    {
-        $exceptionParameters = @{
-            errorId       = 'LabBuilderModuleNotLoadedError'
-            errorCategory = 'InvalidArgument'
-            errorMessage  = $($LocalizedData.LabBuilderModuleNotLoadedError)
-        }
-        New-LabException @exceptionParameters
-    }
-
-    if ([System.String]::IsNullOrEmpty($module.Path))
-    {
-        $exceptionParameters = @{
-            errorId       = 'LabBuilderModulePathNullError'
-            errorCategory = 'InvalidArgument'
-            errorMessage  = $($LocalizedData.LabBuilderModulePathNullError)
-        }
-        New-LabException @exceptionParameters
-    }
-
-    return Split-Path -Path $module.Path -Parent
+    return $script:LabBuidlerModuleRoot
 }
