@@ -1,6 +1,6 @@
 # Change Log
 
-## Unreleased
+## 1.0.5.104
 
 - Samples\Sample_WS2019_AzureADConnect.xml: Added sample for installing Azure AD
   Connect.
