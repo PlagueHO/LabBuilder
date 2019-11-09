@@ -602,16 +602,16 @@ function Get-LabVM
                         Look the ISO up in the ISO Resources
                         Pull the list of Resource ISOs available if not already pulled from Lab.
                     #>
-                    if (-not $ResourceISOs)
+                    if (-not $resourceISOs)
                     {
-                        $ResourceISOs = Get-LabResourceISO `
+                        $resourceISOs = Get-LabResourceISO `
                             -Lab $Lab
                     } # if
 
                     # Lookup the Resource ISO record
-                    $ResourceISO = $ResourceISOs | Where-Object -Property Name -eq $vmDVDDrive.ISO
+                    $resourceISO = $resourceISOs | Where-Object -Property Name -eq $vmDVDDrive.ISO
 
-                    if (-not $ResourceISO)
+                    if (-not $resourceISO)
                     {
                         # The ISO Resource was not found
                         $exceptionParameters = @{
@@ -625,7 +625,7 @@ function Get-LabVM
 
                     # The ISO resource was found so populate the ISO details
                     $newDVDDrive.ISO = $vmDVDDrive.ISO
-                    $newDVDDrive.Path = $ResourceISO.Path
+                    $newDVDDrive.Path = $resourceISO.Path
                 } # if
 
                 $dvdDrives += @( $newDVDDrive )

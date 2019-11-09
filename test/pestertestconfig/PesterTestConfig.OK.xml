@@ -10,7 +10,6 @@
             email="tester@pester.local"
             labpath="C:\Pester Lab"
             vhdparentpath="C:\Pester Lab\Virtual Hard Disk Templates"
-            dsclibrarypath="DSCLibrary"
             resourcepath="Resource"
             modulepath="Modules"
             dismpath="C:\dism"
@@ -240,7 +239,7 @@
         </adapter>
       </adapters>
       <dsc configname="STANDALONE_DEFAULT"
-           configfile="PesterTest.DSC.ps1"
+           configfile="STANDALONE_DEFAULT.DSC.PS1"
            logging="Y">
         <parameters>
           Dummy = "Dummy"
