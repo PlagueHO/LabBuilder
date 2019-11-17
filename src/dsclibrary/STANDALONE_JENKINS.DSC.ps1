@@ -10,36 +10,36 @@ DSC Template Configuration File For use by LabBuilder
 
 Configuration STANDALONE_JENKINS
 {
-    Import-DscResource -ModuleName 'PSDesiredStateConfiguration'
+    Import-DscResource -ModuleName PSDesiredStateConfiguration
     Import-DscResource -ModuleName cChoco
     Import-DscResource -ModuleName NetworkingDsc
 
     Node $AllNodes.NodeName {
         WindowsFeature NetFrameworkCore
         {
-            Ensure = "Present"
-            Name   = "NET-Framework-Core"
+            Ensure = 'Present'
+            Name   = 'NET-Framework-Core'
         }
 
         # Install Chocolatey
         cChocoInstaller installChoco
         {
-            InstallDir = "c:\choco"
-            DependsOn  = "[WindowsFeature]NetFrameworkCore"
+            InstallDir = 'c:\choco'
+            DependsOn  = '[WindowsFeature]NetFrameworkCore'
         }
 
         # Install JDK8
         cChocoPackageInstaller installJdk8
         {
-            Name      = "jdk8"
-            DependsOn = "[cChocoInstaller]installChoco"
+            Name      = 'jdk8'
+            DependsOn = '[cChocoInstaller]installChoco'
         }
 
         # Install Jenkins
         cChocoPackageInstaller installJenkins
         {
-            Name      = "Jenkins"
-            DependsOn = "[cChocoInstaller]installChoco"
+            Name      = 'Jenkins'
+            DependsOn = '[cChocoInstaller]installChoco'
         }
 
         # Set the Jenkins Port
@@ -87,7 +87,7 @@ Configuration STANDALONE_JENKINS
                 # Jenkins is already on correct port
                 Return $true
             }
-            DependsOn  = "[cChocoPackageInstaller]installJenkins"
+            DependsOn  = '[cChocoPackageInstaller]installJenkins'
         }
     }
 }

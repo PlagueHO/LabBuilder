@@ -5,39 +5,44 @@ DSC Template Configuration File For use by LabBuilder
 .Desription
     Builds a Server that is joined to a domain and then made into an ADFS Server using WID.
 .Parameters:
-    DomainName = "LABBUILDER.COM"
-    DomainAdminPassword = "P@ssword!1"
+    DomainName = 'LABBUILDER.COM'
+    DomainAdminPassword = 'P@ssword!1'
     DCName = 'SA-DC1'
     PSDscAllowDomainUser = $true
 ###################################################################################################>
 
 Configuration MEMBER_ADFS
 {
-    Import-DscResource -ModuleName 'PSDesiredStateConfiguration'
-    Import-DscResource -ModuleName ComputerManagementDsc
+    Import-DscResource -ModuleName PSDesiredStateConfiguration
+    Import-DscResource -ModuleName ComputerManagementDsc -ModuleVersion 7.1.0.0
 
     Node $AllNodes.NodeName {
         # Assemble the Local Admin Credentials
         if ($Node.LocalAdminPassword)
         {
-            [PSCredential]$LocalAdminCredential = New-Object System.Management.Automation.PSCredential ("Administrator", (ConvertTo-SecureString $Node.LocalAdminPassword -AsPlainText -Force))
+            $LocalAdminCredential = New-Object `
+                -TypeName System.Management.Automation.PSCredential `
+                -ArgumentList ('Administrator', (ConvertTo-SecureString $Node.LocalAdminPassword -AsPlainText -Force))
         }
+
         if ($Node.DomainAdminPassword)
         {
-            [PSCredential]$DomainAdminCredential = New-Object System.Management.Automation.PSCredential ("$($Node.DomainName)\Administrator", (ConvertTo-SecureString $Node.DomainAdminPassword -AsPlainText -Force))
+            $DomainAdminCredential = New-Object `
+                -TypeName System.Management.Automation.PSCredential `
+                -ArgumentList ("$($Node.DomainName)\Administrator", (ConvertTo-SecureString $Node.DomainAdminPassword -AsPlainText -Force))
         }
 
         WindowsFeature WIDInstall
         {
-            Ensure = "Present"
-            Name   = "Windows-Internal-Database"
+            Ensure = 'Present'
+            Name   = 'Windows-Internal-Database'
         }
 
         WindowsFeature ADFSInstall
         {
-            Ensure    = "Present"
-            Name      = "ADFS-Federation"
-            DependsOn = "[WindowsFeature]WIDInstall"
+            Ensure    = 'Present'
+            Name      = 'ADFS-Federation'
+            DependsOn = '[WindowsFeature]WIDInstall'
         }
 
         WaitForAll DC
@@ -53,27 +58,27 @@ Configuration MEMBER_ADFS
             Name       = $Node.NodeName
             DomainName = $Node.DomainName
             Credential = $DomainAdminCredential
-            DependsOn  = "[WaitForAll]DC"
+            DependsOn  = '[WaitForAll]DC'
         }
 
         # Enable ADFS FireWall rules
         Firewall ADFSFirewall1
         {
-            Name    = "ADFSSrv-HTTP-In-TCP"
+            Name    = 'ADFSSrv-HTTP-In-TCP'
             Ensure  = 'Present'
             Enabled = 'True'
         }
 
         Firewall ADFSFirewall2
         {
-            Name    = "ADFSSrv-HTTPS-In-TCP"
+            Name    = 'ADFSSrv-HTTPS-In-TCP'
             Ensure  = 'Present'
             Enabled = 'True'
         }
 
         Firewall ADFSFirewall3
         {
-            Name    = "ADFSSrv-SmartcardAuthN-HTTPS-In-TCP"
+            Name    = 'ADFSSrv-SmartcardAuthN-HTTPS-In-TCP'
             Ensure  = 'Present'
             Enabled = 'True'
         }

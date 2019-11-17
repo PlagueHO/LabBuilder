@@ -5,8 +5,8 @@ DSC Template Configuration File For use by LabBuilder
 .Desription
     Builds a Windows Server, joins it to a Domain and installs Jenkins CI on it.
 .Parameters:
-    DomainName = "LABBUILDER.COM"
-    DomainAdminPassword = "P@ssword!1"
+    DomainName = 'LABBUILDER.COM'
+    DomainAdminPassword = 'P@ssword!1'
     DCName = 'SA-DC1'
     PSDscAllowDomainUser = $true
     JenkinsPort = 80
@@ -14,26 +14,24 @@ DSC Template Configuration File For use by LabBuilder
 
 Configuration MEMBER_JENKINS
 {
-    Import-DscResource -ModuleName 'PSDesiredStateConfiguration'
-    Import-DscResource -ModuleName ComputerManagementDsc
+    Import-DscResource -ModuleName PSDesiredStateConfiguration
+    Import-DscResource -ModuleName ComputerManagementDsc -ModuleVersion 7.1.0.0
     Import-DscResource -ModuleName cChoco
     Import-DscResource -ModuleName NetworkingDsc
 
     Node $AllNodes.NodeName {
-        # Assemble the Local Admin Credentials
-        if ($Node.LocalAdminPassword)
-        {
-            [PSCredential]$LocalAdminCredential = New-Object System.Management.Automation.PSCredential ("Administrator", (ConvertTo-SecureString $Node.LocalAdminPassword -AsPlainText -Force))
-        }
+        # Assemble the Admin Credentials
         if ($Node.DomainAdminPassword)
         {
-            [PSCredential]$DomainAdminCredential = New-Object System.Management.Automation.PSCredential ("$($Node.DomainName)\Administrator", (ConvertTo-SecureString $Node.DomainAdminPassword -AsPlainText -Force))
+            $DomainAdminCredential = New-Object `
+                -TypeName System.Management.Automation.PSCredential `
+                -ArgumentList ("$($Node.DomainName)\Administrator", (ConvertTo-SecureString $Node.DomainAdminPassword -AsPlainText -Force))
         }
 
         WindowsFeature NetFrameworkCore
         {
-            Ensure = "Present"
-            Name   = "NET-Framework-Core"
+            Ensure = 'Present'
+            Name   = 'NET-Framework-Core'
         }
 
         # Wait for the Domain to be available so we can join it.
@@ -51,28 +49,28 @@ Configuration MEMBER_JENKINS
             Name       = $Node.NodeName
             DomainName = $Node.DomainName
             Credential = $DomainAdminCredential
-            DependsOn  = "[WaitForAll]DC"
+            DependsOn  = '[WaitForAll]DC'
         }
 
         # Install Chocolatey
         cChocoInstaller installChoco
         {
-            InstallDir = "c:\choco"
-            DependsOn  = "[WindowsFeature]NetFrameworkCore"
+            InstallDir = 'c:\choco'
+            DependsOn  = '[WindowsFeature]NetFrameworkCore'
         }
 
         # Install JDK8
         cChocoPackageInstaller installJdk8
         {
-            Name      = "jdk8"
-            DependsOn = "[cChocoInstaller]installChoco"
+            Name      = 'jdk8'
+            DependsOn = '[cChocoInstaller]installChoco'
         }
 
         # Install Jenkins
         cChocoPackageInstaller installJenkins
         {
-            Name      = "Jenkins"
-            DependsOn = "[cChocoInstaller]installChoco"
+            Name      = 'Jenkins'
+            DependsOn = '[cChocoInstaller]installChoco'
         }
 
         # Set the Jenkins Port
@@ -93,7 +91,7 @@ Configuration MEMBER_JENKINS
                     -Path "${ENV:ProgramFiles(x86)}\Jenkins\Jenkins.xml" `
                     -Value $NewConfig `
                     -Force
-                Write-Verbose -Message "Restarting Jenkins"
+                Write-Verbose -Message 'Restarting Jenkins'
                 Restart-Service `
                     -Name Jenkins
             }
@@ -120,7 +118,7 @@ Configuration MEMBER_JENKINS
                 # Jenkins is already on correct port
                 Return $true
             }
-            DependsOn  = "[cChocoPackageInstaller]installJenkins"
+            DependsOn  = '[cChocoPackageInstaller]installJenkins'
         }
     }
 }

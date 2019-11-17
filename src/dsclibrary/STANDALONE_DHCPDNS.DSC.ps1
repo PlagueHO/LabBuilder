@@ -63,34 +63,28 @@ DSC Template Configuration File For use by LabBuilder
 
 Configuration STANDALONE_DHCPDNS
 {
-    Import-DscResource -ModuleName 'PSDesiredStateConfiguration'
-    Import-DscResource -ModuleName xDNSServer
+    Import-DscResource -ModuleName PSDesiredStateConfiguration
+    Import-DscResource -ModuleName xDNSServer -ModuleVersion 1.16.0.0
     Import-DscResource -ModuleName xDHCPServer -ModuleVersion 2.0.0.0
 
     Node $AllNodes.NodeName {
-        # Assemble the Local Admin Credentials
-        if ($Node.LocalAdminPassword)
-        {
-            [PSCredential]$LocalAdminCredential = New-Object System.Management.Automation.PSCredential ("Administrator", (ConvertTo-SecureString $Node.LocalAdminPassword -AsPlainText -Force))
-        }
-
         WindowsFeature DHCPInstall
         {
-            Ensure = "Present"
-            Name   = "DHCP"
+            Ensure = 'Present'
+            Name   = 'DHCP'
         }
 
         WindowsFeature DNSInstall
         {
-            Ensure = "Present"
-            Name   = "DNS"
+            Ensure = 'Present'
+            Name   = 'DNS'
         }
 
         <#
             Add the DHCP Scope, Reservation and Options from
             the node configuration
         #>
-        $count=0
+        $count = 0
         foreach ($Scope in $Node.Scopes)
         {
             $count++
@@ -109,7 +103,7 @@ Configuration STANDALONE_DHCPDNS
             }
         }
 
-        $count=0
+        $count = 0
         foreach ($Reservation in $Node.Reservations)
         {
             $count++
@@ -125,7 +119,7 @@ Configuration STANDALONE_DHCPDNS
             }
         }
 
-        $count=0
+        $count = 0
         foreach ($ScopeOption in $Node.ScopeOptions)
         {
             $count++
@@ -148,12 +142,11 @@ Configuration STANDALONE_DHCPDNS
             {
                 IsSingleInstance = 'Yes'
                 IPAddresses      = $Node.Forwarders
-                Credential       = $DomainAdminCredential
                 DependsOn        = '[Computer]JoinDomain'
             }
         }
 
-        $count=0
+        $count = 0
         foreach ($ADZone in $Node.ADZones)
         {
             $count++
@@ -168,17 +161,16 @@ Configuration STANDALONE_DHCPDNS
             }
         }
 
-        $count=0
+        $count = 0
         foreach ($PrimaryZone in $Node.PrimaryZones)
         {
             $count++
-            xDnsServerSecondaryZone "PrimaryZone$count"
+            xDnsServerPrimaryZone "PrimaryZone$count"
             {
                 Ensure        = 'Present'
                 Name          = $PrimaryZone.Name
                 ZoneFile      = $PrimaryZone.ZoneFile
                 DynamicUpdate = $PrimaryZone.DynamicUpdate
-                Credential    = $DomainAdminCredential
                 DependsOn     = '[Computer]JoinDomain'
             }
         }

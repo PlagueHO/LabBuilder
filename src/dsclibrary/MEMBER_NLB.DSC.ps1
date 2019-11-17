@@ -5,46 +5,44 @@ DSC Template Configuration File For use by LabBuilder
 .Desription
     Builds a Network Load Balancing cluster node.
 .Parameters:
-    DomainName = "LABBUILDER.COM"
-    DomainAdminPassword = "P@ssword!1"
+    DomainName = 'LABBUILDER.COM'
+    DomainAdminPassword = 'P@ssword!1'
     DCName = 'SA-DC1'
     PSDscAllowDomainUser = $true
 ###################################################################################################>
 
 Configuration MEMBER_NLB
 {
-    Import-DscResource -ModuleName 'PSDesiredStateConfiguration'
-    Import-DscResource -ModuleName ComputerManagementDsc
+    Import-DscResource -ModuleName PSDesiredStateConfiguration
+    Import-DscResource -ModuleName ComputerManagementDsc -ModuleVersion 7.1.0.0
     Import-DscResource -ModuleName xPSDesiredStateConfiguration
 
     Node $AllNodes.NodeName {
-        # Assemble the Local Admin Credentials
-        if ($Node.LocalAdminPassword)
-        {
-            [PSCredential]$LocalAdminCredential = New-Object System.Management.Automation.PSCredential ("Administrator", (ConvertTo-SecureString $Node.LocalAdminPassword -AsPlainText -Force))
-        }
+        # Assemble the Admin Credentials
         if ($Node.DomainAdminPassword)
         {
-            [PSCredential]$DomainAdminCredential = New-Object System.Management.Automation.PSCredential ("$($Node.DomainName)\Administrator", (ConvertTo-SecureString $Node.DomainAdminPassword -AsPlainText -Force))
+            $DomainAdminCredential = New-Object `
+                -TypeName System.Management.Automation.PSCredential `
+                -ArgumentList ("$($Node.DomainName)\Administrator", (ConvertTo-SecureString $Node.DomainAdminPassword -AsPlainText -Force))
         }
 
 
         WindowsFeature InstallWebServer
         {
-            Ensure = "Present"
-            Name   = "Web-Server"
+            Ensure = 'Present'
+            Name   = 'Web-Server'
         }
 
         WindowsFeature InstallWebMgmtService
         {
-            Ensure = "Present"
-            Name   = "Web-Mgmt-Service"
+            Ensure = 'Present'
+            Name   = 'Web-Mgmt-Service'
         }
 
         WindowsFeature InstallNLB
         {
-            Ensure = "Present"
-            Name   = "NLB"
+            Ensure = 'Present'
+            Name   = 'NLB'
         }
 
         # Wait for the Domain to be available so we can join it.
@@ -62,7 +60,7 @@ Configuration MEMBER_NLB
             Name       = $Node.NodeName
             DomainName = $Node.DomainName
             Credential = $DomainAdminCredential
-            DependsOn  = "[WaitForAll]DC"
+            DependsOn  = '[WaitForAll]DC'
         }
     }
 }

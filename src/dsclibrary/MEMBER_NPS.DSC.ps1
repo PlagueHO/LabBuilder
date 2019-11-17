@@ -7,46 +7,44 @@ DSC Template Configuration File For use by LabBuilder
 .Requires
     Windows Server 2012 R2 Full (Server core not supported).
 .Parameters:
-    DomainName = "LABBUILDER.COM"
-    DomainAdminPassword = "P@ssword!1"
+    DomainName = 'LABBUILDER.COM'
+    DomainAdminPassword = 'P@ssword!1'
     DCName = 'SA-DC1'
     PSDscAllowDomainUser = $true
 ###################################################################################################>
 
 Configuration MEMBER_NPS
 {
-    Import-DscResource -ModuleName 'PSDesiredStateConfiguration'
-    Import-DscResource -ModuleName ComputerManagementDsc
+    Import-DscResource -ModuleName PSDesiredStateConfiguration
+    Import-DscResource -ModuleName ComputerManagementDsc -ModuleVersion 7.1.0.0
 
     Node $AllNodes.NodeName {
-        # Assemble the Local Admin Credentials
-        if ($Node.LocalAdminPassword)
-        {
-            [PSCredential]$LocalAdminCredential = New-Object System.Management.Automation.PSCredential ("Administrator", (ConvertTo-SecureString $Node.LocalAdminPassword -AsPlainText -Force))
-        }
+        # Assemble the Admin Credentials
         if ($Node.DomainAdminPassword)
         {
-            [PSCredential]$DomainAdminCredential = New-Object System.Management.Automation.PSCredential ("$($Node.DomainName)\Administrator", (ConvertTo-SecureString $Node.DomainAdminPassword -AsPlainText -Force))
+            $DomainAdminCredential = New-Object `
+                -TypeName System.Management.Automation.PSCredential `
+                -ArgumentList ("$($Node.DomainName)\Administrator", (ConvertTo-SecureString $Node.DomainAdminPassword -AsPlainText -Force))
         }
 
         WindowsFeature NPASPolicyServerInstall
         {
-            Ensure = "Present"
-            Name   = "NPAS-Policy-Server"
+            Ensure = 'Present'
+            Name   = 'NPAS-Policy-Server'
         }
 
         WindowsFeature NPASHealthInstall
         {
-            Ensure    = "Present"
-            Name      = "NPAS-Health"
-            DependsOn = "[WindowsFeature]NPASPolicyServerInstall"
+            Ensure    = 'Present'
+            Name      = 'NPAS-Health'
+            DependsOn = '[WindowsFeature]NPASPolicyServerInstall'
         }
 
         WindowsFeature RSATNPAS
         {
-            Ensure    = "Present"
-            Name      = "RSAT-NPAS"
-            DependsOn = "[WindowsFeature]NPASPolicyServerInstall"
+            Ensure    = 'Present'
+            Name      = 'RSAT-NPAS'
+            DependsOn = '[WindowsFeature]NPASPolicyServerInstall'
         }
 
         # Wait for the Domain to be available so we can join it.
@@ -64,7 +62,7 @@ Configuration MEMBER_NPS
             Name       = $Node.NodeName
             DomainName = $Node.DomainName
             Credential = $DomainAdminCredential
-            DependsOn  = "[WaitForAll]DC"
+            DependsOn  = '[WaitForAll]DC'
         }
     }
 }

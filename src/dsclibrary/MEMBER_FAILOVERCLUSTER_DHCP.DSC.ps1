@@ -6,8 +6,8 @@ DSC Template Configuration File For use by LabBuilder
     Builds a Network failover clustering node for use as a DHCP Server.
     It also optionally starts the iSCSI Initiator and connects to any specified iSCSI Targets.
 .Parameters:
-    DomainName = "LABBUILDER.COM"
-    DomainAdminPassword = "P@ssword!1"
+    DomainName = 'LABBUILDER.COM'
+    DomainAdminPassword = 'P@ssword!1'
     DCName = 'SA-DC1'
     PSDscAllowDomainUser = $true
     ISCSIServerName = 'SA-FS1'
@@ -59,40 +59,38 @@ DSC Template Configuration File For use by LabBuilder
 
 Configuration MEMBER_FAILOVERCLUSTER_FS
 {
-    Import-DscResource -ModuleName 'PSDesiredStateConfiguration'
-    Import-DscResource -ModuleName ComputerManagementDsc
+    Import-DscResource -ModuleName PSDesiredStateConfiguration
+    Import-DscResource -ModuleName ComputerManagementDsc -ModuleVersion 7.1.0.0
     Import-DscResource -ModuleName xPSDesiredStateConfiguration
     Import-DscResource -ModuleName xDHCPServer -ModuleVersion 2.0.0.0
 
     Node $AllNodes.NodeName {
-        # Assemble the Local Admin Credentials
-        if ($Node.LocalAdminPassword)
-        {
-            [PSCredential]$LocalAdminCredential = New-Object System.Management.Automation.PSCredential ("Administrator", (ConvertTo-SecureString $Node.LocalAdminPassword -AsPlainText -Force))
-        }
+        # Assemble the Admin Credentials
         if ($Node.DomainAdminPassword)
         {
-            [PSCredential]$DomainAdminCredential = New-Object System.Management.Automation.PSCredential ("$($Node.DomainName)\Administrator", (ConvertTo-SecureString $Node.DomainAdminPassword -AsPlainText -Force))
+            $DomainAdminCredential = New-Object `
+                -TypeName System.Management.Automation.PSCredential `
+                -ArgumentList ("$($Node.DomainName)\Administrator", (ConvertTo-SecureString $Node.DomainAdminPassword -AsPlainText -Force))
         }
 
         WindowsFeature FailoverClusteringInstall
         {
-            Ensure = "Present"
-            Name   = "Failover-Clustering"
+            Ensure = 'Present'
+            Name   = 'Failover-Clustering'
         }
 
         WindowsFeature FailoverClusteringPSInstall
         {
-            Ensure    = "Present"
-            Name      = "RSAT-Clustering-PowerShell"
-            DependsOn = "[WindowsFeature]FailoverClusteringInstall"
+            Ensure    = 'Present'
+            Name      = 'RSAT-Clustering-PowerShell'
+            DependsOn = '[WindowsFeature]FailoverClusteringInstall'
         }
 
         WindowsFeature DHCPInstall
         {
-            Ensure    = "Present"
-            Name      = "DHCP"
-            DependsOn = "[WindowsFeature]FailoverClusteringPSInstall"
+            Ensure    = 'Present'
+            Name      = 'DHCP'
+            DependsOn = '[WindowsFeature]FailoverClusteringPSInstall'
         }
 
         # Wait for the Domain to be available so we can join it.
@@ -110,7 +108,7 @@ Configuration MEMBER_FAILOVERCLUSTER_FS
             Name       = $Node.NodeName
             DomainName = $Node.DomainName
             Credential = $DomainAdminCredential
-            DependsOn  = "[WaitForAll]DC"
+            DependsOn  = '[WaitForAll]DC'
         }
 
         if ($Node.ServerTargetName)
@@ -126,11 +124,11 @@ Configuration MEMBER_FAILOVERCLUSTER_FS
             # Wait for the iSCSI Server Target to become available
             WaitForAny WaitForiSCSIServerTarget
             {
-                ResourceName     = "[ISCSIServerTarget]ClusterServerTarget"
+                ResourceName     = '[ISCSIServerTarget]ClusterServerTarget'
                 NodeName         = $Node.ServerName
                 RetryIntervalSec = 30
                 RetryCount       = 30
-                DependsOn        = "[Service]iSCSIService"
+                DependsOn        = '[Service]iSCSIService'
             }
 
             # Connect the Initiator
@@ -141,19 +139,19 @@ Configuration MEMBER_FAILOVERCLUSTER_FS
                 TargetPortalAddress    = $Node.TargetPortalAddress
                 InitiatorPortalAddress = $Node.InitiatorPortalAddress
                 IsPersistent           = $true
-                DependsOn              = "[WaitForAny]WaitForiSCSIServerTarget"
+                DependsOn              = '[WaitForAny]WaitForiSCSIServerTarget'
             } # End of ISCSITarget Resource
 
             # Enable iSCSI FireWall rules so that the Initiator can be added to iSNS
             Firewall iSCSIFirewallIn
             {
-                Name    = "MsiScsi-In-TCP"
+                Name    = 'MsiScsi-In-TCP'
                 Ensure  = 'Present'
                 Enabled = 'True'
             }
             Firewall iSCSIFirewallOut
             {
-                Name    = "MsiScsi-Out-TCP"
+                Name    = 'MsiScsi-Out-TCP'
                 Ensure  = 'Present'
                 Enabled = 'True'
             }
@@ -177,7 +175,7 @@ Configuration MEMBER_FAILOVERCLUSTER_FS
             DependsOn            = '[Computer]JoinDomain'
         }
 
-        $count=0
+        $count = 0
         foreach ($Scope in $Node.Scopes)
         {
             $count++
@@ -195,7 +193,7 @@ Configuration MEMBER_FAILOVERCLUSTER_FS
             }
         }
 
-        $count=0
+        $count = 0
         foreach ($Reservation in $Node.Reservations)
         {
             $count++
@@ -210,7 +208,7 @@ Configuration MEMBER_FAILOVERCLUSTER_FS
             }
         }
 
-        $count=0
+        $count = 0
         foreach ($ScopeOption in $Node.ScopeOptions)
         {
             $count++

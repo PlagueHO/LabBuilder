@@ -11,34 +11,28 @@ DSC Template Configuration File For use by LabBuilder
 
 Configuration STANDALONE_INTERNET
 {
-    Import-DscResource -ModuleName 'PSDesiredStateConfiguration'
-    Import-DscResource -ModuleName xDNSServer
+    Import-DscResource -ModuleName PSDesiredStateConfiguration
+    Import-DscResource -ModuleName xDNSServer -ModuleVersion 1.16.0.0
     Import-DscResource -ModuleName xDHCPServer -ModuleVersion 2.0.0.0
     Import-DscResource -ModuleName xWebAdministration
 
     Node $AllNodes.NodeName {
-        # Assemble the Local Admin Credentials
-        if ($Node.LocalAdminPassword)
-        {
-            [PSCredential]$LocalAdminCredential = New-Object System.Management.Automation.PSCredential ("Administrator", (ConvertTo-SecureString $Node.LocalAdminPassword -AsPlainText -Force))
-        }
-
         WindowsFeature WebServerInstall
         {
-            Ensure = "Present"
-            Name   = "Web-WebServer"
+            Ensure = 'Present'
+            Name   = 'Web-WebServer'
         }
 
         WindowsFeature DHCPInstall
         {
-            Ensure = "Present"
-            Name   = "DHCP"
+            Ensure = 'Present'
+            Name   = 'DHCP'
         }
 
         WindowsFeature DNSInstall
         {
-            Ensure = "Present"
-            Name   = "DNS"
+            Ensure = 'Present'
+            Name   = 'DNS'
         }
 
         # Create the default ncsi.txt.
@@ -46,7 +40,7 @@ Configuration STANDALONE_INTERNET
         {
             Ensure          = 'Present'
             DestinationPath = 'c:\inetpub\wwwroot\ncsi.txt'
-            Contents        = "Microsoft NCSI"
+            Contents        = 'Microsoft NCSI'
             Type            = 'File'
             DependsOn       = '[WindowsFeature]WebServerInstall'
         }
@@ -55,7 +49,7 @@ Configuration STANDALONE_INTERNET
             Add the DHCP Scope, Reservation and Options from
             the node configuration
         #>
-        $count=0
+        $count = 0
         foreach ($Scope in $Node.Scopes)
         {
             $count++
@@ -74,7 +68,7 @@ Configuration STANDALONE_INTERNET
             }
         }
 
-        $count=0
+        $count = 0
         foreach ($Reservation in $Node.Reservations)
         {
             $count++
@@ -90,7 +84,7 @@ Configuration STANDALONE_INTERNET
             }
         }
 
-        $count=0
+        $count = 0
         foreach ($ScopeOption in $Node.ScopeOptions)
         {
             $count++

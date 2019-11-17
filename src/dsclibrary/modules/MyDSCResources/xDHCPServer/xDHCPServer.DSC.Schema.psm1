@@ -33,7 +33,7 @@ Configuration DHCP
         $Reservations
     )
 
-    Import-DscResource -ModuleName 'PSDesiredStateConfiguration'
+    Import-DscResource -ModuleName PSDesiredStateConfiguration
     Import-DscResource -ModuleName xDHCPServer -ModuleVersion 2.0.0.0
 
     # Assemble the Local Admin Credentials

@@ -5,12 +5,12 @@ DSC Template Configuration File For use by LabBuilder
 .Desription
     Builds a Server that is joined to a domain and then made into an DSC Pull Server.
 .Parameters:
-    DomainName = "LABBUILDER.COM"
-    DomainAdminPassword = "P@ssword!1"
+    DomainName = 'LABBUILDER.COM'
+    DomainAdminPassword = 'P@ssword!1'
     DCName = 'SA-DC1'
     PSDscAllowDomainUser = $true
     Port = 8080
-    PhysicalPath = "D:\inetpub\PSDSCPullServer"
+    PhysicalPath = 'D:\inetpub\PSDSCPullServer'
     # Set to a valid certificate thumbprint to allow HTTP traffic
     CertificateThumbprint = 'AllowUnencryptedTraffic'
     RegistrationKey = '140a952b-b9d6-406b-b416-e0f759c9c0e4'
@@ -19,36 +19,34 @@ DSC Template Configuration File For use by LabBuilder
 Configuration MEMBER_DSCPULLSERVER
 {
     Import-DSCResource -ModuleName xPSDesiredStateConfiguration
-    Import-DscResource -ModuleName ComputerManagementDsc
+    Import-DscResource -ModuleName ComputerManagementDsc -ModuleVersion 7.1.0.0
     Import-DscResource -ModuleName xWebAdministration
 
     Node $AllNodes.NodeName {
-        # Assemble the Local Admin Credentials
-        if ($Node.LocalAdminPassword)
-        {
-            [PSCredential]$LocalAdminCredential = New-Object System.Management.Automation.PSCredential ("Administrator", (ConvertTo-SecureString $Node.LocalAdminPassword -AsPlainText -Force))
-        }
+        # Assemble the Admin Credentials
         if ($Node.DomainAdminPassword)
         {
-            [PSCredential]$DomainAdminCredential = New-Object System.Management.Automation.PSCredential ("$($Node.DomainName)\Administrator", (ConvertTo-SecureString $Node.DomainAdminPassword -AsPlainText -Force))
+            $DomainAdminCredential = New-Object `
+                -TypeName System.Management.Automation.PSCredential `
+                -ArgumentList ("$($Node.DomainName)\Administrator", (ConvertTo-SecureString $Node.DomainAdminPassword -AsPlainText -Force))
         }
 
         WindowsFeature IISInstall
         {
-            Ensure = "Present"
-            Name   = "Web-Server"
+            Ensure = 'Present'
+            Name   = 'Web-Server'
         }
 
         WindowsFeature AspNet45Install
         {
-            Ensure = "Present"
-            Name   = "Web-Asp-Net45"
+            Ensure = 'Present'
+            Name   = 'Web-Asp-Net45'
         }
 
         WindowsFeature WebMgmtServiceInstall
         {
-            Ensure = "Present"
-            Name   = "Web-Mgmt-Service"
+            Ensure = 'Present'
+            Name   = 'Web-Mgmt-Service'
         }
 
         WindowsFeature DSCServiceFeature
@@ -70,7 +68,7 @@ Configuration MEMBER_DSCPULLSERVER
             Name       = $Node.NodeName
             DomainName = $Node.DomainName
             Credential = $DomainAdminCredential
-            DependsOn  = "[WaitForAll]DC"
+            DependsOn  = '[WaitForAll]DC'
         }
 
         xDscWebService PSDSCPullServer

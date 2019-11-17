@@ -5,8 +5,8 @@ DSC Template Configuration File For use by LabBuilder
 .Desription
     Builds a Server that is joined to a domain and then made into an IIS Web Application Server.
 .Parameters:
-    DomainName = "LABBUILDER.COM"
-    DomainAdminPassword = "P@ssword!1"
+    DomainName = 'LABBUILDER.COM'
+    DomainAdminPassword = 'P@ssword!1'
     DCName = 'SA-DC1'
     PSDscAllowDomainUser = $true
     WebAppPools = @(
@@ -24,17 +24,17 @@ DSC Template Configuration File For use by LabBuilder
            BindingInfo     = @(
                MSFT_xWebBindingInformation
                {
-                   Protocol              = "HTTPS"
+                   Protocol              = 'HTTPS'
                    Port                  = 8443
-                   CertificateThumbprint = "71AD93562316F21F74606F1096B85D66289ED60F"
-                   CertificateStoreName  = "WebHosting"
+                   CertificateThumbprint = '71AD93562316F21F74606F1096B85D66289ED60F'
+                   CertificateStoreName  = 'WebHosting'
                },
                MSFT_xWebBindingInformation
                {
-                   Protocol              = "HTTPS"
+                   Protocol              = 'HTTPS'
                    Port                  = 8444
-                   CertificateThumbprint = "DEDDD963B28095837F558FE14DA1FDEFB7FA9DA7"
-                   CertificateStoreName  = "MY"
+                   CertificateThumbprint = 'DEDDD963B28095837F558FE14DA1FDEFB7FA9DA7'
+                   CertificateStoreName  = 'MY'
                }
            )
            ApplicationPool = 'MyAppPool';
@@ -62,35 +62,34 @@ DSC Template Configuration File For use by LabBuilder
 
 Configuration MEMBER_WEBSERVER
 {
-    Import-DscResource -ModuleName 'PSDesiredStateConfiguration'
-    Import-DscResource -ModuleName ComputerManagementDsc
+    Import-DscResource -ModuleName PSDesiredStateConfiguration
+    Import-DscResource -ModuleName ComputerManagementDsc -ModuleVersion 7.1.0.0
     Import-DscResource -ModuleName xWebAdministration
 
     Node $AllNodes.NodeName {
-        # Assemble the Local Admin Credentials
-        if ($Node.LocalAdminPassword) {
-            [PSCredential]$LocalAdminCredential = New-Object System.Management.Automation.PSCredential ("Administrator", (ConvertTo-SecureString $Node.LocalAdminPassword -AsPlainText -Force))
-        }
+        # Assemble the Admin Credentials
         if ($Node.DomainAdminPassword) {
-            [PSCredential]$DomainAdminCredential = New-Object System.Management.Automation.PSCredential ("$($Node.DomainName)\Administrator", (ConvertTo-SecureString $Node.DomainAdminPassword -AsPlainText -Force))
+            $DomainAdminCredential = New-Object `
+                -TypeName System.Management.Automation.PSCredential `
+                -ArgumentList ("$($Node.DomainName)\Administrator", (ConvertTo-SecureString $Node.DomainAdminPassword -AsPlainText -Force))
         }
 
         WindowsFeature IISInstall
         {
-            Ensure          = "Present"
-            Name            = "Web-Server"
+            Ensure          = 'Present'
+            Name            = 'Web-Server'
         }
 
         WindowsFeature AspNet45Install
         {
-            Ensure          = "Present"
-            Name            = "Web-Asp-Net45"
+            Ensure          = 'Present'
+            Name            = 'Web-Asp-Net45'
         }
 
         WindowsFeature WebMgmtServiceInstall
         {
-            Ensure          = "Present"
-            Name            = "Web-Mgmt-Service"
+            Ensure          = 'Present'
+            Name            = 'Web-Mgmt-Service'
         }
 
         WaitForAll DC
@@ -106,14 +105,14 @@ Configuration MEMBER_WEBSERVER
             Name          = $Node.NodeName
             DomainName    = $Node.DomainName
             Credential    = $DomainAdminCredential
-            DependsOn     = "[WaitForAll]DC"
+            DependsOn     = '[WaitForAll]DC'
         }
 
         # Create the Web App Pools
-        [System.Int32]$Count=0
+        $count=0
         foreach ($WebAppPool in $Node.WebAppPools) {
-            $Count++
-            xWebAppPool "WebAppPool$Count"
+            $count++
+            xWebAppPool "WebAppPool$count"
             {
                 Ensure        = $WebAppPool.Ensure
                 Name          = $WebAppPool.Name
@@ -122,33 +121,33 @@ Configuration MEMBER_WEBSERVER
         }
 
         # Create the Web Sites
-        [System.Int32]$Count=0
+        $count=0
         foreach ($WebSite in $Node.WebSites) {
-            $Count++
+            $count++
 
             # Create an empty folder or copy content from Source Path
             if ($WebSite.SourcePath)
             {
-                File "WebSiteContent$Count"
+                File "WebSiteContent$count"
                 {
-                    Ensure          = "Present"
+                    Ensure          = 'Present'
                     SourcePath      = $WebSite.SourcePath
                     DestinationPath = $WebSite.PhysicalPath
                     Recurse         = $true
-                    Type            = "Directory"
+                    Type            = 'Directory'
                 }
             }
             else
             {
-                File "WebSiteContent$Count"
+                File "WebSiteContent$count"
                 {
-                    Ensure          = "Present"
-                    Type            = "Directory"
+                    Ensure          = 'Present'
+                    Type            = 'Directory'
                     DestinationPath = $WebSite.PhysicalPath
                 }
             } # if
 
-            xWebsite "WebSite$Count"
+            xWebsite "WebSite$count"
             {
                 Ensure          = $WebSite.Ensure
                 Name            = $WebSite.Name
@@ -156,7 +155,7 @@ Configuration MEMBER_WEBSERVER
                 PhysicalPath    = $WebSite.PhysicalPath
                 BindingInfo     = $WebSite.BindingInfo
                 ApplicationPool = $WebSite.ApplicationPool
-                DependsOn       = "[File]WebSiteContent$Count"
+                DependsOn       = "[File]WebSiteContent$count"
             }
         }
 
@@ -170,19 +169,19 @@ Configuration MEMBER_WEBSERVER
             {
                 File "WebApplicationContent$count"
                 {
-                    Ensure          = "Present"
+                    Ensure          = 'Present'
                     SourcePath      = $WebApplication.SourcePath
                     DestinationPath = $WebApplication.PhysicalPath
                     Recurse         = $true
-                    Type            = "Directory"
+                    Type            = 'Directory'
                 }
             }
             else
             {
                 File "WebApplicationContent$count"
                 {
-                    Ensure          = "Present"
-                    Type            = "Directory"
+                    Ensure          = 'Present'
+                    Type            = 'Directory'
                     DestinationPath = $WebApplication.PhysicalPath
                 }
             } # if
@@ -208,19 +207,19 @@ Configuration MEMBER_WEBSERVER
             {
                 File "WebVirtualDirectoryContent$count"
                 {
-                    Ensure          = "Present"
+                    Ensure          = 'Present'
                     SourcePath      = $WebVirtualDirectory.SourcePath
                     DestinationPath = $WebVirtualDirectory.PhysicalPath
                     Recurse         = $true
-                    Type            = "Directory"
+                    Type            = 'Directory'
                 }
             }
             else
             {
                 File "WebVirtualDirectoryContent$count"
                 {
-                    Ensure          = "Present"
-                    Type            = "Directory"
+                    Ensure          = 'Present'
+                    Type            = 'Directory'
                     DestinationPath = $WebVirtualDirectory.PhysicalPath
                 }
             } # if

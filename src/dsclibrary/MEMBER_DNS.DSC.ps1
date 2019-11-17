@@ -5,8 +5,8 @@ DSC Template Configuration File For use by LabBuilder
 .Desription
     Builds a Server that is joined to a domain and then made into a DNS Server.
 .Parameters:
-    DomainName = "LABBUILDER.COM"
-    DomainAdminPassword = "P@ssword!1"
+    DomainName = 'LABBUILDER.COM'
+    DomainAdminPassword = 'P@ssword!1'
     DCName = 'SA-DC1'
     PSDscAllowDomainUser = $true
     InstallRSATTools = $true
@@ -21,34 +21,32 @@ DSC Template Configuration File For use by LabBuilder
 
 Configuration MEMBER_DNS
 {
-    Import-DscResource -ModuleName 'PSDesiredStateConfiguration'
-    Import-DscResource -ModuleName ComputerManagementDsc
-    Import-DscResource -ModuleName xDNSServer
+    Import-DscResource -ModuleName PSDesiredStateConfiguration
+    Import-DscResource -ModuleName ComputerManagementDsc -ModuleVersion 7.1.0.0
+    Import-DscResource -ModuleName xDNSServer -ModuleVersion 1.16.0.0
 
     Node $AllNodes.NodeName {
-        # Assemble the Local Admin Credentials
-        if ($Node.LocalAdminPassword)
-        {
-            [PSCredential]$LocalAdminCredential = New-Object System.Management.Automation.PSCredential ("Administrator", (ConvertTo-SecureString $Node.LocalAdminPassword -AsPlainText -Force))
-        }
+        # Assemble the Admin Credentials
         if ($Node.DomainAdminPassword)
         {
-            [PSCredential]$DomainAdminCredential = New-Object System.Management.Automation.PSCredential ("$($Node.DomainName)\Administrator", (ConvertTo-SecureString $Node.DomainAdminPassword -AsPlainText -Force))
+            $DomainAdminCredential = New-Object `
+                -TypeName System.Management.Automation.PSCredential `
+                -ArgumentList ("$($Node.DomainName)\Administrator", (ConvertTo-SecureString $Node.DomainAdminPassword -AsPlainText -Force))
         }
 
         WindowsFeature DNSInstall
         {
-            Ensure = "Present"
-            Name   = "DNS"
+            Ensure = 'Present'
+            Name   = 'DNS'
         }
 
         if ($InstallRSATTools)
         {
             WindowsFeature RSAT-ManagementTools
             {
-                Ensure    = "Present"
-                Name      = "RSAT-DNS-Server"
-                DependsOn = "[WindowsFeature]DNSInstall"
+                Ensure    = 'Present'
+                Name      = 'RSAT-DNS-Server'
+                DependsOn = '[WindowsFeature]DNSInstall'
             }
         }
 
@@ -75,21 +73,19 @@ Configuration MEMBER_DNS
             {
                 IsSingleInstance = 'Yes'
                 IPAddresses      = $Node.Forwarders
-                Credential       = $DomainAdminCredential
                 DependsOn        = '[Computer]JoinDomain'
             }
         }
-        $Count=0
+        $count = 0
         foreach ($PrimaryZone in $Node.PrimaryZones)
         {
-            $Count++
-            xDnsServerPrimaryZone "PrimaryZone$Count"
+            $count++
+            xDnsServerPrimaryZone "PrimaryZone$count"
             {
                 Ensure        = 'Present'
                 Name          = $PrimaryZone.Name
                 ZoneFile      = $PrimaryZone.ZoneFile
                 DynamicUpdate = $PrimaryZone.DynamicUpdate
-                Credential    = $DomainAdminCredential
                 DependsOn     = '[Computer]JoinDomain'
             }
         }
