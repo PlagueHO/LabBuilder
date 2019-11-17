@@ -4,28 +4,28 @@ DSC Template Configuration File For use by LabBuilder
     MEMBER_EDGE
 .Desription
     Builds a Server that is joined to a domain and then contains Remote Access components.
-.Parameters:          
+.Parameters:
     DomainName = "LABBUILDER.COM"
     DomainAdminPassword = "P@ssword!1"
 ###################################################################################################>
 
 Configuration REMOTEACCESS
 {
-    Import-DscResource -ModuleName 'PSDesiredStateConfiguration'
+    Import-DscResource -ModuleName PSDesiredStateConfiguration
 
 
-        WindowsFeature DirectAccessVPNInstall 
-        { 
-            Ensure = "Present" 
-            Name = "DirectAccess-VPN" 
-        } 
+        WindowsFeature DirectAccessVPNInstall
+        {
+            Ensure = "Present"
+            Name = "DirectAccess-VPN"
+        }
 
-        WindowsFeature RoutingInstall 
-        { 
-            Ensure = "Present" 
-            Name = "Routing" 
-            DependsOn = "[WindowsFeature]DirectAccessVPNInstall" 
-        } 
+        WindowsFeature RoutingInstall
+        {
+            Ensure = "Present"
+            Name = "Routing"
+            DependsOn = "[WindowsFeature]DirectAccessVPNInstall"
+        }
 
-    
+
 }

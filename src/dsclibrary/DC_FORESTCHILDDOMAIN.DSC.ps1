@@ -8,9 +8,9 @@ DSC Template Configuration File For use by LabBuilder
     Setting optional parameters Forwarders, ADZones and PrimaryZones will allow additional
     configuration of the DNS Server.
 .Parameters:
-    ParentDomainName = "LABBUILDER.COM"
-    DomainName = "DEV"
-    DomainAdminPassword = "P@ssword!1"
+    ParentDomainName = 'LABBUILDER.COM'
+    DomainName = 'DEV'
+    DomainAdminPassword = 'P@ssword!1'
     PSDscAllowDomainUser = $true
     InstallRSATTools = $true
     Forwarders = @('8.8.8.8','8.8.4.4')
@@ -30,64 +30,69 @@ DSC Template Configuration File For use by LabBuilder
 
 Configuration DC_FORESTCHILDDOMAIN
 {
-    Import-DscResource -ModuleName 'PSDesiredStateConfiguration'
+    Import-DscResource -ModuleName PSDesiredStateConfiguration
     Import-DscResource -ModuleName ActiveDirectoryDsc -ModuleVersion 4.1.0.0
-    Import-DscResource -ModuleName xDNSServer
+    Import-DscResource -ModuleName xDNSServer -ModuleVersion 1.16.0.0
 
     Node $AllNodes.NodeName {
         # Assemble the Local Admin Credentials
         if ($Node.LocalAdminPassword)
         {
-            [PSCredential]$LocalAdminCredential = New-Object System.Management.Automation.PSCredential ("Administrator", (ConvertTo-SecureString $Node.LocalAdminPassword -AsPlainText -Force))
+            $LocalAdminCredential = New-Object `
+                -TypeName System.Management.Automation.PSCredential `
+                -ArgumentList ('Administrator', (ConvertTo-SecureString $Node.LocalAdminPassword -AsPlainText -Force))
         }
+
         if ($Node.DomainAdminPassword)
         {
-            [PSCredential]$DomainAdminCredential = New-Object System.Management.Automation.PSCredential ("$($Node.ParentDomainName)\Administrator", (ConvertTo-SecureString $Node.DomainAdminPassword -AsPlainText -Force))
+            $DomainAdminCredential = New-Object `
+                -TypeName System.Management.Automation.PSCredential `
+                -ArgumentList ("$($Node.ParentDomainName)\Administrator", (ConvertTo-SecureString $Node.DomainAdminPassword -AsPlainText -Force))
         }
 
         WindowsFeature BackupInstall
         {
-            Ensure = "Present"
-            Name   = "Windows-Server-Backup"
+            Ensure = 'Present'
+            Name   = 'Windows-Server-Backup'
         }
 
         WindowsFeature DNSInstall
         {
-            Ensure = "Present"
-            Name   = "DNS"
+            Ensure = 'Present'
+            Name   = 'DNS'
         }
 
         WindowsFeature ADDSInstall
         {
-            Ensure    = "Present"
-            Name      = "AD-Domain-Services"
-            DependsOn = "[WindowsFeature]DNSInstall"
+            Ensure    = 'Present'
+            Name      = 'AD-Domain-Services'
+            DependsOn = '[WindowsFeature]DNSInstall'
         }
 
         WindowsFeature RSAT-AD-PowerShellInstall
         {
-            Ensure    = "Present"
-            Name      = "RSAT-AD-PowerShell"
-            DependsOn = "[WindowsFeature]ADDSInstall"
+            Ensure    = 'Present'
+            Name      = 'RSAT-AD-PowerShell'
+            DependsOn = '[WindowsFeature]ADDSInstall'
         }
 
         if ($InstallRSATTools)
         {
             WindowsFeature RSAT-ManagementTools
             {
-                Ensure    = "Present"
-                Name      = "RSAT-AD-Tools", "RSAT-DNS-Server"
-                DependsOn = "[WindowsFeature]ADDSInstall"
+                Ensure    = 'Present'
+                Name      = 'RSAT-AD-Tools', 'RSAT-DNS-Server'
+                DependsOn = '[WindowsFeature]ADDSInstall'
             }
         }
 
         WaitForADDomain DscDomainWait
         {
-            DomainName           = $Node.ParentDomainName
-            Credential           = $DomainAdminCredential
-            WaitTimeout          = 300
-            RestartCount         = 5
-            DependsOn            = "[WindowsFeature]ADDSInstall"
+            DomainName   = $Node.ParentDomainName
+            Credential   = $DomainAdminCredential
+            WaitTimeout  = 300
+            RestartCount = 5
+            DependsOn    = '[WindowsFeature]ADDSInstall'
         }
 
         ADDomain PrimaryDC
@@ -96,7 +101,7 @@ Configuration DC_FORESTCHILDDOMAIN
             ParentDomainName              = $Node.ParentDomainName
             Credential                    = $DomainAdminCredential
             SafemodeAdministratorPassword = $LocalAdminCredential
-            DependsOn                     = "[WaitForADDomain]DscDomainWait"
+            DependsOn                     = '[WaitForADDomain]DscDomainWait'
         }
 
         # DNS Server Settings
@@ -106,33 +111,35 @@ Configuration DC_FORESTCHILDDOMAIN
             {
                 IsSingleInstance = 'Yes'
                 IPAddresses      = $Node.Forwarders
-                DependsOn        = "[ADDomain]PrimaryDC"
+                DependsOn        = '[ADDomain]PrimaryDC'
             }
         }
-        $Count=0
+
+        $count = 0
         foreach ($ADZone in $Node.ADZones)
         {
-            $Count++
-            xDnsServerADZone "ADZone$Count"
+            $count++
+            xDnsServerADZone "ADZone$count"
             {
                 Ensure           = 'Present'
                 Name             = $ADZone.Name
                 DynamicUpdate    = $ADZone.DynamicUpdate
                 ReplicationScope = $ADZone.ReplicationScope
-                DependsOn        = "[ADDomain]PrimaryDC"
+                DependsOn        = '[ADDomain]PrimaryDC'
             }
         }
-        $Count=0
+
+        $count = 0
         foreach ($PrimaryZone in $Node.PrimaryZones)
         {
-            $Count++
-            xDnsServerPrimaryZone "PrimaryZone$Count"
+            $count++
+            xDnsServerPrimaryZone "PrimaryZone$count"
             {
                 Ensure        = 'Present'
                 Name          = $PrimaryZone.Name
                 ZoneFile      = $PrimaryZone.ZoneFile
                 DynamicUpdate = $PrimaryZone.DynamicUpdate
-                DependsOn     = "[ADDomain]PrimaryDC"
+                DependsOn     = '[ADDomain]PrimaryDC'
             }
         }
     }

@@ -21,7 +21,7 @@ DSC Template Configuration File For use by LabBuilder
 
 Configuration STANDALONE_ROOTCA
 {
-    Import-DscResource -ModuleName 'PSDesiredStateConfiguration'
+    Import-DscResource -ModuleName PSDesiredStateConfiguration
     Import-DscResource -ModuleName ActiveDirectoryCSDsc
     Import-DscResource -ModuleName xPSDesiredStateConfiguration
 
@@ -29,7 +29,9 @@ Configuration STANDALONE_ROOTCA
         # Assemble the Local Admin Credentials
         if ($Node.LocalAdminPassword)
         {
-            [PSCredential]$LocalAdminCredential = New-Object System.Management.Automation.PSCredential ("Administrator", (ConvertTo-SecureString $Node.LocalAdminPassword -AsPlainText -Force))
+            $LocalAdminCredential = New-Object `
+                -TypeName System.Management.Automation.PSCredential `
+                -ArgumentList ('Administrator', (ConvertTo-SecureString $Node.LocalAdminPassword -AsPlainText -Force))
         }
 
         # Install the ADCS Certificate Authority
@@ -85,7 +87,8 @@ Configuration STANDALONE_ROOTCA
         }
 
         # Configure the ADCS Web Enrollment
-        ADCSWebEnrollment ConfigWebEnrollment {
+        ADCSWebEnrollment ConfigWebEnrollment
+        {
             Ensure           = 'Present'
             IsSingleInstance = 'Yes'
             CAConfig         = 'CertSrv'

@@ -10,9 +10,9 @@ DSC Template Configuration File For use by LabBuilder
     Setting optional parameters Forwarders, ADZones and PrimaryZones will allow additional
     configuration of the DNS Server.
 .Parameters:
-    DomainName = "LABBUILDER.COM"
-    DomainNetBiosName = "LABBUILDER"
-    DomainAdminPassword = "P@ssword!1"
+    DomainName = 'LABBUILDER.COM'
+    DomainNetBiosName = 'LABBUILDER'
+    DomainAdminPassword = 'P@ssword!1'
     InstallRSATTools = $true
     Forwarders = @('8.8.8.8','8.8.4.4')
     ADZones = @(
@@ -31,54 +31,59 @@ DSC Template Configuration File For use by LabBuilder
 
 Configuration DC_FORESTPRIMARY
 {
-    Import-DscResource -ModuleName 'PSDesiredStateConfiguration'
+    Import-DscResource -ModuleName PSDesiredStateConfiguration
     Import-DscResource -ModuleName ActiveDirectoryDsc -ModuleVersion 4.1.0.0
-    Import-DscResource -ModuleName xDNSServer
+    Import-DscResource -ModuleName xDNSServer -ModuleVersion 1.16.0.0
 
     Node $AllNodes.NodeName {
         # Assemble the Local Admin Credentials
         if ($Node.LocalAdminPassword)
         {
-            [PSCredential]$LocalAdminCredential = New-Object System.Management.Automation.PSCredential ("Administrator", (ConvertTo-SecureString $Node.LocalAdminPassword -AsPlainText -Force))
+            $LocalAdminCredential = New-Object `
+                -TypeName System.Management.Automation.PSCredential `
+                -ArgumentList ('Administrator', (ConvertTo-SecureString $Node.LocalAdminPassword -AsPlainText -Force))
         }
+
         if ($Node.DomainAdminPassword)
         {
-            [PSCredential]$DomainAdminCredential = New-Object System.Management.Automation.PSCredential ("Administrator", (ConvertTo-SecureString $Node.DomainAdminPassword -AsPlainText -Force))
+            $DomainAdminCredential = New-Object `
+                -TypeName System.Management.Automation.PSCredential `
+                -ArgumentList ('Administrator', (ConvertTo-SecureString $Node.DomainAdminPassword -AsPlainText -Force))
         }
 
         WindowsFeature BackupInstall
         {
-            Ensure = "Present"
-            Name   = "Windows-Server-Backup"
+            Ensure = 'Present'
+            Name   = 'Windows-Server-Backup'
         }
 
         WindowsFeature DNSInstall
         {
-            Ensure = "Present"
-            Name   = "DNS"
+            Ensure = 'Present'
+            Name   = 'DNS'
         }
 
         WindowsFeature ADDSInstall
         {
-            Ensure    = "Present"
-            Name      = "AD-Domain-Services"
-            DependsOn = "[WindowsFeature]DNSInstall"
+            Ensure    = 'Present'
+            Name      = 'AD-Domain-Services'
+            DependsOn = '[WindowsFeature]DNSInstall'
         }
 
         WindowsFeature RSAT-AD-PowerShellInstall
         {
-            Ensure    = "Present"
-            Name      = "RSAT-AD-PowerShell"
-            DependsOn = "[WindowsFeature]ADDSInstall"
+            Ensure    = 'Present'
+            Name      = 'RSAT-AD-PowerShell'
+            DependsOn = '[WindowsFeature]ADDSInstall'
         }
 
         if ($InstallRSATTools)
         {
             WindowsFeature RSAT-ManagementTools
             {
-                Ensure    = "Present"
-                Name      = "RSAT-AD-Tools", "RSAT-DNS-Server"
-                DependsOn = "[WindowsFeature]ADDSInstall"
+                Ensure    = 'Present'
+                Name      = 'RSAT-AD-Tools', 'RSAT-DNS-Server'
+                DependsOn = '[WindowsFeature]ADDSInstall'
             }
         }
 
@@ -90,7 +95,7 @@ Configuration DC_FORESTPRIMARY
                 DomainNetBiosName             = $Node.DomainNetBiosName
                 Credential                    = $DomainAdminCredential
                 SafemodeAdministratorPassword = $LocalAdminCredential
-                DependsOn                     = "[WindowsFeature]ADDSInstall"
+                DependsOn                     = '[WindowsFeature]ADDSInstall'
             }
         }
         else
@@ -100,7 +105,7 @@ Configuration DC_FORESTPRIMARY
                 DomainName                    = $Node.DomainName
                 Credential                    = $DomainAdminCredential
                 SafemodeAdministratorPassword = $LocalAdminCredential
-                DependsOn                     = "[WindowsFeature]ADDSInstall"
+                DependsOn                     = '[WindowsFeature]ADDSInstall'
             }
         }
 
@@ -110,16 +115,16 @@ Configuration DC_FORESTPRIMARY
             Credential   = $DomainAdminCredential
             WaitTimeout  = 300
             RestartCount = 5
-            DependsOn    = "[ADDomain]PrimaryDC"
+            DependsOn    = '[ADDomain]PrimaryDC'
         }
 
         # Enable AD Recycle bin
         ADOptionalFeature RecycleBin
         {
-            FeatureName                       = "Recycle Bin Feature"
+            FeatureName                       = 'Recycle Bin Feature'
             EnterpriseAdministratorCredential = $DomainAdminCredential
             ForestFQDN                        = $Node.DomainName
-            DependsOn                         = "[WaitForADDomain]DscDomainWait"
+            DependsOn                         = '[WaitForADDomain]DscDomainWait'
         }
 
         # Install a KDS Root Key so we can create MSA/gMSA accounts
@@ -135,7 +140,7 @@ Configuration DC_FORESTPRIMARY
             TestScript = {
                 if (-not (Get-KDSRootKey))
                 {
-                    Write-Verbose -Message "KDS Root Key Needs to be installed..."
+                    Write-Verbose -Message 'KDS Root Key Needs to be installed...'
                     Return $false
                 }
                 Return $true
@@ -150,37 +155,38 @@ Configuration DC_FORESTPRIMARY
             {
                 IsSingleInstance = 'Yes'
                 IPAddresses      = $Node.Forwarders
-                DependsOn        = "[WaitForADDomain]DscDomainWait"
+                DependsOn        = '[WaitForADDomain]DscDomainWait'
             }
         }
 
-        $Count = 0
+        $count = 0
         foreach ($ADZone in $Node.ADZones)
         {
-            $Count++
-            xDnsServerADZone "ADZone$Count"
+            $count++
+            xDnsServerADZone "ADZone$count"
             {
                 Ensure           = 'Present'
                 Name             = $ADZone.Name
                 DynamicUpdate    = $ADZone.DynamicUpdate
                 ReplicationScope = $ADZone.ReplicationScope
-                DependsOn        = "[WaitForADDomain]DscDomainWait"
+                DependsOn        = '[WaitForADDomain]DscDomainWait'
             }
         }
 
-        $Count = 0
+        $count = 0
         foreach ($PrimaryZone in $Node.PrimaryZones)
         {
-            $Count++
-            xDnsServerPrimaryZone "PrimaryZone$Count"
+            $count++
+            xDnsServerPrimaryZone "PrimaryZone$count"
             {
                 Ensure        = 'Present'
                 Name          = $PrimaryZone.Name
                 ZoneFile      = $PrimaryZone.ZoneFile
                 DynamicUpdate = $PrimaryZone.DynamicUpdate
-                DependsOn     = "[WaitForADDomain]DscDomainWait"
+                DependsOn     = '[WaitForADDomain]DscDomainWait'
             }
         }
+
         <#
         # Create a Reverse Lookup Zone
         xDnsServerPrimaryZone GlobalNamesZone
@@ -205,7 +211,7 @@ Configuration DC_FORESTPRIMARY
         {
             PSDSCRunAsCredential = $DomainAdminCredential
             SetScript = {
-                Write-Verbose -Message "Enabling Global Name Zone..."
+                Write-Verbose -Message 'Enabling Global Name Zone...'
                 Set-DNSServerGlobalNameZone -Enable
             }
             GetScript = {
@@ -215,7 +221,7 @@ Configuration DC_FORESTPRIMARY
             }
             TestScript = {
                 if (-not (Get-DNSServerGlobalNameZone).Enable) {
-                    Write-Verbose -Message "Global Name Zone needs to be enabled..."
+                    Write-Verbose -Message 'Global Name Zone needs to be enabled...'
                     Return $false
                 }
                 Return $true

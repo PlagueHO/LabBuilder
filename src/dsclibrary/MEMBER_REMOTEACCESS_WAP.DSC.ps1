@@ -6,46 +6,44 @@ DSC Template Configuration File For use by LabBuilder
     Builds a Server that is joined to a domain and then contains Remote Access and
     Web Application Proxy components.
 .Parameters:
-    DomainName = "LABBUILDER.COM"
-    DomainAdminPassword = "P@ssword!1"
+    DomainName = 'LABBUILDER.COM'
+    DomainAdminPassword = 'P@ssword!1'
     DCName = 'SA-DC1'
     PSDscAllowDomainUser = $true
 ###################################################################################################>
 
 Configuration MEMBER_REMOTEACCESS_WAP
 {
-    Import-DscResource -ModuleName 'PSDesiredStateConfiguration'
-    Import-DscResource -ModuleName ComputerManagementDsc
+    Import-DscResource -ModuleName PSDesiredStateConfiguration
+    Import-DscResource -ModuleName ComputerManagementDsc -ModuleVersion 7.1.0.0
 
     Node $AllNodes.NodeName {
-        # Assemble the Local Admin Credentials
-        if ($Node.LocalAdminPassword)
-        {
-            [PSCredential]$LocalAdminCredential = New-Object System.Management.Automation.PSCredential ("Administrator", (ConvertTo-SecureString $Node.LocalAdminPassword -AsPlainText -Force))
-        }
+        # Assemble the  Admin Credentials
         if ($Node.DomainAdminPassword)
         {
-            [PSCredential]$DomainAdminCredential = New-Object System.Management.Automation.PSCredential ("$($Node.DomainName)\Administrator", (ConvertTo-SecureString $Node.DomainAdminPassword -AsPlainText -Force))
+            $DomainAdminCredential = New-Object `
+                -TypeName System.Management.Automation.PSCredential `
+                -ArgumentList ("$($Node.DomainName)\Administrator", (ConvertTo-SecureString $Node.DomainAdminPassword -AsPlainText -Force))
         }
 
         WindowsFeature DirectAccessVPNInstall
         {
-            Ensure = "Present"
-            Name   = "DirectAccess-VPN"
+            Ensure = 'Present'
+            Name   = 'DirectAccess-VPN'
         }
 
         WindowsFeature RoutingInstall
         {
-            Ensure    = "Present"
-            Name      = "Routing"
-            DependsOn = "[WindowsFeature]DirectAccessVPNInstall"
+            Ensure    = 'Present'
+            Name      = 'Routing'
+            DependsOn = '[WindowsFeature]DirectAccessVPNInstall'
         }
 
         WindowsFeature WebApplicationProxyInstall
         {
-            Ensure    = "Present"
-            Name      = "Web-Application-Proxy"
-            DependsOn = "[WindowsFeature]RoutingInstall"
+            Ensure    = 'Present'
+            Name      = 'Web-Application-Proxy'
+            DependsOn = '[WindowsFeature]RoutingInstall'
         }
 
         # Wait for the Domain to be available so we can join it.
@@ -63,7 +61,7 @@ Configuration MEMBER_REMOTEACCESS_WAP
             Name       = $Node.NodeName
             DomainName = $Node.DomainName
             Credential = $DomainAdminCredential
-            DependsOn  = "[WaitForAll]DC"
+            DependsOn  = '[WaitForAll]DC'
         }
     }
 }

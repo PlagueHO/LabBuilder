@@ -5,8 +5,8 @@ DSC Template Configuration File For use by LabBuilder
 .Desription
     Builds a Server that is joined to a domain and then made into an ADRMS Server.
 .Parameters:
-    DomainName = "LABBUILDER.COM"
-    DomainAdminPassword = "P@ssword!1"
+    DomainName = 'LABBUILDER.COM'
+    DomainAdminPassword = 'P@ssword!1'
     DCName = 'SA-DC1'
     PSDscAllowDomainUser = $true
     ADFSSupport = $true
@@ -14,40 +14,45 @@ DSC Template Configuration File For use by LabBuilder
 
 Configuration MEMBER_ADRMS
 {
-    Import-DscResource -ModuleName 'PSDesiredStateConfiguration'
-    Import-DscResource -ModuleName ComputerManagementDsc
+    Import-DscResource -ModuleName PSDesiredStateConfiguration
+    Import-DscResource -ModuleName ComputerManagementDsc -ModuleVersion 7.1.0.0
 
     Node $AllNodes.NodeName {
         # Assemble the Local Admin Credentials
         if ($Node.LocalAdminPassword)
         {
-            [PSCredential]$LocalAdminCredential = New-Object System.Management.Automation.PSCredential ("Administrator", (ConvertTo-SecureString $Node.LocalAdminPassword -AsPlainText -Force))
+            $LocalAdminCredential = New-Object `
+                -TypeName System.Management.Automation.PSCredential `
+                -ArgumentList ('Administrator', (ConvertTo-SecureString $Node.LocalAdminPassword -AsPlainText -Force))
         }
+
         if ($Node.DomainAdminPassword)
         {
-            [PSCredential]$DomainAdminCredential = New-Object System.Management.Automation.PSCredential ("$($Node.DomainName)\Administrator", (ConvertTo-SecureString $Node.DomainAdminPassword -AsPlainText -Force))
+            $DomainAdminCredential = New-Object `
+                -TypeName System.Management.Automation.PSCredential `
+                -ArgumentList ("$($Node.DomainName)\Administrator", (ConvertTo-SecureString $Node.DomainAdminPassword -AsPlainText -Force))
         }
 
         WindowsFeature WIDInstall
         {
-            Ensure = "Present"
-            Name   = "Windows-Internal-Database"
+            Ensure = 'Present'
+            Name   = 'Windows-Internal-Database'
         }
 
         WindowsFeature ADRMSServerInstall
         {
-            Ensure    = "Present"
-            Name      = "ADRMS-Server"
-            DependsOn = "[WindowsFeature]WIDInstall"
+            Ensure    = 'Present'
+            Name      = 'ADRMS-Server'
+            DependsOn = '[WindowsFeature]WIDInstall'
         }
 
         if ($Node.ADFSSupport)
         {
             WindowsFeature ADRMSIdentityInstall
             {
-                Ensure    = "Present"
-                Name      = "ADRMS-Identity"
-                DependsOn = "[WindowsFeature]ADRMSServerInstall"
+                Ensure    = 'Present'
+                Name      = 'ADRMS-Identity'
+                DependsOn = '[WindowsFeature]ADRMSServerInstall'
             }
         }
 
@@ -64,7 +69,7 @@ Configuration MEMBER_ADRMS
             Name       = $Node.NodeName
             DomainName = $Node.DomainName
             Credential = $DomainAdminCredential
-            DependsOn  = "[WaitForAll]DC"
+            DependsOn  = '[WaitForAll]DC'
         }
     }
 }

@@ -1,5 +1,42 @@
 # Change Log
 
+## Unreleased
+
+- Convert all DSC configurations to use ComputerManagementDsc version
+  7.1.0.0.
+- Clean up code style on all DSC Library files.
+- `dsclibrary\DC_FORESTCHILDDOMAIN.DSC.ps1`:
+  - Convert to use xDnsServer version 1.16.0.0.
+  - Clean up code style.
+- `dsclibrary\DC_FORESTPRIMARY.DSC.ps1`:
+  - Convert to use xDnsServer version 1.16.0.0.
+  - Clean up code style.
+- `dsclibrary\DC_FORESTSECONDARY.DSC.ps1`:
+  - Convert to use xDnsServer version 1.16.0.0.
+  - Clean up code style.
+- `dsclibrary\MEMBER_DHCP.DSC.ps1`:
+  - Convert to use xDnsServer version 1.16.0.0.
+  - Clean up code style.
+  - Correct DHCP scope example - fixes [Issue-343](https://github.com/PlagueHO/LabBuilder/issues/343).
+- `dsclibrary\MEMBER_DHCPDNS.DSC.ps1`:
+  - Convert to use xDnsServer version 1.16.0.0.
+  - Clean up code style.
+  - Correct DHCP scope example - fixes [Issue-343](https://github.com/PlagueHO/LabBuilder/issues/343).
+- `dsclibrary\MEMBER_DHCPNPAS2016.DSC.ps1`:
+  - Convert to use xDnsServer version 1.16.0.0.
+  - Clean up code style.
+  - Correct DHCP scope example - fixes [Issue-343](https://github.com/PlagueHO/LabBuilder/issues/343).
+- `dsclibrary\MEMBER_DNS.DSC.ps1`:
+  - Convert to use xDnsServer version 1.16.0.0.
+  - Clean up code style.
+- `dsclibrary\STNADALONE_DHCPDNS.DSC.ps1`:
+  - Convert to use xDnsServer version 1.16.0.0.
+  - Clean up code style.
+  - Correct DHCP scope example - fixes [Issue-343](https://github.com/PlagueHO/LabBuilder/issues/343).
+- `dsclibrary\STNADALONE_INTERNET.DSC.ps1`:
+  - Convert to use xDnsServer version 1.16.0.0.
+  - Clean up code style.
+
 ## 1.0.5.104
 
 - Samples\Sample_WS2019_AzureADConnect.xml: Added sample for installing Azure AD

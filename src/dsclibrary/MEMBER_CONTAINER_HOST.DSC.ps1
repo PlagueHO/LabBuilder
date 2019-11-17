@@ -7,8 +7,8 @@ DSC Template Configuration File For use by LabBuilder
 
     This should only be used on a Windows Server 2016 RTM host.
 .Parameters:
-    DomainName = "LABBUILDER.COM"
-    DomainAdminPassword = "P@ssword!1"
+    DomainName = 'LABBUILDER.COM'
+    DomainAdminPassword = 'P@ssword!1'
     DCName = 'SA-DC1'
     PSDscAllowDomainUser = $true
 ###################################################################################################>
@@ -23,18 +23,22 @@ Configuration MEMBER_CONTAINER_HOST
 
     Import-DscResource -ModuleName PSDesiredStateConfiguration
     Import-DscResource -ModuleName xPSDesiredStateConfiguration
-    Import-DscResource -ModuleName ComputerManagementDsc
-    Import-DscResource -ModuleName xPendingReboot
+    Import-DscResource -ModuleName ComputerManagementDsc -ModuleVersion 7.1.0.0
 
     Node $AllNodes.NodeName {
         # Assemble the Local Admin Credentials
         if ($Node.LocalAdminPassword)
         {
-            [PSCredential]$LocalAdminCredential = New-Object System.Management.Automation.PSCredential ("Administrator", (ConvertTo-SecureString $Node.LocalAdminPassword -AsPlainText -Force))
+            $LocalAdminCredential = New-Object `
+                -TypeName System.Management.Automation.PSCredential `
+                -ArguementList ('Administrator', (ConvertTo-SecureString $Node.LocalAdminPassword -AsPlainText -Force))
         }
+
         if ($Node.DomainAdminPassword)
         {
-            [PSCredential]$DomainAdminCredential = New-Object System.Management.Automation.PSCredential ("$($Node.DomainName)\Administrator", (ConvertTo-SecureString $Node.DomainAdminPassword -AsPlainText -Force))
+            $DomainAdminCredential = New-Object `
+                -TypeName System.Management.Automation.PSCredential `
+                -ArguementList ("$($Node.DomainName)\Administrator", (ConvertTo-SecureString $Node.DomainAdminPassword -AsPlainText -Force))
         }
 
         WaitForAll DC
@@ -56,8 +60,8 @@ Configuration MEMBER_CONTAINER_HOST
         # Install containers feature
         WindowsFeature ContainerInstall
         {
-            Ensure = "Present"
-            Name   = "Containers"
+            Ensure = 'Present'
+            Name   = 'Containers'
         }
 
         # Download Docker Engine
@@ -89,12 +93,14 @@ Configuration MEMBER_CONTAINER_HOST
             DependsOn = '[xArchive]DockerEngineExtract'
         }
 
-        # Reboot the system to complete Containers feature setup
-        # Perform this after setting the Environment variable
-        # so that PowerShell and other consoles can access it.
-        xPendingReboot Reboot
+        <#
+            Reboot the system to complete Containers feature setup
+            Perform this after setting the Environment variable
+            so that PowerShell and other consoles can access it.
+        #>
+        PendingReboot Reboot
         {
-            Name = "Reboot After Containers"
+            Name = 'Reboot After Containers'
         }
 
         # Install the Docker Daemon as a service
@@ -119,8 +125,10 @@ Configuration MEMBER_CONTAINER_HOST
             DependsOn  = '[xArchive]DockerEngineExtract'
         }
 
-        # Start up the Docker Service and ensure it is set
-        # to start up automatically.
+        <#
+            Start up the Docker Service and ensure it is set
+            to start up automatically.
+        #>
         xServiceSet DockerService
         {
             Ensure      = 'Present'

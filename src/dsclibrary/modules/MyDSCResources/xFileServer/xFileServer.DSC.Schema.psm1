@@ -37,17 +37,17 @@ Configuration FILESERVER
 
     )
 
-    Import-DscResource -ModuleName 'PSDesiredStateConfiguration'
-    Import-DscResource -ModuleName ComputerManagementDsc
+    Import-DscResource -ModuleName PSDesiredStateConfiguration
+    Import-DscResource -ModuleName ComputerManagementDsc -ModuleVersion 7.1.0.0
     Import-DscResource -ModuleName StorageDsc
     Import-DscResource -ModuleName NetworkingDsc
 
         # Assemble the Local Admin Credentials
         if ($Node.LocalAdminPassword) {
-            [PSCredential]$LocalAdminCredential = New-Object System.Management.Automation.PSCredential ("Administrator", (ConvertTo-SecureString $Node.LocalAdminPassword -AsPlainText -Force))
+            $LocalAdminCredential = New-Object -TypeName System.Management.Automation.PSCredential -ArgumentList ("Administrator", (ConvertTo-SecureString $Node.LocalAdminPassword -AsPlainText -Force))
         }
         if ($Node.DomainAdminPassword) {
-            [PSCredential]$DomainAdminCredential = New-Object System.Management.Automation.PSCredential ("$($Node.DomainName)\Administrator", (ConvertTo-SecureString $Node.DomainAdminPassword -AsPlainText -Force))
+            $DomainAdminCredential = New-Object -TypeName System.Management.Automation.PSCredential -ArgumentList ("$($Node.DomainName)\Administrator", (ConvertTo-SecureString $Node.DomainAdminPassword -AsPlainText -Force))
         }
 
         WindowsFeature FileServerInstall
@@ -163,22 +163,22 @@ Configuration FILESERVER
             Enabled = 'True'
         }
 
-        [System.Int32]$Count=0
+        [System.Int32]$count=0
         ForEach ($Disk in $Disks) {
-        $Count++
+        $count++
 
-        WaitforDisk Disk$Count
+        WaitforDisk Disk$count
         {
             DiskNumber = $Disk.Number
             RetryIntervalSec = 60
             RetryCount = 60
         }
 
-        Disk Volume$Count
+        Disk Volume$count
         {
             DiskNumber = $Disk.Number
             DriveLetter = $Disk.Letter
-            DependsOn = "[WaitforDisk]Disk$Count"
+            DependsOn = "[WaitforDisk]Disk$count"
         }
       }
 }

@@ -29,52 +29,59 @@ DSC Template Configuration File For use by LabBuilder
 
 Configuration DC_SECONDARY
 {
-    Import-DscResource -ModuleName 'PSDesiredStateConfiguration'
+    Import-DscResource -ModuleName PSDesiredStateConfiguration
     Import-DscResource -ModuleName ActiveDirectoryDsc -ModuleVersion 4.1.0.0
-    Import-DscResource -ModuleName xDNSServer
+    Import-DscResource -ModuleName xDNSServer -ModuleVersion 1.16.0.0
 
     Node $AllNodes.NodeName {
         # Assemble the Local Admin Credentials
-        if ($Node.LocalAdminPassword) {
-            [PSCredential]$LocalAdminCredential = New-Object System.Management.Automation.PSCredential ("Administrator", (ConvertTo-SecureString $Node.LocalAdminPassword -AsPlainText -Force))
+        if ($Node.LocalAdminPassword)
+        {
+            $LocalAdminCredential = New-Object `
+                -TypeName System.Management.Automation.PSCredential `
+                -ArgumentName ('Administrator', (ConvertTo-SecureString $Node.LocalAdminPassword -AsPlainText -Force))
         }
-        if ($Node.DomainAdminPassword) {
-            [PSCredential]$DomainAdminCredential = New-Object System.Management.Automation.PSCredential ("$($Node.DomainName)\Administrator", (ConvertTo-SecureString $Node.DomainAdminPassword -AsPlainText -Force))
+
+        if ($Node.DomainAdminPassword)
+        {
+            $DomainAdminCredential = New-Object `
+                -TypeName System.Management.Automation.PSCredential `
+                -ArgumentName ("$($Node.DomainName)\Administrator", (ConvertTo-SecureString $Node.DomainAdminPassword -AsPlainText -Force))
         }
 
         WindowsFeature BackupInstall
         {
-            Ensure = "Present"
-            Name   = "Windows-Server-Backup"
+            Ensure = 'Present'
+            Name   = 'Windows-Server-Backup'
         }
 
         WindowsFeature DNSInstall
         {
-            Ensure = "Present"
-            Name   = "DNS"
+            Ensure = 'Present'
+            Name   = 'DNS'
         }
 
         WindowsFeature ADDSInstall
         {
-            Ensure    = "Present"
-            Name      = "AD-Domain-Services"
-            DependsOn = "[WindowsFeature]DNSInstall"
+            Ensure    = 'Present'
+            Name      = 'AD-Domain-Services'
+            DependsOn = '[WindowsFeature]DNSInstall'
         }
 
         WindowsFeature RSAT-AD-PowerShellInstall
         {
-            Ensure    = "Present"
-            Name      = "RSAT-AD-PowerShell"
-            DependsOn = "[WindowsFeature]ADDSInstall"
+            Ensure    = 'Present'
+            Name      = 'RSAT-AD-PowerShell'
+            DependsOn = '[WindowsFeature]ADDSInstall'
         }
 
         if ($InstallRSATTools)
         {
             WindowsFeature RSAT-ManagementTools
             {
-                Ensure    = "Present"
-                Name      = "RSAT-AD-Tools","RSAT-DNS-Server"
-                DependsOn = "[WindowsFeature]ADDSInstall"
+                Ensure    = 'Present'
+                Name      = 'RSAT-AD-Tools', 'RSAT-DNS-Server'
+                DependsOn = '[WindowsFeature]ADDSInstall'
             }
         }
 
@@ -84,7 +91,7 @@ Configuration DC_SECONDARY
             Credential   = $DomainAdminCredential
             WaitTimeout  = 300
             RestartCount = 5
-            DependsOn    = "[WindowsFeature]ADDSInstall"
+            DependsOn    = '[WindowsFeature]ADDSInstall'
         }
 
         ADDomainController SecondaryDC
@@ -92,7 +99,7 @@ Configuration DC_SECONDARY
             DomainName                    = $Node.DomainName
             Credential                    = $DomainAdminCredential
             SafemodeAdministratorPassword = $LocalAdminCredential
-            DependsOn                     = "[WaitForADDomain]DscDomainWait"
+            DependsOn                     = '[WaitForADDomain]DscDomainWait'
         }
 
         # DNS Server Settings
@@ -102,31 +109,33 @@ Configuration DC_SECONDARY
             {
                 IsSingleInstance = 'Yes'
                 IPAddresses      = $Node.Forwarders
-                DependsOn        = "[ADDomainController]SecondaryDC"
+                DependsOn        = '[ADDomainController]SecondaryDC'
             }
         }
-        [System.Int32]$Count=0
-        foreach ($ADZone in $Node.ADZones) {
-            $Count++
-            xDnsServerADZone "ADZone$Count"
+        [System.Int32]$count = 0
+        foreach ($ADZone in $Node.ADZones)
+        {
+            $count++
+            xDnsServerADZone "ADZone$count"
             {
                 Ensure           = 'Present'
                 Name             = $ADZone.Name
                 DynamicUpdate    = $ADZone.DynamicUpdate
                 ReplicationScope = $ADZone.ReplicationScope
-                DependsOn        = "[ADDomainController]SecondaryDC"
+                DependsOn        = '[ADDomainController]SecondaryDC'
             }
         }
-        [System.Int32]$Count=0
-        foreach ($PrimaryZone in $Node.PrimaryZones) {
-            $Count++
-            xDnsServerPrimaryZone "PrimaryZone$Count"
+        [System.Int32]$count = 0
+        foreach ($PrimaryZone in $Node.PrimaryZones)
+        {
+            $count++
+            xDnsServerPrimaryZone "PrimaryZone$count"
             {
                 Ensure        = 'Present'
                 Name          = $PrimaryZone.Name
                 ZoneFile      = $PrimaryZone.ZoneFile
                 DynamicUpdate = $PrimaryZone.DynamicUpdate
-                DependsOn     = "[ADDomainController]SecondaryDC"
+                DependsOn     = '[ADDomainController]SecondaryDC'
             }
         }
     }

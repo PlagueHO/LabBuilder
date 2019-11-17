@@ -6,8 +6,8 @@ DSC Template Configuration File For use by LabBuilder
     Builds a Server that is joined to a domain and then installs SQL Server 2016.
     It will install SQLServer from a locally mounted ISO file.
 .Parameters:
-    DomainName = "LABBUILDER.COM"
-    DomainAdminPassword = "P@ssword!1"
+    DomainName = 'LABBUILDER.COM'
+    DomainAdminPassword = 'P@ssword!1'
     DCName = 'SA-DC1'
     PSDscAllowDomainUser = $true
     InstallerUsername = 'Administrator'
@@ -26,24 +26,25 @@ DSC Template Configuration File For use by LabBuilder
 
 Configuration MEMBER_SQLSERVER2016
 {
-    Import-DscResource -ModuleName 'PSDesiredStateConfiguration'
-    Import-DscResource -ModuleName ComputerManagementDsc
+    Import-DscResource -ModuleName PSDesiredStateConfiguration
+    Import-DscResource -ModuleName ComputerManagementDsc -ModuleVersion 7.1.0.0
     Import-DscResource -ModuleName StorageDsc
     Import-DscResource -ModuleName SQLServerDsc
 
     Node $AllNodes.NodeName {
-        # Assemble the Local Admin Credentials
-        if ($Node.LocalAdminPassword)
-        {
-            [PSCredential]$LocalAdminCredential = New-Object System.Management.Automation.PSCredential ("Administrator", (ConvertTo-SecureString $Node.LocalAdminPassword -AsPlainText -Force))
-        }
+        # Assemble the Admin Credentials
         if ($Node.DomainAdminPassword)
         {
-            [PSCredential]$DomainAdminCredential = New-Object System.Management.Automation.PSCredential ("$($Node.DomainName)\Administrator", (ConvertTo-SecureString $Node.DomainAdminPassword -AsPlainText -Force))
+            $DomainAdminCredential = New-Object `
+                -TypeName System.Management.Automation.PSCredential `
+                -ArgumentList ("$($Node.DomainName)\Administrator", (ConvertTo-SecureString $Node.DomainAdminPassword -AsPlainText -Force))
         }
+
         if ($Node.InstallerPassword)
         {
-            [PSCredential]$InstallerCredential = New-Object System.Management.Automation.PSCredential ("$($Node.DomainName)\$($Node.InstallerUsername)", (ConvertTo-SecureString $Node.InstallerPassword -AsPlainText -Force))
+            $InstallerCredential = New-Object `
+                -TypeName System.Management.Automation.PSCredential `
+                -ArgumentList ("$($Node.DomainName)\$($Node.InstallerUsername)", (ConvertTo-SecureString $Node.InstallerPassword -AsPlainText -Force))
         }
 
         # Install the SQL Server Dependencies
@@ -112,7 +113,7 @@ Configuration MEMBER_SQLSERVER2016
                 ASTempDir            = "$($Node.SQLDataDrive):\Program Files\Microsoft SQL Server\MSAS11.MSSQLSERVER\OLAP\Temp"
                 ASConfigDir          = "$($Node.SQLDataDrive):\Program Files\Microsoft SQL Server\MSAS11.MSSQLSERVER\OLAP\Config"
                 PsDscRunAsCredential = $InstallerCredential
-                DependsOn            = "[Computer]JoinDomain", "[WindowsFeature]NET35Install"
+                DependsOn            = '[Computer]JoinDomain', '[WindowsFeature]NET35Install'
             }
 
             SqlServerFirewall ($Instance.Name)
@@ -129,10 +130,10 @@ Configuration MEMBER_SQLSERVER2016
             SqlServerSetup SQLMT
             {
                 SourcePath           = $Node.SourcePath
-                InstanceName         = "NULL"
-                Features             = "SSMS,ADV_SSMS"
+                InstanceName         = 'NULL'
+                Features             = 'SSMS,ADV_SSMS'
                 PsDscRunAsCredential = $InstallerCredential
-                DependsOn            = "[Computer]JoinDomain", "[WindowsFeature]NET35Install"
+                DependsOn            = '[Computer]JoinDomain', '[WindowsFeature]NET35Install'
             }
         }
     }
