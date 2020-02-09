@@ -154,9 +154,6 @@ $unattendContent += @"
             <DisableAutoDaylightTimeSet>false</DisableAutoDaylightTimeSet>
             <TimeZone>$($VM.TimeZone)</TimeZone>
         </component>
-        <component name="Microsoft-Windows-ehome-reg-inf" processorArchitecture="x86" publicKeyToken="31bf3856ad364e35" language="neutral" versionScope="NonSxS" xmlns:wcm="http://schemas.microsoft.com/WMIConfig/2002/State" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
-            <RestartEnabled>true</RestartEnabled>
-        </component>
         <component name="Microsoft-Windows-ehome-reg-inf" processorArchitecture="amd64" publicKeyToken="31bf3856ad364e35" language="neutral" versionScope="NonSxS" xmlns:wcm="http://schemas.microsoft.com/WMIConfig/2002/State" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
             <RestartEnabled>true</RestartEnabled>
         </component>
