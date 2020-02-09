@@ -133,7 +133,20 @@ function Get-LabUnattendFileContent
 
 "@
 } # If
-$unattendContent += @"
+        if (($VM.Name -like '*7*' -or $VM.Name -like '*2008*') -and $VM.Name -notlike '*10*') {
+            $unattendContent += @"
+            <OOBE>
+                <HideEULAPage>true</HideEULAPage>
+                <NetworkLocation>Work</NetworkLocation>
+                <ProtectYourPC>1</ProtectYourPC>
+                <HideWirelessSetupInOOBE>true</HideWirelessSetupInOOBE>
+                <SkipUserOOBE>true</SkipUserOOBE>
+                <SkipMachineOOBE>true</SkipMachineOOBE>
+            </OOBE>
+
+"@
+        } else {
+            $unattendContent += @"
             <OOBE>
                 <HideEULAPage>true</HideEULAPage>
                 <HideOEMRegistrationScreen>true</HideOEMRegistrationScreen>
@@ -144,6 +157,10 @@ $unattendContent += @"
                 <SkipUserOOBE>true</SkipUserOOBE>
                 <SkipMachineOOBE>true</SkipMachineOOBE>
             </OOBE>
+
+"@
+} # If
+$unattendContent += @"
             <UserAccounts>
                <AdministratorPassword>
                   <Value>$($VM.AdministratorPassword)</Value>
