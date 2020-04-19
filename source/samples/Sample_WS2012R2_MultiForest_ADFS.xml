@@ -1,0 +1,586 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<labbuilderconfig xmlns="labbuilderconfig"
+                  name="Sample_WS2012R2_MultiForest_ADFS"
+                  version="1.0">
+  <description>
+  Sample Windows Server 2012 R2 Lab Configuration containing two forests:
+   - ALPHA.LOCAL
+   - BRAVO.LOCAL
+  Each forest is on an isolated subnet and contains a DC server, DHCP server, ADFS Server, ADCS Server and an Edge Server.
+  The edge servers are also on a shared subnet (Domain Internal) enabling routing between the isolated subnets (Domain Private Alpha/Bravo).
+  ADFS Trusts are not established between the two forests/domains.
+  The two forests are not configured to trust each others Root certificates.
+  </description>
+
+  <settings labid="LABBUILDER-ADFS.COM "
+            domainname="LABBUILDER-ADFS.COM"
+            email="admina@LABBUILDER-ADFS.COM"
+            labpath="c:\vm\LABBUILDER-ADFS.COM" />
+
+  <resources>
+    <msu name="WMF5.1-WS2012R2-W81"
+         url="https://download.microsoft.com/download/6/F/5/6F5FF66C-6775-42B0-86C4-47D41F2DA187/W2K12-KB3191565-x64.msu" />
+  </resources>
+
+  <switches>
+    <switch name="External" type="External">
+      <adapters>
+        <adapter name="Cluster" macaddress="00155D010701" />
+        <adapter name="Management" macaddress="00155D010702" />
+        <adapter name="SMB" macaddress="00155D010703" />
+        <adapter name="LM" macaddress="00155D010704" />
+      </adapters>
+    </switch>
+    <switch name="Domain Internal" type="Internal" />
+    <switch name="Domain Private Alpha" type="Private" vlan="2" />
+    <switch name="Domain Private Bravo" type="Private" vlan="3" />
+  </switches>
+
+  <templatevhds isopath="ISOFiles"
+                vhdpath="VHDFiles"
+                prefix="" >
+    <templatevhd name="Windows Server 2012 R2 Datacenter Full"
+                 iso="9600.17050.WINBLUE_REFRESH.140317-1640_X64FRE_SERVER_EVAL_EN-US-IR3_SSS_X64FREE_EN-US_DV9.iso"
+                 url="https://www.microsoft.com/en-us/evalcenter/evaluate-windows-server-2012-r2"
+                 vhd="Windows Server 2012 R2 Datacenter Full.vhdx"
+                 edition="Windows Server 2012 R2 SERVERDATACENTER"
+                 ostype="Server"
+                 packages="WMF5.1-WS2012R2-W81"
+                 vhdformat="vhdx"
+                 vhdtype="dynamic"
+                 generation="2"
+                 vhdsize="40GB" />
+    <templatevhd name="Windows Server 2012 R2 Datacenter Core"
+                 iso="9600.17050.WINBLUE_REFRESH.140317-1640_X64FRE_SERVER_EVAL_EN-US-IR3_SSS_X64FREE_EN-US_DV9.iso"
+                 url="https://www.microsoft.com/en-us/evalcenter/evaluate-windows-server-2012-r2"
+                 vhd="Windows Server 2012 R2 Datacenter Core.vhdx"
+                 edition="Windows Server 2012 R2 SERVERDATACENTERCORE"
+                 ostype="Server"
+                 packages="WMF5.1-WS2012R2-W81"
+                 vhdformat="vhdx"
+                 vhdtype="dynamic"
+                 generation="2"
+                 vhdsize="25GB" />
+  </templatevhds>
+
+  <templates>
+    <template name="Template Windows Server 2012 R2 Datacenter Full"
+              templatevhd="Windows Server 2012 R2 Datacenter FULL"
+              memorystartupbytes="1GB"
+              processorcount="1"
+              administratorpassword="P@ssword!1"
+              timezone="New Zealand Standard Time"
+              ostype="Server"
+              packages="WMF5.1-WS2012R2-W81" />
+    <template name="Template Windows Server 2012 R2 Datacenter Core"
+              templatevhd="Windows Server 2012 R2 Datacenter CORE"
+              memorystartupbytes="1GB"
+              processorcount="1"
+              administratorpassword="P@ssword!1"
+              timezone="New Zealand Standard Time"
+              ostype="Server"
+              packages="WMF5.1-WS2012R2-W81" />
+  </templates>
+
+  <vms>
+    <vm name="ALPHA-DC1"
+        template="Template Windows Server 2012 R2 Datacenter Full"
+        computername="ALPHA-DC1"
+        bootorder="1">
+      <dsc configname="DC_FORESTPRIMARY"
+           configfile="DC_FORESTPRIMARY.DSC.ps1">
+        <parameters>
+          DomainName = "ALPHA.LOCAL"
+          DomainAdminPassword = "P@ssword!1"
+          Forwarders = @('8.8.8.8','8.8.4.4')
+        </parameters>
+      </dsc>
+      <adapters>
+        <adapter name="Domain Private Alpha"
+                 switchname="Domain Private Alpha">
+          <ipv4 address="192.168.128.10"
+                defaultgateway="192.168.128.19"
+                subnetmask="24"
+                dnsserver="192.168.128.10"/>
+          <ipv6 address="fd53:ccc5:895a:bc00::a"
+                defaultgateway="fd53:ccc5:895a:bc00::13"
+                subnetmask="64"
+                dnsserver="fd53:ccc5:895a:bc00::a"/>
+        </adapter>
+      </adapters>
+    </vm>
+
+    <vm name="ALPHA-DHCP1"
+        template="Template Windows Server 2012 R2 Datacenter Core"
+        computername="ALPHA-DHCP1"
+        bootorder="2">
+      <dsc configname="MEMBER_DHCP"
+           configfile="MEMBER_DHCP.DSC.ps1">
+        <parameters>
+          DomainName = "ALPHA.LOCAL"
+          DomainAdminPassword = "P@ssword!1"
+          DCName = "ALPHA-DC1"
+          PSDscAllowDomainUser = $true
+          Scopes = @(
+              @{ Name = 'Alpha Primary';
+                 Start = '192.168.128.50';
+                 End = '192.168.128.254';
+                 SubnetMask = '255.255.255.0';
+                 AddressFamily = 'IPv4'
+              }
+            )
+          Reservations = @(
+              @{ Name = 'ALPHA-DC1';
+                 ScopeID = '192.168.128.0';
+                 ClientMACAddress = '000000000000';
+                 IPAddress = '192.168.128.10';
+                 AddressFamily = 'IPv4'
+              },
+              @{ Name = 'ALPHA-DHCP1';
+                 ScopeID = '192.168.128.0';
+                 ClientMACAddress = '000000000002';
+                 IPAddress = '192.168.128.16';
+                 AddressFamily = 'IPv4'
+              },
+              @{ Name = 'ALPHA-ROOTCA';
+                 ScopeID = '192.168.128.0';
+                 ClientMACAddress = '000000000003';
+                 IPAddress = '192.168.128.17';
+                 AddressFamily = 'IPv4'
+              },
+              @{ Name = 'ALPHA-ADFS1';
+                 ScopeID = '192.168.128.0';
+                 ClientMACAddress = '000000000004';
+                 IPAddress = '192.168.128.18';
+                 AddressFamily = 'IPv4'
+              },
+              @{ Name = 'ALPHA-EDGE1';
+                 ScopeID = '192.168.128.0';
+                 ClientMACAddress = '000000000005';
+                 IPAddress = '192.168.128.19';
+                 AddressFamily = 'IPv4'
+              },
+              @{ Name = 'ALPHA-WEBAPP1';
+                 ScopeID = '192.168.128.0';
+                 ClientMACAddress = '000000000006';
+                 IPAddress = '192.168.128.20';
+                 AddressFamily = 'IPv4'
+              }
+            )
+          ScopeOptions = @(
+              @{ ScopeID = '192.168.128.0';
+                 DNServerIPAddress = @('192.168.128.10','192.168.128.11');
+                 Router = '192.168.128.19';
+                 AddressFamily = 'IPv4'
+              }
+            )
+        </parameters>
+      </dsc>
+      <adapters>
+        <adapter name="Domain Private Alpha"
+                 switchname="Domain Private Alpha">
+          <ipv4 address="192.168.128.16"
+                defaultgateway="192.168.128.19"
+                subnetmask="24"
+                dnsserver="192.168.128.10"/>
+          <ipv6 address="fd53:ccc5:895a:bc00::10"
+                defaultgateway="fd53:ccc5:895a:bc00::13"
+                subnetmask="64"
+                dnsserver="fd53:ccc5:895a:bc00::a"/>
+        </adapter>
+      </adapters>
+    </vm>
+
+    <vm name="ALPHA-ROOTCA"
+      template="Template Windows Server 2012 R2 Datacenter Core"
+      computername="ALPHA-ROOTCA"
+      bootorder="3">
+      <dsc configname="MEMBER_ROOTCA"
+           configfile="MEMBER_ROOTCA.DSC.ps1"
+           logging="Y">
+        <parameters>
+           DomainName = "ALPHA.LOCAL"
+           DomainAdminPassword = "P@ssword!1"
+           DCName = "ALPHA-DC1"
+           PSDscAllowDomainUser = $true
+           InstallOnlineResponder = $true
+           InstallEnrollmentWebService = $true
+           CACommonName = "ALPHA.LOCAL Root CA"
+           CADistinguishedNameSuffix = "DC=ALPHA,DC=LOCAL"
+           CRLPublicationURLs = "65:C:\Windows\system32\CertSrv\CertEnroll\%3%8%9.crl\n79:ldap:///CN=%7%8,CN=%2,CN=CDP,CN=Public Key Services,CN=Services,%6%10\n2:http://pki.alpha.local/CertEnroll/%3%8%9.crl"
+           CACertPublicationURLs = "1:C:\Windows\system32\CertSrv\CertEnroll\%1_%3%4.crt\n2:ldap:///CN=%7,CN=AIA,CN=Public Key Services,CN=Services,%6%11\n2:http://pki.alpha.local/CertEnroll/%1_%3%4.crt\n32:http://pki.alpha.local/ocsp"
+           CRLPeriodUnits = 52
+           CRLPeriod = 'Weeks'
+           CRLOverlapUnits = 12
+           CRLOverlapPeriod = 'Hours'
+           ValidityPeriodUnits = 10
+           ValidityPeriod = 'Years'
+           AuditFilter = 127
+        </parameters>
+      </dsc>
+      <adapters>
+        <adapter name="Domain Private Alpha"
+                 switchname="Domain Private Alpha">
+          <ipv4 address="192.168.128.17"
+                defaultgateway="192.168.128.19"
+                subnetmask="24"
+                dnsserver="192.168.128.10,192.168.128.11"/>
+          <ipv6 address="fd53:ccc5:895a:bc00::17"
+                defaultgateway="fd53:ccc5:895a:bc00::13"
+                subnetmask="64"
+                dnsserver="fd53:ccc5:895a:bc00::a,fd53:ccc5:895a:bc00::b"/>
+        </adapter>
+      </adapters>
+    </vm>
+
+    <vm name="ALPHA-ADFS1"
+      template="Template Windows Server 2012 R2 Datacenter Full"
+      computername="ALPHA-ADFS1"
+      bootorder="3">
+      <dsc configname="MEMBER_ADFS"
+           configfile="MEMBER_ADFS.DSC.ps1"
+           logging="Y">
+        <parameters>
+           DomainName = "ALPHA.LOCAL"
+           DomainAdminPassword = "P@ssword!1"
+           DCName = "ALPHA-DC1"
+           PSDscAllowDomainUser = $true
+        </parameters>
+      </dsc>
+      <adapters>
+        <adapter name="Domain Private Alpha"
+                 switchname="Domain Private Alpha">
+          <ipv4 address="192.168.128.18"
+                defaultgateway="192.168.128.19"
+                subnetmask="24"
+                dnsserver="192.168.128.10,192.168.128.11"/>
+          <ipv6 address="fd53:ccc5:895a:bc00::18"
+                defaultgateway="fd53:ccc5:895a:bc00::13"
+                subnetmask="64"
+                dnsserver="fd53:ccc5:895a:bc00::a,fd53:ccc5:895a:bc00::b"/>
+        </adapter>
+      </adapters>
+    </vm>
+
+    <vm name="ALPHA-EDGE1"
+      template="Template Windows Server 2012 R2 Datacenter Full"
+      computername="ALPHA-EDGE1"
+      bootorder="3">
+      <dsc configname="MEMBER_REMOTEACCESS_WAP"
+           configfile="MEMBER_REMOTEACCESS_WAP.DSC.ps1">
+        <parameters>
+          DomainName = "ALPHA.LOCAL"
+          DomainAdminPassword = "P@ssword!1"
+          DCName = "ALPHA-DC1"
+          PSDscAllowDomainUser = $true
+        </parameters>
+      </dsc>
+      <adapters>
+        <adapter name="Domain Private Alpha"
+                 switchname="Domain Private Alpha">
+          <ipv4 address="192.168.128.19"
+                defaultgateway=""
+                subnetmask="24"
+                dnsserver="192.168.128.10"/>
+          <ipv6 address="fd53:ccc5:895a:bc00::13"
+                defaultgateway=""
+                subnetmask="64"
+                dnsserver="fd53:ccc5:895a:bc00::a"/>
+        </adapter>
+        <adapter name="Domain Internal"
+                 switchname="Domain Internal">
+          <ipv4 address="192.168.131.10"
+                defaultgateway=""
+                subnetmask="24"
+                dnsserver=""/>
+          <ipv6 address="fd53:ccc5:895d:bc00::10"
+                defaultgateway=""
+                subnetmask="64"
+                dnsserver=""/>
+        </adapter>
+        <adapter name="External"
+                 switchname="External" />
+      </adapters>
+    </vm>
+
+    <vm name="ALPHA-WEBAPP1"
+      template="Template Windows Server 2012 R2 Datacenter Full"
+      computername="ALPHA-WEBAPP1"
+      bootorder="3">
+      <dsc configname="MEMBER_WEBSERVER"
+           configfile="MEMBER_WEBSERVER.DSC.ps1"
+           logging="Y">
+        <parameters>
+           DomainName = "ALPHA.LOCAL"
+           DomainAdminPassword = "P@ssword!1"
+           DCName = "ALPHA-DC1"
+           PSDscAllowDomainUser = $true
+        </parameters>
+      </dsc>
+      <adapters>
+        <adapter name="Domain Private Alpha"
+                 switchname="Domain Private Alpha">
+          <ipv4 address="192.168.128.20"
+                defaultgateway="192.168.128.19"
+                subnetmask="24"
+                dnsserver="192.168.128.10,192.168.128.11"/>
+          <ipv6 address="fd53:ccc5:895a:bc00::20"
+                defaultgateway="fd53:ccc5:895a:bc00::13"
+                subnetmask="64"
+                dnsserver="fd53:ccc5:895a:bc00::a,fd53:ccc5:895a:bc00::b"/>
+        </adapter>
+      </adapters>
+    </vm>
+
+    <vm name="BRAVO-DC1"
+        template="Template Windows Server 2012 R2 Datacenter Full"
+        computername="BRAVO-DC1"
+        bootorder="1">
+      <dsc configname="DC_FORESTPRIMARY"
+           configfile="DC_FORESTPRIMARY.DSC.ps1">
+        <parameters>
+          DomainName = "BRAVO.LOCAL"
+          DomainAdminPassword = "P@ssword!1"
+          Forwarders = @('8.8.8.8','8.8.4.4')
+        </parameters>
+      </dsc>
+      <adapters>
+        <adapter name="Domain Private Bravo"
+                 switchname="Domain Private Bravo">
+          <ipv4 address="192.168.130.10"
+                defaultgateway="192.168.130.19"
+                subnetmask="24"
+                dnsserver="192.168.130.10"/>
+          <ipv6 address="fd53:ccc5:895c:bc00::a"
+                defaultgateway="fd53:ccc5:895c:bc00::13"
+                subnetmask="64"
+                dnsserver="fd53:ccc5:895c:bc00::a"/>
+        </adapter>
+      </adapters>
+    </vm>
+
+    <vm name="BRAVO-DHCP1"
+        template="Template Windows Server 2012 R2 Datacenter Core"
+        computername="BRAVO-DHCP1"
+        bootorder="2">
+      <dsc configname="MEMBER_DHCP"
+           configfile="MEMBER_DHCP.DSC.ps1">
+        <parameters>
+          DomainName = "BRAVO.LOCAL"
+          DomainAdminPassword = "P@ssword!1"
+          DCName = "BRAVO-DC1"
+          PSDscAllowDomainUser = $true
+          Scopes = @(
+              @{ Name = 'Bravo Primary';
+                 Start = '192.168.130.50';
+                 End = '192.168.130.254';
+                 SubnetMask = '255.255.255.0';
+                 AddressFamily = 'IPv4'
+              }
+            )
+          Reservations = @(
+              @{ Name = 'BRAVO-DC1';
+                 ScopeID = '192.168.130.0';
+                 ClientMACAddress = '000000000000';
+                 IPAddress = '192.168.130.10';
+                 AddressFamily = 'IPv4'
+              },
+              @{ Name = 'BRAVO-DHCP1';
+                 ScopeID = '192.168.130.0';
+                 ClientMACAddress = '000000000002';
+                 IPAddress = '192.168.130.16';
+                 AddressFamily = 'IPv4'
+              },
+              @{ Name = 'BRAVO-ROOTCA';
+                 ScopeID = '192.168.130.0';
+                 ClientMACAddress = '000000000003';
+                 IPAddress = '192.168.130.17';
+                 AddressFamily = 'IPv4'
+              },
+              @{ Name = 'BRAVO-ADFS1';
+                 ScopeID = '192.168.130.0';
+                 ClientMACAddress = '000000000004';
+                 IPAddress = '192.168.130.18';
+                 AddressFamily = 'IPv4'
+              },
+              @{ Name = 'BRAVO-EDGE1';
+                 ScopeID = '192.168.130.0';
+                 ClientMACAddress = '000000000005';
+                 IPAddress = '192.168.130.19';
+                 AddressFamily = 'IPv4'
+              },
+              @{ Name = 'BRAVO-WEBAP1';
+                 ScopeID = '192.168.130.0';
+                 ClientMACAddress = '000000000006';
+                 IPAddress = '192.168.130.20';
+                 AddressFamily = 'IPv4'
+              }
+            )
+          ScopeOptions = @(
+              @{ ScopeID = '192.168.130.0';
+                 DNServerIPAddress = @('192.168.130.10','192.168.130.11');
+                 Router = '192.168.130.19';
+                 AddressFamily = 'IPv4'
+              }
+            )
+        </parameters>
+      </dsc>
+      <adapters>
+        <adapter name="Domain Private Bravo"
+                 switchname="Domain Private Bravo">
+          <ipv4 address="192.168.130.16"
+                defaultgateway="192.168.130.19"
+                subnetmask="24"
+                dnsserver="192.168.130.10"/>
+          <ipv6 address="fd53:ccc5:895c:bc00::10"
+                defaultgateway="fd53:ccc5:895c:bc00::13"
+                subnetmask="64"
+                dnsserver="fd53:ccc5:895c:bc00::a"/>
+        </adapter>
+      </adapters>
+    </vm>
+
+    <vm name="BRAVO-ROOTCA"
+      template="Template Windows Server 2012 R2 Datacenter Core"
+      computername="BRAVO-ROOTCA"
+      bootorder="3">
+      <dsc configname="MEMBER_ROOTCA"
+           configfile="MEMBER_ROOTCA.DSC.ps1"
+           logging="Y">
+        <parameters>
+           DomainName = "BRAVO.LOCAL"
+           DomainAdminPassword = "P@ssword!1"
+           DCName = "BRAVO-DC1"
+           PSDscAllowDomainUser = $true
+           InstallOnlineResponder = $true
+           InstallEnrollmentWebService = $true
+           CACommonName = "BRAVO.LOCAL Root CA"
+           CADistinguishedNameSuffix = "DC=BRAVO,DC=LOCAL"
+           CRLPublicationURLs = "65:C:\Windows\system32\CertSrv\CertEnroll\%3%8%9.crl\n79:ldap:///CN=%7%8,CN=%2,CN=CDP,CN=Public Key Services,CN=Services,%6%10\n2:http://pki.bravo.local/CertEnroll/%3%8%9.crl"
+           CACertPublicationURLs = "1:C:\Windows\system32\CertSrv\CertEnroll\%1_%3%4.crt\n2:ldap:///CN=%7,CN=AIA,CN=Public Key Services,CN=Services,%6%11\n2:http://pki.bravo.local/CertEnroll/%1_%3%4.crt\n32:http://pki.bravo.local/ocsp"
+           CRLPeriodUnits = 52
+           CRLPeriod = 'Weeks'
+           CRLOverlapUnits = 12
+           CRLOverlapPeriod = 'Hours'
+           ValidityPeriodUnits = 10
+           ValidityPeriod = 'Years'
+           AuditFilter = 127
+        </parameters>
+      </dsc>
+      <adapters>
+        <adapter name="Domain Private Bravo"
+                 switchname="Domain Private Bravo">
+          <ipv4 address="192.168.130.17"
+                defaultgateway="192.168.130.19"
+                subnetmask="24"
+                dnsserver="192.168.130.10,192.168.130.11"/>
+          <ipv6 address="fd53:ccc5:895c:bc00::17"
+                defaultgateway="fd53:ccc5:895c:bc00::13"
+                subnetmask="64"
+                dnsserver="fd53:ccc5:895c:bc00::a,fd53:ccc5:895c:bc00::b"/>
+        </adapter>
+      </adapters>
+    </vm>
+
+    <vm name="BRAVO-ADFS1"
+      template="Template Windows Server 2012 R2 Datacenter Full"
+      computername="BRAVO-ADFS1"
+      bootorder="3">
+      <dsc configname="MEMBER_ADFS"
+           configfile="MEMBER_ADFS.DSC.ps1"
+           logging="Y">
+        <parameters>
+           DomainName = "BRAVO.LOCAL"
+           DomainAdminPassword = "P@ssword!1"
+           DCName = "BRAVO-DC1"
+           PSDscAllowDomainUser = $true
+        </parameters>
+      </dsc>
+      <adapters>
+        <adapter name="Domain Private Bravo"
+                 switchname="Domain Private Bravo">
+          <ipv4 address="192.168.130.18"
+                defaultgateway="192.168.130.19"
+                subnetmask="24"
+                dnsserver="192.168.130.10,192.168.130.11"/>
+          <ipv6 address="fd53:ccc5:895c:bc00::18"
+                defaultgateway="fd53:ccc5:895c:bc00::13"
+                subnetmask="64"
+                dnsserver="fd53:ccc5:895c:bc00::a,fd53:ccc5:895c:bc00::b"/>
+        </adapter>
+      </adapters>
+    </vm>
+
+    <vm name="BRAVO-EDGE1"
+      template="Template Windows Server 2012 R2 Datacenter Full"
+      computername="BRAVO-EDGE1"
+      bootorder="3">
+      <dsc configname="MEMBER_REMOTEACCESS_WAP"
+           configfile="MEMBER_REMOTEACCESS_WAP.DSC.ps1">
+        <parameters>
+          DomainName = "BRAVO.LOCAL"
+          DomainAdminPassword = "P@ssword!1"
+          DCName = "BRAVO-DC1"
+          PSDscAllowDomainUser = $true
+        </parameters>
+      </dsc>
+      <adapters>
+        <adapter name="Domain Private Bravo"
+                 switchname="Domain Private Bravo">
+          <ipv4 address="192.168.130.19"
+                defaultgateway=""
+                subnetmask="24"
+                dnsserver="192.168.130.10"/>
+          <ipv6 address="fd53:ccc5:895c:bc00::13"
+                defaultgateway=""
+                subnetmask="64"
+                dnsserver="fd53:ccc5:895c:bc00::a"/>
+        </adapter>
+        <adapter name="Domain Internal"
+                 switchname="Domain Internal">
+          <ipv4 address="192.168.131.20"
+                defaultgateway=""
+                subnetmask="24"
+                dnsserver=""/>
+          <ipv6 address="fd53:ccc5:895d:bc00::20"
+                defaultgateway=""
+                subnetmask="64"
+                dnsserver=""/>
+        </adapter>
+        <adapter name="External"
+                 switchname="External" />
+      </adapters>
+    </vm>
+
+    <vm name="BRAVO-WEBAPP1"
+      template="Template Windows Server 2012 R2 Datacenter Full"
+      computername="BRAVO-WEBAPP1"
+      bootorder="3">
+      <dsc configname="MEMBER_WEBSERVER"
+           configfile="MEMBER_WEBSERVER.DSC.ps1"
+           logging="Y">
+        <parameters>
+           DomainName = "BRAVO.LOCAL"
+           DomainAdminPassword = "P@ssword!1"
+           DCName = "BRAVO-DC1"
+           PSDscAllowDomainUser = $true
+        </parameters>
+      </dsc>
+      <adapters>
+        <adapter name="Domain Private Bravo"
+                 switchname="Domain Private Bravo">
+          <ipv4 address="192.168.130.20"
+                defaultgateway="192.168.130.19"
+                subnetmask="24"
+                dnsserver="192.168.130.10,192.168.130.11"/>
+          <ipv6 address="fd53:ccc5:895c:bc00::20"
+                defaultgateway="fd53:ccc5:895c:bc00::13"
+                subnetmask="64"
+                dnsserver="fd53:ccc5:895c:bc00::a,fd53:ccc5:895c:bc00::b"/>
+        </adapter>
+      </adapters>
+    </vm>
+  </vms>
+
+</labbuilderconfig>

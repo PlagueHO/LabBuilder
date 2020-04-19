@@ -1,0 +1,691 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<labbuilderconfig xmlns="labbuilderconfig"
+                  name="Sample_WS2012R2_DomainComplete"
+                  version="1.0">
+  <description>
+  Sample Windows Server 2012 R2 Lab Configuration Domain with multiple DCs, DHCP Servers, WSUS, WDS, Edge, File Servers and two-tier PKI with offline CA.
+
+  Useful for general experimentation and testing of Windows Server 2012 R2 features.
+  </description>
+
+  <settings labid="LABBUILDER-DOMAINCOMPLETE.COM "
+            domainname="LABBUILDER-DOMAINCOMPLETE.COM"
+            email="admin@LABBUILDER-DOMAINCOMPLETE.COM"
+            labpath="c:\vm\LABBUILDER-DOMAINCOMPLETE.COM" />
+
+  <resources>
+    <msu name="WMF5.1-WS2012R2-W81"
+         url="https://download.microsoft.com/download/6/F/5/6F5FF66C-6775-42B0-86C4-47D41F2DA187/W2K12-KB3191565-x64.msu" />
+    <msu name="RSAT-W10"
+         url="http://download.microsoft.com/download/1/D/8/1D8B5022-5477-4B9A-8104-6A71FF9D98AB/WindowsTH-KB2693643-x64.msu" />
+  </resources>
+
+  <switches>
+    <switch name="External" type="External">
+      <adapters>
+        <adapter name="Cluster" macaddress="00155D010701" />
+        <adapter name="Management" macaddress="00155D010702" />
+        <adapter name="SMB" macaddress="00155D010703" />
+        <adapter name="LM" macaddress="00155D010704" />
+      </adapters>
+    </switch>
+    <switch name="Domain Private Site A" type="Private" vlan="2" />
+    <switch name="Domain Private Site B" type="Private" vlan="3" />
+    <switch name="Domain Private Site C" type="Private" vlan="4" />
+    <switch name="Internet" type="Private" vlan="9" />
+  </switches>
+
+  <templatevhds isopath="ISOFiles"
+                vhdpath="VHDFiles"
+                prefix="" >
+    <templatevhd name="Windows Server 2012 R2 Datacenter Full"
+                 iso="9600.17050.WINBLUE_REFRESH.140317-1640_X64FRE_SERVER_EVAL_EN-US-IR3_SSS_X64FREE_EN-US_DV9.iso"
+                 url="https://www.microsoft.com/en-us/evalcenter/evaluate-windows-server-2012-r2"
+                 vhd="Windows Server 2012 R2 Datacenter Full.vhdx"
+                 edition="Windows Server 2012 R2 SERVERDATACENTER"
+                 ostype="Server"
+                 packages="WMF5.1-WS2012R2-W81"
+                 vhdformat="vhdx"
+                 vhdtype="dynamic"
+                 generation="2"
+                 vhdsize="40GB" />
+    <templatevhd name="Windows Server 2012 R2 Datacenter Core"
+                 iso="9600.17050.WINBLUE_REFRESH.140317-1640_X64FRE_SERVER_EVAL_EN-US-IR3_SSS_X64FREE_EN-US_DV9.iso"
+                 url="https://www.microsoft.com/en-us/evalcenter/evaluate-windows-server-2012-r2"
+                 vhd="Windows Server 2012 R2 Datacenter Core.vhdx"
+                 edition="Windows Server 2012 R2 SERVERDATACENTERCORE"
+                 ostype="Server"
+                 packages="WMF5.1-WS2012R2-W81"
+                 vhdformat="vhdx"
+                 vhdtype="dynamic"
+                 generation="2"
+                 vhdsize="25GB" />
+    <templatevhd name="Windows 10 Enterprise"
+                 iso="10586.0.151029-1700.TH2_RELEASE_CLIENTENTERPRISEEVAL_OEMRET_X64FRE_EN-US.ISO"
+                 url="https://www.microsoft.com/en-us/evalcenter/evaluate-windows-10-enterprise"
+                 vhd="Windows 10 Enterprise.vhdx"
+                 edition="Windows 10 Enterprise"
+                 ostype="Client"
+                 packages="RSAT-W10"
+                 vhdformat="vhdx"
+                 vhdtype="dynamic"
+                 generation="2"
+                 vhdsize="25GB" />
+  </templatevhds>
+
+  <templates>
+    <template name="Template Windows Server 2012 R2 Datacenter Full"
+              templatevhd="Windows Server 2012 R2 Datacenter FULL"
+              memorystartupbytes="1GB"
+              processorcount="1"
+              administratorpassword="P@ssword!1"
+              timezone="New Zealand Standard Time"
+              ostype="Server"
+              packages="WMF5.1-WS2012R2-W81" />
+    <template name="Template Windows Server 2012 R2 Datacenter Core"
+              templatevhd="Windows Server 2012 R2 Datacenter Core"
+              memorystartupbytes="1GB"
+              processorcount="1"
+              administratorpassword="P@ssword!1"
+              timezone="New Zealand Standard Time"
+              ostype="Server"
+              packages="WMF5.1-WS2012R2-W81" />
+    <template name="Template Windows 10 Enterprise"
+              templatevhd="Windows 10 Enterprise"
+              memorystartupbytes="2GB"
+              processorcount="1"
+              administratorpassword="P@ssword!1"
+              timezone="New Zealand Standard Time"
+              ostype="Client"
+              packages="RSAT-W10" />
+  </templates>
+
+  <vms>
+    <vm name="SS-ROOTCA"
+        template="Template Windows Server 2012 R2 Datacenter CORE"
+        computername="SS-ROOTCA">
+      <dsc configname="STANDALONE_ROOTCA"
+           configfile="STANDALONE_ROOTCA.DSC.ps1"
+           logging="Y">
+          <parameters>
+            CACommonName = "LABBUILDER.COM Root CA"
+            CADistinguishedNameSuffix = "DC=LABBUILDER,DC=COM"
+            CRLPublicationURLs = "1:C:\Windows\system32\CertSrv\CertEnroll\%3%8%9.crl\n10:ldap:///CN=%7%8,CN=%2,CN=CDP,CN=Public Key Services,CN=Services,%6%10\n2:http://pki.labbuilder.com/CertEnroll/%3%8%9.crl"
+            CACertPublicationURLs = "1:C:\Windows\system32\CertSrv\CertEnroll\%1_%3%4.crt\n2:ldap:///CN=%7,CN=AIA,CN=Public Key Services,CN=Services,%6%11\n2:http://pki.labbuilder.com/CertEnroll/%1_%3%4.crt"
+            CRLPeriodUnits = 52
+            CRLPeriod = 'Weeks'
+            CRLOverlapUnits = 12
+            CRLOverlapPeriod = 'Hours'
+            ValidityPeriodUnits = 10
+            ValidityPeriod = 'Years'
+            AuditFilter = 127
+            SubCAs = @('SA-SUBCA')
+          </parameters>
+      </dsc>
+    </vm>
+
+    <vm name="SS-INTERNET"
+        template="Template Windows Server 2012 R2 Datacenter Full"
+        computername="SS-INTERNET">
+      <dsc configname="STANDALONE_INTERNET"
+           configfile="STANDALONE_INTERNET.DSC.ps1"
+           logging="Y">
+        <parameters>
+          Scopes = @(
+            @{ Name = 'Internet';
+               Start = '131.107.0.50';
+               End = '131.107.0.250';
+               SubnetMask = '255.255.0.0';
+               AddressFamily = 'IPv4'
+            }
+          )
+          Reservations = @(
+            @{ Name = 'SA-EDGE1';
+               ScopeID = '131.107.0.0';
+               ClientMACAddress = '000000000000';
+               IPAddress = '131.107.0.50';
+               AddressFamily = 'IPv4'
+            },
+            @{ Name = 'SA-EDGE2';
+               ScopeID = '131.107.0.0';
+               ClientMACAddress = '000000000001';
+               IPAddress = '131.107.0.51';
+               AddressFamily = 'IPv4'
+            }
+          )
+          ScopeOptions = @(
+            @{ ScopeID = '131.107.0.0';
+               DNServerIPAddress = @('131.107.0.1');
+               AddressFamily = 'IPv4'
+            }
+          )
+        </parameters>
+      </dsc>
+      <adapters>
+        <adapter name="Internet"
+                 switchname="Internet">
+          <ipv4 address="131.107.0.1"
+                defaultgateway=""
+                subnetmask="8"
+                dnsserver="131.107.0.1"/>
+          <ipv6 address="2001:54b9:f782:ae41::10"
+                defaultgateway=""
+                subnetmask="64"
+                dnsserver="2001:54b9:f782:ae41::10"/>
+        </adapter>
+      </adapters>
+    </vm>
+
+    <vm name="SA-DC1"
+        template="Template Windows Server 2012 R2 Datacenter CORE"
+        computername="SA-DC1">
+      <dsc configname="DC_FORESTPRIMARY"
+           configfile="DC_FORESTPRIMARY.DSC.ps1">
+        <parameters>
+          DomainName = "LABBUILDER.COM"
+          DomainAdminPassword = "P@ssword!1"
+          Forwarders = @('8.8.8.8','8.8.4.4')
+        </parameters>
+      </dsc>
+      <adapters>
+        <adapter name="Domain Private Site A"
+                 switchname="Domain Private Site A">
+          <ipv4 address="192.168.128.10"
+                defaultgateway="192.168.128.19"
+                subnetmask="24"
+                dnsserver="192.168.128.10"/>
+          <ipv6 address="fd53:ccc5:895a:bc00::a"
+                defaultgateway="fd53:ccc5:895a:bc00::13"
+                subnetmask="64"
+                dnsserver="fd53:ccc5:895a:bc00::a"/>
+        </adapter>
+      </adapters>
+    </vm>
+
+    <vm name="SA-DC2"
+        template="Template Windows Server 2012 R2 Datacenter CORE"
+        computername="SA-DC2">
+      <dsc configname="DC_SECONDARY"
+           configfile="DC_SECONDARY.DSC.ps1">
+        <parameters>
+          DomainName = "LABBUILDER.COM"
+          DomainAdminPassword = "P@ssword!1"
+          DCName = "SA-DC1"
+          Forwarders = @('8.8.8.8','8.8.4.4')
+          PSDscAllowDomainUser = $true
+        </parameters>
+      </dsc>
+      <adapters>
+        <adapter name="Domain Private Site A"
+                 switchname="Domain Private Site A">
+          <ipv4 address="192.168.128.11"
+                defaultgateway="192.168.128.19"
+                subnetmask="24"
+                dnsserver="192.168.128.10,192.168.128.11"/>
+          <ipv6 address="fd53:ccc5:895a:bc00::b"
+                defaultgateway="fd53:ccc5:895a:bc00::13"
+                subnetmask="64"
+                dnsserver="fd53:ccc5:895a:bc00::a,fd53:ccc5:895a:bc00::b"/>
+        </adapter>
+      </adapters>
+    </vm>
+
+    <vm name="SA-RODC1"
+    template="Template Windows Server 2012 R2 Datacenter CORE"
+    computername="SA-RODC1">
+      <dsc configname="RODC_SECONDARY"
+           configfile="RODC_SECONDARY.DSC.ps1">
+        <parameters>
+          DomainName = "LABBUILDER.COM"
+          DomainAdminPassword = "P@ssword!1"
+          DCName = "SA-DC1"
+          Forwarders = @('8.8.8.8','8.8.4.4')
+          PSDscAllowDomainUser = $true
+        </parameters>
+      </dsc>
+      <adapters>
+        <adapter name="Domain Private Site A"
+                 switchname="Domain Private Site A">
+          <ipv4 address="192.168.128.30"
+                defaultgateway="192.168.128.19"
+                subnetmask="24"
+                dnsserver="192.168.128.30,192.168.128.10,192.168.128.11"/>
+          <ipv6 address="fd53:ccc5:895a:bc00::20"
+                defaultgateway="fd53:ccc5:895a:bc00::13"
+                subnetmask="64"
+                dnsserver="fd53:ccc5:895a:bc00::20,fd53:ccc5:895a:bc00::a,fd53:ccc5:895a:bc00::b"/>
+        </adapter>
+      </adapters>
+    </vm>
+
+    <vm name="SA-DHCP1"
+        template="Template Windows Server 2012 R2 Datacenter CORE"
+        computername="SA-DHCP1">
+      <dsc configname="MEMBER_DHCP"
+           configfile="MEMBER_DHCP.DSC.ps1">
+        <parameters>
+          DomainName = "LABBUILDER.COM"
+          DomainAdminPassword = "P@ssword!1"
+          DCName = "SA-DC1"
+          PSDscAllowDomainUser = $true
+          Scopes = @(
+              @{ Name = 'Site A Primary';
+                 Start = '192.168.128.50';
+                 End = '192.168.128.254';
+                 SubnetMask = '255.255.255.0';
+                 AddressFamily = 'IPv4'
+              }
+            )
+          Reservations = @(
+              @{ Name = 'SA-DC1';
+                 ScopeID = '192.168.128.0';
+                 ClientMACAddress = '000000000000';
+                 IPAddress = '192.168.128.10';
+                 AddressFamily = 'IPv4'
+              },
+              @{ Name = 'SA-DC2';
+                 ScopeID = '192.168.128.0';
+                 ClientMACAddress = '000000000001';
+                 IPAddress = '192.168.128.11';
+                 AddressFamily = 'IPv4'
+              },
+              @{ Name = 'SA-RODC1';
+                 ScopeID = '192.168.128.0';
+                 ClientMACAddress = '000000000001';
+                 IPAddress = '192.168.128.30';
+                 AddressFamily = 'IPv4'
+              },
+              @{ Name = 'SA-DHCP1';
+                 ScopeID = '192.168.128.0';
+                 ClientMACAddress = '000000000002';
+                 IPAddress = '192.168.128.16';
+                 AddressFamily = 'IPv4'
+              },
+              @{ Name = 'SA-DHCP2';
+                 ScopeID = '192.168.128.0';
+                 ClientMACAddress = '000000000003';
+                 IPAddress = '192.168.128.17';
+                 AddressFamily = 'IPv4'
+              },
+              @{ Name = 'SA-NPS';
+                 ScopeID = '192.168.128.0';
+                 ClientMACAddress = '000000000004';
+                 IPAddress = '192.168.128.18';
+                 AddressFamily = 'IPv4'
+              },
+              @{ Name = 'SA-EDGE1';
+                 ScopeID = '192.168.128.0';
+                 ClientMACAddress = '000000000005';
+                 IPAddress = '192.168.128.19';
+                 AddressFamily = 'IPv4'
+              },
+              @{ Name = 'SA-EDGE2';
+                 ScopeID = '192.168.128.0';
+                 ClientMACAddress = '000000000006';
+                 IPAddress = '192.168.128.20';
+                 AddressFamily = 'IPv4'
+              },
+              @{ Name = 'SA-WDS';
+                 ScopeID = '192.168.128.0';
+                 ClientMACAddress = '000000000007';
+                 IPAddress = '192.168.128.21';
+                 AddressFamily = 'IPv4'
+              },
+              @{ Name = 'SA-WSUS';
+                 ScopeID = '192.168.128.0';
+                 ClientMACAddress = '000000000008';
+                 IPAddress = '192.168.128.22';
+                 AddressFamily = 'IPv4'
+              },
+              @{ Name = 'SA-SUBCA';
+                 ScopeID = '192.168.128.0';
+                 ClientMACAddress = '000000000009';
+                 IPAddress = '192.168.128.23';
+                 AddressFamily = 'IPv4'
+              },
+              @{ Name = 'SA-FS1';
+                 ScopeID = '192.168.128.0';
+                 ClientMACAddress = '00000000000A';
+                 IPAddress = '192.168.128.24';
+                 AddressFamily = 'IPv4'
+              },
+              @{ Name = 'SA-FS2';
+                 ScopeID = '192.168.128.0';
+                 ClientMACAddress = '00000000000B';
+                 IPAddress = '192.168.128.25';
+                 AddressFamily = 'IPv4'
+              }
+            )
+          ScopeOptions = @(
+              @{ ScopeID = '192.168.128.0';
+                 DNServerIPAddress = @('192.168.128.10','192.168.128.11');
+                 Router = '192.168.128.19';
+                 AddressFamily = 'IPv4'
+              }
+            )
+        </parameters>
+      </dsc>
+      <adapters>
+        <adapter name="Domain Private Site A"
+                 switchname="Domain Private Site A">
+          <ipv4 address="192.168.128.16"
+                defaultgateway="192.168.128.19"
+                subnetmask="24"
+                dnsserver="192.168.128.10,192.168.128.11"/>
+          <ipv6 address="fd53:ccc5:895a:bc00::10"
+                defaultgateway="fd53:ccc5:895a:bc00::13"
+                subnetmask="64"
+                dnsserver="fd53:ccc5:895a:bc00::a,fd53:ccc5:895a:bc00::b"/>
+        </adapter>
+      </adapters>
+    </vm>
+
+    <vm name="SA-DHCP2"
+      template="Template Windows Server 2012 R2 Datacenter CORE"
+      computername="SA-DHCP2">
+      <dsc configname="MEMBER_DHCP"
+           configfile="MEMBER_DHCP.DSC.ps1">
+        <parameters>
+          DomainName = "LABBUILDER.COM"
+          DomainAdminPassword = "P@ssword!1"
+          DCName = "SA-DC1"
+          PSDscAllowDomainUser = $true
+          Scopes = @(
+              @{ Name = 'Remediation Site A';
+                 Start = '192.168.129.50';
+                 End = '192.168.129.254';
+                 SubnetMask = '255.255.255.0';
+                 AddressFamily = 'IPv4'
+              }
+            )
+          ScopeOptions = @(
+              @{ ScopeID = '192.168.129.0';
+                 DNServerIPAddress = '';
+                 Router = '';
+                 AddressFamily = 'IPv4'
+              }
+            )
+        </parameters>
+      </dsc>
+      <adapters>
+        <adapter name="Domain Private Site A"
+                 switchname="Domain Private Site A">
+          <ipv4 address="192.168.128.17"
+                defaultgateway="192.168.128.19"
+                subnetmask="24"
+                dnsserver="192.168.128.10,192.168.128.11"/>
+          <ipv6 address="fd53:ccc5:895a:bc00::11"
+                defaultgateway="fd53:ccc5:895a:bc00::13"
+                subnetmask="64"
+                dnsserver="fd53:ccc5:895a:bc00::a,fd53:ccc5:895a:bc00::b"/>
+        </adapter>
+      </adapters>
+    </vm>
+
+    <vm name="SA-NPS"
+      template="Template Windows Server 2012 R2 Datacenter Full"
+      computername="SA-NPS">
+      <dsc configname="MEMBER_NPS_DFSTEST"
+           configfile="MEMBER_NPS_DFSTEST.DSC.ps1">
+        <parameters>
+          DomainName = "LABBUILDER.COM"
+          DomainAdminPassword = "P@ssword!1"
+          DCName = "SA-DC1"
+          PSDscAllowDomainUser = $true
+        </parameters>
+      </dsc>
+      <adapters>
+        <adapter name="Domain Private Site A"
+                 switchname="Domain Private Site A">
+          <ipv4 address="192.168.128.18"
+                defaultgateway="192.168.128.19"
+                subnetmask="24"
+                dnsserver="192.168.128.10,192.168.128.11"/>
+          <ipv6 address="fd53:ccc5:895a:bc00::12"
+                defaultgateway="fd53:ccc5:895a:bc00::13"
+                subnetmask="64"
+                dnsserver="fd53:ccc5:895a:bc00::a,fd53:ccc5:895a:bc00::b"/>
+        </adapter>
+      </adapters>
+    </vm>
+
+    <vm name="SA-EDGE1"
+      template="Template Windows Server 2012 R2 Datacenter CORE"
+      computername="SA-EDGE1">
+      <dsc configname="MEMBER_REMOTEACCESS"
+           configfile="MEMBER_REMOTEACCESS.DSC.ps1">
+        <parameters>
+          DomainName = "LABBUILDER.COM"
+          DomainAdminPassword = "P@ssword!1"
+          DCName = "SA-DC1"
+          PSDscAllowDomainUser = $true
+        </parameters>
+      </dsc>
+      <adapters>
+        <adapter name="Domain Private Site A"
+                 switchname="Domain Private Site A">
+          <ipv4 address="192.168.128.19"
+                defaultgateway=""
+                subnetmask="24"
+                dnsserver="192.168.128.10,192.168.128.11"/>
+          <ipv6 address="fd53:ccc5:895a:bc00::13"
+                defaultgateway=""
+                subnetmask="64"
+                dnsserver="fd53:ccc5:895a:bc00::a,fd53:ccc5:895a:bc00::b"/>
+        </adapter>
+        <adapter name="Internet"
+                 switchname="Internet" >
+          <ipv4 address="131.107.0.50"
+                defaultgateway=""
+                subnetmask="16"
+                dnsserver="131.107.0.1"/>
+        </adapter>
+      </adapters>
+    </vm>
+
+    <vm name="SA-EDGE2"
+      template="Template Windows Server 2012 R2 Datacenter CORE"
+      computername="SA-EDGE2">
+      <dsc configname="MEMBER_REMOTEACCESS"
+           configfile="MEMBER_REMOTEACCESS.DSC.ps1">
+        <parameters>
+          DomainName = "LABBUILDER.COM"
+          DomainAdminPassword = "P@ssword!1"
+          DCName = "SA-DC1"
+          PSDscAllowDomainUser = $true
+        </parameters>
+      </dsc>
+      <adapters>
+        <adapter name="Domain Private Site A"
+                 switchname="Domain Private Site A">
+          <ipv4 address="192.168.128.20"
+                defaultgateway="192.168.128.19"
+                subnetmask="24"
+                dnsserver="192.168.128.10,192.168.128.11"/>
+          <ipv6 address="fd53:ccc5:895a:bc00::14"
+                defaultgateway="fd53:ccc5:895a:bc00::13"
+                subnetmask="64"
+                dnsserver="fd53:ccc5:895a:bc00::a,fd53:ccc5:895a:bc00::b"/>
+        </adapter>
+        <adapter name="Internet"
+                 switchname="Internet" >
+          <ipv4 address="131.107.0.51"
+                defaultgateway=""
+                subnetmask="16"
+                dnsserver="131.107.0.1"/>
+        </adapter>
+      </adapters>
+    </vm>
+
+    <vm name="SA-WDS"
+      template="Template Windows Server 2012 R2 Datacenter Full"
+      computername="SA-WDS">
+      <datavhds>
+        <datavhd vhd="LABBUILDER.COM SA-WDS Data Disk.vhdx" size="10GB" type="dynamic" />
+      </datavhds>
+      <dsc configname="MEMBER_WDS"
+           configfile="MEMBER_WDS.DSC.ps1">
+        <parameters>
+          DomainName = "LABBUILDER.COM"
+          DomainAdminPassword = "P@ssword!1"
+          DCName = "SA-DC1"
+          PSDscAllowDomainUser = $true
+        </parameters>
+      </dsc>
+      <adapters>
+        <adapter name="Domain Private Site A"
+                 switchname="Domain Private Site A">
+          <ipv4 address="192.168.128.21"
+                defaultgateway="192.168.128.19"
+                subnetmask="24"
+                dnsserver="192.168.128.10,192.168.128.11"/>
+          <ipv6 address="fd53:ccc5:895a:bc00::15"
+                defaultgateway="fd53:ccc5:895a:bc00::13"
+                subnetmask="64"
+                dnsserver="fd53:ccc5:895a:bc00::a,fd53:ccc5:895a:bc00::b"/>
+        </adapter>
+      </adapters>
+    </vm>
+
+    <vm name="SA-WSUS"
+      template="Template Windows Server 2012 R2 Datacenter CORE"
+      computername="SA-WSUS">
+      <datavhds>
+        <datavhd vhd="LABBUILDER.COM SA-WSUS Data Disk.vhdx" size="10GB" type="dynamic" />
+      </datavhds>
+      <dsc configname="MEMBER_WSUS"
+           configfile="MEMBER_WSUS.DSC.ps1">
+        <parameters>
+          DomainName = "LABBUILDER.COM"
+          DomainAdminPassword = "P@ssword!1"
+          DCName = "SA-DC1"
+          PSDscAllowDomainUser = $true
+        </parameters>
+      </dsc>
+      <adapters>
+        <adapter name="Domain Private Site A"
+                 switchname="Domain Private Site A">
+          <ipv4 address="192.168.128.22"
+                defaultgateway="192.168.128.19"
+                subnetmask="24"
+                dnsserver="192.168.128.10,192.168.128.11"/>
+          <ipv6 address="fd53:ccc5:895a:bc00::16"
+                defaultgateway="fd53:ccc5:895a:bc00::13"
+                subnetmask="64"
+                dnsserver="fd53:ccc5:895a:bc00::a,fd53:ccc5:895a:bc00::b"/>
+        </adapter>
+      </adapters>
+    </vm>
+
+    <vm name="SA-SUBCA"
+      template="Template Windows Server 2012 R2 Datacenter CORE"
+      computername="SA-SUBCA">
+      <dsc configname="MEMBER_SUBCA"
+           configfile="MEMBER_SUBCA.DSC.ps1"
+           logging="Y">
+        <parameters>
+          DomainName = "LABBUILDER.COM"
+          DomainAdminPassword = "P@ssword!1"
+          DCName = "SA-DC1"
+          PSDscAllowDomainUser = $true
+          InstallOnlineResponder = $true
+          InstallEnrollmentWebService = $true
+          CACommonName = "LABBUILDER.COM Issuing CA"
+          CADistinguishedNameSuffix = "DC=LABBUILDER,DC=COM"
+          CRLPublicationURLs = "65:C:\Windows\system32\CertSrv\CertEnroll\%3%8%9.crl\n79:ldap:///CN=%7%8,CN=%2,CN=CDP,CN=Public Key Services,CN=Services,%6%10\n6:http://pki.labbuilder.com/CertEnroll/%3%8%9.crl"
+          CACertPublicationURLs = "1:C:\Windows\system32\CertSrv\CertEnroll\%1_%3%4.crt\n2:ldap:///CN=%7,CN=AIA,CN=Public Key Services,CN=Services,%6%11\n2:http://pki.labbuilder.com/CertEnroll/%1_%3%4.crt"
+          RootCAName = "SS_ROOTCA"
+          RootCACommonName = "LABBUILDER.COM Root CA"
+        </parameters>
+      </dsc>
+      <adapters>
+        <adapter name="Domain Private Site A"
+                 switchname="Domain Private Site A">
+          <ipv4 address="192.168.128.23"
+                defaultgateway="192.168.128.19"
+                subnetmask="24"
+                dnsserver="192.168.128.10,192.168.128.11"/>
+          <ipv6 address="fd53:ccc5:895a:bc00::17"
+                defaultgateway="fd53:ccc5:895a:bc00::13"
+                subnetmask="64"
+                dnsserver="fd53:ccc5:895a:bc00::a,fd53:ccc5:895a:bc00::b"/>
+        </adapter>
+      </adapters>
+    </vm>
+
+    <vm name="SA-FS1"
+        template="Template Windows Server 2012 R2 Datacenter CORE"
+        computername="SA-FS1">
+      <datavhds>
+        <datavhd vhd="LABBUILDER.COM SA-FS1 Data Disk.vhdx" size="10GB" type="dynamic" />
+      </datavhds>
+      <dsc configname="MEMBER_FILESERVER"
+           configfile="MEMBER_FILESERVER.DSC.ps1"
+           logging="Y">
+        <parameters>
+          DomainName = "LABBUILDER.COM"
+          DomainAdminPassword = "P@ssword!1"
+          DCName = "SA-DC1"
+          PSDscAllowDomainUser = $true
+        </parameters>
+      </dsc>
+      <adapters>
+        <adapter name="Domain Private Site A"
+                 switchname="Domain Private Site A">
+          <ipv4 address="192.168.128.24"
+                defaultgateway="192.168.128.19"
+                subnetmask="24"
+                dnsserver="192.168.128.10,192.168.128.11"/>
+          <ipv6 address="fd53:ccc5:895a:bc00::18"
+                defaultgateway="fd53:ccc5:895a:bc00::13"
+                subnetmask="64"
+                dnsserver="fd53:ccc5:895a:bc00::a,fd53:ccc5:895a:bc00::b"/>
+        </adapter>
+      </adapters>
+    </vm>
+
+    <vm name="SA-FS2"
+        template="Template Windows Server 2012 R2 Datacenter CORE"
+        computername="SA-FS2">
+      <datavhds>
+        <datavhd vhd="LABBUILDER.COM SA-FS2 Data Disk.vhdx" size="10GB" type="dynamic" />
+      </datavhds>
+      <dsc configname="MEMBER_FILESERVER"
+           configfile="MEMBER_FILESERVER.DSC.ps1">
+        <parameters>
+          DomainName = "LABBUILDER.COM"
+          DomainAdminPassword = "P@ssword!1"
+          DCName = "SA-DC1"
+          PSDscAllowDomainUser = $true
+        </parameters>
+      </dsc>
+      <adapters>
+        <adapter name="Domain Private Site A"
+                 switchname="Domain Private Site A">
+          <ipv4 address="192.168.128.25"
+                defaultgateway="192.168.128.19"
+                subnetmask="24"
+                dnsserver="192.168.128.10,192.168.128.11"/>
+          <ipv6 address="fd53:ccc5:895a:bc00::19"
+                defaultgateway="fd53:ccc5:895a:bc00::13"
+                subnetmask="64"
+                dnsserver="fd53:ccc5:895a:bc00::a,fd53:ccc5:895a:bc00::b"/>
+        </adapter>
+      </adapters>
+    </vm>
+
+    <vm name="DA-IT01"
+      template="Template Windows 10 Enterprise"
+      computername="DA-IT01">
+      <adapters>
+        <adapter name="Domain Private Site A"
+                 switchname="Domain Private Site A" />
+        <adapter name="Internet"
+                 switchname="Internet" >
+        </adapter>
+      </adapters>
+    </vm>
+  </vms>
+
+</labbuilderconfig>

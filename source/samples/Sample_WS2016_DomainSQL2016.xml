@@ -1,0 +1,257 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<labbuilderconfig xmlns="labbuilderconfig"
+                  name="Sample_WS2016_DomainSQL2016"
+                  version="1.0">
+  <description>
+  Sample Windows Server 2016 Lab Configuration DC, DHCP and Edge.
+
+  A SQL Server 2016 node will also be installed from a SQL Server 2016 ISO with data stored on a local data disk.
+
+  Download the SQL Server 2016 ISO from here:
+  https://www.microsoft.com/en-us/evalcenter/evaluate-sql-server-2016
+
+  Use the evaluation installer to download media (as an ISO).
+
+  **Update the Resource ISO path below with the location of the SQL Server 2016 ISO.**
+
+  Management Tools will not be automatically installed as they do not appear on the SQL Server 2016 ISO and must be downloaded and installed separately.
+  </description>
+
+  <settings labid="DOMAINSQL2016.COM "
+            domainname="DOMAINSQL2016.COM"
+            email="admina@DOMAINSQL2016.COM"
+            labpath="c:\vm\DOMAINSQL2016.COM" />
+
+  <resources isopath="ISOFiles">
+    <iso name="SQL2016_Full_ENU"
+         path="SQLServer2016-x64-ENU.iso"
+         url="https://www.microsoft.com/en-us/evalcenter/evaluate-sql-server-2016" />
+  </resources>
+
+  <switches>
+    <switch name="External" type="External">
+      <adapters>
+        <adapter name="Cluster" macaddress="00155D010701" />
+        <adapter name="Management" macaddress="00155D010702" />
+        <adapter name="SMB" macaddress="00155D010703" />
+        <adapter name="LM" macaddress="00155D010704" />
+      </adapters>
+    </switch>
+    <switch name="Domain Private Site A" type="Private" vlan="2" />
+  </switches>
+
+  <templatevhds isopath="ISOFiles"
+                vhdpath="VHDFiles"
+                prefix="" >
+    <templatevhd name="Windows Server 2016 Datacenter Full"
+                 iso="14393.0.161119-1705.RS1_REFRESH_SERVER_EVAL_X64FRE_EN-US.ISO"
+                 url="https://www.microsoft.com/en-us/evalcenter/evaluate-windows-server-2016"
+                 vhd="Windows Server 2016 Datacenter Full.vhdx"
+                 edition="Windows Server 2016 SERVERDATACENTER"
+                 ostype="Server"
+                 vhdformat="vhdx"
+                 vhdtype="dynamic"
+                 generation="2"
+                 vhdsize="40GB" />
+    <templatevhd name="Windows Server 2016 Datacenter CORE"
+                 iso="14393.0.161119-1705.RS1_REFRESH_SERVER_EVAL_X64FRE_EN-US.ISO"
+                 url="https://www.microsoft.com/en-us/evalcenter/evaluate-windows-server-2016"
+                 vhd="Windows Server 2016 Datacenter Core.vhdx"
+                 edition="Windows Server 2016 SERVERDATACENTERCORE"
+                 ostype="Server"
+                 vhdformat="vhdx"
+                 vhdtype="dynamic"
+                 generation="2"
+                 vhdsize="25GB" />
+  </templatevhds>
+
+  <templates>
+    <template name="Template Windows Server 2016 Datacenter Full"
+              templatevhd="Windows Server 2016 Datacenter Full"
+              memorystartupbytes="1GB"
+              processorcount="1"
+              administratorpassword="P@ssword!1"
+              timezone="New Zealand Standard Time"
+              ostype="Server" />
+    <template name="Template Windows Server 2016 Datacenter CORE"
+              templatevhd="Windows Server 2016 Datacenter CORE"
+              memorystartupbytes="1GB"
+              processorcount="1"
+              administratorpassword="P@ssword!1"
+              timezone="New Zealand Standard Time"
+              ostype="Server" />
+  </templates>
+
+  <vms>
+    <vm name="SA-DC1"
+        template="Template Windows Server 2016 Datacenter CORE"
+        computername="SA-DC1">
+      <dsc configname="DC_FORESTPRIMARY"
+           configfile="DC_FORESTPRIMARY.DSC.ps1">
+        <parameters>
+          DomainName = "DOMAINSQL2016.COM"
+          DomainAdminPassword = "P@ssword!1"
+          Forwarders = @('8.8.8.8','8.8.4.4')
+        </parameters>
+      </dsc>
+      <adapters>
+        <adapter name="Domain Private Site A"
+                 switchname="Domain Private Site A">
+          <ipv4 address="192.168.128.10"
+                defaultgateway="192.168.128.19"
+                subnetmask="24"
+                dnsserver="192.168.128.10"/>
+          <ipv6 address="fd53:ccc5:895a:bc00::a"
+                defaultgateway="fd53:ccc5:895a:bc00::13"
+                subnetmask="64"
+                dnsserver="fd53:ccc5:895a:bc00::a"/>
+        </adapter>
+      </adapters>
+    </vm>
+
+    <vm name="SA-DHCP1"
+        template="Template Windows Server 2016 Datacenter CORE"
+        computername="SA-DHCP1">
+      <dsc configname="MEMBER_DHCP"
+           configfile="MEMBER_DHCP.DSC.ps1">
+        <parameters>
+          DomainName = "DOMAINSQL2016.COM"
+          DCname = "SA-DC1"
+          DomainAdminPassword = "P@ssword!1"
+          PSDscAllowDomainUser = $true
+          Scopes = @(
+              @{ Name = 'Site A Primary';
+                 Start = '192.168.128.50';
+                 End = '192.168.128.254';
+                 SubnetMask = '255.255.255.0';
+                 AddressFamily = 'IPv4'
+              }
+            )
+          Reservations = @(
+              @{ Name = 'SA-DC1';
+                 ScopeID = '192.168.128.0';
+                 ClientMACAddress = '000000000000';
+                 IPAddress = '192.168.128.10';
+                 AddressFamily = 'IPv4'
+              },
+              @{ Name = 'SA-DHCP1';
+                 ScopeID = '192.168.128.0';
+                 ClientMACAddress = '000000000002';
+                 IPAddress = '192.168.128.16';
+                 AddressFamily = 'IPv4'
+              },
+              @{ Name = 'SA-EDGE1';
+                 ScopeID = '192.168.128.0';
+                 ClientMACAddress = '000000000005';
+                 IPAddress = '192.168.128.19';
+                 AddressFamily = 'IPv4'
+              }
+              @{ Name = 'SA-SQL1';
+                 ScopeID = '192.168.128.0';
+                 ClientMACAddress = '00000000000A';
+                 IPAddress = '192.168.128.20';
+                 AddressFamily = 'IPv4'
+              }
+            )
+          ScopeOptions = @(
+              @{ ScopeID = '192.168.128.0';
+                 DNServerIPAddress = @('192.168.128.10');
+                 Router = '192.168.128.19';
+                 AddressFamily = 'IPv4'
+              }
+            )
+        </parameters>
+      </dsc>
+      <adapters>
+        <adapter name="Domain Private Site A"
+                 switchname="Domain Private Site A">
+          <ipv4 address="192.168.128.16"
+                defaultgateway="192.168.128.19"
+                subnetmask="24"
+                dnsserver="192.168.128.10"/>
+          <ipv6 address="fd53:ccc5:895a:bc00::10"
+                defaultgateway="fd53:ccc5:895a:bc00::13"
+                subnetmask="64"
+                dnsserver="fd53:ccc5:895a:bc00::a"/>
+        </adapter>
+      </adapters>
+    </vm>
+
+    <vm name="SA-EDGE1"
+      template="Template Windows Server 2016 Datacenter CORE"
+      computername="SA-EDGE1"
+      bootorder="3">
+      <dsc configname="MEMBER_REMOTEACCESS"
+           configfile="MEMBER_REMOTEACCESS.DSC.ps1">
+        <parameters>
+          DomainName = "DOMAINSQL2016.COM"
+          DomainAdminPassword = "P@ssword!1"
+          DCName = "SA-DC1"
+          PSDscAllowDomainUser = $true
+        </parameters>
+      </dsc>
+      <adapters>
+        <adapter name="Domain Private Site A"
+                 switchname="Domain Private Site A">
+          <ipv4 address="192.168.128.19"
+                defaultgateway=""
+                subnetmask="24"
+                dnsserver="192.168.128.10"/>
+          <ipv6 address="fd53:ccc5:895a:bc00::13"
+                defaultgateway=""
+                subnetmask="64"
+                dnsserver="fd53:ccc5:895a:bc00::a"/>
+        </adapter>
+        <adapter name="External"
+                 switchname="External" />
+      </adapters>
+    </vm>
+
+    <vm name="SA-SQL1"
+      template="Template Windows Server 2016 Datacenter Full"
+      computername="SA-SQL1"
+      bootorder="4">
+      <dsc configname="MEMBER_SQLSERVER2016"
+           configfile="MEMBER_SQLSERVER2016.DSC.ps1">
+        <parameters>
+          DomainName = "DOMAINSQL2016.COM"
+          DomainAdminPassword = "P@ssword!1"
+          DCName = "SA-DC1"
+          PSDscAllowDomainUser = $true
+          InstallerUsername = 'Administrator'
+          InstallerPassword = 'P@ssword!1'
+          SQLAdminAccount = 'Administrator'
+          SQLDataDrive = 'E'
+          SourcePath = 'D:\'
+          Instances = @(
+            @{
+              Name = 'MSSQLSERVER'
+              Features = 'SQLENGINE,FULLTEXT,RS,AS,IS'
+            }
+          )
+        </parameters>
+      </dsc>
+      <adapters>
+        <adapter name="Domain Private"
+                 switchname="Domain Private">
+          <ipv4 address="192.168.128.21"
+                defaultgateway="192.168.128.19"
+                subnetmask="24"
+                dnsserver="192.168.128.10"/>
+          <ipv6 address="fd53:ccc5:895a:bc00::15"
+                defaultgateway="fd53:ccc5:895a:bc00::13"
+                subnetmask="64"
+                dnsserver="fd53:ccc5:895a:bc00::a"/>
+        </adapter>
+      </adapters>
+      <datavhds>
+        <datavhd vhd="SQLData.vhdx" type="dynamic" size="10GB" partitionstyle="GPT" filesystem="NTFS" filesystemlabel="SQLData" />
+      </datavhds>
+      <dvddrives>
+        <dvddrive iso="SQL2016_Full_ENU" />
+      </dvddrives>
+    </vm>
+  </vms>
+
+</labbuilderconfig>

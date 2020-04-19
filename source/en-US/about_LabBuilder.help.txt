@@ -1,0 +1,24 @@
+TOPIC
+    about_CosmosDB
+
+SHORT DESCRIPTION
+    PowerShell module for working with CosmosDB.
+
+LONG DESCRIPTION
+    This module provides cmdlets for working with Azure Cosmos DB databases, collections,
+    documents, attachments, offers, users, permissions, triggers, stored procedures
+    and user defined functions.
+
+EXAMPLES
+    PS C:\> Get-Command -Module CosmosDB
+
+TROUBLESHOOTING NOTE:
+    Go to the Github repository for read about issues, submit a new issue, and read
+    about new releases. https://github.com/PlagueHO/CosmosDB
+
+SEE ALSO
+  - https://github.com/PlagueHO/CosmosDB
+
+KEYWORDS
+      CosmosDB, DocumentDb, Azure
+

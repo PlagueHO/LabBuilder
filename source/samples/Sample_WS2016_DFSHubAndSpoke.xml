@@ -1,0 +1,311 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<labbuilderconfig xmlns="labbuilderconfig"
+                  name="Sample_WS2016_DFSHubAndSpoke"
+                  version="1.0">
+  <description>Sample Windows Server 2016 Lab Configuration DC, DHCP, EDGE and Hub and Spoke DFS replication group.</description>
+
+  <settings labid="LABBUILDER-DFSHUBANDSPOKE.COM "
+            domainname="LABBUILDER-DFSHUBANDSPOKE.COM"
+            email="admina@LABBUILDER-DFSHUBANDSPOKE.COM"
+            labpath="c:\vm\LABBUILDER-DFSHUBANDSPOKE.COM" />
+
+  <switches>
+    <switch name="External" type="External">
+      <adapters>
+        <adapter name="Cluster" macaddress="00155D010701" />
+        <adapter name="Management" macaddress="00155D010702" />
+        <adapter name="SMB" macaddress="00155D010703" />
+        <adapter name="LM" macaddress="00155D010704" />
+      </adapters>
+    </switch>
+    <switch name="Domain Private Site A" type="Private" vlan="2" />
+  </switches>
+
+  <templatevhds isopath="ISOFiles"
+                vhdpath="VHDFiles"
+                prefix="" >
+    <templatevhd name="Windows Server 2016 Datacenter Full"
+                 iso="14393.0.161119-1705.RS1_REFRESH_SERVER_EVAL_X64FRE_EN-US.ISO"
+                 url="https://www.microsoft.com/en-us/evalcenter/evaluate-windows-server-2016"
+                 vhd="Windows Server 2016 Datacenter Full.vhdx"
+                 edition="Windows Server 2016 SERVERDATACENTER"
+                 ostype="Server"
+                 vhdformat="vhdx"
+                 vhdtype="dynamic"
+                 generation="2"
+                 vhdsize="40GB" />
+    <templatevhd name="Windows Server 2016 Datacenter CORE"
+                 iso="14393.0.161119-1705.RS1_REFRESH_SERVER_EVAL_X64FRE_EN-US.ISO"
+                 url="https://www.microsoft.com/en-us/evalcenter/evaluate-windows-server-2016"
+                 vhd="Windows Server 2016 Datacenter Core.vhdx"
+                 edition="Windows Server 2016 SERVERDATACENTERCORE"
+                 ostype="Server"
+                 vhdformat="vhdx"
+                 vhdtype="dynamic"
+                 generation="2"
+                 vhdsize="25GB" />
+  </templatevhds>
+
+  <templates>
+    <template name="Template Windows Server 2016 Datacenter Full"
+              templatevhd="Windows Server 2016 Datacenter Full"
+              memorystartupbytes="1GB"
+              processorcount="1"
+              administratorpassword="P@ssword!1"
+              timezone="New Zealand Standard Time"
+              ostype="Server" />
+    <template name="Template Windows Server 2016 Datacenter CORE"
+              templatevhd="Windows Server 2016 Datacenter CORE"
+              memorystartupbytes="1GB"
+              processorcount="1"
+              administratorpassword="P@ssword!1"
+              timezone="New Zealand Standard Time"
+              ostype="Server" />
+  </templates>
+
+  <vms>
+    <vm name="SA-DC1"
+        template="Template Windows Server 2016 Datacenter CORE"
+        computername="SA-DC1">
+      <dsc configname="DC_FORESTPRIMARY"
+           configfile="DC_FORESTPRIMARY.DSC.ps1">
+        <parameters>
+          DomainName = "LABBUILDER.COM"
+          DomainAdminPassword = "P@ssword!1"
+          Forwarders = @('8.8.8.8','8.8.4.4')
+        </parameters>
+      </dsc>
+      <adapters>
+        <adapter name="External"
+                 switchname="External" />
+        <adapter name="Domain Private Site A"
+                 switchname="Domain Private Site A">
+          <ipv4 address="192.168.128.10"
+                defaultgateway="192.168.128.19"
+                subnetmask="24"
+                dnsserver="192.168.128.10"/>
+          <ipv6 address="fd53:ccc5:895a:bc00::a"
+                defaultgateway="fd53:ccc5:895a:bc00::13"
+                subnetmask="64"
+                dnsserver="fd53:ccc5:895a:bc00::a"/>
+        </adapter>
+      </adapters>
+    </vm>
+
+    <vm name="SA-DHCP1"
+        template="Template Windows Server 2016 Datacenter CORE"
+        computername="SA-DHCP1">
+      <dsc configname="MEMBER_DHCP"
+           configfile="MEMBER_DHCP.DSC.ps1">
+        <parameters>
+          DomainName = "LABBUILDER.COM"
+          DCname = "SA-DC1"
+          DomainAdminPassword = "P@ssword!1"
+          PSDscAllowDomainUser = $true
+          Scopes = @(
+              @{ Name = 'Site A Primary';
+                 Start = '192.168.128.50';
+                 End = '192.168.128.254';
+                 SubnetMask = '255.255.255.0';
+                 AddressFamily = 'IPv4'
+              }
+            )
+          Reservations = @(
+              @{ Name = 'SA-DC1';
+                 ScopeID = '192.168.128.0';
+                 ClientMACAddress = '000000000000';
+                 IPAddress = '192.168.128.10';
+                 AddressFamily = 'IPv4'
+              },
+              @{ Name = 'SA-DHCP1';
+                 ScopeID = '192.168.128.0';
+                 ClientMACAddress = '000000000002';
+                 IPAddress = '192.168.128.16';
+                 AddressFamily = 'IPv4'
+              },
+              @{ Name = 'SA-EDGE1';
+                 ScopeID = '192.168.128.0';
+                 ClientMACAddress = '000000000005';
+                 IPAddress = '192.168.128.19';
+                 AddressFamily = 'IPv4'
+              },
+              @{ Name = 'SA-SPOKE1';
+                 ScopeID = '192.168.128.0';
+                 ClientMACAddress = '000000000006';
+                 IPAddress = '192.168.128.20';
+                 AddressFamily = 'IPv4'
+              }
+              @{ Name = 'SA-SPOKE2';
+                 ScopeID = '192.168.128.0';
+                 ClientMACAddress = '000000000007';
+                 IPAddress = '192.168.128.21';
+                 AddressFamily = 'IPv4'
+              }
+              @{ Name = 'SA-HUB';
+                 ScopeID = '192.168.128.0';
+                 ClientMACAddress = '000000000008';
+                 IPAddress = '192.168.128.22';
+                 AddressFamily = 'IPv4'
+              }
+
+            )
+          ScopeOptions = @(
+              @{ ScopeID = '192.168.128.0';
+                 DNServerIPAddress = @('192.168.128.10');
+                 Router = '192.168.128.19';
+                 AddressFamily = 'IPv4'
+              }
+            )
+        </parameters>
+      </dsc>
+      <adapters>
+        <adapter name="External"
+                 switchname="External" />
+        <adapter name="Domain Private Site A"
+                 switchname="Domain Private Site A">
+          <ipv4 address="192.168.128.16"
+                defaultgateway="192.168.128.19"
+                subnetmask="24"
+                dnsserver="192.168.128.10"/>
+          <ipv6 address="fd53:ccc5:895a:bc00::10"
+                defaultgateway="fd53:ccc5:895a:bc00::13"
+                subnetmask="64"
+                dnsserver="fd53:ccc5:895a:bc00::a"/>
+        </adapter>
+      </adapters>
+    </vm>
+
+    <vm name="SA-EDGE1"
+      template="Template Windows Server 2016 Datacenter CORE"
+      computername="SA-EDGE1"
+      bootorder="3">
+      <dsc configname="MEMBER_REMOTEACCESS"
+           configfile="MEMBER_REMOTEACCESS.DSC.ps1">
+        <parameters>
+          DomainName = "LABBUILDER.COM"
+          DomainAdminPassword = "P@ssword!1"
+          DCName = "SA-DC1"
+          PSDscAllowDomainUser = $true
+        </parameters>
+      </dsc>
+      <adapters>
+        <adapter name="Domain Private Site A"
+                 switchname="Domain Private Site A">
+          <ipv4 address="192.168.128.19"
+                defaultgateway=""
+                subnetmask="24"
+                dnsserver="192.168.128.10"/>
+          <ipv6 address="fd53:ccc5:895a:bc00::13"
+                defaultgateway=""
+                subnetmask="64"
+                dnsserver="fd53:ccc5:895a:bc00::a"/>
+        </adapter>
+        <adapter name="External"
+                 switchname="External" />
+      </adapters>
+    </vm>
+
+    <vm name="SA-SPOKE1"
+      template="Template Windows Server 2016 Datacenter Full"
+      computername="SA-SPOKE1"
+      bootorder="4">
+      <datavhds>
+        <datavhd vhd="LABBUILDER.COM SA-FS1 Data Disk.vhdx" size="10GB" type="dynamic" />
+      </datavhds>
+      <dsc configname="MEMBER_DFSSPOKE"
+           configfile="MEMBER_DFSSPOKE.DSC.ps1"
+           logging="Y">
+        <parameters>
+          DomainName = "LABBUILDER.COM"
+          DomainAdminPassword = "P@ssword!1"
+          DCName = "SA-DC1"
+          PSDscAllowDomainUser = $true
+        </parameters>
+      </dsc>
+      <adapters>
+        <adapter name="Domain Private Site A"
+                 switchname="Domain Private Site A">
+          <ipv4 address="192.168.128.20"
+                defaultgateway=""
+                subnetmask="24"
+                dnsserver="192.168.128.10"/>
+          <ipv6 address="fd53:ccc5:895a:bc00::14"
+                defaultgateway=""
+                subnetmask="64"
+                dnsserver="fd53:ccc5:895a:bc00::a"/>
+        </adapter>
+      </adapters>
+    </vm>
+
+    <vm name="SA-SPOKE2"
+      template="Template Windows Server 2016 Datacenter Full"
+      computername="SA-SPOKE2"
+      bootorder="4">
+      <datavhds>
+        <datavhd vhd="LABBUILDER.COM SA-FS1 Data Disk.vhdx" size="10GB" type="dynamic" />
+      </datavhds>
+      <dsc configname="MEMBER_DFSSPOKE"
+           configfile="MEMBER_DFSSPOKE.DSC.ps1"
+           logging="Y">
+        <parameters>
+          DomainName = "LABBUILDER.COM"
+          DomainAdminPassword = "P@ssword!1"
+          DCName = "SA-DC1"
+          PSDscAllowDomainUser = $true
+        </parameters>
+      </dsc>
+      <adapters>
+        <adapter name="Domain Private Site A"
+                 switchname="Domain Private Site A">
+          <ipv4 address="192.168.128.21"
+                defaultgateway=""
+                subnetmask="24"
+                dnsserver="192.168.128.10"/>
+          <ipv6 address="fd53:ccc5:895a:bc00::15"
+                defaultgateway=""
+                subnetmask="64"
+                dnsserver="fd53:ccc5:895a:bc00::a"/>
+        </adapter>
+      </adapters>
+    </vm>
+
+    <vm name="SA-HUB"
+      template="Template Windows Server 2016 Datacenter Full"
+      computername="SA-HUB"
+      bootorder="5">
+      <datavhds>
+        <datavhd vhd="LABBUILDER.COM SA-FS1 Data Disk.vhdx" size="10GB" type="dynamic" />
+      </datavhds>
+      <dsc configname="MEMBER_DFSHUB"
+           configfile="MEMBER_DFSHUB.DSC.ps1"
+           logging="Y">
+        <parameters>
+          DomainName = "LABBUILDER.COM"
+          DomainAdminPassword = "P@ssword!1"
+          DCName = "SA-DC1"
+          PSDscAllowDomainUser = $true
+          SpokeComputerName = @('SA-SPOKE1','SA-SPOKE2')
+          ResourceGroupName = 'WebSite'
+          ResourceGroupDescription = 'Files for web server'
+          ResourceGroupFolderName = 'WebSiteFiles'
+          ResourceGroupContentPath = 'd:\inetpub\wwwroot\WebSiteFiles'
+        </parameters>
+      </dsc>
+      <adapters>
+        <adapter name="Domain Private Site A"
+                 switchname="Domain Private Site A">
+          <ipv4 address="192.168.128.22"
+                defaultgateway=""
+                subnetmask="24"
+                dnsserver="192.168.128.10"/>
+          <ipv6 address="fd53:ccc5:895a:bc00::16"
+                defaultgateway=""
+                subnetmask="64"
+                dnsserver="fd53:ccc5:895a:bc00::a"/>
+        </adapter>
+      </adapters>
+    </vm>
+  </vms>
+
+</labbuilderconfig>

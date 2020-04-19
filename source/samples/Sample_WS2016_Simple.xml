@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<labbuilderconfig xmlns="labbuilderconfig"
+                  name="Sample_WS2016_Simple"
+                  version="1.0">
+  <description>Sample Windows Server 2016 Lab Configuration Simple</description>
+
+  <settings labid="LABBUILDER-SIMPLE.COM "
+            domainname="LABBUILDER-SIMPLE.COM"
+            email="admin@LABBUILDER-SIMPLE.COM"
+            labpath="c:\vm\LABBUILDER-SIMPLE.COM" />
+
+  <switches>
+    <switch name="External" type="External">
+      <adapters>
+        <adapter name="Cluster" macaddress="00155D010701" />
+        <adapter name="Management" macaddress="00155D010702" />
+        <adapter name="SMB" macaddress="00155D010703" />
+        <adapter name="LM" macaddress="00155D010704" />
+      </adapters>
+    </switch>
+    <switch name="General Purpose Internal" type="Internal" />
+    <switch name="Domain Private Site A" type="Private" vlan="2" />
+    <switch name="Domain Private Site B" type="Private" vlan="3" />
+    <switch name="Domain Private Site C" type="Private" vlan="4" />
+  </switches>
+
+  <templatevhds isopath="ISOFiles"
+                vhdpath="VHDFiles"
+                prefix="" >
+    <templatevhd name="Windows Server 2016 Datacenter Full"
+                 iso="14393.0.161119-1705.RS1_REFRESH_SERVER_EVAL_X64FRE_EN-US.ISO"
+                 url="https://www.microsoft.com/en-us/evalcenter/evaluate-windows-server-2016"
+                 vhd="Windows Server 2016 Datacenter Full.vhdx"
+                 edition="Windows Server 2016 SERVERDATACENTER"
+                 ostype="Server"
+                 vhdformat="vhdx"
+                 vhdtype="dynamic"
+                 generation="2"
+                 vhdsize="40GB" />
+  </templatevhds>
+
+  <templates>
+    <template name="Template Windows Server 2016 Datacenter Full"
+              templatevhd="Windows Server 2016 Datacenter Full"
+              memorystartupbytes="1GB"
+              processorcount="1"
+              administratorpassword="P@ssword!1"
+              timezone="New Zealand Standard Time"
+              ostype="Server" />
+  </templates>
+
+  <vms>
+    <vm name="SS-DEFAULT"
+        template="Template Windows Server 2016 Datacenter Full"
+        computername="SS-DEFAULT">
+      <dsc configname="STANDALONE_DEFAULT"
+           configfile="STANDALONE_DEFAULT.DSC.ps1">
+      </dsc>
+      <adapters>
+        <adapter name="External"
+                 switchname="External" />
+        <adapter name="Domain Private Site A"
+                 switchname="Domain Private Site A">
+          <ipv4 address="192.168.10.2"
+                defaultgateway="192.168.10.1"
+                subnetmask="24"
+                dnsserver="192.168.10.2"/>
+          <ipv6 address="fd53:ccc5:895a:ba00::2"
+                defaultgateway="fd53:ccc5:895a:ba00::1"
+                subnetmask="64"
+                dnsserver="fd53:ccc5:895a:ba00::2"/>
+        </adapter>
+      </adapters>
+    </vm>
+  </vms>
+
+</labbuilderconfig>

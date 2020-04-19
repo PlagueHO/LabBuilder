@@ -1,0 +1,328 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<labbuilderconfig xmlns="labbuilderconfig"
+                  name="NANOTEST.COM"
+                  version="1.0" >
+  <description>Simple Windows Server 2016 Lab Configuration creating an AD DC, DHCP Server, Edge Server, Root CA and eight Nano Servers</description>
+
+  <settings labid="NANOTEST.COM "
+            domainname="NANOTEST.COM"
+            email="daniel@NANOTEST.COM"
+            labpath="c:\vm\NANOTEST.COM" />
+
+  <switches managementvlan="97">
+    <switch name="General Purpose External" type="External">
+      <adapters>
+        <adapter name="Cluster" macaddress="00155D010701" />
+        <adapter name="Management" macaddress="00155D010702" />
+        <adapter name="SMB" macaddress="00155D010703" />
+        <adapter name="LM" macaddress="00155D010704" />
+      </adapters>
+    </switch>
+    <switch name="Domain Private" type="Private" vlan="30" />
+    <switch name="Domain Private iSCSI" type="Private" vlan="31" />
+    <switch name="Domain Private LM" type="Private" vlan="32" />
+    <switch name="Domain Private SMB" type="Private" vlan="33" />
+  </switches>
+
+  <templatevhds isopath="ISOFiles"
+                vhdpath="VHDFiles"
+                prefix="" >
+    <templatevhd name="Windows Server 2016 Datacenter Full"
+                 iso="14393.0.161119-1705.RS1_REFRESH_SERVER_EVAL_X64FRE_EN-US.ISO"
+                 url="https://www.microsoft.com/en-us/evalcenter/evaluate-windows-server-2016"
+                 vhd="Windows Server 2016 Datacenter Full.vhdx"
+                 edition="Windows Server 2016 SERVERDATACENTER"
+                 ostype="Server"
+                 vhdformat="vhdx"
+                 vhdtype="dynamic"
+                 generation="2"
+                 vhdsize="40GB" />
+    <templatevhd name="Nano Server 2016 Datacenter"
+                 iso="14393.0.161119-1705.RS1_REFRESH_SERVER_EVAL_X64FRE_EN-US.ISO"
+                 url="https://www.microsoft.com/en-us/evalcenter/evaluate-windows-server-2016"
+                 vhd="Nano Server 2016 Datacenter.vhdx"
+                 edition="Windows Server 2016 SERVERDATACENTERNANO"
+                 ostype="Nano"
+                 packages="Microsoft-NanoServer-Guest-Package.cab"
+                 vhdformat="vhdx"
+                 vhdtype="dynamic"
+                 generation="2"
+                 vhdsize="25GB" />
+  </templatevhds>
+
+  <templates>
+    <template name="Template Windows Server 2016 Datacenter Full"
+              templatevhd="Windows Server 2016 Datacenter Full"
+              memorystartupbytes="1GB"
+              processorcount="1"
+              administratorpassword="P@ssword!1"
+              timezone="New Zealand Standard Time"
+              ostype="Server" />
+    <template name="Template Nano Server 2016 Datacenter"
+              templatevhd="Nano Server 2016 Datacenter"
+              memorystartupbytes="500MB"
+              processorcount="1"
+              administratorpassword="P@ssword!1"
+              timezone="New Zealand Standard Time"
+              ostype="Nano" />
+  </templates>
+
+  <vms>
+    <vm name="SA-DC1"
+        template="Template Windows Server 2016 Datacenter Full"
+        computername="SA-DC1"
+        bootorder="1">
+      <dsc configname="DC_FORESTPRIMARY"
+           configfile="DC_FORESTPRIMARY.DSC.ps1"
+           logging="Y">
+        <parameters>
+          DomainName = "NANOTEST.COM"
+          DomainAdminPassword = "P@ssword!1"
+          InstallRSATTools = $true
+          Forwarders = @('8.8.8.8','8.8.4.4')
+        </parameters>
+      </dsc>
+      <adapters>
+        <adapter name="Domain Private"
+                 switchname="Domain Private">
+          <ipv4 address="192.168.128.10"
+                defaultgateway="192.168.128.19"
+                subnetmask="24"
+                dnsserver="192.168.128.10"/>
+          <ipv6 address="fd53:ccc5:895a:bc00::a"
+                defaultgateway="fd53:ccc5:895a:bc00::13"
+                subnetmask="64"
+                dnsserver="fd53:ccc5:895a:bc00::a"/>
+        </adapter>
+      </adapters>
+    </vm>
+
+    <vm name="SA-DHCP1"
+        template="Template Windows Server 2016 Datacenter Full"
+        computername="SA-DHCP1"
+        bootorder="2">
+      <dsc configname="MEMBER_DHCP"
+           configfile="MEMBER_DHCP.DSC.ps1">
+        <parameters>
+          DomainName = "NANOTEST.COM"
+          DomainAdminPassword = "P@ssword!1"
+          DCName = "SA-DC1"
+          PSDscAllowDomainUser = $true
+          Scopes = @(
+              @{ Name = 'NANOTEST.COM Primary';
+                 Start = '192.168.128.50';
+                 End = '192.168.128.254';
+                 SubnetMask = '255.255.255.0';
+                 AddressFamily = 'IPv4'
+              }
+            )
+          Reservations = @(
+              @{ Name = 'SA-DC1';
+                 ScopeID = '192.168.128.0';
+                 ClientMACAddress = '000000000000';
+                 IPAddress = '192.168.128.10';
+                 AddressFamily = 'IPv4'
+              },
+              @{ Name = 'SA-DHCP1';
+                 ScopeID = '192.168.128.0';
+                 ClientMACAddress = '000000000002';
+                 IPAddress = '192.168.128.16';
+                 AddressFamily = 'IPv4'
+              },
+              @{ Name = 'SA-EDGE1';
+                 ScopeID = '192.168.128.0';
+                 ClientMACAddress = '000000000005';
+                 IPAddress = '192.168.128.19';
+                 AddressFamily = 'IPv4'
+              },
+              @{ Name = 'SA-ROOTCA';
+                 ScopeID = '192.168.128.0';
+                 ClientMACAddress = '000000000007';
+                 IPAddress = '192.168.128.23';
+                 AddressFamily = 'IPv4'
+              },
+              @{ Name = 'SA-NANO1';
+                 ScopeID = '192.168.128.0';
+                 ClientMACAddress = '000000000008';
+                 IPAddress = '192.168.128.30';
+                 AddressFamily = 'IPv4'
+              },
+              @{ Name = 'SA-NANO2';
+                 ScopeID = '192.168.128.0';
+                 ClientMACAddress = '000000000009';
+                 IPAddress = '192.168.128.31';
+                 AddressFamily = 'IPv4'
+              },
+              @{ Name = 'SA-NANO3';
+                 ScopeID = '192.168.128.0';
+                 ClientMACAddress = '00000000000A';
+                 IPAddress = '192.168.128.32';
+                 AddressFamily = 'IPv4'
+              },
+              @{ Name = 'SA-NANO4';
+                 ScopeID = '192.168.128.0';
+                 ClientMACAddress = '00000000000B';
+                 IPAddress = '192.168.128.33';
+                 AddressFamily = 'IPv4'
+              },
+              @{ Name = 'SA-NANO5';
+                 ScopeID = '192.168.128.0';
+                 ClientMACAddress = '00000000000C';
+                 IPAddress = '192.168.128.34';
+                 AddressFamily = 'IPv4'
+              },
+              @{ Name = 'SA-NANO6';
+                 ScopeID = '192.168.128.0';
+                 ClientMACAddress = '00000000000D';
+                 IPAddress = '192.168.128.35';
+                 AddressFamily = 'IPv4'
+              },
+              @{ Name = 'SA-NANO7';
+                 ScopeID = '192.168.128.0';
+                 ClientMACAddress = '00000000000E';
+                 IPAddress = '192.168.128.36';
+                 AddressFamily = 'IPv4'
+              },
+              @{ Name = 'SA-NANO8';
+                 ScopeID = '192.168.128.0';
+                 ClientMACAddress = '00000000000F';
+                 IPAddress = '192.168.128.37';
+                 AddressFamily = 'IPv4'
+              }
+            )
+          ScopeOptions = @(
+              @{ ScopeID = '192.168.128.0';
+                 DNServerIPAddress = @('192.168.128.10');
+                 Router = '192.168.128.19';
+                 AddressFamily = 'IPv4'
+              }
+            )
+        </parameters>
+      </dsc>
+      <adapters>
+        <adapter name="Domain Private"
+                 switchname="Domain Private">
+          <ipv4 address="192.168.128.16"
+                defaultgateway="192.168.128.19"
+                subnetmask="24"
+                dnsserver="192.168.128.10"/>
+          <ipv6 address="fd53:ccc5:895a:bc00::10"
+                defaultgateway="fd53:ccc5:895a:bc00::13"
+                subnetmask="64"
+                dnsserver="fd53:ccc5:895a:bc00::a"/>
+        </adapter>
+      </adapters>
+    </vm>
+
+    <vm name="SA-EDGE1"
+      template="Template Windows Server 2016 Datacenter Full"
+      computername="SA-EDGE1"
+      bootorder="3">
+      <dsc configname="MEMBER_REMOTEACCESS"
+           configfile="MEMBER_REMOTEACCESS.DSC.ps1">
+        <parameters>
+          DomainName = "NANOTEST.COM"
+          DomainAdminPassword = "P@ssword!1"
+          DCName = "SA-DC1"
+          PSDscAllowDomainUser = $true
+        </parameters>
+      </dsc>
+      <adapters>
+        <adapter name="Domain Private"
+                 switchname="Domain Private">
+          <ipv4 address="192.168.128.19"
+                defaultgateway=""
+                subnetmask="24"
+                dnsserver="192.168.128.10"/>
+          <ipv6 address="fd53:ccc5:895a:bc00::13"
+                defaultgateway=""
+                subnetmask="64"
+                dnsserver="fd53:ccc5:895a:bc00::a"/>
+        </adapter>
+        <adapter name="General Purpose External"
+                 switchname="General Purpose External" />
+      </adapters>
+      <datavhds>
+        <datavhd vhd="ToolsDisk.vhdx" type="dynamic" size="10GB" partitionstyle="GPT" filesystem="NTFS" filesystemlabel="ToolsDisk" />
+      </datavhds>
+    </vm>
+
+    <vm name="SA-ROOTCA"
+      template="Template Windows Server 2016 Datacenter Full"
+      computername="SA-ROOTCA"
+      bootorder="3">
+      <dsc configname="MEMBER_ROOTCA"
+           configfile="MEMBER_ROOTCA.DSC.ps1"
+           logging="Y">
+        <parameters>
+          DomainName = "NANOTEST.COM"
+          DomainAdminPassword = "P@ssword!1"
+          DCName = "SA-DC1"
+          PSDscAllowDomainUser = $true
+          InstallOnlineResponder = $true
+          InstallEnrollmentWebService = $true
+          CACommonName = "NANOTEST.COM Root CA"
+          CADistinguishedNameSuffix = "DC=LABBUILDER,DC=COM"
+          CRLPublicationURLs = "1:C:\Windows\system32\CertSrv\CertEnroll\%3%8%9.crl\n74:ldap:///CN=%7%8,CN=%2,CN=CDP,CN=Public Key Services,CN=Services,%6%10\n2:http://pki.NANOTEST.COM/CertEnroll/%3%8%9.crl"
+          CACertPublicationURLs = "1:C:\Windows\system32\CertSrv\CertEnroll\%1_%3%4.crt\n2:ldap:///CN=%7,CN=AIA,CN=Public Key Services,CN=Services,%6%11\n2:http://pki.NANOTEST.COM/CertEnroll/%1_%3%4.crt\n32:http://pki.NANOTEST.COM/ocsp"
+          CRLPeriodUnits = 52
+          CRLPeriod = 'Weeks'
+          CRLOverlapUnits = 12
+          CRLOverlapPeriod = 'Hours'
+          ValidityPeriodUnits = 10
+          ValidityPeriod = 'Years'
+          AuditFilter = 127
+        </parameters>
+      </dsc>
+      <adapters>
+        <adapter name="Domain Private"
+                 switchname="Domain Private">
+          <ipv4 address="192.168.128.23"
+                defaultgateway="192.168.128.19"
+                subnetmask="24"
+                dnsserver="192.168.128.10"/>
+          <ipv6 address="fd53:ccc5:895a:bc00::17"
+                defaultgateway="fd53:ccc5:895a:bc00::13"
+                subnetmask="64"
+                dnsserver="fd53:ccc5:895a:bc00::a"/>
+        </adapter>
+      </adapters>
+    </vm>
+
+    <vm name="SA-NANO"
+      template="Template Nano Server 2016 Datacenter"
+      computername="SA-NANO"
+      bootorder="3"
+      instancecount="8"
+      packages="Microsoft-NanoServer-DSC-Package.cab,Microsoft-NanoServer-Containers-Package.cab,Microsoft-NanoServer-Guest-Package.cab" >
+      <dsc configname="MEMBER_NANO"
+           configfile="MEMBER_NANO.DSC.ps1"
+           logging="Y">
+        <parameters>
+          ODJRequestFile = "c:\ODJRequest.txt"
+          DomainName = "NANOTEST.COM"
+          DomainAdminPassword = "P@ssword!1"
+          DCName = "SA-DC1"
+          PSDscAllowDomainUser = $true
+        </parameters>
+      </dsc>
+      <adapters>
+        <adapter name="Domain Private"
+                 switchname="Domain Private">
+          <ipv4 address="192.168.128.30"
+                defaultgateway="192.168.128.19"
+                subnetmask="24"
+                dnsserver="192.168.128.10"/>
+          <ipv6 address="fd53:ccc5:895a:bc00::30"
+                defaultgateway="fd53:ccc5:895a:bc00::13"
+                subnetmask="64"
+                dnsserver="fd53:ccc5:895a:bc00::a"/>
+        </adapter>
+        <adapter name="General Purpose External"
+                 switchname="General Purpose External" />
+      </adapters>
+    </vm>
+  </vms>
+
+</labbuilderconfig>
