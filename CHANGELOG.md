@@ -9,6 +9,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- Renamed `LabBuilder_LocalizedData.psd1` to `LabBuilder.strings.psd1` to
+  align to other PowerShell modules.
 - Convert all DSC configurations to use ComputerManagementDsc version
   7.1.0.0.
 - Clean up code style on all DSC Library files.

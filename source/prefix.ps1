@@ -25,7 +25,7 @@ else
 
 Import-LocalizedData `
     -BindingVariable LocalizedData `
-    -Filename 'CosmosDB.strings.psd1' `
+    -Filename 'LabBuilder.strings.psd1' `
     -BaseDirectory $script:moduleRoot `
     -UICulture $culture
 #endregion
