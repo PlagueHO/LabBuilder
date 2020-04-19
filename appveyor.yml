@@ -1,9 +1,0 @@
-﻿#---------------------------------#
-#      environment configuration  #
-#---------------------------------#
-version: 1.0.0.{build}
-environment:
-  image: Visual Studio 2017
-
-build_script:
-  - ps: . .\psake.ps1 -TaskList Test -Verbose
