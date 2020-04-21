@@ -228,14 +228,14 @@ function Update-LabDSC
 
         # Remove any old self-signed certifcates for this VM
         Get-ChildItem -Path cert:\LocalMachine\My |
-            Where-Object { $_.FriendlyName -eq $Script:DSCCertificateFriendlyName } |
+            Where-Object { $_.FriendlyName -eq $script:DSCCertificateFriendlyName } |
             Remove-Item
     } # if
 
     # Add the VM Self-Signed Certificate to the Local Machine store and get the Thumbprint
     $certificateFile = Join-Path `
         -Path $vmLabBuilderFiles `
-        -ChildPath $Script:DSCEncryptionCert
+        -ChildPath $script:DSCEncryptionCert
     $certificate = Import-Certificate `
         -FilePath $certificateFile `
         -CertStoreLocation 'Cert:LocalMachine\My'

@@ -113,9 +113,9 @@ function Copy-LabOdjFile
                 catch
                 {
                     Write-LabMessage -Message $($LocalizedData.CopyingFilesToVMFailedMessage `
-                        -f $VM.Name,'ODJ',$Script:RetryConnectSeconds)
+                        -f $VM.Name,'ODJ',$script:RetryConnectSeconds)
 
-                    Start-Sleep -Seconds $Script:RetryConnectSeconds
+                    Start-Sleep -Seconds $script:RetryConnectSeconds
                 } # try
             } # while
         } # if

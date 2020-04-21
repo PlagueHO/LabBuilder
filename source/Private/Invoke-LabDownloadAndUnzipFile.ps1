@@ -41,7 +41,7 @@ function Invoke-LabDownloadAndUnzipFile
     if ($extension -eq '.zip')
     {
         # Download to a temp folder and unzip
-        $downloadPath = Join-Path -Path $Script:WorkingFolder -ChildPath $fileName
+        $downloadPath = Join-Path -Path $script:WorkingFolder -ChildPath $fileName
     }
     else
     {

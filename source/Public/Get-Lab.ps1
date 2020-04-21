@@ -75,13 +75,13 @@ function Get-Lab
     $requiredWindowsBuild = $lab.labbuilderconfig.settings.requiredwindowsbuild
 
     if ($requiredWindowsBuild -and `
-        ($Script:CurrentBuild -lt $requiredWindowsBuild))
+        ($script:currentBuild -lt $requiredWindowsBuild))
     {
         $exceptionParameters = @{
             errorId       = 'RequiredBuildNotMetError'
             errorCategory = 'InvalidArgument'
             errorMessage  = $($LocalizedData.RequiredBuildNotMetError `
-                    -f $Script:CurrentBuild, $requiredWindowsBuild)
+                    -f $script:currentBuild, $requiredWindowsBuild)
         }
         New-LabException @exceptionParameters
     } # if

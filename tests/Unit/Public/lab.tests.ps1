@@ -1,45 +1,48 @@
-$global:LabBuilderProjectRoot = $PSScriptRoot | Split-Path -Parent | Split-Path -Parent | Split-Path -Parent | Split-Path -Parent
+[System.Diagnostics.CodeAnalysis.SuppressMessage('PSAvoidUsingConvertToSecureStringWithPlainText', '')]
+[CmdletBinding()]
+param ()
 
-if (Get-Module -Name LabBuilder -All)
-{
-    Get-Module -Name LabBuilder -All | Remove-Module
-}
+$projectPath = "$PSScriptRoot\..\..\.." | Convert-Path
+$projectName = ((Get-ChildItem -Path $projectPath\*\*.psd1).Where{
+        ($_.Directory.Name -match 'source|src' -or $_.Directory.Name -eq $_.BaseName) -and
+        $(try { Test-ModuleManifest $_.FullName -ErrorAction Stop } catch { $false } )
+    }).BaseName
 
-Import-Module -Name (Join-Path -Path $global:LabBuilderProjectRoot -ChildPath 'src\LabBuilder.psd1') `
-    -Force `
-    -DisableNameChecking `
-    -Verbose:$false
-Import-Module -Name (Join-Path -Path $global:LabBuilderProjectRoot -ChildPath 'test\testhelper\testhelper.psm1') `
-    -Global
+Import-Module -Name $projectName -Force
 
-InModuleScope LabBuilder {
+InModuleScope $projectName {
+    $testRootPath = $PSScriptRoot | Split-Path -Parent | Split-Path -Parent
+    $testHelperPath = $testRootPath | Join-Path -ChildPath 'TestHelper'
+    Import-Module -Name $testHelperPath -Force
+
     # Run tests assuming Build 10586 is installed
-    $script:CurrentBuild = 10586
+    $script:currentBuild = 10586
 
-    $script:TestConfigPath = Join-Path `
-        -Path $global:LabBuilderProjectRoot `
-        -ChildPath 'test\pestertestconfig'
-    $script:TestConfigOKPath = Join-Path `
-        -Path $script:TestConfigPath `
+    $script:testConfigPath = Join-Path `
+        -Path $testRootPath `
+        -ChildPath 'pestertestconfig'
+    $script:testConfigOKPath = Join-Path `
+        -Path $script:testConfigPath `
         -ChildPath 'PesterTestConfig.OK.xml'
-    $script:ArtifactPath = Join-Path `
-        -Path $global:LabBuilderProjectRoot `
-        -ChildPath 'test\artifacts'
-    $script:ExpectedContentPath = Join-Path `
-        -Path $script:TestConfigPath `
+    $script:artifactPath = Join-Path `
+        -Path $testRootPath `
+        -ChildPath 'artifacts'
+    $script:expectedContentPath = Join-Path `
+        -Path $script:testConfigPath `
         -ChildPath 'expectedcontent'
     $null = New-Item `
-        -Path $script:ArtifactPath `
+        -Path $script:artifactPath `
         -ItemType Directory `
         -Force `
         -ErrorAction SilentlyContinue
+    $script:Lab = Get-Lab -ConfigPath $script:testConfigOKPath
 
     Describe 'Get-Lab' {
         Context 'When relative path is provided and valid XML file exists' {
-            Mock Get-Location -MockWith { @{ Path = $script:TestConfigPath} }
+            Mock Get-Location -MockWith { @{ Path = $script:testConfigPath} }
 
             It 'Returns XmlDocument object with valid content' {
-                $Lab = Get-Lab -ConfigPath (Split-Path -Path $script:TestConfigOKPath -Leaf)
+                $Lab = Get-Lab -ConfigPath (Split-Path -Path $script:testConfigOKPath -Leaf)
                 $Lab.GetType().Name | Should -Be 'XmlDocument'
                 $Lab.labbuilderconfig | Should -Not -Be $null
             }
@@ -47,7 +50,7 @@ InModuleScope LabBuilder {
 
         Context 'When path is provided and valid XML file exists' {
             It 'Returns XmlDocument object with valid content' {
-                $Lab = Get-Lab -ConfigPath $script:TestConfigOKPath
+                $Lab = Get-Lab -ConfigPath $script:testConfigOKPath
                 $Lab.GetType().Name | Should -Be 'XmlDocument'
                 $Lab.labbuilderconfig | Should -Not -Be $null
             }
@@ -55,7 +58,7 @@ InModuleScope LabBuilder {
 
         Context 'When path and LabPath are provided and valid XML file exists' {
             It 'Returns XmlDocument object with valid content' {
-                $Lab = Get-Lab -ConfigPath $script:TestConfigOKPath `
+                $Lab = Get-Lab -ConfigPath $script:testConfigOKPath `
                     -LabPath 'c:\Pester Lab'
                 $Lab.GetType().Name | Should -Be 'XmlDocument'
                 $Lab.labbuilderconfig.settings.labpath | Should -Be 'c:\Pester Lab'
@@ -100,7 +103,7 @@ InModuleScope LabBuilder {
             }
         }
 
-        $Script:CurrentBuild = 10000
+        $script:currentBuild = 10000
 
         Context 'When path is provided and file exists but host build version requirement not met' {
             It 'Throws RequiredBuildNotMetError Exception' {
@@ -108,20 +111,20 @@ InModuleScope LabBuilder {
                     errorId = 'RequiredBuildNotMetError'
                     errorCategory = 'InvalidArgument'
                     errorMessage = $($LocalizedData.RequiredBuildNotMetError `
-                        -f $Script:CurrentBuild,'10560')
+                        -f $script:currentBuild,'10560')
                 }
                 $Exception = Get-LabException @exceptionParameters
-                { Get-Lab -ConfigPath $script:TestConfigOKPath } | Should -Throw $Exception
+                { Get-Lab -ConfigPath $script:testConfigOKPath } | Should -Throw $Exception
             }
         }
-        $Script:CurrentBuild = 10586
+        $script:currentBuild = 10586
     }
 
     Describe 'New-Lab' -Tags 'Incomplete' {
     }
 
     Describe 'Install-Lab' -Tags 'Incomplete' {
-        $Lab = Get-Lab -ConfigPath $script:TestConfigOKPath
+        $Lab = Get-Lab -ConfigPath $script:testConfigOKPath
 
         Mock Get-VMSwitch
         Mock New-VMSwitch

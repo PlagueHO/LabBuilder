@@ -45,7 +45,7 @@ function Initialize-LabVM
     }
     else
     {
-        [Int32] $ManagementVlan = $Script:DefaultManagementVLan
+        [Int32] $ManagementVlan = $script:DefaultManagementVLan
     } # if
 
     foreach ($VM in $VMs)
@@ -123,7 +123,7 @@ function Initialize-LabVM
             } # if
 
             # Create New VM from settings
-            if ($VM.Version -and ($Script:CurrentBuild -ge 14352))
+            if ($VM.Version -and ($script:currentBuild -ge 14352))
             {
                 $null = New-VM `
                     -Name $VM.Name `
@@ -174,7 +174,7 @@ function Initialize-LabVM
         } # if
 
         # Is ExposeVirtualizationExtensions supported?
-        if ($Script:CurrentBuild -lt 10565)
+        if ($script:currentBuild -lt 10565)
         {
             # No, it is not supported - is it required by VM?
             if ($VM.ExposeVirtualizationExtensions)
@@ -195,7 +195,7 @@ function Initialize-LabVM
             if ($VM.ExposeVirtualizationExtensions `
                 -ne (Get-VMProcessor -VMName $VM.Name).ExposeVirtualizationExtensions)
             {
-                if ($Script:CurrentBuild -ge 14352 -and ($VM.Version -eq "8.0"))
+                if ($script:currentBuild -ge 14352 -and ($VM.Version -eq "8.0"))
                 {
                     Set-VMSecurity `
                         -VMName $VM.Name `

@@ -88,7 +88,7 @@ Start-Sleep -Seconds 30
 $getCertPs
 Add-Content ``
     -Path `"`$(`$ENV:SystemRoot)\Setup\Scripts\SetupComplete.log`" ``
-    -Value 'Certificate identified and saved to C:\Windows\$Script:DSCEncryptionCert ...' ``
+    -Value 'Certificate identified and saved to C:\Windows\$script:DSCEncryptionCert ...' ``
     -Encoding Ascii
 Enable-PSRemoting -SkipNetworkProfileCheck -Force
 Add-Content ``
@@ -137,7 +137,7 @@ Add-Content ``
         $setupCompleteCmd = @"
 @echo SetupComplete.cmd Script Started... >> %SYSTEMROOT%\Setup\Scripts\SetupComplete.log
 $setupCompleteCmd
-certoc.exe -ImportPFX -p $Script:DSCCertificatePassword root $ENV:SystemRoot\$Script:DSCEncryptionPfxCert >> %SYSTEMROOT%\Setup\Scripts\SetupComplete.log
+certoc.exe -ImportPFX -p $script:DSCCertificatePassword root $ENV:SystemRoot\$script:DSCEncryptionPfxCert >> %SYSTEMROOT%\Setup\Scripts\SetupComplete.log
 @echo SetupComplete.cmd Script Finished... >> %SYSTEMROOT%\Setup\Scripts\SetupComplete.log
 @echo Initial Setup Completed - this file indicates that setup has completed. >> %SYSTEMROOT%\Setup\Scripts\InitialSetupCompleted.txt
 "@

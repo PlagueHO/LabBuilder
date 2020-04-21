@@ -78,7 +78,7 @@ function Connect-LabVM
             else
             {
                 Write-LabMessage -Message $($LocalizedData.WaitingForIPAddressAssignedMessage `
-                        -f $VM.Name, $Script:RetryConnectSeconds)
+                        -f $VM.Name, $script:RetryConnectSeconds)
             }
         }
         catch
@@ -86,15 +86,15 @@ function Connect-LabVM
             if (-not $ipAddress)
             {
                 Write-LabMessage -Message $($LocalizedData.WaitingForIPAddressAssignedMessage `
-                        -f $VM.Name, $Script:RetryConnectSeconds)
+                        -f $VM.Name, $script:RetryConnectSeconds)
             }
             else
             {
                 Write-LabMessage -Message $($LocalizedData.ConnectingVMFailedMessage `
-                        -f $VM.Name, $Script:RetryConnectSeconds, $_.Exception.Message)
+                        -f $VM.Name, $script:RetryConnectSeconds, $_.Exception.Message)
             }
 
-            Start-Sleep -Seconds $Script:RetryConnectSeconds
+            Start-Sleep -Seconds $script:RetryConnectSeconds
         } # Try
     } # While
 

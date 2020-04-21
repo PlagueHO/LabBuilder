@@ -1,43 +1,46 @@
-$global:LabBuilderProjectRoot = $PSScriptRoot | Split-Path -Parent | Split-Path -Parent | Split-Path -Parent | Split-Path -Parent
+[System.Diagnostics.CodeAnalysis.SuppressMessage('PSAvoidUsingConvertToSecureStringWithPlainText', '')]
+[CmdletBinding()]
+param ()
 
-if (Get-Module -Name LabBuilder -All)
-{
-    Get-Module -Name LabBuilder -All | Remove-Module
-}
+$projectPath = "$PSScriptRoot\..\..\.." | Convert-Path
+$projectName = ((Get-ChildItem -Path $projectPath\*\*.psd1).Where{
+        ($_.Directory.Name -match 'source|src' -or $_.Directory.Name -eq $_.BaseName) -and
+        $(try { Test-ModuleManifest $_.FullName -ErrorAction Stop } catch { $false } )
+    }).BaseName
 
-Import-Module -Name (Join-Path -Path $global:LabBuilderProjectRoot -ChildPath 'src\LabBuilder.psd1') `
-    -Force `
-    -DisableNameChecking `
-    -Verbose:$false
-Import-Module -Name (Join-Path -Path $global:LabBuilderProjectRoot -ChildPath 'test\testhelper\testhelper.psm1') `
-    -Global
+Import-Module -Name $projectName -Force
 
-InModuleScope LabBuilder {
+InModuleScope $projectName {
+    $testRootPath = $PSScriptRoot | Split-Path -Parent | Split-Path -Parent
+    $testHelperPath = $testRootPath | Join-Path -ChildPath 'TestHelper'
+    Import-Module -Name $testHelperPath -Force
+
     # Run tests assuming Build 10586 is installed
-    $script:CurrentBuild = 10586
+    $script:currentBuild = 10586
 
-    $script:TestConfigPath = Join-Path `
-        -Path $global:LabBuilderProjectRoot `
-        -ChildPath 'test\pestertestconfig'
-    $script:TestConfigOKPath = Join-Path `
-        -Path $script:TestConfigPath `
+    $script:testConfigPath = Join-Path `
+        -Path $testRootPath `
+        -ChildPath 'pestertestconfig'
+    $script:testConfigOKPath = Join-Path `
+        -Path $script:testConfigPath `
         -ChildPath 'PesterTestConfig.OK.xml'
-    $script:ArtifactPath = Join-Path `
-        -Path $global:LabBuilderProjectRoot `
-        -ChildPath 'test\artifacts'
-    $script:ExpectedContentPath = Join-Path `
-        -Path $script:TestConfigPath `
+    $script:artifactPath = Join-Path `
+        -Path $testRootPath `
+        -ChildPath 'artifacts'
+    $script:expectedContentPath = Join-Path `
+        -Path $script:testConfigPath `
         -ChildPath 'expectedcontent'
     $null = New-Item `
-        -Path $script:ArtifactPath `
+        -Path $script:artifactPath `
         -ItemType Directory `
         -Force `
         -ErrorAction SilentlyContinue
+    $script:Lab = Get-Lab -ConfigPath $script:testConfigOKPath
 
     Describe 'Get-LabSwitch' {
         Context 'When valid configuration passed with switch missing Switch Name.' {
             It 'Throws a SwitchNameIsEmptyError Exception' {
-                $Lab = Get-Lab -ConfigPath $script:TestConfigOKPath
+                $Lab = Get-Lab -ConfigPath $script:testConfigOKPath
                 $Lab.labbuilderconfig.switches.switch[0].RemoveAttribute('name')
                 $exceptionParameters = @{
                     errorId = 'SwitchNameIsEmptyError'
@@ -52,7 +55,7 @@ InModuleScope LabBuilder {
 
         Context 'When valid configuration passed with switch missing Switch Type.' {
             It 'Throws a UnknownSwitchTypeError Exception' {
-                $Lab = Get-Lab -ConfigPath $script:TestConfigOKPath
+                $Lab = Get-Lab -ConfigPath $script:testConfigOKPath
                 $Lab.labbuilderconfig.switches.switch[0].RemoveAttribute('type')
                 $exceptionParameters = @{
                     errorId = 'UnknownSwitchTypeError'
@@ -68,7 +71,7 @@ InModuleScope LabBuilder {
 
         Context 'When valid configuration passed with switch invalid Switch Type.' {
             It 'Throws a UnknownSwitchTypeError Exception' {
-                $Lab = Get-Lab -ConfigPath $script:TestConfigOKPath
+                $Lab = Get-Lab -ConfigPath $script:testConfigOKPath
                 $Lab.labbuilderconfig.switches.switch[0].type='BadType'
                 $exceptionParameters = @{
                     errorId = 'UnknownSwitchTypeError'
@@ -83,7 +86,7 @@ InModuleScope LabBuilder {
         }
 
         Context 'When valid configuration passed with switch containing adapters but is not External type.' {
-            $Lab = Get-Lab -ConfigPath $script:TestConfigOKPath
+            $Lab = Get-Lab -ConfigPath $script:testConfigOKPath
             $Lab.labbuilderconfig.switches.switch[0].type='Private'
             It 'Throws a AdapterSpecifiedError Exception' {
                 $exceptionParameters = @{
@@ -100,7 +103,7 @@ InModuleScope LabBuilder {
 
         Context 'When valid configuration is passed with and Name filter set to matching switch' {
             It 'Returns a Single Switch object' {
-                $Lab = Get-Lab -ConfigPath $script:TestConfigOKPath
+                $Lab = Get-Lab -ConfigPath $script:testConfigOKPath
                 [Array] $Switches = Get-LabSwitch -Lab $Lab -Name $Lab.labbuilderconfig.switches.switch[0].name
                 $Switches.Count | Should -Be 1
             }
@@ -108,7 +111,7 @@ InModuleScope LabBuilder {
 
         Context 'When valid configuration is passed with and Name filter set to non-matching switch' {
             It 'Returns a Single Switch object' {
-                $Lab = Get-Lab -ConfigPath $script:TestConfigOKPath
+                $Lab = Get-Lab -ConfigPath $script:testConfigOKPath
                 [Array] $Switches = Get-LabSwitch -Lab $Lab -Name 'Does Not Exist'
                 $Switches.Count | Should -Be 0
             }
@@ -116,17 +119,17 @@ InModuleScope LabBuilder {
 
         Context 'When valid configuration is passed' {
             It 'Returns Switches Object that matches Expected Object' {
-                $Lab = Get-Lab -ConfigPath $script:TestConfigOKPath
+                $Lab = Get-Lab -ConfigPath $script:testConfigOKPath
                 [Array] $Switches = Get-LabSwitch -Lab $Lab
-                Set-Content -Path "$script:ArtifactPath\ExpectedSwitches.json" -Value ($Switches | ConvertTo-Json -Depth 4)
-                $ExpectedSwitches = Get-Content -Path "$script:ExpectedContentPath\ExpectedSwitches.json"
-                [System.String]::Compare((Get-Content -Path "$script:ArtifactPath\ExpectedSwitches.json"),$ExpectedSwitches,$true) | Should -Be 0
+                Set-Content -Path "$script:artifactPath\ExpectedSwitches.json" -Value ($Switches | ConvertTo-Json -Depth 4)
+                $ExpectedSwitches = Get-Content -Path "$script:expectedContentPath\ExpectedSwitches.json"
+                [System.String]::Compare((Get-Content -Path "$script:artifactPath\ExpectedSwitches.json"),$ExpectedSwitches,$true) | Should -Be 0
             }
         }
     }
 
     Describe 'Initialize-LabSwitch' {
-        $Lab = Get-Lab -ConfigPath $script:TestConfigOKPath
+        $Lab = Get-Lab -ConfigPath $script:testConfigOKPath
         [LabSwitch[]] $Switches = Get-LabSwitch -Lab $Lab
 
         function Get-VMSwitch {}
@@ -201,7 +204,7 @@ InModuleScope LabBuilder {
             }
         }
 
-        $script:CurrentBuild = 14295
+        $script:currentBuild = 14295
 
         Context 'When valid configuration is passed' {
             It 'Does not throw an Exception' {
@@ -271,7 +274,7 @@ InModuleScope LabBuilder {
             }
         }
 
-        $script:CurrentBuild = 10586
+        $script:currentBuild = 10586
 
         Context 'When valid configuration NAT on unsupported build' {
             $Switches[0].Type = [LabSwitchType]::NAT
@@ -302,7 +305,7 @@ InModuleScope LabBuilder {
             }
         }
 
-        $script:CurrentBuild = 14295
+        $script:currentBuild = 14295
 
         Context 'When valid configuration NAT with invalid NAT Subnet' {
             $Switches[0].Type = [LabSwitchType]::NAT
@@ -527,7 +530,7 @@ InModuleScope LabBuilder {
         function Remove-VMNetworkAdapter {}
         function Remove-NetNat {}
 
-        $Lab = Get-Lab -ConfigPath $script:TestConfigOKPath
+        $Lab = Get-Lab -ConfigPath $script:testConfigOKPath
         [LabSwitch[]] $Switches = Get-LabSwitch -Lab $Lab
 
         Mock Get-VMSwitch -MockWith { $Switches }

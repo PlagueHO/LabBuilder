@@ -100,7 +100,7 @@ function New-Lab
 
     # Get the Config Template into a variable
     $Content = Get-Content `
-        -Path $Script:ConfigurationXMLTemplate
+        -Path $script:ConfigurationXMLTemplate
 
     # The XML passes the Schema check so load it.
     [XML] $Lab = New-Object System.Xml.XmlDocument
@@ -145,7 +145,7 @@ function New-Lab
 
     # Copy the DSCLibrary
     $null = Copy-Item `
-        -Path $Script:DSCLibraryPath `
+        -Path $script:DSCLibraryPath `
         -Destination $LabPath `
         -Recurse `
         -Force `

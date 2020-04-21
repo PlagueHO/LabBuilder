@@ -1,37 +1,41 @@
-$global:LabBuilderProjectRoot = $PSScriptRoot | Split-Path -Parent | Split-Path -Parent | Split-Path -Parent | Split-Path -Parent
+[System.Diagnostics.CodeAnalysis.SuppressMessage('PSAvoidUsingConvertToSecureStringWithPlainText', '')]
+[CmdletBinding()]
+param ()
 
-if (Get-Module -Name LabBuilder -All)
-{
-    Get-Module -Name LabBuilder -All | Remove-Module
-}
+$projectPath = "$PSScriptRoot\..\..\.." | Convert-Path
+$projectName = ((Get-ChildItem -Path $projectPath\*\*.psd1).Where{
+        ($_.Directory.Name -match 'source|src' -or $_.Directory.Name -eq $_.BaseName) -and
+        $(try { Test-ModuleManifest $_.FullName -ErrorAction Stop } catch { $false } )
+    }).BaseName
 
-Import-Module -Name (Join-Path -Path $global:LabBuilderProjectRoot -ChildPath 'src\LabBuilder.psd1') `
-    -Force `
-    -DisableNameChecking
-Import-Module -Name (Join-Path -Path $global:LabBuilderProjectRoot -ChildPath 'test\testhelper\testhelper.psm1') `
-    -Global
+Import-Module -Name $projectName -Force
 
-InModuleScope LabBuilder {
+InModuleScope $projectName {
+    $testRootPath = $PSScriptRoot | Split-Path -Parent | Split-Path -Parent
+    $testHelperPath = $testRootPath | Join-Path -ChildPath 'TestHelper'
+    Import-Module -Name $testHelperPath -Force
+
     # Run tests assuming Build 10586 is installed
-    $script:CurrentBuild = 10586
+    $script:currentBuild = 10586
 
-    $script:TestConfigPath = Join-Path `
-        -Path $global:LabBuilderProjectRoot `
-        -ChildPath 'test\pestertestconfig'
-    $script:TestConfigOKPath = Join-Path `
-        -Path $script:TestConfigPath `
+    $script:testConfigPath = Join-Path `
+        -Path $testRootPath `
+        -ChildPath 'pestertestconfig'
+    $script:testConfigOKPath = Join-Path `
+        -Path $script:testConfigPath `
         -ChildPath 'PesterTestConfig.OK.xml'
-    $script:ArtifactPath = Join-Path `
-        -Path $global:LabBuilderProjectRoot `
-        -ChildPath 'test\artifacts'
-    $script:ExpectedContentPath = Join-Path `
-        -Path $script:TestConfigPath `
+    $script:artifactPath = Join-Path `
+        -Path $testRootPath `
+        -ChildPath 'artifacts'
+    $script:expectedContentPath = Join-Path `
+        -Path $script:testConfigPath `
         -ChildPath 'expectedcontent'
     $null = New-Item `
-        -Path $script:ArtifactPath `
+        -Path $script:artifactPath `
         -ItemType Directory `
         -Force `
         -ErrorAction SilentlyContinue
+    $script:Lab = Get-Lab -ConfigPath $script:testConfigOKPath
 
     Describe 'Get-LabVMTemplate' {
         # Mock functions
@@ -42,7 +46,7 @@ InModuleScope LabBuilder {
 
         Context 'When configuration passed with template missing Template Name.' {
             It 'Throws a EmptyTemplateNameError Exception' {
-                $Lab = Get-Lab -ConfigPath $script:TestConfigOKPath
+                $Lab = Get-Lab -ConfigPath $script:testConfigOKPath
                 $Lab.labbuilderconfig.templates.template[0].RemoveAttribute('name')
                 $exceptionParameters = @{
                     errorId = 'EmptyTemplateNameError'
@@ -57,13 +61,13 @@ InModuleScope LabBuilder {
 
         Context 'When configuration passed with template with Source VHD set to relative non-existent file.' {
             It 'Throws a TemplateSourceVHDNotFoundError Exception' {
-                $Lab = Get-Lab -ConfigPath $script:TestConfigOKPath
+                $Lab = Get-Lab -ConfigPath $script:testConfigOKPath
                 $Lab.labbuilderconfig.templates.template[0].sourcevhd = 'This File Doesnt Exist.vhdx'
                 $exceptionParameters = @{
                     errorId = 'TemplateSourceVHDNotFoundError'
                     errorCategory = 'InvalidArgument'
                     errorMessage = $($LocalizedData.TemplateSourceVHDNotFoundError `
-                        -f $Lab.labbuilderconfig.templates.template[0].name,"$script:TestConfigPath\This File Doesnt Exist.vhdx")
+                        -f $Lab.labbuilderconfig.templates.template[0].name,"$script:testConfigPath\This File Doesnt Exist.vhdx")
                 }
                 $Exception = Get-LabException @exceptionParameters
 
@@ -73,7 +77,7 @@ InModuleScope LabBuilder {
 
         Context 'When configuration passed with template with Source VHD set to absolute non-existent file.' {
             It 'Throws a TemplateSourceVHDNotFoundError Exception' {
-                $Lab = Get-Lab -ConfigPath $script:TestConfigOKPath
+                $Lab = Get-Lab -ConfigPath $script:testConfigOKPath
                 $Lab.labbuilderconfig.templates.template[0].sourcevhd = 'c:\This File Doesnt Exist.vhdx'
                 $exceptionParameters = @{
                     errorId = 'TemplateSourceVHDNotFoundError'
@@ -89,7 +93,7 @@ InModuleScope LabBuilder {
 
         Context 'When configuration passed with template with Source VHD and Template VHD.' {
             It 'Throws a TemplateSourceVHDAndTemplateVHDConflictError Exception' {
-                $Lab = Get-Lab -ConfigPath $script:TestConfigOKPath
+                $Lab = Get-Lab -ConfigPath $script:testConfigOKPath
                 $Lab.labbuilderconfig.templates.template[0].SetAttribute('templatevhd','Windows Server 2012 R2 Datacenter FULL')
                 $exceptionParameters = @{
                     errorId = 'TemplateSourceVHDAndTemplateVHDConflictError'
@@ -105,7 +109,7 @@ InModuleScope LabBuilder {
 
         Context 'When configuration passed with template with no Source VHD and no Template VHD.' {
             It 'Throws a TemplateSourceVHDandTemplateVHDMissingError Exception' {
-                $Lab = Get-Lab -ConfigPath $script:TestConfigOKPath
+                $Lab = Get-Lab -ConfigPath $script:testConfigOKPath
                 $Lab.labbuilderconfig.templates.template[0].RemoveAttribute('sourcevhd')
                 $exceptionParameters = @{
                     errorId = 'TemplateSourceVHDandTemplateVHDMissingError'
@@ -121,7 +125,7 @@ InModuleScope LabBuilder {
 
         Context 'When configuration passed with template with Template VHD that does not exist.' {
             It 'Throws a TemplateSourceVHDAndTemplateVHDConflictError Exception' {
-                $Lab = Get-Lab -ConfigPath $script:TestConfigOKPath
+                $Lab = Get-Lab -ConfigPath $script:testConfigOKPath
                 $Lab.labbuilderconfig.templates.template[1].TemplateVHD='Template VHD Does Not Exist'
                 $exceptionParameters = @{
                     errorId = 'TemplateTemplateVHDNotFoundError'
@@ -137,7 +141,7 @@ InModuleScope LabBuilder {
 
         Context 'When valid configuration is passed but no templates found' {
             It 'Returns Template Object that matches Expected Object' {
-                $Lab = Get-Lab -ConfigPath $script:TestConfigOKPath
+                $Lab = Get-Lab -ConfigPath $script:testConfigOKPath
                 [array] $Templates = Get-LabVMTemplate -Lab $Lab
                 # Remove the SourceVHD values for any templates because they
                 # will usually be relative to the test folder and won't exist
@@ -145,9 +149,9 @@ InModuleScope LabBuilder {
                 {
                     $Template.SourceVHD = 'Intentionally Removed'
                 }
-                Set-Content -Path "$script:ArtifactPath\ExpectedTemplates.json" -Value ($Templates | ConvertTo-Json -Depth 2)
-                $ExpectedTemplates = Get-Content -Path "$script:ExpectedContentPath\ExpectedTemplates.json"
-                [System.String]::Compare((Get-Content -Path "$script:ArtifactPath\ExpectedTemplates.json"),$ExpectedTemplates,$true) | Should -Be 0
+                Set-Content -Path "$script:artifactPath\ExpectedTemplates.json" -Value ($Templates | ConvertTo-Json -Depth 2)
+                $ExpectedTemplates = Get-Content -Path "$script:expectedContentPath\ExpectedTemplates.json"
+                [System.String]::Compare((Get-Content -Path "$script:artifactPath\ExpectedTemplates.json"),$ExpectedTemplates,$true) | Should -Be 0
             }
 
             It 'Calls Mocked commands' {
@@ -169,7 +173,7 @@ InModuleScope LabBuilder {
 
         Context 'When valid configuration is passed with a Name filter set to matching VM' {
             It 'Returns a Single Template object' {
-                $Lab = Get-Lab -ConfigPath $script:TestConfigOKPath
+                $Lab = Get-Lab -ConfigPath $script:testConfigOKPath
                 $Lab.labbuilderconfig.templates.SetAttribute('fromvm','Pester *')
                 [Array] $Templates = Get-LabVMTemplate `
                     -Lab $Lab `
@@ -180,7 +184,7 @@ InModuleScope LabBuilder {
 
         Context 'When valid configuration is passed with a Name filter set to non-matching VM' {
             It 'Returns no Template objects' {
-                $Lab = Get-Lab -ConfigPath $script:TestConfigOKPath
+                $Lab = Get-Lab -ConfigPath $script:testConfigOKPath
                 $Lab.labbuilderconfig.templates.SetAttribute('fromvm','Pester *')
                 [Array] $Templates = Get-LabVMTemplate `
                     -Lab $Lab `
@@ -191,7 +195,7 @@ InModuleScope LabBuilder {
 
         Context 'When valid configuration is passed and some templates are found' {
             It 'Returns Template Object that matches Expected Object' {
-                $Lab = Get-Lab -ConfigPath $script:TestConfigOKPath
+                $Lab = Get-Lab -ConfigPath $script:testConfigOKPath
                 $Lab.labbuilderconfig.templates.SetAttribute('fromvm','Pester *')
                 [array] $Templates = Get-LabVMTemplate -Lab $Lab
                 # Remove the SourceVHD values for any templates because they
@@ -200,9 +204,9 @@ InModuleScope LabBuilder {
                 {
                     $Template.SourceVHD = 'Intentionally Removed'
                 }
-                Set-Content -Path "$script:ArtifactPath\ExpectedTemplates.FromVM.json" -Value ($Templates | ConvertTo-Json -Depth 2)
-                $ExpectedTemplates = Get-Content -Path "$script:ExpectedContentPath\ExpectedTemplates.FromVM.json"
-                [System.String]::Compare((Get-Content -Path "$script:ArtifactPath\ExpectedTemplates.FromVM.json"),$ExpectedTemplates,$true) | Should -Be 0
+                Set-Content -Path "$script:artifactPath\ExpectedTemplates.FromVM.json" -Value ($Templates | ConvertTo-Json -Depth 2)
+                $ExpectedTemplates = Get-Content -Path "$script:expectedContentPath\ExpectedTemplates.FromVM.json"
+                [System.String]::Compare((Get-Content -Path "$script:artifactPath\ExpectedTemplates.FromVM.json"),$ExpectedTemplates,$true) | Should -Be 0
             }
 
             It 'Calls Mocked commands' {
@@ -219,7 +223,7 @@ InModuleScope LabBuilder {
         function Optimize-VHD {}
         function Get-VM {}
 
-        $Lab = Get-Lab -ConfigPath $script:TestConfigOKPath
+        $Lab = Get-Lab -ConfigPath $script:testConfigOKPath
         [array] $VMTemplates = Get-LabVMTemplate -Lab $Lab
         [Int32] $TemplateCount = $Lab.labbuilderconfig.templates.template.count
         $ResourceWMFMSUFile = Join-Path -Path $Lab.labbuilderconfig.settings.resourcepathfull -ChildPath "W2K12-KB3191565-x64.msu"
@@ -315,7 +319,7 @@ InModuleScope LabBuilder {
         # Mock functions
         function Get-VM {}
 
-        $Lab = Get-Lab -ConfigPath $script:TestConfigOKPath
+        $Lab = Get-Lab -ConfigPath $script:testConfigOKPath
         $TemplateCount = $Lab.labbuilderconfig.templates.template.count
 
         Mock Set-ItemProperty -ParameterFilter { ($Name -eq 'IsReadOnly') -and ($Value -eq $false) }

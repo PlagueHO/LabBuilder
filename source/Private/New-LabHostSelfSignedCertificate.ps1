@@ -40,11 +40,11 @@ function New-LabHostSelfSignedCertificate
     # Get Path to LabBuilder files
     $vmLabBuilderFiles = $VM.LabBuilderFilesPath
 
-    $certificateFriendlyName = $Script:DSCCertificateFriendlyName
+    $certificateFriendlyName = $script:DSCCertificateFriendlyName
     $certificateSubject = "CN=$($VM.ComputerName)"
 
     # Create the self-signed certificate for the destination VM
-    . $Script:SupportGertGenPath
+    . $script:SupportGertGenPath
     New-SelfsignedCertificateEx `
         -Subject $certificateSubject `
         -EKU 'Document Encryption','Server Authentication','Client Authentication' `
@@ -54,10 +54,10 @@ function New-LabHostSelfSignedCertificate
         -Exportable `
         -StoreLocation 'LocalMachine' `
         -StoreName 'My' `
-        -KeyLength $Script:SelfSignedCertKeyLength `
-        -ProviderName $Script:SelfSignedCertProviderName `
-        -AlgorithmName $Script:SelfSignedCertAlgorithmName `
-        -SignatureAlgorithm $Script:SelfSignedCertSignatureAlgorithm `
+        -KeyLength $script:SelfSignedCertKeyLength `
+        -ProviderName $script:SelfSignedCertProviderName `
+        -AlgorithmName $script:SelfSignedCertAlgorithmName `
+        -SignatureAlgorithm $script:SelfSignedCertSignatureAlgorithm `
         -ErrorAction Stop
 
     # Locate the newly created certificate
@@ -70,12 +70,12 @@ function New-LabHostSelfSignedCertificate
     # Export the certificate with the Private key in
     # preparation for upload to the VM
     $certificatePassword = ConvertTo-SecureString `
-        -String $Script:DSCCertificatePassword `
+        -String $script:DSCCertificatePassword `
         -Force `
         -AsPlainText
     $certificatePfxDestination = Join-Path `
         -Path $vmLabBuilderFiles `
-        -ChildPath $Script:DSCEncryptionPfxCert
+        -ChildPath $script:DSCEncryptionPfxCert
     $null = Export-PfxCertificate `
         -FilePath $certificatePfxDestination `
         -Cert $certificate `
@@ -85,7 +85,7 @@ function New-LabHostSelfSignedCertificate
     # Export the certificate without a private key
     $certificateDestination = Join-Path `
         -Path $vmLabBuilderFiles `
-        -ChildPath $Script:DSCEncryptionCert
+        -ChildPath $script:DSCEncryptionCert
     $null = Export-Certificate `
         -Type CERT `
         -FilePath $certificateDestination `

@@ -1,43 +1,46 @@
-$global:LabBuilderProjectRoot = $PSScriptRoot | Split-Path -Parent | Split-Path -Parent | Split-Path -Parent | Split-Path -Parent
+[System.Diagnostics.CodeAnalysis.SuppressMessage('PSAvoidUsingConvertToSecureStringWithPlainText', '')]
+[CmdletBinding()]
+param ()
 
-if (Get-Module -Name LabBuilder -All)
-{
-    Get-Module -Name LabBuilder -All | Remove-Module
-}
+$projectPath = "$PSScriptRoot\..\..\.." | Convert-Path
+$projectName = ((Get-ChildItem -Path $projectPath\*\*.psd1).Where{
+        ($_.Directory.Name -match 'source|src' -or $_.Directory.Name -eq $_.BaseName) -and
+        $(try { Test-ModuleManifest $_.FullName -ErrorAction Stop } catch { $false } )
+    }).BaseName
 
-Import-Module -Name (Join-Path -Path $global:LabBuilderProjectRoot -ChildPath 'src\LabBuilder.psd1') `
-    -Force `
-    -DisableNameChecking `
-    -Verbose:$false
-Import-Module -Name (Join-Path -Path $global:LabBuilderProjectRoot -ChildPath 'test\testhelper\testhelper.psm1') `
-    -Global
+Import-Module -Name $projectName -Force
 
-InModuleScope LabBuilder {
+InModuleScope $projectName {
+    $testRootPath = $PSScriptRoot | Split-Path -Parent | Split-Path -Parent
+    $testHelperPath = $testRootPath | Join-Path -ChildPath 'TestHelper'
+    Import-Module -Name $testHelperPath -Force
+
     # Run tests assuming Build 10586 is installed
-    $script:CurrentBuild = 10586
+    $script:currentBuild = 10586
 
-    $script:TestConfigPath = Join-Path `
-        -Path $global:LabBuilderProjectRoot `
-        -ChildPath 'test\pestertestconfig'
-    $script:TestConfigOKPath = Join-Path `
-        -Path $script:TestConfigPath `
+    $script:testConfigPath = Join-Path `
+        -Path $testRootPath `
+        -ChildPath 'pestertestconfig'
+    $script:testConfigOKPath = Join-Path `
+        -Path $script:testConfigPath `
         -ChildPath 'PesterTestConfig.OK.xml'
-    $script:ArtifactPath = Join-Path `
-        -Path $global:LabBuilderProjectRoot `
-        -ChildPath 'test\artifacts'
-    $script:ExpectedContentPath = Join-Path `
-        -Path $script:TestConfigPath `
+    $script:artifactPath = Join-Path `
+        -Path $testRootPath `
+        -ChildPath 'artifacts'
+    $script:expectedContentPath = Join-Path `
+        -Path $script:testConfigPath `
         -ChildPath 'expectedcontent'
     $null = New-Item `
-        -Path $script:ArtifactPath `
+        -Path $script:artifactPath `
         -ItemType Directory `
         -Force `
         -ErrorAction SilentlyContinue
+    $script:Lab = Get-Lab -ConfigPath $script:testConfigOKPath
 
     Describe 'Get-LabResourceModule' {
         Context 'When valid configuration passed with resource module missing Name.' {
             It 'Throws a ResourceModuleNameIsEmptyError Exception' {
-                $Lab = Get-Lab -ConfigPath $script:TestConfigOKPath
+                $Lab = Get-Lab -ConfigPath $script:testConfigOKPath
                 $Lab.labbuilderconfig.resources.module[0].RemoveAttribute('name')
                 $exceptionParameters = @{
                     errorId = 'ResourceModuleNameIsEmptyError'
@@ -52,17 +55,17 @@ InModuleScope LabBuilder {
 
         Context 'When valid configuration is passed' {
             It 'Returns Resource Modules Array that matches Expected Array' {
-                $Lab = Get-Lab -ConfigPath $script:TestConfigOKPath
+                $Lab = Get-Lab -ConfigPath $script:testConfigOKPath
                 [Array] $ResourceModules = Get-LabResourceModule -Lab $Lab
-                Set-Content -Path "$script:ArtifactPath\ExpectedResourceModules.json" -Value ($ResourceModules | ConvertTo-Json -Depth 4)
-                $ExpectedResourceModules = Get-Content -Path "$script:ExpectedContentPath\ExpectedResourceModules.json"
-                [System.String]::Compare((Get-Content -Path "$script:ArtifactPath\ExpectedResourceModules.json"),$ExpectedResourceModules,$true) | Should -Be 0
+                Set-Content -Path "$script:artifactPath\ExpectedResourceModules.json" -Value ($ResourceModules | ConvertTo-Json -Depth 4)
+                $ExpectedResourceModules = Get-Content -Path "$script:expectedContentPath\ExpectedResourceModules.json"
+                [System.String]::Compare((Get-Content -Path "$script:artifactPath\ExpectedResourceModules.json"),$ExpectedResourceModules,$true) | Should -Be 0
             }
         }
     }
 
     Describe 'Initialize-LabResourceModule' {
-        $Lab = Get-Lab -ConfigPath $script:TestConfigOKPath
+        $Lab = Get-Lab -ConfigPath $script:testConfigOKPath
         [LabResourceModule[]]$ResourceModules = Get-LabResourceModule -Lab $Lab
 
         Mock Invoke-LabDownloadResourceModule
@@ -83,7 +86,7 @@ InModuleScope LabBuilder {
     Describe 'Get-LabResourceMSU' {
         Context 'When valid configuration passed with resource MSU missing Name.' {
             It 'Throws a ResourceMSUNameIsEmptyError Exception' {
-                $Lab = Get-Lab -ConfigPath $script:TestConfigOKPath
+                $Lab = Get-Lab -ConfigPath $script:testConfigOKPath
                 $Lab.labbuilderconfig.resources.msu[0].RemoveAttribute('name')
                 $exceptionParameters = @{
                     errorId = 'ResourceMSUNameIsEmptyError'
@@ -98,17 +101,17 @@ InModuleScope LabBuilder {
 
         Context 'When valid configuration is passed' {
             It 'Returns Resource MSU Array that matches Expected Array' {
-                $Lab = Get-Lab -ConfigPath $script:TestConfigOKPath
+                $Lab = Get-Lab -ConfigPath $script:testConfigOKPath
                 [Array] $ResourceMSUs = Get-LabResourceMSU -Lab $Lab
-                Set-Content -Path "$script:ArtifactPath\ExpectedResourceMSUs.json" -Value ($ResourceMSUs | ConvertTo-Json -Depth 4)
-                $ExpectedResourceMSUs = Get-Content -Path "$script:ExpectedContentPath\ExpectedResourceMSUs.json"
-                [System.String]::Compare((Get-Content -Path "$script:ArtifactPath\ExpectedResourceMSUs.json"),$ExpectedResourceMSUs,$true) | Should -Be 0
+                Set-Content -Path "$script:artifactPath\ExpectedResourceMSUs.json" -Value ($ResourceMSUs | ConvertTo-Json -Depth 4)
+                $ExpectedResourceMSUs = Get-Content -Path "$script:expectedContentPath\ExpectedResourceMSUs.json"
+                [System.String]::Compare((Get-Content -Path "$script:artifactPath\ExpectedResourceMSUs.json"),$ExpectedResourceMSUs,$true) | Should -Be 0
             }
         }
     }
 
     Describe 'Initialize-LabResourceMSU' {
-        $Lab = Get-Lab -ConfigPath $script:TestConfigOKPath
+        $Lab = Get-Lab -ConfigPath $script:testConfigOKPath
         [LabResourceMSU[]]$ResourceMSUs = Get-LabResourceMSU -Lab $Lab
 
         Mock Invoke-LabDownloadAndUnzipFile
@@ -128,7 +131,7 @@ InModuleScope LabBuilder {
     Describe 'Get-LabResourceISO' {
         Context 'When valid configuration passed with resource ISO missing Name.' {
             It 'Throws a ResourceISONameIsEmptyError Exception' {
-                $Lab = Get-Lab -ConfigPath $script:TestConfigOKPath
+                $Lab = Get-Lab -ConfigPath $script:testConfigOKPath
                 $Lab.labbuilderconfig.resources.iso[0].RemoveAttribute('name')
                 $exceptionParameters = @{
                     errorId = 'ResourceISONameIsEmptyError'
@@ -143,7 +146,7 @@ InModuleScope LabBuilder {
 
         Context 'When valid configuration passed with resource ISO with Empty Path' {
             It 'Throws a ResourceISOPathIsEmptyError Exception' {
-                $Lab = Get-Lab -ConfigPath $script:TestConfigOKPath
+                $Lab = Get-Lab -ConfigPath $script:testConfigOKPath
                 $Lab.labbuilderconfig.resources.iso[0].path=''
                 $exceptionParameters = @{
                     errorId = 'ResourceISOPathIsEmptyError'
@@ -159,12 +162,12 @@ InModuleScope LabBuilder {
 
         Context 'When valid configuration passed with resource ISO files that do exist.' {
             It 'Does not throw an Exception' {
-                $Path = "$script:TestConfigPath\ISOFiles\SQLServer2014SP1-FullSlipstream-x64-ENU.iso"
-                $Lab = Get-Lab -ConfigPath $script:TestConfigOKPath
+                $Path = "$script:testConfigPath\ISOFiles\SQLServer2014SP1-FullSlipstream-x64-ENU.iso"
+                $Lab = Get-Lab -ConfigPath $script:testConfigOKPath
                 $Lab.labbuilderconfig.resources.iso[0].RemoveAttribute('url')
-                $Lab.labbuilderconfig.resources.iso[0].SetAttribute('path',"$script:TestConfigPath\ISOFiles\SQLServer2014SP1-FullSlipstream-x64-ENU.iso")
+                $Lab.labbuilderconfig.resources.iso[0].SetAttribute('path',"$script:testConfigPath\ISOFiles\SQLServer2014SP1-FullSlipstream-x64-ENU.iso")
                 $Lab.labbuilderconfig.resources.iso[1].RemoveAttribute('url')
-                $Lab.labbuilderconfig.resources.iso[1].SetAttribute('path',"$script:TestConfigPath\ISOFiles\SQLFULL_ENU.iso")
+                $Lab.labbuilderconfig.resources.iso[1].SetAttribute('path',"$script:testConfigPath\ISOFiles\SQLFULL_ENU.iso")
 
                 { Get-LabResourceISO -Lab $Lab } | Should -Not -Throw
             }
@@ -172,40 +175,40 @@ InModuleScope LabBuilder {
 
         Context 'When valid configuration is passed' {
             It 'Returns Resource ISO Array that matches Expected Array' {
-                $Lab = Get-Lab -ConfigPath $script:TestConfigOKPath
-                $Lab.labbuilderconfig.resources.iso[0].SetAttribute('path',"$($script:TestConfigPath)\ISOFiles\SQLServer2014SP1-FullSlipstream-x64-ENU.iso")
-                $Lab.labbuilderconfig.resources.iso[1].SetAttribute('path',"$($script:TestConfigPath)\ISOFiles\SQLFULL_ENU.iso")
+                $Lab = Get-Lab -ConfigPath $script:testConfigOKPath
+                $Lab.labbuilderconfig.resources.iso[0].SetAttribute('path',"$($script:testConfigPath)\ISOFiles\SQLServer2014SP1-FullSlipstream-x64-ENU.iso")
+                $Lab.labbuilderconfig.resources.iso[1].SetAttribute('path',"$($script:testConfigPath)\ISOFiles\SQLFULL_ENU.iso")
                 [Array] $ResourceISOs = Get-LabResourceISO -Lab $Lab
                 # Adjust the path to remove machine specific path
                 $ResourceISOs.foreach({
-                    $_.Path = $_.Path.Replace($script:TestConfigPath,'.')
+                    $_.Path = $_.Path.Replace($script:testConfigPath,'.')
                 })
-                Set-Content -Path "$script:ArtifactPath\ExpectedResourceISOs.json" -Value ($ResourceISOs | ConvertTo-Json -Depth 4)
-                $ExpectedResourceISOs = Get-Content -Path "$script:ExpectedContentPath\ExpectedResourceISOs.json"
-                [System.String]::Compare((Get-Content -Path "$script:ArtifactPath\ExpectedResourceISOs.json"),$ExpectedResourceISOs,$true) | Should -Be 0
+                Set-Content -Path "$script:artifactPath\ExpectedResourceISOs.json" -Value ($ResourceISOs | ConvertTo-Json -Depth 4)
+                $ExpectedResourceISOs = Get-Content -Path "$script:expectedContentPath\ExpectedResourceISOs.json"
+                [System.String]::Compare((Get-Content -Path "$script:artifactPath\ExpectedResourceISOs.json"),$ExpectedResourceISOs,$true) | Should -Be 0
             }
         }
 
         Context 'When valid configuration is passed with ISOPath set' {
             It 'Returns Resource ISO Array that matches Expected Array' {
-                $Path = "$script:TestConfigPath\ISOFiles"
-                $Lab = Get-Lab -ConfigPath $script:TestConfigOKPath
+                $Path = "$script:testConfigPath\ISOFiles"
+                $Lab = Get-Lab -ConfigPath $script:testConfigOKPath
                 $Lab.labbuilderconfig.resources.SetAttribute('isopath',$Path)
                 [Array] $ResourceISOs = Get-LabResourceISO -Lab $Lab
                 # Adjust the path to remove machine specific path
                 $ResourceISOs.foreach({
-                    $_.Path = $_.Path.Replace($script:TestConfigPath,'.')
+                    $_.Path = $_.Path.Replace($script:testConfigPath,'.')
                 })
-                Set-Content -Path "$script:ArtifactPath\ExpectedResourceISOs.json" -Value ($ResourceISOs | ConvertTo-Json -Depth 4)
-                $ExpectedResourceISOs = Get-Content -Path "$script:ExpectedContentPath\ExpectedResourceISOs.json"
-                [System.String]::Compare((Get-Content -Path "$script:ArtifactPath\ExpectedResourceISOs.json"),$ExpectedResourceISOs,$true) | Should -Be 0
+                Set-Content -Path "$script:artifactPath\ExpectedResourceISOs.json" -Value ($ResourceISOs | ConvertTo-Json -Depth 4)
+                $ExpectedResourceISOs = Get-Content -Path "$script:expectedContentPath\ExpectedResourceISOs.json"
+                [System.String]::Compare((Get-Content -Path "$script:artifactPath\ExpectedResourceISOs.json"),$ExpectedResourceISOs,$true) | Should -Be 0
             }
         }
     }
 
     Describe 'Initialize-LabResourceISO' {
-        $Path = "$script:TestConfigPath\ISOFiles"
-        $Lab = Get-Lab -ConfigPath $script:TestConfigOKPath
+        $Path = "$script:testConfigPath\ISOFiles"
+        $Lab = Get-Lab -ConfigPath $script:testConfigOKPath
         $Lab.labbuilderconfig.resources.SetAttribute('isopath',$Path)
         [LabResourceISO[]]$ResourceISOs = Get-LabResourceISO -Lab $Lab
 

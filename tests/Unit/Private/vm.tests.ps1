@@ -1,67 +1,70 @@
-$global:LabBuilderProjectRoot = $PSScriptRoot | Split-Path -Parent | Split-Path -Parent | Split-Path -Parent | Split-Path -Parent
+[System.Diagnostics.CodeAnalysis.SuppressMessage('PSAvoidUsingConvertToSecureStringWithPlainText', '')]
+[CmdletBinding()]
+param ()
 
-if (Get-Module -Name LabBuilder -All)
-{
-    Get-Module -Name LabBuilder -All | Remove-Module
-}
+$projectPath = "$PSScriptRoot\..\..\.." | Convert-Path
+$projectName = ((Get-ChildItem -Path $projectPath\*\*.psd1).Where{
+        ($_.Directory.Name -match 'source|src' -or $_.Directory.Name -eq $_.BaseName) -and
+        $(try { Test-ModuleManifest $_.FullName -ErrorAction Stop } catch { $false } )
+    }).BaseName
 
-Import-Module -Name (Join-Path -Path $global:LabBuilderProjectRoot -ChildPath 'src\LabBuilder.psd1') `
-    -Force `
-    -DisableNameChecking `
-    -Verbose:$false
-Import-Module -Name (Join-Path -Path $global:LabBuilderProjectRoot -ChildPath 'test\testhelper\testhelper.psm1') `
-    -Global
+Import-Module -Name $projectName -Force
 
-InModuleScope LabBuilder {
+InModuleScope $projectName {
+    $testRootPath = $PSScriptRoot | Split-Path -Parent | Split-Path -Parent
+    $testHelperPath = $testRootPath | Join-Path -ChildPath 'TestHelper'
+    Import-Module -Name $testHelperPath -Force
+
     # Run tests assuming Build 10586 is installed
-    $Script:CurrentBuild = 10586
+    $script:currentBuild = 10586
 
-    $script:TestConfigPath = Join-Path `
-        -Path $global:LabBuilderProjectRoot `
-        -ChildPath 'test\pestertestconfig'
-    $script:TestConfigOKPath = Join-Path `
-        -Path $script:TestConfigPath `
+    $script:testConfigPath = Join-Path `
+        -Path $testRootPath `
+        -ChildPath 'pestertestconfig'
+    $script:testConfigOKPath = Join-Path `
+        -Path $script:testConfigPath `
         -ChildPath 'PesterTestConfig.OK.xml'
-    $script:ArtifactPath = Join-Path `
-        -Path $global:LabBuilderProjectRoot `
-        -ChildPath 'test\artifacts'
-    $script:ExpectedContentPath = Join-Path `
-        -Path $script:TestConfigPath `
+    $script:artifactPath = Join-Path `
+        -Path $testRootPath `
+        -ChildPath 'artifacts'
+    $script:expectedContentPath = Join-Path `
+        -Path $script:testConfigPath `
         -ChildPath 'expectedcontent'
     $null = New-Item `
-        -Path $script:ArtifactPath `
+        -Path $script:artifactPath `
         -ItemType Directory `
         -Force `
         -ErrorAction SilentlyContinue
+    $script:Lab = Get-Lab -ConfigPath $script:testConfigOKPath
 
-    Describe '\lib\private\Vm.ps1\New-LabVMInitializationFile' -Tags 'Incomplete' {
+    Describe 'New-LabVMInitializationFile' -Tags 'Incomplete' {
     }
 
-    Describe '\lib\private\Vm.ps1\Get-LabUnattendFileContent' -Tags 'Incomplete' {
+    Describe 'Get-LabUnattendFileContent' -Tags 'Incomplete' {
     }
 
-    Describe '\lib\private\Vm.ps1\Get-LabCertificatePsFileContent' -Tags 'Incomplete' {
+    Describe 'Get-LabCertificatePsFileContent' -Tags 'Incomplete' {
     }
 
-    Describe '\lib\private\Vm.ps1\Recieve-LabSelfSignedCertificate' -Tags 'Incomplete' {
+    Describe 'Recieve-LabSelfSignedCertificate' -Tags 'Incomplete' {
     }
 
-    Describe '\lib\private\Vm.ps1\Request-LabSelfSignedCertificate' -Tags 'Incomplete' {
+    Describe 'Request-LabSelfSignedCertificate' -Tags 'Incomplete' {
     }
 
-    Describe '\lib\private\Vm.ps1\New-LabHostSelfSignedCertificate' -Tags 'Incomplete' {
+    Describe 'New-LabHostSelfSignedCertificate' -Tags 'Incomplete' {
     }
 
-    Describe '\lib\private\Vm.ps1\Wait-LabVMInitializationComplete' -Tags 'Incomplete' {
+    Describe 'Wait-LabVMInitializationComplete' -Tags 'Incomplete' {
     }
 
-    Describe '\lib\private\Vm.ps1\Wait-LabVMStarted' -Tags 'Incomplete'  {
+    Describe 'Wait-LabVMStarted' -Tags 'Incomplete'  {
     }
 
-    Describe '\lib\private\Vm.ps1\Wait-LabVMOff' -Tags 'Incomplete'  {
+    Describe 'Wait-LabVMOff' -Tags 'Incomplete'  {
     }
 
-    Describe '\lib\private\Vm.ps1\Get-LabIntegrationServiceName' {
+    Describe 'Get-LabIntegrationServiceName' {
         Mock -CommandName Get-CimInstance `
             -ParameterFilter { $Class -eq 'Msvm_VssComponentSettingData' } `
             -MockWith { @{ Caption = 'VSS' }}
@@ -99,7 +102,7 @@ InModuleScope LabBuilder {
         }
     }
 
-    Describe '\lib\private\Vm.ps1\Update-LabVMIntegrationService' {
+    Describe 'Update-LabVMIntegrationService' {
         function Get-VMIntegrationService {}
         function Enable-VMIntegrationService {
             [CmdletBinding()]
@@ -143,7 +146,7 @@ InModuleScope LabBuilder {
         Mock -CommandName Enable-VMIntegrationService
         Mock -CommandName Disable-VMIntegrationService
 
-        $Lab = Get-Lab -ConfigPath $script:TestConfigOKPath
+        $Lab = Get-Lab -ConfigPath $script:testConfigOKPath
         [array] $Templates = Get-LabVMTemplate -Lab $Lab
         [array] $Switches = Get-LabSwitch -Lab $Lab
 
@@ -209,7 +212,7 @@ InModuleScope LabBuilder {
     }
 
 
-    Describe '\lib\private\Vm.ps1\Update-LabVMDataDisk' {
+    Describe 'Update-LabVMDataDisk' {
         function Get-VM {}
         function Get-VHD {}
         function Resize-VHD {}
@@ -237,7 +240,7 @@ InModuleScope LabBuilder {
 
         # The same VM will be used for all tests, but a different
         # DataVHds array will be created/assigned for each test.
-        $Lab = Get-Lab -ConfigPath $script:TestConfigOKPath
+        $Lab = Get-Lab -ConfigPath $script:testConfigOKPath
         [array] $Templates = Get-LabVMTemplate -Lab $Lab
         [array] $Switches = Get-LabSwitch -Lab $Lab
         [array] $VMs = Get-LabVM -Lab $Lab -VMTemplates $Templates -Switches $Switches
@@ -529,7 +532,7 @@ InModuleScope LabBuilder {
             $DataVHD.Size = 10GB
             $DataVHD.PartitionStyle = [LabPartitionStyle]::GPT
             $DataVHD.FileSystem = [LabFileSystem]::NTFS
-            $DataVHD.CopyFolders = "$script:TestConfigPath\ExpectedContent"
+            $DataVHD.CopyFolders = "$script:testConfigPath\ExpectedContent"
             $VMs[0].DataVHDs = @( $DataVHD )
 
             It 'Does not throw an Exception' {
@@ -555,7 +558,7 @@ InModuleScope LabBuilder {
             $DataVHD = [LabDataVHD]::New('DoesNotExist.vhdx')
             $DataVHD.VhdType = [LabVHDType]::Dynamic
             $DataVHD.Size = 10GB
-            $DataVHD.CopyFolders = "$script:TestConfigPath\ExpectedContent"
+            $DataVHD.CopyFolders = "$script:testConfigPath\ExpectedContent"
             $VMs[0].DataVHDs = @( $DataVHD )
 
             It 'Does not throw an Exception' {
@@ -700,7 +703,7 @@ InModuleScope LabBuilder {
         }
     }
 
-    Describe '\lib\private\Vm.ps1\Update-LabVMDvdDrive' {
+    Describe 'Update-LabVMDvdDrive' {
         function Get-VMDVDDrive {}
         function Add-VMDVDDrive {}
         function Set-VMDVDDrive {}
@@ -711,7 +714,7 @@ InModuleScope LabBuilder {
 
         # The same VM will be used for all tests, but a different
         # DVD Drives array will be created/assigned for each test.
-        $Lab = Get-Lab -ConfigPath $script:TestConfigOKPath
+        $Lab = Get-Lab -ConfigPath $script:testConfigOKPath
         [array] $Templates = Get-LabVMTemplate -Lab $Lab
         [array] $Switches = Get-LabSwitch -Lab $Lab
         [array] $VMs = Get-LabVM -Lab $Lab -VMTemplates $Templates -Switches $Switches

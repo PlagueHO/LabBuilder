@@ -28,26 +28,26 @@ function Assert-LabValidConfigurationXMLSchema
     )
 
     # Define these variables so they are accesible inside the event handler.
-    $Script:XMLErrorCount = 0
-    $Script:XMLFirstError = ''
-    $Script:XMLPath = $ConfigPath
-    $Script:ConfigurationXMLValidationMessage = $LocalizedData.ConfigurationXMLValidationMessage
+    $script:XMLErrorCount = 0
+    $script:XMLFirstError = ''
+    $script:XMLPath = $ConfigPath
+    $script:ConfigurationXMLValidationMessage = $LocalizedData.ConfigurationXMLValidationMessage
 
     # Perform the XSD Validation
     $readerSettings = New-Object -TypeName System.Xml.XmlReaderSettings
     $readerSettings.ValidationType = [System.Xml.ValidationType]::Schema
-    $null = $readerSettings.Schemas.Add("labbuilderconfig", $Script:ConfigurationXMLSchema)
+    $null = $readerSettings.Schemas.Add("labbuilderconfig", $script:ConfigurationXMLSchema)
     $readerSettings.ValidationFlags = [System.Xml.Schema.XmlSchemaValidationFlags]::ProcessInlineSchema -bor [System.Xml.Schema.XmlSchemaValidationFlags]::ProcessSchemaLocation
     $readerSettings.add_ValidationEventHandler(
         {
             # Triggered each time an error is found in the XML file
-            if ([System.String]::IsNullOrWhitespace($Script:XMLFirstError))
+            if ([System.String]::IsNullOrWhitespace($script:XMLFirstError))
             {
-                $Script:XMLFirstError = $_.Message
+                $script:XMLFirstError = $_.Message
             } # if
-            Write-LabMessage -Message ($Script:ConfigurationXMLValidationMessage `
-                    -f $Script:XMLPath, $_.Message)
-            $Script:XMLErrorCount++
+            Write-LabMessage -Message ($script:ConfigurationXMLValidationMessage `
+                    -f $script:XMLPath, $_.Message)
+            $script:XMLErrorCount++
         })
 
     $reader = [System.Xml.XmlReader]::Create([System.String] $ConfigPath, $readerSettings)
@@ -81,7 +81,7 @@ function Assert-LabValidConfigurationXMLSchema
         $exceptionParameters = @{
             errorId       = 'ConfigurationXMLValidationError'
             errorCategory = 'InvalidArgument'
-            errorMessage  = $($LocalizedData.ConfigurationXMLValidationError -f $ConfigPath, $Script:XMLFirstError)
+            errorMessage  = $($LocalizedData.ConfigurationXMLValidationError -f $ConfigPath, $script:XMLFirstError)
         }
         New-LabException @exceptionParameters
     } # if

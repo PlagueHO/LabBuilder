@@ -124,9 +124,9 @@ function Start-LabDSC
                 catch
                 {
                     Write-LabMessage -Message $($LocalizedData.CopyingFilesToVMFailedMessage `
-                            -f $VM.Name, 'DSC', $Script:RetryConnectSeconds)
+                            -f $VM.Name, 'DSC', $script:RetryConnectSeconds)
 
-                    Start-Sleep -Seconds $Script:RetryConnectSeconds
+                    Start-Sleep -Seconds $script:RetryConnectSeconds
                 } # try
             } # while
         } # if
@@ -187,9 +187,9 @@ function Start-LabDSC
                     catch
                     {
                         Write-LabMessage -Message $($LocalizedData.CopyingFilesToVMFailedMessage `
-                                -f $VM.Name, "DSC Module $moduleName", $Script:RetryConnectSeconds)
+                                -f $VM.Name, "DSC Module $moduleName", $script:RetryConnectSeconds)
 
-                        Start-Sleep -Seconds $Script:RetryConnectSeconds
+                        Start-Sleep -Seconds $script:RetryConnectSeconds
                     } # try
                 } # if
             } # foreach

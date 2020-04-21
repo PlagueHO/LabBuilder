@@ -40,7 +40,7 @@ function Initialize-LabManagementSwitch
     }
     else
     {
-        $requiredManagementVlan = $Script:DefaultManagementVLan
+        $requiredManagementVlan = $script:DefaultManagementVLan
     }
 
     $managementSwitch = Get-VMSwitch | Where-Object -Property Name -eq $managementSwitchName

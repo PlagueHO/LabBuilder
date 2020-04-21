@@ -1,73 +1,76 @@
-$global:LabBuilderProjectRoot = $PSScriptRoot | Split-Path -Parent | Split-Path -Parent | Split-Path -Parent | Split-Path -Parent
+[System.Diagnostics.CodeAnalysis.SuppressMessage('PSAvoidUsingConvertToSecureStringWithPlainText', '')]
+[CmdletBinding()]
+param ()
 
-if (Get-Module -Name LabBuilder -All)
-{
-    Get-Module -Name LabBuilder -All | Remove-Module
-}
+$projectPath = "$PSScriptRoot\..\..\.." | Convert-Path
+$projectName = ((Get-ChildItem -Path $projectPath\*\*.psd1).Where{
+        ($_.Directory.Name -match 'source|src' -or $_.Directory.Name -eq $_.BaseName) -and
+        $(try { Test-ModuleManifest $_.FullName -ErrorAction Stop } catch { $false } )
+    }).BaseName
 
-Import-Module -Name (Join-Path -Path $global:LabBuilderProjectRoot -ChildPath 'src\LabBuilder.psd1') `
-    -Force `
-    -DisableNameChecking `
-    -Verbose:$false
-Import-Module -Name (Join-Path -Path $global:LabBuilderProjectRoot -ChildPath 'test\testhelper\testhelper.psm1') `
-    -Global
+Import-Module -Name $projectName -Force
 
-InModuleScope LabBuilder {
+InModuleScope $projectName {
+    $testRootPath = $PSScriptRoot | Split-Path -Parent | Split-Path -Parent
+    $testHelperPath = $testRootPath | Join-Path -ChildPath 'TestHelper'
+    Import-Module -Name $testHelperPath -Force
+
     # Run tests assuming Build 10586 is installed
-    $Script:CurrentBuild = 10586
+    $script:currentBuild = 10586
 
-    $script:TestConfigPath = Join-Path `
-        -Path $global:LabBuilderProjectRoot `
-        -ChildPath 'test\pestertestconfig'
-    $script:TestConfigOKPath = Join-Path `
-        -Path $script:TestConfigPath `
+    $script:testConfigPath = Join-Path `
+        -Path $testRootPath `
+        -ChildPath 'pestertestconfig'
+    $script:testConfigOKPath = Join-Path `
+        -Path $script:testConfigPath `
         -ChildPath 'PesterTestConfig.OK.xml'
-    $script:ArtifactPath = Join-Path `
-        -Path $global:LabBuilderProjectRoot `
-        -ChildPath 'test\artifacts'
-    $script:ExpectedContentPath = Join-Path `
-        -Path $script:TestConfigPath `
+    $script:artifactPath = Join-Path `
+        -Path $testRootPath `
+        -ChildPath 'artifacts'
+    $script:expectedContentPath = Join-Path `
+        -Path $script:testConfigPath `
         -ChildPath 'expectedcontent'
     $null = New-Item `
-        -Path $script:ArtifactPath `
+        -Path $script:artifactPath `
         -ItemType Directory `
         -Force `
         -ErrorAction SilentlyContinue
+    $script:Lab = Get-Lab -ConfigPath $script:testConfigOKPath
 
-    Describe '\lib\private\Dsc.ps1\Get-LabModulesInDSCConfig' {
+    Describe 'Get-LabModulesInDSCConfig' {
         Context 'When Called with Test DSC Resource File' {
             It 'Returns DSCModules Object that matches Expected Object' {
                 $dscModules = Get-LabModulesInDSCConfig `
-                    -DSCConfigFile (Join-Path -Path $script:TestConfigPath -ChildPath 'dsclibrary\PesterTest.DSC.ps1') `
+                    -DSCConfigFile (Join-Path -Path $script:testConfigPath -ChildPath 'dsclibrary\PesterTest.DSC.ps1') `
                     -Verbose
 
                 Set-Content `
-                    -Path "$script:ArtifactPath\ExpectedDSCModules.json" `
+                    -Path "$script:artifactPath\ExpectedDSCModules.json" `
                     -Value ($dscModules | ConvertTo-Json -Depth 4)
 
-                $expectedDSCModules = Get-Content -Path "$script:ExpectedContentPath\ExpectedDSCModules.json"
-                [System.String]::Compare((Get-Content -Path "$script:ArtifactPath\ExpectedDSCModules.json"), $expectedDSCModules, $true) | Should -Be 0
+                $expectedDSCModules = Get-Content -Path "$script:expectedContentPath\ExpectedDSCModules.json"
+                [System.String]::Compare((Get-Content -Path "$script:artifactPath\ExpectedDSCModules.json"), $expectedDSCModules, $true) | Should -Be 0
             }
         }
 
         Context 'When Called with Test DSC Resource Content' {
             It 'Returns DSCModules Object that matches Expected Object' {
-                $content = Get-Content -Path (Join-Path -Path $script:TestConfigPath -ChildPath 'dsclibrary\PesterTest.DSC.ps1') -RAW
+                $content = Get-Content -Path (Join-Path -Path $script:testConfigPath -ChildPath 'dsclibrary\PesterTest.DSC.ps1') -RAW
                 $dscModules = Get-LabModulesInDSCConfig `
                     -DSCConfigContent $content `
                     -Verbose
 
                 Set-Content `
-                    -Path "$script:ArtifactPath\ExpectedDSCModules.json" `
+                    -Path "$script:artifactPath\ExpectedDSCModules.json" `
                     -Value ($dscModules | ConvertTo-Json -Depth 4)
 
-                $expectedDSCModules = Get-Content -Path "$script:ExpectedContentPath\ExpectedDSCModules.json"
-                [System.String]::Compare((Get-Content -Path "$script:ArtifactPath\ExpectedDSCModules.json"), $expectedDSCModules, $true) | Should -Be 0
+                $expectedDSCModules = Get-Content -Path "$script:expectedContentPath\ExpectedDSCModules.json"
+                [System.String]::Compare((Get-Content -Path "$script:artifactPath\ExpectedDSCModules.json"), $expectedDSCModules, $true) | Should -Be 0
             }
         }
     }
 
-    Describe '\lib\private\Dsc.ps1\Set-LabModulesInDSCConfig' {
+    Describe 'Set-LabModulesInDSCConfig' {
         $module1 = [LabDSCModule]::New('PSDesiredStateConfiguration', '1.0')
         $module2 = [LabDSCModule]::New('xActiveDirectory')
         $module3 = [LabDSCModule]::New('ComputerManagementDsc', '1.4.0.0')
@@ -77,36 +80,36 @@ InModuleScope LabBuilder {
         Context 'When called with Test DSC Resource File' {
             It 'Returns DSCConfig Content that matches Expected String' {
                 $dscConfig = Set-LabModulesInDSCConfig `
-                    -DSCConfigFile (Join-Path -Path $script:TestConfigPath -ChildPath 'dsclibrary\PesterTest.DSC.ps1') `
+                    -DSCConfigFile (Join-Path -Path $script:testConfigPath -ChildPath 'dsclibrary\PesterTest.DSC.ps1') `
                     -Modules $UpdateModules `
                     -Verbose
 
-                Set-Content -Path "$script:ArtifactPath\ExpectedDSCConfig.txt" -Value $dscConfig
-                $expectedDSCConfig = Get-Content -Path "$script:ExpectedContentPath\ExpectedDSCConfig.txt"
+                Set-Content -Path "$script:artifactPath\ExpectedDSCConfig.txt" -Value $dscConfig
+                $expectedDSCConfig = Get-Content -Path "$script:expectedContentPath\ExpectedDSCConfig.txt"
                 @(Compare-Object `
                         -ReferenceObject $expectedDSCConfig `
-                        -DifferenceObject (Get-Content -Path "$script:ArtifactPath\ExpectedDSCConfig.txt")).Count | Should -Be 0
+                        -DifferenceObject (Get-Content -Path "$script:artifactPath\ExpectedDSCConfig.txt")).Count | Should -Be 0
             }
         }
 
         Context 'When called with Test DSC Resource Content' {
             It 'Returns DSCModules Content that matches Expected String' {
-                $content = Get-Content -Path (Join-Path -Path $script:TestConfigPath -ChildPath 'dsclibrary\PesterTest.DSC.ps1') -Raw
+                $content = Get-Content -Path (Join-Path -Path $script:testConfigPath -ChildPath 'dsclibrary\PesterTest.DSC.ps1') -Raw
                 $dscConfig = Set-LabModulesInDSCConfig `
                     -DSCConfigContent $Content `
                     -Modules $UpdateModules `
                     -Verbose
 
-                Set-Content -Path "$script:ArtifactPath\ExpectedDSCConfig.txt" -Value $dscConfig
-                $expectedDSCConfig = Get-Content -Path "$script:ExpectedContentPath\ExpectedDSCConfig.txt"
+                Set-Content -Path "$script:artifactPath\ExpectedDSCConfig.txt" -Value $dscConfig
+                $expectedDSCConfig = Get-Content -Path "$script:expectedContentPath\ExpectedDSCConfig.txt"
                 @(Compare-Object `
                         -ReferenceObject $expectedDSCConfig `
-                        -DifferenceObject (Get-Content -Path "$script:ArtifactPath\ExpectedDSCConfig.txt")).Count | Should -Be 0
+                        -DifferenceObject (Get-Content -Path "$script:artifactPath\ExpectedDSCConfig.txt")).Count | Should -Be 0
             }
         }
     }
 
-    Describe '\lib\private\Dsc.ps1\Update-LabDSC' {
+    Describe 'Update-LabDSC' {
         function Get-VM
         {
             [CmdletBinding()]
@@ -154,7 +157,7 @@ InModuleScope LabBuilder {
 
         Mock -CommandName Get-VM
 
-        $lab = Get-Lab -ConfigPath $script:TestConfigOKPath
+        $lab = Get-Lab -ConfigPath $script:testConfigOKPath
         $switches = Get-LabSwitch -Lab $lab
         $templates = Get-LabVMTemplate -Lab $lab
         $vms = Get-LabVM -Lab $lab -VMTemplates $templates -Switches $switches
@@ -344,7 +347,7 @@ InModuleScope LabBuilder {
         }
     }
 
-    Describe '\lib\private\Dsc.ps1\Set-LabDSC' {
+    Describe 'Set-LabDSC' {
         # Mock functions
         function Get-VM
         {
@@ -362,7 +365,7 @@ InModuleScope LabBuilder {
 
         Mock -CommandName Get-VM
 
-        $lab = Get-Lab -ConfigPath $script:TestConfigOKPath
+        $lab = Get-Lab -ConfigPath $script:testConfigOKPath
         $switches = Get-LabSwitch -Lab $lab
         $templates = Get-LabVMTemplate -Lab $lab
         $vms = Get-LabVM -Lab $lab -VMTemplates $templates -Switches $switches
@@ -428,8 +431,8 @@ InModuleScope LabBuilder {
         }
     }
 
-    Describe '\lib\private\Dsc.ps1\Initialize-LabDSC' {
-        $lab = Get-Lab -ConfigPath $script:TestConfigOKPath
+    Describe 'Initialize-LabDSC' {
+        $lab = Get-Lab -ConfigPath $script:testConfigOKPath
         $vms = Get-LabVM -Lab $lab
 
         Mock -CommandName Update-LabDSC
@@ -449,9 +452,9 @@ InModuleScope LabBuilder {
         }
     }
 
-    Describe '\lib\private\Dsc.ps1\Start-LabDSC' -Tags 'Incomplete' {
+    Describe 'Start-LabDSC' -Tags 'Incomplete' {
     }
 
-    Describe '\lib\private\Dsc.ps1\Get-LabDSCNetworkingConfig' -Tags 'Incomplete' {
+    Describe 'Get-LabDSCNetworkingConfig' -Tags 'Incomplete' {
     }
 }

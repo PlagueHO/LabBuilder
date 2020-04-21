@@ -145,7 +145,7 @@ function Initialize-LabSwitch
 
                 'NAT'
                 {
-                    if ($Script:CurrentBuild -lt 14295)
+                    if ($script:currentBuild -lt 14295)
                     {
                         $exceptionParameters = @{
                             errorId       = 'NatSwitchNotSupportedError'

@@ -150,10 +150,10 @@ function Initialize-LabBootVHD
                         -Path $MountPoint
 
                     # Generate the path to the Nano Language Package
-                    $PackageLangFile = $Package -replace '.cab',"_$($Script:NanoPackageCulture).cab"
+                    $PackageLangFile = $Package -replace '.cab',"_$($script:NanoPackageCulture).cab"
                     $PackageLangFile = Join-Path `
                         -Path $NanoPackagesFolder `
-                        -ChildPath "$($Script:NanoPackageCulture)\$PackageLangFile"
+                        -ChildPath "$($script:NanoPackageCulture)\$PackageLangFile"
 
                     # Does it exist?
                     if (-not (Test-Path -Path $PackageLangFile))
@@ -264,15 +264,15 @@ function Initialize-LabBootVHD
     # folder of the VM.
     $CertificatePfxPath = Join-Path `
         -Path $VMLabBuilderFiles `
-        -ChildPath $Script:DSCEncryptionPfxCert
+        -ChildPath $script:DSCEncryptionPfxCert
     if (Test-Path -Path $CertificatePfxPath)
     {
         # Apply the CMD Setup Complete File
         Write-LabMessage -Message $($LocalizedData.ApplyingVMBootDiskFileMessage `
-            -f $VM.Name,'Credential Certificate PFX',$Script:DSCEncryptionPfxCert)
+            -f $VM.Name,'Credential Certificate PFX',$script:DSCEncryptionPfxCert)
         $null = Copy-Item `
             -Path $CertificatePfxPath `
-            -Destination "$MountPoint\Windows\$Script:DSCEncryptionPfxCert" `
+            -Destination "$MountPoint\Windows\$script:DSCEncryptionPfxCert" `
             -Force
     }
 
@@ -295,11 +295,11 @@ function Initialize-LabBootVHD
     # Apply the Certificate Generator script if not a Nano Server
     if ($VM.OSType -ne [LabOSType]::Nano)
     {
-        $CertGenFilename = Split-Path -Path $Script:SupportGertGenPath -Leaf
+        $CertGenFilename = Split-Path -Path $script:SupportGertGenPath -Leaf
         Write-LabMessage -Message $($LocalizedData.ApplyingVMBootDiskFileMessage `
             -f $VM.Name,'Certificate Create Script',$CertGenFilename)
         $null = Copy-Item `
-            -Path $Script:SupportGertGenPath `
+            -Path $script:SupportGertGenPath `
             -Destination "$MountPoint\Windows\Setup\Scripts\"`
             -Force
     }

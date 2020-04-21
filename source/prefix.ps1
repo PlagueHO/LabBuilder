@@ -4,7 +4,7 @@
 #Requires -version 5.1
 #Requires -RunAsAdministrator
 
-$script:moduleRoot = Split-Path `
+$script:LabBuidlerModuleRoot = Split-Path `
     -Path $MyInvocation.MyCommand.Path `
     -Parent
 
@@ -17,7 +17,7 @@ if ([System.String]::IsNullOrEmpty($culture))
 }
 else
 {
-    if (Test-Path -Path (Join-Path -Path $script:moduleRoot -ChildPath $culture))
+    if (Test-Path -Path (Join-Path -Path $script:LabBuidlerModuleRoot -ChildPath $culture))
     {
         $culture = 'en-US'
     }
@@ -26,7 +26,7 @@ else
 Import-LocalizedData `
     -BindingVariable LocalizedData `
     -Filename 'LabBuilder.strings.psd1' `
-    -BaseDirectory $script:moduleRoot `
+    -BaseDirectory $script:LabBuidlerModuleRoot `
     -UICulture $culture
 #endregion
 
@@ -491,49 +491,49 @@ class LabDSCModule:System.ICloneable {
 #endregion
 
 #region ModuleVariables
-[System.String] $Script:WorkingFolder = $ENV:Temp
+[System.String] $script:WorkingFolder = $ENV:Temp
 
 # Supporting files
-[System.String] $Script:SupportConvertWindowsImagePath = Join-Path `
+[System.String] $script:SupportConvertWindowsImagePath = Join-Path `
     -Path $PSScriptRoot `
     -ChildPath 'support\Convert-WindowsImage.ps1'
-[System.String] $Script:SupportGertGenPath = Join-Path `
+[System.String] $script:SupportGertGenPath = Join-Path `
     -Path $PSScriptRoot `
     -ChildPath 'support\New-SelfSignedCertificateEx.ps1'
 
 # DSC Library
-[System.String] $Script:DSCLibraryPath = Join-Path `
+[System.String] $script:DSCLibraryPath = Join-Path `
     -Path $PSScriptRoot `
     -ChildPath 'dsclibrary'
 
 # Virtual Networking Parameters
-[System.Int32] $Script:DefaultManagementVLan = 99
+[System.Int32] $script:DefaultManagementVLan = 99
 
 # Self-signed Certificate Parameters
-[System.Int32] $Script:SelfSignedCertKeyLength = 2048
+[System.Int32] $script:SelfSignedCertKeyLength = 2048
 # Warning - using KSP causes the Private Key to not be accessible to PS.
-[System.String] $Script:SelfSignedCertProviderName = 'Microsoft Enhanced Cryptographic Provider v1.0' # 'Microsoft Software Key Storage Provider'
-[System.String] $Script:SelfSignedCertAlgorithmName = 'RSA' # 'ECDH_P256' Or 'ECDH_P384' Or 'ECDH_P521'
-[System.String] $Script:SelfSignedCertSignatureAlgorithm = 'SHA256' # 'SHA1'
-[System.String] $Script:DSCEncryptionCert = 'DSCEncryption.cer'
-[System.String] $Script:DSCEncryptionPfxCert = 'DSCEncryption.pfx'
-[System.String] $Script:DSCCertificateFriendlyName = 'DSC Credential Encryption'
-[System.String] $Script:DSCCertificatePassword = 'E3jdNkd903mDn43NEk2nbDENjw'
-[System.Int32] $Script:RetryConnectSeconds = 5
-[System.Int32] $Script:RetryHeartbeatSeconds = 1
-[System.Int32] $Script:StartupTimeout = 90
+[System.String] $script:SelfSignedCertProviderName = 'Microsoft Enhanced Cryptographic Provider v1.0' # 'Microsoft Software Key Storage Provider'
+[System.String] $script:SelfSignedCertAlgorithmName = 'RSA' # 'ECDH_P256' Or 'ECDH_P384' Or 'ECDH_P521'
+[System.String] $script:SelfSignedCertSignatureAlgorithm = 'SHA256' # 'SHA1'
+[System.String] $script:DSCEncryptionCert = 'DSCEncryption.cer'
+[System.String] $script:DSCEncryptionPfxCert = 'DSCEncryption.pfx'
+[System.String] $script:DSCCertificateFriendlyName = 'DSC Credential Encryption'
+[System.String] $script:DSCCertificatePassword = 'E3jdNkd903mDn43NEk2nbDENjw'
+[System.Int32] $script:RetryConnectSeconds = 5
+[System.Int32] $script:RetryHeartbeatSeconds = 1
+[System.Int32] $script:StartupTimeout = 90
 
 # System Info
-[System.Int32] $Script:CurrentBuild = (Get-ItemProperty `
+[System.Int32] $script:currentBuild = (Get-ItemProperty `
     -Path 'hklm:\SOFTWARE\Microsoft\Windows NT\CurrentVersion').CurrentBuild
 
 # XML Stuff
-[System.String] $Script:ConfigurationXMLSchema = Join-Path `
+[System.String] $script:ConfigurationXMLSchema = Join-Path `
     -Path $PSScriptRoot `
     -ChildPath 'schema\labbuilderconfig-schema.xsd'
-[System.String] $Script:ConfigurationXMLTemplate = Join-Path `
+[System.String] $script:ConfigurationXMLTemplate = Join-Path `
     -Path $PSScriptRoot `
     -ChildPath 'template\labbuilderconfig-template.xml'
 
 # Nano Stuff
-[System.String] $Script:NanoPackageCulture = 'en-us'
+[System.String] $script:NanoPackageCulture = 'en-us'

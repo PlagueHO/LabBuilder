@@ -77,10 +77,11 @@ BuildWorkflow:
 Pester:
   OutputFormat: NUnitXML
   ExcludeFromCodeCoverage:
+    - dsclibrary
+    - support
   Script:
     - tests/Unit
-    - tests/Integration
-  ExcludeTag:
+  ExcludeTag: Incomplete
   Tag:
   CodeCoverageThreshold: 70
 

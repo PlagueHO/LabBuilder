@@ -85,7 +85,7 @@ function Recieve-LabSelfSignedCertificate
                 try
                 {
                     $null = Copy-Item `
-                        -Path "c:\windows\$Script:DSCEncryptionCert" `
+                        -Path "c:\windows\$script:DSCEncryptionCert" `
                         -Destination $vmLabBuilderFiles `
                         -FromSession $session `
                         -ErrorAction Stop
@@ -94,9 +94,9 @@ function Recieve-LabSelfSignedCertificate
                 catch
                 {
                     Write-LabMessage -Message $($LocalizedData.WaitingForCertificateMessage `
-                        -f $VM.Name,$Script:RetryConnectSeconds)
+                        -f $VM.Name,$script:RetryConnectSeconds)
 
-                    Start-Sleep -Seconds $Script:RetryConnectSeconds
+                    Start-Sleep -Seconds $script:RetryConnectSeconds
                 } # try
             } # while
         } # if
@@ -131,5 +131,5 @@ function Recieve-LabSelfSignedCertificate
         } # if
     } # while
 
-    return (Get-Item -Path "$vmLabBuilderFiles\$($Script:DSCEncryptionCert)")
+    return (Get-Item -Path "$vmLabBuilderFiles\$($script:DSCEncryptionCert)")
 }

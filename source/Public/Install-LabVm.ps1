@@ -30,7 +30,7 @@ function Install-LabVM
     if ($VM.DSC.ConfigFile)
     {
         # Has this VM been initialized before (do we have a cert for it)
-        if (-not (Test-Path "$LabPath\$($VM.Name)\LabBuilder Files\$Script:DSCEncryptionCert"))
+        if (-not (Test-Path "$LabPath\$($VM.Name)\LabBuilder Files\$script:DSCEncryptionCert"))
         {
             # No, so check it is initialized and download the cert if required
             if (Wait-LabVMInitializationComplete -VM $VM -ErrorAction Continue)

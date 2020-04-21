@@ -38,8 +38,8 @@ function Wait-LabVMStarted
         $heartbeat = Get-VMIntegrationService -VMName $VM.Name -Name $heartbeatCultureNeutral
 
         Write-LabMessage -Message $($LocalizedData.WaitingForVMHeartbeatMessage `
-            -f $VM.Name,$Script:RetryHeartbeatSeconds)
+            -f $VM.Name,$script:RetryHeartbeatSeconds)
 
-        Start-Sleep -Seconds $Script:RetryHeartbeatSeconds
+        Start-Sleep -Seconds $script:RetryHeartbeatSeconds
     } # while
 }

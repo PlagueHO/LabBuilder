@@ -111,9 +111,9 @@ function Wait-LabVMInitializationComplete
                 catch
                 {
                     Write-LabMessage -Message $($LocalizedData.WaitingForInitialSetupCompleteMessage `
-                            -f $VM.Name, $Script:RetryConnectSeconds)
+                            -f $VM.Name, $script:RetryConnectSeconds)
                     Start-Sleep `
-                        -Seconds $Script:RetryConnectSeconds
+                        -Seconds $script:RetryConnectSeconds
                 } # try
             } # while
         } # if

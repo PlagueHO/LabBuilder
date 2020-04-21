@@ -52,7 +52,7 @@ function Get-LabCertificatePsFileContent
     if ($CertificateSource -eq [LabCertificateSource]::Guest)
     {
         $createCertificatePs = @"
-`$CertificateFriendlyName = '$($Script:DSCCertificateFriendlyName)'
+`$CertificateFriendlyName = '$($script:DSCCertificateFriendlyName)'
 `$Cert = Get-ChildItem -Path cert:\LocalMachine\My ``
     | Where-Object { `$_.FriendlyName -eq `$CertificateFriendlyName } ``
     | Select-Object -First 1
@@ -68,10 +68,10 @@ if (-not `$Cert)
         -Exportable ``
         -StoreLocation 'LocalMachine' ``
         -StoreName 'My' ``
-        -KeyLength $($Script:SelfSignedCertKeyLength) ``
-        -ProviderName '$($Script:SelfSignedCertProviderName)' ``
-        -AlgorithmName $($Script:SelfSignedCertAlgorithmName) ``
-        -SignatureAlgorithm $($Script:SelfSignedCertSignatureAlgorithm)
+        -KeyLength $($script:SelfSignedCertKeyLength) ``
+        -ProviderName '$($script:SelfSignedCertProviderName)' ``
+        -AlgorithmName $($script:SelfSignedCertAlgorithmName) ``
+        -SignatureAlgorithm $($script:SelfSignedCertSignatureAlgorithm)
     # There is a slight delay before new cert shows up in Cert:
     # So wait for it to show.
     While (-not `$Cert)
@@ -83,7 +83,7 @@ if (-not `$Cert)
 Export-Certificate ``
     -Type CERT ``
     -Cert `$Cert ``
-    -FilePath `"`$(`$ENV:SystemRoot)\$Script:DSCEncryptionCert`"
+    -FilePath `"`$(`$ENV:SystemRoot)\$script:DSCEncryptionCert`"
 Add-Content ``
     -Path `"`$(`$ENV:SystemRoot)\Setup\Scripts\SetupComplete.log`" ``
     -Value 'Encryption Certificate Imported from CER ...' ``
@@ -93,10 +93,10 @@ Add-Content ``
     else
     {
         [System.String] $createCertificatePs = @"
-if (Test-Path -Path `"`$(`$ENV:SystemRoot)\$Script:DSCEncryptionPfxCert`")
+if (Test-Path -Path `"`$(`$ENV:SystemRoot)\$script:DSCEncryptionPfxCert`")
 {
     `$CertificatePassword = ConvertTo-SecureString ``
-        -String '$Script:DSCCertificatePassword' ``
+        -String '$script:DSCCertificatePassword' ``
         -Force ``
         -AsPlainText
     Add-Content ``
@@ -104,8 +104,8 @@ if (Test-Path -Path `"`$(`$ENV:SystemRoot)\$Script:DSCEncryptionPfxCert`")
         -Value 'Importing Encryption Certificate from PFX ...' ``
         -Encoding Ascii
     Import-PfxCertificate ``
-        -Password '$Script:DSCCertificatePassword' ``
-        -FilePath `"`$(`$ENV:SystemRoot)\$Script:DSCEncryptionPfxCert`" ``
+        -Password '$script:DSCCertificatePassword' ``
+        -FilePath `"`$(`$ENV:SystemRoot)\$script:DSCEncryptionPfxCert`" ``
         -CertStoreLocation cert:\localMachine\root
     Add-Content ``
         -Path `"`$(`$ENV:SystemRoot)\Setup\Scripts\SetupComplete.log`" ``

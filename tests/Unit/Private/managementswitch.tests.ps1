@@ -1,39 +1,41 @@
-$global:LabBuilderProjectRoot = $PSScriptRoot | Split-Path -Parent | Split-Path -Parent | Split-Path -Parent | Split-Path -Parent
+[System.Diagnostics.CodeAnalysis.SuppressMessage('PSAvoidUsingConvertToSecureStringWithPlainText', '')]
+[CmdletBinding()]
+param ()
 
-if (Get-Module -Name LabBuilder -All)
-{
-    Get-Module -Name LabBuilder -All | Remove-Module
-}
+$projectPath = "$PSScriptRoot\..\..\.." | Convert-Path
+$projectName = ((Get-ChildItem -Path $projectPath\*\*.psd1).Where{
+        ($_.Directory.Name -match 'source|src' -or $_.Directory.Name -eq $_.BaseName) -and
+        $(try { Test-ModuleManifest $_.FullName -ErrorAction Stop } catch { $false } )
+    }).BaseName
 
-Import-Module -Name (Join-Path -Path $global:LabBuilderProjectRoot -ChildPath 'src\LabBuilder.psd1') `
-    -Force `
-    -DisableNameChecking `
-    -Verbose:$false
-Import-Module -Name (Join-Path -Path $global:LabBuilderProjectRoot -ChildPath 'test\testhelper\testhelper.psm1') `
-    -Global
+Import-Module -Name $projectName -Force
 
-InModuleScope LabBuilder {
+InModuleScope $projectName {
+    $testRootPath = $PSScriptRoot | Split-Path -Parent | Split-Path -Parent
+    $testHelperPath = $testRootPath | Join-Path -ChildPath 'TestHelper'
+    Import-Module -Name $testHelperPath -Force
+
     # Run tests assuming Build 10586 is installed
-    $Script:CurrentBuild = 10586
+    $script:currentBuild = 10586
 
-    $script:TestConfigPath = Join-Path `
-        -Path $global:LabBuilderProjectRoot `
-        -ChildPath 'test\pestertestconfig'
-    $script:TestConfigOKPath = Join-Path `
-        -Path $script:TestConfigPath `
+    $script:testConfigPath = Join-Path `
+        -Path $testRootPath `
+        -ChildPath 'pestertestconfig'
+    $script:testConfigOKPath = Join-Path `
+        -Path $script:testConfigPath `
         -ChildPath 'PesterTestConfig.OK.xml'
-    $script:ArtifactPath = Join-Path `
-        -Path $global:LabBuilderProjectRoot `
-        -ChildPath 'test\artifacts'
-    $script:ExpectedContentPath = Join-Path `
-        -Path $script:TestConfigPath `
+    $script:artifactPath = Join-Path `
+        -Path $testRootPath `
+        -ChildPath 'artifacts'
+    $script:expectedContentPath = Join-Path `
+        -Path $script:testConfigPath `
         -ChildPath 'expectedcontent'
     $null = New-Item `
-        -Path $script:ArtifactPath `
+        -Path $script:artifactPath `
         -ItemType Directory `
         -Force `
         -ErrorAction SilentlyContinue
-    $script:Lab = Get-Lab -ConfigPath $script:TestConfigOKPath
+    $script:Lab = Get-Lab -ConfigPath $script:testConfigOKPath
 
     function Get-VMNetworkAdapter
     {
@@ -170,7 +172,7 @@ InModuleScope LabBuilder {
         )
     }
 
-    Describe '\lib\private\Get-LabManagementSwitchName' {
+    Describe 'Get-LabManagementSwitchName' {
         Context 'Valid Configuration Passed' {
             It 'Should return "TestLab Lab Management"' {
                 Get-LabManagementSwitchName -Lab $script:Lab | Should -Be 'TestLab Lab Management'
@@ -178,7 +180,7 @@ InModuleScope LabBuilder {
         }
     }
 
-    Describe '\lib\private\Set-LabSwitchAdapter' {
+    Describe 'Set-LabSwitchAdapter' {
         $TestAdapter = @{
             Name             = 'Adapter Name'
             SwitchName       = 'Switch Name'
@@ -320,7 +322,7 @@ InModuleScope LabBuilder {
         }
     }
 
-    Describe '\lib\private\Initialize-LabManagementSwitch' {
+    Describe 'Initialize-LabManagementSwitch' {
         Context 'Valid Configuration Passed and Management Switch does not exist' {
             Mock -CommandName Get-VMSwitch
             Mock -CommandName New-VMSwitch

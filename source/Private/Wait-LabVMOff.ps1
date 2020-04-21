@@ -22,6 +22,6 @@ function Wait-LabVMOff
     while ($runningVM.State -ne 'Off')
     {
         $runningVM = Get-VM -Name $VM.Name
-        Start-Sleep -Seconds $Script:RetryHeartbeatSeconds
+        Start-Sleep -Seconds $script:RetryHeartbeatSeconds
     } # while
 }

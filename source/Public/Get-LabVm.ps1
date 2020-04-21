@@ -816,7 +816,7 @@ function Get-LabVM
                 If VM requires ExposeVirtualizationExtensions but
                 it is not supported on Host then throw an exception.
             #>
-            if ($exposeVirtualizationExtensions -and ($Script:CurrentBuild -lt 10565))
+            if ($exposeVirtualizationExtensions -and ($script:currentBuild -lt 10565))
             {
                 $exceptionParameters = @{
                     errorId = 'VMVirtualizationExtError'

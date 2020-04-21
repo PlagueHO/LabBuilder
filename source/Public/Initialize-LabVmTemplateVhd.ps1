@@ -253,10 +253,10 @@ function Initialize-LabVMTemplateVHD
                         $Packages += @( $PackagePath )
 
                         # Generate the path to the Nano Language Package
-                        $PackageLangFile = $Package -replace '.cab', "_$($Script:NanoPackageCulture).cab"
+                        $PackageLangFile = $Package -replace '.cab', "_$($script:NanoPackageCulture).cab"
                         $PackageLangPath = Join-Path `
                             -Path $NanoPackagesFolder `
-                            -ChildPath "$($Script:NanoPackageCulture)\$PackageLangFile"
+                            -ChildPath "$($script:NanoPackageCulture)\$PackageLangFile"
                         # Does it exist?
                         if (-not (Test-Path -Path $PackageLangPath))
                         {
@@ -333,7 +333,7 @@ function Initialize-LabVMTemplateVHD
         # Should only be done once
         if (-not (Test-Path -Path Function:Convert-WindowsImage))
         {
-            . $Script:SupportConvertWindowsImagePath
+            . $script:SupportConvertWindowsImagePath
         } # if
 
         try

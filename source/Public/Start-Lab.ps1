@@ -26,7 +26,7 @@ function Start-Lab
 
         [Parameter(
             Position=4)]
-        [System.Int32] $StartupTimeout = $Script:StartupTimeout
+        [System.Int32] $StartupTimeout = $script:StartupTimeout
     ) # Param
 
     begin
