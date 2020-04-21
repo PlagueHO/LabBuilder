@@ -26,22 +26,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `dsclibrary\MEMBER_DHCP.DSC.ps1`:
   - Convert to use xDnsServer version 1.16.0.0.
   - Clean up code style.
-  - Correct DHCP scope example - fixes [Issue-343](https://github.com/PlagueHO/LabBuilder/issues/343).
+  - Correct DHCP scope example - fixes [Issue #343](https://github.com/PlagueHO/LabBuilder/issues/343).
 - `dsclibrary\MEMBER_DHCPDNS.DSC.ps1`:
   - Convert to use xDnsServer version 1.16.0.0.
   - Clean up code style.
-  - Correct DHCP scope example - fixes [Issue-343](https://github.com/PlagueHO/LabBuilder/issues/343).
+  - Correct DHCP scope example - fixes [Issue #343](https://github.com/PlagueHO/LabBuilder/issues/343).
 - `dsclibrary\MEMBER_DHCPNPAS2016.DSC.ps1`:
   - Convert to use xDnsServer version 1.16.0.0.
   - Clean up code style.
-  - Correct DHCP scope example - fixes [Issue-343](https://github.com/PlagueHO/LabBuilder/issues/343).
+  - Correct DHCP scope example - fixes [Issue #343](https://github.com/PlagueHO/LabBuilder/issues/343).
 - `dsclibrary\MEMBER_DNS.DSC.ps1`:
   - Convert to use xDnsServer version 1.16.0.0.
   - Clean up code style.
 - `dsclibrary\STNADALONE_DHCPDNS.DSC.ps1`:
   - Convert to use xDnsServer version 1.16.0.0.
   - Clean up code style.
-  - Correct DHCP scope example - fixes [Issue-343](https://github.com/PlagueHO/LabBuilder/issues/343).
+  - Correct DHCP scope example - fixes [Issue #343](https://github.com/PlagueHO/LabBuilder/issues/343).
 - `dsclibrary\STNADALONE_INTERNET.DSC.ps1`:
   - Convert to use xDnsServer version 1.16.0.0.
   - Clean up code style.
+- Remove AppVeyor CI pipeline and updated to new Continuous Delivery
+  pattern using Azure DevOps - fixes [Issue #355](https://github.com/PlagueHO/LabBuilder/issues/355).
