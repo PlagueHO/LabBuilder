@@ -83,7 +83,7 @@ Pester:
     - tests/Unit
   ExcludeTag: Incomplete
   Tag:
-  CodeCoverageThreshold: 70
+  CodeCoverageThreshold: 55
 
 Resolve-Dependency:
   Gallery: 'PSGallery'
