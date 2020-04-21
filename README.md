@@ -483,8 +483,8 @@ For a list of changes to versions, see the [CHANGELOG.md](CHANGELOG.md) file.
 - [Blog](https://dscottraynsford.wordpress.com/)
 
 [ap-image-master]: https://dev.azure.com/dscottraynsford/GitHub/_apis/build/status/PlagueHO.LabBuilder?branchName=master
-[ap-site-master]: https://dev.azure.com/dscottraynsford/GitHub/_build/latest?definitionId=5
-[ts-image-master]: https://img.shields.io/azure-devops/tests/dscottraynsford/GitHub/5/master
-[ts-site-master]: https://dev.azure.com/dscottraynsford/GitHub/_build/latest?definitionId=5&branchName=master
+[ap-site-master]: https://dev.azure.com/dscottraynsford/GitHub/_build/latest?definitionId=39
+[ts-image-master]: https://img.shields.io/azure-devops/tests/dscottraynsford/GitHub/39/master
+[ts-site-master]: https://dev.azure.com/dscottraynsford/GitHub/_build/latest?definitionId=39&branchName=master
 [cq-image-master]: https://codecov.io/gh/PlagueHO/LabBuilder/branch/master/graph/badge.svg
 [cq-site-master]: https://codecov.io/gh/PlagueHO/LabBuilder/branch/master
