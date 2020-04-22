@@ -47,3 +47,4 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Clean up code style.
 - Remove AppVeyor CI pipeline and updated to new Continuous Delivery
   pattern using Azure DevOps - fixes [Issue #355](https://github.com/PlagueHO/LabBuilder/issues/355).
+- Fix build badges.
