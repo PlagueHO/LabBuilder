@@ -1,0 +1,24 @@
+TOPIC
+    about_LabBuilder
+
+SHORT DESCRIPTION
+    Builds Hyper-V Windows multi-machine/Active Directory labs using XML
+    configuration files and DSC Resources.
+
+LONG DESCRIPTION
+    This module provides cmdlets for building Hyper-V Windows multi-machine/Active
+    Directory labs using XML configuration files and DSC Resources.
+
+EXAMPLES
+    PS C:\> Get-Command -Module LabBuilder
+
+TROUBLESHOOTING NOTE:
+    Go to the Github repository for read about issues, submit a new issue, and read
+    about new releases. https://github.com/PlagueHO/LabBuilder
+
+SEE ALSO
+  - https://github.com/PlagueHO/LabBuilder
+
+KEYWORDS
+      Hyper-V, Lab, DesiredStateConfiguration, DSC
+

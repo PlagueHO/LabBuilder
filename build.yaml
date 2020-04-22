@@ -1,0 +1,113 @@
+---
+####################################################
+#          ModuleBuilder Configuration             #
+####################################################
+CopyDirectories:
+  - dsclibrary
+  - en-US
+  - samples
+  - schema
+  - support
+  - template
+prefix: prefix.ps1
+suffix: suffix.ps1
+Encoding: UTF8
+VersionedOutputDirectory: true
+
+
+####################################################
+#       Sampler Pipeline Configuration             #
+####################################################
+BuildWorkflow:
+  Compile_Help: |
+    {
+      <#
+        Execute in a separate PWSH session because platyPS tries
+        to load YamlDotNet.dll which conflicts with one loaded by
+        Module-Builder.
+      #>
+      if ([System.String]::IsNullOrEmpty($ModuleVersion))
+      {
+        $ModuleVersion = '0.0.1'
+      }
+
+      $outputPath = "$BuildModuleOutput\$ProjectName\$(($ModuleVersion -Split '-')[0])"
+      $execute = "New-ExternalHelp -Path '$ProjectPath\docs' -OutputPath '$OutputPath' -Force"
+
+      if ($IsCoreCLR)
+      {
+        $PowerShellExe = 'pwsh'
+      }
+      else
+      {
+        $PowerShellExe = 'powershell'
+      }
+
+      & $PowerShellExe -Command "`"$execute`""
+    }
+
+  '.':
+    - build
+    - test
+
+  build:
+    - Clean
+    - Build_Module_ModuleBuilder
+    - Build_NestedModules_ModuleBuilder
+    - Create_changelog_release_output
+    - Compile_Help
+
+  pack:
+    - build
+    - package_module_nupkg
+
+  test:
+    - Pester_Tests_Stop_On_Fail
+    - Pester_if_Code_Coverage_Under_Threshold
+
+  publish:
+    - Publish_release_to_GitHub
+    - publish_module_to_gallery
+
+
+####################################################
+#       PESTER  Configuration                      #
+####################################################
+
+Pester:
+  OutputFormat: NUnitXML
+  ExcludeFromCodeCoverage:
+    - dsclibrary
+    - support
+  Script:
+    - tests/Unit
+  ExcludeTag: Incomplete
+  Tag:
+  CodeCoverageThreshold: 55
+
+Resolve-Dependency:
+  Gallery: 'PSGallery'
+  AllowPrerelease: false
+  Verbose: false
+
+ModuleBuildTasks:
+  Sampler:
+    - '*.build.Sampler.ib.tasks'
+
+TaskHeader: |
+  param($Path)
+  ""
+  "=" * 79
+  Write-Build Cyan "`t`t`t$($Task.Name.replace("_"," ").ToUpper())"
+  Write-Build DarkGray  "$(Get-BuildSynopsis $Task)"
+  "-" * 79
+  Write-Build DarkGray "  $Path"
+  Write-Build DarkGray "  $($Task.InvocationInfo.ScriptName):$($Task.InvocationInfo.ScriptLineNumber)"
+  ""
+
+GitHubConfig:
+  GitHubFilesToAdd:
+    - 'CHANGELOG.md'
+  GitHubConfigUserName: Daniel Scott-Raynsford
+  GitHubConfigUserEmail: plagueho@gmail.com
+  UpdateChangelogOnPrerelease: false
