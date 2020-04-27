@@ -47,6 +47,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Clean up code style.
 - Remove AppVeyor CI pipeline and updated to new Continuous Delivery
   pattern using Azure DevOps - fixes [Issue #355](https://github.com/PlagueHO/LabBuilder/issues/355).
+- Fix build badges.
 - Change Azure DevOps Pipeline definition to include `source/*` - Fixes [Issue #359](https://github.com/PlagueHO/LabBuilder/issues/359).
 - Updated pipeline to use `latest` version of `ModuleBuilder` - Fixes [Issue #359](https://github.com/PlagueHO/LabBuilder/issues/359).
 - Merge `HISTORIC_CHANGELOG.md` into `CHANGELOG.md` - Fixes [Issue #360](https://github.com/PlagueHO/LabBuilder/issues/360).
@@ -281,7 +282,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - DSCLibrary\*_SUBCA.DSC.ps1: Fix to support 2.0.0.0 of xADCSDeployment resource.
 - Converted AppVeyor.yml to pull Pester from PSGallery instead of Chocolatey.
 - Changed AppVeyor.yml to use default image
-- - MSFT-MWalker changes Below
 - Added support for Version of VM - Only works on latest Windows 10 builds post 14352
 - Added support for generation of VM so Generation 1 VMs can now be created
 - Fixed issue with Shared VHDX that prevented their creation.

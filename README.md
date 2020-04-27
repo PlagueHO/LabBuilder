@@ -1,11 +1,11 @@
+# LabBuilder PowerShell Module
+
 [![License](https://img.shields.io/badge/License-MIT-blue.svg)](https://github.com/PlagueHO/LabBuilder/blob/dev/LICENSE)
 [![Documentation](https://img.shields.io/badge/Docs-LabBuilder-blue.svg)](https://github.com/PlagueHO/LabBuilder/wiki)
-[![PowerShell Gallery](https://img.shields.io/badge/PowerShell%20Gallery-LabBuilder-blue.svg)](https://www.powershellgallery.com/packages/LabBuilder)
-[![PowerShell Gallery](https://img.shields.io/powershellgallery/dt/labbuilder.svg)](https://www.powershellgallery.com/packages/LabBuilder)
+[![PowerShell Gallery (with prereleases)](https://img.shields.io/powershellgallery/vpre/LabBuilder?label=LabBuilder%20Preview)](https://www.powershellgallery.com/packages/LabBuilder/)
+[![PowerShell Gallery](https://img.shields.io/powershellgallery/v/LabBuilder?label=LabBuilder)](https://www.powershellgallery.com/packages/LabBuilder/)
 [![Minimum Supported PowerShell Version](https://img.shields.io/badge/PowerShell-5.1-blue.svg)](https://github.com/PlagueHO/LabBuilder)
 [![Join the chat at https://gitter.im/PlagueHO/LabBuilder](https://badges.gitter.im/PlagueHO/LabBuilder.svg)](https://gitter.im/PlagueHO/LabBuilder?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
-
-# LabBuilder PowerShell Module
 
 ## Module Build Status
 
@@ -482,9 +482,9 @@ For a list of changes to versions, see the [CHANGELOG.md](CHANGELOG.md) file.
 - [GitHub Repository](https://github.com/PlagueHO/LabBuilder/)
 - [Blog](https://dscottraynsford.wordpress.com/)
 
-[ap-image-master]: https://dev.azure.com/dscottraynsford/GitHub/_apis/build/status/PlagueHO.LabBuilder?branchName=master
+[ap-image-master]: https://dev.azure.com/dscottraynsford/GitHub/_apis/build/status/PlagueHO.LabBuilder.master?branchName=master
 [ap-site-master]: https://dev.azure.com/dscottraynsford/GitHub/_build/latest?definitionId=39
-[ts-image-master]: https://img.shields.io/azure-devops/tests/dscottraynsford/GitHub/39/master
-[ts-site-master]: https://dev.azure.com/dscottraynsford/GitHub/_build/latest?definitionId=39&branchName=master
+[ts-image-master]: https://img.shields.io/azure-devops/tests/dsccommunity/FileContentDsc/31/master
+[ts-site-master]: https://dev.azure.com/dscottraynsford/GitHub/_test/analytics?definitionId=39&contextType=build
 [cq-image-master]: https://codecov.io/gh/PlagueHO/LabBuilder/branch/master/graph/badge.svg
 [cq-site-master]: https://codecov.io/gh/PlagueHO/LabBuilder/branch/master
