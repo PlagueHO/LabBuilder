@@ -2,7 +2,7 @@ name: $(rev:r)
 trigger:
   branches:
     include:
-    - master
+      - '*'
   paths:
     include:
     - source/*
@@ -11,7 +11,6 @@ trigger:
     - "v*"
     exclude:
     - "*-*"
-pr: none
 
 stages:
   - stage: Build

@@ -51,6 +51,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Change Azure DevOps Pipeline definition to include `source/*` - Fixes [Issue #359](https://github.com/PlagueHO/LabBuilder/issues/359).
 - Updated pipeline to use `latest` version of `ModuleBuilder` - Fixes [Issue #359](https://github.com/PlagueHO/LabBuilder/issues/359).
 - Merge `HISTORIC_CHANGELOG.md` into `CHANGELOG.md` - Fixes [Issue #360](https://github.com/PlagueHO/LabBuilder/issues/360).
+- Changed Build.yml to support `ModuleBuilder` version to `1.7.0` by changing
+  `CopyDirectories` to `CopyPaths`.
+- Changed `azure-pipelines.yml` to run on all builds and PRs.
 
 ## [1.0.5.104] - 2019-11-10
 
