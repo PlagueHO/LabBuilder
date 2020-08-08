@@ -54,6 +54,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Changed Build.yml to support `ModuleBuilder` version to `1.7.0` by changing
   `CopyDirectories` to `CopyPaths`.
 - Changed `azure-pipelines.yml` to run on all builds and PRs.
+- Renamed `master` branch to `main` - fixes [Issue #368](https://github.com/PlagueHO/LabBuilder/issues/368).
+- Pinned build to Pester v4.10.1 - Fixes [Issue #369](https://github.com/PlagueHO/LabBuilder/issues/369).
 
 ## [1.0.5.104] - 2019-11-10
 
