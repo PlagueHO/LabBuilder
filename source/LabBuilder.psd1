@@ -98,7 +98,7 @@
             Tags         = @('Hyper-V', 'Lab', 'DesiredStateConfiguration', 'DSC', 'PSEdition_Desktop')
 
             # A URL to the license for this module.
-            LicenseUri   = 'https://github.com/PlagueHO/LabBuilder/blob/master/LICENSE'
+            LicenseUri   = 'https://github.com/PlagueHO/LabBuilder/blob/main/LICENSE'
 
             # A URL to the main website for this project.
             ProjectUri   = 'https://github.com/PlagueHO/LabBuilder'

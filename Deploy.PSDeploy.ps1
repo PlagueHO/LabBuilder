@@ -2,7 +2,7 @@ if (
     $Env:ProjectName -and $Env:ProjectName.Count -eq 1 -and
     $Env:BuildSystem -ne 'unknown'
 ) {
-    if ($Env:BranchName -eq 'master') {
+    if ($Env:BranchName -eq 'main') {
         Deploy Module {
             by PSGalleryModule {
                 FromSource $(Get-Item ".\BuildOutput\$Env:ProjectName")

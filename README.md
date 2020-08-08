@@ -9,9 +9,9 @@
 
 ## Module Build Status
 
-| Branch | Azure Pipelines                        | Automated Tests                        | Code Quality |
-| ------ | -------------------------------------- | -------------------------------------- | -------------------------------------- |
-| master | [![ap-image-master][]][ap-site-master] | [![ts-image-master][]][ts-site-master] | [![cq-image-master][]][cq-site-master] |
+| Branch | Azure Pipelines                    | Automated Tests                    | Code Quality                           |
+| ------ | ---------------------------------- | ---------------------------------- | -------------------------------------- |
+| main   | [![ap-image-main][]][ap-site-main] | [![ts-image-main][]][ts-site-main] | [![cq-image-main][]][cq-site-main]     |
 
 ## Summary
 
@@ -482,9 +482,9 @@ For a list of changes to versions, see the [CHANGELOG.md](CHANGELOG.md) file.
 - [GitHub Repository](https://github.com/PlagueHO/LabBuilder/)
 - [Blog](https://dscottraynsford.wordpress.com/)
 
-[ap-image-master]: https://dev.azure.com/dscottraynsford/GitHub/_apis/build/status/PlagueHO.LabBuilder.master?branchName=master
-[ap-site-master]: https://dev.azure.com/dscottraynsford/GitHub/_build/latest?definitionId=39
-[ts-image-master]: https://img.shields.io/azure-devops/tests/dsccommunity/FileContentDsc/31/master
-[ts-site-master]: https://dev.azure.com/dscottraynsford/GitHub/_test/analytics?definitionId=39&contextType=build
-[cq-image-master]: https://codecov.io/gh/PlagueHO/LabBuilder/branch/master/graph/badge.svg
-[cq-site-master]: https://codecov.io/gh/PlagueHO/LabBuilder/branch/master
+[ap-image-main]: https://dev.azure.com/dscottraynsford/GitHub/_apis/build/status/PlagueHO.LabBuilder.main?branchName=main
+[ap-site-main]: https://dev.azure.com/dscottraynsford/GitHub/_build/latest?definitionId=39
+[ts-image-main]: https://img.shields.io/azure-devops/tests/dsccommunity/FileContentDsc/31/main
+[ts-site-main]: https://dev.azure.com/dscottraynsford/GitHub/_test/analytics?definitionId=39&contextType=build
+[cq-image-main]: https://codecov.io/gh/PlagueHO/LabBuilder/branch/main/graph/badge.svg
+[cq-site-main]: https://codecov.io/gh/PlagueHO/LabBuilder/branch/main
