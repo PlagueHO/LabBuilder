@@ -1,7 +1,16 @@
-# Change Log
+# Changelog
 
-## Unreleased
+All notable changes to this project will be documented in this file.
 
+The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
+and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+
+## [Unreleased]
+
+### Changed
+
+- Renamed `LabBuilder_LocalizedData.psd1` to `LabBuilder.strings.psd1` to
+  align to other PowerShell modules.
 - Convert all DSC configurations to use ComputerManagementDsc version
   7.1.0.0.
 - Clean up code style on all DSC Library files.
@@ -17,27 +26,38 @@
 - `dsclibrary\MEMBER_DHCP.DSC.ps1`:
   - Convert to use xDnsServer version 1.16.0.0.
   - Clean up code style.
-  - Correct DHCP scope example - fixes [Issue-343](https://github.com/PlagueHO/LabBuilder/issues/343).
+  - Correct DHCP scope example - fixes [Issue #343](https://github.com/PlagueHO/LabBuilder/issues/343).
 - `dsclibrary\MEMBER_DHCPDNS.DSC.ps1`:
   - Convert to use xDnsServer version 1.16.0.0.
   - Clean up code style.
-  - Correct DHCP scope example - fixes [Issue-343](https://github.com/PlagueHO/LabBuilder/issues/343).
+  - Correct DHCP scope example - fixes [Issue #343](https://github.com/PlagueHO/LabBuilder/issues/343).
 - `dsclibrary\MEMBER_DHCPNPAS2016.DSC.ps1`:
   - Convert to use xDnsServer version 1.16.0.0.
   - Clean up code style.
-  - Correct DHCP scope example - fixes [Issue-343](https://github.com/PlagueHO/LabBuilder/issues/343).
+  - Correct DHCP scope example - fixes [Issue #343](https://github.com/PlagueHO/LabBuilder/issues/343).
 - `dsclibrary\MEMBER_DNS.DSC.ps1`:
   - Convert to use xDnsServer version 1.16.0.0.
   - Clean up code style.
 - `dsclibrary\STNADALONE_DHCPDNS.DSC.ps1`:
   - Convert to use xDnsServer version 1.16.0.0.
   - Clean up code style.
-  - Correct DHCP scope example - fixes [Issue-343](https://github.com/PlagueHO/LabBuilder/issues/343).
+  - Correct DHCP scope example - fixes [Issue #343](https://github.com/PlagueHO/LabBuilder/issues/343).
 - `dsclibrary\STNADALONE_INTERNET.DSC.ps1`:
   - Convert to use xDnsServer version 1.16.0.0.
   - Clean up code style.
+- Remove AppVeyor CI pipeline and updated to new Continuous Delivery
+  pattern using Azure DevOps - fixes [Issue #355](https://github.com/PlagueHO/LabBuilder/issues/355).
+- Fix build badges.
+- Change Azure DevOps Pipeline definition to include `source/*` - Fixes [Issue #359](https://github.com/PlagueHO/LabBuilder/issues/359).
+- Updated pipeline to use `latest` version of `ModuleBuilder` - Fixes [Issue #359](https://github.com/PlagueHO/LabBuilder/issues/359).
+- Merge `HISTORIC_CHANGELOG.md` into `CHANGELOG.md` - Fixes [Issue #360](https://github.com/PlagueHO/LabBuilder/issues/360).
+- Changed Build.yml to support `ModuleBuilder` version to `1.7.0` by changing
+  `CopyDirectories` to `CopyPaths`.
+- Changed `azure-pipelines.yml` to run on all builds and PRs.
+- Renamed `master` branch to `main` - fixes [Issue #368](https://github.com/PlagueHO/LabBuilder/issues/368).
+- Pinned build to Pester v4.10.1 - Fixes [Issue #369](https://github.com/PlagueHO/LabBuilder/issues/369).
 
-## 1.0.5.104
+## [1.0.5.104] - 2019-11-10
 
 - Samples\Sample_WS2019_AzureADConnect.xml: Added sample for installing Azure AD
   Connect.
@@ -64,7 +84,7 @@
 - `Get-LabResourceISO.ps1`:
   - Clean up code style.
 
-## 1.0.4.83
+## [1.0.4.83] - 2019-09-28
 
 - Change `psakefile.ps1` to detect Azure Pipelines correctly.
 - Updated `BuildHelpers` support module for CI pipelines to 2.0.10.
@@ -80,7 +100,7 @@
 - `Install-LabVM.ps1`:
   - Check for DSC Configuration section in XML file prior to calling DSC.
 
-## 1.0.3.69
+## [1.0.3.69] - 2019-07-22
 
 - `dsclibrary\MEMBER_SUBCA.DSC.ps1`:
   - CAServer parameter removed from ADCSWebEnrollment - fixes [Issue-320](https://github.com/PlagueHO/LabBuilder/issues/320).
@@ -135,7 +155,7 @@
 - `dsclibrary\MEMBER_WDS.DSC.ps1`:
   - Fix configuration.
 
-## 1.0.2.58
+## [1.0.2.58] - 2019-05-04
 
 - Reword module description in Manifest.
 - Fix bug when connecting to a Lab VM when TrustedHosts is empty - fixes
@@ -153,7 +173,7 @@
 - DSCLibrary\MEMBER_NANO.DSC.ps1: Rename xOfflineDomainJoin to
   OfflineDomainJoin - fixes [Issue #317](https://github.com/PlagueHO/LabBuilder/issues/317).
 
-## 1.0.1.40
+## [1.0.1.40] - 2019-04-13
 
 - Update to use NetworkingDsc 7.0.0.0 and converted DhcpClient
   resource to NetIpInterface - fixes [Issue #304](https://github.com/PlagueHO/LabBuilder/issues/304).
@@ -184,7 +204,7 @@
 - Split Private Lib functions into individual .ps1 files.
 - Refactored Private Lib functions to improve code style standards.
 
-## 1.0.0.6
+## [1.0.0.7] - 2018-12-08
 
 - Samples\Sample_WS2016_DCandDHCPandCA.xml: Added to easily create a Windows
   Server 2016 domain with a enterprise root CA.
@@ -195,7 +215,7 @@
 - Convert module to require WMF 5.1 and all the samples to install WMF 5.1.
 - DSCLibrary\MEMBER_MEMBER_DHCP*.ps1: Fixed to support xDHCPServer 2.0.0.0.
 
-## 0.8.4.1160
+## [0.8.4.1160] - 2018-05-22
 
 - Clean up markdown errors in README.MD.
 - Updated code style to meet current best practices.
@@ -216,13 +236,13 @@
 - Samples\Sample_WS2016_DFSHubAndSpoke.xml: Added to demonstrate Hub and Spoke DFS
   replication gorup.
 
-## 0.8.3.1140
+## [0.8.3.1140] - 2017-07-17
 
 - Enforce xNetworking v5.0.0.0 is installed and used - fixes [Issue #289](https://github.com/PlagueHO/LabBuilder/issues/289).
 - DSCLibrary\MEMBER_SQLSERVER2014.DSC.ps1: Updated to support v8.0.0.0 of xSQLServer
 - DSCLibrary\MEMBER_SQLSERVER2016.DSC.ps1: Updated to support v8.0.0.0 of xSQLServer
 
-## 0.8.3.1132
+## [0.8.3.1132] - 2017-07-16
 
 - Added .vscode\settings.json to force code styles and enable auto formatting in
   VS Code.
@@ -231,12 +251,12 @@
 - Updated LabBuilder to support changes in xNetworking DSC Resource v5.0.0.0
 - Updated DSC sample configurations to support xStorage DSC Resource v3.2.0.0
 
-## 0.8.3.1124
+## [0.8.3.1124] - 2017-06-29
 
 - DSCLibrary\MEMBER_DHCPNPAS2016.DSC.ps1:Added DSC Library Configuration for
   DHCP with NPAS on Windows Server 2016 - see [Issue 283](https://github.com/PlagueHO/LabBuilder/issues/283).
 
-## 0.8.3.1116
+## [0.8.3.1116] - 2017-05-20
 
 - Moved Changelist.md file to root and renamed to CHANGELOG.MD.
 - Cleaned up markdown errors in README.MD.
@@ -245,7 +265,7 @@
   lab.
 - Added support for codecoverage analysis using CodeCov.io.
 
-## 0.8.3.1107
+## [0.8.3.1107] - 2016-11-26
 
 - DSCLibrary\MEMBER_CONTAINER_HOST.DSC.ps1: Added DSC Configuration for configuring
   a Docker Container host.
@@ -259,7 +279,7 @@
 - Added support for specifying minimum module version in Update-LabDSC to enforce
   xNetworking 3.0.0.0 usage.
 
-## 0.8.3.1068
+## [0.8.3.1068] - 2016-01-01
 
 - Added Jenkins build scripts.
 - Fix ExposeVirtualizationExtensions when on Windows 10 build 14352 and above.
@@ -267,7 +287,6 @@
 - DSCLibrary\*_SUBCA.DSC.ps1: Fix to support 2.0.0.0 of xADCSDeployment resource.
 - Converted AppVeyor.yml to pull Pester from PSGallery instead of Chocolatey.
 - Changed AppVeyor.yml to use default image
-- - MSFT-MWalker changes Below
 - Added support for Version of VM - Only works on latest Windows 10 builds post 14352
 - Added support for generation of VM so Generation 1 VMs can now be created
 - Fixed issue with Shared VHDX that prevented their creation.
@@ -292,22 +311,22 @@
 - Updated all samples to use the filename of the latest Windows Server 2012 R2
   Evaluation ISO.
 
-## 0.8.3.0
+## [0.8.3.0] - 2016-01-01
 
 - Fix bug where Administrator account is not enabled in Windows client OS.
 - Added support for ModulePath attribute on Settings node.
 
-## 0.8.2.0
+## [0.8.2.0] - 2016-01-01
 
 - Fix bug when creating a new Management adapter for a new Lab and setting a
   static MAC address on it.
 
-## 0.8.1.0
+## [0.8.1.0] - 2016-01-01
 
 - Converted all Write-Verbose calls to Write-LabMessage function.
 - Fix bug when creating a new Management adapter for a new Lab.
 
-## 0.8.0.0
+## [0.8.0.0] - 2016-01-01
 
 - DSCLibrary\MEMBER_SQLSERVER2014.DSC.ps1: Completed DSC Library configuration
   for installing a SQL Server 2014 from an ISO.
@@ -335,7 +354,7 @@
   - MEMBER_ROOTCA.DSC.ps1
   - MEMBER_SUBCA.ps1
 
-## 0.7.9.0
+## [0.7.9.0] - 2016-01-01
 
 - Fixed failure when creating self-signed certificate on localized systems, by
   replacing EKU Names with IDs.
@@ -352,7 +371,7 @@
 - Install-Lab: Added checks to ensure required PackageProviders and PackageSources
   are available.
 
-## 0.7.8.0
+## [0.7.8.0] - 2016-01-01
 
 - Install-Lab:
   - Force flag added to suppress confirmation messages.
@@ -364,14 +383,14 @@
   - LabID will only be prepended to VM Adapter name for adapters not
     attached to an External switch.
 
-## 0.7.7.0
+## [0.7.7.0] - 2016-01-01
 
 - Samples\Sample_WS2016TP5_DCandDHCPOnly.xml:
   - Set edition in Nano Server Template VHD.
   - Fixed WS2016 Template VHD edition names.
   - Fixed Template name.
 
-## 0.7.6.0
+## [0.7.6.0] - 2016-01-01
 
 - Added .vscode\tasks.json file to allow quick conversion of LabBuilder Schema
   to MD.
@@ -380,10 +399,10 @@
 - Updated Visual Studio Project and Soltion files.
 - Fix Nano Server localization package filename support for TP5.
 
-## 0.7.5.0
+## [0.7.5.0] - 2016-01-01
 
 - Added VM InstanceCount attribute for creating multiple copies a VM in a Lab.
-- Added $Script:CurrentBuild variable to allow easier access to OS build version.
+- Added $script:currentBuild variable to allow easier access to OS build version.
 - Fix to prevent ExposeVirtualizationExtensions from being applied on Lab Hosts
   that don't support it.
 - Samples\Sample_WS2012R2_DCandDHCPandEdge.ps1: Added sample for creating Lab with
@@ -398,7 +417,7 @@
   available and/or already in use by external switches.
 - Improved Localization support for Integration Services.
 
-## 0.7.4.0
+## [0.7.4.0] - 2016-01-01
 
 - lib\vm.ps1: WaitWMStarted - name of integrationservice "heartbeat" detected by
   id to be culture neutral
@@ -435,7 +454,7 @@
 - Automatically set xNetworking version in DSC Networking config to that of the
   highest version available on the Lab Host.
 
-## 0.7.3.0
+## [0.7.3.0] - 2016-01-01
 
 - DSCLibrary\MEMBER_FAILOVERCLUSTER_FS.DSC.ps1: Added ServerName property to
   contain name of ISCSI Server.
@@ -463,7 +482,7 @@
 - samples\Sample_WS2012R2_MultiForest_ADFS.xml: Added Web Application Servers.
 - .github\*: Added general documentation on contributing to this project.
 
-## 0.7.2.0
+## [0.7.2.0] - 2016-01-01
 
 - DSCLibrary\MEMBER_FAILOVERCLUSTER_FS.DSC.ps1: Changed to install most File
   Server features on cluster nodes.
@@ -471,7 +490,7 @@
   Cluster DHCP Server nodes.
 - Readme.md: Additional Documentation added.
 
-## 0.7.1.0
+## [0.7.1.0] - 2016-01-01
 
 - Get-LabDSCNetworkingConfig: Fix DSC error occuring when a blank DNS Server
   address or Default Gateway address is set on an Adapter.
@@ -483,7 +502,7 @@
 - DSCLibrary\MEMBER_FILESERVER_*.DSC.ps1: Added BranchCache for File Servers feature.
 - Readme.md: Added 'Lab Installation Process in Detail' section.
 
-## 0.7.0.0
+## [0.7.0.0] - 2016-01-01
 
 - Initialize-LabSwitch: External switch correctly sets Adapter Name.
 - IsAdmin: Function removed because was not useful.
@@ -520,7 +539,7 @@
 - InitializeVhd: Fix error when attempting to create a new VHD/VHDx with a
   formatted volume.
 
-## 0.6.0.0
+## [0.6.0.0] - 2016-01-01
 
 - New-Lab: Function added for creating a new Lab configuration file and basic
   folder structure.
@@ -568,7 +587,7 @@
 - Initialize-LabVMTemplate:
   - MSU Resources specified in Packages attribute are added to Template  when copied.
 
-## 0.5.0.0
+## [0.5.0.0] - 2016-01-01
 
 - BREKAING: Renamed Config parameter to Lab parameter to indicate the object is
   actually an object that also stores Lab state information.
@@ -596,13 +615,13 @@
   labbuilderconfig-schema.xsd in schemas folder when unit tests run.
 - All sample and test configuration XML files updated with namespace -> xmlns="labbuilderconfig".
 
-## 0.4.2.0
+## [0.4.2.0] - 2016-01-01
 
 - Add bootorder VM attribute for controlling stop-lab/start-lab order.
 - Added Start-Lab and Stop-Lab cmdlets.
 - *-Lab cmdlet documentation added to Readme.md
 
-## 0.4.1.0
+## [0.4.1.0] - 2016-01-01
 
 - VHDParentPath setting made optional. Defaults to "Virtual Machine Hard Disks"
   under config.
@@ -622,7 +641,7 @@
 - Display PS ScriptAnalyzer Warnings when unit tests run.
 - Remove-LabVMTemplateVHD function added and will be called from Uninstall-Lab.
 
-## 0.4.0.0
+## [0.4.0.0] - 2016-01-01
 
 - Some secondary non-exported functions moved into separate support libraries.
 - Initialize-LabVMTemplate caches NanoServerPackages from VHD template folder to
@@ -631,7 +650,7 @@
 - Fix path Lab VM files are created.
 - Support for creating Certificates for Nano Servers on the host added.
 
-## 0.3.3.0
+## [0.3.3.0] - 2016-01-01
 
 - Changed Get-LabSwitch Unit tests to use PesterTestConfig.OK.xml.
 - Added support for configuring Nano Server packages for each VM.
@@ -642,7 +661,7 @@
 - Added TemplateVHD in templates/template config node for specifying the template
   VHD.
 
-## 0.3.2.0
+## [0.3.2.0] - 2016-01-01
 
 - Added Initialize-VHD function.
 - Added support for formatting Data VHDs.
@@ -650,7 +669,7 @@
 - Updated Download-ResourceModule to use Invoke-LabDownloadAndUnzipFile function.
 - Changed name of Settings\VMPath attribute to LabPath.
 
-## 0.3.1.0
+## [0.3.1.0] - 2016-01-01
 
 - Disable 'Access Denied' test when connecting to new VM because this error is
   reported by VM that is still booting up.
@@ -660,7 +679,7 @@
 - Moved DSC Config message into Localization data.
 - Disabled automatic module push to PSGallery till version 1.0.0.0 or greater.
 
-## 0.3.0.0
+## [0.3.0.0] - 2016-01-01
 
 - Fix to Module detection regex.
 - Updated AppVeyor.yml to push more artifacts.
@@ -680,10 +699,10 @@
 - Configuration parameter changed to Config to reduce size/typing.
 - Support for creating VHD boot disks from ISO via TemplateVHD nodes in XML.
 
-## 0.2.0.0
+## [0.2.0.0] - 2016-01-01
 
 - Code cleanup and refactoring.
 
-## 0.1.0.0
+## [0.1.0.0] - 2016-01-01
 
 - Initial Release.

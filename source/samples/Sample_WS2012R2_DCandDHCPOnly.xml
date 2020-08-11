@@ -1,0 +1,166 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<labbuilderconfig xmlns="labbuilderconfig"
+                  name="Sample_WS2012R2_DCandDHCPOnly"
+                  version="1.0">
+  <description>Sample Windows Server 2012 R2 Lab Configuration DC and DHCP Only</description>
+
+  <settings labid="LABBUILDER-DCANDDHCPONLY.COM "
+            domainname="LABBUILDER-DCANDDHCPONLY.COM"
+            email="admina@LABBUILDER-DCANDDHCPONLY.COM"
+            labpath="c:\vm\LABBUILDER-DCANDDHCPONLY.COM" />
+
+  <resources>
+    <msu name="WMF5.1-WS2012R2-W81"
+         url="https://download.microsoft.com/download/6/F/5/6F5FF66C-6775-42B0-86C4-47D41F2DA187/W2K12-KB3191565-x64.msu" />
+  </resources>
+
+  <switches>
+    <switch name="External" type="External">
+      <adapters>
+        <adapter name="Cluster" macaddress="00155D010701" />
+        <adapter name="Management" macaddress="00155D010702" />
+        <adapter name="SMB" macaddress="00155D010703" />
+        <adapter name="LM" macaddress="00155D010704" />
+      </adapters>
+    </switch>
+    <switch name="Domain Internal" type="Internal" />
+    <switch name="Domain Private Site A" type="Private" vlan="2" />
+    <switch name="Domain Private Site B" type="Private" vlan="3" />
+    <switch name="Domain Private Site C" type="Private" vlan="4" />
+  </switches>
+
+  <templatevhds isopath="ISOFiles"
+                vhdpath="VHDFiles"
+                prefix="" >
+    <templatevhd name="Windows Server 2012 R2 Datacenter Full"
+                 iso="9600.17050.WINBLUE_REFRESH.140317-1640_X64FRE_SERVER_EVAL_EN-US-IR3_SSS_X64FREE_EN-US_DV9.iso"
+                 url="https://www.microsoft.com/en-us/evalcenter/evaluate-windows-server-2012-r2"
+                 vhd="Windows Server 2012 R2 Datacenter Full.vhdx"
+                 edition="Windows Server 2012 R2 SERVERDATACENTER"
+                 ostype="Server"
+                 packages="WMF5.1-WS2012R2-W81"
+                 vhdformat="vhdx"
+                 vhdtype="dynamic"
+                 generation="2"
+                 vhdsize="40GB" />
+    <templatevhd name="Windows Server 2012 R2 Datacenter Core"
+                 iso="9600.17050.WINBLUE_REFRESH.140317-1640_X64FRE_SERVER_EVAL_EN-US-IR3_SSS_X64FREE_EN-US_DV9.iso"
+                 url="https://www.microsoft.com/en-us/evalcenter/evaluate-windows-server-2012-r2"
+                 vhd="Windows Server 2012 R2 Datacenter Core.vhdx"
+                 edition="Windows Server 2012 R2 SERVERDATACENTERCORE"
+                 ostype="Server"
+                 packages="WMF5.1-WS2012R2-W81"
+                 vhdformat="vhdx"
+                 vhdtype="dynamic"
+                 generation="2"
+                 vhdsize="25GB" />
+  </templatevhds>
+
+  <templates>
+    <template name="Template Windows Server 2012 R2 Datacenter Full"
+              templatevhd="Windows Server 2012 R2 Datacenter FULL"
+              memorystartupbytes="1GB"
+              processorcount="1"
+              administratorpassword="P@ssword!1"
+              timezone="New Zealand Standard Time"
+              ostype="Server"
+              packages="WMF5.1-WS2012R2-W81" />
+    <template name="Template Windows Server 2012 R2 Datacenter Core"
+              templatevhd="Windows Server 2012 R2 Datacenter CORE"
+              memorystartupbytes="1GB"
+              processorcount="1"
+              administratorpassword="P@ssword!1"
+              timezone="New Zealand Standard Time"
+              ostype="Server"
+              packages="WMF5.1-WS2012R2-W81" />
+  </templates>
+
+  <vms>
+    <vm name="SA-DC1"
+        template="Template Windows Server 2012 R2 Datacenter CORE"
+        computername="SA-DC1">
+      <dsc configname="DC_FORESTPRIMARY"
+           configfile="DC_FORESTPRIMARY.DSC.ps1">
+        <parameters>
+          DomainName = "LABBUILDER.COM"
+          DomainAdminPassword = "P@ssword!1"
+        </parameters>
+      </dsc>
+      <adapters>
+        <adapter name="External"
+                 switchname="External" />
+        <adapter name="Domain Private Site A"
+                 switchname="Domain Private Site A">
+          <ipv4 address="192.168.128.10"
+                defaultgateway=""
+                subnetmask="24"
+                dnsserver="192.168.128.10"/>
+          <ipv6 address="fd53:ccc5:895a:bc00::a"
+                defaultgateway=""
+                subnetmask="64"
+                dnsserver="fd53:ccc5:895a:bc00::a"/>
+        </adapter>
+      </adapters>
+    </vm>
+
+    <vm name="SA-DHCP1"
+        template="Template Windows Server 2012 R2 Datacenter CORE"
+        computername="SA-DHCP1">
+      <dsc configname="MEMBER_DHCP"
+           configfile="MEMBER_DHCP.DSC.ps1">
+        <parameters>
+          DomainName = "LABBUILDER.COM"
+          DCname = "SA-DC1"
+          DomainAdminPassword = "P@ssword!1"
+          PSDscAllowDomainUser = $true
+          Scopes = @(
+              @{ Name = 'Site A Primary';
+                 Start = '192.168.128.50';
+                 End = '192.168.128.254';
+                 SubnetMask = '255.255.255.0';
+                 AddressFamily = 'IPv4'
+              }
+            )
+          Reservations = @(
+              @{ Name = 'SA-DC1';
+                 ScopeID = '192.168.128.0';
+                 ClientMACAddress = '000000000000';
+                 IPAddress = '192.168.128.10';
+                 AddressFamily = 'IPv4'
+              },
+              @{ Name = 'SA-DHCP1';
+                 ScopeID = '192.168.128.0';
+                 ClientMACAddress = '000000000002';
+                 IPAddress = '192.168.128.16';
+                 AddressFamily = 'IPv4'
+              }
+            )
+          ScopeOptions = @(
+              @{ ScopeID = '192.168.128.0';
+                 DNServerIPAddress = @('192.168.128.10');
+                 Router = '';
+                 AddressFamily = 'IPv4'
+              }
+            )
+        </parameters>
+      </dsc>
+      <adapters>
+        <adapter name="External"
+                 switchname="External" />
+        <adapter name="Domain Private Site A"
+                 switchname="Domain Private Site A">
+          <ipv4 address="192.168.128.16"
+                defaultgateway=""
+                subnetmask="24"
+                dnsserver="192.168.128.10"/>
+          <ipv6 address="fd53:ccc5:895a:bc00::10"
+                defaultgateway=""
+                subnetmask="64"
+                dnsserver="fd53:ccc5:895a:bc00::a"/>
+        </adapter>
+      </adapters>
+    </vm>
+  </vms>
+
+</labbuilderconfig>
