@@ -111,4 +111,3 @@ GitHubConfig:
   GitHubConfigUserName: Daniel Scott-Raynsford
   GitHubConfigUserEmail: plagueho@gmail.com
   UpdateChangelogOnPrerelease: false
-  MainGitBranch: main
