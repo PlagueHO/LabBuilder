@@ -183,4 +183,5 @@ stages:
               pwsh: true
             env:
               GitHubToken: $(GitHubToken)
+              ReleaseBranch: main
               MainGitBranch: main
