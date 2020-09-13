@@ -15,6 +15,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   is not valid for Windows Server 2019.
 - Improve structure of `Invoke-LabSample.ps1` function to remove need
   for `$script` scope variables.
+- Fixed sample `samples\Sample_WS2019_AzureADConnect.xml` default gateway
+  for SA-AADC VM.
 
 ## [1.1.0] - 2020-08-30
 
