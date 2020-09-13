@@ -1,42 +1,83 @@
-﻿# Set the name of the sample Lab from the samples folder:
-[System.String]$script:ConfigPath = "$PSScriptRoot\..\src\Samples\Sample_WS2016_DCandDHCPandCA.xml"
-[System.String]$script:ModulePath = "$PSScriptRoot\..\src\LabBuilder.psd1"
+﻿# Load the LabBuilder Module after being built by .\build.ps1 -Tasks Build
+$projectPath = "$PSScriptRoot\.." | Convert-Path
+
+Import-Module -Name LabBuilder -Force
+
+# Set the name of the sample Lab from the samples folder:
+$sampleConfigName = 'Sample_WS2019_AzureADConnect.xml'
+$samplePath = "$projectPath\source\Samples\"
+$configPath = Join-Path -Path $samplePath -ChildPath $sampleConfigName
+$labParameters = @{
+    ConfigPath = $configPath
+}
 
 ####################################################################################################
-Function Test-StartLabVM {
+function Test-StartLabVM {
     param (
-        [System.String[]]$StartVMs
+        [System.String[]]
+        $StartVMs
     )
+
     $Lab = Get-Lab -Config $script:ConfigPath
-    [array] $VMs = Get-LabVM `
+    $VMs = Get-LabVM `
         -Lab $Lab `
         -Name $StartVMs
-    Foreach ($VM in $VMs) {
+    foreach ($VM in $VMs) {
         Install-LabVM `
             -Lab $Lab `
             -VM $VM `
             -Verbose
     }
 }
+
 ####################################################################################################
-Function Test-LabBuilderInstall {
-    Get-Lab -ConfigPath $script:ConfigPath | Install-Lab -Verbose
+function Test-LabBuilderInstall {
+    param (
+        [System.String]
+        $ConfigPath
+    )
+
+    Get-Lab -ConfigPath $ConfigPath | Install-Lab -Verbose
 } # Function Test-LabBuilderInstall
+
 ####################################################################################################
 Function Test-LabBuilderUpdate {
-    Get-Lab -ConfigPath $script:ConfigPath | Update-Lab -Verbose
+    param (
+        [System.String]
+        $ConfigPath
+    )
+
+    Get-Lab -ConfigPath $ConfigPath | Update-Lab -Verbose
 } # Function Test-LabBuilderInstall
+
 ####################################################################################################
 Function Test-LabBuilderStart {
-    Get-Lab -ConfigPath $script:ConfigPath | Start-Lab -Verbose
+    param (
+        [System.String]
+        $ConfigPath
+    )
+
+    Get-Lab -ConfigPath $ConfigPath | Start-Lab -Verbose
 } # Function Test-LabBuilderInstall
+
 ####################################################################################################
 Function Test-LabBuilderStop {
-    Get-Lab -ConfigPath $script:ConfigPath | Stop-Lab -Verbose
+    param (
+        [System.String]
+        $ConfigPath
+    )
+
+    Get-Lab -ConfigPath $ConfigPath | Stop-Lab -Verbose
 } # Function Test-LabBuilderInstall
+
 ####################################################################################################
 Function Test-LabBuilderUninstall {
-    Get-Lab -ConfigPath $script:ConfigPath | Uninstall-Lab `
+    param (
+        [System.String]
+        $ConfigPath
+    )
+
+    Get-Lab -ConfigPath $ConfigPath | Uninstall-Lab `
         -RemoveVMFolder `
         -RemoveVMTemplate `
         -RemoveLabFolder `
@@ -44,17 +85,11 @@ Function Test-LabBuilderUninstall {
         -Verbose
 } # Function Test-LabBuilderUnnstall
 ####################################################################################################
-Function Test-LabBuilderLoadModule {
-    Import-Module $script:ModulePath -Verbose -Force
-} # Function Test-LabBuilderLoadModule
-####################################################################################################
-
-# Test-LabBuilderLoadModule
 
 # Comment/Uncomment lines below and run this script to execute the LabBuilder commands
-Test-LabBuilderInstall
-# Test-LabBuilderUpdate
-# Test-LabBuilderStart
-# Test-LabBuilderStop
-# Test-StartLabVM -StartVMs 'SA-DC1'
-# Test-LabBuilderUninstall
+Test-LabBuilderInstall @LabParameters
+# Test-LabBuilderUpdate @LabParameters
+# Test-LabBuilderStart @LabParameters
+# Test-LabBuilderStop @LabParameters
+# Test-StartLabVM @LabParameters -StartVMs 'SA-DC1'
+# Test-LabBuilderUninstall @LabParameters

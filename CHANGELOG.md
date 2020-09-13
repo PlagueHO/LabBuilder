@@ -13,6 +13,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   evaluation ISO download URIs and edition names.
 - Removed sample `samples\Sample_WS2019_NanoDomain.xml` because it
   is not valid for Windows Server 2019.
+- Improve structure of `Invoke-LabSample.ps1` function to remove need
+  for `$script` scope variables.
 
 ## [1.1.0] - 2020-08-30
 
