@@ -68,7 +68,8 @@
   <vms>
     <vm name="SA-DC1"
         template="Template Windows Server 2019 Datacenter CORE"
-        computername="SA-DC1">
+        computername="SA-DC1"
+        bootorder="1">
       <dsc configname="DC_FORESTPRIMARY"
            configfile="DC_FORESTPRIMARY.DSC.ps1">
         <parameters>
@@ -96,7 +97,8 @@
 
     <vm name="SA-DHCP1"
         template="Template Windows Server 2019 Datacenter CORE"
-        computername="SA-DHCP1">
+        computername="SA-DHCP1"
+        bootorder="2">
       <dsc configname="MEMBER_DHCP"
            configfile="MEMBER_DHCP.DSC.ps1">
         <parameters>
@@ -164,34 +166,6 @@
       </adapters>
     </vm>
 
-    <vm name="SA-AADC"
-      template="Template Windows Server 2019 Datacenter Full"
-      computername="SA-AADC"
-      bootorder="3">
-      <dsc configname="MEMBER_DEFAULT"
-           configfile="MEMBER_DEFAULT.DSC.ps1">
-        <parameters>
-          DomainName = "LABBUILDER.COM"
-          DomainAdminPassword = "P@ssword!1"
-          DCName = "SA-DC1"
-          PSDscAllowDomainUser = $true
-        </parameters>
-      </dsc>
-      <adapters>
-        <adapter name="Domain Private Site A"
-                 switchname="Domain Private Site A">
-          <ipv4 address="192.168.128.17"
-                defaultgateway="192.168.128.19"
-                subnetmask="24"
-                dnsserver="192.168.128.10"/>
-          <ipv6 address="fd53:ccc5:895a:bc00::b"
-                defaultgateway="fd53:ccc5:895a:bc00::13"
-                subnetmask="64"
-                dnsserver="fd53:ccc5:895a:bc00::a"/>
-        </adapter>
-      </adapters>
-    </vm>
-
     <vm name="SA-EDGE1"
       template="Template Windows Server 2019 Datacenter Full"
       computername="SA-EDGE1"
@@ -219,6 +193,34 @@
         </adapter>
         <adapter name="External"
                  switchname="External" />
+      </adapters>
+    </vm>
+
+    <vm name="SA-AADC"
+      template="Template Windows Server 2019 Datacenter Full"
+      computername="SA-AADC"
+      bootorder="4">
+      <dsc configname="MEMBER_AADC"
+           configfile="MEMBER_AADC.DSC.ps1">
+        <parameters>
+          DomainName = "LABBUILDER.COM"
+          DomainAdminPassword = "P@ssword!1"
+          DCName = "SA-DC1"
+          PSDscAllowDomainUser = $true
+        </parameters>
+      </dsc>
+      <adapters>
+        <adapter name="Domain Private Site A"
+                 switchname="Domain Private Site A">
+          <ipv4 address="192.168.128.17"
+                defaultgateway="192.168.128.19"
+                subnetmask="24"
+                dnsserver="192.168.128.10"/>
+          <ipv6 address="fd53:ccc5:895a:bc00::b"
+                defaultgateway="fd53:ccc5:895a:bc00::13"
+                subnetmask="64"
+                dnsserver="fd53:ccc5:895a:bc00::a"/>
+        </adapter>
       </adapters>
     </vm>
   </vms>

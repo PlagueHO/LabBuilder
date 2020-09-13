@@ -17,6 +17,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   for `$script` scope variables.
 - Fixed sample `samples\Sample_WS2019_AzureADConnect.xml` default gateway
   for SA-AADC VM.
+- `dsclibrary\MEMBER_AADC.DSC.ps1`: Created DSC config for deploying an
+  Azure AD Connect server.
 
 ## [1.1.0] - 2020-08-30
 
