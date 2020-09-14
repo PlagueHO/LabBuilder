@@ -3,7 +3,7 @@
 <labbuilderconfig xmlns="labbuilderconfig"
                   name="Sample_WS2019_AzureADConnect"
                   version="1.0">
-  <description>Sample Windows Server 2019 Lab Configuration DC, DHCP, Edge and a Member for testing Azure AD Connect.</description>
+  <description>Sample Windows Server 2019 Lab Configuration DC, DHCP, Edge, a Windows Admin Center and a server for testing Azure AD Connect.</description>
 
   <settings labid="LABBUILDER-AZUREADCONNECT.COM "
             domainname="LABBUILDER-AZUREADCONNECT.COM"
@@ -127,16 +127,22 @@
                  IPAddress = '192.168.128.16';
                  AddressFamily = 'IPv4'
               },
+              @{ Name = 'SA-EDGE1';
+                 ScopeID = '192.168.128.0';
+                 ClientMACAddress = '000000000003';
+                 IPAddress = '192.168.128.19';
+                 AddressFamily = 'IPv4'
+              },
               @{ Name = 'SA-AADC';
                  ScopeID = '192.168.128.0';
-                 ClientMACAddress = '000000000005';
+                 ClientMACAddress = '000000000004';
                  IPAddress = '192.168.128.17';
                  AddressFamily = 'IPv4'
               },
-              @{ Name = 'SA-EDGE1';
+              @{ Name = 'SA-WAC';
                  ScopeID = '192.168.128.0';
                  ClientMACAddress = '000000000005';
-                 IPAddress = '192.168.128.19';
+                 IPAddress = '192.168.128.18';
                  AddressFamily = 'IPv4'
               }
             )
@@ -217,6 +223,34 @@
                 subnetmask="24"
                 dnsserver="192.168.128.10"/>
           <ipv6 address="fd53:ccc5:895a:bc00::b"
+                defaultgateway="fd53:ccc5:895a:bc00::13"
+                subnetmask="64"
+                dnsserver="fd53:ccc5:895a:bc00::a"/>
+        </adapter>
+      </adapters>
+    </vm>
+
+        <vm name="SA-WAC"
+      template="Template Windows Server 2019 Datacenter Full"
+      computername="SA-WAC"
+      bootorder="4">
+      <dsc configname="MEMBER_WAC"
+           configfile="MEMBER_WAC.DSC.ps1">
+        <parameters>
+          DomainName = "LABBUILDER.COM"
+          DomainAdminPassword = "P@ssword!1"
+          DCName = "SA-DC1"
+          PSDscAllowDomainUser = $true
+        </parameters>
+      </dsc>
+      <adapters>
+        <adapter name="Domain Private Site A"
+                 switchname="Domain Private Site A">
+          <ipv4 address="192.168.128.17"
+                defaultgateway="192.168.128.18"
+                subnetmask="24"
+                dnsserver="192.168.128.10"/>
+          <ipv6 address="fd53:ccc5:895a:bc00::c"
                 defaultgateway="fd53:ccc5:895a:bc00::13"
                 subnetmask="64"
                 dnsserver="fd53:ccc5:895a:bc00::a"/>
