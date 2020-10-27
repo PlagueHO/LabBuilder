@@ -22,6 +22,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `dsclibrary\MEMBER_WAC.DSC.ps1`: Created DSC config for deploying a
   Windows Administration Center server.
 
+### Fixes
+
+- Fixed GitVersion to prevent build failures
+
 ## [1.1.0] - 2020-08-30
 
 ### Changed

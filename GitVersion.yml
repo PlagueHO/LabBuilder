@@ -15,10 +15,10 @@ branches:
     tag: useBranchName
     increment: Minor
     regex: f(eature(s)?)?[\/-]
-    source-branches: ['main']
+    source-branches: ['master']
   hotfix:
     tag: fix
     increment: Patch
     regex: (hot)?fix(es)?[\/-]
-    source-branches: ['main']
+    source-branches: ['master']
 merge-message-formats: {}
