@@ -26,13 +26,20 @@ BuildWorkflow:
         to load YamlDotNet.dll which conflicts with one loaded by
         Module-Builder.
       #>
-      if ([System.String]::IsNullOrEmpty($ModuleVersion))
+      if ([System.String]::IsNullOrEmpty($ENV:ModuleVersion))
       {
-        $ModuleVersion = '0.0.1'
+        Write-Host -Object 'ModuleVersion environment variable is not defined.'
+        $moduleVersion = ($BuildModuleOutput | Join-Path -ChildPath $ProjectName | Get-ChildItem -Attributes D | Sort-Object -Property Name)[0].Name
+      }
+      else
+      {
+        $moduleVersion = (($ENV:ModuleVersion -Split '-') -Split '\+')[0]
       }
 
-      $outputPath = "$BuildModuleOutput\$ProjectName\$(($ModuleVersion -Split '-')[0])"
-      $execute = "New-ExternalHelp -Path '$ProjectPath\docs' -OutputPath '$OutputPath' -Force"
+      Write-Host -Object "Compiling help for version $moduleVersion."
+
+      $outputPath = "$BuildModuleOutput\$ProjectName\$moduleVersion"
+      $execute = "New-ExternalHelp -Path '$ProjectPath\docs' -OutputPath '$outputPath' -Force"
 
       if ($IsCoreCLR)
       {

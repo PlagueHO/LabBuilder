@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- Fix build problems preventing help from being compiled and added
+  to the module.
+
 ### Changed
 
 - Update sample labs for Windows Server 2019 to use latest
