@@ -720,7 +720,7 @@ This optional attribute controls the Virtual Machine generation to create.
 This optional attribute controls the Virtual Machine Version to create, this is only applicable to Windows 10 build 14352 or higher/Server 2016 post TP5.
 
 - Default Value: 8.0
-- Valid Values: 5.0, 6.2, 7.0, 7.1, 8.0, 254.0, and 255.0
+- Valid Values: 5.0, 6.2, 7.0, 7.1, 8.0, 9.0, 254.0, and 255.0
 
 ```version="5.0"```
 

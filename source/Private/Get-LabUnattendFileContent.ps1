@@ -102,6 +102,7 @@ function Get-LabUnattendFileContent
     </settings>
     <settings pass="oobeSystem">
         <component name="Microsoft-Windows-Shell-Setup" processorArchitecture="amd64" publicKeyToken="31bf3856ad364e35" language="neutral" versionScope="nonSxS" xmlns:wcm="http://schemas.microsoft.com/WMIConfig/2002/State" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+
 "@
         if ($VM.OSType -eq [LabOSType]::Client)
         {
@@ -132,7 +133,20 @@ function Get-LabUnattendFileContent
 
 "@
 } # If
-$unattendContent += @"
+        if (($VM.Name -like '*7*' -or $VM.Name -like '*2008*') -and $VM.Name -notlike '*10*') {
+            $unattendContent += @"
+            <OOBE>
+                <HideEULAPage>true</HideEULAPage>
+                <NetworkLocation>Work</NetworkLocation>
+                <ProtectYourPC>1</ProtectYourPC>
+                <HideWirelessSetupInOOBE>true</HideWirelessSetupInOOBE>
+                <SkipUserOOBE>true</SkipUserOOBE>
+                <SkipMachineOOBE>true</SkipMachineOOBE>
+            </OOBE>
+
+"@
+        } else {
+            $unattendContent += @"
             <OOBE>
                 <HideEULAPage>true</HideEULAPage>
                 <HideOEMRegistrationScreen>true</HideOEMRegistrationScreen>
@@ -143,6 +157,10 @@ $unattendContent += @"
                 <SkipUserOOBE>true</SkipUserOOBE>
                 <SkipMachineOOBE>true</SkipMachineOOBE>
             </OOBE>
+
+"@
+} # If
+$unattendContent += @"
             <UserAccounts>
                <AdministratorPassword>
                   <Value>$($VM.AdministratorPassword)</Value>
@@ -153,9 +171,6 @@ $unattendContent += @"
             <RegisteredOwner>$($email)</RegisteredOwner>
             <DisableAutoDaylightTimeSet>false</DisableAutoDaylightTimeSet>
             <TimeZone>$($VM.TimeZone)</TimeZone>
-        </component>
-        <component name="Microsoft-Windows-ehome-reg-inf" processorArchitecture="x86" publicKeyToken="31bf3856ad364e35" language="neutral" versionScope="NonSxS" xmlns:wcm="http://schemas.microsoft.com/WMIConfig/2002/State" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
-            <RestartEnabled>true</RestartEnabled>
         </component>
         <component name="Microsoft-Windows-ehome-reg-inf" processorArchitecture="amd64" publicKeyToken="31bf3856ad364e35" language="neutral" versionScope="NonSxS" xmlns:wcm="http://schemas.microsoft.com/WMIConfig/2002/State" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
             <RestartEnabled>true</RestartEnabled>

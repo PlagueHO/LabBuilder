@@ -336,7 +336,7 @@ class LabVMTemplate:System.ICloneable {
     [System.String[]] $IntegrationServices = @('Guest Service Interface','Heartbeat','Key-Value Pair Exchange','Shutdown','Time Synchronization','VSS')
     [System.String[]] $Packages
     [ValidateRange(1,2)][Byte] $Generation = 2
-    [ValidateSet("5.0","6.2","7.0","7.1","8.0","254.0","255.0")][System.String] $Version = '8.0'
+    [ValidateSet("5.0","6.2","7.0","7.1","8.0","9.0","254.0","255.0")][System.String] $Version = '8.0'
 
     LabVMTemplate() {}
 
@@ -430,7 +430,7 @@ class LabVM:System.ICloneable {
     [System.String] $SetupComplete
     [System.String[]] $Packages
     [ValidateRange(1,2)][Byte] $Generation = 2
-    [ValidateSet("5.0","6.2","7.0","7.1","8.0","254.0","255.0")][System.String] $Version = '8.0'
+    [ValidateSet("5.0","6.2","7.0","7.1","8.0","9.0","254.0","255.0")][System.String] $Version = '8.0'
     [System.Int32] $BootOrder
     [System.String[]] $IntegrationServices = @('Guest Service Interface','Heartbeat','Key-Value Pair Exchange','Shutdown','Time Synchronization','VSS')
     [LabVMAdapter[]] $Adapters
