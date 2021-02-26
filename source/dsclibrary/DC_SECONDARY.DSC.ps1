@@ -39,14 +39,14 @@ Configuration DC_SECONDARY
         {
             $LocalAdminCredential = New-Object `
                 -TypeName System.Management.Automation.PSCredential `
-                -ArgumentName ('Administrator', (ConvertTo-SecureString $Node.LocalAdminPassword -AsPlainText -Force))
+                -ArgumentList ('Administrator', (ConvertTo-SecureString $Node.LocalAdminPassword -AsPlainText -Force))
         }
 
         if ($Node.DomainAdminPassword)
         {
             $DomainAdminCredential = New-Object `
                 -TypeName System.Management.Automation.PSCredential `
-                -ArgumentName ("$($Node.DomainName)\Administrator", (ConvertTo-SecureString $Node.DomainAdminPassword -AsPlainText -Force))
+                -ArgumentList ("$($Node.DomainName)\Administrator", (ConvertTo-SecureString $Node.DomainAdminPassword -AsPlainText -Force))
         }
 
         WindowsFeature BackupInstall
