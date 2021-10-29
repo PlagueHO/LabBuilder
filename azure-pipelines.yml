@@ -147,7 +147,7 @@ stages:
           eq(variables['Build.SourceBranch'], 'refs/heads/main'),
           startsWith(variables['Build.SourceBranch'], 'refs/tags/')
         ),
-        eq(variables['System.TeamFoundationCollectionUri'], 'https://dscottraynsford.visualstudio.com/'),
+        eq(variables['System.TeamFoundationCollectionUri'], 'https://dev.azure.com/dscottraynsford/'),
         endsWith(variables['Build.DefinitionName'],'main')
       )
     jobs:
