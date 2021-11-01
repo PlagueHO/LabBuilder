@@ -11,6 +11,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Convert build pipeline to use GitTools Azure DevOps extension tasks
   instead of deprecated GitVersion extension.
+- Fixed incorrect parameter name passed to `New-Object -TypeName System.Management.Automation.PSCredential`
+  in `DC_SECONDARY.DSC.ps1` DSC template
 
 ### Fixed
 
