@@ -36,5 +36,11 @@
     "[markdown]": {
         "files.trimTrailingWhitespace": false,
         "files.encoding": "utf8"
+    },
+    "markdownlint.config": {
+        "MD028": false,
+        "MD025": {
+            "front_matter_title": ""
+        }
     }
 }

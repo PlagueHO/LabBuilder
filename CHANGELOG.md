@@ -11,6 +11,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Convert build pipeline to use GitTools Azure DevOps extension tasks
   instead of deprecated GitVersion extension.
+- Updated pipeline to use `ubuntu-latest` images for build and deploy stages.
+- Removed automated testing for Windows Server 2016 to eliminate use of
+  deprecated Azure DevOps `ws2016-v2017` agents - fixes [Issue #384](https://github.com/PlagueHO/LabBuilder/issues/384).
 
 ### Fixed
 
