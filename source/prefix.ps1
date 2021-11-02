@@ -17,7 +17,7 @@ if ([System.String]::IsNullOrEmpty($culture))
 }
 else
 {
-    if (Test-Path -Path (Join-Path -Path $script:LabBuidlerModuleRoot -ChildPath $culture))
+    if (! (Test-Path -Path (Join-Path -Path $script:LabBuidlerModuleRoot -ChildPath $culture)))
     {
         $culture = 'en-US'
     }
