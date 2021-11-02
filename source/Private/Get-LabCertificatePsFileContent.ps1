@@ -80,10 +80,19 @@ if (-not `$Cert)
             | Where-Object { `$_.FriendlyName -eq `$CertificateFriendlyName }
     }
 }
-Export-Certificate ``
-    -Type CERT ``
-    -Cert `$Cert ``
-    -FilePath `"`$(`$ENV:SystemRoot)\$script:DSCEncryptionCert`"
+if ((Get-WmiObject -Class Win32_OperatingSystem).Version -eq '6.1.7601') {
+    `$content = @(
+        '-----BEGIN CERTIFICATE-----'
+        [System.Convert]::ToBase64String(`$cert.RawData, 'InsertLineBreaks')
+        '-----END CERTIFICATE-----'
+    )
+    `$content | Out-File -FilePath `"`$(`$ENV:SystemRoot)\$Script:DSCEncryptionCert`" -Encoding ascii
+} else {
+    Export-Certificate ``
+        -Type CERT ``
+        -Cert `$Cert ``
+        -FilePath `"`$(`$ENV:SystemRoot)\$Script:DSCEncryptionCert`"
+}
 Add-Content ``
     -Path `"`$(`$ENV:SystemRoot)\Setup\Scripts\SetupComplete.log`" ``
     -Value 'Encryption Certificate Imported from CER ...' ``

@@ -71,6 +71,7 @@ function Set-LabDSC
         } # if
 
         $macAddress = $netAdapter.MacAddress
+        $mac = $macAddress.insert(2,":").insert(5,":").insert(8,":").insert(11,":").insert(14,":")
 
         if (-not $macAddress)
         {
@@ -84,9 +85,13 @@ function Set-LabDSC
         } # If
 
         $dscStartPs += @"
-Get-NetAdapter ``
-    | Where-Object { `$_.MacAddress.Replace('-','') -eq '$macAddress' } ``
-    | Rename-NetAdapter -NewName '$($adapter)'
+if ((Get-WmiObject -Class Win32_OperatingSystem).Version -eq '6.1.7601') {
+    Set-CimInstance -Query "Select * from Win32_NetworkAdapter where MACAddress ='$mac'" -Property @{NetConnectionID="$adapter"}
+} else {
+    Get-NetAdapter ``
+        | Where-Object { `$_.MacAddress.Replace('-','') -eq '$macAddress' } ``
+        | Rename-NetAdapter -NewName '$($adapter)'
+}
 
 "@
     } # Foreach
