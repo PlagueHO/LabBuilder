@@ -71,14 +71,18 @@ The general goals of this module are:
 
 To use this Module you will require on your Lab Host:
 
-1. Operating Systems supported:
+1. Operating Systems supported and automatically tested:
+
+    - Windows Server 2019
+
+1. Operating Systems that should work but are not automatically tested:
 
     - Windows Server 2012
     - Windows Server 2012 R2
     - Windows Server 2016
     - Windows Server 2016, version 1709
     - Windows Server 2016, version 1803
-    - Windows Server 2019
+    - Windows Server 2022
     - Windows 8.0
     - Windows 8.1
     - Windows 10
@@ -89,6 +93,8 @@ To use this Module you will require on your Lab Host:
     but for Windows Server 2012/R2 and Windows 8/8.1 it will need to be
     installed separately._
     _WMF 5.1 can be downloaded from [here](https://www.microsoft.com/en-us/download/details.aspx?id=54616)._
+
+1. **PowerShell Core 6/PowerShell 7**: Untested, but may work.
 
 1. **Hyper-V** available (which requires intel-VT CPU support).
 1. To use labs that contain Nested Hyper-V hosts only Windows 10 built 10586
